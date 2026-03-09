@@ -171,70 +171,11 @@ const POST_COMMENTS = {
 
 /* ── Init ────────────────────────────────────────────────────── */
 function initFeedPage() {
-  loadFeedFromSupabase().then(() => {
-    renderFeed(1);
-    wireNewPostBox();
-    wireLoadMore();
-    console.log('[Feed] Social feed initialized ✓');
-  });
-}
+  renderFeed(1);
+  wireNewPostBox();
+  wireLoadMore();
 
-/**
- * Sprint 3: Fetch feed posts from Supabase.
- * Falls back to the static FEED_POSTS placeholder if DB is empty or offline.
- */
-async function loadFeedFromSupabase() {
-  if (!window.supabase) return;
-
-  try {
-    const { data, error } = await window.supabase
-      .from('feed_posts')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      const dbPosts = data.map((p, i) => ({
-        id:          p.id             || `db-post-${i}`,
-        authorId:    p.tasker_id      || p.author_id || '',
-        author:      p.author_name    || 'Tasker',
-        initials:    (p.author_name || 'TK').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(),
-        avatarClass: `av-${(i % 6) + 1}`,
-        service:     p.service        || 'Service',
-        category:    p.category       || 'other',
-        location:    p.location       || 'Lagos',
-        timeAgo:     timeAgo(p.created_at),
-        caption:     p.caption        || '',
-        tags:        p.tags           || [],
-        likes:       parseInt(p.likes_count) || 0,
-        comments:    parseInt(p.comments_count) || 0,
-        liked:       false,
-        saved:       false,
-        mediaType:   p.image_url ? 'image' : 'placeholder',
-        imageUrl:    p.image_url      || null,
-        mediaColor:  '#1A1A2E',
-        mediaIcon:   'star',
-      }));
-
-      /* Prepend DB posts above static placeholders */
-      feedState = [...dbPosts, ...feedState];
-      console.log(`[Feed] Loaded ${dbPosts.length} posts from Supabase ✓`);
-    }
-  } catch (err) {
-    console.warn('[Feed] Could not load from Supabase:', err.message);
-  }
-}
-
-/** Converts ISO date to human-readable "X hours ago" */
-function timeAgo(iso) {
-  if (!iso) return 'recently';
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return `${Math.floor(diff/60)} min ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)} hours ago`;
-  return `${Math.floor(diff/86400)} days ago`;
+  console.log('[Feed] Social feed initialized ✓');
 }
 
 /* ── Render feed ─────────────────────────────────────────────── */
@@ -445,22 +386,7 @@ function toggleLike(postId) {
     setTimeout(() => btn.classList.remove('like-pop'), 300);
   }
 
-  /* Sprint 3: Persist like to Supabase */
-  if (window.supabase) {
-    window.supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      if (post.liked) {
-        window.supabase.from('likes').insert({ post_id: postId, user_id: user.id }).then(({ error }) => {
-          if (error) console.warn('[Feed] Like insert:', error.message);
-          else console.log('[Feed] Like saved to Supabase ✓');
-        });
-      } else {
-        window.supabase.from('likes').delete().match({ post_id: postId, user_id: user.id }).then(({ error }) => {
-          if (error) console.warn('[Feed] Like delete:', error.message);
-        });
-      }
-    });
-  }
+  console.log(`[Feed] Like ${post.liked ? 'added' : 'removed'} on post ${postId} — Sprint 3 will persist to Supabase`);
 }
 
 /* ── Save toggle ─────────────────────────────────────────────── */
@@ -497,13 +423,13 @@ function toggleComments(postId) {
  * Future Sprint 3: Call Supabase:
  *   supabase.from('comments').insert({ post_id: postId, user_id, body: text })
  */
-async function submitComment(postId) {
+function submitComment(postId) {
   const input = document.getElementById(`comment-input-${postId}`);
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
 
-  /* Inject new comment into preview area immediately (optimistic UI) */
+  /* Inject new comment into preview area */
   const preview = document.querySelector(`#post-${postId} .feed-comments-preview`);
   if (preview) {
     const div = document.createElement('div');
@@ -517,7 +443,7 @@ async function submitComment(postId) {
     preview.appendChild(div);
   }
 
-  /* Update comment count in state */
+  /* Update comment count */
   const post = feedState.find(p => p.id === postId);
   if (post) {
     post.comments++;
@@ -526,31 +452,8 @@ async function submitComment(postId) {
   }
 
   input.value = '';
-
-  /* Sprint 3: Persist comment to Supabase */
-  if (window.supabase) {
-    try {
-      let userId = null;
-      const { data: { user } } = await window.supabase.auth.getUser();
-      userId = user?.id || null;
-
-      const { error } = await window.supabase.from('comments').insert({
-        post_id:    postId,
-        user_id:    userId,
-        body:       text,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-      showToast('Comment posted!');
-      console.log(`[Feed] Comment saved to Supabase ✓ (post: ${postId})`);
-    } catch (err) {
-      console.warn('[Feed] Comment insert failed:', err.message);
-      showToast('Comment shown locally — could not save to server.');
-    }
-  } else {
-    showToast('Comment added!');
-  }
+  showToast('Comment added — will be saved to Supabase in Sprint 3');
+  console.log(`[Feed] Comment on ${postId} captured for Sprint 3:`, text);
 }
 
 function handleCommentKey(event, postId) {

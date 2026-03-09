@@ -290,56 +290,30 @@ async function handleTaskSubmit(e) {
   /* Show loading state */
   setButtonLoading(submitBtn, 'Posting task...');
 
-  /* ── Sprint 3: Real Supabase insert via db.js ── */
-  try {
-    /* Require login — redirect if not authenticated */
-    if (window.ST?.auth) {
-      const user = await window.ST.auth.getCurrentUser();
-      if (!user) {
-        showToast('Please log in to post a task.');
-        setTimeout(() => { window.location.href = 'login.html?redirect=post-task.html'; }, 1200);
-        setButtonLoading(submitBtn, null, 'Post My Task');
-        return;
-      }
-    }
+  /* Simulate async operation */
+  await delay(1200);
 
-    /* Use db.js postTask — handles auth + insert cleanly */
-    if (window.ST?.db?.postTask) {
-      await window.ST.db.postTask({
-        title:       taskPayload.title,
-        description: taskPayload.description,
-        budget:      taskPayload.budget,
-        location:    taskPayload.location,
-        deadline:    taskPayload.deadline,
-        category:    taskPayload.category,
-      });
-    } else {
-      /* Fallback: direct insert if db.js not loaded */
-      const { data: { user } } = await window.supabase.auth.getUser();
-      const { error } = await window.supabase.from('tasks').insert({
-        title:       taskPayload.title,
-        description: taskPayload.description,
-        budget:      taskPayload.budget,
-        location:    taskPayload.location,
-        deadline:    new Date(taskPayload.deadline).toISOString(),
-        category:    taskPayload.category,
-        status:      'open',
-        customer_id: user?.id || null,
-      });
-      if (error) throw error;
-    }
+  /* Reset button */
+  setButtonLoading(submitBtn, null, 'Post My Task');
 
-    /* Clear draft and show success */
-    clearDraft();
-    showTaskSuccessModal(taskPayload);
-    console.log('[Tasks] Task inserted into Supabase ✓');
+  /* Clear draft */
+  clearDraft();
 
-  } catch (err) {
-    console.error('[Tasks] Insert error:', err);
-    showToast('Failed to post task: ' + (err.message || 'Unknown error. Please try again.'));
-  } finally {
-    setButtonLoading(submitBtn, null, 'Post My Task');
-  }
+  /*
+   * ── Future Sprint 3 Integration Point ──
+   * Replace the showSprintModal below with:
+   *
+   * try {
+   *   const newTask = await postTask(taskPayload);
+   *   window.location.href = `task-detail.html?id=${newTask.id}`;
+   * } catch (err) {
+   *   showToast('Failed to post task. Please try again.');
+   *   console.error(err);
+   * }
+   */
+  showTaskSuccessModal(taskPayload);
+
+  console.log('[Tasks] Task payload ready for Sprint 3:', taskPayload);
 }
 
 /* ── Success modal ───────────────────────────────────────────── */

@@ -115,21 +115,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Init animations */
   initScrollAnimations();
 
-  /* Sprint 3: Sync navbar auth state via auth.js */
-  if (window.ST?.auth?.syncNavbarAuthState) {
-    await window.ST.auth.syncNavbarAuthState().catch(() => {});
-  }
+  /*
+   * Future Sprint: Initialize Supabase client here.
+   * import { createClient } from '@supabase/supabase-js'
+   * const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+   * window.supabase = supabase
+   *
+   * Future Sprint: Check auth session here.
+   * const { data: { session } } = await supabase.auth.getSession()
+   * if (session) showAuthenticatedUI(session.user)
+   */
 
-  /* Sprint 3: Listen for auth changes (login/logout) and update nav */
-  if (window.supabase) {
-    window.supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (window.ST?.auth?.syncNavbarAuthState) {
-        await window.ST.auth.syncNavbarAuthState().catch(() => {});
-      }
-    });
-  }
-
-  console.log('[StreetTasker] Sprint 3 initialized ✓');
+  console.log('[StreetTasker] Sprint 1 initialized ✓');
 });
 
 /* ── Scroll Animations ───────────────────────────────────────── */

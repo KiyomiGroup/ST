@@ -109,148 +109,12 @@ const MOCK_TASKER_STATE = {
 
 /* ── Init ────────────────────────────────────────────────────── */
 function initSubscriptionPage() {
-  /* Sprint 3: Load real tasker subscription state from Supabase */
-  loadTaskerSubscriptionState().then(() => {
-    renderPlanCards();
-    renderFreeSlotMeter();
-    wireToggleBilling();
-    renderComparisonTable();
-    console.log('[Subscription] Subscription page initialized ✓');
-  });
-}
+  renderPlanCards();
+  renderFreeSlotMeter();
+  wireToggleBilling();
+  renderComparisonTable();
 
-/**
- * Sprint 3: Check tasker's real booking count and subscription status.
- * Updates MOCK_TASKER_STATE with live data from Supabase.
- * Redirects to subscription page if the tasker has exceeded 5 free bookings.
- */
-async function loadTaskerSubscriptionState() {
-  if (!window.supabase) return;
-
-  try {
-    const { data: { user } } = await window.supabase.auth.getUser();
-    if (!user) return; /* Not logged in — show page with defaults */
-
-    /* 1. Check how many bookings this tasker has served */
-    const { count: bookingCount, error: countErr } = await window.supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('tasker_id', user.id);
-
-    if (countErr) throw countErr;
-
-    /* 2. Check current subscription status */
-    const { data: subData, error: subErr } = await window.supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('tasker_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-
-    if (subErr) throw subErr;
-
-    const used = bookingCount || 0;
-    const FREE_LIMIT = 5;
-    const hasActiveSub = !!subData;
-
-    /* Update the state that renderFreeSlotMeter reads */
-    MOCK_TASKER_STATE.usedFreeSlots = Math.min(used, FREE_LIMIT);
-    MOCK_TASKER_STATE.totalJobs     = used;
-    MOCK_TASKER_STATE.plan          = hasActiveSub ? (subData.tier || 'starter') : 'free';
-    MOCK_TASKER_STATE.needsUpgrade  = !hasActiveSub && used >= FREE_LIMIT;
-
-    console.log(`[Subscription] Tasker state: ${used} bookings, plan: ${MOCK_TASKER_STATE.plan}`);
-
-    /* Sprint 3: Show upgrade banner if over free limit */
-    if (MOCK_TASKER_STATE.needsUpgrade) {
-      showUpgradeBanner();
-    }
-
-  } catch (err) {
-    console.warn('[Subscription] Could not load tasker state:', err.message);
-  }
-}
-
-/**
- * Sprint 3: Show a prominent upgrade banner when a tasker
- * has exhausted their 5 free bookings.
- */
-function showUpgradeBanner() {
-  const existing = document.getElementById('upgradeBanner');
-  if (existing) return; /* Already shown */
-
-  const banner = document.createElement('div');
-  banner.id = 'upgradeBanner';
-  banner.style.cssText = [
-    'background: linear-gradient(135deg, #0A84FF 0%, #006AE8 100%)',
-    'color: white',
-    'padding: 20px 24px',
-    'border-radius: 12px',
-    'margin-bottom: 24px',
-    'display: flex',
-    'align-items: center',
-    'gap: 16px',
-    'box-shadow: 0 4px 20px rgba(10,132,255,0.3)',
-  ].join(';');
-
-  banner.innerHTML = `
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-    <div style="flex:1;">
-      <strong style="font-size:1rem;">You've reached your 5 free bookings</strong>
-      <p style="margin:4px 0 0; opacity:0.9; font-size:0.875rem;">Upgrade your plan to keep receiving new customers and stay visible on Street Tasker.</p>
-    </div>
-    <a href="#plan-cards" style="background:white;color:#0A84FF;padding:10px 18px;border-radius:8px;font-weight:600;font-size:0.875rem;text-decoration:none;white-space:nowrap;">Upgrade Now</a>
-  `;
-
-  /* Insert before the first main content block */
-  const main = document.querySelector('.subscription-page .container') || document.querySelector('main') || document.body;
-  const firstChild = main.firstElementChild;
-  main.insertBefore(banner, firstChild?.nextElementSibling || firstChild);
-}
-
-/**
- * Sprint 3: Called from a "Select Plan" button click.
- * Records the chosen subscription in Supabase (no payment yet —
- * payment is Sprint 4 / Paystack).
- */
-async function recordSubscriptionChoice(tier) {
-  if (!window.supabase) {
-    showToast('Payment integration coming in Sprint 4 (Paystack).');
-    return;
-  }
-
-  try {
-    const { data: { user } } = await window.supabase.auth.getUser();
-    if (!user) {
-      showToast('Please log in to subscribe.');
-      window.location.href = 'login.html';
-      return;
-    }
-
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 1);
-
-    const { error } = await window.supabase.from('subscriptions').upsert({
-      tasker_id:  user.id,
-      tier:       tier,
-      status:     'pending_payment', /* Will become 'active' after Paystack Sprint 4 */
-      start_date: now.toISOString(),
-      end_date:   endDate.toISOString(),
-      created_at: now.toISOString(),
-    }, { onConflict: 'tasker_id' });
-
-    if (error) throw error;
-
-    showToast(`${tier} plan selected! Payment integration arrives in Sprint 4.`);
-    console.log(`[Subscription] Plan '${tier}' recorded in Supabase ✓`);
-
-  } catch (err) {
-    console.error('[Subscription] Error recording plan:', err);
-    showToast('Could not save plan selection. Please try again.');
-  }
+  console.log('[Subscription] Subscription page initialized ✓');
 }
 
 /* ── Render plan cards ───────────────────────────────────────── */
@@ -362,14 +226,20 @@ async function handleSubscriptionConfirm() {
   const plan   = SUBSCRIPTION_PLANS.find(p => p.id === planId);
   const btn    = document.getElementById('subscriptionConfirmBtn');
 
-  setButtonLoading(btn, 'Saving selection...');
-
-  /* Sprint 3: Record plan in Supabase (payment in Sprint 4) */
-  await recordSubscriptionChoice(planId);
-
+  setButtonLoading(btn, 'Redirecting to payment...');
+  await delay(1400);
   setButtonLoading(btn, null, 'Proceed to Payment');
   closeSubscriptionModal();
-  console.log('[Subscription] Plan selection recorded in Supabase:', planId);
+
+  /*
+   * ── Future Sprint 4 Integration Point ──
+   * Paystack payment flow starts here.
+   */
+  showSprintAlert(
+    'Payment Gateway — Sprint 4',
+    `Paystack integration for "${plan?.name}" plan (${plan?.priceLabel}${plan?.period}) will be wired up in Sprint 4.\n\nYour selection has been logged.`
+  );
+  console.log('[Subscription] Plan selection captured for Sprint 4:', planId);
 }
 
 /* ── Free slot meter ─────────────────────────────────────────── */

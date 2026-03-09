@@ -50,70 +50,14 @@ const PAGE_SIZE  = 8;
 
 /* ── Init ────────────────────────────────────────────────────── */
 function initTaskersPage() {
-  /* Sprint 3: Try to load from Supabase, fall back to ALL_TASKERS */
-  loadTaskersFromSupabase().then(() => {
-    renderTaskerGrid();
-    wireSearch();
-    wireCategoryTabs();
-    wireFilters();
-    wireSort();
-    initBookingModal();
-    console.log('[Taskers] Tasker listings page initialized ✓');
-  });
-}
+  renderTaskerGrid();
+  wireSearch();
+  wireCategoryTabs();
+  wireFilters();
+  wireSort();
+  initBookingModal();
 
-/**
- * Sprint 3: Fetch taskers from Supabase.
- * Merges database records with the placeholder array so the
- * page always has data even if the DB is empty or offline.
- */
-async function loadTaskersFromSupabase() {
-  /* Use ST.db if available, otherwise fall back to direct call */
-  if (!window.supabase) return;
-
-  try {
-    const { data, error } = await window.supabase
-      .from('taskers')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      /* Map Supabase rows to the shape renderTaskerGrid() expects */
-      const dbTaskers = data.map((t, i) => ({
-        id:           t.id || `db-${i}`,
-        initials:     getInitials(t.name || 'TK'),
-        avatarClass:  `av-${(i % 6) + 1}`,
-        name:         t.name         || 'Unnamed Tasker',
-        service:      t.service      || 'General',
-        category:     t.category     || 'other',
-        location:     t.location     || 'Lagos',
-        rating:       parseFloat(t.rating) || 4.5,
-        reviews:      parseInt(t.reviews)  || 0,
-        rateValue:    parseInt(t.rate_value) || 5000,
-        rate:         t.rate         || '₦5,000/hr',
-        badges:       t.badges       || ['verified'],
-        bio:          t.bio          || '',
-        available:    t.available !== false,
-      }));
-
-      /* Prepend DB taskers to the static list */
-      ALL_TASKERS.unshift(...dbTaskers);
-      console.log(`[Taskers] Loaded ${dbTaskers.length} taskers from Supabase ✓`);
-    }
-  } catch (err) {
-    /* Non-fatal — static placeholder data is used as fallback */
-    console.warn('[Taskers] Could not load from Supabase:', err.message);
-  }
-}
-
-/** Returns initials from a name string */
-function getInitials(name) {
-  const parts = name.trim().split(' ');
-  return parts.length >= 2
-    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase();
+  console.log('[Taskers] Tasker listings page initialized ✓');
 }
 
 /* ── Render tasker grid ──────────────────────────────────────── */
@@ -457,48 +401,27 @@ async function handleBookingSubmit(e) {
   const tasker   = ALL_TASKERS.find(t => t.id === taskerId);
 
   setButtonLoading(btn, 'Processing...');
+  await delay(1200);
+  setButtonLoading(btn, null, 'Confirm Booking');
 
-  /* Sprint 3: Real Supabase booking insert via db.js */
-  try {
-    const scheduledDate = form.bookingDate?.value
-      ? form.bookingDate.value + 'T' + (form.bookingTime?.value || '09:00')
-      : null;
+  closeBookingModal();
 
-    /* Use db.js createBooking which handles auth check + subscription gate */
-    if (window.ST?.db?.createBooking) {
-      await window.ST.db.createBooking({
-        taskerId,
-        scheduledTime: scheduledDate,
-      });
-    } else if (window.supabase) {
-      /* Fallback: direct insert */
-      const { data: { user } } = await window.supabase.auth.getUser();
-      const { error } = await window.supabase.from('bookings').insert({
-        tasker_id:      taskerId,
-        customer_id:    user?.id || null,
-        status:         'pending',
-        scheduled_time: scheduledDate,
-        notes:          form.bookingNotes?.value?.trim() || null,
-      });
-      if (error) throw error;
-    }
-
-    console.log('[Bookings] Booking created in Supabase ✓');
-    closeBookingModal();
-    showToast(`Booking request sent to ${tasker?.name || 'the tasker'}! They will confirm shortly.`);
-
-  } catch (err) {
-    if (err.message === 'SUBSCRIPTION_REQUIRED') {
-      closeBookingModal();
-      showToast('This tasker has reached their free booking limit. Redirecting to subscription page...');
-      setTimeout(() => { window.location.href = 'subscription.html'; }, 2000);
-    } else {
-      console.error('[Bookings] Insert error:', err);
-      showToast('Could not create booking: ' + (err.message || 'Please try again.'));
-    }
-  } finally {
-    setButtonLoading(btn, null, 'Confirm Booking');
-  }
+  /*
+   * ── Future Sprint 3 Integration Point ──
+   * Replace showSprintAlert with:
+   *   const booking = await createBooking({
+   *     taskerId,
+   *     customerId: supabase.auth.getUser().id,
+   *     taskId: form.taskId?.value,
+   *     scheduledDate: form.bookingDate.value + 'T' + form.bookingTime.value,
+   *     notes: form.bookingNotes.value
+   *   });
+   *   window.location.href = `booking-confirmation.html?id=${booking.id}`;
+   */
+  showSprintAlert(
+    'Booking Request Ready',
+    `Your booking request for ${tasker?.name || 'this tasker'} has been captured.\n\nFull booking with calendar, payment (Paystack), and confirmation will be live in Sprint 3.`
+  );
 }
 
 /* ── Tasker profile ──────────────────────────────────────────── */
