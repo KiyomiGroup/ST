@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Find trusted local taskers near you on Street Taskers." />
+  <title>Find Taskers — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FIND TASKERS — Sprint 2
+       Future Sprint 3: Real data from Supabase fetchTaskers().
+       Future Sprint 3: Book Now → real booking modal + Paystack.
+       Future Sprint 3: Map view via Mapbox + PostGIS.
+       ══════════════════════════════════════════════════════════ -->
+
+  <!-- Page hero -->
+  <div class="page-hero">
+    <div class="container">
+      <div class="eyebrow fade-up">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        12 Taskers Near You
+      </div>
+      <h1 class="fade-up d1">Find your perfect tasker</h1>
+      <p class="fade-up d2">Browse skilled local workers, compare ratings, and get things done.</p>
+
+      <!-- Search bar -->
+      <form id="taskerSearchForm" class="search-bar fade-up d3" novalidate>
+        <div class="sf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="taskerSearchInput" name="service" placeholder="Service or tasker name..." autocomplete="off" />
+        </div>
+        <div class="sf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category tabs -->
+  <div style="background:var(--white); border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div class="category-tabs-wrap" style="padding:16px 0 0; border:none; margin:0;">
+        <button class="category-tab active" data-category="">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All
+        </button>
+        <button class="category-tab" data-category="barber">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/></svg>
+          Barber
+        </button>
+        <button class="category-tab" data-category="electrician">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Electrician
+        </button>
+        <button class="category-tab" data-category="cleaning">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg>
+          Cleaning
+        </button>
+        <button class="category-tab" data-category="mechanic">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Mechanic
+        </button>
+        <button class="category-tab" data-category="beauty">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Beauty
+        </button>
+        <button class="category-tab" data-category="plumber">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+          Plumber
+        </button>
+        <button class="category-tab" data-category="carpentry">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/></svg>
+          Carpentry
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="container">
+    <div class="taskers-layout">
+
+      <!-- Filter sidebar -->
+      <aside class="filter-sidebar fade-up">
+        <div class="filter-panel">
+          <div class="filter-panel-head">
+            <span>Filters</span>
+            <button class="filter-reset" id="filterReset">Reset all</button>
+          </div>
+
+          <!-- Available only -->
+          <div class="filter-group">
+            <div class="filter-group-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Availability
+            </div>
+            <label class="filter-opt">
+              <input type="checkbox" id="availableFilter" />
+              Available now only
+            </label>
+          </div>
+
+          <!-- Rating -->
+          <div class="filter-group">
+            <div class="filter-group-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Min Rating
+            </div>
+            <label class="filter-opt"><input type="checkbox" data-rating-filter="5" /> 5 stars only</label>
+            <label class="filter-opt"><input type="checkbox" data-rating-filter="4" /> 4 stars and above</label>
+            <label class="filter-opt"><input type="checkbox" data-rating-filter="3" /> 3 stars and above</label>
+          </div>
+
+          <!-- Max price -->
+          <div class="filter-group">
+            <div class="filter-group-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Max Rate (₦/hr)
+            </div>
+            <div class="range-wrap">
+              <input type="range" class="filter-range" id="priceRange" min="500" max="30000" value="30000" step="500" />
+              <div class="range-labels"><span>₦500</span><span id="priceVal">Any</span><span>₦30k+</span></div>
+            </div>
+          </div>
+
+          <!-- Service type checkboxes -->
+          <div class="filter-group">
+            <div class="filter-group-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              Service Type
+            </div>
+            <label class="filter-opt"><input type="checkbox" /> Barber</label>
+            <label class="filter-opt"><input type="checkbox" /> Electrician</label>
+            <label class="filter-opt"><input type="checkbox" /> Cleaner</label>
+            <label class="filter-opt"><input type="checkbox" /> Mechanic</label>
+            <label class="filter-opt"><input type="checkbox" /> Make-up Artist</label>
+            <label class="filter-opt"><input type="checkbox" /> Plumber</label>
+          </div>
+
+          <div style="padding:16px 18px;">
+            <button class="btn btn-primary btn-full" onclick="showToast('Live filters active — Supabase query in Sprint 3')">Apply Filters</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Results grid -->
+      <main>
+        <div class="results-bar fade-up">
+          <div>
+            <div class="results-count"><strong id="resultsCount">—</strong> taskers found</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <!-- Future Sprint 3: Map view via Mapbox -->
+            <button class="btn btn-ghost btn-sm" onclick="showSprintAlert('Map View — Sprint 3', 'Interactive map discovery powered by Mapbox and PostGIS spatial queries comes in Sprint 3.')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+              Map View <span class="badge badge-amber">Sprint 3</span>
+            </button>
+            <select class="sort-select" id="sortSelect">
+              <option value="rating">Top Rated</option>
+              <option value="price_asc">Price: Low → High</option>
+              <option value="price_desc">Price: High → Low</option>
+              <option value="reviews">Most Reviews</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="taskers-grid" id="taskersGrid">
+          <!-- Skeleton placeholders -->
+          <div class="card skeleton" style="height:220px;"></div>
+          <div class="card skeleton" style="height:220px;"></div>
+          <div class="card skeleton" style="height:220px;"></div>
+          <div class="card skeleton" style="height:220px;"></div>
+        </div>
+
+        <div id="loadMoreWrap" style="display:none; justify-content:center; margin-top:24px;">
+          <button class="btn btn-outline btn-lg" id="loadMoreBtn">Load More Taskers</button>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Sprint modal -->
+  <div class="modal-overlay" id="sprintModal" role="dialog" aria-modal="true">
+    <div class="modal-box sprint-modal-box">
+      <button class="modal-close-x" onclick="closeSprintModal()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="sprint-modal-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h2 data-sprint-title style="margin-bottom:8px;"></h2>
+      <p data-sprint-message></p>
+      <button class="btn btn-primary btn-full" style="margin-top:20px;" onclick="closeSprintModal()">Got it</button>
+    </div>
+  </div>
+
+  <!-- Booking modal
+       Future Sprint 3: Date picker, availability calendar, Paystack payment -->
+  <div class="modal-overlay booking-modal" id="bookingModal" role="dialog" aria-modal="true" aria-label="Book a tasker">
+    <div class="modal-box" style="max-width:500px; text-align:left;">
+      <button class="modal-close-x" id="bookingModalClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+
+      <h2 style="margin-bottom:4px;">Book a Tasker</h2>
+      <p style="font-size:0.84rem; margin-bottom:20px;">Fill in the details below to request a booking.</p>
+
+      <div class="booking-tasker-preview">
+        <div class="tc-avatar av-1" style="width:42px;height:42px;" id="bookingAvatarEl">AO</div>
+        <div>
+          <div class="booking-tasker-name" data-booking-name>Tasker Name</div>
+          <div class="booking-tasker-meta">
+            <span data-booking-service></span> &middot; <span data-booking-rate></span> &middot; <span data-booking-rating></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sprint 2 notice inside modal -->
+      <div style="padding:12px 14px; background:var(--amber-light); border:1px solid rgba(217,119,6,0.2); border-radius:var(--radius-md); margin-bottom:20px; font-size:0.82rem; color:#92400E;">
+        <strong>Sprint 3 feature:</strong> Full booking flow with calendar, real availability, and Paystack payment goes live in Sprint 3. This form captures your preferences for UX validation.
+      </div>
+
+      <form id="bookingForm" novalidate>
+        <div class="booking-form-group">
+          <label class="booking-label" for="bookingDate">Preferred Date *</label>
+          <input type="date" id="bookingDate" name="bookingDate" class="task-input" required />
+        </div>
+        <div class="booking-form-group">
+          <label class="booking-label" for="bookingTime">Preferred Time</label>
+          <select id="bookingTime" name="bookingTime" class="task-select">
+            <option value="">Select a time slot...</option>
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+          </select>
+        </div>
+        <div class="booking-form-group">
+          <label class="booking-label" for="bookingNotes">Notes (optional)</label>
+          <textarea id="bookingNotes" name="bookingNotes" class="task-textarea" rows="3" placeholder="Any special requirements or access details..."></textarea>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+          <button type="submit" class="btn btn-primary" style="flex:1;">Confirm Booking</button>
+          <button type="button" class="btn btn-outline" onclick="closeBookingModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/taskers.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/future-features.js"></script>
+  <script>
+    function initPage() {
+      initTaskersPage();
+      const pr = document.getElementById('priceRange');
+      if (pr) pr.addEventListener('input', () => {
+        const v = parseInt(pr.value);
+        document.getElementById('priceVal').textContent = v >= 30000 ? 'Any' : '₦' + v.toLocaleString();
+      });
+    }
+  </script>
+</body>
+</html>
