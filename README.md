@@ -1,124 +1,96 @@
-# ⚡ Street Tasker
+# Street Taskers — Frontend
 
-**Local Services Marketplace** — Connect skilled workers with customers in your city.
+Local services marketplace connecting customers with skilled taskers across Lagos.
 
-> Sprint 1: Frontend Foundation — Deployed on GitHub Pages
+## Sprint Status
 
----
+| Sprint | Status | Notes |
+|--------|--------|-------|
+| Sprint 1 | ✅ Complete | Foundation: design system, pages, layout |
+| Sprint 2 | ✅ Complete | Interactive UI: forms, listings, social feed, subscription |
+| Sprint 3 | 🔜 Next | Supabase backend, map discovery, booking engine |
+| Sprint 4 | 📋 Planned | Paystack subscriptions, AI assistant, notifications |
 
-## 🚀 Live Demo
+## Pages
 
-Open `index.html` in your browser or deploy the folder to GitHub Pages.
+| Page | File | Sprint |
+|------|------|--------|
+| Homepage | `index.html` | 1 |
+| Find Taskers | `find-taskers.html` | 2 (enhanced) |
+| Post a Task | `post-task.html` | 2 (enhanced) |
+| Social Feed | `social-feed.html` | 2 (new) |
+| Subscription / Pricing | `subscription.html` | 2 (new) |
+| Login | `login.html` | 1 |
+| Sign Up | `signup.html` | 1 |
 
----
-
-## 📁 Project Structure
+## File Structure
 
 ```
 street-tasker/
-├─ index.html              # Home page
-├─ find-taskers.html       # Browse + filter taskers
-├─ post-task.html          # Task submission form
-├─ login.html              # Login page
-├─ signup.html             # Signup page (Customer / Tasker)
-├─ css/
-│   └─ styles.css          # Full design system (glassmorphism + neon)
-├─ js/
-│   ├─ app.js              # Core bootstrap, component loader, nav
-│   ├─ ui.js               # UI interactions, placeholder data, toast
-│   └─ future-features.js  # Documented stubs for Sprint 2–4 features
-├─ components/
-│   ├─ navbar.html         # Shared navbar component
-│   └─ footer.html         # Shared footer component
-├─ images/                 # (add assets here)
-└─ README.md
+├── index.html
+├── find-taskers.html
+├── post-task.html
+├── social-feed.html
+├── subscription.html
+├── login.html
+├── signup.html
+├── css/
+│   ├── styles.css          # Design system (variables, reset, base components)
+│   ├── tasks.css           # Task form + tasker card v2 styles
+│   ├── subscription.css    # Subscription tiers + plan cards
+│   └── feed.css            # Social feed + post cards
+├── js/
+│   ├── app.js              # Bootstrap, component loader, scroll animations
+│   ├── ui.js               # Toast, placeholder data, card builder
+│   ├── tasks.js            # Task posting form — Sprint 2
+│   ├── taskers.js          # Tasker listings, filtering, booking modal — Sprint 2
+│   ├── feed.js             # Social feed likes/comments — Sprint 2
+│   ├── subscription.js     # Subscription tier UI — Sprint 2
+│   └── future-features.js  # Supabase integration stubs — Sprint 3+
+├── components/
+│   ├── navbar.html         # Shared navigation (loaded via fetch)
+│   ├── footer.html         # Shared footer (loaded via fetch)
+│   ├── task-card.html      # Tasker card reference markup
+│   └── feed-post.html      # Feed post reference markup
+└── images/
+    ├── logo-nav.png        # Transparent logo for navbar
+    ├── logo-full.jpeg      # Full street-sign logo
+    ├── favicon.png         # Browser tab icon
+    └── apple-touch-icon.png
 ```
 
----
+## Local Development
 
-## 🎨 Design System
-
-| Token | Value |
-|---|---|
-| Primary | Deep Purple `#2D1B69` / `#4A2C9A` |
-| Accent | Neon Blue `#00D4FF` |
-| Highlight | Soft Gold `#F0C040` |
-| Background | Light Gray `#F5F4FA` |
-| Font (Display) | Syne (800, 700, 600) |
-| Font (Body) | DM Sans (300, 400, 500) |
-| Style | Glassmorphism cards + neon glow accents |
-
----
-
-## 🗺️ Sprint Roadmap
-
-| Sprint | Status | Focus |
-|---|---|---|
-| **Sprint 1** | ✅ Done | Frontend foundation, all pages, design system |
-| **Sprint 2** | 🔜 Next | Supabase auth, task posting, tasker profiles, real data |
-| **Sprint 3** | 📋 Planned | Booking engine, map discovery (Mapbox), social feed |
-| **Sprint 4** | 🔮 Future | AI task assistant, subscription/billing (Paystack), notifications |
-
----
-
-## 🔌 Future Tech Stack
-
-- **Database / Auth**: Supabase (PostgreSQL + Row Level Security)
-- **Storage**: Supabase Storage (profile photos, task images)
-- **Maps**: Mapbox GL JS + PostGIS for geo-queries
-- **Payments**: Paystack (Nigeria) / Stripe
-- **AI**: Claude API for task description improvement
-- **Realtime**: Supabase Realtime for live booking updates
-
----
-
-## 🛠️ Local Development
-
-No build tools needed for Sprint 1 — it's pure HTML/CSS/JS.
+Components are loaded via `fetch()` — must run a local server:
 
 ```bash
-# Option 1: Open directly
-open index.html
-
-# Option 2: Serve locally (avoids fetch() CORS issues for components)
+# Option 1
 npx serve .
-# or
+
+# Option 2
 python3 -m http.server 3000
+
+# Then open: http://localhost:3000
 ```
 
-> ⚠️ Due to `fetch()` being used for navbar/footer components, open via a local server (not `file://`) for the best experience.
+## Sprint 2 Features
 
----
+- **Task Posting Form**: validated form with draft saving, character counter, budget chips, category quick-select, progress indicator
+- **Tasker Listings**: live filtering (category, rating, price, availability), search with debounce, sort, pagination, booking modal
+- **Social Feed**: like/comment interactions (in-memory), share, save, suggested taskers, trending services sidebar
+- **Subscription Plans**: Free / Starter (₦9,999/mo) / Pro (₦29,999/mo), annual billing toggle, free slot meter, comparison table, FAQ
 
-## 📋 Pages Overview
+## Sprint 3 Integration Points
 
-| Page | File | Status |
-|---|---|---|
-| Home | `index.html` | ✅ |
-| Find Taskers | `find-taskers.html` | ✅ (placeholder data) |
-| Post a Task | `post-task.html` | ✅ (form UI only) |
-| Login | `login.html` | ✅ (UI only) |
-| Signup | `signup.html` | ✅ (UI only) |
-| Dashboard | `dashboard.html` | 🔜 Sprint 2 |
-| Tasker Profile | `tasker/[id].html` | 🔜 Sprint 2 |
-| Social Feed | `social.html` | 🔜 Sprint 3 |
-| Map Discovery | `map.html` | 🔜 Sprint 3 |
+All `showSprintAlert()` calls mark where Supabase integration goes:
+- Task posting → `supabase.from('tasks').insert()`
+- Auth → `supabase.auth.signUp()` / `supabase.auth.signIn()`
+- Tasker data → `supabase.from('tasker_profiles').select()`
+- Booking → `supabase.from('bookings').insert()`
+- Map → Mapbox GL JS + PostGIS spatial queries
 
----
+## Sprint 4 Integration Points
 
-## 💬 Comments Convention
-
-Throughout the code you'll find these comment types:
-
-```
-// Future Sprint 2: Supabase auth integration
-// Future Feature: Map discovery system
-// Future Sprint 3: Booking engine
-// Future Sprint 4: AI task assistant
-```
-
-These mark exact locations where backend logic will be wired in future sprints.
-
----
-
-*Built with ❤️ · Street Tasker Sprint 1*
+- Payments → Paystack subscription API
+- AI → Anthropic Claude API for task description improvement
+- Push notifications → Supabase Edge Functions + FCM

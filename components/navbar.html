@@ -1,23 +1,29 @@
 <!-- ============================================================
-     STREET TASKERS — Navbar Component v2
-     Inter font · Minimal white · Blue accent
+     STREET TASKERS — Navbar Component
+     Sprint 2: Social Feed + Subscription links now active
      ============================================================
-     Future Sprint: Active link state driven by Supabase session.
-     Future Sprint: User avatar + dropdown replaces login/signup
-     when auth is live.
+     Future Sprint 3: Replace Login/Sign Up with user avatar
+     dropdown when Supabase auth session is active.
+     Future Sprint 3: Show notification bell with unread count
+     from Supabase Realtime.
      ============================================================ -->
 
 <nav id="navbar">
   <div class="nav-inner">
 
-    <!-- Logo (PNG asset, inverted on white bg) -->
+    <!-- Logo -->
     <a href="index.html" class="nav-logo" aria-label="Street Taskers home">
-      <img src="images/logo-nav.png" alt="Street Taskers" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+      <img
+        src="images/logo-nav.png"
+        alt="Street Taskers"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
+      />
       <span class="nav-logo-text" style="display:none;">Street Taskers</span>
     </a>
 
-    <!-- Desktop links -->
+    <!-- Desktop navigation links -->
     <ul class="nav-links" role="navigation" aria-label="Main navigation">
+
       <li>
         <a href="find-taskers.html" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,32 +32,52 @@
           Find Taskers
         </a>
       </li>
+
       <li>
         <a href="post-task.html" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
           </svg>
           Post a Task
         </a>
       </li>
-      <!-- Future Sprint 3: Social feed page -->
+
+      <!-- Sprint 2: Social Feed is now an active page -->
       <li>
-        <a href="#" class="nav-link nav-link-soon" onclick="showToast('Social Feed coming in Sprint 3'); return false;" aria-label="Social Feed (coming soon)">
+        <a href="social-feed.html" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
           </svg>
           Social Feed
+          <span class="badge badge-blue" style="font-size:0.55rem; padding:1px 5px;">New</span>
         </a>
       </li>
+
+      <!-- Sprint 2: Subscription page is now an active page -->
+      <li>
+        <a href="subscription.html" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Pricing
+        </a>
+      </li>
+
     </ul>
 
     <div class="nav-divider" aria-hidden="true"></div>
 
-    <!-- Desktop auth actions -->
-    <!-- Future Sprint: Replace with user avatar + dropdown when Supabase auth is live -->
+    <!-- Auth actions
+         Future Sprint 3: Replace with avatar + dropdown when Supabase auth live. -->
     <div class="nav-actions">
-      <a href="login.html"  class="btn btn-ghost btn-sm">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+      <a href="login.html"  class="btn btn-ghost   btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary  btn-sm">Sign Up</a>
     </div>
 
     <!-- Mobile hamburger -->
@@ -64,14 +90,15 @@
 
 <!-- Mobile dropdown menu -->
 <div class="nav-mobile" id="navMobile" aria-hidden="true">
-  <a href="find-taskers.html" class="nav-link">Find Taskers</a>
-  <a href="post-task.html"    class="nav-link">Post a Task</a>
-  <a href="#" class="nav-link" onclick="showToast('Social Feed coming in Sprint 3'); return false;">
+  <a href="find-taskers.html"  class="nav-link">Find Taskers</a>
+  <a href="post-task.html"     class="nav-link">Post a Task</a>
+  <a href="social-feed.html"   class="nav-link">
     Social Feed
-    <span class="badge badge-amber" style="margin-left:6px;">Soon</span>
+    <span class="badge badge-blue" style="margin-left:6px; font-size:0.6rem;">New</span>
   </a>
+  <a href="subscription.html"  class="nav-link">Pricing</a>
   <div class="nav-mobile-actions">
-    <a href="login.html"  class="btn btn-ghost  btn-full">Log In</a>
-    <a href="signup.html" class="btn btn-primary btn-full">Sign Up</a>
+    <a href="login.html"  class="btn btn-ghost   btn-full">Log In</a>
+    <a href="signup.html" class="btn btn-primary  btn-full">Sign Up</a>
   </div>
 </div>

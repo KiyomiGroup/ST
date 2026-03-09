@@ -1,0 +1,237 @@
+<!-- ============================================================
+     STREET TASKERS — Feed Post Component
+     Sprint 2: Social feed post card markup template
+     ============================================================
+     Usage: This template documents the structure of a feed post.
+     In production, posts are built dynamically by feed.js
+     via buildFeedPost(post).
+
+     Future Sprint 3: Caption text, tags, and comment previews
+     loaded from Supabase 'posts' JOIN 'profiles' query.
+     Future Sprint 3: Media (image/video) from Supabase Storage.
+     Future Sprint 3: Like action persists to 'likes' table.
+     Future Sprint 3: Comments from 'comments' table with
+     Supabase Realtime live updates.
+     Future Sprint 3: Follow button updates 'follows' table.
+     ============================================================ -->
+
+<!--
+  FEED POST — Static reference markup
+  ─────────────────────────────────────
+  CSS: feed.css  |  JS: feed.js  |  Data: FEED_POSTS array
+
+  Data attributes for Sprint 3 Supabase binding:
+    data-post-id      → posts.id
+    data-author-id    → posts.user_id
+    data-liked        → computed: likes WHERE user_id = current_user
+    data-like-count   → count from likes WHERE post_id
+    data-comment-count→ count from comments WHERE post_id
+-->
+<article class="feed-post" data-post-id="p1" data-author-id="t5" data-liked="false">
+
+  <!-- Post header: avatar, author info, follow button -->
+  <div class="feed-post-header">
+    <div class="feed-post-author">
+
+      <!-- Avatar: initials placeholder
+           Future Sprint 3: <img> from Supabase Storage avatar_path -->
+      <div class="feed-avatar av-5">SB</div>
+
+      <div class="feed-author-meta">
+        <div class="feed-author-name-row">
+          <span class="feed-author-name">Sadia Bello</span>
+          <span class="badge badge-green" style="font-size:0.6rem; padding:1px 5px;">Verified</span>
+        </div>
+        <div class="feed-author-sub">
+          <!-- Service type icon + name -->
+          <span style="display:inline-flex; align-items:center; gap:3px; color:var(--blue); font-size:0.72rem; font-weight:500;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Make-up Artist
+          </span>
+          <span style="color:var(--text-muted); font-size:0.72rem;"> · Ajah, Lagos · 2 hours ago</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Follow button
+         Future Sprint 3: calls supabase.from('follows').insert({ follower_id, following_id }) -->
+    <button
+      class="feed-follow-btn"
+      data-following="false"
+      onclick="handleFollowToggle(this, 't5')"
+    >
+      Follow
+    </button>
+  </div>
+
+  <!-- Media placeholder
+       Future Sprint 3: <img src="{{ storageUrl }}" /> or <video> from Supabase Storage
+       Media color and icon are set by JS based on category -->
+  <div class="feed-media" style="background: #1A0A2E;">
+    <div class="feed-media-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    </div>
+    <div class="feed-media-overlay">
+      <span class="feed-media-label">
+        <!-- Future Sprint 3: "1 of 4 photos" / "Video · 0:32" -->
+        Work Preview
+      </span>
+    </div>
+  </div>
+
+  <!-- Actions: like, comment, share, save -->
+  <div class="feed-actions">
+    <div class="feed-actions-left">
+
+      <!-- Like button
+           Future Sprint 3: calls supabase.from('likes').upsert / delete -->
+      <button
+        class="feed-action-btn"
+        data-action="like"
+        data-post-id="p1"
+        onclick="handleLike(this, 'p1')"
+        aria-label="Like post"
+        title="Like"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
+
+      <!-- Comment button -->
+      <button
+        class="feed-action-btn"
+        data-action="comment"
+        onclick="focusCommentInput(this)"
+        aria-label="Comment"
+        title="Comment"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+
+      <!-- Share button
+           Future Sprint 3: native share API / copy link -->
+      <button
+        class="feed-action-btn"
+        onclick="handleShare('p1')"
+        aria-label="Share"
+        title="Share"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Save / bookmark -->
+    <button
+      class="feed-action-btn"
+      data-action="save"
+      data-post-id="p1"
+      onclick="handleSave(this, 'p1')"
+      aria-label="Save post"
+      title="Save"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Like count
+       Future Sprint 3: real-time count from Supabase Realtime -->
+  <div class="feed-like-count" id="like-count-p1">
+    <strong>142 likes</strong>
+  </div>
+
+  <!-- Caption with "more" toggle -->
+  <div class="feed-caption">
+    <span class="feed-caption-author">Sadia Bello</span>
+    <span class="feed-caption-text">
+      Just wrapped a beautiful bridal session today! Full glam look for an Abuja-Lagos wedding...
+    </span>
+    <button class="feed-more-btn" onclick="toggleCaption(this)">more</button>
+    <!-- Full caption (hidden initially) -->
+    <span class="feed-caption-full" style="display:none;">
+      Swipe to see the full transformation. The client was absolutely glowing. DM to book your event look ✨
+    </span>
+  </div>
+
+  <!-- Hashtags -->
+  <div class="feed-tags">
+    <span class="feed-tag">#BridalMakeup</span>
+    <span class="feed-tag">#LagosWedding</span>
+    <span class="feed-tag">#GlamArtist</span>
+  </div>
+
+  <!-- Comments preview -->
+  <div class="feed-comments-preview" id="comments-p1">
+    <div class="comment-preview">
+      <div class="comment-avatar" style="background:#1E3A5F;">CF</div>
+      <div class="comment-body">
+        <span class="comment-author">Chidi F</span>
+        <span class="comment-text">Stunning work as always 🔥</span>
+      </div>
+    </div>
+    <div class="comment-preview">
+      <div class="comment-avatar" style="background:#1A3320;">FM</div>
+      <div class="comment-body">
+        <span class="comment-author">Fatima M</span>
+        <span class="comment-text">Love this look! How long did it take?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- View all comments -->
+  <button class="feed-view-comments" onclick="handleViewComments(this, 'p1')">
+    View all 18 comments
+  </button>
+
+  <!-- Comment input
+       Future Sprint 3: calls supabase.from('comments').insert() on submit -->
+  <div class="feed-comment-box">
+    <div class="feed-comment-input-row">
+      <div class="feed-comment-input-wrap">
+        <input
+          type="text"
+          class="feed-comment-input"
+          placeholder="Add a comment..."
+          aria-label="Add a comment"
+          onkeydown="handleCommentEnter(event, this, 'p1')"
+          data-post-id="p1"
+        />
+        <button
+          class="feed-comment-send"
+          onclick="submitComment(this.previousElementSibling, 'p1')"
+          aria-label="Send comment"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book this tasker CTA -->
+  <div class="feed-book-cta">
+    <button
+      class="btn btn-primary btn-sm"
+      onclick="openBookingModal('t5')"
+      data-action="book-from-feed"
+      data-tasker-id="t5"
+    >
+      <!-- Future Sprint 3: opens booking modal for this tasker -->
+      Book Sadia
+    </button>
+  </div>
+
+</article>
+<!-- END feed-post component -->
