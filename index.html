@@ -3,210 +3,253 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Street Tasker — Find trusted local workers near you. Post tasks, hire taskers, get things done." />
-  <title>Street Tasker — Find Trusted Workers Near You</title>
+  <meta name="description" content="Street Taskers — Find trusted local workers near you. Post tasks, hire taskers, get things done." />
+  <title>Street Taskers — Find Trusted Workers Near You</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-  <!-- Navbar injected here by app.js -->
   <div id="navbar-placeholder"></div>
 
   <!-- ══════════════════════════════════════════════════════════
-       HERO SECTION
-       Future Feature: Search fields will query Supabase and
-       redirect to find-taskers.html with URL params.
+       HERO
+       Future Sprint: Search triggers Supabase tasker query
+       and redirects with URL params to find-taskers.html.
        ══════════════════════════════════════════════════════════ -->
   <section class="hero">
-    <div class="hero-bg">
-      <div class="hero-orb hero-orb-1"></div>
-      <div class="hero-orb hero-orb-2"></div>
-      <div class="hero-orb hero-orb-3"></div>
-    </div>
+    <div class="container">
+      <div class="hero-inner">
 
-    <div class="container" style="display:flex; align-items:center; gap:80px; width:100%;">
+        <!-- Left: copy + search -->
+        <div class="hero-content">
 
-      <!-- Hero Text + Search -->
-      <div class="hero-content anim-fade-up">
+          <div class="eyebrow fade-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Nigeria's Local Services Marketplace
+          </div>
 
-        <div class="label-accent delay-1 anim-fade-up">
-          ⚡ Nigeria's Local Services Marketplace
+          <h1 class="fade-up d1">
+            Find trusted<br>workers <em>near you</em>
+          </h1>
+
+          <p class="fade-up d2">
+            Connect with skilled local taskers — barbers, electricians, cleaners, mechanics and more. Post a task or browse verified workers in your area.
+          </p>
+
+          <!-- Search bar
+               Future Sprint: Connects to Supabase full-text search.
+               Future Feature: Location auto-fill via browser geolocation. -->
+          <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
+            <div class="hero-search-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" name="service" placeholder="Service (e.g. Barber, Electrician)" autocomplete="off" />
+            </div>
+            <div class="hero-search-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <input type="text" name="location" placeholder="Your location" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-primary">Find Taskers</button>
+          </form>
+
+          <div class="hero-cta fade-up d4">
+            <a href="post-task.html" class="btn btn-dark btn-lg">Post a Task</a>
+            <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse Taskers</a>
+          </div>
+
+          <!-- Stats — Future Sprint: Real counts from Supabase aggregates -->
+          <div class="hero-stats fade-up d5">
+            <div>
+              <span class="stat-num">1,200+</span>
+              <span class="stat-label">Active Taskers</span>
+            </div>
+            <div>
+              <span class="stat-num">8,400+</span>
+              <span class="stat-label">Tasks Completed</span>
+            </div>
+            <div>
+              <span class="stat-num">4.8</span>
+              <span class="stat-label">Average Rating</span>
+            </div>
+          </div>
         </div>
 
-        <h1 class="delay-2 anim-fade-up">
-          Find trusted<br>workers near you
-        </h1>
+        <!-- Right: panel mockup -->
+        <div class="hero-visual fade-up d2" style="position:relative;">
+          <div class="hero-panel">
+            <div class="panel-header">
+              <span class="panel-title">Nearby Taskers</span>
+              <span class="panel-live">
+                <span class="panel-live-dot"></span>
+                Live
+              </span>
+            </div>
 
-        <p class="delay-3 anim-fade-up">
-          Connect with skilled taskers in your area. Post a task or browse service providers — fast, reliable, local.
-        </p>
+            <div class="panel-row">
+              <div class="panel-avatar">AO</div>
+              <div class="panel-info">
+                <div class="panel-name">Adebayo Okafor</div>
+                <div class="panel-role">Electrician &middot; Lekki</div>
+              </div>
+              <div class="panel-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            </div>
 
-        <!-- Search Bar
-             Future Sprint: Connects to Supabase tasker_profiles search.
-             Future Feature: Location will use browser geolocation API. -->
-        <form id="heroSearch" class="hero-search delay-4 anim-fade-up" onsubmit="handleHeroSearch(event)">
-          <div class="search-field">
-            <span class="search-icon">🔍</span>
-            <input type="text" name="service" placeholder="What service do you need?" autocomplete="off" />
+            <div class="panel-row">
+              <div class="panel-avatar pav-b">CF</div>
+              <div class="panel-info">
+                <div class="panel-name">Chidi Fernandez</div>
+                <div class="panel-role">Barber &middot; Victoria Island</div>
+              </div>
+              <div class="panel-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            </div>
+
+            <div class="panel-row">
+              <div class="panel-avatar pav-c">FM</div>
+              <div class="panel-info">
+                <div class="panel-name">Fatima Mohammed</div>
+                <div class="panel-role">Cleaner &middot; Ikeja</div>
+              </div>
+              <div class="panel-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+            </div>
+
+            <!-- Future Sprint 3: Map view replaces this placeholder -->
+            <div class="panel-map">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+              </svg>
+              <p class="panel-map-label">Map View &mdash; Sprint 3</p>
+            </div>
           </div>
-          <div class="search-divider"></div>
-          <div class="search-field">
-            <span class="search-icon">📍</span>
-            <input type="text" name="location" placeholder="Your location" autocomplete="off" />
-          </div>
-          <button type="submit" class="btn btn-primary">Find Taskers</button>
-        </form>
 
-        <div class="hero-cta delay-5 anim-fade-up">
-          <a href="post-task.html" class="btn btn-accent btn-lg">📋 Post a Task</a>
-          <a href="find-taskers.html" class="btn btn-ghost btn-lg">Browse All →</a>
+          <!-- Floating badge -->
+          <div class="hero-float-badge">
+            <div class="float-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="float-text">
+              <strong>Task Completed</strong>
+              <span>2 minutes ago in Lekki</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Live stats — Future Sprint: Pull from Supabase aggregates -->
-        <div class="hero-stats delay-5 anim-fade-up">
-          <div class="stat-item">
-            <span class="stat-num">1,200+</span>
-            <span class="stat-label">Active Taskers</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-num">8,400+</span>
-            <span class="stat-label">Tasks Completed</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-num">4.8 ★</span>
-            <span class="stat-label">Avg Rating</span>
-          </div>
-        </div>
       </div>
-
-      <!-- Hero Visual Mockup -->
-      <div class="hero-visual anim-fade-in delay-3">
-        <div class="hero-mockup">
-          <div class="mockup-tag">⚡ Nearby Taskers</div>
-
-          <div class="mockup-tasker-row">
-            <div class="mockup-avatar avatar-a">AO</div>
-            <div class="mockup-info">
-              <div class="mockup-name">Adebayo O.</div>
-              <div class="mockup-role">⚡ Electrician — Lekki</div>
-            </div>
-            <div class="mockup-stars">★★★★★</div>
-          </div>
-
-          <div class="mockup-tasker-row">
-            <div class="mockup-avatar avatar-b">CF</div>
-            <div class="mockup-info">
-              <div class="mockup-name">Chidi F.</div>
-              <div class="mockup-role">✂️ Barber — VI</div>
-            </div>
-            <div class="mockup-stars">★★★★★</div>
-          </div>
-
-          <div class="mockup-tasker-row">
-            <div class="mockup-avatar avatar-c">FM</div>
-            <div class="mockup-info">
-              <div class="mockup-name">Fatima M.</div>
-              <div class="mockup-role">🧹 Cleaner — Ikeja</div>
-            </div>
-            <div class="mockup-stars">★★★★☆</div>
-          </div>
-
-          <!-- Future Feature: Map thumbnail will show real tasker locations -->
-          <div style="margin-top:14px; background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(74,44,154,0.1)); border-radius:10px; padding:12px; text-align:center; border:1px dashed rgba(0,212,255,0.3);">
-            <div style="font-size:0.72rem; color:var(--text-light); font-family:var(--font-display); font-weight:600; letter-spacing:0.08em; text-transform:uppercase;">🗺️ Map View — Sprint 3</div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </section>
 
   <!-- ══════════════════════════════════════════════════════════
-       FEATURED SERVICES SECTION
-       Future Sprint: Service counts pulled from Supabase.
-       Future Feature: Clicking a service filters find-taskers.
+       FEATURED SERVICES
+       Future Sprint: Service counts from Supabase.
+       Future Feature: Clicking filters find-taskers.html.
        ══════════════════════════════════════════════════════════ -->
-  <section class="section" id="services">
+  <section class="section services-section">
     <div class="container">
 
-      <div class="section-header anim-fade-up">
-        <div class="label-accent">Popular Services</div>
+      <div class="section-header">
+        <div class="eyebrow">Popular Services</div>
         <h2>Browse by category</h2>
         <p>Find skilled professionals across dozens of service types in your city.</p>
       </div>
 
-      <div class="grid-4" id="servicesGrid">
+      <div class="grid-4">
 
-        <div class="glass-card service-card anim-fade-up delay-1" onclick="filterByService('Barber')">
-          <div class="service-icon icon-purple">✂️</div>
+        <!-- Barber -->
+        <div class="card service-card fade-up d1" onclick="filterService('Barber')">
+          <div class="icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12l2.828-4.243L14.19 10.186A3 3 0 0 1 12 16a3 3 0 0 1-2.19-5.814"/><circle cx="18" cy="4" r="2"/><path d="m12 16 1.5 2.5"/><path d="m16.5 18.5 3-5-3.5-2.5"/>
+            </svg>
+          </div>
           <h3>Barber</h3>
-          <p>Fades, cuts, beard trims and more from top local barbers.</p>
-          <span class="badge-count">200+ taskers</span>
+          <p>Fades, cuts, beard trims and more from local barbers.</p>
+          <span class="service-count">200+ taskers</span>
         </div>
 
-        <div class="glass-card service-card anim-fade-up delay-2" onclick="filterByService('Electrician')">
-          <div class="service-icon icon-blue">⚡</div>
+        <!-- Electrician -->
+        <div class="card service-card fade-up d2" onclick="filterService('Electrician')">
+          <div class="icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
           <h3>Electrician</h3>
           <p>Wiring, installations, repairs — certified and verified.</p>
-          <span class="badge-count">85+ taskers</span>
+          <span class="service-count">85+ taskers</span>
         </div>
 
-        <div class="glass-card service-card anim-fade-up delay-3" onclick="filterByService('Cleaner')">
-          <div class="service-icon icon-gold">🧹</div>
+        <!-- Cleaner -->
+        <div class="card service-card fade-up d3" onclick="filterService('Cleaner')">
+          <div class="icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="m8 11 2 2 4-4"/>
+            </svg>
+          </div>
           <h3>Cleaner</h3>
-          <p>Home and office cleaning done to a high standard, fast.</p>
-          <span class="badge-count">150+ taskers</span>
+          <p>Home and office cleaning done to a high standard.</p>
+          <span class="service-count">150+ taskers</span>
         </div>
 
-        <div class="glass-card service-card anim-fade-up delay-4" onclick="filterByService('Mechanic')">
-          <div class="service-icon icon-green">🔧</div>
+        <!-- Mechanic -->
+        <div class="card service-card fade-up d4" onclick="filterService('Mechanic')">
+          <div class="icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
           <h3>Mechanic</h3>
           <p>Auto repairs, servicing, and diagnostics near you.</p>
-          <span class="badge-count">60+ taskers</span>
+          <span class="service-count">60+ taskers</span>
         </div>
 
       </div>
 
       <div class="text-center mt-32">
-        <a href="find-taskers.html" class="btn btn-outline btn-lg">View all services →</a>
+        <a href="find-taskers.html" class="btn btn-outline btn-lg">View all services</a>
       </div>
 
     </div>
   </section>
 
   <!-- ══════════════════════════════════════════════════════════
-       HOW IT WORKS SECTION
+       HOW IT WORKS
        ══════════════════════════════════════════════════════════ -->
   <section class="section steps-section">
     <div class="container">
 
-      <div class="section-header anim-fade-up">
-        <div class="label-accent" style="background:rgba(0,212,255,0.15); border-color:rgba(0,212,255,0.2);">Simple Process</div>
-        <h2 style="color:white;">How Street Tasker works</h2>
-        <p style="color:rgba(255,255,255,0.6);">Get any task done in three simple steps — no hassle, no guesswork.</p>
+      <div class="section-header center fade-up">
+        <div class="eyebrow" style="background:rgba(10,132,255,0.15); border-color:rgba(10,132,255,0.25);">Simple Process</div>
+        <h2>How Street Taskers works</h2>
+        <p>Get any task done in three steps — no guesswork, no hassle.</p>
       </div>
 
-      <div class="steps-grid">
+      <div class="step-grid fade-up d2">
 
-        <div class="step-card anim-fade-up delay-1">
-          <div class="step-number">1</div>
+        <div class="step-block">
+          <div class="step-num">Step 01</div>
           <h3>Post a Task</h3>
-          <!-- Future Sprint: Post Task form connects to Supabase 'tasks' table -->
+          <!-- Future Sprint 2: Connects to Supabase 'tasks' table -->
           <p>Describe what you need done, set your budget, and drop your location. Takes under 2 minutes.</p>
         </div>
 
-        <div class="step-card anim-fade-up delay-2">
-          <div class="step-number">2</div>
+        <div class="step-block">
+          <div class="step-num">Step 02</div>
           <h3>Receive Offers</h3>
-          <!-- Future Sprint: Taskers will receive push notifications and submit offers -->
-          <p>Nearby taskers see your task and send you their quotes. Compare ratings, prices, and reviews.</p>
+          <!-- Future Sprint 2: Real-time offers via Supabase Realtime -->
+          <p>Nearby taskers see your task and send quotes. Compare ratings, prices, and reviews.</p>
         </div>
 
-        <div class="step-card anim-fade-up delay-3">
-          <div class="step-number">3</div>
-          <h3>Hire & Done</h3>
-          <!-- Future Sprint: Booking engine + payment integration (Paystack) -->
-          <p>Pick the best tasker, confirm the booking, and get your task completed. Pay securely in-app.</p>
+        <div class="step-block">
+          <div class="step-num">Step 03</div>
+          <h3>Hire &amp; Done</h3>
+          <!-- Future Sprint 3: Booking engine + Paystack payment -->
+          <p>Pick the best tasker, confirm the booking, and pay securely in-app when the job is done.</p>
         </div>
 
       </div>
@@ -215,67 +258,83 @@
   </section>
 
   <!-- ══════════════════════════════════════════════════════════
-       TRENDING WORK SECTION (Social Feed Preview)
-       Future Sprint 3: This section will be powered by real
-       posts from taskers in the Supabase 'posts' table.
-       Future Feature: Full social feed page with likes,
-       comments, and follows.
+       TRENDING WORK (Social Feed Preview)
+       Future Sprint 3: Populated from Supabase 'posts' table.
+       Future Feature: Full social feed with likes, comments.
        ══════════════════════════════════════════════════════════ -->
   <section class="section">
     <div class="container">
 
-      <div class="section-header anim-fade-up">
-        <div class="label-accent">
-          <span>Social Feed</span>
-          <span class="future-chip">Sprint 3</span>
+      <div class="section-header">
+        <div class="eyebrow">
+          Social Feed
+          <span class="badge badge-amber" style="margin-left:4px;">Sprint 3</span>
         </div>
         <h2>Trending work in your city</h2>
         <p>See the quality of work taskers are completing right now near you.</p>
       </div>
 
-      <div class="grid-3" id="trendingGrid">
+      <div class="trend-grid">
 
-        <div class="glass-card trend-card anim-fade-up delay-1" onclick="showToast('📸 Social Feed coming in Sprint 3!')">
-          <div class="trend-image trend-img-bg1">
-            <span style="font-size:3rem;position:relative;z-index:1;">⚡</span>
-            <div class="trend-overlay"></div>
+        <div class="card trend-card fade-up d1" onclick="showToast('Social Feed coming in Sprint 3')">
+          <div class="trend-thumb trend-bg-1">
+            <div class="trend-thumb-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <span class="trend-like">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              142
+            </span>
           </div>
-          <span class="trend-likes">❤️ 142</span>
-          <div class="trend-content">
+          <div class="trend-body">
             <div class="trend-author">Adebayo Okafor</div>
-            <div class="trend-role">⚡ Electrician · Lekki, Lagos</div>
+            <div class="trend-role">Electrician &middot; Lekki, Lagos</div>
           </div>
         </div>
 
-        <div class="glass-card trend-card anim-fade-up delay-2" onclick="showToast('📸 Social Feed coming in Sprint 3!')">
-          <div class="trend-image trend-img-bg2">
-            <span style="font-size:3rem;position:relative;z-index:1;">✂️</span>
-            <div class="trend-overlay"></div>
+        <div class="card trend-card fade-up d2" onclick="showToast('Social Feed coming in Sprint 3')">
+          <div class="trend-thumb trend-bg-2">
+            <div class="trend-thumb-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12l2.828-4.243L14.19 10.186A3 3 0 0 1 12 16a3 3 0 0 1-2.19-5.814"/><circle cx="18" cy="4" r="2"/>
+              </svg>
+            </div>
+            <span class="trend-like">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              98
+            </span>
           </div>
-          <span class="trend-likes">❤️ 98</span>
-          <div class="trend-content">
+          <div class="trend-body">
             <div class="trend-author">Chidi Fernandez</div>
-            <div class="trend-role">✂️ Barber · Victoria Island</div>
+            <div class="trend-role">Barber &middot; Victoria Island</div>
           </div>
         </div>
 
-        <div class="glass-card trend-card anim-fade-up delay-3" onclick="showToast('📸 Social Feed coming in Sprint 3!')">
-          <div class="trend-image trend-img-bg3">
-            <span style="font-size:3rem;position:relative;z-index:1;">🧹</span>
-            <div class="trend-overlay"></div>
+        <div class="card trend-card fade-up d3" onclick="showToast('Social Feed coming in Sprint 3')">
+          <div class="trend-thumb trend-bg-3">
+            <div class="trend-thumb-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </div>
+            <span class="trend-like">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              67
+            </span>
           </div>
-          <span class="trend-likes">❤️ 67</span>
-          <div class="trend-content">
+          <div class="trend-body">
             <div class="trend-author">Fatima Mohammed</div>
-            <div class="trend-role">🧹 Cleaner · Ikeja, Lagos</div>
+            <div class="trend-role">Cleaner &middot; Ikeja, Lagos</div>
           </div>
         </div>
 
       </div>
 
       <div class="text-center mt-32">
-        <button class="btn btn-outline btn-lg" onclick="showToast('📸 Full Social Feed coming in Sprint 3!')">
-          View All Posts <span class="future-chip" style="margin-left:8px;">Soon</span>
+        <button class="btn btn-outline btn-lg" onclick="showToast('Full Social Feed coming in Sprint 3')">
+          View All Posts
         </button>
       </div>
 
@@ -285,57 +344,43 @@
   <!-- ══════════════════════════════════════════════════════════
        CTA BANNER
        ══════════════════════════════════════════════════════════ -->
-  <section class="section" style="padding: 60px 0;">
+  <section class="section-sm">
     <div class="container">
-      <div class="glass-card anim-fade-up" style="padding:60px 48px; text-align:center; background:linear-gradient(135deg,rgba(74,44,154,0.1),rgba(0,212,255,0.06)); position:relative; overflow:hidden;">
-        <div style="position:absolute; inset:0; background:radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,212,255,0.08) 0%, transparent 60%);"></div>
-        <div style="position:relative; z-index:1;">
-          <div class="label-accent" style="margin:0 auto 16px;">Ready to get started?</div>
-          <h2 style="margin-bottom:16px;">Join thousands using Street Tasker</h2>
-          <p style="margin-bottom:36px; max-width:480px; margin-left:auto; margin-right:auto;">Whether you need help or want to offer your skills — Street Tasker connects you with the right people, fast.</p>
-          <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-            <a href="signup.html" class="btn btn-primary btn-lg">Sign Up Free</a>
-            <a href="find-taskers.html" class="btn btn-ghost btn-lg">Find a Tasker</a>
-          </div>
+      <div class="cta-banner fade-up">
+        <div>
+          <h2>Ready to get started?</h2>
+          <p>Join thousands of customers and taskers across Nigeria.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="signup.html"       class="btn btn-primary btn-xl">Sign Up Free</a>
+          <a href="find-taskers.html" class="btn btn-white   btn-xl">Find a Tasker</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer injected here by app.js -->
   <div id="footer-placeholder"></div>
 
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/future-features.js"></script>
   <script>
-    /* Page-specific init — called by app.js after components load */
     function initPage() {
-      /* Wire up hero search form */
-      initSearch('heroSearch');
+      // no extra init needed for homepage beyond what app.js handles
     }
 
-    /* Hero search redirect */
     function handleHeroSearch(e) {
       e.preventDefault();
-      const service  = e.target.querySelector('[name="service"]').value.trim();
-      const location = e.target.querySelector('[name="location"]').value.trim();
-
-      if (!service && !location) {
-        showToast('💡 Enter a service or location to search!');
-        return;
-      }
-
-      /* Future Sprint: Pass params as URL search params to find-taskers.html */
-      /* window.location.href = `find-taskers.html?service=${encodeURIComponent(service)}&location=${encodeURIComponent(location)}`; */
-      showToast(`🔍 Searching "${service || 'all'}" in "${location || 'your area'}" — live search in Sprint 2!`);
+      const service  = e.target.service.value.trim();
+      const location = e.target.location.value.trim();
+      if (!service && !location) { showToast('Enter a service or location to search'); return; }
+      // Future Sprint 2: window.location.href = `find-taskers.html?service=${encodeURIComponent(service)}&loc=${encodeURIComponent(location)}`;
+      showToast('Live search coming in Sprint 2!');
     }
 
-    /* Service category click */
-    function filterByService(service) {
-      /* Future Sprint: Navigate with filter param */
-      /* window.location.href = `find-taskers.html?service=${encodeURIComponent(service)}`; */
-      showToast(`🔍 Filtering by "${service}" — coming in Sprint 2!`);
+    function filterService(name) {
+      // Future Sprint 2: navigate with URL param
+      showToast(`Filtering by "${name}" — live in Sprint 2`);
     }
   </script>
 </body>
