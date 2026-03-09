@@ -1,0 +1,51 @@
+<!-- ============================================================
+     STREET TASKER — Navbar Component
+     Sprint 1: Static HTML component loaded via JS fetch()
+     ------------------------------------------------------------
+     Future Sprint: Active link state will be set dynamically
+     based on Supabase auth session (logged in vs out).
+     Future Sprint: User avatar + dropdown will replace Login/Signup
+     when authentication is implemented.
+     ============================================================ -->
+
+<nav id="navbar">
+  <div class="nav-inner">
+
+    <!-- Logo -->
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      Street Tasker
+    </a>
+
+    <!-- Desktop Navigation Links -->
+    <ul class="nav-links">
+      <li><a href="find-taskers.html" class="nav-link">Find Taskers</a></li>
+      <li><a href="post-task.html"    class="nav-link">Post a Task</a></li>
+      <!-- Future Feature: Social feed will show Instagram-style completed work posts -->
+      <li><a href="#" class="nav-link badge" onclick="showToast('🚧 Social Feed coming in Sprint 3!'); return false;">Social Feed</a></li>
+    </ul>
+
+    <!-- Desktop Auth Actions -->
+    <div class="nav-actions">
+      <!-- Future Sprint: Replace with user avatar + dropdown when Supabase auth is live -->
+      <a href="login.html"  class="btn btn-ghost btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="nav-mobile" id="navMobile">
+  <a href="find-taskers.html" class="nav-link">🔍 Find Taskers</a>
+  <a href="post-task.html"    class="nav-link">📋 Post a Task</a>
+  <a href="#" class="nav-link" onclick="showToast('🚧 Social Feed coming soon!'); return false;">📸 Social Feed <span class="future-chip">Soon</span></a>
+  <hr style="border-color: rgba(124,92,191,0.15); margin: 8px 0;">
+  <a href="login.html"  class="btn btn-ghost" style="justify-content:center;">Log In</a>
+  <a href="signup.html" class="btn btn-primary" style="justify-content:center;">Sign Up Free</a>
+</div>

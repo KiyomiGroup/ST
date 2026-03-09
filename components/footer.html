@@ -1,0 +1,84 @@
+<!-- ============================================================
+     STREET TASKER — Footer Component
+     Sprint 1: Static placeholder footer
+     ------------------------------------------------------------
+     Future Sprint: Newsletter subscription form will connect
+     to a Supabase mailing list or third-party email service.
+     Future Feature: Social media links will be added when
+     brand accounts are created.
+     ============================================================ -->
+
+<footer id="footer">
+  <div class="container">
+
+    <div class="footer-inner">
+
+      <!-- Brand Column -->
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo" style="color:white;">
+          <div class="nav-logo-icon">⚡</div>
+          Street Tasker
+        </a>
+        <p>The local services marketplace that connects trusted workers with customers who need tasks done nearby.</p>
+
+        <!-- Future Sprint: Social media icons (Twitter/X, Instagram, LinkedIn) -->
+        <div style="display:flex; gap:10px; margin-top:20px;">
+          <a href="#" onclick="showToast('Social links coming soon!'); return false;" style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);font-size:1rem;transition:all 0.2s;" title="Twitter">𝕏</a>
+          <a href="#" onclick="showToast('Social links coming soon!'); return false;" style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);font-size:1rem;transition:all 0.2s;" title="Instagram">📷</a>
+        </div>
+      </div>
+
+      <!-- Platform Links -->
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="find-taskers.html">Find Taskers</a></li>
+          <li><a href="post-task.html">Post a Task</a></li>
+          <!-- Future Feature: Service listings directory page -->
+          <li><a href="#" onclick="showToast('Service listings coming in Sprint 2!'); return false;">Browse Services</a></li>
+          <!-- Future Feature: Map discovery page -->
+          <li><a href="#" onclick="showToast('Map view coming in Sprint 3!'); return false;">Near Me 🗺️</a></li>
+        </ul>
+      </div>
+
+      <!-- Company Links -->
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <!-- Future Sprint: Real about/contact pages -->
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+
+      <!-- Legal Links -->
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <!-- Future Sprint: Real legal pages to be created -->
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <!-- Future Feature: Tasker trust & safety guidelines -->
+          <li><a href="#">Trust & Safety</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Footer Bottom Bar -->
+    <div class="footer-bottom">
+      <p>© 2025 Street Tasker. All rights reserved.</p>
+      <div class="footer-badge">
+        <span>⚡</span>
+        <span>Sprint 1 — Frontend Foundation</span>
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+<!-- Toast notification element (shared across all pages) -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>

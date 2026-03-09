@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create your free Street Tasker account. Find work or post tasks near you." />
+  <title>Sign Up — Street Tasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navbar injected here by app.js -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIGNUP PAGE
+       Sprint 1: UI form only — no real user creation.
+       ------------------------------------------------------------
+       Future Sprint 2: Supabase user creation flow:
+       1. supabase.auth.signUp({ email, password, options: { data: { name, role } } })
+       2. Create a row in 'profiles' table with name + role
+       3. If role === 'tasker': also create a row in 'tasker_profiles'
+       4. Send email verification via Supabase magic link
+       5. Redirect to onboarding flow based on role
+       ------------------------------------------------------------
+       Future Sprint: Role selection will determine which
+       onboarding screens are shown post-signup.
+       - Customer → task posting tutorial
+       - Tasker → profile setup + subscription info
+       ══════════════════════════════════════════════════════════ -->
+
+  <div class="form-page" style="padding: 24px 0;">
+    <div class="form-page-bg"></div>
+
+    <div class="container">
+      <div class="form-container" style="max-width:580px;">
+
+        <div class="form-card anim-scale-in">
+
+          <!-- Form Header -->
+          <div class="form-header">
+            <a href="index.html" class="nav-logo" style="justify-content:center; margin-bottom:24px;">
+              <div class="nav-logo-icon">⚡</div>
+              Street Tasker
+            </a>
+            <h1>Create your account</h1>
+            <p style="margin-top:8px;">Join thousands of taskers and customers near you.</p>
+          </div>
+
+          <!-- OAuth — Future Sprint -->
+          <button
+            type="button"
+            class="btn btn-ghost"
+            style="width:100%; justify-content:center; gap:10px; margin-bottom:8px;"
+            onclick="showToast('🔑 Google sign-up coming in Sprint 2 via Supabase OAuth!')"
+          >
+            <span style="font-size:1.1rem;">🅶</span>
+            Sign up with Google
+            <span class="future-chip">Sprint 2</span>
+          </button>
+
+          <div class="form-divider">or sign up with email</div>
+
+          <!-- Signup Form -->
+          <form id="signupForm" novalidate>
+
+            <!-- Role Selection — IMPORTANT for future routing -->
+            <div class="form-group">
+              <label class="form-label">I want to... *</label>
+              <div class="role-selector">
+                <div class="role-option">
+                  <input type="radio" name="role" id="roleCustomer" value="customer" checked />
+                  <label class="role-label" for="roleCustomer">
+                    <span class="role-icon">🛒</span>
+                    <span class="role-name">Hire Taskers</span>
+                    <span class="role-desc">Post tasks, find and book local workers</span>
+                  </label>
+                </div>
+                <div class="role-option">
+                  <input type="radio" name="role" id="roleTasker" value="tasker" />
+                  <label class="role-label" for="roleTasker">
+                    <span class="role-icon">⚡</span>
+                    <span class="role-name">Work as Tasker</span>
+                    <span class="role-desc">Offer your skills and earn locally</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Tasker subscription info (shown when tasker role selected) -->
+              <div id="taskerInfo" style="display:none; margin-top:12px; padding:12px 16px; background:var(--neon-blue-dim); border:1px solid rgba(0,212,255,0.2); border-radius:var(--radius-md);">
+                <p style="font-size:0.82rem; color:var(--purple-deep);">
+                  ⭐ <strong>First 5 customers are free.</strong> After that, a small subscription keeps you discoverable.
+                  <!-- Future Sprint 4: Paystack subscription integration -->
+                </p>
+              </div>
+            </div>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label class="form-label" for="signupName">Full Name *</label>
+              <div class="form-input-icon">
+                <span class="input-icon">👤</span>
+                <input
+                  type="text"
+                  id="signupName"
+                  name="name"
+                  class="form-input"
+                  placeholder="Your full name"
+                  autocomplete="name"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label" for="signupEmail">Email Address *</label>
+              <div class="form-input-icon">
+                <span class="input-icon">✉️</span>
+                <input
+                  type="email"
+                  id="signupEmail"
+                  name="email"
+                  class="form-input"
+                  placeholder="you@example.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label class="form-label" for="signupPassword">Password *</label>
+              <div class="form-input-icon" style="position:relative;">
+                <span class="input-icon">🔒</span>
+                <input
+                  type="password"
+                  id="signupPassword"
+                  name="password"
+                  class="form-input"
+                  placeholder="At least 8 characters"
+                  autocomplete="new-password"
+                  required
+                  minlength="8"
+                />
+                <button type="button" class="password-toggle" id="toggleSignupPwd" aria-label="Show password">👁️</button>
+              </div>
+
+              <!-- Password strength indicator -->
+              <div id="pwdStrength" style="margin-top:8px; display:none;">
+                <div style="height:4px; border-radius:4px; background:var(--border-purple); overflow:hidden;">
+                  <div id="pwdBar" style="height:100%; width:0%; background:var(--neon-blue); transition:all 0.3s;"></div>
+                </div>
+                <p id="pwdLabel" style="font-size:0.72rem; color:var(--text-light); margin-top:4px;"></p>
+              </div>
+            </div>
+
+            <!-- Phone (optional) -->
+            <div class="form-group">
+              <label class="form-label" for="signupPhone">Phone Number <span style="font-weight:400; color:var(--text-light);">(optional)</span></label>
+              <div class="form-input-icon">
+                <span class="input-icon">📞</span>
+                <input
+                  type="tel"
+                  id="signupPhone"
+                  name="phone"
+                  class="form-input"
+                  placeholder="+234 800 000 0000"
+                  autocomplete="tel"
+                />
+              </div>
+            </div>
+
+            <!-- Terms checkbox -->
+            <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:24px;">
+              <input type="checkbox" id="agreeTerms" name="terms" style="accent-color:var(--purple-mid); width:16px; height:16px; margin-top:2px; flex-shrink:0;" required />
+              <label for="agreeTerms" style="font-size:0.85rem; color:var(--text-mid); cursor:pointer; line-height:1.5;">
+                I agree to the <a href="#" style="color:var(--purple-mid);">Terms of Service</a> and
+                <a href="#" style="color:var(--purple-mid);">Privacy Policy</a>
+              </label>
+            </div>
+
+            <!-- Submit
+                 Future Sprint 2: Wire to Supabase auth.signUp()
+                 See future-features.js → signUpUser() for full implementation stub. -->
+            <button type="submit" class="btn btn-primary btn-lg form-submit" id="signupBtn">
+              🚀 Create Free Account
+            </button>
+
+            <!-- Error placeholder -->
+            <div id="signupError" style="display:none; margin-top:12px; padding:12px 16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); border-radius:var(--radius-md); color:#DC2626; font-size:0.85rem; text-align:center;"></div>
+
+          </form>
+
+          <!-- Login link -->
+          <div class="form-footer">
+            Already have an account?
+            <a href="login.html">Log in →</a>
+          </div>
+
+        </div>
+
+        <!-- Trust badges -->
+        <div class="text-center mt-16 anim-fade-up delay-2">
+          <p style="font-size:0.78rem; color:var(--text-light);">
+            🔒 Secured &nbsp;·&nbsp; ✅ No spam &nbsp;·&nbsp; 🎉 Free to join
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer injected here by app.js -->
+  <div id="footer-placeholder"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/future-features.js"></script>
+  <script>
+    /* Page-specific init */
+    function initPage() {
+
+      /* Role toggle — show tasker subscription info */
+      document.querySelectorAll('[name="role"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          const taskerInfo = document.getElementById('taskerInfo');
+          taskerInfo.style.display = radio.value === 'tasker' ? 'block' : 'none';
+        });
+      });
+
+      /* Password toggle */
+      const toggle   = document.getElementById('toggleSignupPwd');
+      const pwdInput = document.getElementById('signupPassword');
+      if (toggle && pwdInput) {
+        toggle.addEventListener('click', () => {
+          const isVis = pwdInput.type === 'text';
+          pwdInput.type = isVis ? 'password' : 'text';
+          toggle.textContent = isVis ? '👁️' : '🙈';
+        });
+
+        /* Password strength meter */
+        const strengthBar   = document.getElementById('pwdBar');
+        const strengthLabel = document.getElementById('pwdLabel');
+        const strengthWrap  = document.getElementById('pwdStrength');
+
+        pwdInput.addEventListener('input', () => {
+          const val = pwdInput.value;
+          if (!val) { strengthWrap.style.display = 'none'; return; }
+          strengthWrap.style.display = 'block';
+
+          let score = 0;
+          if (val.length >= 8)            score++;
+          if (/[A-Z]/.test(val))          score++;
+          if (/[0-9]/.test(val))          score++;
+          if (/[^A-Za-z0-9]/.test(val))   score++;
+
+          const levels = [
+            { pct: '25%', color: '#EF4444', label: 'Weak — add numbers or symbols' },
+            { pct: '50%', color: '#F59E0B', label: 'Fair — getting better' },
+            { pct: '75%', color: '#10B981', label: 'Good — nearly there' },
+            { pct: '100%', color: '#059669', label: '✓ Strong password' },
+          ];
+          const lvl = levels[score - 1] || levels[0];
+          strengthBar.style.width   = lvl.pct;
+          strengthBar.style.background = lvl.color;
+          strengthLabel.textContent = lvl.label;
+          strengthLabel.style.color  = lvl.color;
+        });
+      }
+
+      /* Signup form submission
+         Future Sprint 2: Replace setTimeout with real Supabase call.
+         1. supabase.auth.signUp({ email, password, options:{ data:{ name, role } } })
+         2. INSERT into profiles table
+         3. If tasker: INSERT into tasker_profiles table
+         4. Redirect to role-specific onboarding page */
+      const form     = document.getElementById('signupForm');
+      const signupBtn = document.getElementById('signupBtn');
+      const errorBox  = document.getElementById('signupError');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name     = form.name.value.trim();
+        const email    = form.email.value.trim();
+        const password = form.password.value;
+        const terms    = form.terms.checked;
+        const role     = form.role.value;
+
+        errorBox.style.display = 'none';
+
+        if (!name || !email || !password) {
+          showErr('Please fill in all required fields.'); return;
+        }
+
+        if (password.length < 8) {
+          showErr('Password must be at least 8 characters.'); return;
+        }
+
+        if (!terms) {
+          showErr('Please agree to the Terms of Service.'); return;
+        }
+
+        /* Simulate loading */
+        signupBtn.textContent = '⏳ Creating account...';
+        signupBtn.disabled = true;
+
+        setTimeout(() => {
+          signupBtn.textContent = '🚀 Create Free Account';
+          signupBtn.disabled = false;
+
+          showToast(
+            `🎉 Welcome! "${name}" as ${role === 'tasker' ? 'Tasker ⚡' : 'Customer 🛒'} — Supabase signup live in Sprint 2!`,
+            5000
+          );
+        }, 1500);
+      });
+
+      function showErr(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

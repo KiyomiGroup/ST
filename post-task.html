@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Post a task on Street Tasker and receive offers from skilled local workers." />
+  <title>Post a Task — Street Tasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navbar injected here by app.js -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       POST TASK PAGE
+       Sprint 1: UI form only — no backend submission.
+       ------------------------------------------------------------
+       Future Sprint 2: Form submission will:
+       1. Check Supabase auth session (must be logged in as Customer)
+       2. INSERT a row into the 'tasks' Supabase table
+       3. Trigger an edge function to notify nearby taskers
+       4. Redirect to /task/:id page for tracking
+       ------------------------------------------------------------
+       Future Feature: AI task assistant will help improve the
+       task description using Claude API (Sprint 4).
+       ══════════════════════════════════════════════════════════ -->
+
+  <div class="post-task-page" style="background: radial-gradient(ellipse 70% 70% at 70% 30%, rgba(74,44,154,0.08) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(0,212,255,0.05) 0%, transparent 60%), var(--bg-base);">
+
+    <div class="task-form-container">
+
+      <!-- Page Header -->
+      <div class="text-center anim-fade-up" style="margin-bottom: 40px;">
+        <div class="label-accent" style="justify-content:center;">📋 Post Your Task</div>
+        <h1 style="margin-top: 12px;">What do you need done?</h1>
+        <p style="margin-top: 12px;">Describe your task and receive offers from trusted local taskers.</p>
+      </div>
+
+      <!-- Sprint Banner -->
+      <div class="glass-card anim-fade-up delay-1" style="padding:16px 20px; margin-bottom:28px; background:var(--gold-dim); border-color:rgba(240,192,64,0.3); display:flex; align-items:center; gap:12px;">
+        <span style="font-size:1.2rem;">🚧</span>
+        <div>
+          <strong style="font-family:var(--font-display); font-size:0.88rem; color:#8B6914;">Sprint 2 Feature</strong>
+          <p style="font-size:0.82rem; margin-top:2px; color:#8B6914;">Task posting backend is coming in Sprint 2. Fill in the form to preview the experience!</p>
+        </div>
+      </div>
+
+      <!-- Task Form Card -->
+      <div class="task-form-card anim-fade-up delay-2">
+
+        <form id="postTaskForm" novalidate>
+
+          <!-- Task Title -->
+          <div class="form-group">
+            <label class="form-label" for="taskTitle">Task Title *</label>
+            <input
+              type="text"
+              id="taskTitle"
+              name="title"
+              class="form-input"
+              placeholder="e.g. Fix my kitchen ceiling fan"
+              required
+            />
+            <p style="font-size:0.78rem; color:var(--text-light); margin-top:5px;">Be specific — good titles attract better offers.</p>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="taskDescription">Description *</label>
+            <textarea
+              id="taskDescription"
+              name="description"
+              class="form-textarea"
+              rows="5"
+              placeholder="Describe what needs to be done, any specific requirements, tools needed, access details..."
+              required
+            ></textarea>
+
+            <!-- Future Feature: AI assistant button to improve description -->
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              style="margin-top:8px; font-size:0.8rem;"
+              onclick="showToast('🤖 AI Task Assistant coming in Sprint 4!')"
+            >
+              ✨ Improve with AI <span class="future-chip">Sprint 4</span>
+            </button>
+          </div>
+
+          <!-- Budget + Deadline Row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="taskBudget">Budget (₦) *</label>
+              <div class="form-input-icon">
+                <span class="input-icon">₦</span>
+                <input
+                  type="number"
+                  id="taskBudget"
+                  name="budget"
+                  class="form-input"
+                  placeholder="e.g. 5000"
+                  min="100"
+                  style="padding-left: 44px;"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="taskDeadline">Deadline *</label>
+              <input
+                type="date"
+                id="taskDeadline"
+                name="deadline"
+                class="form-input"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="form-group">
+            <label class="form-label" for="taskLocation">Location *</label>
+            <div class="form-input-icon">
+              <span class="input-icon">📍</span>
+              <input
+                type="text"
+                id="taskLocation"
+                name="location"
+                class="form-input"
+                placeholder="e.g. 14 Bode Thomas Street, Surulere, Lagos"
+                required
+              />
+            </div>
+            <!-- Future Feature: Map picker for precise location selection -->
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              style="margin-top:8px; font-size:0.8rem;"
+              onclick="showToast('🗺️ Map location picker coming in Sprint 3!')"
+            >
+              🗺️ Pick on Map <span class="future-chip">Sprint 3</span>
+            </button>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="taskCategory">Service Category</label>
+            <select id="taskCategory" name="category" class="form-select">
+              <option value="">Select a category...</option>
+              <option value="barber">✂️ Barber / Hair</option>
+              <option value="electrician">⚡ Electrician</option>
+              <option value="cleaner">🧹 Cleaning</option>
+              <option value="mechanic">🔧 Mechanic / Auto</option>
+              <option value="plumber">🪠 Plumber</option>
+              <option value="makeup">💄 Make-up / Beauty</option>
+              <option value="other">📦 Other</option>
+            </select>
+          </div>
+
+          <!-- Images — Future Feature -->
+          <div class="form-group">
+            <label class="form-label">Photos (Optional) <span class="future-chip">Sprint 2</span></label>
+            <div
+              style="border:2px dashed var(--border-purple); border-radius:var(--radius-md); padding:32px; text-align:center; cursor:pointer; background:rgba(124,92,191,0.03);"
+              onclick="showToast('📷 Photo uploads coming in Sprint 2 via Supabase Storage!')"
+            >
+              <div style="font-size:2rem; margin-bottom:8px;">📷</div>
+              <p style="font-size:0.88rem; color:var(--text-light);">Click to add photos of what needs to be done</p>
+              <span style="font-size:0.75rem; color:var(--text-light);">Supabase Storage integration — Sprint 2</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg form-submit"
+            id="submitTaskBtn"
+          >
+            📋 Post My Task
+          </button>
+
+          <p style="text-align:center; font-size:0.78rem; color:var(--text-light); margin-top:16px;">
+            By posting, you agree to our <a href="#" style="color:var(--purple-mid);">Terms of Service</a>.
+            <!-- Future Sprint: Auth check will redirect to login if not signed in -->
+          </p>
+
+        </form>
+
+      </div>
+
+      <!-- How it works mini section -->
+      <div class="glass-card anim-fade-up delay-3" style="padding:28px 32px; margin-top:24px;">
+        <h3 style="margin-bottom:16px; font-size:1rem;">What happens after you post?</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:32px; height:32px; background:var(--neon-blue-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700; color:var(--neon-blue); flex-shrink:0;">1</div>
+            <p style="font-size:0.88rem;">Your task goes live and nearby taskers are notified instantly.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:32px; height:32px; background:var(--neon-blue-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700; color:var(--neon-blue); flex-shrink:0;">2</div>
+            <p style="font-size:0.88rem;">Taskers send you their offers — compare quotes, ratings, and profiles.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:32px; height:32px; background:var(--neon-blue-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700; color:var(--neon-blue); flex-shrink:0;">3</div>
+            <p style="font-size:0.88rem;">Hire the best tasker, confirm, and get the job done — pay securely in-app.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer injected here by app.js -->
+  <div id="footer-placeholder"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/future-features.js"></script>
+  <script>
+    /* Page-specific init */
+    function initPage() {
+
+      /* Set minimum date to today */
+      const deadlineInput = document.getElementById('taskDeadline');
+      if (deadlineInput) {
+        const today = new Date().toISOString().split('T')[0];
+        deadlineInput.min = today;
+      }
+
+      /* Form submission handler
+         Future Sprint 2: Replace this with a real Supabase INSERT
+         after checking the user is authenticated as a Customer.
+         See future-features.js → postTask() for the full stub. */
+      const form = document.getElementById('postTaskForm');
+      const btn  = document.getElementById('submitTaskBtn');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const title       = form.title.value.trim();
+        const description = form.description.value.trim();
+        const budget      = form.budget.value.trim();
+        const location    = form.taskLocation.value.trim();
+        const deadline    = form.deadline.value;
+
+        /* Basic client-side validation */
+        if (!title || !description || !budget || !location || !deadline) {
+          showToast('⚠️ Please fill in all required fields.');
+          return;
+        }
+
+        /* Simulate loading state */
+        btn.textContent = '⏳ Posting...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+          btn.textContent = '📋 Post My Task';
+          btn.disabled = false;
+
+          /* Sprint 1: Placeholder alert */
+          showToast('🚀 Task posting will be enabled in Sprint 2! Your data was received.', 4500);
+        }, 1200);
+      });
+    }
+  </script>
+</body>
+</html>

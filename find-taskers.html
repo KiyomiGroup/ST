@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Find trusted local taskers near you on Street Tasker. Filter by service, location, rating, and price." />
+  <title>Find Taskers — Street Tasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navbar injected here by app.js -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE HERO + SEARCH BAR
+       Future Sprint: Search will trigger real Supabase queries.
+       Future Feature: Geolocation button will auto-fill location
+       using browser navigator.geolocation API.
+       ══════════════════════════════════════════════════════════ -->
+  <div class="page-hero">
+    <div class="container">
+      <div class="label-accent anim-fade-up" style="background:rgba(0,212,255,0.15); border-color:rgba(0,212,255,0.2);">
+        1,200+ Verified Taskers
+      </div>
+      <h1 class="anim-fade-up delay-1">Find your perfect tasker</h1>
+      <p class="anim-fade-up delay-2">Browse skilled local workers, compare ratings, and get things done.</p>
+
+      <form id="taskerSearch" class="search-bar-page anim-fade-up delay-2">
+        <div class="search-field">
+          <span class="search-icon">🔍</span>
+          <input type="text" name="service" placeholder="Service (e.g. Barber, Electrician)" autocomplete="off" />
+        </div>
+        <div class="search-divider" style="height:auto; width:1px; background:var(--border-purple);"></div>
+        <div class="search-field">
+          <span class="search-icon">📍</span>
+          <input type="text" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" />
+        </div>
+        <!-- Future Feature: Geolocation button will use navigator.geolocation -->
+        <button type="button" class="btn btn-ghost btn-sm" onclick="showToast('📍 Auto-location coming in Sprint 2!')" title="Use my location">📍</button>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MAIN LAYOUT: Sidebar Filters + Tasker Grid
+       ══════════════════════════════════════════════════════════ -->
+  <div class="container">
+    <div class="taskers-layout">
+
+      <!-- ────────────────────────────────────────────────────
+           FILTER SIDEBAR
+           Future Sprint: Filter values will be sent as Supabase
+           query params to filter the tasker_profiles table.
+           Future Feature: Saved filters per user (from profile).
+           ──────────────────────────────────────────────────── -->
+      <aside class="filter-sidebar anim-fade-up">
+        <div class="filter-card">
+
+          <div class="filter-title">
+            Filters
+            <span class="filter-reset" id="filterReset">Reset all</span>
+          </div>
+
+          <!-- Distance Filter -->
+          <div class="filter-group">
+            <div class="filter-group-title">📍 Distance</div>
+            <input type="range" class="filter-range" id="distanceRange" min="1" max="50" value="10" />
+            <div class="range-labels">
+              <span>1 km</span>
+              <span id="distanceVal">10 km</span>
+              <span>50 km</span>
+            </div>
+          </div>
+
+          <!-- Rating Filter -->
+          <div class="filter-group">
+            <div class="filter-group-title">⭐ Minimum Rating</div>
+            <label class="filter-option"><input type="checkbox" /> 5 stars only ★★★★★</label>
+            <label class="filter-option"><input type="checkbox" /> 4+ stars ★★★★☆</label>
+            <label class="filter-option"><input type="checkbox" /> 3+ stars ★★★☆☆</label>
+          </div>
+
+          <!-- Price Filter -->
+          <div class="filter-group">
+            <div class="filter-group-title">💰 Max Price (₦/hr)</div>
+            <input type="range" class="filter-range" id="priceRange" min="500" max="20000" value="10000" step="500" />
+            <div class="range-labels">
+              <span>₦500</span>
+              <span id="priceVal">₦10,000</span>
+              <span>₦20,000+</span>
+            </div>
+          </div>
+
+          <!-- Service Type Filter -->
+          <div class="filter-group">
+            <div class="filter-group-title">🛠️ Service Type</div>
+            <label class="filter-option"><input type="checkbox" /> ✂️ Barber</label>
+            <label class="filter-option"><input type="checkbox" /> ⚡ Electrician</label>
+            <label class="filter-option"><input type="checkbox" /> 🧹 Cleaner</label>
+            <label class="filter-option"><input type="checkbox" /> 🔧 Mechanic</label>
+            <label class="filter-option"><input type="checkbox" /> 💄 Make-up Artist</label>
+            <label class="filter-option"><input type="checkbox" /> 🪠 Plumber</label>
+          </div>
+
+          <!-- Availability Filter — Future Feature -->
+          <div class="filter-group">
+            <div class="filter-group-title">🗓️ Availability <span class="future-chip">Sprint 2</span></div>
+            <label class="filter-option" style="opacity:0.5; cursor:not-allowed;"><input type="checkbox" disabled /> Available today</label>
+            <label class="filter-option" style="opacity:0.5; cursor:not-allowed;"><input type="checkbox" disabled /> Available this week</label>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="showToast('🔧 Live filtering coming in Sprint 2!')">
+            Apply Filters
+          </button>
+
+        </div>
+      </aside>
+
+      <!-- ────────────────────────────────────────────────────
+           TASKER RESULTS GRID
+           Future Sprint: Will be populated by real Supabase data.
+           Future Feature: Infinite scroll / pagination.
+           Future Feature: Map/list view toggle.
+           ──────────────────────────────────────────────────── -->
+      <main>
+
+        <!-- Results Header -->
+        <div class="results-header anim-fade-up">
+          <div>
+            <div class="results-count">Showing <strong id="resultsCount">6</strong> taskers</div>
+            <!-- Future Sprint: Map view toggle will show taskers on Mapbox map -->
+            <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="showToast('🗺️ Map view coming in Sprint 3!')">
+              🗺️ Map View <span class="future-chip">Sprint 3</span>
+            </button>
+          </div>
+          <select class="sort-select" onchange="showToast('Sort by: ' + this.options[this.selectedIndex].text + ' — live in Sprint 2!')">
+            <option>Sort: Top Rated</option>
+            <option>Sort: Price: Low to High</option>
+            <option>Sort: Price: High to Low</option>
+            <option>Sort: Nearest First</option>
+            <option>Sort: Most Reviews</option>
+          </select>
+        </div>
+
+        <!-- Tasker Cards Grid — rendered by ui.js -->
+        <div class="taskers-grid" id="taskersGrid">
+          <!-- Placeholder: Skeleton loaders shown before JS renders cards -->
+          <div class="glass-card skeleton" style="height:220px;"></div>
+          <div class="glass-card skeleton" style="height:220px;"></div>
+          <div class="glass-card skeleton" style="height:220px;"></div>
+        </div>
+
+        <!-- Load More — Future Feature: Pagination / infinite scroll -->
+        <div class="text-center mt-32">
+          <button class="btn btn-outline btn-lg" onclick="showToast('📄 Pagination coming in Sprint 2!')">
+            Load more taskers
+          </button>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Footer injected here by app.js -->
+  <div id="footer-placeholder"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/future-features.js"></script>
+  <script>
+    /* Page-specific init — called by app.js */
+    function initPage() {
+
+      /* Render placeholder tasker cards */
+      const grid = document.getElementById('taskersGrid');
+      renderTaskers(grid, PLACEHOLDER_TASKERS);
+      document.getElementById('resultsCount').textContent = PLACEHOLDER_TASKERS.length;
+
+      /* Wire up search */
+      initSearch('taskerSearch');
+
+      /* Wire up filters */
+      initFilters();
+
+      /* Live range sliders */
+      const distanceRange = document.getElementById('distanceRange');
+      const priceRange    = document.getElementById('priceRange');
+
+      if (distanceRange) {
+        distanceRange.addEventListener('input', () => {
+          document.getElementById('distanceVal').textContent = `${distanceRange.value} km`;
+        });
+      }
+
+      if (priceRange) {
+        priceRange.addEventListener('input', () => {
+          document.getElementById('priceVal').textContent =
+            `₦${parseInt(priceRange.value).toLocaleString()}`;
+        });
+      }
+    }
+  </script>
+</body>
+</html>

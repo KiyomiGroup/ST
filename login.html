@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Log in to your Street Tasker account." />
+  <title>Log In — Street Tasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navbar injected here by app.js -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LOGIN PAGE
+       Sprint 1: UI form only — no real authentication.
+       ------------------------------------------------------------
+       Future Sprint 2: Supabase authentication will be integrated.
+       • supabase.auth.signInWithPassword({ email, password })
+       • On success: store session, redirect to /dashboard
+       • On error: show inline error message
+       • Future: Google OAuth via supabase.auth.signInWithOAuth
+       • Future: "Remember me" will use persistent session cookies
+       ══════════════════════════════════════════════════════════ -->
+
+  <div class="form-page">
+    <div class="form-page-bg"></div>
+
+    <div class="container">
+      <div class="form-container">
+
+        <div class="form-card anim-scale-in">
+
+          <!-- Form Header -->
+          <div class="form-header">
+            <a href="index.html" class="nav-logo" style="justify-content:center; margin-bottom:24px;">
+              <div class="nav-logo-icon">⚡</div>
+              Street Tasker
+            </a>
+            <h1>Welcome back</h1>
+            <p style="margin-top:8px;">Log in to your account to continue.</p>
+          </div>
+
+          <!-- Social Login Buttons — Future Sprint: OAuth providers -->
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:8px;">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              style="justify-content:center; gap:10px;"
+              onclick="showToast('🔑 Google login coming in Sprint 2 via Supabase OAuth!')"
+            >
+              <span style="font-size:1.1rem;">🅶</span>
+              Continue with Google
+              <span class="future-chip">Sprint 2</span>
+            </button>
+          </div>
+
+          <div class="form-divider">or log in with email</div>
+
+          <!-- Login Form -->
+          <form id="loginForm" novalidate>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label" for="loginEmail">Email Address</label>
+              <div class="form-input-icon">
+                <span class="input-icon">✉️</span>
+                <input
+                  type="email"
+                  id="loginEmail"
+                  name="email"
+                  class="form-input"
+                  placeholder="you@example.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label class="form-label" for="loginPassword" style="margin:0;">Password</label>
+                <!-- Future Sprint: Supabase password reset via email -->
+                <a href="#" style="font-size:0.78rem; color:var(--purple-mid);" onclick="showToast('🔒 Password reset coming in Sprint 2!'); return false;">Forgot password?</a>
+              </div>
+              <div class="form-input-icon" style="position:relative;">
+                <span class="input-icon">🔒</span>
+                <input
+                  type="password"
+                  id="loginPassword"
+                  name="password"
+                  class="form-input"
+                  placeholder="Your password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">👁️</button>
+              </div>
+            </div>
+
+            <!-- Remember me -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+              <input type="checkbox" id="rememberMe" style="accent-color:var(--purple-mid); width:16px; height:16px;" />
+              <label for="rememberMe" style="font-size:0.88rem; color:var(--text-mid); cursor:pointer;">Remember me for 30 days</label>
+            </div>
+
+            <!-- Submit
+                 Future Sprint 2: Replace with Supabase auth call.
+                 See future-features.js → loginUser() for full stub. -->
+            <button type="submit" class="btn btn-primary btn-lg form-submit" id="loginBtn">
+              Log In
+            </button>
+
+            <!-- Error message placeholder — Future Sprint: Show real auth errors -->
+            <div id="loginError" style="display:none; margin-top:12px; padding:12px 16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); border-radius:var(--radius-md); color:#DC2626; font-size:0.85rem; text-align:center;">
+            </div>
+
+          </form>
+
+          <!-- Sign Up Link -->
+          <div class="form-footer">
+            Don't have an account?
+            <a href="signup.html">Sign up free →</a>
+          </div>
+
+        </div>
+
+        <!-- Trust indicators -->
+        <div class="text-center mt-16 anim-fade-up delay-2">
+          <p style="font-size:0.78rem; color:var(--text-light);">
+            🔒 Secured by Supabase Auth &nbsp;·&nbsp; 256-bit encryption
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer injected here by app.js -->
+  <div id="footer-placeholder"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/future-features.js"></script>
+  <script>
+    /* Page-specific init */
+    function initPage() {
+
+      /* Password visibility toggle */
+      const toggle   = document.getElementById('togglePassword');
+      const pwdInput = document.getElementById('loginPassword');
+      if (toggle && pwdInput) {
+        toggle.addEventListener('click', () => {
+          const isVisible = pwdInput.type === 'text';
+          pwdInput.type   = isVisible ? 'password' : 'text';
+          toggle.textContent = isVisible ? '👁️' : '🙈';
+        });
+      }
+
+      /* Login form submission
+         Future Sprint 2: Replace with real Supabase sign-in.
+         import { supabase } from './supabaseClient'
+         const { error } = await supabase.auth.signInWithPassword({ email, password })
+         if (error) showError(error.message)
+         else window.location.href = 'dashboard.html' */
+      const form    = document.getElementById('loginForm');
+      const loginBtn = document.getElementById('loginBtn');
+      const errorBox = document.getElementById('loginError');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const email    = form.email.value.trim();
+        const password = form.password.value;
+
+        if (!email || !password) {
+          showError('Please enter your email and password.');
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          showError('Please enter a valid email address.');
+          return;
+        }
+
+        /* Simulate loading */
+        loginBtn.textContent = '⏳ Logging in...';
+        loginBtn.disabled = true;
+        errorBox.style.display = 'none';
+
+        setTimeout(() => {
+          loginBtn.textContent = 'Log In';
+          loginBtn.disabled = false;
+
+          /* Sprint 1: Placeholder — not real auth */
+          showToast('🚀 Authentication coming in Sprint 2 via Supabase! Form looks great.', 4000);
+        }, 1400);
+      });
+
+      function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+    }
+  </script>
+</body>
+</html>
