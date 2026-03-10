@@ -6,6 +6,13 @@
   <title>Customer Dashboard — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .app-card { background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start; }
+    .app-avatar { width:44px;height:44px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:var(--blue);flex-shrink:0;overflow:hidden; }
+    .app-actions { display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end; }
+    .status-pill { font-size:0.7rem;font-weight:700;text-transform:capitalize;padding:2px 8px;border-radius:999px;border:1px solid; }
+  </style>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -14,7 +21,7 @@
     <div class="dashboard-header">
       <div class="container">
         <h1 id="dashGreeting">My Dashboard</h1>
-        <p>Track your tasks and bookings</p>
+        <p>Track your tasks, applications and bookings</p>
       </div>
     </div>
 
@@ -33,6 +40,16 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
                 My Tasks
               </button>
+              <button class="dashboard-nav-item" data-panel="applications" onclick="switchPanel('applications',this);loadApplications()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Applications
+                <span id="custAppBadge" style="display:none;background:#2563eb;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
+              </button>
+              <button class="dashboard-nav-item" data-panel="notifications" onclick="switchPanel('notifications',this);loadCustNotifications()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notifications
+                <span id="custNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
+              </button>
               <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
@@ -44,38 +61,28 @@
           </aside>
 
           <main>
-            <!-- Customer subscription gate banner (shown after 10 tasks) -->
-            <div id="custSubGateBanner" style="display:none; margin-bottom:20px; padding:16px 20px; background:var(--amber-light); border:1px solid rgba(217,119,6,0.3); border-radius:var(--radius-lg);">
-              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <div style="flex:1;">
-                  <strong style="color:var(--amber);font-size:0.88rem;">Free task limit reached</strong>
-                  <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;">You've posted <span id="custTaskCount">10</span> tasks. Upgrade to post unlimited tasks and get priority matching.</p>
-                </div>
-                <a href="subscription.html" class="btn btn-sm" style="background:var(--amber);color:var(--white);border:none;flex-shrink:0;">Upgrade</a>
-              </div>
-            </div>
-
             <div id="dashLoading" style="text-align:center;padding:48px;color:var(--text-muted);">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
               Loading...
             </div>
 
+            <!-- Subscription gate -->
+            <div id="custSubGateBanner" style="display:none; margin-bottom:20px; padding:16px 20px; background:var(--amber-light); border:1px solid rgba(217,119,6,0.3); border-radius:var(--radius-lg);">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;">
+                  <strong style="color:var(--amber);font-size:0.88rem;">Free task limit reached</strong>
+                  <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;">You've posted <span id="custTaskCount">10</span> tasks. Upgrade to post unlimited tasks.</p>
+                </div>
+                <a href="subscription.html" class="btn btn-sm" style="background:var(--amber);color:var(--white);border:none;flex-shrink:0;">Upgrade</a>
+              </div>
+            </div>
+
             <!-- Overview Panel -->
             <div id="panel-overview" class="dashboard-panel">
               <div class="dashboard-stats">
-                <div class="stat-card">
-                  <div class="stat-card-label">Posted Tasks</div>
-                  <div class="stat-card-value" id="statTotal">—</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-card-label">Active Tasks</div>
-                  <div class="stat-card-value" id="statActive">—</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-card-label">Completed</div>
-                  <div class="stat-card-value" id="statDone">—</div>
-                </div>
+                <div class="stat-card"><div class="stat-card-label">Posted Tasks</div><div class="stat-card-value" id="statTotal">—</div></div>
+                <div class="stat-card"><div class="stat-card-label">Active Tasks</div><div class="stat-card-value" id="statActive">—</div></div>
+                <div class="stat-card"><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statDone">—</div></div>
               </div>
               <div class="panel-header"><h2>Recent Tasks</h2><button class="btn btn-ghost btn-sm" onclick="switchPanel('my-tasks',document.querySelector('[data-panel=my-tasks]'))">View all</button></div>
               <div class="task-row-list" id="recentList"></div>
@@ -85,6 +92,24 @@
             <div id="panel-my-tasks" class="dashboard-panel">
               <div class="panel-header"><h2>My Posted Tasks</h2><a href="post-task.html" class="btn btn-primary btn-sm">+ Post New</a></div>
               <div class="task-row-list" id="allTasksList"></div>
+            </div>
+
+            <!-- Applications Panel -->
+            <div id="panel-applications" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Task Applications</h2>
+                <span style="font-size:0.82rem;color:var(--text-muted);">Taskers who want to do your tasks</span>
+              </div>
+              <div id="appTaskList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
+            </div>
+
+            <!-- Notifications Panel -->
+            <div id="panel-notifications" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Notifications</h2>
+                <button class="btn btn-ghost btn-sm" onclick="markCustAllRead()">Mark all read</button>
+              </div>
+              <div id="custNotifList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
             </div>
 
             <!-- Bookings Panel -->
@@ -99,7 +124,6 @@
   </div>
 
   <div id="footer-placeholder"></div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
@@ -108,10 +132,14 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script>
+    'use strict';
+    var appLoaded = false;
+    var custNotifLoaded = false;
+
     function switchPanel(id, btn) {
-      document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.dashboard-nav-item').forEach(b => b.classList.remove('active'));
-      const p = document.getElementById('panel-' + id);
+      document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
+      var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
       if (btn) btn.classList.add('active');
     }
@@ -122,101 +150,244 @@
     }
 
     function badge(s) {
-      const st = (s||'open').toLowerCase();
-      return `<span class="task-row-badge status-${st}">${st.charAt(0).toUpperCase()+st.slice(1)}</span>`;
+      var st = (s||'open').toLowerCase();
+      return '<span class="task-row-badge status-' + st + '">' + st.charAt(0).toUpperCase() + st.slice(1) + '</span>';
+    }
+
+    function empty(msg, cta, href) {
+      return '<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>Nothing here yet</h3><p>' + msg + '</p>' + (cta ? '<a href="' + href + '" class="btn btn-primary btn-sm">' + cta + '</a>' : '') + '</div>';
     }
 
     function taskCard(t) {
-      return `<div class="task-row-card">
-        <div class="task-row-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <div class="task-row-content">
-          <div class="task-row-title">${t.title||'Untitled task'}</div>
-          <div class="task-row-meta">
-            <span>${t.location||'—'}</span>
-            ${t.budget ? `<span style="color:var(--green);font-weight:700;">₦${Number(t.budget).toLocaleString()}</span>` : ''}
-            ${t.category ? `<span>${t.category}</span>` : ''}
-            <span>${fmtDate(t.created_at)}</span>
-          </div>
-          ${t.description ? `<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">${t.description.slice(0,100)}${t.description.length>100?'…':''}</p>` : ''}
-        </div>
-        ${badge(t.status)}
-      </div>`;
+      return '<div class="task-row-card">' +
+        '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>' +
+        '<div class="task-row-content"><div class="task-row-title">' + (t.title||'Untitled task') + '</div>' +
+        '<div class="task-row-meta"><span>' + (t.location||'—') + '</span>' +
+        (t.budget ? '<span style="color:var(--green);font-weight:700;">&#8358;' + Number(t.budget).toLocaleString() + '</span>' : '') +
+        (t.category ? '<span>' + t.category + '</span>' : '') +
+        '<span>' + fmtDate(t.created_at) + '</span></div>' +
+        (t.description ? '<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">' + t.description.slice(0,100) + (t.description.length>100?'…':'') + '</p>' : '') +
+        '</div>' + badge(t.status) + '</div>';
     }
 
     function bookingCard(b) {
-      const who = b.taskers?.service || b.tasker_id?.slice(0,8) || 'Provider';
-      return `<div class="booking-row-card">
-        <div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div class="booking-row-content">
-          <div class="booking-row-title">${who}</div>
-          <div class="booking-row-meta">${b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set'}</div>
-        </div>
-        ${badge(b.status)}
-      </div>`;
+      var who = (b.taskers && b.taskers.service) || (b.tasker_id ? b.tasker_id.slice(0,8) : 'Provider');
+      return '<div class="booking-row-card">' +
+        '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>' +
+        '<div class="booking-row-content"><div class="booking-row-title">' + who + '</div><div class="booking-row-meta">' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
+        badge(b.status) + '</div>';
     }
 
-    function empty(msg, cta, ctaHref) {
-      return `<div class="empty-state">
-        <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <h3>Nothing here yet</h3><p>${msg}</p>
-        ${cta ? `<a href="${ctaHref}" class="btn btn-primary btn-sm">${cta}</a>` : ''}
-      </div>`;
-    }
-
-    async function initPage() {
-      const user = await window.ST.auth.requireAuth();
-      if (!user) return;
-
-      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'there';
-      document.getElementById('dashGreeting').textContent = `Welcome back, ${name}`;
-
+    /* ── Task Applications ───────────────────────────────────── */
+    async function loadApplications() {
+      if (appLoaded) return;
+      appLoaded = true;
+      var container = document.getElementById('appTaskList');
       try {
-        const [tasks, bookings] = await Promise.all([
-          window.ST.db.fetchMyTasks(),
-          window.ST.db.fetchMyBookings(),
-        ]);
-
-        document.getElementById('dashLoading').style.display = 'none';
-
-        const active    = tasks.filter(t => t.status === 'open' || t.status === 'active').length;
-        const done      = tasks.filter(t => t.status === 'completed').length;
-        document.getElementById('statTotal').textContent  = tasks.length;
-        document.getElementById('statActive').textContent = active;
-        document.getElementById('statDone').textContent   = done;
-
-        /* Subscription gate: customers get 10 free task posts */
-        const FREE_TASK_LIMIT = 10;
-        if (tasks.length >= FREE_TASK_LIMIT) {
-          const banner = document.getElementById('custSubGateBanner');
-          if (banner) {
-            banner.style.display = 'flex';
-            const countEl = document.getElementById('custTaskCount');
-            if (countEl) countEl.textContent = tasks.length;
-          }
+        var tasks = await window.ST.db.fetchMyTasks();
+        if (!tasks.length) {
+          container.innerHTML = empty('Post a task to start receiving applications from taskers.', 'Post a Task', 'post-task.html');
+          return;
         }
 
-        /* Recent tasks in overview */
-        document.getElementById('recentList').innerHTML = tasks.slice(0,4).length
-          ? tasks.slice(0,4).map(taskCard).join('')
-          : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
+        var html = '';
+        var totalApps = 0;
 
-        /* All tasks panel */
-        document.getElementById('allTasksList').innerHTML = tasks.length
-          ? tasks.map(taskCard).join('')
-          : empty('No tasks posted yet. Each task gets instant-matched with providers.', 'Post a Task', 'post-task.html');
+        for (var i = 0; i < Math.min(tasks.length, 10); i++) {
+          var task = tasks[i];
+          var apps;
+          try { apps = await window.ST.db.fetchTaskApplications(task.id); } catch(e) { apps = []; }
+          if (!apps.length) continue;
+          totalApps += apps.length;
 
-        /* Bookings panel */
-        document.getElementById('bookingsList').innerHTML = bookings.length
-          ? bookings.map(bookingCard).join('')
-          : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
+          html += '<div style="margin-bottom:24px;">' +
+            '<div style="font-size:0.9rem;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);">' +
+            '&#128203; ' + task.title + ' <span style="font-size:0.78rem;font-weight:400;color:var(--text-muted);">— ' + apps.length + ' applicant' + (apps.length>1?'s':'') + '</span></div>' +
+            apps.map(function(a) { return applicationCard(a, task.id); }).join('') +
+            '</div>';
+        }
 
-        switchPanel('overview', document.querySelector('[data-panel="overview"]'));
-      } catch(err) {
-        document.getElementById('dashLoading').innerHTML =
-          `<div style="text-align:center;padding:40px;"><p style="color:var(--red);">Could not load dashboard: ${err.message}</p><a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;">Go to Find Services</a></div>`;
+        if (!html) {
+          container.innerHTML = empty('No applications yet. Taskers will apply as they see your tasks.', null, null);
+          return;
+        }
+
+        if (totalApps > 0) {
+          var badge2 = document.getElementById('custAppBadge');
+          if (badge2) { badge2.textContent = totalApps > 9 ? '9+' : String(totalApps); badge2.style.display = 'inline'; }
+        }
+
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<p style="color:var(--red);font-size:0.84rem;padding:16px;">Could not load applications: ' + e.message + '</p>';
       }
+    }
+    window.loadApplications = loadApplications;
+
+    function applicationCard(a, taskId) {
+      var tasker  = a.taskers || {};
+      var name    = tasker.name || 'Tasker';
+      var svc     = tasker.service || '';
+      var loc     = tasker.location || '';
+      var rating  = tasker.rating ? '&#11088; ' + parseFloat(tasker.rating).toFixed(1) : '';
+      var photo   = tasker.photo_url;
+      var initials = name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+
+      var statusColors = { pending:'#f59e0b', accepted:'#16a34a', rejected:'#dc2626' };
+      var statusColor  = statusColors[a.status] || '#6b7280';
+
+      return '<div class="app-card" id="app-' + a.id + '">' +
+        '<div class="app-avatar">' +
+          (photo ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\'' + initials + '\'" />' : initials) +
+        '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700;font-size:0.9rem;">' + name + '</div>' +
+          '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">' + [svc,loc,rating].filter(Boolean).join(' &middot; ') + '</div>' +
+          (a.message ? '<p style="font-size:0.82rem;color:var(--text-secondary);margin-top:7px;padding:8px 10px;background:var(--bg-subtle);border-radius:6px;border-left:3px solid var(--border);">&ldquo;' + a.message + '&rdquo;</p>' : '') +
+          '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:5px;">' + fmtDate(a.created_at) + '</div>' +
+        '</div>' +
+        '<div class="app-actions">' +
+          '<span class="status-pill" style="color:' + statusColor + ';border-color:' + statusColor + ';">' + (a.status||'pending') + '</span>' +
+          (a.status === 'pending' ? '<button class="btn btn-sm btn-primary" onclick="acceptApp(\'' + a.id + '\',\'' + taskId + '\')">Accept</button><button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="rejectApp(\'' + a.id + '\')">Decline</button>' : '') +
+        '</div></div>';
+    }
+
+    async function acceptApp(appId, taskId) {
+      if (!confirm('Accept this tasker for the job?')) return;
+      try {
+        await window.ST.db.updateApplicationStatus(appId, 'accepted');
+        showToast('&#127881; Application accepted! The tasker has been notified.');
+        appLoaded = false;
+        await loadApplications();
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.acceptApp = acceptApp;
+
+    async function rejectApp(appId) {
+      try {
+        await window.ST.db.updateApplicationStatus(appId, 'rejected');
+        showToast('Application declined.');
+        appLoaded = false;
+        await loadApplications();
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.rejectApp = rejectApp;
+
+    /* ── Notifications ───────────────────────────────────────── */
+    async function loadCustNotifications() {
+      if (custNotifLoaded) return;
+      custNotifLoaded = true;
+      var el = document.getElementById('custNotifList');
+      try {
+        var notifs = await window.ST.db.fetchMyNotifications({ limit: 40 });
+        await window.ST.db.markAllNotificationsRead();
+        var badge3 = document.getElementById('custNotifBadge');
+        if (badge3) badge3.style.display = 'none';
+        if (!notifs.length) { el.innerHTML = empty('No notifications yet.', null, null); return; }
+        el.innerHTML = notifs.map(function(n) {
+          return '<div class="task-row-card" style="margin-bottom:8px;' + (n.read ? 'opacity:0.75;' : 'border-left:3px solid var(--blue);') + '">' +
+            '<div class="task-row-icon" style="background:var(--blue-light);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>' +
+            '<div class="task-row-content"><div class="task-row-title" style="font-size:0.88rem;">' + (n.title||'Notification') + '</div><div class="task-row-meta">' + (n.message||'') + '</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">' + fmtDate(n.created_at) + '</div></div>' +
+            (!n.read ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px;"></div>' : '') +
+            '</div>';
+        }).join('');
+      } catch(e) {
+        el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;padding:16px;">Could not load notifications.</p>';
+      }
+    }
+    window.loadCustNotifications = loadCustNotifications;
+
+    async function markCustAllRead() {
+      try {
+        await window.ST.db.markAllNotificationsRead();
+        var b = document.getElementById('custNotifBadge');
+        if (b) b.style.display = 'none';
+        custNotifLoaded = false;
+        await loadCustNotifications();
+        showToast('All notifications marked as read.');
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.markCustAllRead = markCustAllRead;
+
+    /* ── Init ────────────────────────────────────────────────── */
+    async function initPage() {
+      var user;
+      try {
+        user = await window.ST.auth.requireAuth();
+        if (!user) return;
+      } catch(authErr) {
+        document.getElementById('dashLoading').innerHTML = '<p style="color:var(--red);text-align:center;">Auth error. <a href="login.html">Log in again</a></p>';
+        return;
+      }
+
+      var name = (user.user_metadata && user.user_metadata.name) || user.email.split('@')[0] || 'there';
+      document.getElementById('dashGreeting').textContent = 'Welcome back, ' + name;
+
+      /* Hide loading, show panels immediately */
+      document.getElementById('dashLoading').style.display = 'none';
+      switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+
+      /* Load notification badge */
+      window.ST.db.fetchUnreadNotificationCount().then(function(count) {
+        if (count > 0) {
+          var nb = document.getElementById('custNotifBadge');
+          if (nb) { nb.textContent = count > 9 ? '9+' : String(count); nb.style.display = 'inline'; }
+        }
+      }).catch(function(){});
+
+      /* Load data independently */
+      var tasks    = [];
+      var bookings = [];
+
+      try { tasks    = await window.ST.db.fetchMyTasks(); }    catch(e) { console.warn('[Dashboard] tasks:', e.message); }
+      try { bookings = await window.ST.db.fetchMyBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
+
+      var active = tasks.filter(function(t) { return t.status === 'open' || t.status === 'active'; }).length;
+      var done   = tasks.filter(function(t) { return t.status === 'completed'; }).length;
+      document.getElementById('statTotal').textContent  = tasks.length;
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statDone').textContent   = done;
+
+      var FREE_TASK_LIMIT = 10;
+      if (tasks.length >= FREE_TASK_LIMIT) {
+        var banner = document.getElementById('custSubGateBanner');
+        if (banner) {
+          banner.style.display = 'flex';
+          var countEl = document.getElementById('custTaskCount');
+          if (countEl) countEl.textContent = String(tasks.length);
+        }
+      }
+
+      /* Show application badge if there are any tasks */
+      if (tasks.length > 0) {
+        /* Check total application count (background, non-blocking) */
+        (async function() {
+          var total = 0;
+          for (var i = 0; i < Math.min(tasks.length, 5); i++) {
+            try {
+              var apps = await window.ST.db.fetchTaskApplications(tasks[i].id);
+              var pending = apps.filter(function(a) { return a.status === 'pending'; }).length;
+              total += pending;
+            } catch(e) {}
+          }
+          if (total > 0) {
+            var ab = document.getElementById('custAppBadge');
+            if (ab) { ab.textContent = total > 9 ? '9+' : String(total); ab.style.display = 'inline'; }
+          }
+        })();
+      }
+
+      document.getElementById('recentList').innerHTML = tasks.slice(0,4).length
+        ? tasks.slice(0,4).map(taskCard).join('')
+        : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
+
+      document.getElementById('allTasksList').innerHTML = tasks.length
+        ? tasks.map(taskCard).join('')
+        : empty('No tasks posted yet. Each task gets matched with providers.', 'Post a Task', 'post-task.html');
+
+      document.getElementById('bookingsList').innerHTML = bookings.length
+        ? bookings.map(bookingCard).join('')
+        : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
     }
   </script>
 </body>

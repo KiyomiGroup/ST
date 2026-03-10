@@ -6,6 +6,11 @@
   <title>Tasker Dashboard — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .notif-dot { width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0; }
+    .notif-unread { border-left:3px solid var(--blue); }
+  </style>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -41,6 +46,11 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Find Tasks
               </button>
+              <button class="dashboard-nav-item" data-panel="notifications" onclick="switchPanel('notifications',this);loadNotifications()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notifications
+                <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
+              </button>
               <button class="dashboard-nav-item" data-panel="subscription" onclick="switchPanel('subscription',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Subscription
@@ -53,9 +63,10 @@
           </aside>
 
           <main>
+            <!-- Loading spinner — hidden as soon as data loads -->
             <div id="dashLoading" style="text-align:center;padding:48px;color:var(--text-muted);">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-              Loading...
+              Loading your dashboard...
             </div>
 
             <!-- Subscription gate banner -->
@@ -89,13 +100,8 @@
             <!-- Find Tasks -->
             <div id="panel-find-tasks" class="dashboard-panel">
               <div class="panel-header"><h2>Open Tasks Near You</h2><a href="find-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
-              <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:16px;">Tasks posted by customers that match your skills. Apply to get hired.</p>
-              <div id="findTasksList">
-                <div style="text-align:center;padding:32px;color:var(--text-muted);">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;display:inline-block;"></svg>
-                  Loading...
-                </div>
-              </div>
+              <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:16px;">Tasks posted by customers. Apply to get hired.</p>
+              <div id="findTasksList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading tasks...</div></div>
             </div>
 
             <!-- Bookings -->
@@ -104,38 +110,39 @@
               <div class="task-row-list" id="bookingsList"></div>
             </div>
 
+            <!-- Notifications -->
+            <div id="panel-notifications" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Notifications</h2>
+                <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Mark all read</button>
+              </div>
+              <div id="notifList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
+            </div>
+
             <!-- Subscription -->
             <div id="panel-subscription" class="dashboard-panel">
               <div class="panel-header"><h2>Subscription Status</h2></div>
               <div id="subCard"></div>
-
-              <!-- Plan cards -->
-              <div style="margin-top:24px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+              <div style="margin-top:24px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
                 <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
                   <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:8px;">Basic</div>
                   <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">Free</div>
                   <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:14px;">Up to 5 customers</p>
-                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;">
-                    <li>✓ Basic listing</li><li>✓ 5 bookings</li><li>✗ Featured</li><li>✗ Analytics</li>
-                  </ul>
+                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;padding:0;"><li>✓ Basic listing</li><li>✓ 5 bookings</li><li>✗ Featured</li><li>✗ Analytics</li></ul>
                   <span class="btn btn-ghost btn-sm btn-full" style="justify-content:center;pointer-events:none;opacity:0.6;">Current Plan</span>
                 </div>
                 <div style="background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-lg);padding:20px;">
                   <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--blue);margin-bottom:8px;">Pro</div>
-                  <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">₦9,999<span style="font-size:0.8rem;font-weight:400;">/mo</span></div>
+                  <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">&#8358;9,999<span style="font-size:0.8rem;font-weight:400;">/mo</span></div>
                   <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:14px;">Up to 100 bookings</p>
-                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;">
-                    <li>✓ 100 bookings/mo</li><li>✓ Featured listing</li><li>✓ Analytics</li><li>✓ Priority ranking</li>
-                  </ul>
+                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;padding:0;"><li>✓ 100 bookings/mo</li><li>✓ Featured listing</li><li>✓ Analytics</li><li>✓ Priority ranking</li></ul>
                   <a href="subscription.html" class="btn btn-primary btn-sm btn-full" style="justify-content:center;">Upgrade to Pro</a>
                 </div>
                 <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
                   <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:8px;">Enterprise</div>
-                  <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">₦24,999<span style="font-size:0.8rem;font-weight:400;">/mo</span></div>
+                  <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">&#8358;24,999<span style="font-size:0.8rem;font-weight:400;">/mo</span></div>
                   <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:14px;">Unlimited bookings</p>
-                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;">
-                    <li>✓ Unlimited bookings</li><li>✓ Featured + top placement</li><li>✓ Advanced analytics</li><li>✓ Verified badge</li>
-                  </ul>
+                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;padding:0;"><li>✓ Unlimited bookings</li><li>✓ Featured placement</li><li>✓ Analytics</li><li>✓ Verified badge</li></ul>
                   <a href="subscription.html" class="btn btn-ghost btn-sm btn-full" style="justify-content:center;">Upgrade</a>
                 </div>
               </div>
@@ -148,7 +155,6 @@
   </div>
 
   <div id="footer-placeholder"></div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
@@ -157,17 +163,20 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script>
-    const PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
-    const AV_COLORS = ['av-1','av-2','av-3','av-4','av-5','av-6'];
-    let findTasksLoaded = false;
+    'use strict';
+    var PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
+    var AV_COLORS = ['av-1','av-2','av-3','av-4','av-5','av-6'];
+    var findTasksLoaded = false;
+    var notifLoaded = false;
 
     function switchPanel(id, btn) {
-      document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.dashboard-nav-item').forEach(b => b.classList.remove('active'));
-      const p = document.getElementById('panel-' + id);
+      document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
+      var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
       if (btn) btn.classList.add('active');
     }
+    window.switchPanel = switchPanel;
 
     function fmtDate(iso) {
       if (!iso) return '—';
@@ -175,195 +184,205 @@
     }
 
     function badge(s) {
-      const st = (s||'pending').toLowerCase();
-      return `<span class="task-row-badge status-${st}">${st.charAt(0).toUpperCase()+st.slice(1)}</span>`;
+      var st = (s||'pending').toLowerCase();
+      return '<span class="task-row-badge status-' + st + '">' + st.charAt(0).toUpperCase() + st.slice(1) + '</span>';
     }
 
-    function bookingRow(b, actions=true) {
-      const who  = b.users?.name || b.customer_id?.slice(0,8) || 'Customer';
-      const task = b.tasks?.title || 'Booking request';
-      return `<div class="booking-row-card" id="bk-${b.id}">
-        <div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div class="booking-row-content">
-          <div class="booking-row-title">${who}</div>
-          <div class="booking-row-meta">${task} · ${b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set'}</div>
-        </div>
-        <div class="booking-row-actions">
-          ${badge(b.status)}
-          ${actions && b.status === 'pending'   ? `<button class="btn btn-sm btn-primary" onclick="doBooking('${b.id}','confirmed')">Confirm</button>` : ''}
-          ${actions && b.status === 'confirmed' ? `<button class="btn btn-sm btn-ghost"   onclick="doBooking('${b.id}','completed')">Mark Done</button>` : ''}
-        </div>
-      </div>`;
+    function empty(msg, cta, href) {
+      return '<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>Nothing here yet</h3><p>' + msg + '</p>' + (cta ? '<a href="' + href + '" class="btn btn-primary btn-sm">' + cta + '</a>' : '') + '</div>';
+    }
+
+    function bookingRow(b, actions) {
+      var who  = (b.users && b.users.name) || (b.customer_id ? b.customer_id.slice(0,8) : 'Customer');
+      var task = (b.tasks && b.tasks.title) || 'Booking request';
+      return '<div class="booking-row-card" id="bk-' + b.id + '">' +
+        '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>' +
+        '<div class="booking-row-content"><div class="booking-row-title">' + who + '</div><div class="booking-row-meta">' + task + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
+        '<div class="booking-row-actions">' + badge(b.status) +
+          (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" onclick="doBooking(\'' + b.id + '\',\'confirmed\')">Confirm</button>' : '') +
+          (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   onclick="doBooking(\'' + b.id + '\',\'completed\')">Mark Done</button>' : '') +
+        '</div></div>';
     }
 
     async function doBooking(id, status) {
       try {
         await window.ST.db.updateBookingStatus(id, status);
         showToast(status === 'confirmed' ? 'Booking confirmed!' : 'Job marked as completed!');
-        setTimeout(() => location.reload(), 800);
+        setTimeout(function() { location.reload(); }, 800);
       } catch(e) { showToast('Error: ' + e.message); }
     }
     window.doBooking = doBooking;
 
-    function empty(msg, cta, ctaHref) {
-      return `<div class="empty-state">
-        <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <h3>Nothing here yet</h3><p>${msg}</p>
-        ${cta ? `<a href="${ctaHref}" class="btn btn-primary btn-sm">${cta}</a>` : ''}
-      </div>`;
-    }
-
-    /* ── Service cards ─────────────────────────────────────── */
     function serviceCard(s, idx) {
-      const init  = (s.service_name||s.service||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      const av    = AV_COLORS[idx % AV_COLORS.length];
-      const type  = PRICING_LABELS[s.pricing_type] || '/job';
-      const photo = s.photo;
-      return `<div class="task-row-card" id="svc-${s.id}">
-        <div class="task-row-icon ${av}" style="${photo?'padding:0;overflow:hidden;background:var(--gray-100);':'font-size:0.8rem;font-weight:700;'}">
-          ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='${init}'" />` : init}
-        </div>
-        <div class="task-row-content">
-          <div class="task-row-title">${s.service_name||s.service||'Service'}</div>
-          <div class="task-row-meta">
-            <span>${s.location||'—'}</span>
-            <span>₦${Number(s.price||0).toLocaleString()}${type}</span>
-            <span>${(s.category||'').replace('_',' ')}</span>
-          </div>
-          ${s.description ? `<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:6px;">${s.description.slice(0,100)}${s.description.length>100?'…':''}</p>` : ''}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-          <a href="post-service.html" class="btn btn-sm btn-ghost">Edit</a>
-          ${s.fromServices ? `<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="confirmDeleteService('${s.id}')">Delete</button>` : ''}
-          <a href="find-taskers.html" class="btn btn-sm btn-ghost" target="_blank">Preview</a>
-          <a href="post-service.html" class="btn btn-sm btn-primary">+ Post Another</a>
-        </div>
-      </div>`;
+      var init  = (s.service_name || s.service || '?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+      var av    = AV_COLORS[idx % AV_COLORS.length];
+      var type  = PRICING_LABELS[s.pricing_type] || '/job';
+      var photo = s.photo;
+      return '<div class="task-row-card" id="svc-' + s.id + '">' +
+        '<div class="task-row-icon ' + av + '" style="' + (photo ? 'padding:0;overflow:hidden;background:var(--gray-100);' : 'font-size:0.8rem;font-weight:700;') + '">' +
+          (photo ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\'' + init + '\'" />' : init) +
+        '</div>' +
+        '<div class="task-row-content">' +
+          '<div class="task-row-title">' + (s.service_name || s.service || 'Service') + '</div>' +
+          '<div class="task-row-meta"><span>' + (s.location || '—') + '</span><span>&#8358;' + Number(s.price||0).toLocaleString() + (s.rate_unit||type) + '</span><span>' + (s.category||'').replace('_',' ') + '</span></div>' +
+          (s.description ? '<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:6px;">' + s.description.slice(0,100) + (s.description.length>100?'…':'') + '</p>' : '') +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+          '<a href="post-service.html" class="btn btn-sm btn-ghost">Edit</a>' +
+          (s.fromServices ? '<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="confirmDeleteService(\'' + s.id + '\')">Delete</button>' : '') +
+          '<a href="post-service.html" class="btn btn-sm btn-primary">+ Post Another</a>' +
+        '</div></div>';
     }
 
     async function confirmDeleteService(id) {
       if (!confirm('Delete this service? This cannot be undone.')) return;
       try {
         await window.ST.db.deleteService(id);
-        const el = document.getElementById('svc-' + id);
+        var el = document.getElementById('svc-' + id);
         if (el) el.remove();
         showToast('Service deleted.');
       } catch(e) { showToast('Error: ' + e.message); }
     }
     window.confirmDeleteService = confirmDeleteService;
 
-    /* ── Find Tasks loader ─────────────────────────────────── */
+    /* ── Find Tasks ───────────────────────────────────────────── */
     async function loadFindTasks() {
       if (findTasksLoaded) return;
       findTasksLoaded = true;
-      const el = document.getElementById('findTasksList');
+      var el = document.getElementById('findTasksList');
       try {
-        const tasks = await window.ST.db.fetchTasks({ limit: 20 });
-        if (!tasks.length) {
-          el.innerHTML = empty('No open tasks right now. Check back soon.', null, null);
-          return;
-        }
-        el.innerHTML = tasks.map(t => findTaskCard(t)).join('');
+        var tasks = await window.ST.db.fetchTasks({ limit: 20 });
+        if (!tasks.length) { el.innerHTML = empty('No open tasks right now. Check back soon.', null, null); return; }
+        el.innerHTML = tasks.map(function(t) {
+          return '<div class="task-row-card" style="margin-bottom:12px;">' +
+            '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
+            '<div class="task-row-content"><div class="task-row-title">' + (t.title||'Task') + '</div>' +
+            '<div class="task-row-meta"><span>' + (t.location||'Lagos') + '</span>' + (t.category?'<span>'+t.category+'</span>':'') + '<span style="color:var(--green);font-weight:700;">&#8358;' + Number(t.budget||0).toLocaleString() + '</span></div>' +
+            (t.description?'<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">' + t.description.slice(0,100) + (t.description.length>100?'…':'') + '</p>':'') +
+            '</div><div style="flex-shrink:0;"><a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
+        }).join('');
       } catch(e) {
-        el.innerHTML = `<p style="color:var(--red);font-size:0.84rem;">Could not load tasks: ${e.message}</p>`;
+        el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;">Could not load tasks: ' + e.message + '</p>';
       }
     }
     window.loadFindTasks = loadFindTasks;
 
-    function findTaskCard(t) {
-      return `<div class="task-row-card" style="margin-bottom:12px;">
-        <div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="task-row-content">
-          <div class="task-row-title">${t.title||'Task'}</div>
-          <div class="task-row-meta">
-            <span>${t.location||'Lagos'}</span>
-            ${t.category ? `<span>${t.category}</span>` : ''}
-            <span style="color:var(--green);font-weight:700;">₦${Number(t.budget||0).toLocaleString()}</span>
-          </div>
-          ${t.description ? `<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">${t.description.slice(0,100)}${t.description.length>100?'…':''}</p>` : ''}
-        </div>
-        <div style="flex-shrink:0;">
-          <a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a>
-        </div>
-      </div>`;
+    /* ── Notifications ────────────────────────────────────────── */
+    async function loadNotifications() {
+      if (notifLoaded) return;
+      notifLoaded = true;
+      var el = document.getElementById('notifList');
+      try {
+        var notifs = await window.ST.db.fetchMyNotifications({ limit: 40 });
+        updateNotifBadge(0);
+        await window.ST.db.markAllNotificationsRead();
+        if (!notifs.length) { el.innerHTML = empty('No notifications yet.', null, null); return; }
+        el.innerHTML = notifs.map(function(n) {
+          return '<div class="task-row-card ' + (n.read ? '' : 'notif-unread') + '" style="margin-bottom:8px;' + (n.read ? 'opacity:0.75;' : '') + '">' +
+            '<div class="task-row-icon" style="background:var(--blue-light);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>' +
+            '<div class="task-row-content"><div class="task-row-title" style="font-size:0.88rem;">' + (n.title||'Notification') + '</div>' +
+            '<div class="task-row-meta">' + (n.message||'') + '</div>' +
+            '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">' + fmtDate(n.created_at) + '</div></div>' +
+            (!n.read ? '<div class="notif-dot" style="margin-top:6px;"></div>' : '') +
+            '</div>';
+        }).join('');
+      } catch(e) {
+        el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;padding:16px;">Could not load notifications.</p>';
+      }
+    }
+    window.loadNotifications = loadNotifications;
+
+    function updateNotifBadge(count) {
+      var badge = document.getElementById('navNotifBadge');
+      if (!badge) return;
+      if (count > 0) { badge.textContent = count > 9 ? '9+' : String(count); badge.style.display = 'inline'; }
+      else { badge.style.display = 'none'; }
     }
 
-    /* ── Init ─────────────────────────────────────────────── */
-    async function initPage() {
-      const user = await window.ST.auth.requireAuth();
-      if (!user) return;
-
-      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Tasker';
-      document.getElementById('dashGreeting').textContent = `Welcome back, ${name}`;
-
+    async function markAllRead() {
       try {
-        const [services, bookings, sub] = await Promise.all([
-          window.ST.db.fetchMyServices(),
-          window.ST.db.fetchTaskerBookings(),
-          window.ST.db.fetchMySubscription(),
-        ]);
+        await window.ST.db.markAllNotificationsRead();
+        updateNotifBadge(0);
+        notifLoaded = false;
+        await loadNotifications();
+        showToast('All notifications marked as read.');
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.markAllRead = markAllRead;
 
-        document.getElementById('dashLoading').style.display = 'none';
-
-        /* Stats */
-        const pending   = bookings.filter(b => b.status === 'pending').length;
-        const completed = bookings.filter(b => b.status === 'completed').length;
-        document.getElementById('statTotal').textContent   = bookings.length;
-        document.getElementById('statPending').textContent = pending;
-        document.getElementById('statDone').textContent    = completed;
-
-        const hasActive = sub && sub.status === 'active';
-        const FREE_LIMIT = 5;
-
-        /* Subscription gate banner (only once limit hit) */
-        if (bookings.length >= FREE_LIMIT && !hasActive) {
-          document.getElementById('subGateBanner').style.display = 'flex';
-        }
-
-        /* Recent bookings in overview */
-        document.getElementById('recentList').innerHTML = bookings.slice(0,4).length
-          ? bookings.slice(0,4).map(b => bookingRow(b, true)).join('')
-          : empty('Post your service to start receiving booking requests.', 'Post a Service', 'post-service.html');
-
-        /* My Services panel */
-        const svcEl = document.getElementById('servicesCard');
-        if (services && services.length > 0) {
-          svcEl.innerHTML = `<div class="task-row-list" style="gap:12px;">${services.map((s,i) => serviceCard(s, i)).join('')}</div>`;
-        } else {
-          svcEl.innerHTML = empty('Set up your service profile so customers can find and book you.', 'Post a Service', 'post-service.html');
-        }
-
-        /* All incoming bookings */
-        const incoming = bookings.filter(b => ['pending','confirmed'].includes(b.status));
-        document.getElementById('bookingsList').innerHTML = incoming.length
-          ? incoming.map(b => bookingRow(b, true)).join('')
-          : empty('No pending bookings right now.');
-
-        /* Subscription panel */
-        const used = Math.min(bookings.length, FREE_LIMIT);
-        const pct  = Math.min(100, Math.round((used / FREE_LIMIT) * 100));
-        document.getElementById('subCard').innerHTML = hasActive
-          ? `<div class="sub-status-card sub-active">
-              <div class="sub-tier-label">Current Plan</div>
-              <div class="sub-tier-name">${sub.tier === 'pro' ? 'Pro Plan' : 'Premium Plan'}</div>
-              <div class="sub-tier-detail">Active until ${fmtDate(sub.end_date)}</div>
-             </div>`
-          : `<div class="sub-status-card sub-free">
-              <div class="sub-tier-label">Current Plan</div>
-              <div class="sub-tier-name">Free</div>
-              <div class="sub-tier-detail">${used} of ${FREE_LIMIT} free bookings used</div>
-            </div>
-            <div style="height:8px;background:var(--gray-100);border-radius:var(--radius-pill);overflow:hidden;margin:12px 0;">
-              <div style="height:100%;width:${pct}%;background:${used>=FREE_LIMIT?'var(--red)':'var(--blue)'};border-radius:var(--radius-pill);transition:width 0.6s;"></div>
-            </div>
-            ${used >= FREE_LIMIT ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You've reached your free booking limit. Upgrade to keep accepting bookings.</p>' : '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Upgrade when you're ready — pricing only unlocks once you hit your limit.</p>'}`;
-
-        switchPanel('overview', document.querySelector('[data-panel="overview"]'));
-
-      } catch(err) {
-        document.getElementById('dashLoading').innerHTML =
-          `<p style="color:var(--red);text-align:center;padding:40px;">Could not load dashboard: ${err.message}</p>`;
+    /* ── Init ─────────────────────────────────────────────────── */
+    async function initPage() {
+      var user;
+      try {
+        user = await window.ST.auth.requireAuth();
+        if (!user) return;
+      } catch(authErr) {
+        document.getElementById('dashLoading').innerHTML = '<p style="color:var(--red);text-align:center;">Auth error. <a href="login.html">Log in again</a></p>';
+        return;
       }
+
+      var name = (user.user_metadata && user.user_metadata.name) || user.email.split('@')[0] || 'Tasker';
+      document.getElementById('dashGreeting').textContent = 'Welcome back, ' + name;
+
+      /* ── CRITICAL: show panels immediately, don't wait for data ── */
+      document.getElementById('dashLoading').style.display = 'none';
+      switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+
+      /* Load unread count for bell badge */
+      window.ST.db.fetchUnreadNotificationCount().then(function(count) {
+        updateNotifBadge(count);
+      }).catch(function() {});
+
+      /* Load each section independently so one failure doesn't break everything */
+      var services  = [];
+      var bookings  = [];
+      var sub       = null;
+      var FREE_LIMIT = 5;
+
+      try { services = await window.ST.db.fetchMyServices(); } catch(e) { console.warn('[Dashboard] services:', e.message); }
+      try { bookings = await window.ST.db.fetchTaskerBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
+      try { sub      = await window.ST.db.fetchMySubscription(); } catch(e) { console.warn('[Dashboard] sub:', e.message); }
+
+      /* Stats */
+      var pending   = bookings.filter(function(b) { return b.status === 'pending'; }).length;
+      var completed = bookings.filter(function(b) { return b.status === 'completed'; }).length;
+      document.getElementById('statTotal').textContent   = bookings.length;
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statDone').textContent    = completed;
+
+      var hasActive = sub && sub.status === 'active';
+
+      if (bookings.length >= FREE_LIMIT && !hasActive) {
+        document.getElementById('subGateBanner').style.display = 'flex';
+      }
+
+      /* Recent bookings */
+      document.getElementById('recentList').innerHTML = bookings.slice(0,4).length
+        ? bookings.slice(0,4).map(function(b) { return bookingRow(b, true); }).join('')
+        : empty('Post your service to start receiving booking requests.', 'Post a Service', 'post-service.html');
+
+      /* Services */
+      var svcEl = document.getElementById('servicesCard');
+      svcEl.innerHTML = services.length
+        ? '<div class="task-row-list" style="gap:12px;">' + services.map(function(s,i) { return serviceCard(s,i); }).join('') + '</div>'
+        : empty('Set up your service profile so customers can find and book you.', 'Post a Service', 'post-service.html');
+
+      /* Bookings panel */
+      var incoming = bookings.filter(function(b) { return b.status === 'pending' || b.status === 'confirmed'; });
+      document.getElementById('bookingsList').innerHTML = incoming.length
+        ? incoming.map(function(b) { return bookingRow(b, true); }).join('')
+        : empty('No pending bookings right now.', null, null);
+
+      /* Subscription */
+      var used = Math.min(bookings.length, FREE_LIMIT);
+      var pct  = Math.min(100, Math.round((used / FREE_LIMIT) * 100));
+      document.getElementById('subCard').innerHTML = hasActive
+        ? '<div class="sub-status-card sub-active"><div class="sub-tier-label">Current Plan</div><div class="sub-tier-name">' + (sub.tier === 'pro' ? 'Pro Plan' : 'Premium Plan') + '</div><div class="sub-tier-detail">Active until ' + fmtDate(sub.end_date) + '</div></div>'
+        : '<div class="sub-status-card sub-free"><div class="sub-tier-label">Current Plan</div><div class="sub-tier-name">Free</div><div class="sub-tier-detail">' + used + ' of ' + FREE_LIMIT + ' free bookings used</div></div>' +
+          '<div style="height:8px;background:var(--gray-100);border-radius:var(--radius-pill);overflow:hidden;margin:12px 0;"><div style="height:100%;width:' + pct + '%;background:' + (used>=FREE_LIMIT?'var(--red)':'var(--blue)') + ';border-radius:var(--radius-pill);transition:width 0.6s;"></div></div>' +
+          (used >= FREE_LIMIT
+            ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You\'ve reached your free booking limit. Upgrade to keep accepting bookings.</p>'
+            : '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Upgrade when you\'re ready.</p>');
     }
   </script>
 </body>
