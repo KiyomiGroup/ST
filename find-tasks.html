@@ -253,17 +253,14 @@
 
       btn.disabled = true; btn.textContent = 'Sending...';
       try {
-        await window.supabase.from('bookings').insert({
-          task_id:     ACTIVE_TASK_ID,
-          tasker_id:   user.id,
-          customer_id: null,
-          status:      'applied',
-          notes:       msg + (price ? ` | Proposed: ₦${price}` : ''),
-        });
+        const fullMsg = msg + (price ? ` | Proposed rate: ₦${price}` : '');
+        await window.ST.db.applyToTask({ taskId: ACTIVE_TASK_ID, message: fullMsg });
         closeApply();
-        showToast('Application sent! The customer will review and contact you.');
+        showToast('Application sent! The task owner has been notified.');
       } catch(e) {
-        err.textContent = 'Failed: ' + e.message;
+        err.textContent = e.message.includes('already applied')
+          ? '⚠ You have already applied for this task.'
+          : 'Failed: ' + e.message;
         err.style.display = 'block';
       } finally {
         btn.disabled = false; btn.textContent = 'Send Application';

@@ -18,37 +18,31 @@
     .service-form-input, .service-form-select, .service-form-textarea {
       width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
       border-radius: var(--radius-md); font-size: 0.9rem; font-family: var(--font);
-      color: var(--text-primary); background: var(--white);
-      transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); outline: none;
+      color: var(--text-primary); background: var(--white); box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s; outline: none;
     }
     .service-form-input:focus, .service-form-select:focus, .service-form-textarea:focus {
       border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light);
     }
     .service-form-textarea { resize: vertical; min-height: 100px; }
-    .service-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .service-price-wrap { position: relative; }
-    .currency-symbol { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; pointer-events: none; }
-    .service-price-wrap .service-form-input { padding-left: 28px; }
-
-    /* Upload zone */
     .upload-zone {
       border: 2px dashed var(--border); border-radius: var(--radius-lg);
-      padding: 28px 20px; text-align: center; cursor: pointer;
-      transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
-      position: relative; overflow: hidden;
+      padding: 28px 20px; text-align: center; cursor: pointer; position: relative; overflow: hidden;
+      transition: border-color 0.15s, background 0.15s;
     }
     .upload-zone:hover, .upload-zone.drag-over { border-color: var(--blue); background: var(--blue-light); }
-    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .upload-zone-icon { margin: 0 auto 10px; color: var(--text-muted); }
     .upload-zone p { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 4px; }
     .upload-zone small { font-size: 0.73rem; color: var(--text-muted); }
     .upload-preview { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); }
     .upload-change-btn { margin-top: 8px; font-size: 0.78rem; color: var(--blue); cursor: pointer; background: none; border: none; padding: 0; }
-
+    .rate-hint-ok  { color: #16a34a; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
+    .rate-hint-err { color: #dc2626; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
     @media (max-width: 640px) {
       .service-form-card { padding: 24px 20px; }
-      .service-price-row { grid-template-columns: 1fr; }
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -67,11 +61,11 @@
           <p>Your listing goes live immediately and appears on Find Services for customers to book.</p>
         </div>
 
-        <div id="successMsg" style="display:none; padding:16px 18px; background:var(--green-light); border:1px solid rgba(22,163,74,0.2); border-radius:var(--radius-md); margin-bottom:20px;">
-          <strong style="color:var(--green); font-size:0.9rem;">✓ Service posted!</strong>
-          <p style="font-size:0.83rem; color:var(--green); margin-top:2px;">Your listing is now live. Redirecting to dashboard...</p>
+        <div id="successMsg" style="display:none; padding:16px 18px; background:#f0fdf4; border:1px solid rgba(22,163,74,0.2); border-radius:8px; margin-bottom:20px;">
+          <strong style="color:#16a34a; font-size:0.9rem;">✓ Service posted!</strong>
+          <p style="font-size:0.83rem; color:#16a34a; margin-top:2px;">Your listing is now live. Redirecting to dashboard...</p>
         </div>
-        <div id="errorMsg" style="display:none; padding:12px 16px; background:var(--red-light); border:1px solid rgba(220,38,38,0.12); border-radius:var(--radius-md); font-size:0.84rem; color:var(--red); margin-bottom:16px;"></div>
+        <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
 
         <form id="serviceForm" novalidate autocomplete="off">
 
@@ -100,28 +94,15 @@
             </select>
           </div>
 
-          <!-- Rate (unified smart input) -->
+          <!-- Rate — smart text input -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcRate">
               Rate *
-              <span style="font-weight:400; color:var(--text-muted);">e.g. ₦30000/hour or ₦5000/job</span>
+              <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">e.g. &#8358;30000/hour &nbsp;or&nbsp; &#8358;5000/job</span>
             </label>
-            <div class="service-price-wrap" style="position:relative;">
-              <input
-                type="text"
-                id="svcRate"
-                class="service-form-input"
-                placeholder="e.g. ₦30000/hour"
-                autocomplete="off"
-                inputmode="text"
-                maxlength="40"
-                required
-              />
-            </div>
-            <div id="rateParsedHint" style="margin-top:5px; font-size:0.76rem; color:var(--text-muted); min-height:16px;"></div>
-            <!-- Hidden fields populated by JS parser -->
-            <input type="hidden" id="svcPrice" />
-            <input type="hidden" id="svcPricingType" value="per_job" />
+            <input type="text" id="svcRate" class="service-form-input"
+              placeholder="e.g. ₦30000/hour" autocomplete="off" maxlength="40" required />
+            <div id="rateParsedHint" class="rate-hint-ok"></div>
           </div>
 
           <!-- Location -->
@@ -154,18 +135,15 @@
               <div class="upload-zone-icon">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </div>
-              <p>Click to upload or drag & drop</p>
+              <p>Click to upload or drag &amp; drop</p>
               <small>JPG, PNG or WebP — max 5 MB</small>
             </div>
             <div id="photoPreviewWrap" style="display:none; margin-top:10px; text-align:center;">
               <img id="photoPreview" class="upload-preview" alt="Preview" />
-              <button type="button" class="upload-change-btn" onclick="clearPhoto()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg>
-                Change photo
-              </button>
+              <button type="button" class="upload-change-btn" onclick="clearPhoto()">&#8635; Change photo</button>
             </div>
-            <div id="uploadProgress" style="display:none; margin-top:8px; font-size:0.8rem; color:var(--blue);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <div id="uploadProgress" style="display:none; margin-top:8px; font-size:0.8rem; color:var(--blue); align-items:center; gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
               Uploading photo...
             </div>
           </div>
@@ -182,7 +160,6 @@
   </div>
 
   <div id="footer-placeholder"></div>
-  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
@@ -191,132 +168,78 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script>
+    'use strict';
     let uploadedPhotoUrl = null;
 
-    /* ── Rate parser ──────────────────────────────────────────────
-       Accepts inputs like:
-         ₦30000/hour  |  #30000/hour  |  30000/hour
-         30,000 per day  |  N5000  |  5000
-       Returns { numericValue: Number, rateUnit: String } or null if invalid.
-    ─────────────────────────────────────────────────────────────── */
+    /* ── Rate parser ─────────────────────────────────────────── */
     function parseRateInput(raw) {
       if (!raw || !raw.trim()) return null;
-
-      // Normalise: strip currency symbols, commas, extra spaces
-      let s = raw.trim()
-        .replace(/[₦#N\$€£]/g, '')   // remove currency chars
-        .replace(/,/g, '')             // remove thousand-separators
-        .trim();
-
-      // Try to extract numeric part (digits + optional decimal)
-      const numMatch = s.match(/^[\s]*([\d]+(?:\.\d+)?)/);
+      // Strip all currency symbols and thousand-separators
+      var s = raw.trim().replace(/[₦#N$€£,]/g, '').trim();
+      // Extract the numeric part
+      var numMatch = s.match(/(\d+(?:\.\d+)?)/);
       if (!numMatch) return null;
-
-      const numericValue = parseFloat(numMatch[1]);
-      if (isNaN(numericValue) || numericValue < 0) return null;
-
-      // Remainder after the number — look for a unit
-      const remainder = s.slice(numMatch[0].length).trim();
-
-      // Normalise unit string: "/hour", "per hour", "hour", etc.
-      const unitMap = {
-        hour:    '/hour',
-        hr:      '/hour',
-        hourly:  '/hour',
-        day:     '/day',
-        daily:   '/day',
-        job:     '/job',
-        service: '/service',
-        visit:   '/visit',
-        session: '/session',
-        week:    '/week',
-        month:   '/month',
+      var numericValue = parseFloat(numMatch[1]);
+      if (isNaN(numericValue) || numericValue <= 0) return null;
+      // Extract the unit part (everything after the number)
+      var remainder = s.slice(s.indexOf(numMatch[0]) + numMatch[0].length).trim();
+      var unitMap = {
+        'hour':'/hour','hr':'/hour','hourly':'/hour',
+        'day':'/day','daily':'/day',
+        'job':'/job','service':'/service',
+        'visit':'/visit','session':'/session',
+        'week':'/week','month':'/month',
       };
-
-      let rateUnit = '/hour'; // default
+      var rateUnit = '/hour'; // sensible default
       if (remainder) {
-        // strip leading / or "per"
-        const clean = remainder.replace(/^[\/\s]*(per\s*)?/i, '').toLowerCase().trim();
-        rateUnit = unitMap[clean] || ('/' + clean) || '/hour';
+        var clean = remainder.replace(/^[\/\s]*(per\s*)?/i,'').toLowerCase().trim();
+        rateUnit = unitMap[clean] || ('/' + (clean || 'hour'));
       }
-
-      return { numericValue, rateUnit };
+      return { numericValue: numericValue, rateUnit: rateUnit };
     }
 
-    /* Derive a pricing_type value (matches legacy DB enum) from a rateUnit */
     function pricingTypeFromUnit(unit) {
-      const map = {
-        '/hour':    'per_hour',
-        '/day':     'per_day',
-        '/job':     'per_job',
-        '/service': 'per_service',
-        '/week':    'per_week',
-        '/month':   'per_month',
-      };
+      var map = {'/hour':'per_hour','/day':'per_day','/job':'per_job','/service':'per_service','/week':'per_week','/month':'per_month'};
       return map[unit] || 'per_job';
     }
 
-    /* Live-parse as user types and show a hint */
     function onRateInput() {
-      const raw     = document.getElementById('svcRate').value;
-      const hintEl  = document.getElementById('rateParsedHint');
-      const hiddenPrice = document.getElementById('svcPrice');
-      const hiddenType  = document.getElementById('svcPricingType');
-
-      const parsed = parseRateInput(raw);
-      if (!raw.trim()) {
-        hintEl.textContent = '';
-        hiddenPrice.value  = '';
-        hiddenType.value   = 'per_job';
-        return;
-      }
+      var raw    = document.getElementById('svcRate').value;
+      var hint   = document.getElementById('rateParsedHint');
+      var parsed = parseRateInput(raw);
+      if (!raw.trim()) { hint.textContent = ''; hint.className = 'rate-hint-ok'; return; }
       if (!parsed) {
-        hintEl.style.color = 'var(--red, #dc2626)';
-        hintEl.textContent = '⚠ Could not read a number — try e.g. ₦30000/hour';
-        hiddenPrice.value  = '';
+        hint.className   = 'rate-hint-err';
+        hint.textContent = '⚠ Enter a number — e.g. ₦30000/hour or 5000/job';
         return;
       }
-
-      hiddenPrice.value = parsed.numericValue;
-      hiddenType.value  = pricingTypeFromUnit(parsed.rateUnit);
-      hintEl.style.color = 'var(--green, #16a34a)';
-      hintEl.textContent =
-        `✓ Amount: ₦${parsed.numericValue.toLocaleString()}  ·  Unit: ${parsed.rateUnit}`;
+      hint.className   = 'rate-hint-ok';
+      hint.textContent = '✓ Amount: ₦' + parsed.numericValue.toLocaleString() + '  ·  Unit: ' + parsed.rateUnit;
     }
 
     async function initPage() {
-      const user = await window.ST.auth.requireAuth();
+      var user = await window.ST.auth.requireAuth();
       if (!user) return;
 
-      /* Pre-fill from existing profile */
+      // Pre-fill from existing service
       try {
-        const svcs = await window.ST.db.fetchMyServices();
-        const svc  = svcs[0];
+        var svcs = await window.ST.db.fetchMyServices();
+        var svc  = svcs[0];
         if (svc) {
-          if (svc.service_name)  document.getElementById('svcName').value     = svc.service_name;
-          if (svc.category)      document.getElementById('svcCategory').value = svc.category;
-          if (svc.location)      document.getElementById('svcLocation').value = svc.location;
-          if (svc.description)   document.getElementById('svcDescription').value = svc.description;
-          if (svc.photo) {
-            uploadedPhotoUrl = svc.photo;
-            showPhotoPreview(svc.photo);
-          }
-
-          /* Rebuild rate display from stored price + pricing_type */
+          if (svc.service_name) document.getElementById('svcName').value     = svc.service_name;
+          if (svc.category)     document.getElementById('svcCategory').value = svc.category;
+          if (svc.location)     document.getElementById('svcLocation').value = svc.location;
+          if (svc.description)  document.getElementById('svcDescription').value = svc.description;
+          if (svc.photo) { uploadedPhotoUrl = svc.photo; showPhotoPreview(svc.photo); }
           if (svc.price) {
-            const unitFromType = {
-              per_hour: '/hour', per_day: '/day', per_job: '/job',
-              per_service: '/service', per_week: '/week', per_month: '/month',
-            };
-            const unit = svc.rate_unit || unitFromType[svc.pricing_type] || '/job';
-            document.getElementById('svcRate').value =
-              `₦${Number(svc.price).toLocaleString()}${unit}`;
+            var unitMap2 = {per_hour:'/hour',per_day:'/day',per_job:'/job',per_service:'/service',per_week:'/week',per_month:'/month'};
+            var u = svc.rate_unit || unitMap2[svc.pricing_type] || '/job';
+            document.getElementById('svcRate').value = '₦' + Number(svc.price).toLocaleString() + u;
             onRateInput();
           }
-
           updateDescCount();
         }
-      } catch (e) {}
+      } catch(e) {}
 
       document.getElementById('svcRate').addEventListener('input', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
@@ -325,113 +248,108 @@
     }
 
     function updateDescCount() {
-      const val = document.getElementById('svcDescription').value.length;
-      document.getElementById('descCount').textContent = val + ' / 800';
+      var v = document.getElementById('svcDescription').value.length;
+      document.getElementById('descCount').textContent = v + ' / 800';
     }
 
     function wireUpload() {
-      const zone  = document.getElementById('uploadZone');
-      const input = document.getElementById('photoFile');
-
-      input.addEventListener('change', () => {
-        if (input.files[0]) handleFileSelected(input.files[0]);
-      });
-      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
+      var zone  = document.getElementById('uploadZone');
+      var input = document.getElementById('photoFile');
+      input.addEventListener('change', function() { if (input.files[0]) handleFileSelected(input.files[0]); });
+      zone.addEventListener('dragover',  function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', function()  { zone.classList.remove('drag-over'); });
+      zone.addEventListener('drop', function(e) {
+        e.preventDefault(); zone.classList.remove('drag-over');
         if (e.dataTransfer.files[0]) handleFileSelected(e.dataTransfer.files[0]);
       });
     }
 
     function handleFileSelected(file) {
       if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); return; }
-      if (file.size > 5 * 1024 * 1024)    { showToast('Image must be under 5 MB.'); return; }
-      const reader = new FileReader();
-      reader.onload = e => showPhotoPreview(e.target.result);
+      if (file.size > 5*1024*1024) { showToast('Image must be under 5 MB.'); return; }
+      var reader = new FileReader();
+      reader.onload = function(e) { showPhotoPreview(e.target.result); };
       reader.readAsDataURL(file);
     }
 
     function showPhotoPreview(src) {
       document.getElementById('photoPreview').src = src;
       document.getElementById('photoPreviewWrap').style.display = 'block';
-      document.getElementById('uploadZone').style.display       = 'none';
+      document.getElementById('uploadZone').style.display = 'none';
     }
 
     function clearPhoto() {
       uploadedPhotoUrl = null;
       document.getElementById('photoFile').value = '';
       document.getElementById('photoPreviewWrap').style.display = 'none';
-      document.getElementById('uploadZone').style.display       = '';
+      document.getElementById('uploadZone').style.display = '';
     }
     window.clearPhoto = clearPhoto;
 
     async function handleSubmit(e) {
       e.preventDefault();
-      const errEl  = document.getElementById('errorMsg');
-      const succEl = document.getElementById('successMsg');
-      const btn    = document.getElementById('submitBtn');
+      var errEl  = document.getElementById('errorMsg');
+      var succEl = document.getElementById('successMsg');
+      var btn    = document.getElementById('submitBtn');
       errEl.style.display = 'none';
 
-      const serviceName = document.getElementById('svcName').value.trim();
-      const category    = document.getElementById('svcCategory').value;
-      const location    = document.getElementById('svcLocation').value.trim();
-      const description = document.getElementById('svcDescription').value.trim();
-      const file        = document.getElementById('photoFile').files[0];
+      var serviceName = document.getElementById('svcName').value.trim();
+      var category    = document.getElementById('svcCategory').value;
+      var rawRate     = document.getElementById('svcRate').value.trim();
+      var location    = document.getElementById('svcLocation').value.trim();
+      var description = document.getElementById('svcDescription').value.trim();
+      var file        = document.getElementById('photoFile').files[0];
 
-      /* Parse rate from the smart input */
-      const rawRate     = document.getElementById('svcRate').value;
-      const parsedRate  = parseRateInput(rawRate);
+      // Validate
+      if (!serviceName)           { showErr('Please enter a service name.'); return; }
+      if (!category)              { showErr('Please select a category.'); return; }
+      if (!rawRate)               { showErr('Please enter your rate (e.g. ₦30000/hour).'); return; }
 
-      /* Validate */
-      if (!serviceName)            { showErr('Please enter a service name.'); return; }
-      if (!category)               { showErr('Please select a category.'); return; }
-      if (!rawRate.trim())         { showErr('Please enter your rate (e.g. ₦30000/hour).'); return; }
-      if (!parsedRate)             { showErr('Could not read a valid number from the rate. Try e.g. ₦30000/hour.'); return; }
-      if (parsedRate.numericValue <= 0) { showErr('Please enter a rate greater than zero.'); return; }
-      if (!location)               { showErr('Please enter your location.'); return; }
-      if (description.length < 20) { showErr('Description must be at least 20 characters.'); return; }
+      // Parse rate — extract plain number regardless of what user typed
+      var parsed = parseRateInput(rawRate);
+      if (!parsed) { showErr('Could not read a number from the rate field. Try e.g. ₦30000/hour or 5000/job.'); return; }
+
+      if (!location)              { showErr('Please enter your location.'); return; }
+      if (description.length < 20){ showErr('Description must be at least 20 characters.'); return; }
 
       btn.disabled    = true;
       btn.textContent = 'Posting...';
 
       try {
-        /* Upload image if selected */
-        let photoUrl = uploadedPhotoUrl;
+        var photoUrl = uploadedPhotoUrl;
         if (file) {
           document.getElementById('uploadProgress').style.display = 'flex';
           try {
             photoUrl = await window.ST.db.uploadServiceImage(file);
             uploadedPhotoUrl = photoUrl;
-          } catch (uploadErr) {
-            console.warn('[Upload] Failed:', uploadErr.message, '— continuing without photo');
+          } catch(uploadErr) {
+            console.warn('[Upload]', uploadErr.message);
             photoUrl = null;
           } finally {
             document.getElementById('uploadProgress').style.display = 'none';
           }
         }
 
-        /* Post service — send clean numeric price + unit separately */
         await window.ST.db.postService({
-          serviceName,
-          category,
-          pricingType: pricingTypeFromUnit(parsedRate.rateUnit),
-          price:       parsedRate.numericValue,          // clean numeric — no ₦ or text
-          rateUnit:    parsedRate.rateUnit,              // e.g. "/hour"
-          location,
-          description,
-          photoUrl,
+          serviceName: serviceName,
+          category:    category,
+          pricingType: pricingTypeFromUnit(parsed.rateUnit),
+          price:       parsed.numericValue,   /* plain Number — no symbols */
+          rateUnit:    parsed.rateUnit,
+          location:    location,
+          description: description,
+          photoUrl:    photoUrl,
         });
 
         succEl.style.display = 'block';
         document.getElementById('serviceForm').reset();
         document.getElementById('rateParsedHint').textContent = '';
         clearPhoto();
+        updateDescCount();
         showToast('Service posted! Redirecting...');
-        setTimeout(() => { window.location.href = 'dashboard-tasker.html'; }, 1800);
+        setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1800);
 
-      } catch (err) {
+      } catch(err) {
         showErr(err.message || 'Failed to post service. Please try again.');
       } finally {
         btn.disabled    = false;
@@ -439,13 +357,11 @@
       }
 
       function showErr(msg) {
-        errEl.textContent    = msg;
-        errEl.style.display  = 'block';
+        errEl.textContent   = msg;
+        errEl.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-
-
   </script>
 </body>
 </html>
