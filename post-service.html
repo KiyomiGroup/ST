@@ -100,26 +100,29 @@
             </select>
           </div>
 
-          <!-- Price + Pricing Type -->
-          <div class="service-price-row">
-            <div class="service-form-group" style="margin-bottom:0;">
-              <label class="service-form-label" for="svcPrice">Price (₦) *</label>
-              <div class="service-price-wrap">
-                <span class="currency-symbol">₦</span>
-                <input type="number" id="svcPrice" class="service-form-input" placeholder="e.g. 5000" min="0" required />
-              </div>
+          <!-- Rate (unified smart input) -->
+          <div class="service-form-group">
+            <label class="service-form-label" for="svcRate">
+              Rate *
+              <span style="font-weight:400; color:var(--text-muted);">e.g. ₦30000/hour or ₦5000/job</span>
+            </label>
+            <div class="service-price-wrap" style="position:relative;">
+              <input
+                type="text"
+                id="svcRate"
+                class="service-form-input"
+                placeholder="e.g. ₦30000/hour"
+                autocomplete="off"
+                inputmode="text"
+                maxlength="40"
+                required
+              />
             </div>
-            <div class="service-form-group" style="margin-bottom:0;">
-              <label class="service-form-label" for="svcPricingType">Pricing Type *</label>
-              <select id="svcPricingType" class="service-form-select" required>
-                <option value="per_hour">Per Hour</option>
-                <option value="per_day">Per Day</option>
-                <option value="per_job" selected>Per Job</option>
-                <option value="per_service">Per Service</option>
-              </select>
-            </div>
+            <div id="rateParsedHint" style="margin-top:5px; font-size:0.76rem; color:var(--text-muted); min-height:16px;"></div>
+            <!-- Hidden fields populated by JS parser -->
+            <input type="hidden" id="svcPrice" />
+            <input type="hidden" id="svcPricingType" value="per_job" />
           </div>
-          <div style="margin-bottom:20px;"></div>
 
           <!-- Location -->
           <div class="service-form-group">
@@ -190,6 +193,97 @@
   <script>
     let uploadedPhotoUrl = null;
 
+    /* ── Rate parser ──────────────────────────────────────────────
+       Accepts inputs like:
+         ₦30000/hour  |  #30000/hour  |  30000/hour
+         30,000 per day  |  N5000  |  5000
+       Returns { numericValue: Number, rateUnit: String } or null if invalid.
+    ─────────────────────────────────────────────────────────────── */
+    function parseRateInput(raw) {
+      if (!raw || !raw.trim()) return null;
+
+      // Normalise: strip currency symbols, commas, extra spaces
+      let s = raw.trim()
+        .replace(/[₦#N\$€£]/g, '')   // remove currency chars
+        .replace(/,/g, '')             // remove thousand-separators
+        .trim();
+
+      // Try to extract numeric part (digits + optional decimal)
+      const numMatch = s.match(/^[\s]*([\d]+(?:\.\d+)?)/);
+      if (!numMatch) return null;
+
+      const numericValue = parseFloat(numMatch[1]);
+      if (isNaN(numericValue) || numericValue < 0) return null;
+
+      // Remainder after the number — look for a unit
+      const remainder = s.slice(numMatch[0].length).trim();
+
+      // Normalise unit string: "/hour", "per hour", "hour", etc.
+      const unitMap = {
+        hour:    '/hour',
+        hr:      '/hour',
+        hourly:  '/hour',
+        day:     '/day',
+        daily:   '/day',
+        job:     '/job',
+        service: '/service',
+        visit:   '/visit',
+        session: '/session',
+        week:    '/week',
+        month:   '/month',
+      };
+
+      let rateUnit = '/hour'; // default
+      if (remainder) {
+        // strip leading / or "per"
+        const clean = remainder.replace(/^[\/\s]*(per\s*)?/i, '').toLowerCase().trim();
+        rateUnit = unitMap[clean] || ('/' + clean) || '/hour';
+      }
+
+      return { numericValue, rateUnit };
+    }
+
+    /* Derive a pricing_type value (matches legacy DB enum) from a rateUnit */
+    function pricingTypeFromUnit(unit) {
+      const map = {
+        '/hour':    'per_hour',
+        '/day':     'per_day',
+        '/job':     'per_job',
+        '/service': 'per_service',
+        '/week':    'per_week',
+        '/month':   'per_month',
+      };
+      return map[unit] || 'per_job';
+    }
+
+    /* Live-parse as user types and show a hint */
+    function onRateInput() {
+      const raw     = document.getElementById('svcRate').value;
+      const hintEl  = document.getElementById('rateParsedHint');
+      const hiddenPrice = document.getElementById('svcPrice');
+      const hiddenType  = document.getElementById('svcPricingType');
+
+      const parsed = parseRateInput(raw);
+      if (!raw.trim()) {
+        hintEl.textContent = '';
+        hiddenPrice.value  = '';
+        hiddenType.value   = 'per_job';
+        return;
+      }
+      if (!parsed) {
+        hintEl.style.color = 'var(--red, #dc2626)';
+        hintEl.textContent = '⚠ Could not read a number — try e.g. ₦30000/hour';
+        hiddenPrice.value  = '';
+        return;
+      }
+
+      hiddenPrice.value = parsed.numericValue;
+      hiddenType.value  = pricingTypeFromUnit(parsed.rateUnit);
+      hintEl.style.color = 'var(--green, #16a34a)';
+      hintEl.textContent =
+        `✓ Amount: ₦${parsed.numericValue.toLocaleString()}  ·  Unit: ${parsed.rateUnit}`;
+    }
+
     async function initPage() {
       const user = await window.ST.auth.requireAuth();
       if (!user) return;
@@ -199,20 +293,32 @@
         const svcs = await window.ST.db.fetchMyServices();
         const svc  = svcs[0];
         if (svc) {
-          if (svc.service_name)  document.getElementById('svcName').value        = svc.service_name;
-          if (svc.category)      document.getElementById('svcCategory').value    = svc.category;
-          if (svc.price)         document.getElementById('svcPrice').value       = svc.price;
-          if (svc.pricing_type)  document.getElementById('svcPricingType').value = svc.pricing_type;
-          if (svc.location)      document.getElementById('svcLocation').value    = svc.location;
+          if (svc.service_name)  document.getElementById('svcName').value     = svc.service_name;
+          if (svc.category)      document.getElementById('svcCategory').value = svc.category;
+          if (svc.location)      document.getElementById('svcLocation').value = svc.location;
           if (svc.description)   document.getElementById('svcDescription').value = svc.description;
           if (svc.photo) {
             uploadedPhotoUrl = svc.photo;
             showPhotoPreview(svc.photo);
           }
+
+          /* Rebuild rate display from stored price + pricing_type */
+          if (svc.price) {
+            const unitFromType = {
+              per_hour: '/hour', per_day: '/day', per_job: '/job',
+              per_service: '/service', per_week: '/week', per_month: '/month',
+            };
+            const unit = svc.rate_unit || unitFromType[svc.pricing_type] || '/job';
+            document.getElementById('svcRate').value =
+              `₦${Number(svc.price).toLocaleString()}${unit}`;
+            onRateInput();
+          }
+
           updateDescCount();
         }
       } catch (e) {}
 
+      document.getElementById('svcRate').addEventListener('input', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
       document.getElementById('serviceForm').addEventListener('submit', handleSubmit);
@@ -270,19 +376,22 @@
 
       const serviceName = document.getElementById('svcName').value.trim();
       const category    = document.getElementById('svcCategory').value;
-      const price       = document.getElementById('svcPrice').value;
-      const pricingType = document.getElementById('svcPricingType').value;
       const location    = document.getElementById('svcLocation').value.trim();
       const description = document.getElementById('svcDescription').value.trim();
       const file        = document.getElementById('photoFile').files[0];
 
+      /* Parse rate from the smart input */
+      const rawRate     = document.getElementById('svcRate').value;
+      const parsedRate  = parseRateInput(rawRate);
+
       /* Validate */
-      if (!serviceName)               { showErr('Please enter a service name.'); return; }
-      if (!category)                  { showErr('Please select a category.'); return; }
-      if (!price || parseFloat(price) < 0) { showErr('Please enter a valid price.'); return; }
-      if (!pricingType)               { showErr('Please select a pricing type.'); return; }
-      if (!location)                  { showErr('Please enter your location.'); return; }
-      if (description.length < 20)    { showErr('Description must be at least 20 characters.'); return; }
+      if (!serviceName)            { showErr('Please enter a service name.'); return; }
+      if (!category)               { showErr('Please select a category.'); return; }
+      if (!rawRate.trim())         { showErr('Please enter your rate (e.g. ₦30000/hour).'); return; }
+      if (!parsedRate)             { showErr('Could not read a valid number from the rate. Try e.g. ₦30000/hour.'); return; }
+      if (parsedRate.numericValue <= 0) { showErr('Please enter a rate greater than zero.'); return; }
+      if (!location)               { showErr('Please enter your location.'); return; }
+      if (description.length < 20) { showErr('Description must be at least 20 characters.'); return; }
 
       btn.disabled    = true;
       btn.textContent = 'Posting...';
@@ -303,13 +412,21 @@
           }
         }
 
-        /* Post service */
+        /* Post service — send clean numeric price + unit separately */
         await window.ST.db.postService({
-          serviceName, category, pricingType, price, location, description, photoUrl,
+          serviceName,
+          category,
+          pricingType: pricingTypeFromUnit(parsedRate.rateUnit),
+          price:       parsedRate.numericValue,          // clean numeric — no ₦ or text
+          rateUnit:    parsedRate.rateUnit,              // e.g. "/hour"
+          location,
+          description,
+          photoUrl,
         });
 
         succEl.style.display = 'block';
         document.getElementById('serviceForm').reset();
+        document.getElementById('rateParsedHint').textContent = '';
         clearPhoto();
         showToast('Service posted! Redirecting...');
         setTimeout(() => { window.location.href = 'dashboard-tasker.html'; }, 1800);
@@ -322,11 +439,13 @@
       }
 
       function showErr(msg) {
-        errEl.textContent = msg;
-        errEl.style.display = 'block';
+        errEl.textContent    = msg;
+        errEl.style.display  = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+
+
   </script>
 </body>
 </html>

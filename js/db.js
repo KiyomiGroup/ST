@@ -59,16 +59,20 @@ async function countMyTasks() {
 
 /* ────────────────────────── SERVICES ───────────────────────── */
 
-async function postService({ serviceName, category, pricingType = 'per_job', price, location, description, photoUrl = null }) {
+async function postService({ serviceName, category, pricingType = 'per_job', price, rateUnit = '/hour', location, description, photoUrl = null }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a service.');
+
+  /* Always coerce price to a plain number — never a string with symbols */
+  const numericPrice = parseFloat(String(price).replace(/[^0-9.]/g, '')) || 0;
 
   const payload = {
     user_id:      user.id,
     service_name: serviceName.trim(),
     category:     category || 'other',
     pricing_type: pricingType,
-    price:        parseFloat(price) || 0,
+    price:        numericPrice,           // clean numeric value only
+    rate_unit:    rateUnit || '/hour',    // e.g. "/hour", "/job", "/day"
     location:     location.trim(),
     description:  description.trim(),
     photo:        photoUrl || null,
@@ -94,8 +98,8 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
     const { error: tErr } = await window.supabase.from('taskers').upsert({
       id: user.id, user_id: user.id,
       service: serviceName.trim(), category: category || 'other',
-      rate_value: parseFloat(price) || 0,
-      rate: `₦${Number(price||0).toLocaleString()}/${pricingType.replace('per_','').replace('_',' ')}`,
+      rate_value: numericPrice,
+      rate: `₦${numericPrice.toLocaleString()}${rateUnit || '/job'}`,
       location: location.trim(), bio: description.trim(), photo_url: photoUrl || null, available: true,
     }, { onConflict: 'id' });
     if (tErr) throw new Error(tErr.message);
@@ -106,8 +110,8 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
   await window.supabase.from('taskers').upsert({
     id: user.id, user_id: user.id,
     service: serviceName.trim(), category: category || 'other',
-    rate_value: parseFloat(price) || 0,
-    rate: `₦${Number(price||0).toLocaleString()}/${pricingType.replace('per_','').replace('_',' ')}`,
+    rate_value: numericPrice,
+    rate: `₦${numericPrice.toLocaleString()}${rateUnit || '/job'}`,
     location: location.trim(), bio: description.trim(), photo_url: photoUrl || null, available: true,
   }, { onConflict: 'id' });
 
