@@ -1,26 +1,28 @@
-<!-- Street Taskers Navbar — Sprint 3.2 Final -->
+<!-- Street Taskers Navbar — Sprint 3.3 -->
 <nav id="navbar">
   <div class="nav-inner">
 
     <a href="index.html" class="nav-logo" aria-label="Street Taskers home">
       <img src="images/logo-nav.png" alt="Street Taskers"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-      <span class="nav-logo-text" style="display:none;">Street Taskers</span>
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <span class="nav-logo-text" style="display:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Street Taskers
+      </span>
     </a>
 
     <ul class="nav-links" role="navigation">
-      <!-- Always visible -->
       <li><a href="find-taskers.html" class="nav-link">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Find Services
       </a></li>
+      <li><a href="find-tasks.html" class="nav-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        Browse Tasks
+      </a></li>
       <li><a href="social-feed.html" class="nav-link">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Social Feed
-      </a></li>
-      <li><a href="subscription.html" class="nav-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Pricing
       </a></li>
 
       <!-- Logged-out only -->
@@ -59,8 +61,8 @@
 
 <div class="nav-mobile" id="navMobile">
   <a href="find-taskers.html" class="nav-link">Find Services</a>
+  <a href="find-tasks.html"   class="nav-link">Browse Tasks</a>
   <a href="social-feed.html"  class="nav-link">Social Feed</a>
-  <a href="subscription.html" class="nav-link">Pricing</a>
   <a href="post-task.html"    class="nav-link nav-loggedout">Post a Task</a>
   <a href="post-service.html" class="nav-link nav-loggedout">Post a Service</a>
   <a href="post-task.html"    class="nav-link nav-customer" style="display:none;">Post a Task</a>

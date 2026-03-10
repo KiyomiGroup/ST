@@ -37,6 +37,10 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
               </button>
+              <button class="dashboard-nav-item" data-panel="find-tasks" onclick="switchPanel('find-tasks',this);loadFindTasks()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Find Tasks
+              </button>
               <button class="dashboard-nav-item" data-panel="subscription" onclick="switchPanel('subscription',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Subscription
@@ -78,8 +82,20 @@
 
             <!-- My Services -->
             <div id="panel-services" class="dashboard-panel">
-              <div class="panel-header"><h2>My Services</h2><a href="post-service.html" class="btn btn-primary btn-sm">+ Update</a></div>
+              <div class="panel-header"><h2>My Services</h2><a href="post-service.html" class="btn btn-primary btn-sm">+ Post Service</a></div>
               <div id="servicesCard"></div>
+            </div>
+
+            <!-- Find Tasks -->
+            <div id="panel-find-tasks" class="dashboard-panel">
+              <div class="panel-header"><h2>Open Tasks Near You</h2><a href="find-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
+              <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:16px;">Tasks posted by customers that match your skills. Apply to get hired.</p>
+              <div id="findTasksList">
+                <div style="text-align:center;padding:32px;color:var(--text-muted);">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;display:inline-block;"></svg>
+                  Loading...
+                </div>
+              </div>
             </div>
 
             <!-- Bookings -->
@@ -114,32 +130,11 @@
                   <a href="subscription.html" class="btn btn-primary btn-sm btn-full" style="justify-content:center;">Upgrade to Pro</a>
                 </div>
                 <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-                  <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:8px;">Premium</div>
-                  <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">₦29,999<span style="font-size:0.8rem;font-weight:400;">/mo</span></div>
-                  <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:14px;">Unlimited bookings</p>
-                  <ul style="font-size:0.8rem;color:var(--text-secondary);list-style:none;margin-bottom:16px;">
-                    <li>✓ Unlimited bookings</li><li>✓ Top placement</li><li>✓ All Pro features</li><li>✓ Priority support</li>
-                  </ul>
-                  <a href="subscription.html" class="btn btn-outline btn-sm btn-full" style="justify-content:center;">Get Premium</a>
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    </div>
-  </div>
+                  <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-sp<script>
+    const PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
+    const AV_COLORS = ['av-1','av-2','av-3','av-4','av-5','av-6'];
+    let findTasksLoaded = false;
 
-  <div id="footer-placeholder"></div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/supabaseClient.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
-  <script>
     function switchPanel(id, btn) {
       document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.dashboard-nav-item').forEach(b => b.classList.remove('active'));
@@ -148,7 +143,10 @@
       if (btn) btn.classList.add('active');
     }
 
-    function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}); }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'});
+    }
 
     function badge(s) {
       const st = (s||'pending').toLowerCase();
@@ -156,13 +154,13 @@
     }
 
     function bookingRow(b, actions=true) {
-      const who = b.users?.name || b.customer_id?.slice(0,8) || 'Customer';
+      const who  = b.users?.name || b.customer_id?.slice(0,8) || 'Customer';
       const task = b.tasks?.title || 'Booking request';
       return `<div class="booking-row-card" id="bk-${b.id}">
         <div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div class="booking-row-content">
           <div class="booking-row-title">${who}</div>
-          <div class="booking-row-meta">${task} · ${b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date'}</div>
+          <div class="booking-row-meta">${task} · ${b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set'}</div>
         </div>
         <div class="booking-row-actions">
           ${badge(b.status)}
@@ -182,12 +180,89 @@
     window.doBooking = doBooking;
 
     function empty(msg, cta, ctaHref) {
-      return `<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      return `<div class="empty-state">
+        <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <h3>Nothing here yet</h3><p>${msg}</p>
         ${cta ? `<a href="${ctaHref}" class="btn btn-primary btn-sm">${cta}</a>` : ''}
       </div>`;
     }
 
+    /* ── Service cards ─────────────────────────────────────── */
+    function serviceCard(s, idx) {
+      const init  = (s.service_name||s.service||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const av    = AV_COLORS[idx % AV_COLORS.length];
+      const type  = PRICING_LABELS[s.pricing_type] || '/job';
+      const photo = s.photo;
+      return `<div class="task-row-card" id="svc-${s.id}">
+        <div class="task-row-icon ${av}" style="${photo?'padding:0;overflow:hidden;background:var(--gray-100);':'font-size:0.8rem;font-weight:700;'}">
+          ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='${init}'" />` : init}
+        </div>
+        <div class="task-row-content">
+          <div class="task-row-title">${s.service_name||s.service||'Service'}</div>
+          <div class="task-row-meta">
+            <span>${s.location||'—'}</span>
+            <span>₦${Number(s.price||0).toLocaleString()}${type}</span>
+            <span>${(s.category||'').replace('_',' ')}</span>
+          </div>
+          ${s.description ? `<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:6px;">${s.description.slice(0,100)}${s.description.length>100?'…':''}</p>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <a href="post-service.html" class="btn btn-sm btn-ghost">Edit</a>
+          ${s.fromServices ? `<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="confirmDeleteService('${s.id}')">Delete</button>` : ''}
+          <a href="find-taskers.html" class="btn btn-sm btn-ghost" target="_blank">Preview</a>
+          <a href="post-service.html" class="btn btn-sm btn-primary">+ Post Another</a>
+        </div>
+      </div>`;
+    }
+
+    async function confirmDeleteService(id) {
+      if (!confirm('Delete this service? This cannot be undone.')) return;
+      try {
+        await window.ST.db.deleteService(id);
+        const el = document.getElementById('svc-' + id);
+        if (el) el.remove();
+        showToast('Service deleted.');
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.confirmDeleteService = confirmDeleteService;
+
+    /* ── Find Tasks loader ─────────────────────────────────── */
+    async function loadFindTasks() {
+      if (findTasksLoaded) return;
+      findTasksLoaded = true;
+      const el = document.getElementById('findTasksList');
+      try {
+        const tasks = await window.ST.db.fetchTasks({ limit: 20 });
+        if (!tasks.length) {
+          el.innerHTML = empty('No open tasks right now. Check back soon.', null, null);
+          return;
+        }
+        el.innerHTML = tasks.map(t => findTaskCard(t)).join('');
+      } catch(e) {
+        el.innerHTML = `<p style="color:var(--red);font-size:0.84rem;">Could not load tasks: ${e.message}</p>`;
+      }
+    }
+    window.loadFindTasks = loadFindTasks;
+
+    function findTaskCard(t) {
+      return `<div class="task-row-card" style="margin-bottom:12px;">
+        <div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="task-row-content">
+          <div class="task-row-title">${t.title||'Task'}</div>
+          <div class="task-row-meta">
+            <span>${t.location||'Lagos'}</span>
+            ${t.category ? `<span>${t.category}</span>` : ''}
+            <span style="color:var(--green);font-weight:700;">₦${Number(t.budget||0).toLocaleString()}</span>
+          </div>
+          ${t.description ? `<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">${t.description.slice(0,100)}${t.description.length>100?'…':''}</p>` : ''}
+        </div>
+        <div style="flex-shrink:0;">
+          <a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a>
+        </div>
+      </div>`;
+    }
+
+    /* ── Init ─────────────────────────────────────────────── */
     async function initPage() {
       const user = await window.ST.auth.requireAuth();
       if (!user) return;
@@ -196,9 +271,9 @@
       document.getElementById('dashGreeting').textContent = `Welcome back, ${name}`;
 
       try {
-        const [bookings, profile, sub] = await Promise.all([
+        const [services, bookings, sub] = await Promise.all([
+          window.ST.db.fetchMyServices(),
           window.ST.db.fetchTaskerBookings(),
-          window.ST.db.fetchMyTaskerProfile(),
           window.ST.db.fetchMySubscription(),
         ]);
 
@@ -211,43 +286,36 @@
         document.getElementById('statPending').textContent = pending;
         document.getElementById('statDone').textContent    = completed;
 
-        /* Gate banner */
         const hasActive = sub && sub.status === 'active';
-        if (bookings.length >= 5 && !hasActive) {
+        const FREE_LIMIT = 5;
+
+        /* Subscription gate banner (only once limit hit) */
+        if (bookings.length >= FREE_LIMIT && !hasActive) {
           document.getElementById('subGateBanner').style.display = 'flex';
         }
 
-        /* Recent bookings */
+        /* Recent bookings in overview */
         document.getElementById('recentList').innerHTML = bookings.slice(0,4).length
           ? bookings.slice(0,4).map(b => bookingRow(b, true)).join('')
-          : empty('No bookings yet. Post your service to get discovered.', 'Post a Service', 'post-service.html');
+          : empty('Post your service to start receiving booking requests.', 'Post a Service', 'post-service.html');
 
-        /* My Services */
+        /* My Services panel */
         const svcEl = document.getElementById('servicesCard');
-        if (profile && profile.service) {
-          const initials = (profile.name || 'TK').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-          svcEl.innerHTML = `<div class="task-row-card">
-            <div class="task-row-icon av-1" style="font-size:0.9rem;font-weight:700;">${initials}</div>
-            <div class="task-row-content">
-              <div class="task-row-title">${profile.service}</div>
-              <div class="task-row-meta"><span>${profile.location||'—'}</span>${profile.rate ? `<span>${profile.rate}</span>` : ''}</div>
-              ${profile.bio ? `<p style="font-size:0.82rem;color:var(--text-secondary);margin-top:6px;">${profile.bio.slice(0,120)}${profile.bio.length>120?'…':''}</p>` : ''}
-            </div>
-            <a href="post-service.html" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Edit</a>
-          </div>`;
+        if (services && services.length > 0) {
+          svcEl.innerHTML = `<div class="task-row-list" style="gap:12px;">${services.map((s,i) => serviceCard(s, i)).join('')}</div>`;
         } else {
-          svcEl.innerHTML = empty('Set up your service profile so customers can find you.', 'Post a Service', 'post-service.html');
+          svcEl.innerHTML = empty('Set up your service profile so customers can find and book you.', 'Post a Service', 'post-service.html');
         }
 
-        /* All bookings */
-        const incoming = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+        /* All incoming bookings */
+        const incoming = bookings.filter(b => ['pending','confirmed'].includes(b.status));
         document.getElementById('bookingsList').innerHTML = incoming.length
           ? incoming.map(b => bookingRow(b, true)).join('')
           : empty('No pending bookings right now.');
 
-        /* Subscription */
-        const FREE_LIMIT = 5;
+        /* Subscription panel */
         const used = Math.min(bookings.length, FREE_LIMIT);
+        const pct  = Math.min(100, Math.round((used / FREE_LIMIT) * 100));
         document.getElementById('subCard').innerHTML = hasActive
           ? `<div class="sub-status-card sub-active">
               <div class="sub-tier-label">Current Plan</div>
@@ -260,10 +328,12 @@
               <div class="sub-tier-detail">${used} of ${FREE_LIMIT} free bookings used</div>
             </div>
             <div style="height:8px;background:var(--gray-100);border-radius:var(--radius-pill);overflow:hidden;margin:12px 0;">
-              <div style="height:100%;width:${(used/FREE_LIMIT)*100}%;background:${used>=FREE_LIMIT?'var(--red)':'var(--blue)'};border-radius:var(--radius-pill);transition:width 0.6s;"></div>
-            </div>`;
+              <div style="height:100%;width:${pct}%;background:${used>=FREE_LIMIT?'var(--red)':'var(--blue)'};border-radius:var(--radius-pill);transition:width 0.6s;"></div>
+            </div>
+            ${used >= FREE_LIMIT ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You've reached your free booking limit. Upgrade to keep accepting bookings.</p>' : '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Upgrade when you're ready — pricing only unlocks once you hit your limit.</p>'}`;
 
         switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+
       } catch(err) {
         document.getElementById('dashLoading').innerHTML =
           `<p style="color:var(--red);text-align:center;padding:40px;">Could not load dashboard: ${err.message}</p>`;

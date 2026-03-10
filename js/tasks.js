@@ -317,10 +317,16 @@ async function handleTaskSubmit(e) {
       if (error) throw error;
     }
 
-    /* Clear draft and show success */
+    /* Clear draft and redirect to instant match */
     clearDraft();
-    showTaskSuccessModal(taskPayload);
     console.log('[Tasks] Task inserted into Supabase ✓');
+    const params = new URLSearchParams({
+      title:    taskPayload.title || '',
+      category: taskPayload.category || '',
+      location: taskPayload.location || '',
+      budget:   taskPayload.budget || '',
+    });
+    window.location.href = 'instant-match.html?' + params.toString();
 
   } catch (err) {
     console.error('[Tasks] Insert error:', err);

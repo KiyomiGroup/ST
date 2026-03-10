@@ -89,7 +89,7 @@ async function loginUser(email, password) {
 
 async function logoutUser() {
   await window.supabase.auth.signOut();
-  window.location.href = 'login.html';
+  window.location.replace('index.html');
 }
 
 async function requireAuth() {
