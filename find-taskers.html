@@ -182,37 +182,45 @@
     </div>
   </div>
 
-  <!-- Sprint modal -->
-  <div class="modal-overlay" id="sprintModal" role="dialog" aria-modal="true">
-    
-
-
-
-      <form id="bookingForm" novalidate>
-        <div class="booking-form-group">
-          <label class="booking-label" for="bookingDate">Preferred Date *</label>
-          <input type="date" id="bookingDate" name="bookingDate" class="task-input" required />
+  <!-- Booking modal -->
+  <div class="modal-overlay" id="bookingModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:480px;width:100%;">
+      <button class="modal-close-x" id="bookingModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+        <div id="bookingModalAvatar" style="width:48px;height:48px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--blue);flex-shrink:0;overflow:hidden;"></div>
+        <div>
+          <div style="font-size:1rem;font-weight:700;color:var(--text-primary);" data-booking-name>Provider</div>
+          <div style="font-size:0.84rem;color:var(--text-muted);" data-booking-service>Service</div>
+          <div style="font-size:0.84rem;margin-top:2px;">
+            <span style="color:var(--green);font-weight:700;" data-booking-rate>—</span>
+            <span style="color:var(--amber);margin-left:8px;" data-booking-rating>—</span>
+          </div>
         </div>
-        <div class="booking-form-group">
-          <label class="booking-label" for="bookingTime">Preferred Time</label>
-          <select id="bookingTime" name="bookingTime" class="task-select">
+      </div>
+      <h3 style="font-size:1.05rem;margin-bottom:16px;">Book This Service</h3>
+      <form id="bookingForm" novalidate>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;" for="bookingDate">Preferred Date *</label>
+          <input type="date" id="bookingDate" name="bookingDate" required style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" />
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;" for="bookingTime">Preferred Time</label>
+          <select id="bookingTime" name="bookingTime" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;background:var(--white);box-sizing:border-box;">
             <option value="">Select a time slot...</option>
-            <option value="08:00">8:00 AM</option>
-            <option value="09:00">9:00 AM</option>
-            <option value="10:00">10:00 AM</option>
-            <option value="11:00">11:00 AM</option>
-            <option value="12:00">12:00 PM</option>
-            <option value="13:00">1:00 PM</option>
-            <option value="14:00">2:00 PM</option>
-            <option value="15:00">3:00 PM</option>
+            <option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option>
             <option value="16:00">4:00 PM</option>
           </select>
         </div>
-        <div class="booking-form-group">
-          <label class="booking-label" for="bookingNotes">Notes (optional)</label>
-          <textarea id="bookingNotes" name="bookingNotes" class="task-textarea" rows="3" placeholder="Any special requirements or access details..."></textarea>
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;" for="bookingNotes">Notes <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+          <textarea id="bookingNotes" name="bookingNotes" rows="3" placeholder="Any special requirements or access details..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:var(--font);box-sizing:border-box;outline:none;"></textarea>
         </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
+        <div style="display:flex;gap:10px;">
           <button type="submit" class="btn btn-primary" style="flex:1;">Confirm Booking</button>
           <button type="button" class="btn btn-outline" onclick="closeBookingModal()">Cancel</button>
         </div>

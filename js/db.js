@@ -5,7 +5,7 @@
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, location, deadline, urgent = false }) {
+async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [] }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -20,6 +20,7 @@ async function postTask({ title, description, category, budget, location, deadli
     deadline:    deadline || null,
     urgent:      urgent,
     status:      'open',
+    photo_urls:  photoUrls.length ? photoUrls : null,
   }).select().single();
   if (error) throw error;
   return data;
@@ -37,15 +38,18 @@ async function fetchTasks({ limit = 50, category = '' } = {}) {
 async function fetchMyTasks() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
+
+  /* Try the combined OR filter first */
   const { data, error } = await window.supabase.from('tasks').select('*')
     .or(`customer_id.eq.${user.id},user_id.eq.${user.id}`)
     .order('created_at', { ascending: false });
-  if (error) {
-    const { data: fb } = await window.supabase.from('tasks')
-      .select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    return fb || [];
-  }
-  return data || [];
+
+  if (!error && data) return data;
+
+  /* Fallback: try user_id only */
+  const { data: fb } = await window.supabase.from('tasks')
+    .select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  return fb || [];
 }
 
 async function countMyTasks() {

@@ -293,6 +293,12 @@ async function handleTaskSubmit(e) {
 
     /* Use db.js postTask — handles auth + insert cleanly */
     if (window.ST?.db?.postTask) {
+      /* Upload photos first if any */
+      let photoUrls = [];
+      if (typeof uploadTaskPhotos === 'function') {
+        try { photoUrls = await uploadTaskPhotos(); } catch(e) { console.warn('Photo upload skipped:', e.message); }
+      }
+
       await window.ST.db.postTask({
         title:       taskPayload.title,
         description: taskPayload.description,
@@ -300,6 +306,7 @@ async function handleTaskSubmit(e) {
         location:    taskPayload.location,
         deadline:    taskPayload.deadline,
         category:    taskPayload.category,
+        photoUrls,
       });
     } else {
       /* Fallback: direct insert if db.js not loaded */
@@ -313,20 +320,15 @@ async function handleTaskSubmit(e) {
         category:    taskPayload.category,
         status:      'open',
         customer_id: user?.id || null,
+        user_id:     user?.id || null,
       });
       if (error) throw error;
     }
 
-    /* Clear draft and redirect to instant match */
+    /* Clear draft and go to customer dashboard so task shows immediately */
     clearDraft();
     console.log('[Tasks] Task inserted into Supabase ✓');
-    const params = new URLSearchParams({
-      title:    taskPayload.title || '',
-      category: taskPayload.category || '',
-      location: taskPayload.location || '',
-      budget:   taskPayload.budget || '',
-    });
-    window.location.href = 'instant-match.html?' + params.toString();
+    showTaskSuccessModal(taskPayload);
 
   } catch (err) {
     console.error('[Tasks] Insert error:', err);
@@ -344,8 +346,13 @@ function showTaskSuccessModal(payload) {
     if (titleEl) titleEl.textContent = payload.title;
     modal.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
+    /* Auto-redirect to dashboard after 3s so task shows immediately */
+    setTimeout(() => {
+      modal.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      window.location.href = 'dashboard-customer.html';
+    }, 3000);
   } else {
-    /* Modal not found — show toast and redirect to dashboard */
     typeof showToast === 'function' && showToast(`Task "${payload.title}" posted successfully!`);
     setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 1500);
   }

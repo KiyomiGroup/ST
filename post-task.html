@@ -99,12 +99,15 @@
                 <label class="toggle-switch"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="toggle-track"></span></label>
               </div>
               <div class="task-form-group">
-                <label class="task-form-label">Photos <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
-                <div class="upload-zone" style="cursor:default;opacity:0.6;">
+                <label class="task-form-label">Reference Photos <span style="font-weight:400;color:var(--text-muted);">(optional · max 5)</span></label>
+                <div class="upload-zone" id="taskUploadZone" style="cursor:pointer;">
+                  <input type="file" id="taskPhotoFiles" accept="image/jpeg,image/png,image/webp" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" />
                   <div class="upload-zone-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                  <p>Reference photos</p>
-                  <small>Add a photo URL in the description instead</small>
+                  <p>Click to upload or drag &amp; drop</p>
+                  <small>JPG, PNG or WebP — max 5 MB each · up to 5 images</small>
                 </div>
+                <div id="taskPhotoProgress" style="display:none;margin-top:6px;font-size:0.8rem;color:var(--blue);">Uploading photos…</div>
+                <div id="taskPhotoPreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
               </div>
               <div class="task-submit-section">
                 <button type="submit" class="btn btn-primary btn-lg" id="taskSubmitBtn" style="flex-shrink:0;">Post My Task</button>
@@ -170,10 +173,94 @@
   <script src="js/app.js"></script>
   <script src="js/tasks.js"></script>
   <script>
-    function initPage() { initTaskForm(); initPostSteps(); }
+    function initPage() { initTaskForm(); initPostSteps(); initTaskPhotoUpload(); }
     function setCategory(cat) {
       const sel = document.getElementById('taskCategory');
       if (sel) { sel.value = cat; sel.dispatchEvent(new Event('input')); }
+    }
+
+    /* ── Task photo upload ───────────────────────────────────── */
+    const taskUploadedPhotoUrls = [];
+
+    function initTaskPhotoUpload() {
+      const zone  = document.getElementById('taskUploadZone');
+      const input = document.getElementById('taskPhotoFiles');
+      if (!zone || !input) return;
+
+      input.addEventListener('change', () => handleTaskFiles(Array.from(input.files)));
+
+      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        handleTaskFiles(Array.from(e.dataTransfer.files));
+      });
+    }
+
+    function handleTaskFiles(files) {
+      const allowed = files.filter(f => f.type.startsWith('image/'));
+      if (allowed.length === 0) { showToast('Please select image files (JPG, PNG, WebP).'); return; }
+      const tooBig  = allowed.filter(f => f.size > 5 * 1024 * 1024);
+      if (tooBig.length) { showToast(`${tooBig.length} file(s) exceed 5 MB and will be skipped.`); }
+      const valid = allowed.filter(f => f.size <= 5 * 1024 * 1024);
+      const remaining = 5 - taskUploadedPhotoUrls.length;
+      valid.slice(0, remaining).forEach(previewTaskPhoto);
+    }
+
+    function previewTaskPhoto(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrap = document.getElementById('taskPhotoPreviews');
+        const idx  = taskUploadedPhotoUrls.length;
+        // Store file for upload, show preview immediately
+        taskUploadedPhotoUrls.push({ file, url: null, dataUrl: e.target.result });
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0;';
+        div.id = `tp-${idx}`;
+        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border);" />
+          <button type="button" onclick="removeTaskPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>`;
+        wrap.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeTaskPhoto(idx) {
+      taskUploadedPhotoUrls.splice(idx, 1);
+      const el = document.getElementById(`tp-${idx}`);
+      if (el) el.remove();
+      // Re-index remaining previews
+      document.querySelectorAll('#taskPhotoPreviews > div').forEach((div, i) => {
+        div.id = `tp-${i}`;
+        const btn = div.querySelector('button');
+        if (btn) btn.setAttribute('onclick', `removeTaskPhoto(${i})`);
+      });
+    }
+    window.removeTaskPhoto = removeTaskPhoto;
+
+    async function uploadTaskPhotos() {
+      const prog = document.getElementById('taskPhotoProgress');
+      const toUpload = taskUploadedPhotoUrls.filter(p => p.file && !p.url);
+      if (!toUpload.length) return taskUploadedPhotoUrls.map(p => p.url).filter(Boolean);
+      if (prog) prog.style.display = 'block';
+      try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        const uploaded = await Promise.all(toUpload.map(async (p, i) => {
+          const ext  = p.file.name.split('.').pop().toLowerCase();
+          const name = `tasks/${user.id}-${Date.now()}-${i}.${ext}`;
+          const { error } = await window.supabase.storage.from('task-images').upload(name, p.file, { cacheControl:'3600', upsert:true });
+          if (error) { console.warn('[Upload] task photo failed:', error.message); return null; }
+          const { data: urlData } = window.supabase.storage.from('task-images').getPublicUrl(name);
+          p.url = urlData.publicUrl;
+          return p.url;
+        }));
+        return uploaded.filter(Boolean);
+      } catch(e) {
+        console.warn('[Upload] task photo upload error:', e.message);
+        return [];
+      } finally {
+        if (prog) prog.style.display = 'none';
+      }
     }
   </script>
 </body>

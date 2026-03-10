@@ -219,17 +219,32 @@ function initBookingModal() {
 
 function openBookingModal(svcId) {
   const s = ALL.find(x => x.id === svcId);
-  if (!s) return;
+  if (!s) { console.warn('[Booking] service not found:', svcId); return; }
   const modal = document.getElementById('bookingModal');
-  if (!modal) return;
+  if (!modal) { console.warn('[Booking] bookingModal element not found'); return; }
 
-  modal.querySelector('[data-booking-name]').textContent    = s.provider_name;
-  modal.querySelector('[data-booking-service]').textContent = s.service_name;
-  modal.querySelector('[data-booking-rate]').textContent    = `₦${Number(s.price).toLocaleString()}/session`;
-  modal.querySelector('[data-booking-rating]').textContent  = `${s.rating} ★`;
+  const nameEl    = modal.querySelector('[data-booking-name]');
+  const serviceEl = modal.querySelector('[data-booking-service]');
+  const rateEl    = modal.querySelector('[data-booking-rate]');
+  const ratingEl  = modal.querySelector('[data-booking-rating]');
+  const avatarEl  = modal.querySelector('#bookingModalAvatar');
   const dateInput = modal.querySelector('#bookingDate');
+
+  if (nameEl)    nameEl.textContent    = s.provider_name;
+  if (serviceEl) serviceEl.textContent = s.service_name;
+  if (rateEl)    rateEl.textContent    = `₦${Number(s.price).toLocaleString()}/session`;
+  if (ratingEl)  ratingEl.textContent  = `${s.rating.toFixed(1)} ★`;
   if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
-  modal.dataset.activeSvc = svcId;
+
+  /* Avatar: photo or initials */
+  if (avatarEl) {
+    const initials = s.provider_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    avatarEl.innerHTML = s.photo
+      ? `<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='${initials}'" />`
+      : initials;
+  }
+
+  modal.dataset.activeSvc  = svcId;
   modal.dataset.activeUser = s.userId || svcId;
   modal.classList.add('modal-open');
   document.body.style.overflow = 'hidden';

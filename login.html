@@ -115,6 +115,41 @@
   <script src="js/app.js"></script>
   <script>
     function initPage() {
+      /* ── Email confirmation redirect ──────────────────────────
+         Supabase appends #access_token=...&type=signup to the URL
+         when a user clicks the confirmation link. Detect this and
+         exchange the token so the user is automatically logged in,
+         then redirect them to their dashboard.
+      ─────────────────────────────────────────────────────────── */
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token') && hash.includes('type=signup')) {
+        /* Supabase JS v2 automatically processes the hash on load.
+           Wait for onAuthStateChange to fire with SIGNED_IN. */
+        const banner = document.getElementById('loginErr');
+        if (banner) {
+          banner.textContent = 'Confirming your email…';
+          banner.style.background = 'var(--blue-light)';
+          banner.style.color = 'var(--blue)';
+          banner.style.display = 'block';
+        }
+        window.supabase.auth.onAuthStateChange(async (event, session) => {
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+            const role = await window.ST.auth.getUserRole(session.user);
+            const dest = window.ST.auth.getDashboardUrl(role);
+            window.location.replace(dest);
+          }
+        });
+        /* Fallback: if already has session after hash processed */
+        setTimeout(async () => {
+          const session = await window.ST.auth.getSession();
+          if (session) {
+            const role = await window.ST.auth.getUserRole(session.user);
+            window.location.replace(window.ST.auth.getDashboardUrl(role));
+          }
+        }, 1500);
+        return; // don't run normal initPage logic while processing confirmation
+      }
+
       /* ── Password toggle ── */
       const toggle = document.getElementById('pwdToggle');
       const input  = document.getElementById('loginPwd');
