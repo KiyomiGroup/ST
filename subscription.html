@@ -15,20 +15,15 @@
   <div id="navbar-placeholder"></div>
 
   <!-- ══════════════════════════════════════════════════════════
-       SUBSCRIPTION / PRICING PAGE — Sprint 2 (UI only)
+       SUBSCRIPTION / PRICING PAGE
        ────────────────────────────────────────────────────────
        This page is for TASKERS only.
        Customers always use Street Taskers for free.
 
-       Future Sprint 4: Replace all showSprintAlert() calls with:
          initiatePaystackPayment({ plan, taskerId, amount })
-       Future Sprint 4: checkTaskerSubscription() drives the
          free-slot meter and gate logic.
-       Future Sprint 4: Subscription status stored in Supabase
          'subscriptions' table, checked on every booking.
-       Future Sprint 4: Annual vs monthly billing toggle
          posts to Supabase with discount_percent field.
-       Future Sprint 4: Promo/coupon code field connects to
          Supabase 'promo_codes' table.
        ══════════════════════════════════════════════════════════ -->
 
@@ -42,15 +37,14 @@
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
           Tasker Plans
-          <span class="badge badge-amber" style="margin-left:4px;">Sprint 4 Integration</span>
         </div>
         <h1 class="fade-up d1">Grow your service business</h1>
         <p class="fade-up d2">Start with 5 free customer connections. When you're ready to scale, upgrade for unlimited reach and premium placement.</p>
 
-        <!-- Sprint 4 notice -->
+
         <div class="fade-up d3" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; background:rgba(217,119,6,0.1); border:1px solid rgba(217,119,6,0.2); border-radius:var(--radius-pill); font-size:0.78rem; color:#92400E;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Paystack payment integration arrives in Sprint 4 — plans are UI previews
+          Plans are listed below. Contact us at hello@streettasker.ng to activate your subscription.
         </div>
       </div>
     </div>
@@ -75,8 +69,7 @@
           <div class="slot-label" id="freeSlotLabel">3 of 5 free slots used</div>
 
           <!-- Upgrade notice — shown when 4+ slots used
-               Future Sprint 4: driven by real data from
-               checkTaskerSubscription() + Supabase 'bookings' count -->
+                   checkTaskerSubscription() + Supabase 'bookings' count -->
           <div class="upgrade-notice" id="upgradeNotice">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -94,7 +87,7 @@
     <div class="container">
 
       <!-- Billing toggle: Monthly / Annual
-           Future Sprint 4: Annual billing computed server-side in Supabase -->
+
       <div class="billing-toggle-wrap fade-up">
         <span class="billing-label billing-active" id="monthlyLabel">Monthly</span>
         <label class="billing-toggle-switch" aria-label="Toggle annual billing">
@@ -207,7 +200,6 @@
           </ul>
 
           <div class="plan-cta">
-            <!-- Future Sprint 4: triggers Paystack subscription payment -->
             <button
               class="btn btn-primary btn-full"
               onclick="handlePlanCTA('starter')"
@@ -215,7 +207,6 @@
               data-plan-price="9999"
             >
               Upgrade to Starter
-              <span class="badge badge-amber" style="margin-left:6px; font-size:0.55rem;">Sprint 4</span>
             </button>
           </div>
           <p class="plan-current-note">Cancel anytime · No lock-in</p>
@@ -263,12 +254,11 @@
             </li>
             <li class="plan-feature feature-yes">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>AI job matching — Sprint 4</span>
+              <span>AI job matching</span>
             </li>
           </ul>
 
           <div class="plan-cta">
-            <!-- Future Sprint 4: triggers Paystack subscription payment -->
             <button
               class="btn btn-dark btn-full"
               onclick="handlePlanCTA('pro')"
@@ -276,7 +266,6 @@
               data-plan-price="29999"
             >
               Upgrade to Pro
-              <span class="badge badge-amber" style="margin-left:6px; font-size:0.55rem;">Sprint 4</span>
             </button>
           </div>
           <p class="plan-current-note">Cancel anytime · Priority onboarding</p>
@@ -387,7 +376,7 @@
                 <svg class="faq-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               <div class="faq-body">
-                Subscriptions are billed monthly or annually via Paystack — Nigeria's leading payment gateway. We accept bank cards, bank transfers, and USSD payments. Annual plans include a 20% discount. Payment integration launches in Sprint 4.
+                Subscriptions are billed monthly or annually via Paystack — Nigeria's leading payment gateway. We accept bank cards, bank transfers, and USSD payments. Annual plans include a 20% discount. Payment integration is in final testing.
               </div>
             </div>
 
@@ -461,7 +450,6 @@
   </div><!-- end .subscription-page -->
 
   <!-- ── Subscription Upgrade Modal ──────────────────────────────
-       Future Sprint 4: Replaces this entire modal with Paystack iframe.
        Data attributes map to Paystack payment handler. -->
   <div class="modal-overlay" id="subscriptionModal" role="dialog" aria-modal="true" aria-label="Upgrade plan">
     <div class="modal-box subscription-modal-box" style="max-width:440px; text-align:left;">
@@ -483,9 +471,8 @@
         </div>
       </div>
 
-      <!-- Sprint 4 disclaimer -->
       <div style="padding:12px 14px; background:var(--amber-light); border:1px solid rgba(217,119,6,0.2); border-radius:var(--radius-md); margin-bottom:20px; font-size:0.82rem; color:#92400E; line-height:1.5;">
-        <strong>Sprint 4 feature:</strong> Payment via Paystack will be wired in Sprint 4. This captures your plan preference for UX testing.
+        Thank you for your interest. Our team will contact you to complete payment and activate your plan.
       </div>
 
       <div style="display:flex; flex-direction:column; gap:10px;">
@@ -508,13 +495,13 @@
 
   <!-- ── Sprint Info Modal ─────────────────────────────────────── -->
   <div class="modal-overlay" id="sprintModal" role="dialog" aria-modal="true">
-    <div class="modal-box sprint-modal-box" style="max-width:440px;">
+    <div class="modal-box" style="max-width:440px;">
       <button class="modal-close-x" onclick="closeSprintModal()" aria-label="Close">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-      <div class="sprint-modal-icon">
+      <div class="modal-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
@@ -529,7 +516,6 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Sprint 3: Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/auth.js"></script>

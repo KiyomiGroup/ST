@@ -16,8 +16,6 @@
 
   <!-- ══════════════════════════════════════════════════════════
        HERO
-       Future Sprint: Search triggers Supabase tasker query
-       and redirects with URL params to find-taskers.html.
        ══════════════════════════════════════════════════════════ -->
   <section class="hero">
     <div class="container">
@@ -42,7 +40,6 @@
           </p>
 
           <!-- Search bar
-               Future Sprint: Connects to Supabase full-text search.
                Future Feature: Location auto-fill via browser geolocation. -->
           <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
             <div class="hero-search-field">
@@ -65,7 +62,7 @@
             <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse Taskers</a>
           </div>
 
-          <!-- Stats — Future Sprint: Real counts from Supabase aggregates -->
+   
           <div class="hero-stats fade-up d5">
             <div>
               <span class="stat-num">1,200+</span>
@@ -120,12 +117,11 @@
               <div class="panel-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
             </div>
 
-            <!-- Future Sprint 3: Map view replaces this placeholder -->
-            <div class="panel-map">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="panel-map" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
               </svg>
-              <p class="panel-map-label">Map View &mdash; Sprint 3</p>
+              <p class="panel-map-label" style="color:var(--blue);">View all services →</p>
             </div>
           </div>
 
@@ -149,8 +145,6 @@
 
   <!-- ══════════════════════════════════════════════════════════
        FEATURED SERVICES
-       Future Sprint: Service counts from Supabase.
-       Future Feature: Clicking filters find-taskers.html.
        ══════════════════════════════════════════════════════════ -->
   <section class="section services-section">
     <div class="container">
@@ -237,21 +231,21 @@
         <div class="step-block">
           <div class="step-num">Step 01</div>
           <h3>Post a Task</h3>
-          <!-- Future Sprint 2: Connects to Supabase 'tasks' table -->
+
           <p>Describe what you need done, set your budget, and drop your location. Takes under 2 minutes.</p>
         </div>
 
         <div class="step-block">
           <div class="step-num">Step 02</div>
           <h3>Receive Offers</h3>
-          <!-- Future Sprint 2: Real-time offers via Supabase Realtime -->
+
           <p>Nearby taskers see your task and send quotes. Compare ratings, prices, and reviews.</p>
         </div>
 
         <div class="step-block">
           <div class="step-num">Step 03</div>
           <h3>Hire &amp; Done</h3>
-          <!-- Future Sprint 3: Booking engine + Paystack payment -->
+
           <p>Pick the best tasker, confirm the booking, and pay securely in-app when the job is done.</p>
         </div>
 
@@ -262,8 +256,6 @@
 
   <!-- ══════════════════════════════════════════════════════════
        TRENDING WORK (Social Feed Preview)
-       Future Sprint 3: Populated from Supabase 'posts' table.
-       Future Feature: Full social feed with likes, comments.
        ══════════════════════════════════════════════════════════ -->
   <section class="section">
     <div class="container">
@@ -271,7 +263,6 @@
       <div class="section-header">
         <div class="eyebrow">
           Social Feed
-          <span class="badge badge-amber" style="margin-left:4px;">Sprint 3</span>
         </div>
         <h2>Trending work in your city</h2>
         <p>See the quality of work taskers are completing right now near you.</p>
@@ -365,7 +356,7 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Sprint 3: Supabase -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/auth.js"></script>
@@ -374,20 +365,75 @@
   <script src="js/app.js"></script>
   <script>
     async function initPage() {
-      /* Sprint 3.1: Show dashboard CTA for logged-in users */
       const user = await window.ST.auth.getCurrentUser();
       if (user) {
         const role    = await window.ST.auth.getUserRole(user);
         const dashUrl = window.ST.auth.getDashboardUrl(role);
-        const heroActions = document.querySelector('.hero-actions, .hero-btns');
-        if (heroActions) {
-          const btn = document.createElement('a');
-          btn.href = dashUrl;
-          btn.className = 'btn btn-primary btn-lg';
-          btn.textContent = 'Go to My Dashboard';
-          heroActions.prepend(btn);
+
+        /* Replace hero CTA buttons with role-specific actions */
+        const heroCta = document.querySelector('.hero-cta');
+        if (heroCta) {
+          if (role === 'tasker') {
+            heroCta.innerHTML = \`
+              <a href="dashboard-tasker.html" class="btn btn-dark btn-lg">My Dashboard</a>
+              <a href="find-tasks.html" class="btn btn-outline btn-lg">Browse Tasks</a>
+              <a href="post-service.html" class="btn btn-outline btn-lg">Post a Service</a>\`;
+          } else {
+            heroCta.innerHTML = \`
+              <a href="dashboard-customer.html" class="btn btn-dark btn-lg">My Dashboard</a>
+              <a href="post-task.html" class="btn btn-outline btn-lg">Post a Task</a>
+              <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse Services</a>\`;
+          }
+        }
+
+        /* Show role-based homepage sections */
+        if (role === 'tasker') {
+          loadTaskerHomeSections();
+        } else {
+          loadCustomerHomeSections();
         }
       }
+    }
+
+    async function loadCustomerHomeSections() {
+      /* Load recent services into the homepage panel */
+      try {
+        const services = await window.ST.db.fetchServices({ limit: 3 });
+        const panelEl  = document.querySelector('.hero-panel');
+        if (panelEl && services.length > 0) {
+          const rows = panelEl.querySelectorAll('.panel-row');
+          services.slice(0,3).forEach((s, i) => {
+            if (rows[i]) {
+              const nameEl = rows[i].querySelector('.panel-name');
+              const roleEl = rows[i].querySelector('.panel-role');
+              if (nameEl) nameEl.textContent = s.provider_name || 'Provider';
+              if (roleEl) roleEl.textContent = (s.service_name || 'Service') + ' · ' + (s.location || 'Lagos');
+            }
+          });
+        }
+      } catch(e) {}
+    }
+
+    async function loadTaskerHomeSections() {
+      /* Show open tasks section for taskers */
+      try {
+        const tasks = await window.ST.db.fetchTasks({ limit: 3 });
+        const panelEl = document.querySelector('.hero-panel');
+        if (panelEl && tasks.length > 0) {
+          const header = panelEl.querySelector('.panel-title');
+          if (header) header.textContent = 'Open Tasks Near You';
+
+          const rows = panelEl.querySelectorAll('.panel-row');
+          tasks.slice(0,3).forEach((t, i) => {
+            if (rows[i]) {
+              const nameEl = rows[i].querySelector('.panel-name');
+              const roleEl = rows[i].querySelector('.panel-role');
+              if (nameEl) nameEl.textContent = t.title || 'Task';
+              if (roleEl) roleEl.textContent = \`₦\${Number(t.budget||0).toLocaleString()} · \${t.location || 'Lagos'}\`;
+            }
+          });
+        }
+      } catch(e) {}
     }
 
     function handleHeroSearch(e) {

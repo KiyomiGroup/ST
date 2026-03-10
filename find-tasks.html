@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse open tasks posted by customers and apply to earn." />
+  <title>Find Tasks — Street Taskers</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="page-hero">
+    <div class="container">
+      <div class="eyebrow fade-up">Open Tasks</div>
+      <h1 class="fade-up d1">Find tasks to complete</h1>
+      <p class="fade-up d2">Browse work posted by customers. Apply to ones that match your skills and earn.</p>
+      <form id="taskSearchForm" class="search-bar fade-up d3" novalidate>
+        <div class="sf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
+        </div>
+        <div class="sf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="padding:32px 0 64px; background:var(--bg-subtle);">
+    <div class="container">
+      <div style="display:grid; grid-template-columns:220px 1fr; gap:28px; align-items:start;">
+
+        <!-- Filters -->
+        <aside class="filter-sidebar">
+          <div class="filter-card">
+            <div class="filter-card-header">
+              <span class="filter-card-title">Filters</span>
+              <button class="filter-reset" id="taskFilterReset">Reset</button>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">Category</div>
+              <label class="filter-opt"><input type="radio" name="tcat" value="" checked /> All</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="barber" /> Barber</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="electrician" /> Electrician</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="cleaning" /> Cleaning</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="mechanic" /> Mechanic</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="plumber" /> Plumber</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="beauty" /> Make-up</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="other" /> Other</label>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">Min Budget</div>
+              <div class="range-wrap">
+                <input type="range" class="filter-range" id="budgetRange" min="0" max="100000" value="0" step="500" />
+                <div class="range-labels"><span>₦0</span><span id="budgetVal">Any</span><span>₦100k</span></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Tasks -->
+        <main>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div style="font-size:0.88rem; color:var(--text-muted);"><strong id="taskCount" style="color:var(--text-primary);">—</strong> open tasks</div>
+          </div>
+
+          <div id="tasksLoading" style="text-align:center; padding:40px; color:var(--text-muted);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            Loading tasks...
+          </div>
+          <div id="tasksGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
+          <div id="tasksEmpty" class="empty-state" style="display:none;">
+            <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <h3>No tasks found</h3>
+            <p>Try a different search or check back later.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apply modal -->
+  <div class="modal-overlay" id="applyModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:480px;text-align:left;">
+      <button class="modal-close-x" onclick="closeApply()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 style="margin-bottom:6px;" id="applyTitle">Apply to Task</h2>
+      <p style="font-size:0.84rem;margin-bottom:20px;" id="applyDesc"></p>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your message *</label>
+        <textarea id="applyMsg" rows="4" placeholder="Describe your experience and why you're the right fit..."
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your proposed price (₦) <span style="font-weight:400;color:var(--text-muted);">optional</span></label>
+        <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
+      </div>
+      <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.83rem;color:var(--red);margin-bottom:14px;"></div>
+      <button class="btn btn-primary btn-full" id="applyBtn" onclick="submitApply()">Send Application</button>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .task-row { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 24px; transition:border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+    .task-row:hover { border-color:var(--border-strong); box-shadow:var(--shadow-sm); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let ALL_TASKS = [];
+    let ACTIVE_TASK_ID = null;
+    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0 };
+
+    async function initPage() {
+      try {
+        ALL_TASKS = await window.ST.db.fetchTasks({ limit: 100 });
+      } catch (e) {
+        document.getElementById('tasksLoading').innerHTML = `<p style="color:var(--red)">Could not load tasks: ${e.message}</p>`;
+        return;
+      }
+      document.getElementById('tasksLoading').style.display = 'none';
+      renderTasks();
+
+      /* Search */
+      const si = document.getElementById('taskSearchInput');
+      const li = document.getElementById('taskLocationInput');
+      const sf = document.getElementById('taskSearchForm');
+      if (si) si.addEventListener('input', () => { TASK_FILTERS.search = si.value.trim(); renderTasks(); });
+      if (li) li.addEventListener('input', () => { TASK_FILTERS.location = li.value.trim(); renderTasks(); });
+      if (sf) sf.addEventListener('submit', e => { e.preventDefault(); renderTasks(); });
+
+      /* Category radio */
+      document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));
+
+      /* Budget */
+      const br = document.getElementById('budgetRange');
+      const bv = document.getElementById('budgetVal');
+      if (br) br.addEventListener('input', () => {
+        TASK_FILTERS.minBudget = parseInt(br.value);
+        if (bv) bv.textContent = TASK_FILTERS.minBudget > 0 ? '₦' + TASK_FILTERS.minBudget.toLocaleString() : 'Any';
+        renderTasks();
+      });
+
+      /* Reset */
+      document.getElementById('taskFilterReset')?.addEventListener('click', () => {
+        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0 };
+        if (si) si.value = ''; if (li) li.value = '';
+        if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
+        document.querySelectorAll('[name="tcat"]')[0].checked = true;
+        renderTasks();
+      });
+    }
+
+    function renderTasks() {
+      const grid = document.getElementById('tasksGrid');
+      const cnt  = document.getElementById('taskCount');
+      const emp  = document.getElementById('tasksEmpty');
+      let f = [...ALL_TASKS];
+      if (TASK_FILTERS.search) {
+        const q = TASK_FILTERS.search.toLowerCase();
+        f = f.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
+      }
+      if (TASK_FILTERS.category) f = f.filter(t => t.category === TASK_FILTERS.category);
+      if (TASK_FILTERS.location) {
+        const loc = TASK_FILTERS.location.toLowerCase();
+        f = f.filter(t => (t.location||'').toLowerCase().includes(loc));
+      }
+      if (TASK_FILTERS.minBudget > 0) f = f.filter(t => (t.budget||0) >= TASK_FILTERS.minBudget);
+
+      if (cnt) cnt.textContent = f.length;
+      if (f.length === 0) { grid.innerHTML = ''; emp.style.display = 'block'; return; }
+      emp.style.display = 'none';
+      grid.innerHTML = f.map(buildTaskRow).join('');
+    }
+
+    function buildTaskRow(t) {
+      const dead = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}) : 'Open-ended';
+      const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
+      const desc = t.description || '';
+      const since = tAgo(t.created_at);
+      return `<div class="task-row">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;">
+          <div style="font-size:1rem;font-weight:700;color:var(--text-primary);">${t.title||'Untitled Task'}</div>
+          <div style="font-size:1.05rem;font-weight:800;color:var(--blue);flex-shrink:0;">₦${Number(t.budget||0).toLocaleString()}</div>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.55;">${desc.slice(0,200)}${desc.length>200?'…':''}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">
+          <span>📍 ${t.location||'Location TBD'}</span>
+          <span>🏷 ${cat}</span>
+          <span>📅 Due: ${dead}</span>
+          <span class="task-row-badge status-open">Open</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
+          <button class="btn btn-primary btn-sm" onclick="openApply('${t.id}','${(t.title||'').replace(/'/g,"\\'")}','${desc.slice(0,80).replace(/'/g,"\\'")}')">Apply to Task</button>
+        </div>
+      </div>`;
+    }
+
+    function tAgo(iso) {
+      if (!iso) return '—';
+      const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
+      if (h < 1) return 'just now';
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h/24) + 'd ago';
+    }
+
+    function openApply(id, title, desc) {
+      ACTIVE_TASK_ID = id;
+      document.getElementById('applyTitle').textContent = 'Apply — ' + title;
+      document.getElementById('applyDesc').textContent  = desc + (desc.length >= 80 ? '…' : '');
+      document.getElementById('applyMsg').value   = '';
+      document.getElementById('applyPrice').value = '';
+      document.getElementById('applyErr').style.display = 'none';
+      document.getElementById('applyModal').classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    }
+    window.openApply = openApply;
+
+    function closeApply() {
+      document.getElementById('applyModal').classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    window.closeApply = closeApply;
+
+    async function submitApply() {
+      const user = await window.ST.auth.getCurrentUser();
+      if (!user) {
+        closeApply();
+        showToast('Please log in to apply to tasks.');
+        setTimeout(() => { window.location.href = 'login.html?redirect=find-tasks.html'; }, 1200);
+        return;
+      }
+      const msg  = document.getElementById('applyMsg').value.trim();
+      const price= document.getElementById('applyPrice').value.trim();
+      const err  = document.getElementById('applyErr');
+      const btn  = document.getElementById('applyBtn');
+      if (!msg) { err.textContent = 'Please write a message.'; err.style.display = 'block'; return; }
+
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        await window.supabase.from('bookings').insert({
+          task_id:     ACTIVE_TASK_ID,
+          tasker_id:   user.id,
+          customer_id: null,
+          status:      'applied',
+          notes:       msg + (price ? ` | Proposed: ₦${price}` : ''),
+        });
+        closeApply();
+        showToast('Application sent! The customer will review and contact you.');
+      } catch(e) {
+        err.textContent = 'Failed: ' + e.message;
+        err.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Send Application';
+      }
+    }
+    window.submitApply = submitApply;
+  </script>
+</body>
+</html>

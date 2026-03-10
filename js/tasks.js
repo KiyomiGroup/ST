@@ -1,16 +1,13 @@
 /* ============================================================
    STREET TASKERS — tasks.js
-   Sprint 2: Task posting form interactions & UI state
+   Task posting form
    ============================================================
    This module owns the post-task form experience.
    All submission handlers are wired to UI feedback only.
 
-   Future Sprint 3: Replace showSprintAlert() calls with real
    Supabase inserts from future-features.js:
      postTask({ title, description, budget, location, deadline })
-   Future Sprint 3: After successful insert, redirect to
      /task-detail.html?id=<new_task_id>
-   Future Sprint 2 (auth guard): Wrap submitTask() with an
    auth check — if no session, redirect to login.html
    ============================================================ */
 
@@ -138,7 +135,6 @@ function wireUrgentToggle() {
 
 /* ── Auto-save draft to sessionStorage ──────────────────────── */
 /*
- * Future Sprint: Replace sessionStorage with Supabase
  * draft saving (INSERT with status='draft') so drafts
  * persist across devices/sessions.
  */
@@ -268,7 +264,6 @@ async function handleTaskSubmit(e) {
   }
 
   /* Build task payload
-   * Future Sprint 3: This object is passed directly to postTask()
    * from future-features.js
    */
   const taskPayload = {
@@ -279,18 +274,11 @@ async function handleTaskSubmit(e) {
     deadline:    dlInput.value,
     category:    form.taskCategory?.value || 'other',
     urgent:      document.getElementById('urgentToggle')?.checked || false,
-    /* Future Sprint 3 fields:
-       customer_id: supabase.auth.getUser().id
-       status: 'open'
-       created_at: new Date().toISOString()
-       photos: [] — from Supabase Storage upload
-    */
   };
 
   /* Show loading state */
   setButtonLoading(submitBtn, 'Posting task...');
 
-  /* ── Sprint 3: Real Supabase insert via db.js ── */
   try {
     /* Require login — redirect if not authenticated */
     if (window.ST?.auth) {
@@ -351,11 +339,9 @@ function showTaskSuccessModal(payload) {
     modal.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
   } else {
-    /* Fallback if modal doesn't exist */
-    showSprintAlert(
-      'Task Posted (Preview)',
-      `"${payload.title}" is ready to go live.\n\nTask posting will connect to Supabase in Sprint 3. Your task data has been captured and is ready for the backend.`
-    );
+    /* Modal not found — show toast and redirect to dashboard */
+    typeof showToast === 'function' && showToast(`Task "${payload.title}" posted successfully!`);
+    setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 1500);
   }
 }
 
@@ -404,20 +390,7 @@ function setButtonLoading(btn, loadingText, resetText) {
 
 /*
  * Global sprint alert helper
- * Future Sprint: Remove once real backend is live —
- * replace all calls with proper success/error UI.
- */
-function showSprintAlert(title, message) {
-  const modal = document.getElementById('sprintModal');
-  if (modal) {
-    modal.querySelector('[data-sprint-title]').textContent  = title;
-    modal.querySelector('[data-sprint-message]').textContent = message;
-    modal.classList.add('modal-open');
-    document.body.style.overflow = 'hidden';
-  } else {
-    alert(`${title}\n\n${message}`);
-  }
-}
+function showSprintAlert(title, message) { if (typeof showToast === "function") showToast(title); }
 
 function closeSprintModal() {
   const modal = document.getElementById('sprintModal');

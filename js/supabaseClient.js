@@ -1,14 +1,9 @@
 /* ============================================================
    STREET TASKER — supabaseClient.js
-   Sprint 3: Supabase client initialization
    ============================================================
    Single source of truth for the Supabase client instance.
    All modules use window.supabase set here.
 
-   Future Sprint: When migrating to a bundler (Vite/Next.js),
-   replace CDN import with:
-     import { createClient } from '@supabase/supabase-js'
-   and load keys from .env.local.
    ============================================================ */
 
 'use strict';

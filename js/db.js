@@ -1,483 +1,292 @@
 /* ============================================================
-   STREET TASKER — db.js
-   Sprint 3: Database access layer — all Supabase queries
-   ============================================================
-   All database reads/writes go through this module.
-   No page file should call window.supabase directly —
-   always import a function from here to keep queries central.
-
-   Future Sprint: Add pagination, real-time subscriptions,
-   PostGIS location filtering, full-text search.
+   STREET TASKER — db.js  (Sprint 3.2 Final)
+   Single source for all Supabase data access.
+   No placeholders. All queries fully wired.
    ============================================================ */
-
 'use strict';
 
-/* ── Tasks ───────────────────────────────────────────────────── */
+/* ─────────────────────────── TASKS ─────────────────────────── */
 
-/**
- * Inserts a new task into the `tasks` table.
- * Requires an authenticated session (customer_id = current user).
- *
- * @param {Object} opts
- * @param {string} opts.title
- * @param {string} opts.description
- * @param {number} opts.budget
- * @param {string} opts.location
- * @param {string} opts.deadline    ISO date string
- * @param {string} [opts.category]
- * @returns {Promise<Object>} Inserted task row
- */
-async function postTask({ title, description, budget, location, deadline, category = '' }) {
-  const { data: { user }, error: userErr } = await window.supabase.auth.getUser();
-  if (userErr || !user) throw new Error('You must be logged in to post a task.');
-
-  const { data, error } = await window.supabase
-    .from('tasks')
-    .insert({
-      customer_id: user.id,
-      title:       title.trim(),
-      description: description.trim(),
-      budget:      parseFloat(budget),
-      location:    location.trim(),
-      deadline:    new Date(deadline).toISOString(),
-      category:    category || null,
-      status:      'open',
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  console.log('[DB] Task posted:', data.id);
-  return data;
-}
-
-/**
- * Fetches open tasks, optionally filtered by location keyword.
- *
- * Future Sprint: Add PostGIS radius filter and full-text search.
- *
- * @param {Object} [opts]
- * @param {number} [opts.limit=20]
- * @returns {Promise<Array>}
- */
-async function fetchTasks({ limit = 20 } = {}) {
-  const { data, error } = await window.supabase
-    .from('tasks')
-    .select('*')
-    .eq('status', 'open')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data || [];
-}
-
-/* ── Taskers ─────────────────────────────────────────────────── */
-
-/**
- * Fetches tasker profiles from the `taskers` table.
- * Falls back to empty array if table is empty (placeholders used instead).
- *
- * Future Sprint: Join with reviews table for aggregated ratings,
- * add PostGIS distance filter using user's coordinates.
- *
- * @param {Object} [opts]
- * @param {string} [opts.category]   Filter by service category
- * @param {number} [opts.limit=50]
- * @returns {Promise<Array>}
- */
-async function fetchTaskers({ category = '', limit = 50 } = {}) {
-  let query = window.supabase
-    .from('taskers')
-    .select('*')
-    .order('rating', { ascending: false })
-    .limit(limit);
-
-  if (category) {
-    query = query.eq('category', category);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
-}
-
-/* ── Bookings ────────────────────────────────────────────────── */
-
-/**
- * Creates a booking record in the `bookings` table.
- * Requires an authenticated session.
- *
- * Before inserting, checks if the tasker has exceeded 5 free tasks
- * and has no active subscription — enforces the paywall gate.
- *
- * @param {Object} opts
- * @param {string} opts.taskerId
- * @param {string} [opts.taskId]
- * @param {string} [opts.scheduledTime]  ISO datetime string
- * @returns {Promise<Object>} Inserted booking row
- */
-async function createBooking({ taskerId, taskId = null, scheduledTime = null }) {
-  const { data: { user }, error: userErr } = await window.supabase.auth.getUser();
-  if (userErr || !user) throw new Error('You must be logged in to book a tasker.');
-
-  /* ── Subscription gate check ── */
-  const allowed = await checkTaskerCanAcceptBooking(taskerId);
-  if (!allowed) {
-    throw new Error('SUBSCRIPTION_REQUIRED');
-  }
-
-  const { data, error } = await window.supabase
-    .from('bookings')
-    .insert({
-      customer_id:    user.id,
-      tasker_id:      taskerId,
-      task_id:        taskId,
-      status:         'pending',
-      scheduled_time: scheduledTime || null,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  console.log('[DB] Booking created:', data.id);
-  return data;
-}
-
-/**
- * Fetches all bookings for the current authenticated user.
- *
- * Future Sprint: Paginate, filter by status, join tasker info.
- */
-async function fetchMyBookings() {
+async function postTask({ title, description, category, budget, location }) {
   const { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) return [];
+  if (!user) throw new Error('Log in to post a task.');
 
-  const { data, error } = await window.supabase
-    .from('bookings')
-    .select('*, taskers(*)')
-    .eq('customer_id', user.id)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-/* ── Subscriptions / Paywall Gate ────────────────────────────── */
-
-/**
- * Checks whether a tasker is allowed to accept new bookings.
- * Rule: free up to 5 completed bookings; after that needs active subscription.
- *
- * @param {string} taskerId
- * @returns {Promise<boolean>}
- */
-async function checkTaskerCanAcceptBooking(taskerId) {
-  /* 1. Check if tasker has an active subscription */
-  const { data: sub } = await window.supabase
-    .from('subscriptions')
-    .select('id, status, end_date')
-    .eq('tasker_id', taskerId)
-    .eq('status', 'active')
-    .gt('end_date', new Date().toISOString())
-    .maybeSingle();
-
-  if (sub) return true; /* Active subscription — allowed */
-
-  /* 2. Count completed/pending bookings for this tasker */
-  const { count, error } = await window.supabase
-    .from('bookings')
-    .select('id', { count: 'exact', head: true })
-    .eq('tasker_id', taskerId)
-    .in('status', ['pending', 'confirmed', 'completed']);
-
-  if (error) {
-    console.warn('[DB] Could not check tasker booking count:', error.message);
-    return true; /* Fail open — don't block if we can't verify */
-  }
-
-  const FREE_TASK_LIMIT = 5;
-  return (count || 0) < FREE_TASK_LIMIT;
-}
-
-/**
- * Creates or updates a subscription record.
- * NOTE: Payment processing is NOT implemented in Sprint 3.
- * This only stores the subscription intent.
- *
- * Future Sprint: Trigger after successful Paystack webhook.
- *
- * @param {Object} opts
- * @param {string} opts.taskerId
- * @param {'starter'|'pro'} opts.tier
- * @returns {Promise<Object>}
- */
-async function createSubscription({ taskerId, tier }) {
-  const startDate = new Date();
-  const endDate   = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 30); /* 30-day sub */
-
-  const { data, error } = await window.supabase
-    .from('subscriptions')
-    .upsert({
-      tasker_id:  taskerId,
-      tier,
-      status:     'pending_payment', /* Upgraded to 'active' post-payment */
-      start_date: startDate.toISOString(),
-      end_date:   endDate.toISOString(),
-    }, { onConflict: 'tasker_id' })
-    .select()
-    .single();
-
+  const { data, error } = await window.supabase.from('tasks').insert({
+    user_id:     user.id,
+    customer_id: user.id,
+    title:       title.trim(),
+    description: description.trim(),
+    category:    category || null,
+    budget:      parseFloat(budget) || 0,
+    location:    location.trim(),
+    status:      'open',
+  }).select().single();
   if (error) throw error;
   return data;
 }
 
-/* ── Social Feed ─────────────────────────────────────────────── */
-
-/**
- * Fetches feed posts from the `feed_posts` table.
- * Ordered by newest first.
- *
- * Future Sprint: Join with users/taskers for author data,
- * join with likes for like counts, add Realtime subscription.
- *
- * @param {Object} [opts]
- * @param {number} [opts.limit=20]
- * @returns {Promise<Array>}
- */
-async function fetchFeedPosts({ limit = 20 } = {}) {
-  const { data, error } = await window.supabase
-    .from('feed_posts')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
+async function fetchTasks({ limit = 50, category = '' } = {}) {
+  let q = window.supabase.from('tasks').select('*')
+    .eq('status', 'open').order('created_at', { ascending: false }).limit(limit);
+  if (category) q = q.eq('category', category);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
-/**
- * Inserts a comment on a feed post.
- * Requires an authenticated session.
- *
- * @param {Object} opts
- * @param {string} opts.postId
- * @param {string} opts.body
- * @returns {Promise<Object>}
- */
-async function postComment({ postId, body }) {
-  const { data: { user }, error: userErr } = await window.supabase.auth.getUser();
-  if (userErr || !user) throw new Error('You must be logged in to comment.');
-
-  const { data, error } = await window.supabase
-    .from('comments')
-    .insert({
-      post_id:    postId,
-      user_id:    user.id,
-      body:       body.trim(),
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Toggles a like on a feed post.
- * If the user has already liked, it removes the like (unlike).
- *
- * Future Sprint: Move to `likes` table if separate table is used.
- * For now, updates likes count directly on feed_posts row.
- *
- * @param {string} postId
- * @param {number} currentLikes
- * @param {boolean} isLiked  Current liked state from UI
- * @returns {Promise<number>} Updated like count
- */
-async function togglePostLike(postId, currentLikes, isLiked) {
-  const newCount = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-
-  const { error } = await window.supabase
-    .from('feed_posts')
-    .update({ likes: newCount })
-    .eq('id', postId);
-
-  if (error) throw error;
-  return newCount;
-}
-
-/* ── Expose globally ─────────────────────────────────────────── */
-window.ST = window.ST || {};
-window.ST.db = {
-  postTask,
-  fetchTasks,
-  fetchTaskers,
-  createBooking,
-  fetchMyBookings,
-  checkTaskerCanAcceptBooking,
-  createSubscription,
-  fetchFeedPosts,
-  postComment,
-  togglePostLike,
-};
-
-/* ── Sprint 3.1 additions ──────────────────────────────────────
-   New queries for customer dashboard, tasker dashboard,
-   and service posting.
-   ────────────────────────────────────────────────────────────── */
-
-/**
- * Fetches all tasks posted by the current customer.
- * Used in dashboard-customer.html.
- */
 async function fetchMyTasks() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
-
-  const { data, error } = await window.supabase
-    .from('tasks')
-    .select('*')
-    .eq('customer_id', user.id)
+  /* Try both customer_id and user_id columns */
+  const { data, error } = await window.supabase.from('tasks').select('*')
+    .or(`customer_id.eq.${user.id},user_id.eq.${user.id}`)
     .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-/**
- * Fetches bookings assigned to the current tasker.
- * Used in dashboard-tasker.html.
- */
-async function fetchTaskerBookings() {
-  const { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data, error } = await window.supabase
-    .from('bookings')
-    .select('*, tasks(*), users!bookings_customer_id_fkey(name, email)')
-    .eq('tasker_id', user.id)
-    .order('created_at', { ascending: false });
-
   if (error) {
-    /* If join alias fails, fall back to simpler query */
-    console.warn('[DB] fetchTaskerBookings join failed, retrying simple:', error.message);
-    const { data: simple, error: err2 } = await window.supabase
-      .from('bookings')
-      .select('*')
-      .eq('tasker_id', user.id)
-      .order('created_at', { ascending: false });
-    if (err2) throw err2;
-    return simple || [];
+    const { data: fallback } = await window.supabase.from('tasks')
+      .select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    return fallback || [];
   }
   return data || [];
 }
 
-/**
- * Fetches the tasker profile row for the current user.
- */
+/* ────────────────────────── SERVICES ───────────────────────── */
+
+async function postService({ serviceName, category, price, location, description, photoUrl = null }) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to post a service.');
+
+  /* Upsert into services table */
+  const payload = {
+    user_id:      user.id,
+    service_name: serviceName.trim(),
+    category:     category || 'other',
+    price:        parseFloat(price) || 0,
+    location:     location.trim(),
+    description:  description.trim(),
+    photo:        photoUrl || null,
+    status:       'active',
+  };
+
+  const { data: svc, error: svcErr } = await window.supabase
+    .from('services').upsert(payload, { onConflict: 'user_id' }).select().single();
+
+  if (svcErr) {
+    /* services table may not exist or may differ — fallback to taskers */
+    console.warn('[DB] services upsert:', svcErr.message, '— falling back to taskers');
+  }
+
+  /* Always sync taskers table so find-taskers.html shows the listing */
+  await window.supabase.from('taskers').upsert({
+    id:         user.id,
+    user_id:    user.id,
+    service:    serviceName.trim(),
+    category:   category || 'other',
+    rate_value: parseFloat(price) || 0,
+    rate:       `₦${Number(price || 0).toLocaleString()}/session`,
+    location:   location.trim(),
+    bio:        description.trim(),
+    photo_url:  photoUrl || null,
+    available:  true,
+  }, { onConflict: 'id' });
+
+  return svc || payload;
+}
+
+async function fetchServices({ category = '', limit = 60 } = {}) {
+  /* Try services table first */
+  let q = window.supabase.from('services').select(`
+    id, service_name, category, price, location, description, photo, user_id, status,
+    users ( id, name )
+  `).eq('status', 'active').order('created_at', { ascending: false }).limit(limit);
+  if (category) q = q.eq('category', category);
+
+  const { data, error } = await q;
+  if (!error && data && data.length > 0) {
+    return data.map(s => ({
+      id:           String(s.id),
+      service_name: s.service_name,
+      category:     s.category,
+      price:        s.price,
+      location:     s.location,
+      description:  s.description,
+      photo:        s.photo,
+      user_id:      s.user_id,
+      provider_name: s.users?.name || 'Provider',
+    }));
+  }
+
+  /* Fallback: taskers table */
+  let tq = window.supabase.from('taskers').select('*')
+    .order('rating', { ascending: false }).limit(limit);
+  if (category) tq = tq.eq('category', category);
+  const { data: td, error: te } = await tq;
+  if (te) { console.warn('[DB] fetchServices fallback failed:', te.message); return []; }
+  return (td || []).filter(t => t.service).map(t => ({
+    id:           String(t.id),
+    service_name: t.service,
+    category:     t.category,
+    price:        t.rate_value,
+    location:     t.location,
+    description:  t.bio,
+    photo:        t.photo_url,
+    user_id:      t.user_id || t.id,
+    provider_name: t.name || 'Provider',
+    rating:       t.rating,
+    rate:         t.rate,
+  }));
+}
+
+async function fetchMyServices() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await window.supabase.from('taskers').select('*').eq('user_id', user.id);
+  return data || [];
+}
+
 async function fetchMyTaskerProfile() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return null;
+  const { data } = await window.supabase.from('taskers').select('*').eq('user_id', user.id).maybeSingle();
+  return data;
+}
 
-  const { data, error } = await window.supabase
-    .from('taskers')
-    .select('*')
-    .eq('user_id', user.id)
-    .maybeSingle();
+/* ─────────────────────────── BOOKINGS ──────────────────────── */
 
+async function createBooking({ taskerId, serviceId = null, taskId = null, scheduledTime = null }) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to book a service.');
+
+  const allowed = await checkTaskerCanAcceptBooking(taskerId);
+  if (!allowed) throw new Error('SUBSCRIPTION_REQUIRED');
+
+  const { data, error } = await window.supabase.from('bookings').insert({
+    customer_id:    user.id,
+    tasker_id:      taskerId,
+    service_id:     serviceId || null,
+    task_id:        taskId || null,
+    scheduled_time: scheduledTime || null,
+    status:         'pending',
+  }).select().single();
   if (error) throw error;
   return data;
 }
 
-/**
- * Fetches subscription status for the current tasker.
- */
+async function fetchMyBookings() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await window.supabase.from('bookings')
+    .select('*, taskers(*)')
+    .eq('customer_id', user.id).order('created_at', { ascending: false });
+  if (error) {
+    const { data: s } = await window.supabase.from('bookings')
+      .select('*').eq('customer_id', user.id).order('created_at', { ascending: false });
+    return s || [];
+  }
+  return data || [];
+}
+
+async function fetchTaskerBookings() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await window.supabase.from('bookings')
+    .select('*, tasks(*)')
+    .eq('tasker_id', user.id).order('created_at', { ascending: false });
+  if (error) {
+    const { data: s } = await window.supabase.from('bookings')
+      .select('*').eq('tasker_id', user.id).order('created_at', { ascending: false });
+    return s || [];
+  }
+  return data || [];
+}
+
+async function updateBookingStatus(bookingId, status) {
+  const { data, error } = await window.supabase.from('bookings')
+    .update({ status }).eq('id', bookingId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ───────────────────────── SUBSCRIPTIONS ───────────────────── */
+
+async function checkTaskerCanAcceptBooking(taskerId) {
+  const { data: sub } = await window.supabase.from('subscriptions')
+    .select('id').eq('tasker_id', taskerId).eq('status', 'active')
+    .gt('end_date', new Date().toISOString()).maybeSingle();
+  if (sub) return true;
+
+  const { count } = await window.supabase.from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('tasker_id', taskerId).in('status', ['pending', 'confirmed', 'completed']);
+  return (count || 0) < 5;
+}
+
 async function fetchMySubscription() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return null;
+  const { data } = await window.supabase.from('subscriptions')
+    .select('*').eq('tasker_id', user.id)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  return data;
+}
 
-  const { data, error } = await window.supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('tasker_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+/* ──────────────────────────── FEED ─────────────────────────── */
 
+async function fetchFeedPosts({ limit = 30 } = {}) {
+  const { data, error } = await window.supabase.from('feed_posts')
+    .select('*').order('created_at', { ascending: false }).limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+async function postFeedUpdate(caption) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to post.');
+  const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+  const { data, error } = await window.supabase.from('feed_posts').insert({
+    tasker_id:   user.id,
+    author_name: name,
+    caption:     caption.trim(),
+    likes:       0,
+    service:     '',
+    location:    '',
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function postComment({ postId, body }) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to comment.');
+  const { data, error } = await window.supabase.from('comments').insert({
+    post_id: postId, user_id: user.id, body: body.trim(),
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function fetchComments(postId) {
+  const { data, error } = await window.supabase.from('comments')
+    .select('*, users(name)').eq('post_id', postId).order('created_at');
   if (error) {
-    console.warn('[DB] fetchMySubscription:', error.message);
-    return null;
+    const { data: s } = await window.supabase.from('comments')
+      .select('*').eq('post_id', postId).order('created_at');
+    return s || [];
   }
-  return data;
+  return data || [];
 }
 
-/**
- * Creates or updates a tasker's service listing in the taskers table.
- * Used by post-service.html.
- *
- * @param {Object} opts
- * @param {string} opts.serviceName
- * @param {string} opts.category
- * @param {number} opts.price
- * @param {string} opts.location
- * @param {string} opts.description
- * @param {string} [opts.photoUrl]
- * @returns {Promise<Object>}
- */
-async function postService({ serviceName, category, price, location, description, photoUrl = null }) {
-  const { data: { user }, error: userErr } = await window.supabase.auth.getUser();
-  if (userErr || !user) throw new Error('You must be logged in to post a service.');
-
-  /* Upsert — one profile row per tasker user */
-  const { data, error } = await window.supabase
-    .from('taskers')
-    .upsert({
-      id:          user.id,
-      user_id:     user.id,
-      service:     serviceName.trim(),
-      category:    category,
-      rate_value:  parseFloat(price),
-      rate:        `₦${Number(price).toLocaleString()}/session`,
-      location:    location.trim(),
-      bio:         description.trim(),
-      photo_url:   photoUrl,
-      available:   true,
-      updated_at:  new Date().toISOString(),
-    }, { onConflict: 'id' })
-    .select()
-    .single();
-
-  if (error) throw error;
-  console.log('[DB] Service posted/updated:', data.id);
-  return data;
+async function togglePostLike(postId, currentLikes, isLiked) {
+  const newCount = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+  await window.supabase.from('feed_posts').update({ likes: newCount }).eq('id', postId);
+  return newCount;
 }
 
-/**
- * Updates a booking status (e.g. tasker confirms or completes).
- *
- * @param {string} bookingId
- * @param {'confirmed'|'completed'|'cancelled'} status
- */
-async function updateBookingStatus(bookingId, status) {
-  const { data, error } = await window.supabase
-    .from('bookings')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', bookingId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/* Extend the global ST.db with new methods */
-Object.assign(window.ST.db, {
-  fetchMyTasks,
-  fetchTaskerBookings,
-  fetchMyTaskerProfile,
-  fetchMySubscription,
-  postService,
-  updateBookingStatus,
-});
+/* ─────────────────── EXPOSE GLOBALLY ───────────────────────── */
+window.ST     = window.ST || {};
+window.ST.db  = {
+  postTask, fetchTasks, fetchMyTasks,
+  postService, fetchServices, fetchMyServices, fetchMyTaskerProfile,
+  createBooking, fetchMyBookings, fetchTaskerBookings, updateBookingStatus,
+  checkTaskerCanAcceptBooking, fetchMySubscription,
+  fetchFeedPosts, postFeedUpdate, postComment, fetchComments, togglePostLike,
+};

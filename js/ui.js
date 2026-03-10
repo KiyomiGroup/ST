@@ -3,8 +3,6 @@
    UI interactions, toast, placeholder data, card builder
    Sprint 1: Frontend only
    ============================================================
-   Future Sprint 2: All PLACEHOLDER_* arrays replaced by
-   live Supabase queries.
    ============================================================ */
 
 'use strict';
@@ -47,9 +45,8 @@ function starString(rating) {
   return '★'.repeat(full) + (half ? '½' : '');
 }
 
-/* ── Placeholder tasker data ─────────────────────────────────── */
+/* ── Static fallback tasker data ─────────────────────────────── */
 /*
- * Future Sprint 2: Replace with Supabase query:
  * const { data } = await supabase
  *   .from('tasker_profiles')
  *   .select('*, profiles(name), reviews(rating)')
@@ -67,10 +64,7 @@ const PLACEHOLDER_TASKERS = [
 
 /* ── Build a tasker card DOM element ─────────────────────────── */
 /*
- * Future Sprint 2: Card will include real profile photo from
  * Supabase Storage and a verified badge from DB.
- * Future Sprint 3: Book button opens booking modal.
- * Future Sprint 2: View Profile navigates to /tasker/:id.
  */
 function buildTaskerCard(tasker) {
   const card = document.createElement('div');
@@ -107,8 +101,8 @@ function buildTaskerCard(tasker) {
       <div class="tasker-rate">${tasker.rate}</div>
     </div>
     <div class="tasker-actions">
-      <button class="btn btn-outline btn-sm" onclick="showToast('Tasker profiles coming in Sprint 2')">View Profile</button>
-      <button class="btn btn-primary btn-sm" onclick="showToast('Booking system coming in Sprint 2')">Book</button>
+      <button class="btn btn-outline btn-sm" onclick="window.openTaskerProfile && openTaskerProfile(tasker.id)">View Profile</button>
+      <button class="btn btn-primary btn-sm" onclick="window.openBookingModal && openBookingModal(tasker.id)">Book</button>
     </div>
   `;
   return card;
@@ -127,12 +121,10 @@ function renderTaskers(container, taskers = PLACEHOLDER_TASKERS) {
 
 /* ── Filter sidebar (UI only) ────────────────────────────────── */
 /*
- * Future Sprint 2: Filter changes will trigger Supabase query
- * with .filter(), .gte(), .lte() clauses on tasker_profiles.
  */
 function initFilters() {
   document.querySelectorAll('.filter-opt input, .filter-range').forEach(input => {
-    input.addEventListener('change', () => showToast('Live filtering coming in Sprint 2'));
+    input.addEventListener('change', () => {});
   });
   const reset = document.getElementById('filterReset');
   if (reset) {
@@ -150,6 +142,6 @@ function initSearch(formId) {
   if (!form) return;
   form.addEventListener('submit', e => {
     e.preventDefault();
-    showToast('Live search coming in Sprint 2!');
+    if(typeof renderTaskerGrid==='function') renderTaskerGrid(1);
   });
 }

@@ -3,11 +3,6 @@
    Core application bootstrap, component loading, navigation
    Sprint 1: Frontend Foundation
    ============================================================
-   Future Sprint: Supabase client will be initialized here.
-   Future Sprint: Auth state listener (onAuthStateChange) will
-   redirect unauthenticated users from protected pages.
-   Future Sprint: Global state management (user session, location)
-   will be initialized here before the app mounts.
    ============================================================ */
 
 'use strict';
@@ -17,8 +12,6 @@
  * Fetches and injects HTML components (navbar, footer) into the page.
  * This avoids duplicating markup across every HTML file.
  *
- * Future Sprint: When React/Next.js is adopted, these become
- * proper React layout components with server-side rendering.
  */
 async function loadComponent(selector, url) {
   try {
@@ -82,8 +75,6 @@ function initNavbar() {
 
 /**
  * Marks the correct nav link as active based on the current URL.
- * Future Sprint: Will also show user avatar instead of login/signup
- * when Supabase session is active.
  */
 function setActiveNavLink() {
   const page  = window.location.pathname.split('/').pop() || 'index.html';
@@ -115,12 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Init animations */
   initScrollAnimations();
 
-  /* Sprint 3: Sync navbar auth state via auth.js */
+  /* Sync navbar auth state */
   if (window.ST?.auth?.syncNavbarAuthState) {
     await window.ST.auth.syncNavbarAuthState().catch(() => {});
   }
 
-  /* Sprint 3: Listen for auth changes (login/logout) and update nav */
+  /* Listen for auth state changes */
   if (window.supabase) {
     window.supabase.auth.onAuthStateChange(async (_event, session) => {
       if (window.ST?.auth?.syncNavbarAuthState) {
@@ -129,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  console.log('[StreetTasker] Sprint 3 initialized ✓');
+  console.log('[StreetTasker] App initialized ✓');
 });
 
 /* ── Scroll Animations ───────────────────────────────────────── */

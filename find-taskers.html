@@ -14,12 +14,6 @@
 
   <div id="navbar-placeholder"></div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       FIND TASKERS — Sprint 2
-       Future Sprint 3: Real data from Supabase fetchTaskers().
-       Future Sprint 3: Book Now → real booking modal + Paystack.
-       Future Sprint 3: Map view via Mapbox + PostGIS.
-       ══════════════════════════════════════════════════════════ -->
 
   <!-- Page hero -->
   <div class="page-hero">
@@ -148,7 +142,7 @@
           </div>
 
           <div style="padding:16px 18px;">
-            <button class="btn btn-primary btn-full" onclick="showToast('Live filters active — Supabase query in Sprint 3')">Apply Filters</button>
+            <button class="btn btn-primary btn-full" id="applyFiltersBtn" onclick="applyFilters()">Apply Filters</button>
           </div>
         </div>
       </aside>
@@ -160,10 +154,9 @@
             <div class="results-count"><strong id="resultsCount">—</strong> taskers found</div>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
-            <!-- Future Sprint 3: Map view via Mapbox -->
-            <button class="btn btn-ghost btn-sm" onclick="showSprintAlert('Map View — Sprint 3', 'Interactive map discovery powered by Mapbox and PostGIS spatial queries comes in Sprint 3.')">
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Map view is in development')">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-              Map View <span class="badge badge-amber">Sprint 3</span>
+              Map View
             </button>
             <select class="sort-select" id="sortSelect">
               <option value="rating">Top Rated</option>
@@ -175,7 +168,6 @@
         </div>
 
         <div class="taskers-grid" id="taskersGrid">
-          <!-- Skeleton placeholders -->
           <div class="card skeleton" style="height:220px;"></div>
           <div class="card skeleton" style="height:220px;"></div>
           <div class="card skeleton" style="height:220px;"></div>
@@ -192,38 +184,9 @@
 
   <!-- Sprint modal -->
   <div class="modal-overlay" id="sprintModal" role="dialog" aria-modal="true">
-    <div class="modal-box sprint-modal-box">
-      <button class="modal-close-x" onclick="closeSprintModal()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      <div class="sprint-modal-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-      <h2 data-sprint-title style="margin-bottom:8px;"></h2>
-      <p data-sprint-message></p>
-      <button class="btn btn-primary btn-full" style="margin-top:20px;" onclick="closeSprintModal()">Got it</button>
-    </div>
-  </div>
+    
 
-  <!-- Booking modal
-       Future Sprint 3: Date picker, availability calendar, Paystack payment -->
-  <div class="modal-overlay booking-modal" id="bookingModal" role="dialog" aria-modal="true" aria-label="Book a tasker">
-    <div class="modal-box" style="max-width:500px; text-align:left;">
-      <button class="modal-close-x" id="bookingModalClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 
-      <h2 style="margin-bottom:4px;">Book a Tasker</h2>
-      <p style="font-size:0.84rem; margin-bottom:20px;">Fill in the details below to request a booking.</p>
-
-      <div class="booking-tasker-preview">
-        <div class="tc-avatar av-1" style="width:42px;height:42px;" id="bookingAvatarEl">AO</div>
-        <div>
-          <div class="booking-tasker-name" data-booking-name>Tasker Name</div>
-          <div class="booking-tasker-meta">
-            <span data-booking-service></span> &middot; <span data-booking-rate></span> &middot; <span data-booking-rating></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sprint 2 notice inside modal -->
-      <div style="padding:12px 14px; background:var(--amber-light); border:1px solid rgba(217,119,6,0.2); border-radius:var(--radius-md); margin-bottom:20px; font-size:0.82rem; color:#92400E;">
-        <strong>Sprint 3 feature:</strong> Full booking flow with calendar, real availability, and Paystack payment goes live in Sprint 3. This form captures your preferences for UX validation.
-      </div>
 
       <form id="bookingForm" novalidate>
         <div class="booking-form-group">
@@ -259,7 +222,7 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Sprint 3: Supabase -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/auth.js"></script>
