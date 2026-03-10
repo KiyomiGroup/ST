@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your Street Taskers customer dashboard — manage your posted tasks and bookings." />
+  <title>Customer Dashboard — Street Taskers</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       CUSTOMER DASHBOARD — Sprint 3.1
+       ══════════════════════════════════════════════════════════
+       Protected page: requires auth (customer role).
+       Loads tasks from Supabase filtered by customer_id.
+
+       Future Sprint: Real-time task updates via Supabase Realtime.
+       Future Sprint: In-app messaging per task/booking.
+       Future Sprint: Ratings & review flow after task completion.
+       ══════════════════════════════════════════════════════════ -->
+
+  <div class="dashboard-page">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="container">
+        <h1 id="dashGreeting">My Dashboard</h1>
+        <p>Track your posted tasks and bookings</p>
+      </div>
+    </div>
+
+    <div class="dashboard-body">
+      <div class="container">
+        <div class="dashboard-grid">
+
+          <!-- Sidebar nav -->
+          <aside class="dashboard-sidebar">
+            <nav class="dashboard-nav" aria-label="Dashboard sections">
+              <button class="dashboard-nav-item active" data-panel="overview" onclick="switchPanel('overview', this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                Overview
+              </button>
+              <button class="dashboard-nav-item" data-panel="my-tasks" onclick="switchPanel('my-tasks', this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+                My Posted Tasks
+              </button>
+              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings', this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                My Bookings
+              </button>
+              <button class="dashboard-nav-item" data-panel="completed" onclick="switchPanel('completed', this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Completed
+              </button>
+            </nav>
+
+            <div style="margin-top:16px;">
+              <a href="post-task.html" class="btn btn-primary btn-full" style="justify-content:center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Post New Task
+              </a>
+            </div>
+          </aside>
+
+          <!-- Main content -->
+          <main>
+
+            <!-- Loading state -->
+            <div id="dashLoading" style="text-align:center; padding:48px 24px; color:var(--text-muted);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite; margin-bottom:12px; display:block; margin-left:auto; margin-right:auto;">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              Loading your dashboard...
+            </div>
+
+            <!-- ── Overview Panel ── -->
+            <div id="panel-overview" class="dashboard-panel">
+              <div class="dashboard-stats" id="statsRow">
+                <div class="stat-card">
+                  <div class="stat-card-label">Posted Tasks</div>
+                  <div class="stat-card-value" id="statTotal">—</div>
+                  <div class="stat-card-sub">All time</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-card-label">Active Tasks</div>
+                  <div class="stat-card-value" id="statActive">—</div>
+                  <div class="stat-card-sub">Open or confirmed</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-card-label">Completed</div>
+                  <div class="stat-card-value" id="statCompleted">—</div>
+                  <div class="stat-card-sub">All time</div>
+                </div>
+              </div>
+
+              <div class="panel-header">
+                <h2>Recent Tasks</h2>
+                <button class="btn btn-ghost btn-sm" onclick="switchPanel('my-tasks', document.querySelector('[data-panel=my-tasks]'))">View all</button>
+              </div>
+              <div class="task-row-list" id="recentTasksList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- ── My Posted Tasks Panel ── -->
+            <div id="panel-my-tasks" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>My Posted Tasks</h2>
+                <a href="post-task.html" class="btn btn-primary btn-sm">+ Post New</a>
+              </div>
+              <div class="task-row-list" id="allTasksList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- ── Bookings Panel ── -->
+            <div id="panel-bookings" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>My Bookings</h2>
+                <a href="find-taskers.html" class="btn btn-ghost btn-sm">Find Taskers</a>
+              </div>
+              <div class="task-row-list" id="bookingsList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- ── Completed Panel ── -->
+            <div id="panel-completed" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Completed Tasks</h2>
+              </div>
+              <div class="task-row-list" id="completedList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    /* ── Panel switching ── */
+    function switchPanel(panelId, btn) {
+      document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.dashboard-nav-item').forEach(b => b.classList.remove('active'));
+      const panel = document.getElementById('panel-' + panelId);
+      if (panel) panel.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    /* ── Format helpers ── */
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    function fmtCurrency(n) {
+      return '₦' + Number(n || 0).toLocaleString();
+    }
+
+    function statusBadge(status) {
+      const s = (status || 'open').toLowerCase();
+      return `<span class="task-row-badge status-${s}">${s}</span>`;
+    }
+
+    /* ── Render task row ── */
+    function renderTaskRow(task) {
+      return `
+        <div class="task-row-card">
+          <div class="task-row-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+          </div>
+          <div class="task-row-content">
+            <div class="task-row-title">${task.title || 'Untitled Task'}</div>
+            <div class="task-row-meta">
+              <span>${task.location || '—'}</span>
+              <span>${fmtCurrency(task.budget)}</span>
+              <span>Due: ${fmtDate(task.deadline)}</span>
+              ${task.category ? `<span>${task.category}</span>` : ''}
+            </div>
+          </div>
+          <div style="flex-shrink:0;">
+            ${statusBadge(task.status)}
+          </div>
+        </div>`;
+    }
+
+    /* ── Render empty state ── */
+    function renderEmpty(msg, cta, ctaLink) {
+      return `
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+          </div>
+          <h3>Nothing here yet</h3>
+          <p>${msg}</p>
+          ${cta ? `<a href="${ctaLink}" class="btn btn-primary btn-sm">${cta}</a>` : ''}
+        </div>`;
+    }
+
+    /* ── Render booking row ── */
+    function renderBookingRow(booking) {
+      const taskerName = booking.taskers?.name || booking.tasker_id || 'Tasker';
+      const svc        = booking.taskers?.service || 'Service';
+      return `
+        <div class="booking-row-card">
+          <div class="task-row-icon" style="background:var(--green-light); color:var(--green);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="booking-row-content">
+            <div class="booking-row-title">${taskerName} — ${svc}</div>
+            <div class="booking-row-meta">
+              ${booking.scheduled_time ? 'Scheduled: ' + fmtDate(booking.scheduled_time) : 'No date set'}
+            </div>
+          </div>
+          <div style="flex-shrink:0;">${statusBadge(booking.status)}</div>
+        </div>`;
+    }
+
+    /* ── Main init ── */
+    async function initPage() {
+      /* Auth guard — redirect to login if not logged in */
+      const user = await window.ST.auth.requireAuth();
+      if (!user) return;
+
+      /* Set greeting */
+      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'there';
+      document.getElementById('dashGreeting').textContent = `Welcome back, ${name}`;
+
+      try {
+        const [tasks, bookings] = await Promise.all([
+          window.ST.db.fetchMyTasks(),
+          window.ST.db.fetchMyBookings(),
+        ]);
+
+        /* Hide loading */
+        document.getElementById('dashLoading').style.display = 'none';
+
+        /* Stats */
+        const active    = tasks.filter(t => t.status === 'open' || t.status === 'active').length;
+        const completed = tasks.filter(t => t.status === 'completed').length;
+        document.getElementById('statTotal').textContent    = tasks.length;
+        document.getElementById('statActive').textContent   = active;
+        document.getElementById('statCompleted').textContent = completed;
+
+        /* Recent tasks (overview) — latest 4 */
+        const recentList = document.getElementById('recentTasksList');
+        const recent = tasks.slice(0, 4);
+        recentList.innerHTML = recent.length
+          ? recent.map(renderTaskRow).join('')
+          : renderEmpty('Post your first task to get started.', 'Post a Task', 'post-task.html');
+
+        /* All tasks */
+        const allList = document.getElementById('allTasksList');
+        allList.innerHTML = tasks.length
+          ? tasks.map(renderTaskRow).join('')
+          : renderEmpty('You haven\'t posted any tasks yet.', 'Post a Task', 'post-task.html');
+
+        /* Bookings (active) */
+        const pendingBookings = bookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled');
+        const bookingsList = document.getElementById('bookingsList');
+        bookingsList.innerHTML = pendingBookings.length
+          ? pendingBookings.map(renderBookingRow).join('')
+          : renderEmpty('No active bookings. Find a tasker to get started.', 'Find Taskers', 'find-taskers.html');
+
+        /* Completed */
+        const completedBookings = bookings.filter(b => b.status === 'completed');
+        const completedList = document.getElementById('completedList');
+        completedList.innerHTML = completedBookings.length
+          ? completedBookings.map(renderBookingRow).join('')
+          : renderEmpty('No completed bookings yet.');
+
+        /* Show overview panel */
+        switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+
+      } catch (err) {
+        document.getElementById('dashLoading').innerHTML =
+          `<p style="color:var(--red)">Could not load dashboard: ${err.message}</p>`;
+        console.error('[Dashboard] Load error:', err);
+      }
+    }
+  </script>
+
+</body>
+</html>

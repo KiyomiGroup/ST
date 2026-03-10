@@ -158,14 +158,20 @@
         btn.disabled = true;
 
         try {
-          await window.ST.auth.loginUser(email, pwd);
+          const { user } = await window.ST.auth.loginUser(email, pwd);
 
-          /* Redirect: honour ?redirect= param or go home */
+          /* Honour an explicit ?redirect= param first */
           const redirect = new URLSearchParams(window.location.search).get('redirect');
-          showToast('Welcome back! Redirecting...');
-          setTimeout(() => {
-            window.location.href = redirect || 'index.html';
-          }, 800);
+          if (redirect) {
+            showToast('Welcome back! Redirecting...');
+            setTimeout(() => { window.location.href = redirect; }, 800);
+          } else {
+            /* Role-based dashboard redirect */
+            const role    = await window.ST.auth.getUserRole(user);
+            const dashUrl = window.ST.auth.getDashboardUrl(role);
+            showToast('Welcome back! Taking you to your dashboard...');
+            setTimeout(() => { window.location.href = dashUrl; }, 800);
+          }
 
         } catch (authErr) {
           btn.textContent = 'Log In';

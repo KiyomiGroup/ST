@@ -373,22 +373,33 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script>
-    function initPage() {
-      // no extra init needed for homepage beyond what app.js handles
+    async function initPage() {
+      /* Sprint 3.1: Show dashboard CTA for logged-in users */
+      const user = await window.ST.auth.getCurrentUser();
+      if (user) {
+        const role    = await window.ST.auth.getUserRole(user);
+        const dashUrl = window.ST.auth.getDashboardUrl(role);
+        const heroActions = document.querySelector('.hero-actions, .hero-btns');
+        if (heroActions) {
+          const btn = document.createElement('a');
+          btn.href = dashUrl;
+          btn.className = 'btn btn-primary btn-lg';
+          btn.textContent = 'Go to My Dashboard';
+          heroActions.prepend(btn);
+        }
+      }
     }
 
     function handleHeroSearch(e) {
       e.preventDefault();
-      const service  = e.target.service.value.trim();
-      const location = e.target.location.value.trim();
+      const service  = e.target.service?.value?.trim() || '';
+      const location = e.target.location?.value?.trim() || '';
       if (!service && !location) { showToast('Enter a service or location to search'); return; }
-      // Future Sprint 2: window.location.href = `find-taskers.html?service=${encodeURIComponent(service)}&loc=${encodeURIComponent(location)}`;
-      showToast('Live search coming in Sprint 2!');
+      window.location.href = 'find-taskers.html' + (service ? '?service=' + encodeURIComponent(service) : '');
     }
 
     function filterService(name) {
-      // Future Sprint 2: navigate with URL param
-      showToast(`Filtering by "${name}" — live in Sprint 2`);
+      window.location.href = 'find-taskers.html?service=' + encodeURIComponent(name);
     }
   </script>
 </body>

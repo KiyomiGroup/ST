@@ -322,3 +322,162 @@ window.ST.db = {
   postComment,
   togglePostLike,
 };
+
+/* ── Sprint 3.1 additions ──────────────────────────────────────
+   New queries for customer dashboard, tasker dashboard,
+   and service posting.
+   ────────────────────────────────────────────────────────────── */
+
+/**
+ * Fetches all tasks posted by the current customer.
+ * Used in dashboard-customer.html.
+ */
+async function fetchMyTasks() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await window.supabase
+    .from('tasks')
+    .select('*')
+    .eq('customer_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Fetches bookings assigned to the current tasker.
+ * Used in dashboard-tasker.html.
+ */
+async function fetchTaskerBookings() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await window.supabase
+    .from('bookings')
+    .select('*, tasks(*), users!bookings_customer_id_fkey(name, email)')
+    .eq('tasker_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    /* If join alias fails, fall back to simpler query */
+    console.warn('[DB] fetchTaskerBookings join failed, retrying simple:', error.message);
+    const { data: simple, error: err2 } = await window.supabase
+      .from('bookings')
+      .select('*')
+      .eq('tasker_id', user.id)
+      .order('created_at', { ascending: false });
+    if (err2) throw err2;
+    return simple || [];
+  }
+  return data || [];
+}
+
+/**
+ * Fetches the tasker profile row for the current user.
+ */
+async function fetchMyTaskerProfile() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await window.supabase
+    .from('taskers')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetches subscription status for the current tasker.
+ */
+async function fetchMySubscription() {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await window.supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('tasker_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('[DB] fetchMySubscription:', error.message);
+    return null;
+  }
+  return data;
+}
+
+/**
+ * Creates or updates a tasker's service listing in the taskers table.
+ * Used by post-service.html.
+ *
+ * @param {Object} opts
+ * @param {string} opts.serviceName
+ * @param {string} opts.category
+ * @param {number} opts.price
+ * @param {string} opts.location
+ * @param {string} opts.description
+ * @param {string} [opts.photoUrl]
+ * @returns {Promise<Object>}
+ */
+async function postService({ serviceName, category, price, location, description, photoUrl = null }) {
+  const { data: { user }, error: userErr } = await window.supabase.auth.getUser();
+  if (userErr || !user) throw new Error('You must be logged in to post a service.');
+
+  /* Upsert — one profile row per tasker user */
+  const { data, error } = await window.supabase
+    .from('taskers')
+    .upsert({
+      id:          user.id,
+      user_id:     user.id,
+      service:     serviceName.trim(),
+      category:    category,
+      rate_value:  parseFloat(price),
+      rate:        `₦${Number(price).toLocaleString()}/session`,
+      location:    location.trim(),
+      bio:         description.trim(),
+      photo_url:   photoUrl,
+      available:   true,
+      updated_at:  new Date().toISOString(),
+    }, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  console.log('[DB] Service posted/updated:', data.id);
+  return data;
+}
+
+/**
+ * Updates a booking status (e.g. tasker confirms or completes).
+ *
+ * @param {string} bookingId
+ * @param {'confirmed'|'completed'|'cancelled'} status
+ */
+async function updateBookingStatus(bookingId, status) {
+  const { data, error } = await window.supabase
+    .from('bookings')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', bookingId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/* Extend the global ST.db with new methods */
+Object.assign(window.ST.db, {
+  fetchMyTasks,
+  fetchTaskerBookings,
+  fetchMyTaskerProfile,
+  fetchMySubscription,
+  postService,
+  updateBookingStatus,
+});

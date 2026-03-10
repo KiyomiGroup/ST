@@ -1,11 +1,15 @@
 <!-- ============================================================
      STREET TASKERS — Navbar Component
-     Sprint 2: Social Feed + Subscription links now active
+     Sprint 3.1: Auth-aware navbar with role-based dashboard links
      ============================================================
-     Future Sprint 3: Replace Login/Sign Up with user avatar
-     dropdown when Supabase auth session is active.
-     Future Sprint 3: Show notification bell with unread count
-     from Supabase Realtime.
+     Auth state is synced by auth.js → syncNavbarAuthState()
+     which runs on every page load via app.js.
+
+     Logged-out state: shows Login + Sign Up
+     Logged-in state:  shows Dashboard + Logout (via JS)
+
+     Future Sprint: Add notification bell with unread count.
+     Future Sprint: Add user avatar dropdown with profile link.
      ============================================================ -->
 
 <nav id="navbar">
@@ -45,7 +49,6 @@
         </a>
       </li>
 
-      <!-- Sprint 2: Social Feed is now an active page -->
       <li>
         <a href="social-feed.html" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,11 +58,9 @@
             <rect x="3" y="14" width="7" height="7"/>
           </svg>
           Social Feed
-          <span class="badge badge-blue" style="font-size:0.55rem; padding:1px 5px;">New</span>
         </a>
       </li>
 
-      <!-- Sprint 2: Subscription page is now an active page -->
       <li>
         <a href="subscription.html" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -73,11 +74,31 @@
 
     <div class="nav-divider" aria-hidden="true"></div>
 
-    <!-- Auth actions
-         Future Sprint 3: Replace with avatar + dropdown when Supabase auth live. -->
+    <!-- Auth actions — toggled by syncNavbarAuthState() in auth.js -->
     <div class="nav-actions">
-      <a href="login.html"  class="btn btn-ghost   btn-sm">Log In</a>
-      <a href="signup.html" class="btn btn-primary  btn-sm">Sign Up</a>
+
+      <!-- Logged-OUT state (default) -->
+      <a href="login.html"  class="btn btn-ghost  btn-sm nav-auth-loggedout">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm nav-auth-loggedout">Sign Up</a>
+
+      <!-- Logged-IN state (hidden until auth synced) -->
+      <span id="navUserName" class="nav-user-chip" style="display:none;"></span>
+      <a href="#" id="navDashboardLink" class="btn btn-ghost btn-sm nav-auth-loggedin" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </a>
+      <button id="navLogout" class="btn btn-ghost btn-sm nav-auth-loggedin" style="display:none;" onclick="window.ST.auth.logoutUser()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      </button>
+
     </div>
 
     <!-- Mobile hamburger -->
@@ -92,13 +113,19 @@
 <div class="nav-mobile" id="navMobile" aria-hidden="true">
   <a href="find-taskers.html"  class="nav-link">Find Taskers</a>
   <a href="post-task.html"     class="nav-link">Post a Task</a>
-  <a href="social-feed.html"   class="nav-link">
-    Social Feed
-    <span class="badge badge-blue" style="margin-left:6px; font-size:0.6rem;">New</span>
-  </a>
+  <a href="social-feed.html"   class="nav-link">Social Feed</a>
   <a href="subscription.html"  class="nav-link">Pricing</a>
+
+  <!-- Mobile logged-in links — shown/hidden by syncNavbarAuthState() -->
+  <a href="#" id="navMobileDashboard" class="nav-link nav-auth-loggedin" style="display:none;">Dashboard</a>
+
   <div class="nav-mobile-actions">
-    <a href="login.html"  class="btn btn-ghost   btn-full">Log In</a>
-    <a href="signup.html" class="btn btn-primary  btn-full">Sign Up</a>
+    <!-- Logged-out -->
+    <a href="login.html"  class="btn btn-ghost   btn-full nav-auth-loggedout">Log In</a>
+    <a href="signup.html" class="btn btn-primary  btn-full nav-auth-loggedout">Sign Up</a>
+    <!-- Logged-in -->
+    <button id="navMobileLogout" class="btn btn-ghost btn-full nav-auth-loggedin" style="display:none;" onclick="window.ST.auth.logoutUser()">
+      Logout
+    </button>
   </div>
 </div>

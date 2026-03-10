@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Post your service on Street Taskers and get discovered by local customers." />
+  <title>Post a Service — Street Taskers</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       POST SERVICE PAGE — Sprint 3.1
+       ══════════════════════════════════════════════════════════
+       Protected page: requires tasker role.
+       Inserts / updates a row in the taskers table.
+       After posting, the listing appears on find-taskers.html.
+
+       Future Sprint: Supabase Storage for photo upload.
+       Future Sprint: Multiple service listings per tasker.
+       Future Sprint: Portfolio gallery (multiple images).
+       Future Sprint: Availability calendar integration.
+       ══════════════════════════════════════════════════════════ -->
+
+  <div class="service-form-page">
+    <div class="container">
+      <div class="service-form-wrap">
+
+        <div class="service-form-card">
+
+          <!-- Back link -->
+          <a href="dashboard-tasker.html" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--text-muted); margin-bottom:24px; text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to Dashboard
+          </a>
+
+          <div class="service-form-heading">
+            <h1>Post Your Service</h1>
+            <p>Create your listing so customers can find and book you.</p>
+          </div>
+
+          <!-- Success message (hidden until submit) -->
+          <div id="successMsg" style="display:none; padding:14px 18px; background:var(--green-light); border:1px solid rgba(22,163,74,0.2); border-radius:var(--radius-md); margin-bottom:20px; font-size:0.88rem; color:var(--green);">
+            <strong>Service posted!</strong> Your listing is now live on Find Taskers.
+            <br><a href="find-taskers.html" style="color:var(--green); font-weight:600; margin-top:4px; display:inline-block;">View your listing →</a>
+          </div>
+
+          <div id="errorMsg" style="display:none;" class="form-error"></div>
+
+          <form id="serviceForm" novalidate>
+
+            <!-- Service name -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcName">Service Name *</label>
+              <input type="text" id="svcName" class="service-form-input"
+                placeholder="e.g. Professional House Cleaning" maxlength="100" required />
+            </div>
+
+            <!-- Category -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcCategory">Category *</label>
+              <select id="svcCategory" class="service-form-select" required>
+                <option value="">Select a category...</option>
+                <option value="barber">Barber / Hair</option>
+                <option value="electrician">Electrician</option>
+                <option value="cleaning">House Cleaning</option>
+                <option value="mechanic">Mechanic / Auto</option>
+                <option value="plumber">Plumber</option>
+                <option value="beauty">Make-up / Beauty</option>
+                <option value="carpentry">Carpentry</option>
+                <option value="painting">Painting</option>
+                <option value="moving">Moving / Delivery</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Price -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcPrice">Price (₦) *</label>
+              <div class="service-price-wrap">
+                <span class="currency-symbol">₦</span>
+                <input type="number" id="svcPrice" class="service-form-input"
+                  placeholder="e.g. 5000" min="500" required />
+              </div>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                Enter your rate per session, hour, or job.
+              </p>
+            </div>
+
+            <!-- Location -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcLocation">Location *</label>
+              <input type="text" id="svcLocation" class="service-form-input"
+                placeholder="e.g. Lekki Phase 1, Lagos" required />
+            </div>
+
+            <!-- Description -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcDescription">
+                Description *
+                <span style="font-weight:400; color:var(--text-muted);">(min 20 characters)</span>
+              </label>
+              <textarea id="svcDescription" class="service-form-textarea"
+                rows="5" maxlength="800"
+                placeholder="Describe your experience, specialties, and what customers can expect..."></textarea>
+              <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                <span id="descCount" style="font-size:0.73rem; color:var(--text-muted);">0 / 800</span>
+              </div>
+            </div>
+
+            <!-- Photo URL (Sprint 3.1: URL input; Sprint 4: file upload) -->
+            <div class="service-form-group">
+              <label class="service-form-label" for="svcPhoto">
+                Profile Photo URL
+                <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
+              </label>
+              <input type="url" id="svcPhoto" class="service-form-input"
+                placeholder="https://example.com/your-photo.jpg" />
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                Direct image URL. File upload coming in Sprint 4 via Supabase Storage.
+              </p>
+            </div>
+
+            <!-- Availability toggle -->
+            <div class="service-form-group">
+              <label class="service-form-label">Availability</label>
+              <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--gray-50); border:1px solid var(--border); border-radius:var(--radius-md);">
+                <input type="checkbox" id="svcAvailable" checked style="width:16px; height:16px; accent-color:var(--blue);" />
+                <label for="svcAvailable" style="font-size:0.87rem; color:var(--text-primary); cursor:pointer; margin:0;">
+                  I am currently available for bookings
+                </label>
+              </div>
+            </div>
+
+            <div style="padding-top:8px; border-top:1px solid var(--border); margin-top:4px;">
+              <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-full">
+                Post My Service
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    async function initPage() {
+      /* Auth guard — must be logged in as tasker */
+      const user = await window.ST.auth.requireAuth();
+      if (!user) return;
+
+      /* Optionally pre-fill with existing profile data */
+      try {
+        const profile = await window.ST.db.fetchMyTaskerProfile();
+        if (profile) {
+          if (profile.service)   document.getElementById('svcName').value     = profile.service;
+          if (profile.category)  document.getElementById('svcCategory').value  = profile.category;
+          if (profile.rate_value) document.getElementById('svcPrice').value    = profile.rate_value;
+          if (profile.location)  document.getElementById('svcLocation').value  = profile.location;
+          if (profile.bio)       document.getElementById('svcDescription').value = profile.bio;
+          if (profile.photo_url) document.getElementById('svcPhoto').value     = profile.photo_url;
+          if (profile.available === false) document.getElementById('svcAvailable').checked = false;
+          updateDescCount();
+        }
+      } catch (err) {
+        console.warn('[Post Service] Could not pre-fill:', err.message);
+      }
+
+      /* Char counter */
+      document.getElementById('svcDescription').addEventListener('input', updateDescCount);
+      function updateDescCount() {
+        const len = document.getElementById('svcDescription').value.length;
+        document.getElementById('descCount').textContent = len + ' / 800';
+      }
+
+      /* Form submit */
+      const form      = document.getElementById('serviceForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const successEl = document.getElementById('successMsg');
+      const errorEl   = document.getElementById('errorMsg');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.style.display = 'none';
+
+        const serviceName = document.getElementById('svcName').value.trim();
+        const category    = document.getElementById('svcCategory').value;
+        const price       = parseFloat(document.getElementById('svcPrice').value);
+        const location    = document.getElementById('svcLocation').value.trim();
+        const description = document.getElementById('svcDescription').value.trim();
+        const photoUrl    = document.getElementById('svcPhoto').value.trim() || null;
+
+        /* Validation */
+        if (!serviceName)          { showError('Please enter a service name.'); return; }
+        if (!category)             { showError('Please select a category.'); return; }
+        if (!price || price < 500) { showError('Please enter a valid price (minimum ₦500).'); return; }
+        if (!location)             { showError('Please enter your service location.'); return; }
+        if (description.length < 20) { showError('Description must be at least 20 characters.'); return; }
+
+        submitBtn.textContent = 'Posting service...';
+        submitBtn.disabled = true;
+
+        try {
+          await window.ST.db.postService({
+            serviceName,
+            category,
+            price,
+            location,
+            description,
+            photoUrl,
+          });
+
+          successEl.style.display = 'block';
+          form.reset();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          console.log('[Post Service] Service posted ✓');
+
+        } catch (err) {
+          showError(err.message || 'Failed to post service. Please try again.');
+          console.error('[Post Service] Error:', err);
+        } finally {
+          submitBtn.textContent = 'Post My Service';
+          submitBtn.disabled = false;
+        }
+      });
+
+      function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  </script>
+
+</body>
+</html>
