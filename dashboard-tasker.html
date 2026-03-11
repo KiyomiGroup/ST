@@ -51,6 +51,10 @@
                 Notifications
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
+              <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Edit Profile
+              </button>
               <button class="dashboard-nav-item" data-panel="subscription" onclick="switchPanel('subscription',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Subscription
@@ -58,7 +62,7 @@
             </nav>
             <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
               <a href="post-service.html" class="btn btn-primary btn-full" style="justify-content:center;">+ Post Service</a>
-              <a href="find-tasks.html" class="btn btn-ghost btn-full" style="justify-content:center;">Browse Tasks</a>
+              <a href="explore-tasks.html" class="btn btn-ghost btn-full" style="justify-content:center;">Browse Tasks</a>
             </div>
           </aside>
 
@@ -99,7 +103,7 @@
 
             <!-- Find Tasks -->
             <div id="panel-find-tasks" class="dashboard-panel">
-              <div class="panel-header"><h2>Open Tasks Near You</h2><a href="find-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
+              <div class="panel-header"><h2>Open Tasks Near You</h2><a href="explore-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
               <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:16px;">Tasks posted by customers. Apply to get hired.</p>
               <div id="findTasksList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading tasks...</div></div>
             </div>
@@ -148,6 +152,42 @@
               </div>
             </div>
 
+            <div id="panel-profile" class="dashboard-panel">
+              <div class="panel-header"><h2>Edit Profile</h2></div>
+              <div id="profilePanelContent">
+                <div style="max-width:480px;">
+                  <div style="margin-bottom:16px;">
+                    <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Profile Photo</label>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                      <div id="profileAvatarPreview" style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:var(--blue);overflow:hidden;flex-shrink:0;"></div>
+                      <div>
+                        <input type="file" id="profileImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewProfileImage(this)" />
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profileImageFile').click()">Change Photo</button>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">JPG, PNG or WebP</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Full Name</label>
+                    <input type="text" id="profileName" class="task-input" placeholder="Your name" style="width:100%;" />
+                  </div>
+                  <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Bio</label>
+                    <textarea id="profileBio" class="task-textarea" rows="3" placeholder="Describe your skills and experience..." style="width:100%;"></textarea>
+                  </div>
+                  <div class="form-group" style="margin-bottom:20px;">
+                    <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Location</label>
+                    <div style="position:relative;">
+                      <input type="text" id="profileLocation" class="task-input" placeholder="e.g. Lekki, Lagos" style="width:100%;" autocomplete="off" oninput="fetchLocationSuggestions(this.value,'profileLocationSuggestions')" onblur="setTimeout(()=>{var s=document.getElementById('profileLocationSuggestions');if(s)s.style.display='none';},200)" />
+                      <div id="profileLocationSuggestions" class="location-suggestions"></div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
+                  <div id="profileSaveMsg" style="display:none;margin-top:10px;font-size:0.83rem;"></div>
+                </div>
+              </div>
+            </div>
+
           </main>
         </div>
       </div>
@@ -162,6 +202,7 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script>
     'use strict';
     var PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
@@ -259,7 +300,7 @@
             '<div class="task-row-content"><div class="task-row-title">' + (t.title||'Task') + '</div>' +
             '<div class="task-row-meta"><span>' + (t.location||'Lagos') + '</span>' + (t.category?'<span>'+t.category+'</span>':'') + '<span style="color:var(--green);font-weight:700;">&#8358;' + Number(t.budget||0).toLocaleString() + '</span></div>' +
             (t.description?'<p style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;">' + t.description.slice(0,100) + (t.description.length>100?'…':'') + '</p>':'') +
-            '</div><div style="flex-shrink:0;"><a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
+            '</div><div style="flex-shrink:0;"><a href="explore-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
         }).join('');
       } catch(e) {
         el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;">Could not load tasks: ' + e.message + '</p>';
@@ -384,6 +425,81 @@
             ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You\'ve reached your free booking limit. Upgrade to keep accepting bookings.</p>'
             : '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Upgrade when you\'re ready.</p>');
     }
+
+    /* ── Profile editing ─────────────────────────────────────── */
+    var _currentProfileImageFile = null;
+
+    async function loadProfilePanel() {
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) return;
+      var { data } = await window.supabase.from('users').select('name,bio,location,avatar_url').eq('id', user.id).maybeSingle();
+      if (data) {
+        var nameEl = document.getElementById('profileName');
+        var bioEl = document.getElementById('profileBio');
+        var locEl = document.getElementById('profileLocation');
+        if (nameEl) nameEl.value = data.name || user.user_metadata?.name || '';
+        if (bioEl) bioEl.value = data.bio || '';
+        if (locEl) locEl.value = data.location || '';
+        var avatarEl = document.getElementById('profileAvatarPreview');
+        if (avatarEl) {
+          if (data.avatar_url) {
+            avatarEl.innerHTML = '<img src="' + data.avatar_url + '" style="width:100%;height:100%;object-fit:cover;" />';
+          } else {
+            avatarEl.textContent = (data.name || user.email || 'U').slice(0,2).toUpperCase();
+          }
+        }
+      }
+    }
+
+    function previewProfileImage(input) {
+      if (!input.files || !input.files[0]) return;
+      _currentProfileImageFile = input.files[0];
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var el = document.getElementById('profileAvatarPreview');
+        if (el) el.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;" />';
+      };
+      reader.readAsDataURL(_currentProfileImageFile);
+    }
+    window.previewProfileImage = previewProfileImage;
+
+    async function saveProfile() {
+      var btn = document.getElementById('saveProfileBtn');
+      var msg = document.getElementById('profileSaveMsg');
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) return;
+      btn.disabled = true; btn.textContent = 'Saving...'; msg.style.display = 'none';
+      try {
+        var avatarUrl = null;
+        if (_currentProfileImageFile) {
+          var ext = _currentProfileImageFile.name.split('.').pop().toLowerCase();
+          var path = 'avatars/' + user.id + '-' + Date.now() + '.' + ext;
+          var { error: upErr } = await window.supabase.storage.from('profile-images').upload(path, _currentProfileImageFile, { cacheControl: '3600', upsert: true });
+          if (!upErr) {
+            var { data: urlData } = window.supabase.storage.from('profile-images').getPublicUrl(path);
+            avatarUrl = urlData.publicUrl;
+          }
+        }
+        var updates = {
+          name: document.getElementById('profileName')?.value?.trim() || null,
+          bio: document.getElementById('profileBio')?.value?.trim() || null,
+          location: document.getElementById('profileLocation')?.value?.trim() || null,
+        };
+        if (avatarUrl) updates.avatar_url = avatarUrl;
+        var { error } = await window.supabase.from('users').update(updates).eq('id', user.id);
+        if (error) throw error;
+        if (avatarUrl) {
+          await window.supabase.from('taskers').update({ photo_url: avatarUrl }).eq('user_id', user.id);
+        }
+        _currentProfileImageFile = null;
+        msg.textContent = 'Profile saved!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
+        showToast('Profile updated!');
+      } catch(e) {
+        msg.textContent = 'Save failed: ' + e.message; msg.style.color = 'var(--red)'; msg.style.display = 'block';
+      } finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+    }
+    window.saveProfile = saveProfile;
+    window.loadProfilePanel = loadProfilePanel;
   </script>
 </body>
 </html>
