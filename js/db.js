@@ -23,7 +23,7 @@ function _parseRate(raw) {
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [] }) {
+async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [], latitude = null, longitude = null }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -38,6 +38,8 @@ async function postTask({ title, description, category, budget, location, deadli
     deadline:    deadline || null,
     urgent:      urgent,
     status:      'open',
+    latitude:    latitude || null,
+    longitude:   longitude || null,
   };
   if (photoUrls && photoUrls.length) payload.photo_urls = photoUrls;
 
@@ -112,15 +114,17 @@ async function applyToTask({ taskId, message = '' }) {
       .select('user_id, customer_id, title').eq('id', taskId).single();
     const ownerId = task?.customer_id || task?.user_id;
     if (ownerId) {
-      await _insertNotification({
-        userId:  ownerId,
+      const { error: notifErr } = await window.supabase.from('notifications').insert({
+        user_id: ownerId,
         type:    'task_application',
         title:   'New Application',
         message: `${taskerName} applied for your task "${task.title}"`,
-        data:    { task_id: taskId, application_id: app.id, tasker_id: user.id },
+        data:    JSON.stringify({ task_id: taskId, application_id: app.id, tasker_id: user.id }),
+        read:    false,
       });
+      if (notifErr) console.warn('[Notify] insert failed:', notifErr.message);
     }
-  } catch(e) { /* silent */ }
+  } catch(e) { console.warn('[Notify] error:', e.message); }
 
   return app;
 }

@@ -76,12 +76,19 @@
               <div class="task-form-row">
                 <div class="task-form-group">
                   <label class="task-form-label" for="taskLocation">Location *</label>
-                  <div class="task-input-wrap" style="position:relative;">
-                    <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <input type="text" id="taskLocation" name="location" class="task-input" placeholder="e.g. Lekki Phase 1" required data-field="location" autocomplete="off" oninput="fetchLocationSuggestions(this.value,'taskLocationSuggestions')" onblur="setTimeout(()=>{var s=document.getElementById('taskLocationSuggestions');if(s)s.style.display='none';},200)" />
-                    <div id="taskLocationSuggestions" class="location-suggestions"></div>
+                  <div class="location-wrap">
+                    <div class="task-input-wrap">
+                      <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <input type="text" id="taskLocation" name="location" class="task-input" placeholder="Search your area... e.g. Lekki" required data-field="location" autocomplete="off"
+                        oninput="fetchLocationSuggestions(this.value,'taskLocationSugg','taskLocation')" />
+                    </div>
+                    <div id="taskLocationSugg" class="location-suggestions"></div>
+                    <button type="button" class="location-map-toggle" onclick="openMapPicker('taskLocation','taskMapBox')">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                      Pick on map
+                    </button>
+                    <div id="taskMapBox" class="location-map-container"></div>
                   </div>
-
                 </div>
                 <div class="task-form-group">
                   <label class="task-form-label" for="taskDeadline">Deadline *</label>

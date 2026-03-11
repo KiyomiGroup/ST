@@ -299,6 +299,9 @@ async function handleTaskSubmit(e) {
         try { photoUrls = await uploadTaskPhotos(); } catch(e) { console.warn('Photo upload skipped:', e.message); }
       }
 
+      const locInput2 = document.getElementById('taskLocation');
+      const lat = locInput2?.dataset?.lat ? parseFloat(locInput2.dataset.lat) : null;
+      const lon = locInput2?.dataset?.lon ? parseFloat(locInput2.dataset.lon) : null;
       await window.ST.db.postTask({
         title:       taskPayload.title,
         description: taskPayload.description,
@@ -307,6 +310,8 @@ async function handleTaskSubmit(e) {
         deadline:    taskPayload.deadline,
         category:    taskPayload.category,
         photoUrls,
+        latitude:    lat,
+        longitude:   lon,
       });
     } else {
       /* Fallback: direct insert if db.js not loaded */

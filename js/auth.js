@@ -43,6 +43,15 @@ async function syncNavbarAuthState() {
     const ml = document.getElementById('navMobileLogout');
     if (lo) lo.style.display = 'inline-flex';
     if (ml) ml.style.display = 'flex';
+
+    /* Show notification dot if unread notifications exist */
+    try {
+      const { count } = await window.supabase.from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id).eq('read', false);
+      const dot = document.getElementById('navNotifDot');
+      if (dot && count > 0) dot.style.display = 'inline-block';
+    } catch(e) {}
   } else {
     show('.nav-loggedout');
     hide('.nav-customer');
