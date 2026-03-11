@@ -39,13 +39,8 @@ async function syncNavbarAuthState() {
     const chip = document.getElementById('navUserName');
     if (chip) { chip.textContent = name; chip.style.display = 'inline-flex'; }
 
-    const dashUrl = getDashboardUrl(role);
-    const dl = document.getElementById('navDashboardLink');
-    const md = document.getElementById('navMobileDashboard');
     const lo = document.getElementById('navLogout');
     const ml = document.getElementById('navMobileLogout');
-    if (dl) { dl.href = dashUrl; dl.style.display = 'inline-flex'; }
-    if (md) { md.href = dashUrl; md.style.display = 'block'; }
     if (lo) lo.style.display = 'inline-flex';
     if (ml) ml.style.display = 'flex';
   } else {

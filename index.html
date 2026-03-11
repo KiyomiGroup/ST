@@ -201,7 +201,7 @@
         <div class="task-live-card"><div class="task-live-icon skel" style="background:var(--gray-100);border:none;"></div><div style="flex:1;"><div class="skel" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:75%;"></div></div></div>
       </div>
       <div class="text-center mt-32 fade-up">
-        <a href="find-tasks.html" class="btn btn-outline btn-lg">Browse all open tasks</a>
+        <a href="explore-tasks.html" class="btn btn-outline btn-lg">Browse all open tasks</a>
       </div>
     </div>
   </section>
@@ -292,7 +292,7 @@
         if (heroCta) {
           heroCta.innerHTML = role === 'tasker'
             ? `<a href="dashboard-tasker.html"  class="btn btn-dark btn-lg">My Dashboard</a>
-               <a href="find-tasks.html"        class="btn btn-outline btn-lg">Browse Tasks</a>`
+               <a href="explore-tasks.html"        class="btn btn-outline btn-lg">Browse Tasks</a>`
             : `<a href="dashboard-customer.html" class="btn btn-dark btn-lg">My Dashboard</a>
                <a href="post-task.html"          class="btn btn-outline btn-lg">Post a Task</a>`;
         }
@@ -381,7 +381,7 @@
         };
         el.innerHTML = tasks.slice(0,5).map((t, i) => {
           const icon = icons[t.category] || icons.default;
-          return `<div class="task-live-card fade-up" style="animation-delay:${i*0.07}s;" onclick="window.location.href='find-tasks.html'">
+          return `<div class="task-live-card fade-up" style="animation-delay:${i*0.07}s;" onclick="window.location.href='explore-tasks.html'">
             <div class="task-live-icon">${icon}</div>
             <div style="flex:1;min-width:0;">
               <div class="task-live-title">${t.title||'Untitled task'}</div>
@@ -399,7 +399,7 @@
         }).join('');
       } catch(e) {
         document.getElementById('tasksList').innerHTML =
-          `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load tasks. <a href="find-tasks.html" style="color:var(--blue);">Browse all →</a></div>`;
+          `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load tasks. <a href="explore-tasks.html" style="color:var(--blue);">Browse all →</a></div>`;
       }
     }
 

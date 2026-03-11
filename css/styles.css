@@ -1180,3 +1180,106 @@ p  { color: var(--text-secondary); font-weight: 400; }
 @media (max-width: 480px) {
   .dashboard-stats { grid-template-columns: 1fr; }
 }
+
+/* ── Location Suggestions ────────────────────────────────────── */
+.location-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  display: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.location-suggestion-item {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border-light, #f1f5f9);
+}
+.location-suggestion-item:last-child { border-bottom: none; }
+.location-suggestion-item:hover { background: var(--blue-light); color: var(--blue); }
+
+/* ============================================================
+   SPRINT 3.5 — Mobile Layout Fixes
+   ============================================================ */
+
+/* Global overflow prevention */
+*, *::before, *::after { box-sizing: border-box; }
+body { overflow-x: hidden; }
+img { max-width: 100%; height: auto; }
+
+/* Containers never exceed viewport */
+.container { padding: 0 16px; width: 100%; }
+
+@media (max-width: 768px) {
+  /* Cards don't overflow */
+  .task-card, .tasker-card, .service-card, .feed-card,
+  .sidebar-card, .dashboard-card, .auth-card { 
+    width: 100%; max-width: 100%; overflow: hidden; 
+  }
+
+  /* Post-task page */
+  .post-task-container > .container { flex-direction: column; }
+  .post-task-container { padding: 0; }
+  .post-task-container main, .post-task-container .post-task-sidebar { 
+    width: 100%; padding: 0 16px; 
+  }
+  .task-form-row { grid-template-columns: 1fr !important; }
+  .task-submit-section { flex-direction: column; align-items: stretch; }
+
+  /* Dashboard */
+  .dashboard-layout { flex-direction: column; }
+  .dashboard-sidebar { width: 100%; }
+  .dashboard-nav { flex-direction: row; overflow-x: auto; flex-wrap: nowrap; gap: 4px; }
+  .dashboard-nav-item { flex-shrink: 0; font-size: 0.78rem; padding: 8px 10px; }
+  .dashboard-content { padding: 16px; }
+
+  /* Feed layout */
+  .feed-layout { flex-direction: column; }
+  .feed-sidebar { display: none; }
+  .feed-main { width: 100%; }
+
+  /* Taskers/tasks grid */
+  .taskers-layout, .tasks-layout { flex-direction: column; }
+  .filter-sidebar { width: 100%; position: static; }
+  .taskers-grid, .tasks-grid { grid-template-columns: 1fr; }
+
+  /* Page hero search */
+  .page-hero .search-bar { flex-direction: column; width: 100%; }
+  .page-hero .search-bar .sf { width: 100%; }
+  .page-hero .search-bar .btn { width: 100%; }
+
+  /* Auth pages */
+  .auth-container { padding: 24px 0; }
+  .auth-card { padding: 24px 18px; }
+
+  /* Booking grid */
+  .booking-grid, .stats-row { grid-template-columns: 1fr 1fr; }
+
+  /* Budget chips wrap */
+  .budget-chips { flex-wrap: wrap; }
+
+  /* Navigation */
+  .nav-inner { padding: 0 14px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 12px; }
+  .booking-grid, .stats-row { grid-template-columns: 1fr; }
+  .dashboard-header { padding: 16px 12px; }
+  .btn-full { width: 100%; }
+  h1 { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
+  .page-hero { padding: 48px 0 32px; }
+  .task-form-card-body { padding: 16px; }
+
+  /* Application cards */
+  .app-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .app-card-actions { width: 100%; }
+  .app-card-actions .btn { flex: 1; }
+}
