@@ -101,10 +101,9 @@ function buildPost(post) {
   const heartFill = post.liked ? 'var(--red)' : 'none';
   const heartStroke = post.liked ? 'var(--red)' : 'currentColor';
 
-  const media = post.imageUrl
-    ? `<img src="${post.imageUrl}" alt="${post.author}" style="width:100%;height:auto;max-height:480px;object-fit:cover;display:block;" />`
-    : `<div style="background:${post.mediaColor};width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${MEDIA_ICONS[post.mediaIcon] || MEDIA_ICONS.img}<div class="feed-media-overlay"><span class="feed-media-label">${post.service || 'Street Tasker'}</span></div></div>`;
-  const mediaClass = post.imageUrl ? 'feed-media has-image' : 'feed-media';
+  const mediaBlock = post.imageUrl
+    ? `<div class="feed-media has-image"><img src="${post.imageUrl}" alt="Post by ${post.author}" onerror="this.parentNode.style.display='none'" /></div>`
+    : `<div class="feed-media"><div style="background:${post.mediaColor};width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${MEDIA_ICONS[post.mediaIcon] || MEDIA_ICONS.img}<div class="feed-media-overlay"><span class="feed-media-label">${post.service || 'Street Tasker'}</span></div></div></div>`;
 
   return `
 <article class="feed-post" id="post-${post.id}">
@@ -121,7 +120,7 @@ function buildPost(post) {
     <span class="feed-post-time">${post.timeAgo}</span>
   </div>
 
-  <div class="${mediaClass}">${media}</div>
+  ${mediaBlock}
 
   <div class="feed-like-count" id="like-count-${post.id}">${post.likes} like${post.likes !== 1 ? 's' : ''}</div>
 

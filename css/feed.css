@@ -32,7 +32,7 @@
   padding: 16px 20px;
   margin-bottom: 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 .new-post-avatar {
@@ -47,16 +47,28 @@
 }
 .new-post-input {
   flex: 1;
+  width: 100%;
   padding: 10px 14px;
   border: 1.5px solid var(--border);
-  border-radius: var(--radius-pill);
+  border-radius: 12px;
   font-family: var(--font);
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--text-primary);
   background: var(--bg-subtle);
-  cursor: pointer;
+  cursor: text;
   outline: none;
   transition: border-color var(--t) var(--ease);
+  display: block;
+  box-sizing: border-box;
+}
+.new-post-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+.new-post-input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(10,132,255,0.08);
 }
 .new-post-input:hover { border-color: var(--border-strong); }
 .new-post-actions { display: flex; gap: 6px; }
@@ -125,7 +137,22 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  /* Future Sprint 3: <img> or <video> from Supabase Storage replaces this */
+}
+
+/* When a real image exists — no dark box, no aspect ratio lock */
+.feed-media.has-image {
+  aspect-ratio: unset !important;
+  height: auto !important;
+  background: none !important;
+  display: block;
+}
+.feed-media.has-image img {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+  display: block;
+  border-radius: 0;
 }
 .feed-media-icon { z-index: 1; }
 .feed-media-overlay {
@@ -418,31 +445,9 @@
 
 /* ── Sprint 3.5: Feed image fixes ───────────────────────────── */
 
-/* When a real image is present, don't constrain aspect ratio */
-.feed-media img {
-  width: 100%;
-  height: auto;
-  max-height: 480px;
-  object-fit: cover;
-  display: block;
-}
+/* Image rules now handled in .feed-media.has-image block above */
 
-/* Override fixed aspect-ratio only when image is present */
-.feed-media.has-image {
-  aspect-ratio: unset;
-  height: auto;
-}
 
-/* Compose box placeholder visibility */
-.new-post-input::placeholder {
-  color: var(--text-muted);
-  opacity: 1;
-  font-size: 0.875rem;
-}
-.new-post-input {
-  color: var(--text-primary);
-  background: var(--bg-subtle);
-}
 
 /* Mobile compose box */
 @media (max-width: 768px) {
