@@ -31,6 +31,18 @@ async function syncNavbarAuthState() {
 
   if (user) {
     hide('.nav-loggedout');
+    /* Ensure public.users row exists — covers Google OAuth sign-ins */
+    try {
+      const { data: existing } = await window.supabase.from('users').select('id').eq('id', user.id).maybeSingle();
+      if (!existing) {
+        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+        const role_ = user.user_metadata?.role || 'customer';
+        await window.supabase.from('users').upsert(
+          { id: user.id, name, email: user.email, role: role_ },
+          { onConflict: 'id' }
+        );
+      }
+    } catch(e) { /* silent */ }
     const role = await getUserRole(user);
     if (role === 'tasker') { show('.nav-tasker'); hide('.nav-customer'); }
     else                   { show('.nav-customer'); hide('.nav-tasker'); }
