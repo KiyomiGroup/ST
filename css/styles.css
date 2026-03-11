@@ -1233,12 +1233,7 @@ img { max-width: 100%; height: auto; }
   .task-form-row { grid-template-columns: 1fr !important; }
   .task-submit-section { flex-direction: column; align-items: stretch; }
 
-  /* Dashboard */
-  .dashboard-layout { flex-direction: column; }
-  .dashboard-sidebar { width: 100%; }
-  .dashboard-nav { flex-direction: row; overflow-x: auto; flex-wrap: nowrap; gap: 4px; }
-  .dashboard-nav-item { flex-shrink: 0; font-size: 0.78rem; padding: 8px 10px; }
-  .dashboard-content { padding: 16px; }
+  /* Dashboard handled in Sprint 3.5 Overhaul section */
 
   /* Feed layout */
   .feed-layout { flex-direction: column; }
@@ -1282,4 +1277,150 @@ img { max-width: 100%; height: auto; }
   .app-card { flex-direction: column; align-items: flex-start; gap: 10px; }
   .app-card-actions { width: 100%; }
   .app-card-actions .btn { flex: 1; }
+}
+
+/* ============================================================
+   SPRINT 3.5 — Mobile Responsiveness Overhaul
+   ============================================================ */
+
+/* ── Explore Tasks layout ────────────────────────────────────── */
+.explore-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.mobile-filter-toggle-wrap { display: none; }
+
+/* ── Dashboard nav — horizontal scroll on mobile ─────────────── */
+.dashboard-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dashboard-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  white-space: nowrap;
+}
+.dashboard-nav-item:hover { background: var(--gray-100); color: var(--text-primary); }
+.dashboard-nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+
+/* ── Modal fix for mobile ────────────────────────────────────── */
+.modal-box {
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Task row card responsive ────────────────────────────────── */
+.task-row { word-break: break-word; }
+
+@media (max-width: 900px) {
+  .explore-layout { grid-template-columns: 200px 1fr; gap: 20px; }
+}
+
+@media (max-width: 768px) {
+  /* ── Explore tasks: hide sidebar, show toggle button ── */
+  .explore-layout { grid-template-columns: 1fr; }
+  .mobile-filter-toggle-wrap { display: flex; margin-bottom: 14px; }
+
+  .filter-sidebar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 300;
+    background: rgba(0,0,0,0.45);
+    padding: 0;
+    align-items: flex-end;
+  }
+  .filter-sidebar.mobile-open { display: flex; }
+  .filter-sidebar .filter-card {
+    width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 24px 20px 40px;
+    margin: 0;
+  }
+
+  /* ── Dashboard nav: horizontal scrollable pill row ── */
+  .dashboard-grid { grid-template-columns: 1fr !important; }
+  .dashboard-sidebar {
+    width: 100% !important;
+    position: static !important;
+  }
+  .dashboard-nav {
+    flex-direction: row !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding-bottom: 4px;
+    flex-wrap: nowrap;
+  }
+  .dashboard-nav::-webkit-scrollbar { display: none; }
+  .dashboard-nav-item {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill) !important;
+    border: 1.5px solid var(--border);
+    font-size: 0.8rem;
+    background: var(--white);
+    white-space: nowrap;
+  }
+  .dashboard-nav-item.active {
+    border-color: var(--blue);
+    background: var(--blue-light);
+    color: var(--blue);
+  }
+  .dashboard-sidebar .sidebar-cta-wrap { display: none; } /* hide CTA buttons on mobile */
+
+  /* ── Dashboard panels ── */
+  .dashboard-content, .dashboard-panel { padding: 16px 0; }
+  .dashboard-body .container { padding: 0 12px; }
+
+  /* ── Apply modal full-screen on mobile ── */
+  .modal-overlay .modal-box { 
+    width: 100%; 
+    margin: 0; 
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 92vh;
+  }
+  .modal-overlay { align-items: flex-end; }
+
+  /* ── Page hero search stack ── */
+  .page-hero .search-bar { flex-direction: column; }
+  .page-hero .search-bar .sf { min-width: 0; width: 100%; border-left: none !important; border-top: 1px solid var(--border); }
+  .page-hero .search-bar .sf:first-child { border-top: none; }
+  .page-hero .search-bar .btn { width: 100%; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+  /* ── Task row card ── */
+  .task-row { padding: 16px; }
+
+  /* ── Stat cards ── */
+  .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stats { grid-template-columns: 1fr 1fr; }
+  .dashboard-header .container h1 { font-size: 1.3rem; }
+  .explore-layout main { min-width: 0; }
+  .task-row > div:first-child { flex-wrap: wrap; }
 }

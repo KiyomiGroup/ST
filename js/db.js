@@ -413,10 +413,19 @@ async function uploadServiceImage(file) {
 async function createBooking({ taskerId, serviceId = null, taskId = null, scheduledTime = null, notes = '' }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to book a service.');
-  const allowed = await checkTaskerCanAcceptBooking(taskerId);
+
+  /* Resolve to taskers.id — try user_id lookup first, fallback to direct id */
+  let resolvedTaskerId = taskerId;
+  try {
+    const { data: tr } = await window.supabase.from('taskers')
+      .select('id').eq('user_id', taskerId).maybeSingle();
+    if (tr?.id) resolvedTaskerId = tr.id;
+  } catch(e) { /* use original taskerId */ }
+
+  const allowed = await checkTaskerCanAcceptBooking(resolvedTaskerId);
   if (!allowed) throw new Error('SUBSCRIPTION_REQUIRED');
   const { data, error } = await window.supabase.from('bookings').insert({
-    customer_id: user.id, tasker_id: taskerId,
+    customer_id: user.id, tasker_id: resolvedTaskerId,
     service_id: serviceId || null, task_id: taskId || null,
     scheduled_time: scheduledTime || null, notes: notes || null, status: 'pending',
   }).select().single();

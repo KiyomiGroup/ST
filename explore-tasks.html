@@ -33,10 +33,20 @@
 
   <div style="padding:32px 0 64px; background:var(--bg-subtle);">
     <div class="container">
-      <div style="display:grid; grid-template-columns:220px 1fr; gap:28px; align-items:start;">
+
+      <!-- Mobile filter toggle -->
+      <div class="mobile-filter-toggle-wrap">
+        <button class="btn btn-ghost btn-sm mobile-filter-btn" id="filterToggleBtn" onclick="toggleMobileFilters()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+          <span id="activeFilterCount" style="display:none;background:var(--blue);color:#fff;border-radius:999px;font-size:0.68rem;font-weight:700;padding:1px 6px;margin-left:2px;"></span>
+        </button>
+      </div>
+
+      <div class="explore-layout">
 
         <!-- Filters -->
-        <aside class="filter-sidebar">
+        <aside class="filter-sidebar" id="filterSidebar">
           <div class="filter-card">
             <div class="filter-card-header">
               <span class="filter-card-title">Filters</span>
@@ -163,7 +173,21 @@
         if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
         document.querySelectorAll('[name="tcat"]')[0].checked = true;
         renderTasks();
+        updateFilterCount();
       });
+
+      /* Close filter sidebar when clicking outside on mobile */
+      document.addEventListener('click', e => {
+        const sidebar = document.getElementById('filterSidebar');
+        const btn = document.getElementById('filterToggleBtn');
+        if (sidebar && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !btn.contains(e.target)) {
+          sidebar.classList.remove('mobile-open');
+        }
+      });
+
+      /* Update filter count badge on filter changes */
+      document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', updateFilterCount));
+      if (br) br.addEventListener('input', updateFilterCount);
     }
 
     function renderTasks() {
@@ -218,6 +242,21 @@
       if (h < 1) return 'just now';
       if (h < 24) return h + 'h ago';
       return Math.floor(h/24) + 'd ago';
+    }
+
+    function toggleMobileFilters() {
+      const sidebar = document.getElementById('filterSidebar');
+      if (sidebar) sidebar.classList.toggle('mobile-open');
+    }
+    window.toggleMobileFilters = toggleMobileFilters;
+
+    function updateFilterCount() {
+      const count = (TASK_FILTERS.category ? 1 : 0) + (TASK_FILTERS.minBudget > 0 ? 1 : 0) + (TASK_FILTERS.location ? 1 : 0);
+      const badge = document.getElementById('activeFilterCount');
+      if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline' : 'none';
+      }
     }
 
     function openApply(id, title, desc) {

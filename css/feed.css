@@ -415,3 +415,43 @@
   .feed-tags, .feed-comments-preview, .feed-book-cta { padding-left: 14px; padding-right: 14px; }
   .feed-comment-box { padding: 10px 14px 14px; }
 }
+
+/* ── Sprint 3.5: Feed image fixes ───────────────────────────── */
+
+/* When a real image is present, don't constrain aspect ratio */
+.feed-media img {
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Override fixed aspect-ratio only when image is present */
+.feed-media.has-image {
+  aspect-ratio: unset;
+  height: auto;
+}
+
+/* Compose box placeholder visibility */
+.new-post-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+  font-size: 0.875rem;
+}
+.new-post-input {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+
+/* Mobile compose box */
+@media (max-width: 768px) {
+  .new-post-card {
+    padding: 12px 14px;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .new-post-input { font-size: 0.875rem; }
+  .feed-layout { padding: 16px 0 60px; }
+  .feed-main { min-width: 0; width: 100%; }
+}
