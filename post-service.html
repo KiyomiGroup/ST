@@ -94,15 +94,28 @@
             </select>
           </div>
 
-          <!-- Rate — smart text input -->
+          <!-- Rate — separate price + unit -->
           <div class="service-form-group">
-            <label class="service-form-label" for="svcRate">
-              Rate *
-              <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">e.g. &#8358;30000/hour &nbsp;or&nbsp; &#8358;5000/job</span>
-            </label>
-            <input type="text" id="svcRate" class="service-form-input"
-              placeholder="e.g. ₦30000/hour" autocomplete="off" maxlength="40" required />
-            <div id="rateParsedHint" class="rate-hint-ok"></div>
+            <label class="service-form-label">Rate *</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="position:relative;flex:1;">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text-muted);pointer-events:none;">₦</span>
+                <input type="number" id="svcPrice" class="service-form-input"
+                  style="padding-left:28px;"
+                  placeholder="e.g. 5000" min="0" step="1" required />
+              </div>
+              <span style="color:var(--text-muted);font-weight:600;flex-shrink:0;">/</span>
+              <select id="svcRateUnit" class="service-form-select" style="flex:1;max-width:140px;">
+                <option value="hour">hour</option>
+                <option value="job" selected>job</option>
+                <option value="day">day</option>
+                <option value="session">session</option>
+                <option value="visit">visit</option>
+                <option value="week">week</option>
+                <option value="month">month</option>
+              </select>
+            </div>
+            <div id="rateParsedHint" class="rate-hint-ok" style="margin-top:5px;font-size:0.76rem;min-height:16px;"></div>
           </div>
 
           <!-- Location -->
@@ -171,50 +184,29 @@
     'use strict';
     let uploadedPhotoUrl = null;
 
-    /* ── Rate parser ─────────────────────────────────────────── */
-    function parseRateInput(raw) {
-      if (!raw || !raw.trim()) return null;
-      // Strip all currency symbols and thousand-separators
-      var s = raw.trim().replace(/[₦#N$€£,]/g, '').trim();
-      // Extract the numeric part
-      var numMatch = s.match(/(\d+(?:\.\d+)?)/);
-      if (!numMatch) return null;
-      var numericValue = parseFloat(numMatch[1]);
-      if (isNaN(numericValue) || numericValue <= 0) return null;
-      // Extract the unit part (everything after the number)
-      var remainder = s.slice(s.indexOf(numMatch[0]) + numMatch[0].length).trim();
-      var unitMap = {
-        'hour':'/hour','hr':'/hour','hourly':'/hour',
-        'day':'/day','daily':'/day',
-        'job':'/job','service':'/service',
-        'visit':'/visit','session':'/session',
-        'week':'/week','month':'/month',
-      };
-      var rateUnit = '/hour'; // sensible default
-      if (remainder) {
-        var clean = remainder.replace(/^[\/\s]*(per\s*)?/i,'').toLowerCase().trim();
-        rateUnit = unitMap[clean] || ('/' + (clean || 'hour'));
-      }
-      return { numericValue: numericValue, rateUnit: rateUnit };
-    }
-
     function pricingTypeFromUnit(unit) {
-      var map = {'/hour':'per_hour','/day':'per_day','/job':'per_job','/service':'per_service','/week':'per_week','/month':'per_month'};
+      var map = {'hour':'per_hour','day':'per_day','job':'per_job','session':'per_session','visit':'per_visit','week':'per_week','month':'per_month'};
       return map[unit] || 'per_job';
     }
 
+    function getRateValues() {
+      var priceVal = parseFloat(document.getElementById('svcPrice').value);
+      var unitVal  = document.getElementById('svcRateUnit').value;
+      return { numericValue: isNaN(priceVal) ? 0 : priceVal, rateUnit: '/' + unitVal };
+    }
+
     function onRateInput() {
-      var raw    = document.getElementById('svcRate').value;
-      var hint   = document.getElementById('rateParsedHint');
-      var parsed = parseRateInput(raw);
-      if (!raw.trim()) { hint.textContent = ''; hint.className = 'rate-hint-ok'; return; }
-      if (!parsed) {
-        hint.className   = 'rate-hint-err';
-        hint.textContent = '⚠ Enter a number — e.g. ₦30000/hour or 5000/job';
+      var hint  = document.getElementById('rateParsedHint');
+      var price = parseFloat(document.getElementById('svcPrice').value);
+      var unit  = document.getElementById('svcRateUnit').value;
+      if (!document.getElementById('svcPrice').value) { hint.textContent = ''; return; }
+      if (isNaN(price) || price <= 0) {
+        hint.className = 'rate-hint-err';
+        hint.textContent = '⚠ Enter a valid amount';
         return;
       }
-      hint.className   = 'rate-hint-ok';
-      hint.textContent = '✓ Amount: ₦' + parsed.numericValue.toLocaleString() + '  ·  Unit: ' + parsed.rateUnit;
+      hint.className = 'rate-hint-ok';
+      hint.textContent = '✓ ₦' + price.toLocaleString() + ' / ' + unit;
     }
 
     async function initPage() {
@@ -232,16 +224,19 @@
           if (svc.description)  document.getElementById('svcDescription').value = svc.description;
           if (svc.photo) { uploadedPhotoUrl = svc.photo; showPhotoPreview(svc.photo); }
           if (svc.price) {
-            var unitMap2 = {per_hour:'/hour',per_day:'/day',per_job:'/job',per_service:'/service',per_week:'/week',per_month:'/month'};
-            var u = svc.rate_unit || unitMap2[svc.pricing_type] || '/job';
-            document.getElementById('svcRate').value = '₦' + Number(svc.price).toLocaleString() + u;
+            document.getElementById('svcPrice').value = Number(svc.price);
+            var unitMap2 = {per_hour:'hour',per_day:'day',per_job:'job',per_service:'session',per_week:'week',per_month:'month'};
+            var rawUnit = svc.rate_unit || '';
+            var u = rawUnit.replace('/','') || unitMap2[svc.pricing_type] || 'job';
+            document.getElementById('svcRateUnit').value = u;
             onRateInput();
           }
           updateDescCount();
         }
       } catch(e) {}
 
-      document.getElementById('svcRate').addEventListener('input', onRateInput);
+      document.getElementById('svcPrice').addEventListener('input', onRateInput);
+      document.getElementById('svcRateUnit').addEventListener('change', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
       document.getElementById('serviceForm').addEventListener('submit', handleSubmit);
@@ -295,7 +290,7 @@
 
       var serviceName = document.getElementById('svcName').value.trim();
       var category    = document.getElementById('svcCategory').value;
-      var rawRate     = document.getElementById('svcRate').value.trim();
+      var rateValues  = getRateValues();
       var location    = document.getElementById('svcLocation').value.trim();
       var description = document.getElementById('svcDescription').value.trim();
       var file        = document.getElementById('photoFile').files[0];
@@ -303,11 +298,7 @@
       // Validate
       if (!serviceName)           { showErr('Please enter a service name.'); return; }
       if (!category)              { showErr('Please select a category.'); return; }
-      if (!rawRate)               { showErr('Please enter your rate (e.g. ₦30000/hour).'); return; }
-
-      // Parse rate — extract plain number regardless of what user typed
-      var parsed = parseRateInput(rawRate);
-      if (!parsed) { showErr('Could not read a number from the rate field. Try e.g. ₦30000/hour or 5000/job.'); return; }
+      if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
 
       if (!location)              { showErr('Please enter your location.'); return; }
       if (description.length < 20){ showErr('Description must be at least 20 characters.'); return; }
@@ -333,9 +324,9 @@
         await window.ST.db.postService({
           serviceName: serviceName,
           category:    category,
-          pricingType: pricingTypeFromUnit(parsed.rateUnit),
-          price:       parsed.numericValue,   /* plain Number — no symbols */
-          rateUnit:    parsed.rateUnit,
+          pricingType: pricingTypeFromUnit(document.getElementById('svcRateUnit').value),
+          price:       rateValues.numericValue,   /* plain Number — guaranteed */
+          rateUnit:    rateValues.rateUnit,
           location:    location,
           description: description,
           photoUrl:    photoUrl,
@@ -343,6 +334,7 @@
 
         succEl.style.display = 'block';
         document.getElementById('serviceForm').reset();
+        document.getElementById('svcRateUnit').value = 'job';
         document.getElementById('rateParsedHint').textContent = '';
         clearPhoto();
         updateDescCount();
