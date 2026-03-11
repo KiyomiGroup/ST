@@ -121,47 +121,6 @@
               <div class="panel-header"><h2>My Bookings</h2><a href="find-taskers.html" class="btn btn-ghost btn-sm">Find Services</a></div>
               <div class="task-row-list" id="bookingsList"></div>
             </div>
-
-            <!-- Profile Panel -->
-            <div id="panel-profile" class="dashboard-panel">
-              <div class="panel-header"><h2>Edit Profile</h2></div>
-              <div style="max-width:480px; padding: 0 4px;">
-                <div style="margin-bottom:20px; display:flex; align-items:center; gap:16px;">
-                  <div id="profileAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.3rem;color:var(--blue);overflow:hidden;flex-shrink:0;border:2px solid var(--border);"></div>
-                  <div>
-                    <input type="file" id="profileImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewProfileImage(this)" />
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profileImageFile').click()">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      Change Photo
-                    </button>
-                    <div style="font-size:0.74rem;color:var(--text-muted);margin-top:5px;">JPG, PNG or WebP · max 2 MB</div>
-                  </div>
-                </div>
-                <div style="margin-bottom:14px;">
-                  <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Full Name</label>
-                  <input type="text" id="profileName" class="task-input" placeholder="Your name" style="width:100%;" />
-                </div>
-                <div style="margin-bottom:14px;">
-                  <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Bio</label>
-                  <textarea id="profileBio" class="task-textarea" rows="3" placeholder="Tell people a bit about yourself..." style="width:100%;"></textarea>
-                </div>
-                <div style="margin-bottom:24px;">
-                  <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:6px;">Location</label>
-                  <div class="location-wrap">
-                    <input type="text" id="profileLocation" class="task-input" placeholder="Search your area..." style="width:100%;" autocomplete="off"
-                      oninput="fetchLocationSuggestions(this.value,'profileLocSugg','profileLocation')" />
-                    <div id="profileLocSugg" class="location-suggestions"></div>
-                    <button type="button" class="location-map-toggle" onclick="openMapPicker('profileLocation','profileMapBox')">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-                      Pick on map
-                    </button>
-                    <div id="profileMapBox" class="location-map-container"></div>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
-                <div id="profileSaveMsg" style="display:none;margin-top:10px;font-size:0.83rem;"></div>
-              </div>
-            </div>
           </main>
         </div>
       </div>
@@ -226,6 +185,7 @@
 
     /* ── Task Applications ───────────────────────────────────── */
     async function loadApplications() {
+      if (appLoaded) return;
       appLoaded = true;
       var container = document.getElementById('appTaskList');
       try {
@@ -320,6 +280,7 @@
 
     /* ── Notifications ───────────────────────────────────────── */
     async function loadCustNotifications() {
+      if (custNotifLoaded) return;
       custNotifLoaded = true;
       var el = document.getElementById('custNotifList');
       try {
