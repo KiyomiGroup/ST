@@ -43,27 +43,26 @@
 
           <!-- New post compose box -->
           <div class="new-post-card fade-up" id="newPostCard">
-            <div class="new-post-avatar" id="newPostAvatar">You</div>
+            <div class="new-post-avatar" id="newPostAvatar" style="margin-top:4px;">You</div>
             <div style="flex:1; min-width:0;">
               <textarea
                 class="new-post-input"
                 id="newPostInput"
                 placeholder="Share your completed work..."
-                rows="1"
-                style="resize:none; overflow:hidden; min-height:40px;"
+                rows="2"
+                style="resize:none; overflow:hidden; min-height:44px; width:100%; display:block;"
                 oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
               ></textarea>
-              <!-- Image upload -->
-              <div id="imageUploadArea" style="display:none; margin-top:10px;">
-                <input type="file" id="feedImageFile" accept="image/*" style="display:none" onchange="onFeedImageSelected(this)"/>
-                <div id="feedImagePreview" style="display:none; position:relative; margin-bottom:8px;">
-                  <img id="feedImageThumb" style="max-width:100%; max-height:220px; border-radius:10px; object-fit:cover;" />
-                  <button onclick="removeFeedImage()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;line-height:1;">✕</button>
-                </div>
-                <div id="feedUploadProgress" style="display:none; font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">⏳ Uploading image...</div>
+              <div id="feedImagePreview" style="display:none; margin-top:8px; position:relative; width:80px;">
+                <img id="feedImageThumb" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" />
+                <button type="button" onclick="removeFeedImage()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;">✕</button>
               </div>
-              <div id="newPostActions" style="display:none; margin-top:10px; justify-content:space-between; align-items:center;">
-                <button onclick="document.getElementById('feedImageFile').click()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);">📷 Add Photo</button>
+              <input type="file" id="feedImageInput" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewFeedImage(this)" />
+              <div id="newPostActions" style="display:none; margin-top:10px; justify-content:space-between; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('feedImageInput').click()" title="Add photo">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Photo
+                </button>
                 <div style="display:flex;gap:8px;">
                   <button class="btn btn-ghost btn-sm" onclick="cancelPost()">Cancel</button>
                   <button class="btn btn-primary btn-sm" id="postSubmitBtn" onclick="submitPost()">Share Update</button>
@@ -161,6 +160,7 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script src="js/feed.js"></script>
   <script>
     async function initPage() {
@@ -188,32 +188,33 @@
       if (input)   { input.value = ''; input.style.height = 'auto'; }
       if (actions) actions.style.display = 'none';
       document.getElementById('postError').style.display = 'none';
+      removeFeedImage();
     }
 
-    var _feedImageUrl = null;
-
-    function onFeedImageSelected(input) {
-      const file = input.files[0];
-      if (!file) return;
+    function previewFeedImage(input) {
+      if (!input.files || !input.files[0]) return;
       const reader = new FileReader();
       reader.onload = e => {
-        document.getElementById('feedImageThumb').src = e.target.result;
-        document.getElementById('feedImagePreview').style.display = 'block';
+        const thumb = document.getElementById('feedImageThumb');
+        const preview = document.getElementById('feedImagePreview');
+        if (thumb) thumb.src = e.target.result;
+        if (preview) preview.style.display = 'block';
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(input.files[0]);
     }
 
     function removeFeedImage() {
-      _feedImageUrl = null;
-      document.getElementById('feedImageFile').value = '';
-      document.getElementById('feedImagePreview').style.display = 'none';
-      document.getElementById('feedImageThumb').src = '';
+      const input = document.getElementById('feedImageInput');
+      const preview = document.getElementById('feedImagePreview');
+      if (input) input.value = '';
+      if (preview) preview.style.display = 'none';
     }
+    window.removeFeedImage = removeFeedImage;
 
     async function submitPost() {
-      const input   = document.getElementById('newPostInput');
-      const errEl   = document.getElementById('postError');
-      const btn     = document.getElementById('postSubmitBtn');
+      const input  = document.getElementById('newPostInput');
+      const errEl  = document.getElementById('postError');
+      const btn    = document.getElementById('postSubmitBtn');
       const caption = input?.value?.trim() || '';
 
       errEl.style.display = 'none';
@@ -221,30 +222,33 @@
       if (!caption) { errEl.textContent = 'Please write something before posting.'; errEl.style.display = 'block'; return; }
 
       const user = await window.ST.auth.getCurrentUser();
-      if (!user) { errEl.textContent = 'Please log in to post an update.'; errEl.style.display = 'block'; return; }
+      if (!user) {
+        errEl.textContent = 'Please log in to post an update.';
+        errEl.style.display = 'block';
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = 'Posting...';
 
       try {
-        /* Upload image if one was selected */
-        const file = document.getElementById('feedImageFile').files[0];
-        if (file) {
-          document.getElementById('feedUploadProgress').style.display = 'block';
-          try {
-            _feedImageUrl = await window.ST.db.uploadFeedImage(file);
-          } catch(e) {
-            console.warn('Image upload failed:', e.message);
-            _feedImageUrl = null;
-          } finally {
-            document.getElementById('feedUploadProgress').style.display = 'none';
+        let imageUrl = null;
+        const fileInput = document.getElementById('feedImageInput');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          const { data: { user: u } } = await window.supabase.auth.getUser();
+          const ext = file.name.split('.').pop().toLowerCase();
+          const path = `feed/${u.id}-${Date.now()}.${ext}`;
+          const { error: upErr } = await window.supabase.storage.from('service-images').upload(path, file, { cacheControl: '3600', upsert: true });
+          if (!upErr) {
+            const { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(path);
+            imageUrl = urlData.publicUrl;
           }
         }
-
-        await window.ST.db.postFeedUpdate(caption, _feedImageUrl);
+        await window.ST.db.postFeedUpdate(caption, imageUrl);
         cancelPost();
-        _feedImageUrl = null;
         showToast('Update posted!');
+        /* Reload feed to show new post */
         setTimeout(() => { if (typeof initFeedPage === 'function') initFeedPage(); }, 500);
       } catch (err) {
         errEl.textContent = 'Failed to post: ' + err.message;

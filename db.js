@@ -3,24 +3,6 @@
    ============================================================ */
 'use strict';
 
-/* ── Ensure public.users row exists (needed for FK constraints) ── */
-async function ensureUserProfile(user) {
-  if (!user) return;
-  try {
-    const { data: existing } = await window.supabase
-      .from('users').select('id').eq('id', user.id).maybeSingle();
-    if (!existing) {
-      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
-      const role = user.user_metadata?.role || 'customer';
-      await window.supabase.from('users').upsert(
-        { id: user.id, name, email: user.email, role },
-        { onConflict: 'id' }
-      );
-    }
-  } catch(e) { /* silent — don't block the main action */ }
-}
-
-
 /* ─── Rate parser (also used server-side in this file) ─────── */
 function _parseRate(raw) {
   if (raw === null || raw === undefined) return { numericPrice: 0, rateUnit: '/hour' };
@@ -107,7 +89,6 @@ async function countMyTasks() {
 async function applyToTask({ taskId, message = '' }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to apply for tasks.');
-  await ensureUserProfile(user);
 
   const { data: existing } = await window.supabase.from('task_applications')
     .select('id').eq('task_id', taskId).eq('tasker_id', user.id).maybeSingle();
@@ -432,22 +413,10 @@ async function uploadServiceImage(file) {
 async function createBooking({ taskerId, serviceId = null, taskId = null, scheduledTime = null, notes = '' }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to book a service.');
-
-  /* Ensure the customer has a public.users row (required for FK) */
-  await ensureUserProfile(user);
-
-  /* Resolve to taskers.id — try user_id lookup first, fallback to direct id */
-  let resolvedTaskerId = taskerId;
-  try {
-    const { data: tr } = await window.supabase.from('taskers')
-      .select('id').eq('user_id', taskerId).maybeSingle();
-    if (tr?.id) resolvedTaskerId = tr.id;
-  } catch(e) { /* use original taskerId */ }
-
-  const allowed = await checkTaskerCanAcceptBooking(resolvedTaskerId);
+  const allowed = await checkTaskerCanAcceptBooking(taskerId);
   if (!allowed) throw new Error('SUBSCRIPTION_REQUIRED');
   const { data, error } = await window.supabase.from('bookings').insert({
-    customer_id: user.id, tasker_id: resolvedTaskerId,
+    customer_id: user.id, tasker_id: taskerId,
     service_id: serviceId || null, task_id: taskId || null,
     scheduled_time: scheduledTime || null, notes: notes || null, status: 'pending',
   }).select().single();
@@ -525,39 +494,21 @@ async function fetchMySubscription() {
 
 async function fetchFeedPosts({ limit = 30 } = {}) {
   const { data, error } = await window.supabase.from('feed_posts')
-    .select('*, users(name)').order('created_at', { ascending: false }).limit(limit);
+    .select('*').order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
-  return (data || []).map(p => ({
-    ...p,
-    author_name: p.users?.name || p.content?.slice(0,12) || 'Tasker',
-  }));
+  return data || [];
 }
 
 async function postFeedUpdate(caption, imageUrl = null) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post.');
-  await ensureUserProfile(user);
   const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
-  /* feed_posts columns: id, user_id, content, image, created_at */
   const { data, error } = await window.supabase.from('feed_posts').insert({
-    user_id: user.id,
-    content: caption.trim(),
-    image:   imageUrl || null,
+    user_id: user.id, author_name: name, caption: caption.trim(), content: caption.trim(),
+    image_url: imageUrl || null, image: imageUrl || null, likes: 0, service: '', location: '',
   }).select().single();
   if (error) throw error;
   return data;
-}
-
-async function uploadFeedImage(file) {
-  const { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) throw new Error('Log in to upload images.');
-  const ext  = file.name.split('.').pop().toLowerCase();
-  const name = `feed/${user.id}-${Date.now()}.${ext}`;
-  const { error } = await window.supabase.storage
-    .from('service-images').upload(name, file, { cacheControl: '3600', upsert: true });
-  if (error) throw new Error(error.message);
-  const { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(name);
-  return urlData.publicUrl;
 }
 
 async function postComment({ postId, body }) {
@@ -595,5 +546,5 @@ window.ST.db = {
   createBooking, fetchMyBookings, fetchTaskerBookings, updateBookingStatus,
   checkTaskerCanAcceptBooking, fetchMySubscription,
   fetchMyNotifications, markNotificationRead, markAllNotificationsRead, fetchUnreadNotificationCount,
-  fetchFeedPosts, postFeedUpdate, uploadFeedImage, postComment, fetchComments, togglePostLike,
+  fetchFeedPosts, postFeedUpdate, postComment, fetchComments, togglePostLike,
 };
