@@ -242,7 +242,7 @@
       if (!user) {
         closeApply();
         showToast('Please log in to apply to tasks.');
-        setTimeout(() => { window.location.href = 'login.html?redirect=explore-tasks.html'; }, 1200);
+        setTimeout(() => { window.location.href = 'login.html?redirect=find-tasks.html'; }, 1200);
         return;
       }
       const msg  = document.getElementById('applyMsg').value.trim();
