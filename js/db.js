@@ -525,11 +525,14 @@ async function fetchMySubscription() {
 
 async function fetchFeedPosts({ limit = 30 } = {}) {
   const { data, error } = await window.supabase.from('feed_posts')
-    .select('*, users(name)').order('created_at', { ascending: false }).limit(limit);
+    .select('*').order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return (data || []).map(p => ({
     ...p,
-    author_name: p.users?.name || p.content?.slice(0,12) || 'Tasker',
+    /* Normalise columns — DB has both old+new names */
+    resolved_caption:     p.content || p.caption || '',
+    resolved_image:       p.image   || p.image_url || null,
+    resolved_author_name: p.author_name || 'Tasker',
   }));
 }
 
@@ -538,26 +541,12 @@ async function postFeedUpdate(caption, imageUrl = null) {
   if (!user) throw new Error('Log in to post.');
   await ensureUserProfile(user);
   const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
-  /* feed_posts columns: id, user_id, content, image, created_at */
   const { data, error } = await window.supabase.from('feed_posts').insert({
-    user_id: user.id,
-    content: caption.trim(),
-    image:   imageUrl || null,
+    user_id: user.id, author_name: name, caption: caption.trim(), content: caption.trim(),
+    image_url: imageUrl || null, image: imageUrl || null, likes: 0, service: '', location: '',
   }).select().single();
   if (error) throw error;
   return data;
-}
-
-async function uploadFeedImage(file) {
-  const { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) throw new Error('Log in to upload images.');
-  const ext  = file.name.split('.').pop().toLowerCase();
-  const name = `feed/${user.id}-${Date.now()}.${ext}`;
-  const { error } = await window.supabase.storage
-    .from('service-images').upload(name, file, { cacheControl: '3600', upsert: true });
-  if (error) throw new Error(error.message);
-  const { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(name);
-  return urlData.publicUrl;
 }
 
 async function postComment({ postId, body }) {
@@ -595,5 +584,5 @@ window.ST.db = {
   createBooking, fetchMyBookings, fetchTaskerBookings, updateBookingStatus,
   checkTaskerCanAcceptBooking, fetchMySubscription,
   fetchMyNotifications, markNotificationRead, markAllNotificationsRead, fetchUnreadNotificationCount,
-  fetchFeedPosts, postFeedUpdate, uploadFeedImage, postComment, fetchComments, togglePostLike,
+  fetchFeedPosts, postFeedUpdate, postComment, fetchComments, togglePostLike,
 };
