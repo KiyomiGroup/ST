@@ -191,7 +191,8 @@ async function updateApplicationStatus(applicationId, status) {
 async function _insertNotification({ userId, type, title, message, data = {} }) {
   const { error } = await window.supabase.from('notifications').insert({
     user_id: userId, type, title, message,
-    data: JSON.stringify(data), read: false,
+    data: data,      /* raw object — Supabase serialises to JSONB */
+    is_read: false,  /* confirmed column name from schema */
   });
   if (error) console.warn('[Notify]', error.message);
 }
@@ -207,7 +208,8 @@ async function _notifyTaskersOfNewTask(task) {
       user_id: t.user_id, type: 'new_task',
       title: 'New task in your category',
       message: `"${task.title}" posted in ${task.location || 'your area'}`,
-      data: JSON.stringify({ task_id: task.id }), read: false,
+      data: { task_id: task.id }, /* raw object, not JSON.stringify */
+      is_read: false,
     }));
   if (rows.length) await window.supabase.from('notifications').insert(rows);
 }
@@ -222,21 +224,21 @@ async function fetchMyNotifications({ limit = 30 } = {}) {
 }
 
 async function markNotificationRead(id) {
-  await window.supabase.from('notifications').update({ read: true }).eq('id', id);
+  await window.supabase.from('notifications').update({ is_read: true }).eq('id', id);
 }
 
 async function markAllNotificationsRead() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return;
-  await window.supabase.from('notifications').update({ read: true })
-    .eq('user_id', user.id).eq('read', false);
+  await window.supabase.from('notifications').update({ is_read: true })
+    .eq('user_id', user.id).eq('is_read', false);
 }
 
 async function fetchUnreadNotificationCount() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return 0;
   const { count } = await window.supabase.from('notifications')
-    .select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false);
+    .select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
   return count || 0;
 }
 
@@ -254,13 +256,11 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
     user_id:      user.id,
     service_name: serviceName.trim(),
     category:     category || 'other',
-    pricing_type: pricingType,
     price:        numericPrice,           /* always a plain JS Number */
     location:     location.trim(),
     description:  description.trim(),
     photo:        photoUrl || null,
-    status:       'active',
-    available:    true,
+    available:    true,                   /* services uses 'available', not 'status' */
   };
 
   /* Try with rate_unit column */
@@ -323,16 +323,16 @@ async function deleteService(serviceId) {
 
 async function fetchServices({ category = '', limit = 60 } = {}) {
   let q = window.supabase.from('services').select(`
-    id, service_name, category, pricing_type, price, rate_unit, location, description, photo, user_id, status, available,
+    id, service_name, category, price, rate_unit, location, description, photo, user_id, available,
     users ( id, name )
-  `).eq('status', 'active').order('created_at', { ascending: false }).limit(limit);
+  `).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
 
   const { data, error } = await q;
   if (!error && data && data.length > 0) {
     return data.map(s => ({
       id: String(s.id), service_name: s.service_name, category: s.category,
-      pricing_type: s.pricing_type || 'per_job', price: s.price,
+      pricing_type: 'per_job', price: s.price,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
       available: s.available !== false, provider_name: s.users?.name || 'Provider',
@@ -385,9 +385,9 @@ async function fetchMyTaskerProfile() {
 
 async function fetchMatchingServices({ category, location, limit = 5 }) {
   let { data, error } = await window.supabase.from('services').select(`
-    id, service_name, category, pricing_type, price, location, description, photo, user_id, available,
+    id, service_name, category, price, rate_unit, location, description, photo, user_id, available,
     users ( id, name )
-  `).eq('status', 'active').eq('available', true).eq('category', category)
+  `).eq('available', true).eq('category', category)
     .order('created_at', { ascending: false }).limit(limit * 2);
   if (error || !data?.length) {
     const { data: td } = await window.supabase.from('taskers').select('*')
@@ -407,7 +407,7 @@ async function fetchMatchingServices({ category, location, limit = 5 }) {
     return { ...s, score };
   }).sort((a, b) => b.score - a.score).slice(0, limit).map(s => ({
     id: String(s.id), service_name: s.service_name, category: s.category,
-    pricing_type: s.pricing_type || 'per_job', price: s.price,
+    pricing_type: 'per_job', price: s.price,
     location: s.location, description: s.description, photo: s.photo,
     user_id: s.user_id, available: s.available !== false,
     provider_name: s.users?.name || 'Provider',
@@ -417,9 +417,19 @@ async function fetchMatchingServices({ category, location, limit = 5 }) {
 async function uploadServiceImage(file) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to upload images.');
-  if (!file)  throw new Error('No file selected.');
-  const ext  = file.name.split('.').pop().toLowerCase();
+
+  /* ── Validate before touching the network ── */
+  const validation = window.validateUpload(file, {
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxBytes: 5 * 1024 * 1024,
+  });
+  if (!validation.ok) throw new Error(validation.error);
+
+  /* Use a safe UUID-based filename — never trust file.name */
+  const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  const ext  = extMap[file.type] || 'jpg';
   const name = `services/${user.id}-${Date.now()}.${ext}`;
+
   const { error } = await window.supabase.storage
     .from('service-images').upload(name, file, { cacheControl: '3600', upsert: true });
   if (error) throw new Error(error.message);
@@ -570,8 +580,15 @@ async function fetchComments(postId) {
   return data || [];
 }
 
-async function togglePostLike(postId, newCount) {
-  await window.supabase.from('feed_posts').update({ likes: newCount }).eq('id', postId);
+async function togglePostLike(postId, liked) {
+  /* Uses a server-side atomic function to prevent race conditions.
+     The RPC increments or decrements the counter in a single DB operation.
+     See: migrations/rls_and_functions.sql for the function definition. */
+  try {
+    await window.supabase.rpc(liked ? 'increment_post_likes' : 'decrement_post_likes', { post_id: postId });
+  } catch(e) {
+    console.warn('[Like]', e.message);
+  }
 }
 
 /* ─────────────────── EXPOSE GLOBALLY ───────────────────────── */
