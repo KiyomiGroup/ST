@@ -50,9 +50,11 @@
                 id="newPostInput"
                 placeholder="Share your completed work..."
                 rows="2"
+                maxlength="2000"
                 style="resize:none; overflow:hidden; min-height:44px; width:100%; display:block;"
-                oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+                oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'; updatePostCharCount(this.value.length);"
               ></textarea>
+              <div id="postCharCount" style="display:none; font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:3px;">0 / 2000</div>
               <div id="feedImagePreview" style="display:none; margin-top:8px; position:relative; width:80px;">
                 <img id="feedImageThumb" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" />
                 <button type="button" onclick="removeFeedImage()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;">✕</button>
@@ -156,6 +158,7 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
@@ -178,21 +181,44 @@
       const input = document.getElementById('newPostInput');
       const actions = document.getElementById('newPostActions');
       if (input && actions) {
-        input.addEventListener('focus', () => { actions.style.display = 'flex'; });
+        input.addEventListener('focus', () => {
+          actions.style.display = 'flex';
+          document.getElementById('postCharCount').style.display = 'block';
+        });
       }
+    }
+
+    function updatePostCharCount(len) {
+      const el = document.getElementById('postCharCount');
+      if (!el) return;
+      el.textContent = len + ' / 2000';
+      el.style.color = len > 1800 ? 'var(--red)' : 'var(--text-muted)';
     }
 
     function cancelPost() {
       const input   = document.getElementById('newPostInput');
       const actions = document.getElementById('newPostActions');
+      const counter = document.getElementById('postCharCount');
       if (input)   { input.value = ''; input.style.height = 'auto'; }
       if (actions) actions.style.display = 'none';
+      if (counter) { counter.style.display = 'none'; counter.textContent = '0 / 2000'; }
       document.getElementById('postError').style.display = 'none';
       removeFeedImage();
     }
 
-    function previewFeedImage(input) {
-      if (!input.files || !input.files[0]) return;
+    function previewFeedImage(inputEl) {
+      if (!inputEl.files || !inputEl.files[0]) return;
+      const file = inputEl.files[0];
+      /* Validate before previewing */
+      const check = validateUpload(file, {
+        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        maxBytes: 5 * 1024 * 1024,
+      });
+      if (!check.ok) {
+        showToast(check.error);
+        inputEl.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = e => {
         const thumb = document.getElementById('feedImageThumb');
@@ -200,7 +226,7 @@
         if (thumb) thumb.src = e.target.result;
         if (preview) preview.style.display = 'block';
       };
-      reader.readAsDataURL(input.files[0]);
+      reader.readAsDataURL(file);
     }
 
     function removeFeedImage() {
@@ -212,14 +238,15 @@
     window.removeFeedImage = removeFeedImage;
 
     async function submitPost() {
-      const input  = document.getElementById('newPostInput');
-      const errEl  = document.getElementById('postError');
-      const btn    = document.getElementById('postSubmitBtn');
+      const input   = document.getElementById('newPostInput');
+      const errEl   = document.getElementById('postError');
+      const btn     = document.getElementById('postSubmitBtn');
       const caption = input?.value?.trim() || '';
 
       errEl.style.display = 'none';
 
       if (!caption) { errEl.textContent = 'Please write something before posting.'; errEl.style.display = 'block'; return; }
+      if (caption.length > 2000) { errEl.textContent = 'Post is too long (max 2000 characters).'; errEl.style.display = 'block'; return; }
 
       const user = await window.ST.auth.getCurrentUser();
       if (!user) {
@@ -236,12 +263,22 @@
         const fileInput = document.getElementById('feedImageInput');
         if (fileInput && fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
+          /* Final server-side-equivalent validation before upload */
+          const check = validateUpload(file, {
+            allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+            maxBytes: 5 * 1024 * 1024,
+          });
+          if (!check.ok) throw new Error(check.error);
+
           const { data: { user: u } } = await window.supabase.auth.getUser();
-          const ext = file.name.split('.').pop().toLowerCase();
+          /* Use MIME-derived extension — never trust file.name */
+          const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+          const ext  = extMap[file.type] || 'jpg';
           const path = `feed/${u.id}-${Date.now()}.${ext}`;
-          const { error: upErr } = await window.supabase.storage.from('service-images').upload(path, file, { cacheControl: '3600', upsert: true });
+          /* Use the dedicated post-images bucket, not service-images */
+          const { error: upErr } = await window.supabase.storage.from('post-images').upload(path, file, { cacheControl: '3600', upsert: true });
           if (!upErr) {
-            const { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(path);
+            const { data: urlData } = window.supabase.storage.from('post-images').getPublicUrl(path);
             imageUrl = urlData.publicUrl;
           }
         }

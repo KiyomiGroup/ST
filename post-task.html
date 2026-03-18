@@ -169,6 +169,7 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
@@ -202,8 +203,9 @@
     }
 
     function handleTaskFiles(files) {
-      const allowed = files.filter(f => f.type.startsWith('image/'));
-      if (allowed.length === 0) { showToast('Please select image files (JPG, PNG, WebP).'); return; }
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+      const allowed = files.filter(f => ALLOWED_TYPES.includes(f.type));
+      if (allowed.length === 0) { showToast('Please select image files (JPG, PNG, or WebP only).'); return; }
       const tooBig  = allowed.filter(f => f.size > 5 * 1024 * 1024);
       if (tooBig.length) { showToast(`${tooBig.length} file(s) exceed 5 MB and will be skipped.`); }
       const valid = allowed.filter(f => f.size <= 5 * 1024 * 1024);
@@ -248,8 +250,9 @@
       if (prog) prog.style.display = 'block';
       try {
         const { data: { user } } = await window.supabase.auth.getUser();
+        const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
         const uploaded = await Promise.all(toUpload.map(async (p, i) => {
-          const ext  = p.file.name.split('.').pop().toLowerCase();
+          const ext  = extMap[p.file.type] || 'jpg';
           const name = `tasks/${user.id}-${Date.now()}-${i}.${ext}`;
           const { error } = await window.supabase.storage.from('task-images').upload(name, p.file, { cacheControl:'3600', upsert:true });
           if (error) { console.warn('[Upload] task photo failed:', error.message); return null; }

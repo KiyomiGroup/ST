@@ -244,6 +244,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
@@ -535,7 +536,13 @@
 
     function previewProfileImage(input) {
       if (!input.files || !input.files[0]) return;
-      _currentProfileImageFile = input.files[0];
+      const file = input.files[0];
+      const check = validateUpload(file, {
+        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        maxBytes: 5 * 1024 * 1024,
+      });
+      if (!check.ok) { showToast(check.error); input.value = ''; return; }
+      _currentProfileImageFile = file;
       const reader = new FileReader();
       reader.onload = e => {
         const el = document.getElementById('profileAvatarPreview');
@@ -558,7 +565,8 @@
       try {
         let avatarUrl = null;
         if (_currentProfileImageFile) {
-          const ext = _currentProfileImageFile.name.split('.').pop().toLowerCase();
+          const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+          const ext  = extMap[_currentProfileImageFile.type] || 'jpg';
           const path = 'avatars/' + user.id + '-' + Date.now() + '.' + ext;
           const { error: upErr } = await window.supabase.storage.from('profile-images').upload(path, _currentProfileImageFile, { cacheControl: '3600', upsert: true });
           if (!upErr) {
