@@ -98,64 +98,76 @@ function renderFeed(page = 1) {
 }
 
 function buildPost(post) {
-  const heartFill = post.liked ? 'var(--red)' : 'none';
+  /* Escape ALL user-supplied fields before they touch innerHTML */
+  const safeAuthor   = escapeHtml(post.author);
+  const safeService  = escapeHtml(post.service);
+  const safeLocation = escapeHtml(post.location);
+  const safeCaption  = escapeHtml(post.caption);
+  const safeInitials = escapeHtml(post.initials);
+  const safeTimeAgo  = escapeHtml(post.timeAgo);
+  /* post.id comes from the DB uuid — still escape for safety */
+  const safeId       = escapeHtml(post.id);
+
+  const heartFill   = post.liked ? 'var(--red)' : 'none';
   const heartStroke = post.liked ? 'var(--red)' : 'currentColor';
 
   const mediaBlock = post.imageUrl
-    ? `<div class="feed-media has-image"><img src="${post.imageUrl}" alt="Post by ${post.author}" onerror="this.parentNode.style.display='none'" /></div>`
-    : `<div class="feed-media"><div style="background:${post.mediaColor};width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${MEDIA_ICONS[post.mediaIcon] || MEDIA_ICONS.img}<div class="feed-media-overlay"><span class="feed-media-label">${post.service || 'Street Tasker'}</span></div></div></div>`;
+    ? `<div class="feed-media has-image"><img src="${escapeHtml(post.imageUrl)}" alt="Post by ${safeAuthor}" loading="lazy" onerror="this.parentNode.style.display='none'" /></div>`
+    : `<div class="feed-media"><div style="background:${escapeHtml(post.mediaColor)};width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${MEDIA_ICONS[post.mediaIcon] || MEDIA_ICONS.img}<div class="feed-media-overlay"><span class="feed-media-label">${safeService || 'Street Tasker'}</span></div></div></div>`;
 
   return `
-<article class="feed-post" id="post-${post.id}">
+<article class="feed-post" id="post-${safeId}">
   <div class="feed-post-header">
-    <div class="feed-avatar ${post.avatarClass}">${post.initials}</div>
+    <div class="feed-avatar ${escapeHtml(post.avatarClass)}">${safeInitials}</div>
     <div class="feed-author-info">
-      <div class="feed-author-name">${post.author}</div>
+      <div class="feed-author-name">${safeAuthor}</div>
       <div class="feed-author-meta">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        ${post.service}
-        ${post.location ? `<span>·</span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${post.location}` : ''}
+        ${safeService}
+        ${safeLocation ? `<span>·</span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${safeLocation}` : ''}
       </div>
     </div>
-    <span class="feed-post-time">${post.timeAgo}</span>
+    <span class="feed-post-time">${safeTimeAgo}</span>
   </div>
 
   ${mediaBlock}
 
-  <div class="feed-like-count" id="like-count-${post.id}">${post.likes} like${post.likes !== 1 ? 's' : ''}</div>
+  <div class="feed-like-count" id="like-count-${safeId}">${escapeHtml(String(post.likes))} like${post.likes !== 1 ? 's' : ''}</div>
 
   <div class="feed-caption">
-    <span class="feed-caption-author">${post.author}</span>${post.caption}
+    <span class="feed-caption-author">${safeAuthor}</span>${safeCaption}
   </div>
 
   <div class="feed-actions">
     <div class="feed-actions-left">
-      <button class="feed-action-btn ${post.liked ? 'feed-action-liked' : ''}" id="like-btn-${post.id}" onclick="toggleLike('${post.id}')" aria-label="Like post">
+      <button class="feed-action-btn ${post.liked ? 'feed-action-liked' : ''}" id="like-btn-${safeId}" onclick="toggleLike('${safeId}')" aria-label="Like post">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="${heartFill}" stroke="${heartStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </button>
-      <button class="feed-action-btn" onclick="toggleComments('${post.id}')" aria-label="Comment">
+      <button class="feed-action-btn" onclick="toggleComments('${safeId}')" aria-label="Comment">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </button>
     </div>
     <div class="feed-actions-right">
-      <button class="feed-action-btn ${post.saved ? 'feed-action-saved' : ''}" onclick="toggleSave('${post.id}')" aria-label="Save">
+      <button class="feed-action-btn ${post.saved ? 'feed-action-saved' : ''}" onclick="toggleSave('${safeId}')" aria-label="Save">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="${post.saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
       </button>
     </div>
   </div>
 
-  <div class="feed-comments" id="comments-${post.id}" style="display:none; padding:0 18px 14px; border-top:1px solid var(--border); margin-top:4px;">
-    <div id="comment-list-${post.id}" style="padding:10px 0 8px;"></div>
+  <div class="feed-comments" id="comments-${safeId}" style="display:none; padding:0 18px 14px; border-top:1px solid var(--border); margin-top:4px;">
+    <div id="comment-list-${safeId}" style="padding:10px 0 8px;"></div>
     <div style="display:flex; gap:8px; align-items:center;">
-      <input type="text" id="comment-input-${post.id}"
+      <input type="text" id="comment-input-${safeId}"
         placeholder="Add a comment..."
+        maxlength="500"
         style="flex:1;padding:8px 14px;border:1.5px solid var(--border);border-radius:var(--radius-pill);font-size:0.83rem;font-family:var(--font);outline:none;background:var(--bg-subtle);"
         onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
-        onkeydown="if(event.key==='Enter'){submitComment('${post.id}');return false;}" />
-      <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">Post</button>
+        onkeydown="if(event.key==='Enter'){submitComment('${safeId}');return false;}" />
+      <button class="btn btn-primary btn-sm" onclick="submitComment('${safeId}')">Post</button>
     </div>
   </div>
 </article>`;
+}
 }
 
 /* ── Wire ────────────────────────────────────────────────────── */
@@ -191,7 +203,7 @@ async function toggleLike(postId) {
   }
 
   if (post.fromDB) {
-    try { await window.ST.db.togglePostLike(postId, post.likes, post.liked); } catch (e) {}
+    try { await window.ST.db.togglePostLike(postId, post.liked); } catch (e) {}
   }
 }
 window.toggleLike = toggleLike;
@@ -230,11 +242,24 @@ async function loadComments(postId) {
       listEl.innerHTML = '<p style="font-size:0.82rem;color:var(--text-muted);padding:4px 0;">No comments yet. Be the first!</p>';
       return;
     }
-    listEl.innerHTML = comments.map(c => `
-      <div style="padding:5px 0;font-size:0.83rem;border-bottom:1px solid var(--gray-100);">
-        <strong style="color:var(--text-primary);">${c.users?.name || 'User'}</strong>
-        <span style="color:var(--text-secondary);margin-left:6px;">${c.body}</span>
-      </div>`).join('');
+    /* Use textContent via DOM construction — no innerHTML with user data */
+    listEl.innerHTML = '';
+    comments.forEach(c => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:5px 0;font-size:0.83rem;border-bottom:1px solid var(--gray-100);';
+
+      const nameEl = document.createElement('strong');
+      nameEl.style.color = 'var(--text-primary)';
+      nameEl.textContent = c.users?.name || 'User';
+
+      const bodyEl = document.createElement('span');
+      bodyEl.style.cssText = 'color:var(--text-secondary);margin-left:6px;';
+      bodyEl.textContent = c.body || c.comment || '';
+
+      row.appendChild(nameEl);
+      row.appendChild(bodyEl);
+      listEl.appendChild(row);
+    });
   } catch (e) {}
 }
 
@@ -248,9 +273,21 @@ async function submitComment(postId) {
 
   const listEl = document.getElementById(`comment-list-${postId}`);
   const name   = user.user_metadata?.name || user.email?.split('@')[0] || 'You';
-  const div    = document.createElement('div');
+
+  /* Build via DOM — never inject user text into innerHTML */
+  const div = document.createElement('div');
   div.style.cssText = 'padding:5px 0;font-size:0.83rem;border-bottom:1px solid var(--gray-100);';
-  div.innerHTML = `<strong style="color:var(--text-primary);">${name}</strong><span style="color:var(--text-secondary);margin-left:6px;">${body}</span>`;
+
+  const nameEl = document.createElement('strong');
+  nameEl.style.color = 'var(--text-primary)';
+  nameEl.textContent = name;
+
+  const bodyEl = document.createElement('span');
+  bodyEl.style.cssText = 'color:var(--text-secondary);margin-left:6px;';
+  bodyEl.textContent = body;
+
+  div.appendChild(nameEl);
+  div.appendChild(bodyEl);
   if (listEl) {
     const empty = listEl.querySelector('p');
     if (empty) empty.remove();

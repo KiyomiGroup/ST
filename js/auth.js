@@ -108,8 +108,26 @@ async function requireAuth() {
   return user;
 }
 
+/**
+ * Requires the current user to have a specific role.
+ * Redirects to the appropriate dashboard if the role doesn't match.
+ * @param {'tasker'|'customer'} role
+ * @returns {object|null} user if role matches, null otherwise
+ */
+async function requireRole(role) {
+  const user = await requireAuth();
+  if (!user) return null;
+  const userRole = await getUserRole(user);
+  if (userRole !== role) {
+    const redirect = role === 'tasker' ? 'dashboard-customer.html' : 'dashboard-tasker.html';
+    window.location.href = redirect;
+    return null;
+  }
+  return user;
+}
+
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl,
-  signUpUser, loginUser, logoutUser, requireAuth, syncNavbarAuthState,
+  signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState,
 };
