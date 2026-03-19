@@ -14,12 +14,27 @@ const STATIC_SERVICES = [
 ];
 
 let ALL = [];
-let FILTERS = { search:'', category:'', maxPrice:999999, minRating:0, sortBy:'rating' };
+let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
 let PAGE = 1;
 const PAGE_SIZE = 8;
 
 /* ── Init ────────────────────────────────────────────────────── */
 function initTaskersPage() {
+  /* Pre-fill search and location from URL params (e.g. from homepage search) */
+  const params = new URLSearchParams(window.location.search);
+  const urlService  = params.get('service')  || '';
+  const urlLocation = params.get('location') || '';
+  if (urlService) {
+    FILTERS.search = urlService;
+    const inp = document.getElementById('taskerSearchInput');
+    if (inp) inp.value = urlService;
+  }
+  if (urlLocation) {
+    FILTERS.location = urlLocation;
+    const locInp = document.getElementById('taskerLocationInput');
+    if (locInp) locInp.value = urlLocation;
+  }
+
   loadServices().then(() => {
     render();
     wireAll();
@@ -69,6 +84,7 @@ function filtered() {
     );
   }
   if (category)          list = list.filter(s => s.category === category);
+  if (FILTERS.location)  list = list.filter(s => (s.location || '').toLowerCase().includes(FILTERS.location.toLowerCase()));
   if (maxPrice < 999999) list = list.filter(s => s.price <= maxPrice);
   if (minRating)         list = list.filter(s => s.rating >= minRating);
   if (sortBy === 'rating')     list.sort((a,b) => b.rating - a.rating);
@@ -150,6 +166,9 @@ function wireAll() {
   if (inp) inp.addEventListener('input', () => { FILTERS.search = inp.value.trim(); render(1); });
   if (frm) frm.addEventListener('submit', e => { e.preventDefault(); render(1); });
 
+  /* Location — wired via initLocationInput in find-taskers.html initPage */
+  /* The onChange callback sets FILTERS.location and re-renders */
+
   /* Category tabs */
   document.querySelectorAll('[data-category]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -195,7 +214,9 @@ function wireAll() {
   /* Reset */
   const reset = document.getElementById('filterReset');
   if (reset) reset.addEventListener('click', () => {
-    FILTERS = { search:'', category:'', maxPrice:999999, minRating:0, sortBy:'rating' };
+    FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
+    const locInp = document.getElementById('taskerLocationInput');
+    if (locInp) { locInp.value = ''; delete locInp.dataset.lat; delete locInp.dataset.lon; }
     if (inp) inp.value = '';
     if (pr)  { pr.value = 30000; if (pv) pv.textContent = 'Any'; }
     document.querySelectorAll('[data-rating-filter]').forEach(c => c.checked = false);
