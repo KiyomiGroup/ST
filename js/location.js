@@ -1,15 +1,10 @@
 /* ============================================================
-   STREET TASKER — location.js  (v2 — Nominatim + GPS)
+   STREET TASKER — location.js  (v3 — instant suggestions + Nominatim + GPS)
    ============================================================
-   Uses OpenStreetMap Nominatim API — completely free, no API key.
-   Provides:
-     1. Real address autocomplete via Nominatim
-     2. GPS "use my location" via browser Geolocation API
-     3. initLocationInput(config) — attach to any input in one call
-
-   Nominatim usage policy:
-     - Max 1 request/second (enforced via debounce)
-     - Must send a valid User-Agent (set in fetch headers)
+   - 1 character typed → instant suggestions from local Nigerian
+     city/area list (feels snappy, zero network needed)
+   - 2+ characters → real Nominatim results replace the instant ones
+   - GPS button → reverse-geocodes to a real address
    ============================================================ */
 'use strict';
 
@@ -18,11 +13,59 @@ const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse';
 const NOMINATIM_UA      = 'StreetTasker/1.0 (streettasker.com)';
 
 const _debounceTimers = {};
-const _cache = {};
+const _nominatimCache = {};
+
+/* ── Complete Nigerian location list for instant suggestions ─── */
+const _NIGERIA = [
+  /* States & capitals */
+  'Abuja','Abeokuta','Ado-Ekiti','Akure','Asaba','Awka','Bauchi',
+  'Benin City','Calabar','Damaturu','Dutse','Enugu','Gombe','Gusau',
+  'Ibadan','Ilorin','Jalingo','Jos','Kaduna','Kano','Katsina',
+  'Kebbi','Lafia','Lagos','Lokoja','Maiduguri','Makurdi','Minna',
+  'Nnewi','Ogbomosho','Onitsha','Osogbo','Owerri','Oyo',
+  'Port Harcourt','Sokoto','Umuahia','Uyo','Warri','Yenagoa','Yola',
+  /* Lagos areas */
+  'Lagos Island','Lagos Mainland','Victoria Island','Lekki',
+  'Lekki Phase 1','Lekki Phase 2','Lekki Phase 3','Ajah','Sangotedo',
+  'Ikate','Chevron','Ikeja','Ikeja GRA','Maryland','Magodo',
+  'Ojodu','Ojota','Gbagada','Surulere','Yaba','Shomolu','Bariga',
+  'Ebute-Metta','Festac','Oshodi','Isolo','Mushin','Ikorodu',
+  'Badagry','Epe','Alagbado','Ojuelegba','Ilupeju','Palmgrove',
+  'Agidingbi','Oregun','Ogba','Ifako-Ijaiye','Agege','Dopemu',
+  'Alimosho','Egbeda','Idimu','Iba','Amuwo-Odofin','Satellite Town',
+  'Apapa','Orile','Mile 2','Mile 12','Ketu','Alapere','Ogudu',
+  'Onipanu','Anthony Village','Pedro','Igbobi','Fadeyi','Iwaya',
+  /* Abuja areas */
+  'Garki','Wuse','Wuse 2','Maitama','Asokoro','Gwarinpa','Kubwa',
+  'Lugbe','Jabi','Utako','Kado','Katampe','Lokogoma','Nyanya',
+  'Karu','Gwagwalada','Bwari','Dawaki','Gudu','Apo','Galadimawa',
+  /* Other major cities */
+  'Trans Amadi','GRA Port Harcourt','Old GRA','New GRA',
+  'Rumuola','Rumuokoro','Rumuigbo','Eleme',
+  'Bodija','New Bodija','Ring Road Ibadan','Dugbe','Mokola',
+  'Achara Layout','Independence Layout','GRA Enugu',
+  'New Haven','Coal Camp',
+  'Barnawa Kaduna','Kawo','Rigasa','Tudun Wada',
+  'Fagge Kano','Nassarawa Kano','Gwale','Dala',
+  'Sabon Gari Kano',
+];
+
+/* ── Instant match from local list ──────────────────────────── */
+function _instant(query) {
+  const q = query.toLowerCase();
+  return _NIGERIA
+    .filter(c => c.toLowerCase().startsWith(q))           /* starts-with first */
+    .concat(_NIGERIA.filter(c => {
+      const cl = c.toLowerCase();
+      return !cl.startsWith(q) && cl.includes(q);         /* then contains */
+    }))
+    .slice(0, 6)
+    .map(label => ({ label, lat: null, lon: null, instant: true }));
+}
 
 /* ── Nominatim fetch ─────────────────────────────────────────── */
-async function _fetchNominatim(query) {
-  if (_cache[query]) return _cache[query];
+async function _nominatim(query) {
+  if (_nominatimCache[query]) return _nominatimCache[query];
 
   const params = new URLSearchParams({
     q: query, format: 'json', addressdetails: '1',
@@ -46,36 +89,24 @@ async function _fetchNominatim(query) {
       const label = parts.length >= 2
         ? parts.slice(0, 3).join(', ')
         : r.display_name.split(',').slice(0, 3).join(',').trim();
-      return { label, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+      return { label, lat: parseFloat(r.lat), lon: parseFloat(r.lon), instant: false };
     });
 
+    /* Deduplicate */
     const seen = new Set();
     const unique = results.filter(r => {
       if (seen.has(r.label)) return false;
       seen.add(r.label); return true;
     });
 
-    _cache[query] = unique;
-    return unique;
+    /* Fallback to instant list if Nominatim returned nothing useful */
+    const out = unique.length ? unique : _instant(query);
+    _nominatimCache[query] = out;
+    return out;
   } catch (e) {
-    console.warn('[Location] Nominatim failed:', e.message);
-    return _fallback(query);
+    console.warn('[Location] Nominatim failed, using local list:', e.message);
+    return _instant(query);
   }
-}
-
-/* ── Fallback static list ────────────────────────────────────── */
-const _CITIES = [
-  'Abuja','Abeokuta','Ado-Ekiti','Akure','Asaba','Awka','Bauchi',
-  'Benin City','Calabar','Enugu','Ibadan','Ilorin','Jos','Kaduna',
-  'Kano','Katsina','Lagos','Lagos Island','Lekki','Lekki Phase 1',
-  'Lekki Phase 2','Victoria Island','Ajah','Surulere','Ikeja',
-  'Magodo','Gbagada','Yaba','Ikorodu','Maiduguri','Makurdi','Minna',
-  'Onitsha','Owerri','Port Harcourt','Sokoto','Uyo','Warri','Yenagoa',
-];
-function _fallback(q) {
-  const lq = q.toLowerCase();
-  return _CITIES.filter(c => c.toLowerCase().includes(lq))
-    .slice(0, 6).map(label => ({ label, lat: null, lon: null }));
 }
 
 /* ── Render dropdown ─────────────────────────────────────────── */
@@ -84,32 +115,55 @@ function _render(results, dropdown, input, onSelect) {
   dropdown.innerHTML = '';
 
   if (!results.length) {
-    dropdown.innerHTML = '<div class="location-suggestion-item location-suggestion-empty">No locations found</div>';
+    const empty = document.createElement('div');
+    empty.className = 'location-suggestion-item location-suggestion-empty';
+    empty.textContent = 'No locations found';
+    dropdown.appendChild(empty);
     dropdown.style.display = 'block';
     return;
   }
 
   results.forEach(r => {
     const item = document.createElement('div');
-    item.className = 'location-suggestion-item';
-    item.innerHTML =
-      '<svg class="loc-sug-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
-      + '<span>' + escapeHtml(r.label) + '</span>';
+    item.className = 'location-suggestion-item' + (r.instant ? ' loc-item-instant' : '');
+
+    /* Pin icon */
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'loc-sug-icon');
+    icon.setAttribute('width', '11');
+    icon.setAttribute('height', '11');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke-width', '2.5');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.innerHTML = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>';
+
+    /* Label */
+    const label = document.createElement('span');
+    label.className = 'loc-sug-label';
+    label.textContent = r.label;
+
+    item.appendChild(icon);
+    item.appendChild(label);
 
     item.addEventListener('mousedown', e => {
-      e.preventDefault();
+      e.preventDefault();   /* prevent blur before click */
       input.value = r.label;
       if (r.lat) { input.dataset.lat = r.lat; input.dataset.lon = r.lon; }
+      else { delete input.dataset.lat; delete input.dataset.lon; }
       dropdown.style.display = 'none';
       dropdown.innerHTML = '';
       if (typeof onSelect === 'function') onSelect(r);
     });
+
     dropdown.appendChild(item);
   });
+
   dropdown.style.display = 'block';
 }
 
-/* ── Reverse geocode (GPS → address) ────────────────────────── */
+/* ── Reverse geocode ─────────────────────────────────────────── */
 async function _reverse(lat, lon) {
   const params = new URLSearchParams({
     lat, lon, format: 'json', addressdetails: '1',
@@ -131,110 +185,129 @@ async function _reverse(lat, lon) {
       label: parts.slice(0, 3).join(', ') || data.display_name.split(',').slice(0,3).join(',').trim(),
       lat, lon,
     };
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
+}
+
+/* ── GPS button HTML ─────────────────────────────────────────── */
+function _gpsBtnHTML() {
+  /* Pill with crosshair icon + label. CSS hides the label in search bars. */
+  return '<button type="button" class="loc-gps-btn" title="Use my location" aria-label="Use my location">'
+    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<circle cx="12" cy="12" r="3"/>'
+    + '<path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>'
+    + '<circle cx="12" cy="12" r="9"/>'
+    + '</svg>'
+    + '<span class="loc-gps-btn-label">Use location</span>'
+    + '</button>';
 }
 
 /* ── GPS detect ──────────────────────────────────────────────── */
 function _gps(input, dropdown, btn, onSelect) {
   if (!navigator.geolocation) {
-    showToast('GPS not available in this browser.');
+    showToast('GPS is not available in this browser.');
     return;
   }
-  const orig = btn ? btn.innerHTML : '';
+  const origHTML = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span class="loc-btn-spinner"></span>';
-    btn.title = 'Detecting…';
+    btn.innerHTML = '<span class="loc-btn-spinner"></span><span class="loc-gps-btn-label"> Detecting…</span>';
   }
   navigator.geolocation.getCurrentPosition(
     async pos => {
       const { latitude: lat, longitude: lon } = pos.coords;
       const result = await _reverse(lat, lon);
-      if (btn) { btn.disabled = false; btn.innerHTML = orig; btn.title = 'Use my location'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
       if (result) {
         input.value = result.label;
         input.dataset.lat = result.lat;
         input.dataset.lon = result.lon;
-        if (dropdown) { dropdown.style.display = 'none'; }
+        if (dropdown) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; }
         if (typeof onSelect === 'function') onSelect(result);
-        showToast('Location detected: ' + result.label);
+        showToast('📍 ' + result.label);
       } else {
-        input.value = lat.toFixed(4) + ', ' + lon.toFixed(4);
+        input.value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
         showToast('Location detected.');
       }
     },
     err => {
-      if (btn) { btn.disabled = false; btn.innerHTML = orig; btn.title = 'Use my location'; }
-      const msg = {
-        1: 'Location permission denied. Enable it in your browser settings.',
+      if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+      const msgs = {
+        1: 'Location access denied. Allow it in your browser settings and try again.',
         2: 'Could not detect your location. Please type it manually.',
-        3: 'Location detection timed out.',
-      }[err.code] || 'Location detection failed.';
-      showToast(msg);
+        3: 'Location detection timed out. Please type your location.',
+      };
+      showToast(msgs[err.code] || 'Location detection failed.');
     },
     { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false }
   );
 }
 
-/* ── GPS button markup ───────────────────────────────────────── */
-function _gpsBtnHTML() {
-  return '<button type="button" class="loc-gps-btn" title="Use my location" aria-label="Use my location">'
-    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
-    + '<circle cx="12" cy="12" r="3"/>'
-    + '<path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>'
-    + '<circle cx="12" cy="12" r="9"/>'
-    + '</svg>'
-    + '</button>';
-}
-
 /* ── Public API ──────────────────────────────────────────────── */
 /**
- * Wire up a location input with Nominatim autocomplete + GPS button.
+ * Attach autocomplete + GPS to a location input.
  *
  * @param {object} cfg
- *   cfg.inputId    {string}   id of the <input>
- *   cfg.dropdownId {string}   id of the suggestions container <div>
- *   cfg.gps        {boolean}  show GPS button (default true)
- *   cfg.onSelect   {function} called with {label, lat, lon} on selection
- *   cfg.onChange   {function} called with current string value on each keystroke
+ *   cfg.inputId    — id of the <input>
+ *   cfg.dropdownId — id of the suggestions <div>
+ *   cfg.gps        — show GPS button (default true)
+ *   cfg.onSelect   — callback({ label, lat, lon }) on pick
+ *   cfg.onChange   — callback(value) on every keystroke
  */
 function initLocationInput(cfg) {
   const input    = document.getElementById(cfg.inputId);
   const dropdown = document.getElementById(cfg.dropdownId);
   if (!input) return;
 
-  const gps = cfg.gps !== false;
+  const useGps = cfg.gps !== false;
 
   /* Inject GPS button once */
   let btn = null;
-  if (gps) {
-    if (!input.parentElement.querySelector('.loc-gps-btn')) {
-      input.insertAdjacentHTML('afterend', _gpsBtnHTML());
-    }
+  if (useGps && !input.parentElement.querySelector('.loc-gps-btn')) {
+    input.insertAdjacentHTML('afterend', _gpsBtnHTML());
+  }
+  if (useGps) {
     btn = input.parentElement.querySelector('.loc-gps-btn');
     if (btn) btn.addEventListener('click', () => _gps(input, dropdown, btn, cfg.onSelect));
   }
 
-  /* Typing handler with debounce */
+  /* Typing handler */
   input.addEventListener('input', () => {
     const val = input.value.trim();
     if (typeof cfg.onChange === 'function') cfg.onChange(val);
+
     clearTimeout(_debounceTimers[cfg.inputId]);
-    if (val.length < 2) {
+
+    if (!val) {
       if (dropdown) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; }
       return;
     }
+
+    /* 1 char: show instant local suggestions immediately (no network) */
+    if (val.length === 1) {
+      const instant = _instant(val);
+      if (dropdown) _render(instant, dropdown, input, cfg.onSelect);
+      return;
+    }
+
+    /* 2+ chars: show instant results right away, then replace with Nominatim */
+    const instant = _instant(val);
+    if (dropdown && instant.length) _render(instant, dropdown, input, cfg.onSelect);
+
+    /* Debounce the real API call — 350ms keeps us within Nominatim's 1 req/sec */
     _debounceTimers[cfg.inputId] = setTimeout(async () => {
-      const results = await _fetchNominatim(val);
-      if (dropdown) _render(results, dropdown, input, cfg.onSelect);
+      const results = await _nominatim(val);
+      /* Only update if input value hasn't changed while we were fetching */
+      if (input.value.trim() === val && dropdown) {
+        _render(results, dropdown, input, cfg.onSelect);
+      }
     }, 350);
   });
 
   /* Hide on blur */
   input.addEventListener('blur', () => {
-    setTimeout(() => { if (dropdown) dropdown.style.display = 'none'; }, 200);
+    setTimeout(() => {
+      if (dropdown) { dropdown.style.display = 'none'; }
+    }, 200);
   });
 
   /* Escape key */
@@ -246,7 +319,7 @@ function initLocationInput(cfg) {
   });
 }
 
-/* ── Legacy wrappers (backwards compatible with old oninput= attrs) ── */
+/* ── Legacy wrappers ─────────────────────────────────────────── */
 function fetchLocationSuggestions(query, containerId) {
   const dropdown = document.getElementById(containerId);
   if (!dropdown) return;
@@ -255,11 +328,20 @@ function fetchLocationSuggestions(query, containerId) {
     : dropdown.parentElement?.querySelector('input');
   if (!input) return;
   const q = (query || '').trim();
-  if (q.length < 2) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
+  if (!q) { dropdown.style.display = 'none'; return; }
+
+  /* Instant first */
+  if (q.length === 1) {
+    _render(_instant(q), dropdown, input, null);
+    return;
+  }
+  /* Show instant then replace with Nominatim */
+  _render(_instant(q), dropdown, input, null);
   clearTimeout(_debounceTimers[containerId]);
   _debounceTimers[containerId] = setTimeout(async () => {
-    const results = await _fetchNominatim(q);
-    _render(results, dropdown, input, null);
+    if (input.value.trim() === q) {
+      _render(await _nominatim(q), dropdown, input, null);
+    }
   }, 350);
 }
 
