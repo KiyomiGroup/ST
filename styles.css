@@ -1182,148 +1182,132 @@ p  { color: var(--text-secondary); font-weight: 400; }
 }
 
 /* ── Location Input Widget ───────────────────────────────────── */
+/*
+   GPS lives INSIDE the dropdown as the first row.
+   Input itself is clean — just a pin icon on the left.
+   Pattern: Uber / Airbnb / Google Maps style.
+*/
 
-/* ── Suggestions dropdown ── */
+/* ── Input: just needs position:relative on its wrapper ── */
 .location-suggestions {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 5px);
   left: 0;
   right: 0;
   background: var(--white);
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
   z-index: 300;
   display: none;
   overflow: hidden;
-  animation: loc-drop-in 0.14s var(--ease) both;
+  animation: loc-appear 0.13s var(--ease) both;
 }
-@keyframes loc-drop-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes loc-appear {
+  from { opacity:0; transform:translateY(-5px) scale(0.99); }
+  to   { opacity:1; transform:translateY(0)   scale(1); }
 }
 
-.location-suggestion-item {
-  padding: 10px 14px;
-  cursor: pointer;
-  font-size: 0.865rem;
-  font-family: var(--font);
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--gray-100, #f5f5f5);
+/* ── Each row ── */
+.loc-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  transition: background var(--t) var(--ease), color var(--t) var(--ease);
-  line-height: 1.4;
+  gap: 11px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background var(--t) var(--ease);
+  border-bottom: 1px solid var(--gray-100, #f5f5f5);
 }
-.location-suggestion-item:last-child { border-bottom: none; }
-.location-suggestion-item:hover {
-  background: var(--blue-light);
-  color: var(--text-primary);
-}
-.location-suggestion-item:hover .loc-sug-icon { stroke: var(--blue); opacity: 1; }
-.location-suggestion-item.loc-item-instant { color: var(--text-muted); }
-.location-suggestion-item.loc-item-instant:hover { color: var(--text-primary); }
-.location-suggestion-item.location-suggestion-empty {
-  color: var(--text-muted);
-  cursor: default;
-  font-style: italic;
-  font-size: 0.82rem;
-}
-.location-suggestion-item.location-suggestion-empty:hover { background: transparent; }
+.loc-row:last-child { border-bottom: none; }
+.loc-row:hover { background: var(--gray-50, #fafafa); }
 
-.loc-sug-icon {
-  flex-shrink: 0;
-  stroke: var(--text-muted);
-  opacity: 0.5;
-  transition: stroke var(--t) var(--ease), opacity var(--t) var(--ease);
+/* ── GPS row — has its own distinct styling ── */
+.loc-row-gps {
+  background: var(--blue-light);
+  border-bottom: 1px solid rgba(10,132,255,0.12);
 }
-.loc-sug-label {
+.loc-row-gps:hover { background: rgba(10,132,255,0.12); }
+
+/* ── Icon column ── */
+.loc-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.loc-row:hover .loc-row-icon {
+  background: var(--white);
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+
+/* GPS icon is blue */
+.loc-row-icon-gps {
+  background: white;
+  border-color: rgba(10,132,255,0.25);
+  color: var(--blue);
+}
+.loc-row-gps:hover .loc-row-icon-gps {
+  background: white;
+  color: var(--blue);
+}
+
+/* Spinning animation for GPS loading */
+.loc-spin {
+  animation: loc-rotate 0.9s linear infinite;
+  stroke: var(--blue);
+}
+@keyframes loc-rotate { to { transform: rotate(360deg); } }
+
+/* ── Text column ── */
+.loc-row-text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.loc-row-primary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.loc-row-gps .loc-row-primary { color: var(--blue); font-weight: 600; }
+
+/* ── Separator between GPS row and suggestions ── */
+.loc-sep {
+  height: 1px;
+  background: rgba(10,132,255,0.1);
+  margin: 0;
 }
 
-/* ── GPS detect button ── */
-/* Pill-shaped, labelled — clearly communicates the action */
-.loc-gps-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px 4px 7px;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  font-size: 0.72rem;
-  font-weight: 600;
-  font-family: var(--font);
-  color: var(--text-secondary);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  transition:
-    background var(--t) var(--ease),
-    border-color var(--t) var(--ease),
-    color var(--t) var(--ease),
-    box-shadow var(--t) var(--ease);
-  z-index: 5;
-  line-height: 1;
+/* ── Empty state ── */
+.loc-row-empty {
+  color: var(--text-muted);
+  font-size: 0.83rem;
+  font-style: italic;
+  cursor: default;
+  justify-content: center;
+  padding: 14px;
+  border-bottom: none;
 }
-.loc-gps-btn:hover {
-  background: var(--white);
-  border-color: var(--blue);
-  color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(10,132,255,0.08);
-}
-.loc-gps-btn:active { transform: translateY(-50%) scale(0.97); }
-.loc-gps-btn:disabled { cursor: not-allowed; opacity: 0.55; }
-.loc-gps-btn svg { flex-shrink: 0; stroke: currentColor; }
-.loc-gps-btn-label { display: inline; }
+.loc-row-empty:hover { background: transparent; }
 
-/* Inside search bars: icon-only compact variant */
-.search-bar .loc-gps-btn,
-.hero-search .loc-gps-btn {
-  padding: 6px;
-  gap: 0;
-  background: transparent;
-  border-color: transparent;
-  border-radius: var(--radius-sm);
-  right: 6px;
-}
-.search-bar .loc-gps-btn:hover,
-.hero-search .loc-gps-btn:hover {
-  background: var(--blue-light);
-  border-color: transparent;
-  box-shadow: none;
-  color: var(--blue);
-}
-.search-bar .loc-gps-btn .loc-gps-btn-label,
-.hero-search .loc-gps-btn .loc-gps-btn-label { display: none; }
-
-/* Loading spinner */
-.loc-btn-spinner {
-  width: 11px;
-  height: 11px;
-  border: 2px solid var(--border);
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: loc-spin 0.65s linear infinite;
-  display: inline-block;
-  flex-shrink: 0;
-}
-@keyframes loc-spin { to { transform: rotate(360deg); } }
-
-/* Input padding — room for the pill button on standalone inputs */
-input.has-gps-btn { padding-right: 100px !important; }
-/* Search bars only need room for the icon */
-.search-bar input.has-gps-btn,
-.hero-search-field input.has-gps-btn { padding-right: 36px !important; }
+/* ── No GPS button needed — remove old padding hacks ── */
+input.has-gps-btn { padding-right: inherit !important; }
 
 
 /* ============================================================
