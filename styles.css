@@ -293,12 +293,14 @@ p  { color: var(--text-secondary); font-weight: 400; }
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  overflow: hidden; margin-bottom: 16px;
+  overflow: visible; margin-bottom: 16px;
+  position: relative;
 }
 .hero-search-field {
   display: flex; align-items: center; gap: 10px;
   flex: 1; padding: 0 16px; min-width: 0;
 }
+.hero-search-field:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); overflow: hidden; }
 .hero-search-field + .hero-search-field { border-left: 1px solid var(--border); }
 .hero-search-field svg { flex-shrink: 0; stroke: var(--text-muted); }
 .hero-search-field input {
@@ -307,7 +309,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
   background: transparent; padding: 15px 0;
 }
 .hero-search-field input::placeholder { color: var(--text-muted); }
-.hero-search .btn { border-radius: 0; padding: 15px 24px; flex-shrink: 0; }
+.hero-search .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 15px 24px; flex-shrink: 0; }
 
 .hero-cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
@@ -456,7 +458,8 @@ p  { color: var(--text-secondary); font-weight: 400; }
   display: flex; background: var(--white);
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 28px;
+  box-shadow: var(--shadow-sm); overflow: visible; margin-top: 28px;
+  position: relative;
 }
 .search-bar .sf {
   display: flex; align-items: center; gap: 10px;
@@ -470,7 +473,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
   background: transparent; padding: 14px 0;
 }
 .search-bar input::placeholder { color: var(--text-muted); }
-.search-bar .btn { border-radius: 0; padding: 14px 24px; flex-shrink: 0; }
+.search-bar .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 14px 24px; flex-shrink: 0; }
 
 /* ── Taskers layout ───────────────────────────────────────────── */
 .taskers-layout { display: grid; grid-template-columns: 252px 1fr; gap: 28px; padding: 48px 0; align-items: start; }
