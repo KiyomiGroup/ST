@@ -22,9 +22,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
         </div>
-        <div class="sf">
+        <div class="sf" style="position:relative;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" />
+          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
+          <div id="taskLocationSuggestions" class="location-suggestions"></div>
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
@@ -121,6 +122,7 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script>
     let ALL_TASKS = [];
     let ACTIVE_TASK_ID = null;
@@ -138,11 +140,18 @@
 
       /* Search */
       const si = document.getElementById('taskSearchInput');
-      const li = document.getElementById('taskLocationInput');
       const sf = document.getElementById('taskSearchForm');
       if (si) si.addEventListener('input', () => { TASK_FILTERS.search = si.value.trim(); renderTasks(); });
-      if (li) li.addEventListener('input', () => { TASK_FILTERS.location = li.value.trim(); renderTasks(); });
       if (sf) sf.addEventListener('submit', e => { e.preventDefault(); renderTasks(); });
+
+      /* Location with Nominatim autocomplete + GPS */
+      initLocationInput({
+        inputId:    'taskLocationInput',
+        dropdownId: 'taskLocationSuggestions',
+        gps: true,
+        onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
+        onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
+      });
 
       /* Category radio */
       document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));

@@ -121,8 +121,11 @@
           <!-- Location -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcLocation">Location *</label>
-            <input type="text" id="svcLocation" class="service-form-input"
-              placeholder="e.g. Lekki Phase 1, Lagos" required />
+            <div style="position:relative;">
+              <input type="text" id="svcLocation" class="service-form-input has-gps-btn"
+                placeholder="e.g. Lekki Phase 1, Lagos" required autocomplete="off" />
+              <div id="svcLocationSuggestions" class="location-suggestions"></div>
+            </div>
           </div>
 
           <!-- Description -->
@@ -214,6 +217,13 @@
       /* Require tasker role — customers cannot post services */
       var user = await window.ST.auth.requireRole('tasker');
       if (!user) return;
+
+      /* Wire location autocomplete + GPS */
+      initLocationInput({
+        inputId:    'svcLocation',
+        dropdownId: 'svcLocationSuggestions',
+        gps: true,
+      });
 
       // Pre-fill from existing service
       try {

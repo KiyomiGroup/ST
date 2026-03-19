@@ -85,11 +85,12 @@
           <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
             <div class="hero-search-field">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" name="service" placeholder="Service (e.g. Barber, Cleaner)" autocomplete="off" />
+              <input type="text" id="heroServiceInput" name="service" placeholder="Service (e.g. Barber, Cleaner)" autocomplete="off" />
             </div>
-            <div class="hero-search-field">
+            <div class="hero-search-field" style="position:relative;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <input type="text" name="location" placeholder="Your location" autocomplete="off" />
+              <input type="text" id="heroLocationInput" name="location" placeholder="Your location" autocomplete="off" class="has-gps-btn" />
+              <div id="heroLocationSuggestions" class="location-suggestions"></div>
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
           </form>
@@ -279,12 +280,20 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script>
     const PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
     const AV_COLORS = ['av-1','av-2','av-3','av-4','av-5','av-6'];
     let allServices = [];
 
     async function initPage() {
+      /* Wire hero location autocomplete + GPS */
+      initLocationInput({
+        inputId:    'heroLocationInput',
+        dropdownId: 'heroLocationSuggestions',
+        gps: true,
+      });
+
       /* Auth-aware hero CTAs */
       const user = await window.ST.auth.getCurrentUser();
       if (user) {
@@ -414,8 +423,8 @@
 
     function handleHeroSearch(e) {
       e.preventDefault();
-      const svc = e.target.service?.value?.trim() || '';
-      const loc = e.target.location?.value?.trim() || '';
+      const svc = document.getElementById('heroServiceInput')?.value?.trim() || '';
+      const loc = document.getElementById('heroLocationInput')?.value?.trim() || '';
       if (!svc && !loc) { showToast('Enter a service or location to search'); return; }
       const p = new URLSearchParams();
       if (svc) p.set('service', svc);

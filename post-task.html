@@ -78,7 +78,7 @@
                   <label class="task-form-label" for="taskLocation">Location *</label>
                   <div class="task-input-wrap" style="position:relative;">
                     <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <input type="text" id="taskLocation" name="location" class="task-input" placeholder="e.g. Lekki Phase 1" required data-field="location" autocomplete="off" oninput="fetchLocationSuggestions(this.value,'taskLocationSuggestions')" onblur="setTimeout(()=>{var s=document.getElementById('taskLocationSuggestions');if(s)s.style.display='none';},200)" />
+                    <input type="text" id="taskLocation" name="location" class="task-input has-gps-btn" placeholder="e.g. Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
                     <div id="taskLocationSuggestions" class="location-suggestions"></div>
                   </div>
 
@@ -177,7 +177,17 @@
   <script src="js/tasks.js"></script>
   <script src="js/location.js"></script>
   <script>
-    function initPage() { initTaskForm(); initPostSteps(); initTaskPhotoUpload(); }
+    function initPage() {
+      initTaskForm();
+      initPostSteps();
+      initTaskPhotoUpload();
+      /* Wire location autocomplete + GPS */
+      initLocationInput({
+        inputId:    'taskLocation',
+        dropdownId: 'taskLocationSuggestions',
+        gps: true,
+      });
+    }
     function setCategory(cat) {
       const sel = document.getElementById('taskCategory');
       if (sel) { sel.value = cat; sel.dispatchEvent(new Event('input')); }

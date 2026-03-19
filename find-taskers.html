@@ -31,9 +31,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="taskerSearchInput" name="service" placeholder="Service or tasker name..." autocomplete="off" />
         </div>
-        <div class="sf">
+        <div class="sf" style="position:relative;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" />
+          <input type="text" id="taskerLocationInput" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" class="has-gps-btn" />
+          <div id="taskerLocationSuggestions" class="location-suggestions"></div>
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
@@ -244,6 +245,14 @@
   <script>
     function initPage() {
       initTaskersPage();
+      /* Wire location autocomplete + GPS for the search bar */
+      initLocationInput({
+        inputId:    'taskerLocationInput',
+        dropdownId: 'taskerLocationSuggestions',
+        gps: true,
+        onSelect: r => { FILTERS.location = r.label; render(1); },
+        onChange: v => { FILTERS.location = v.trim(); render(1); },
+      });
       const pr = document.getElementById('priceRange');
       if (pr) pr.addEventListener('input', () => {
         const v = parseInt(pr.value);

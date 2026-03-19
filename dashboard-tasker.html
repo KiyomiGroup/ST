@@ -362,11 +362,11 @@
 
                 <div class="form-group" style="margin-bottom:24px; position:relative;">
                   <label class="form-label" for="profileLocation">Location</label>
-                  <div class="input-wrap">
+                  <div class="input-wrap" style="position:relative;">
                     <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <input type="text" id="profileLocation" class="form-input" placeholder="e.g. Lekki, Lagos" autocomplete="off" oninput="fetchLocationSuggestions(this.value,'profileLocationSuggestions')" onblur="setTimeout(()=>{var s=document.getElementById('profileLocationSuggestions');if(s)s.style.display='none';},200)" />
+                    <input type="text" id="profileLocation" class="form-input has-gps-btn" placeholder="e.g. Lekki, Lagos" autocomplete="off" />
+                    <div id="profileLocationSuggestions" class="location-suggestions"></div>
                   </div>
-                  <div id="profileLocationSuggestions" class="location-suggestions"></div>
                 </div>
 
                 <div style="border-top:1px solid var(--border);padding-top:18px;display:flex;align-items:center;gap:14px;">
@@ -697,6 +697,17 @@
     }
     window.saveProfile = saveProfile;
     window.loadProfilePanel = loadProfilePanel;
+
+    /* Wire profile location input once DOM is ready */
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof initLocationInput === 'function') {
+        initLocationInput({
+          inputId:    'profileLocation',
+          dropdownId: 'profileLocationSuggestions',
+          gps: true,
+        });
+      }
+    });
   </script>
 
   <script>
