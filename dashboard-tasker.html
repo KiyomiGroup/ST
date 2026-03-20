@@ -261,7 +261,7 @@
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                 <div style="flex:1;">
                   <strong style="color:var(--amber);font-size:0.88rem;">Free booking limit reached</strong>
-                  <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;">You've used your 5 free bookings. Upgrade to continue receiving customers.</p>
+                  <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;">You have 3 active bookings on the free plan. Complete a job to open a slot, or upgrade for unlimited.</p>
                 </div>
                 <a href="subscription.html" class="btn btn-sm" style="background:var(--amber);color:var(--white);border:none;flex-shrink:0;">Upgrade Now</a>
               </div>
@@ -579,14 +579,45 @@
     }
 
     function bookingRow(b, actions) {
-      var who  = (b.users && b.users.name) || (b.customer_id ? b.customer_id.slice(0,8) : 'Customer');
-      var task = (b.tasks && b.tasks.title) || 'Booking request';
+      var contact    = b._customerContact;
+      var who        = (contact && contact.name) || (b.customer_id ? b.customer_id.slice(0,8) : 'Customer');
+      var task       = (b.tasks && b.tasks.title) || (b.notes ? b.notes.slice(0,40) : 'Booking request');
+      var isActive   = b.status === 'confirmed' || b.status === 'completed';
+
+      /* Contact reveal — only shown when booking is confirmed */
+      var contactHtml = '';
+      if (isActive && contact) {
+        var phone = contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
+        contactHtml =
+          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
+          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Customer Contact</span>' +
+          (phone
+            ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+              contact.phone + '</a>'
+            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file</span>') +
+          (contact.email
+            ? '<a href="mailto:' + contact.email + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;color:var(--text-secondary);text-decoration:none;">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>' +
+              contact.email + '</a>'
+            : '') +
+          '</div>';
+      } else if (b.status === 'pending') {
+        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Confirm this booking to see customer contact details.</div>';
+      }
+
       return '<div class="booking-row-card" id="bk-' + b.id + '">' +
         '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>' +
-        '<div class="booking-row-content"><div class="booking-row-title">' + who + '</div><div class="booking-row-meta">' + task + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
-        '<div class="booking-row-actions">' + badge(b.status) +
-          (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" onclick="doBooking(\'' + b.id + '\',\'confirmed\')">Confirm</button>' : '') +
-          (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   onclick="doBooking(\'' + b.id + '\',\'completed\')">Mark Done</button>' : '') +
+        '<div class="booking-row-content" style="flex:1;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">' +
+            '<div><div class="booking-row-title">' + escapeHtml(who) + '</div>' +
+            '<div class="booking-row-meta">' + escapeHtml(task) + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
+            '<div class="booking-row-actions">' + badge(b.status) +
+              (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" onclick="doBooking(\'' + b.id + '\',\'confirmed\')">Confirm</button>' : '') +
+              (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   onclick="doBooking(\'' + b.id + '\',\'completed\')">Mark Done</button>' : '') +
+            '</div>' +
+          '</div>' +
+          contactHtml +
         '</div></div>';
     }
 
@@ -724,7 +755,7 @@
       var services  = [];
       var bookings  = [];
       var sub       = null;
-      var FREE_LIMIT = 5;
+      var FREE_LIMIT = 3; /* free tier: 3 concurrent active bookings */
 
       try { services = await window.ST.db.fetchMyServices(); } catch(e) { console.warn('[Dashboard] services:', e.message); }
       try { bookings = await window.ST.db.fetchTaskerBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
@@ -733,7 +764,8 @@
       /* Stats go to My Page panel (loaded by loadMyPage) */
       /* Sub gate check */
       var hasActive = sub && sub.status === 'active';
-      if (bookings.length >= FREE_LIMIT && !hasActive) {
+      var activeCount = bookings.filter(function(b) { return b.status === 'pending' || b.status === 'confirmed'; }).length;
+      if (activeCount >= FREE_LIMIT && !hasActive) {
         var sgb = document.getElementById('subGateBanner');
         if (sgb) sgb.style.display = 'flex';
       }
@@ -751,14 +783,16 @@
         : empty('No pending bookings right now.', null, null);
 
       /* Subscription */
-      var used = Math.min(bookings.length, FREE_LIMIT);
+      /* Only count pending+confirmed — completed bookings free up slots */
+      var activeBookings = bookings.filter(function(b) { return b.status === 'pending' || b.status === 'confirmed'; });
+      var used = Math.min(activeBookings.length, FREE_LIMIT);
       var pct  = Math.min(100, Math.round((used / FREE_LIMIT) * 100));
       document.getElementById('subCard').innerHTML = hasActive
         ? '<div class="sub-status-card sub-active"><div class="sub-tier-label">Current Plan</div><div class="sub-tier-name">' + (sub.tier === 'pro' ? 'Pro Plan' : 'Premium Plan') + '</div><div class="sub-tier-detail">Active until ' + fmtDate(sub.end_date) + '</div></div>'
-        : '<div class="sub-status-card sub-free"><div class="sub-tier-label">Current Plan</div><div class="sub-tier-name">Free</div><div class="sub-tier-detail">' + used + ' of ' + FREE_LIMIT + ' free bookings used</div></div>' +
+        : '<div class="sub-status-card sub-free"><div class="sub-tier-label">Current Plan</div><div class="sub-tier-name">Free</div><div class="sub-tier-detail">' + used + ' of ' + FREE_LIMIT + ' active slots used</div></div>' +
           '<div style="height:8px;background:var(--gray-100);border-radius:var(--radius-pill);overflow:hidden;margin:12px 0;"><div style="height:100%;width:' + pct + '%;background:' + (used>=FREE_LIMIT?'var(--red)':'var(--blue)') + ';border-radius:var(--radius-pill);transition:width 0.6s;"></div></div>' +
           (used >= FREE_LIMIT
-            ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You\'ve reached your free booking limit. Upgrade to keep accepting bookings.</p>'
+            ? '<p style="font-size:0.82rem;color:var(--red);margin-bottom:16px;">You have 3 active bookings. Complete a job to open a slot, or upgrade for unlimited.</p>'
             : '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Upgrade when you\'re ready.</p>');
     }
 
