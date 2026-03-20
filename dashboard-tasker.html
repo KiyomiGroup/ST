@@ -208,9 +208,9 @@
           <!-- Sidebar -->
           <aside class="dashboard-sidebar">
             <nav class="dashboard-nav">
-              <button class="dashboard-nav-item active" data-panel="overview" onclick="switchPanel('overview',this)">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                Overview
+              <button class="dashboard-nav-item active" data-panel="mypage" onclick="switchPanel('mypage',this);loadMyPage()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                My Page
               </button>
               <button class="dashboard-nav-item" data-panel="services" onclick="switchPanel('services',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -230,8 +230,13 @@
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
               <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
                 Edit Profile
+              </button>
+              <button class="dashboard-nav-item" data-panel="verification" onclick="switchPanel('verification',this);loadVerification()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Verification
+                <span id="navVerifBadge" style="display:none;background:var(--amber);color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:auto;">!</span>
               </button>
               <button class="dashboard-nav-item" data-panel="subscription" onclick="switchPanel('subscription',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -263,14 +268,51 @@
             </div>
 
             <!-- Overview -->
-            <div id="panel-overview" class="dashboard-panel">
-              <div class="dashboard-stats">
+            <!-- My Page -->
+            <div id="panel-mypage" class="dashboard-panel">
+              <!-- Header with public link + post button -->
+              <div class="panel-header" style="flex-wrap:wrap;gap:10px;">
+                <div>
+                  <h2 style="margin-bottom:2px;">My Public Page</h2>
+                  <p id="myPageLinkWrap" style="font-size:0.78rem;color:var(--text-muted);"></p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm" id="viewPublicPageBtn" onclick="viewPublicPage()" style="display:none;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    View Page
+                  </button>
+                  <button class="btn btn-primary btn-sm" onclick="openPostWorkModal()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Post Work
+                  </button>
+                </div>
+              </div>
+
+              <!-- Verification prompt -->
+              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div style="flex:1;">
+                  <div style="font-weight:600;font-size:0.85rem;color:var(--amber);">Get Verified</div>
+                  <div style="font-size:0.78rem;color:var(--text-secondary);">Add your ID and business details to show a verified badge on your profile.</div>
+                </div>
+                <button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none;flex-shrink:0;" onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification()">Verify Now</button>
+              </div>
+
+              <!-- Stats -->
+              <div class="dashboard-stats" style="margin-bottom:20px;">
                 <div class="stat-card"><div class="stat-card-label">Total Bookings</div><div class="stat-card-value" id="statTotal">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" id="statPending">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statDone">—</div></div>
+                <div class="stat-card"><div class="stat-card-label">Work Posts</div><div class="stat-card-value" id="statPosts">—</div></div>
               </div>
-              <div class="panel-header"><h2>Recent Bookings</h2><button class="btn btn-ghost btn-sm" onclick="switchPanel('bookings',document.querySelector('[data-panel=bookings]'))">View all</button></div>
-              <div class="task-row-list" id="recentList"></div>
+
+              <!-- Work posts grid -->
+              <div class="panel-header" style="margin-bottom:12px;">
+                <h3 style="font-size:0.95rem;">Posted Work</h3>
+              </div>
+              <div id="myWorkGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;grid-column:1/-1;">Loading your work posts…</div>
+              </div>
             </div>
 
             <!-- My Services -->
@@ -377,13 +419,126 @@
               </div>
             </div>
 
+            <!-- Verification Panel -->
+            <div id="panel-verification" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Get Verified</h2>
+                <span id="verifStatusBadge" style="display:none;"></span>
+              </div>
+
+              <div id="verifApproved" style="display:none;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                <div>
+                  <div style="font-weight:700;color:var(--green);margin-bottom:2px;">You're Verified ✓</div>
+                  <div style="font-size:0.8rem;color:var(--text-secondary);">Your profile shows the verified badge. Customers can trust your listing.</div>
+                </div>
+              </div>
+
+              <div id="verifPending" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:20px;">
+                <div style="font-weight:600;color:var(--amber);margin-bottom:4px;">Verification Pending Review</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);">We've received your submission and are reviewing it. This usually takes 1–2 business days.</div>
+              </div>
+
+              <div id="verifForm">
+                <p style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:24px;line-height:1.6;">
+                  Verified taskers appear higher in search results and display a trust badge on their profile. Fill in your details below — your ID number is stored securely and never shown publicly.
+                </p>
+
+                <div class="task-row-card" style="flex-direction:column;gap:0;align-items:stretch;padding:24px;">
+
+                  <div class="form-group">
+                    <label class="form-label" for="verifBusinessName">Business / Trading Name *</label>
+                    <input type="text" id="verifBusinessName" class="form-input" placeholder="e.g. Adebayo Electrical Services" />
+                    <div class="form-helper">This name will appear on your public profile.</div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label" for="verifIdType">ID Type *</label>
+                      <select id="verifIdType" class="form-input" style="cursor:pointer;">
+                        <option value="">Select ID type</option>
+                        <option value="nin">NIN (National ID Number)</option>
+                        <option value="bvn">BVN (Bank Verification Number)</option>
+                        <option value="drivers_license">Driver's Licence</option>
+                        <option value="passport">International Passport</option>
+                        <option value="voters_card">Voter's Card</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="verifIdNumber">ID Number *</label>
+                      <input type="text" id="verifIdNumber" class="form-input" placeholder="Enter your ID number" />
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="position:relative;">
+                    <label class="form-label" for="verifBusinessAddress">Business Location *</label>
+                    <div class="input-wrap" style="position:relative;">
+                      <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <input type="text" id="verifBusinessAddress" class="form-input" style="padding-left:42px;" placeholder="Your actual business address" autocomplete="off" />
+                      <div id="verifAddressSuggestions" class="location-suggestions"></div>
+                    </div>
+                    <div class="form-helper">Must be your real operating location — we use this to match you with nearby customers.</div>
+                    <input type="hidden" id="verifLat" />
+                    <input type="hidden" id="verifLon" />
+                  </div>
+
+                  <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
+                    <strong style="color:var(--text-secondary);">Privacy Notice:</strong> Your ID number is encrypted and used only for identity verification. It is never shown to customers or on your public profile.
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:14px;">
+                    <button class="btn btn-primary" id="submitVerifBtn" onclick="submitVerification()">Submit for Verification</button>
+                    <span id="verifMsg" style="display:none;font-size:0.83rem;"></span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
           </main>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="footer-placeholder"></div>
+  <!-- Post Work Modal -->
+  <div id="postWorkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--white);border-radius:var(--radius-lg);width:100%;max-width:480px;overflow:hidden;">
+      <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="font-size:1rem;font-weight:700;">Post Work to Your Profile</h3>
+        <button onclick="closePostWorkModal()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.3rem;line-height:1;">×</button>
+      </div>
+      <div style="padding:20px 24px;">
+        <div class="form-group">
+          <label class="form-label" for="postWorkCaption">Describe the work *</label>
+          <textarea id="postWorkCaption" class="form-textarea" rows="3" maxlength="2000"
+            placeholder="What did you do? e.g. Complete rewiring for a 3-bedroom apartment in Lekki..."
+            oninput="updateWorkCharCount(this.value.length)"></textarea>
+          <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);margin-top:3px;" id="workCharCount">0 / 2000</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Photo (optional)</label>
+          <div id="postWorkImagePreview" style="display:none;position:relative;width:80px;height:80px;margin-bottom:10px;">
+            <img id="postWorkImageThumb" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border);" />
+            <button onclick="removeWorkImage()" type="button" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+          </div>
+          <input type="file" id="postWorkImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewWorkImage(this)" />
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('postWorkImageFile').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Add Photo
+          </button>
+        </div>
+
+        <div id="postWorkError" style="display:none;font-size:0.82rem;color:var(--red);margin-bottom:12px;"></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-ghost btn-sm" onclick="closePostWorkModal()">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="postWorkSubmitBtn" onclick="submitWorkPost()">Post to My Page</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
@@ -557,7 +712,8 @@
 
       /* ── CRITICAL: show panels immediately, don't wait for data ── */
       document.getElementById('dashLoading').style.display = 'none';
-      switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+      switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
+      loadMyPage();
 
       /* Load unread count for bell badge */
       window.ST.db.fetchUnreadNotificationCount().then(function(count) {
@@ -698,16 +854,348 @@
     window.saveProfile = saveProfile;
     window.loadProfilePanel = loadProfilePanel;
 
-    /* Wire profile location input once DOM is ready */
+    /* Wire profile location input */
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initLocationInput === 'function') {
-        initLocationInput({
-          inputId:    'profileLocation',
-          dropdownId: 'profileLocationSuggestions',
-          gps: true,
-        });
+        initLocationInput({ inputId: 'profileLocation', dropdownId: 'profileLocationSuggestions', gps: true });
       }
     });
+
+    /* ── My Page panel ───────────────────────────────────────── */
+    var _myPageLoaded = false;
+    async function loadMyPage() {
+      if (_myPageLoaded) return;
+      _myPageLoaded = true;
+
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) return;
+
+      /* Public page link */
+      var linkWrap = document.getElementById('myPageLinkWrap');
+      var viewBtn  = document.getElementById('viewPublicPageBtn');
+      var profileUrl = 'tasker-profile.html?id=' + user.id;
+      if (linkWrap) {
+        linkWrap.innerHTML = '<a href="' + profileUrl + '" target="_blank" style="color:var(--blue);font-size:0.78rem;">' +
+          window.location.origin + '/' + profileUrl + '</a>';
+      }
+      if (viewBtn) viewBtn.style.display = 'inline-flex';
+
+      /* Check verification status */
+      try {
+        var { data: verif } = await window.supabase.from('verifications')
+          .select('status').eq('user_id', user.id).maybeSingle();
+        var taskerIsVerified = false;
+        try {
+          var { data: tr } = await window.supabase.from('taskers')
+            .select('is_verified').eq('user_id', String(user.id)).maybeSingle();
+          taskerIsVerified = tr?.is_verified;
+        } catch(e) {}
+
+        if (!taskerIsVerified && (!verif || verif.status === 'rejected')) {
+          var vp = document.getElementById('verificationPrompt');
+          if (vp) vp.style.display = 'flex';
+          var nb = document.getElementById('navVerifBadge');
+          if (nb) nb.style.display = 'inline-block';
+        }
+      } catch(e) {}
+
+      /* Load bookings stats */
+      try {
+        var bookings = await window.ST.db.fetchTaskerBookings();
+        var pending   = bookings.filter(b => b.status === 'pending').length;
+        var completed = bookings.filter(b => b.status === 'completed').length;
+        var total     = bookings.length;
+        var sT = document.getElementById('statTotal');
+        var sP = document.getElementById('statPending');
+        var sD = document.getElementById('statDone');
+        if (sT) sT.textContent = total;
+        if (sP) sP.textContent = pending;
+        if (sD) sD.textContent = completed;
+      } catch(e) {}
+
+      /* Load work posts */
+      await loadMyWorkPosts(user.id);
+    }
+    window.loadMyPage = loadMyPage;
+
+    async function loadMyWorkPosts(userId) {
+      var grid = document.getElementById('myWorkGrid');
+      if (!grid) return;
+      try {
+        var { data: posts } = await window.supabase.from('feed_posts')
+          .select('*').eq('user_id', userId)
+          .order('created_at', { ascending: false }).limit(24);
+
+        var postCount = document.getElementById('statPosts');
+        if (postCount) postCount.textContent = (posts || []).length;
+
+        if (!posts || !posts.length) {
+          grid.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;grid-column:1/-1;">' +
+            'No work posts yet. Hit <strong>Post Work</strong> to share what you\'ve done.</div>';
+          return;
+        }
+
+        grid.innerHTML = posts.map(p => {
+          var img     = p.image_url || p.image || null;
+          var caption = escapeHtml(p.content || p.caption || '');
+          var ago     = timeAgoFn(p.created_at);
+          return '<div style="border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;cursor:pointer;" onclick="openMyWorkPost(\'' + p.id + '\')">' +
+            '<div style="aspect-ratio:1;background:' + (img ? 'transparent' : 'var(--charcoal)') + ';display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+              (img ? '<img src="' + escapeHtml(img) + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />'
+                   : '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>') +
+            '</div>' +
+            (caption ? '<div style="padding:8px 10px;font-size:0.75rem;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + caption + '</div>' : '') +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        grid.innerHTML = '<div style="color:var(--text-muted);font-size:0.84rem;grid-column:1/-1;">Could not load posts.</div>';
+      }
+    }
+
+    function openMyWorkPost(id) { /* future: open lightbox */ }
+    window.openMyWorkPost = openMyWorkPost;
+
+    function viewPublicPage() {
+      window.ST.auth.getCurrentUser().then(function(user) {
+        if (user) window.open('tasker-profile.html?id=' + user.id, '_blank');
+      });
+    }
+    window.viewPublicPage = viewPublicPage;
+
+    function timeAgoFn(iso) {
+      if (!iso) return '';
+      var s = (Date.now() - new Date(iso).getTime()) / 1000;
+      if (s < 60)    return 'just now';
+      if (s < 3600)  return Math.floor(s/60) + 'm ago';
+      if (s < 86400) return Math.floor(s/3600) + 'h ago';
+      return Math.floor(s/86400) + 'd ago';
+    }
+
+    /* ── Post Work modal ─────────────────────────────────────── */
+    function openPostWorkModal() {
+      document.getElementById('postWorkModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    window.openPostWorkModal = openPostWorkModal;
+
+    function closePostWorkModal() {
+      document.getElementById('postWorkModal').style.display = 'none';
+      document.body.style.overflow = '';
+      document.getElementById('postWorkCaption').value = '';
+      document.getElementById('postWorkError').style.display = 'none';
+      document.getElementById('workCharCount').textContent = '0 / 2000';
+      removeWorkImage();
+    }
+    window.closePostWorkModal = closePostWorkModal;
+
+    function updateWorkCharCount(len) {
+      var el = document.getElementById('workCharCount');
+      if (el) { el.textContent = len + ' / 2000'; el.style.color = len > 1800 ? 'var(--red)' : 'var(--text-muted)'; }
+    }
+    window.updateWorkCharCount = updateWorkCharCount;
+
+    function previewWorkImage(inputEl) {
+      if (!inputEl.files || !inputEl.files[0]) return;
+      var file = inputEl.files[0];
+      var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
+      if (!check.ok) { showToast(check.error); inputEl.value = ''; return; }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('postWorkImageThumb').src = e.target.result;
+        document.getElementById('postWorkImagePreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+    window.previewWorkImage = previewWorkImage;
+
+    function removeWorkImage() {
+      var fi = document.getElementById('postWorkImageFile');
+      var pr = document.getElementById('postWorkImagePreview');
+      if (fi) fi.value = '';
+      if (pr) pr.style.display = 'none';
+    }
+    window.removeWorkImage = removeWorkImage;
+
+    async function submitWorkPost() {
+      var caption = (document.getElementById('postWorkCaption').value || '').trim();
+      var errEl   = document.getElementById('postWorkError');
+      var btn     = document.getElementById('postWorkSubmitBtn');
+      errEl.style.display = 'none';
+
+      if (!caption) { errEl.textContent = 'Please describe the work.'; errEl.style.display = 'block'; return; }
+      if (caption.length > 2000) { errEl.textContent = 'Caption too long (max 2000 chars).'; errEl.style.display = 'block'; return; }
+
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) { showToast('Please log in.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Posting…';
+
+      try {
+        var imageUrl = null;
+        var fileInput = document.getElementById('postWorkImageFile');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          var file = fileInput.files[0];
+          var extMap = { 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' };
+          var ext  = extMap[file.type] || 'jpg';
+          var path = 'feed/' + user.id + '-' + Date.now() + '.' + ext;
+          var { error: upErr } = await window.supabase.storage.from('post-images').upload(path, file, { cacheControl:'3600', upsert:true });
+          if (!upErr) {
+            var { data: urlData } = window.supabase.storage.from('post-images').getPublicUrl(path);
+            imageUrl = urlData.publicUrl;
+          }
+        }
+
+        /* Get business name to use as author */
+        var { data: userRow } = await window.supabase.from('users')
+          .select('name, business_name').eq('id', user.id).maybeSingle();
+        var authorName = userRow?.business_name || userRow?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Tasker';
+
+        await window.supabase.from('feed_posts').insert({
+          user_id: user.id,
+          author_name: authorName,
+          caption: caption,
+          content: caption,
+          image_url: imageUrl || null,
+          image: imageUrl || null,
+          likes: 0,
+          service: '',
+          location: '',
+        });
+
+        closePostWorkModal();
+        showToast('Work posted to your profile!');
+        _myPageLoaded = false;
+        loadMyPage();
+      } catch(e) {
+        errEl.textContent = 'Failed to post: ' + e.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Post to My Page';
+      }
+    }
+    window.submitWorkPost = submitWorkPost;
+
+    /* ── Verification panel ──────────────────────────────────── */
+    var _verifLoaded = false;
+    async function loadVerification() {
+      if (_verifLoaded) return;
+      _verifLoaded = true;
+
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) return;
+
+      try {
+        var { data: verif } = await window.supabase.from('verifications')
+          .select('*').eq('user_id', user.id).maybeSingle();
+        var { data: taskerRow } = await window.supabase.from('taskers')
+          .select('is_verified, business_name, business_address').eq('user_id', String(user.id)).maybeSingle();
+
+        if (taskerRow?.is_verified || verif?.status === 'approved') {
+          document.getElementById('verifApproved').style.display = 'flex';
+          document.getElementById('verifForm').style.display = 'none';
+          return;
+        }
+        if (verif?.status === 'pending') {
+          document.getElementById('verifPending').style.display = 'block';
+          document.getElementById('verifForm').style.display = 'none';
+          return;
+        }
+
+        /* Pre-fill if previously rejected */
+        if (verif) {
+          var bn = document.getElementById('verifBusinessName');
+          var it = document.getElementById('verifIdType');
+          var ba = document.getElementById('verifBusinessAddress');
+          if (bn && verif.business_name) bn.value = verif.business_name;
+          if (it && verif.id_type)       it.value = verif.id_type;
+          if (ba && verif.business_address) ba.value = verif.business_address;
+        }
+
+        /* Wire location autocomplete to verification address field */
+        if (typeof initLocationInput === 'function') {
+          initLocationInput({
+            inputId: 'verifBusinessAddress',
+            dropdownId: 'verifAddressSuggestions',
+            gps: true,
+            onSelect: function(r) {
+              if (r.lat) {
+                document.getElementById('verifLat').value = r.lat;
+                document.getElementById('verifLon').value = r.lon;
+              }
+            },
+          });
+        }
+
+      } catch(e) { console.warn('[Verif]', e.message); }
+    }
+    window.loadVerification = loadVerification;
+
+    async function submitVerification() {
+      var businessName    = (document.getElementById('verifBusinessName').value || '').trim();
+      var idType          = document.getElementById('verifIdType').value;
+      var idNumber        = (document.getElementById('verifIdNumber').value || '').trim();
+      var businessAddress = (document.getElementById('verifBusinessAddress').value || '').trim();
+      var lat             = document.getElementById('verifLat').value || null;
+      var lon             = document.getElementById('verifLon').value || null;
+      var msgEl           = document.getElementById('verifMsg');
+      var btn             = document.getElementById('submitVerifBtn');
+
+      msgEl.style.display = 'none';
+
+      if (!businessName)    { showToast('Enter your business name.'); return; }
+      if (!idType)          { showToast('Select your ID type.'); return; }
+      if (!idNumber)        { showToast('Enter your ID number.'); return; }
+      if (!businessAddress) { showToast('Enter your business location.'); return; }
+      if (!lat || !lon)     { showToast('Please select your location from the suggestions so we can pin your exact address.'); return; }
+
+      var user = await window.ST.auth.getCurrentUser();
+      if (!user) return;
+
+      btn.disabled = true; btn.textContent = 'Submitting…';
+
+      try {
+        /* Upsert verification row */
+        var { error } = await window.supabase.from('verifications').upsert({
+          user_id: user.id,
+          business_name: businessName,
+          id_type: idType,
+          id_number: idNumber,
+          business_address: businessAddress,
+          business_lat: parseFloat(lat),
+          business_lon: parseFloat(lon),
+          status: 'pending',
+          submitted_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+        if (error) throw error;
+
+        /* Also update business_name on users and taskers */
+        await window.supabase.from('users').update({ business_name: businessName }).eq('id', user.id);
+        await window.supabase.from('taskers').update({
+          business_name: businessName,
+          business_address: businessAddress,
+          business_lat: parseFloat(lat),
+          business_lon: parseFloat(lon),
+        }).eq('user_id', String(user.id));
+
+        document.getElementById('verifForm').style.display = 'none';
+        document.getElementById('verifPending').style.display = 'block';
+
+        var nb = document.getElementById('navVerifBadge');
+        if (nb) nb.style.display = 'none';
+        var vp = document.getElementById('verificationPrompt');
+        if (vp) vp.style.display = 'none';
+
+        showToast('Verification submitted! We\'ll review within 1–2 business days.');
+      } catch(e) {
+        msgEl.textContent = 'Failed: ' + e.message;
+        msgEl.style.color = 'var(--red)';
+        msgEl.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Submit for Verification';
+      }
+    }
+    window.submitVerification = submitVerification;
   </script>
 
   <script>

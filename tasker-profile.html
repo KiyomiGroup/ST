@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tasker Profile — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    .profile-page { padding-top: calc(var(--nav-height) + 32px); padding-bottom: 64px; }
+
+    /* ── Hero banner ── */
+    .profile-hero {
+      background: var(--charcoal);
+      padding: 48px 0 0;
+      margin-top: var(--nav-height);
+    }
+    .profile-hero-inner {
+      max-width: 860px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: flex-end; gap: 24px; padding-bottom: 0;
+    }
+    .profile-avatar-wrap {
+      position: relative; flex-shrink: 0;
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      border: 3px solid var(--white);
+      overflow: hidden;
+      background: var(--blue-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: var(--blue);
+      transform: translateY(24px);
+    }
+    .profile-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-hero-info { flex: 1; min-width: 0; padding-bottom: 28px; }
+    .profile-name {
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--white); margin-bottom: 2px; line-height: 1.2;
+    }
+    .profile-service {
+      font-size: 0.875rem; color: rgba(255,255,255,0.6); margin-bottom: 10px;
+    }
+    .profile-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .profile-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .badge-verified {
+      background: rgba(22,163,74,0.18);
+      color: #4ade80;
+      border: 1px solid rgba(22,163,74,0.3);
+    }
+    .badge-pending {
+      background: rgba(217,119,6,0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(217,119,6,0.3);
+    }
+    .badge-category {
+      background: rgba(10,132,255,0.2);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(10,132,255,0.3);
+    }
+
+    /* ── Content area ── */
+    .profile-content {
+      max-width: 860px; margin: 0 auto; padding: 40px 24px 0;
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-hero-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .profile-avatar-wrap { transform: none; width: 80px; height: 80px; font-size: 1.6rem; }
+    }
+
+    /* ── Sections ── */
+    .profile-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .profile-section-title {
+      font-size: 0.78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-muted); margin-bottom: 16px;
+    }
+
+    /* ── Stats row ── */
+    .profile-stats {
+      display: flex; gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .profile-stat {
+      flex: 1; padding: 14px 12px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .profile-stat:last-child { border-right: none; }
+    .profile-stat-val { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
+    .profile-stat-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Work posts grid ── */
+    .work-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .work-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+    }
+    .work-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .work-card-image {
+      width: 100%; aspect-ratio: 1;
+      background: var(--bg-subtle);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .work-card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .work-card-placeholder {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--charcoal) 0%, #1E3A5F 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.25);
+    }
+    .work-card-body { padding: 10px 12px; }
+    .work-card-caption {
+      font-size: 0.8rem; color: var(--text-secondary);
+      line-height: 1.4; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .work-card-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Sidebar ── */
+    .profile-sidebar { position: sticky; top: calc(var(--nav-height) + 24px); }
+    .profile-contact-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .profile-contact-item:last-child { border-bottom: none; }
+    .profile-contact-icon {
+      width: 32px; height: 32px;
+      background: var(--bg-subtle); border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--text-muted);
+    }
+    .profile-contact-label { font-size: 0.72rem; color: var(--text-muted); }
+    .profile-contact-val { font-weight: 500; color: var(--text-primary); margin-top: 1px; }
+
+    /* ── Book button ── */
+    .profile-book-btn {
+      width: 100%; margin-top: 16px;
+      padding: 13px; font-size: 0.9rem; font-weight: 700;
+    }
+
+    /* ── Empty states ── */
+    .profile-empty {
+      text-align: center; padding: 32px 16px;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+    .profile-empty svg { opacity: 0.3; margin: 0 auto 12px; display: block; }
+
+    /* ── Loading skeleton ── */
+    .skel { background: var(--gray-100); border-radius: var(--radius-sm); animation: shimmer 1.4s ease infinite; }
+    .skel-text { height: 14px; margin-bottom: 8px; }
+    .skel-avatar { width: 96px; height: 96px; border-radius: 50%; }
+    @keyframes shimmer {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* ── Work post lightbox ── */
+    .work-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .work-modal {
+      background: var(--white); border-radius: var(--radius-lg);
+      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+    }
+    .work-modal-img { width: 100%; max-height: 340px; object-fit: cover; }
+    .work-modal-body { padding: 20px 24px; }
+    .work-modal-caption { font-size: 0.9rem; color: var(--text-primary); line-height: 1.6; }
+    .work-modal-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 10px; }
+    .work-modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(0,0,0,0.5); border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- Loading state -->
+  <div id="profileLoading" style="padding-top:calc(var(--nav-height) + 48px); max-width:860px; margin:0 auto; padding-left:24px; padding-right:24px;">
+    <div style="display:flex;gap:20px;align-items:center;margin-bottom:32px;">
+      <div class="skel skel-avatar"></div>
+      <div style="flex:1;">
+        <div class="skel skel-text" style="width:200px;"></div>
+        <div class="skel skel-text" style="width:140px;"></div>
+      </div>
+    </div>
+    <div class="skel skel-text"></div>
+    <div class="skel skel-text" style="width:80%;"></div>
+    <div class="skel skel-text" style="width:60%;"></div>
+  </div>
+
+  <!-- Profile hero (populated by JS) -->
+  <div id="profileHero" style="display:none;">
+    <div class="profile-hero">
+      <div class="profile-hero-inner">
+        <div class="profile-avatar-wrap" id="heroAvatar"></div>
+        <div class="profile-hero-info">
+          <div class="profile-name" id="heroName"></div>
+          <div class="profile-service" id="heroService"></div>
+          <div class="profile-badges" id="heroBadges"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile content -->
+  <div id="profileMain" style="display:none;">
+    <div class="profile-content">
+      <div class="profile-grid">
+
+        <!-- Left: main content -->
+        <div>
+
+          <!-- Stats -->
+          <div class="profile-stats" id="profileStats"></div>
+
+          <!-- About -->
+          <div class="profile-section" id="aboutSection" style="display:none;">
+            <div class="profile-section-title">About</div>
+            <p id="profileBioText" style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;"></p>
+          </div>
+
+          <!-- Work posts -->
+          <div class="profile-section">
+            <div class="profile-section-title">Work Portfolio</div>
+            <div id="workGrid" class="work-grid">
+              <div class="profile-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                No work posts yet.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: sidebar -->
+        <div class="profile-sidebar">
+
+          <!-- Book CTA -->
+          <div class="profile-section" style="text-align:center;">
+            <div id="sidebarRate" style="font-size:1.5rem;font-weight:800;margin-bottom:4px;"></div>
+            <div id="sidebarRateUnit" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;"></div>
+            <button class="btn btn-primary profile-book-btn" id="bookBtn" onclick="openBooking()">Book This Service</button>
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;">Usually responds within 24 hours</p>
+          </div>
+
+          <!-- Contact & info -->
+          <div class="profile-section">
+            <div class="profile-section-title">Details</div>
+            <div id="contactList"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div id="profileError" style="display:none;padding-top:calc(var(--nav-height)+80px);text-align:center;">
+    <p style="color:var(--text-muted);font-size:0.9rem;">Tasker not found.</p>
+    <a href="find-taskers.html" class="btn btn-primary" style="margin-top:16px;">Browse Services</a>
+  </div>
+
+  <!-- Work post lightbox -->
+  <div id="workModal" style="display:none;" class="work-modal-backdrop" onclick="closeWorkModal(event)">
+    <div class="work-modal" style="position:relative;" onclick="event.stopPropagation()">
+      <button class="work-modal-close" onclick="closeWorkModal()">×</button>
+      <img id="workModalImg" class="work-modal-img" style="display:none;" />
+      <div class="work-modal-body">
+        <div class="work-modal-caption" id="workModalCaption"></div>
+        <div class="work-modal-meta" id="workModalMeta"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+  'use strict';
+
+  let _tasker = null;
+  let _taskerId = null;
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 60)    return 'just now';
+    if (s < 3600)  return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    if (s < 2592000) return Math.floor(s/86400) + 'd ago';
+    return new Date(iso).toLocaleDateString('en-NG', { month:'short', year:'numeric' });
+  }
+
+  async function initPage() {
+    const params = new URLSearchParams(window.location.search);
+    _taskerId = params.get('id');
+    if (!_taskerId) { show('profileError'); hide('profileLoading'); return; }
+
+    try {
+      /* Load tasker row */
+      const { data: tasker, error } = await window.supabase
+        .from('taskers')
+        .select('*')
+        .eq('user_id', _taskerId)
+        .maybeSingle();
+
+      if (error || !tasker) { show('profileError'); hide('profileLoading'); return; }
+      _tasker = tasker;
+
+      /* Load user row for business_name and name */
+      const { data: userRow } = await window.supabase
+        .from('users')
+        .select('name, bio, business_name, avatar_url, email, location')
+        .eq('id', _taskerId)
+        .maybeSingle();
+
+      /* Load verification status */
+      const { data: verification } = await window.supabase
+        .from('verifications')
+        .select('status, business_name, business_address')
+        .eq('user_id', _taskerId)
+        .maybeSingle();
+
+      /* Load work posts */
+      const { data: posts } = await window.supabase
+        .from('feed_posts')
+        .select('*')
+        .eq('user_id', _taskerId)
+        .order('created_at', { ascending: false })
+        .limit(24);
+
+      /* Load booking count */
+      const { count: bookingCount } = await window.supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('tasker_id', _taskerId)
+        .eq('status', 'completed');
+
+      /* Resolve display name — business name takes priority */
+      const displayName = verification?.business_name
+        || tasker.business_name
+        || userRow?.business_name
+        || userRow?.name
+        || tasker.name
+        || 'Service Provider';
+
+      const service  = tasker.service || tasker.service_name || 'Service Provider';
+      const bio      = userRow?.bio || tasker.bio || '';
+      const location = tasker.business_address || tasker.location || userRow?.location || '';
+      const photo    = tasker.photo_url || tasker.photo || userRow?.avatar_url || null;
+      const rate     = tasker.rate_value ? `₦${Number(tasker.rate_value).toLocaleString()}` : '';
+      const rateUnit = tasker.rate_unit || '/hour';
+      const isVerified = tasker.is_verified || verification?.status === 'approved';
+      const isPending  = !isVerified && verification?.status === 'pending';
+
+      /* Update page title */
+      document.title = displayName + ' — StreetTasker';
+
+      /* ── Hero ── */
+      const heroAvatar = document.getElementById('heroAvatar');
+      if (photo) {
+        heroAvatar.innerHTML = '<img src="' + escapeHtml(photo) + '" alt="' + escapeHtml(displayName) + '" />';
+      } else {
+        heroAvatar.textContent = displayName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      }
+      document.getElementById('heroName').textContent    = displayName;
+      document.getElementById('heroService').textContent = service + (location ? '  ·  ' + location : '');
+
+      const badges = document.getElementById('heroBadges');
+      if (isVerified) {
+        badges.innerHTML += '<span class="profile-badge badge-verified">' +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          'Verified</span>';
+      } else if (isPending) {
+        badges.innerHTML += '<span class="profile-badge badge-pending">Verification Pending</span>';
+      }
+      if (tasker.category) {
+        badges.innerHTML += '<span class="profile-badge badge-category">' + escapeHtml(tasker.category) + '</span>';
+      }
+
+      /* ── Stats ── */
+      const rating = parseFloat(tasker.rating) || 0;
+      document.getElementById('profileStats').innerHTML =
+        '<div class="profile-stat"><div class="profile-stat-val">' + (rating > 0 ? rating.toFixed(1) + '★' : '—') + '</div><div class="profile-stat-lbl">Rating</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat-val">' + (bookingCount || 0) + '</div><div class="profile-stat-lbl">Jobs Done</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat-val">' + (posts?.length || 0) + '</div><div class="profile-stat-lbl">Work Posts</div></div>';
+
+      /* ── Bio ── */
+      if (bio) {
+        document.getElementById('profileBioText').textContent = bio;
+        show('aboutSection');
+      }
+
+      /* ── Work posts ── */
+      if (posts && posts.length > 0) {
+        document.getElementById('workGrid').innerHTML = posts.map(p => {
+          const img = p.image_url || p.image || null;
+          const caption = p.content || p.caption || '';
+          return '<div class="work-card" onclick="openWorkModal(\'' + escapeHtml(p.id) + '\',' +
+            '\'' + escapeHtml(img||'') + '\',' +
+            '\'' + escapeHtml(caption.replace(/'/g,"\\x27")) + '\',' +
+            '\'' + escapeHtml(timeAgo(p.created_at)) + '\')">' +
+            '<div class="work-card-image">' +
+              (img
+                ? '<img src="' + escapeHtml(img) + '" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=work-card-placeholder><svg width=32 height=32 viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"1.5\\\"><rect x=\\\"3\\\" y=\\\"3\\\" width=\\\"18\\\" height=\\\"18\\\" rx=\\\"2\\\"/></svg></div>\'" />'
+                : '<div class="work-card-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>') +
+            '</div>' +
+            (caption ? '<div class="work-card-body"><div class="work-card-caption">' + escapeHtml(caption) + '</div><div class="work-card-time">' + escapeHtml(timeAgo(p.created_at)) + '</div></div>' : '') +
+          '</div>';
+        }).join('');
+      }
+
+      /* ── Sidebar rate ── */
+      if (rate) {
+        document.getElementById('sidebarRate').textContent    = rate;
+        document.getElementById('sidebarRateUnit').textContent = rateUnit;
+      } else {
+        document.getElementById('sidebarRate').textContent    = 'Contact for price';
+        document.getElementById('sidebarRateUnit').textContent = '';
+      }
+
+      /* ── Contact/details ── */
+      const contactItems = [];
+      if (location) {
+        contactItems.push({ icon: pinIcon(), label: 'Location', val: location });
+      }
+      if (service) {
+        contactItems.push({ icon: tagIcon(), label: 'Service', val: service });
+      }
+      if (tasker.available !== false) {
+        contactItems.push({ icon: checkIcon(), label: 'Availability', val: 'Currently available' });
+      }
+      document.getElementById('contactList').innerHTML = contactItems.map(c =>
+        '<div class="profile-contact-item">' +
+          '<div class="profile-contact-icon">' + c.icon + '</div>' +
+          '<div><div class="profile-contact-label">' + escapeHtml(c.label) + '</div>' +
+          '<div class="profile-contact-val">' + escapeHtml(c.val) + '</div></div>' +
+        '</div>'
+      ).join('');
+
+      /* Show everything */
+      hide('profileLoading');
+      show('profileHero');
+      show('profileMain');
+
+    } catch (err) {
+      console.error('[Profile]', err);
+      show('profileError');
+      hide('profileLoading');
+    }
+  }
+
+  function show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
+  function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+
+  function pinIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  }
+  function tagIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
+  }
+  function checkIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+
+  function openWorkModal(id, img, caption, time) {
+    const modal = document.getElementById('workModal');
+    const modalImg = document.getElementById('workModalImg');
+    if (img) {
+      modalImg.src = img;
+      modalImg.style.display = 'block';
+    } else {
+      modalImg.style.display = 'none';
+    }
+    document.getElementById('workModalCaption').textContent = caption;
+    document.getElementById('workModalMeta').textContent    = time;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  window.openWorkModal = openWorkModal;
+
+  function closeWorkModal(e) {
+    if (e && e.target !== document.getElementById('workModal') && !e.currentTarget?.classList?.contains('work-modal-close')) return;
+    document.getElementById('workModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  window.closeWorkModal = closeWorkModal;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWorkModal({}); });
+
+  async function openBooking() {
+    const user = await window.ST.auth.getCurrentUser();
+    if (!user) {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+      return;
+    }
+    if (!_taskerId) return;
+    const btn = document.getElementById('bookBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await window.ST.db.createBooking({ taskerId: _taskerId });
+      showToast('Booking request sent!');
+      btn.textContent = 'Request Sent ✓';
+    } catch(e) {
+      if (e.message === 'SUBSCRIPTION_REQUIRED') {
+        showToast('This tasker has reached their free booking limit.');
+      } else {
+        showToast('Could not send booking: ' + e.message);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Book This Service';
+    }
+  }
+  window.openBooking = openBooking;
+  </script>
+</body>
+</html>
