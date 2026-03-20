@@ -172,7 +172,7 @@ async function updateApplicationStatus(applicationId, status) {
       const { data: task } = await window.supabase.from('tasks')
         .select('title').eq('id', app.task_id).single();
       const msg = status === 'accepted'
-        ? `Your application for "${task?.title}" was accepted! The customer will contact you.`
+        ? `Your application for "${task?.title}" was accepted! Booking accepted! Check your dashboard for the customer's contact details.`
         : `Your application for "${task?.title}" was not accepted this time.`;
       await _insertNotification({
         userId: app.tasker_id,
@@ -480,27 +480,55 @@ async function createBooking({ taskerId, serviceId = null, taskId = null, schedu
 async function fetchMyBookings() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
+  /* Join tasker info so we can show contact details on confirmed bookings */
   const { data, error } = await window.supabase.from('bookings')
-    .select('*, taskers(*)').eq('customer_id', user.id).order('created_at', { ascending: false });
+    .select('*, taskers(name, service, location, photo_url, rate, user_id)')
+    .eq('customer_id', user.id)
+    .order('created_at', { ascending: false });
   if (error) {
     const { data: s } = await window.supabase.from('bookings')
       .select('*').eq('customer_id', user.id).order('created_at', { ascending: false });
     return s || [];
   }
-  return data || [];
+  /* For confirmed/completed bookings, fetch tasker phone number */
+  const rows = data || [];
+  await Promise.all(rows.map(async b => {
+    if ((b.status === 'confirmed' || b.status === 'completed') && b.taskers?.user_id) {
+      try {
+        const { data: u } = await window.supabase
+          .from('users').select('phone, name, email').eq('id', b.taskers.user_id).maybeSingle();
+        b._taskerContact = u || null;
+      } catch(e) {}
+    }
+  }));
+  return rows;
 }
 
 async function fetchTaskerBookings() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
+  /* Join tasks and customer user info for contact reveal on confirmed bookings */
   const { data, error } = await window.supabase.from('bookings')
-    .select('*, tasks(*)').eq('tasker_id', user.id).order('created_at', { ascending: false });
+    .select('*, tasks(title, description, budget, location)')
+    .eq('tasker_id', user.id)
+    .order('created_at', { ascending: false });
   if (error) {
     const { data: s } = await window.supabase.from('bookings')
       .select('*').eq('tasker_id', user.id).order('created_at', { ascending: false });
     return s || [];
   }
-  return data || [];
+  /* For confirmed/completed bookings, fetch customer phone number */
+  const rows = data || [];
+  await Promise.all(rows.map(async b => {
+    if ((b.status === 'confirmed' || b.status === 'completed') && b.customer_id) {
+      try {
+        const { data: u } = await window.supabase
+          .from('users').select('phone, name, email').eq('id', b.customer_id).maybeSingle();
+        b._customerContact = u || null;
+      } catch(e) {}
+    }
+  }));
+  return rows;
 }
 
 async function updateBookingStatus(bookingId, status) {
@@ -511,19 +539,25 @@ async function updateBookingStatus(bookingId, status) {
 }
 
 async function checkTaskerCanAcceptBooking(taskerId) {
+  /* Check for an active paid subscription first */
   try {
     const { data: sub } = await window.supabase.from('subscriptions')
       .select('id, status, end_date').eq('user_id', taskerId).maybeSingle();
     if (sub) {
       const notExpired = !sub.end_date || new Date(sub.end_date) > new Date();
-      const isActive   = !sub.status  || sub.status === 'active';
+      const isActive   = sub.status === 'active';
       if (notExpired && isActive) return true;
     }
   } catch(e) { /* subscriptions table may differ */ }
+
+  /* Free tier: max 3 ACTIVE (pending or confirmed) bookings at once.
+     Completed/cancelled bookings don't count — slots reopen after job is done.
+     This means a busy tasker can always work, they just confirm one at a time. */
   const { count } = await window.supabase.from('bookings')
     .select('id', { count: 'exact', head: true })
-    .eq('tasker_id', taskerId).in('status', ['pending','confirmed','completed']);
-  return (count || 0) < 5;
+    .eq('tasker_id', taskerId)
+    .in('status', ['pending', 'confirmed']);   /* NOT completed, NOT cancelled */
+  return (count || 0) < 3;
 }
 
 async function fetchMySubscription() {
