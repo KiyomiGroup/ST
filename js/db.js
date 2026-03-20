@@ -324,7 +324,7 @@ async function deleteService(serviceId) {
 async function fetchServices({ category = '', limit = 60 } = {}) {
   let q = window.supabase.from('services').select(`
     id, service_name, category, price, rate_unit, location, description, photo, user_id, available,
-    users ( id, name )
+    users ( id, name, business_name )
   `).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
 
@@ -335,7 +335,9 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
       pricing_type: 'per_job', price: s.price,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
-      available: s.available !== false, provider_name: s.users?.name || 'Provider',
+      available: s.available !== false,
+      /* Business name takes priority over personal name */
+      provider_name: s.users?.business_name || s.users?.name || 'Provider',
     }));
   }
 
@@ -355,7 +357,7 @@ async function fetchMyServices() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
   const { data: svcData, error: svcErr } = await window.supabase
-    .from('services').select('*, users(name)').eq('user_id', user.id)
+    .from('services').select('*, users(name, business_name)').eq('user_id', user.id)
     .order('created_at', { ascending: false });
   if (!svcErr && svcData?.length > 0) {
     return svcData.map(s => ({
@@ -363,7 +365,9 @@ async function fetchMyServices() {
       pricing_type: s.pricing_type || 'per_job', price: s.price,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
-      available: s.available, provider_name: s.users?.name || 'Provider', fromServices: true,
+      available: s.available,
+      provider_name: s.users?.business_name || s.users?.name || 'Provider',
+      fromServices: true,
     }));
   }
   const { data: td } = await window.supabase.from('taskers').select('*').eq('user_id', String(user.id));

@@ -153,7 +153,10 @@ function buildCard(s) {
     </div>
     <div class="tc-footer">
       <span class="tc-badge tc-badge-green">Available</span>
-      <button class="btn btn-primary btn-sm" onclick="openBookingModal('${s.id}')">Book Service</button>
+      <div style="display:flex;gap:6px;">
+        <a href="tasker-profile.html?id=${escapeHtml(s.user_id)}" class="btn btn-outline btn-sm">View Profile</a>
+        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${s.id}')">Book</button>
+      </div>
     </div>
   </div>`;
 }
