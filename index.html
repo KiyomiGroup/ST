@@ -232,29 +232,22 @@
     </div>
   </section>
 
-  <!-- SOCIAL FEED PREVIEW -->
+  <!-- FEATURED TASKER PROFILES -->
   <section class="section">
     <div class="container">
       <div class="section-header fade-up">
-        <div class="eyebrow">Social Feed</div>
-        <h2>Trending work in your city</h2>
-        <p>See completed work from providers near you. Like, comment, and book directly.</p>
+        <div class="eyebrow">Top Providers</div>
+        <h2>Meet verified taskers near you</h2>
+        <p>Browse profiles, see their work, and book directly.</p>
       </div>
-      <div class="trend-grid">
-        <div class="card trend-card fade-up d1" onclick="window.location.href='social-feed.html'">
-          <div class="trend-thumb trend-bg-1"><div class="trend-thumb-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><span class="trend-like"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>142</span></div>
-          <div class="trend-body"><div class="trend-author">Adebayo Okafor</div><div class="trend-role">Electrician · Lekki, Lagos</div></div>
-        </div>
-        <div class="card trend-card fade-up d2" onclick="window.location.href='social-feed.html'">
-          <div class="trend-thumb trend-bg-2"><div class="trend-thumb-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><circle cx="18" cy="4" r="2"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg></div><span class="trend-like"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>98</span></div>
-          <div class="trend-body"><div class="trend-author">Chidi Fernandez</div><div class="trend-role">Barber · Victoria Island</div></div>
-        </div>
-        <div class="card trend-card fade-up d3" onclick="window.location.href='social-feed.html'">
-          <div class="trend-thumb trend-bg-3"><div class="trend-thumb-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg></div><span class="trend-like"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>67</span></div>
-          <div class="trend-body"><div class="trend-author">Fatima Mohammed</div><div class="trend-role">Cleaner · Ikeja, Lagos</div></div>
-        </div>
+      <div class="live-grid" id="featuredTaskersList">
+        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:80%;"></div></div>
+        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:55%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:70%;"></div></div>
+        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:65%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:75%;"></div></div>
       </div>
-      <div class="text-center mt-32"><a href="social-feed.html" class="btn btn-outline btn-lg">View Social Feed →</a></div>
+      <div class="text-center mt-32 fade-up">
+        <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse all providers &rarr;</a>
+      </div>
     </div>
   </section>
 
@@ -308,8 +301,8 @@
         }
         if (role === 'tasker') loadTasksInHeroPanel();
       }
-      /* Load both sections in parallel */
-      Promise.all([loadServicesSection(), loadTasksSection()]);
+      /* Load all sections in parallel */
+      Promise.all([loadServicesSection(), loadTasksSection(), loadFeaturedTaskers()]);
     }
 
     async function loadTasksInHeroPanel() {
@@ -317,12 +310,17 @@
       try {
         const tasks = await window.ST.db.fetchTasks({ limit: 3 });
         if (!tasks.length) return;
-        document.getElementById('heroPanelRows').innerHTML = tasks.slice(0,3).map(t => `
-          <div class="panel-row">
-            <div class="panel-avatar" style="font-size:0.6rem;text-align:center;">${(t.category||'?').slice(0,3).toUpperCase()}</div>
-            <div class="panel-info"><div class="panel-name">${t.title||'Task'}</div><div class="panel-role">₦${Number(t.budget||0).toLocaleString()} · ${t.location||'Lagos'}</div></div>
-            <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;color:var(--green);background:var(--green-light);padding:2px 6px;border-radius:var(--radius-pill);">Open</span>
-          </div>`).join('');
+        document.getElementById('heroPanelRows').innerHTML = tasks.slice(0,3).map(t => {
+          const safeTitle = escapeHtml(t.title || 'Task');
+          const safeLoc   = escapeHtml(t.location || 'Lagos');
+          const safeCat   = escapeHtml((t.category||'?').slice(0,3).toUpperCase());
+          return '<div class="panel-row">'
+            + '<div class="panel-avatar" style="font-size:0.6rem;text-align:center;">' + safeCat + '</div>'
+            + '<div class="panel-info"><div class="panel-name">' + safeTitle + '</div>'
+            + '<div class="panel-role">&#8358;' + Number(t.budget||0).toLocaleString() + ' &middot; ' + safeLoc + '</div></div>'
+            + '<span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;color:var(--green);background:var(--green-light);padding:2px 6px;border-radius:var(--radius-pill);">Open</span>'
+            + '</div>';
+        }).join('');
       } catch(e) {}
     }
 
@@ -345,26 +343,30 @@
         return;
       }
       el.innerHTML = list.slice(0,6).map((s, i) => {
-        const init = s.provider_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const av   = AV_COLORS[i % AV_COLORS.length];
-        const type = PRICING_LABELS[s.pricing_type] || '/job';
-        const photoHtml = s.photo
-          ? `<img src="${s.photo}" alt="${s.provider_name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='${init}'" />`
+        const safeName  = escapeHtml(s.provider_name || 'Provider');
+        const safeDesc  = escapeHtml((s.description||'').slice(0,80)) + ((s.description||'').length>80?'&hellip;':'');
+        const safeLoc   = escapeHtml(s.location||'Lagos');
+        const safeCat   = escapeHtml((s.category||'other').replace('_',' '));
+        const safePhoto = escapeHtml(s.photo||'');
+        const safeId    = escapeHtml(s.user_id||'');
+        const init      = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+        const av        = AV_COLORS[i % AV_COLORS.length];
+        const type      = PRICING_LABELS[s.pricing_type] || '/job';
+        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
+        const photoHtml = safePhoto
+          ? '<img src="' + safePhoto + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />'
           : init;
-        return `<div class="live-card fade-up" style="animation-delay:${i*0.06}s;">
-          <div class="live-card-top">
-            <div class="live-avatar ${av}" style="${s.photo?'background:var(--gray-100);padding:0;':''}">${photoHtml}</div>
-            <div style="text-align:right;"><div class="live-price">₦${Number(s.price||0).toLocaleString()}</div><div class="live-price-type">${type}</div></div>
-          </div>
-          <div class="live-name">${s.provider_name}</div>
-          <div class="live-sub">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${s.location||'Lagos'}
-          </div>
-          <div class="live-cat">${(s.category||'other').replace('_',' ')}</div>
-          ${s.description ? `<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">${s.description.slice(0,80)}${s.description.length>80?'…':''}</p>` : ''}
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View &amp; Book</a>
-        </div>`;
+        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href='' + profileUrl + ''">'
+          + '<div class="live-card-top">'
+          + '<div class="live-avatar ' + av + '" style="' + (safePhoto?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
+          + '<div style="text-align:right;"><div class="live-price">&#8358;' + Number(s.price||0).toLocaleString() + '</div><div class="live-price-type">' + type + '</div></div>'
+          + '</div>'
+          + '<div class="live-name">' + safeName + '</div>'
+          + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + safeLoc + '</div>'
+          + '<div class="live-cat">' + safeCat + '</div>'
+          + (safeDesc ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + safeDesc + '</p>' : '')
+          + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
+          + '</div>';
       }).join('');
     }
 
@@ -390,22 +392,24 @@
           electrician: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
         };
         el.innerHTML = tasks.slice(0,5).map((t, i) => {
-          const icon = icons[t.category] || icons.default;
-          return `<div class="task-live-card fade-up" style="animation-delay:${i*0.07}s;" onclick="window.location.href='explore-tasks.html'">
-            <div class="task-live-icon">${icon}</div>
-            <div style="flex:1;min-width:0;">
-              <div class="task-live-title">${t.title||'Untitled task'}</div>
-              <div class="task-live-meta">
-                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${t.location||'Lagos'}</span>
-                ${t.category ? `<span>${t.category}</span>` : ''}
-              </div>
-              ${t.description ? `<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">${t.description.slice(0,80)}${t.description.length>80?'…':''}</p>` : ''}
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div class="task-live-budget">₦${Number(t.budget||0).toLocaleString()}</div>
-              <span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span>
-            </div>
-          </div>`;
+          const icon    = icons[t.category] || icons.default;
+          const safeTitle = escapeHtml(t.title || 'Untitled task');
+          const safeLoc   = escapeHtml(t.location || 'Lagos');
+          const safeCat   = escapeHtml(t.category || '');
+          const safeDesc  = escapeHtml((t.description||'').slice(0,80)) + ((t.description||'').length>80?'&hellip;':'');
+          return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href='explore-tasks.html'">'
+            + '<div class="task-live-icon">' + icon + '</div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div class="task-live-title">' + safeTitle + '</div>'
+            + '<div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
+            + (safeCat ? '<span>' + safeCat + '</span>' : '')
+            + '</div>'
+            + (safeDesc ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">' + safeDesc + '</p>' : '')
+            + '</div>'
+            + '<div style="text-align:right;flex-shrink:0;">'
+            + '<div class="task-live-budget">&#8358;' + Number(t.budget||0).toLocaleString() + '</div>'
+            + '<span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span>'
+            + '</div></div>';
         }).join('');
       } catch(e) {
         document.getElementById('tasksList').innerHTML =
@@ -420,6 +424,61 @@
       document.getElementById('how-' + flow).classList.add('active');
     }
     window.switchFlow = switchFlow;
+
+    async function loadFeaturedTaskers() {
+      const el = document.getElementById('featuredTaskersList');
+      if (!el) return;
+      try {
+        /* Fetch from taskers table — those with a service listed and available */
+        const { data: taskers } = await window.supabase
+          .from('taskers')
+          .select('id, user_id, service, service_name, category, location, bio, photo_url, rate_value, rate_unit, is_verified, business_name')
+          .eq('available', true)
+          .not('service', 'is', null)
+          .order('is_verified', { ascending: false })
+          .limit(6);
+
+        if (!taskers || !taskers.length) {
+          el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:0.88rem;">No providers listed yet. <a href="post-service.html" style="color:var(--blue);">Be the first!</a></div>';
+          return;
+        }
+
+        const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
+        el.innerHTML = taskers.map((t, i) => {
+          const uid        = escapeHtml(t.user_id || t.id || '');
+          const name       = escapeHtml(t.business_name || t.service || 'Provider');
+          const service    = escapeHtml(t.service || t.service_name || '');
+          const loc        = escapeHtml(t.location || 'Lagos');
+          const bio        = escapeHtml((t.bio || '').slice(0, 75)) + ((t.bio||'').length > 75 ? '&hellip;' : '');
+          const photo      = escapeHtml(t.photo_url || '');
+          const rate       = t.rate_value ? '&#8358;' + Number(t.rate_value).toLocaleString() : '';
+          const rateUnit   = escapeHtml(t.rate_unit || '/hour');
+          const verified   = t.is_verified;
+          const init       = name.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+          const av         = AV[i % 6];
+          const profileUrl = uid ? 'tasker-profile.html?id=' + uid : 'find-taskers.html';
+          const photoHtml  = photo
+            ? '<img src="' + photo + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
+            : init;
+
+          return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
+            + '<div class="live-card-top">'
+            + '<div class="live-avatar ' + av + '" style="border-radius:50%;' + (photo?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
+            + '<div style="text-align:right;">'
+            + (rate ? '<div class="live-price">' + rate + '</div><div class="live-price-type">' + rateUnit + '</div>' : '')
+            + (verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
+            + '</div></div>'
+            + '<div class="live-name">' + name + '</div>'
+            + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + loc + '</div>'
+            + (service ? '<div class="live-cat">' + service + '</div>' : '')
+            + (bio ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + bio + '</p>' : '')
+            + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
+            + '</div>';
+        }).join('');
+      } catch(e) {
+        if (el) el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load providers. <a href="find-taskers.html" style="color:var(--blue);">Browse all →</a></div>';
+      }
+    }
 
     function handleHeroSearch(e) {
       e.preventDefault();

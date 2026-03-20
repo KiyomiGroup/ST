@@ -123,7 +123,7 @@
 
   <!-- Mobile header -->
   <div class="mobile-dash-header">
-    <span class="mobile-dash-title" id="mobileDashTitle">📋 Overview</span>
+    <span class="mobile-dash-title" id="mobileDashTitle">👤 My Page</span>
     <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
       <svg id="menuIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -131,9 +131,9 @@
 
   <!-- Mobile dropdown nav -->
   <div class="mobile-nav-dropdown" id="mobileNavDropdown">
-    <button onclick="mobileSwitchPanel('overview','📋 Overview')" class="active" id="mob-overview">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      Overview
+    <button onclick="mobileSwitchPanel('mypage','👤 My Page');loadMyPage()" class="active" id="mob-mypage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      My Page
     </button>
     <button onclick="mobileSwitchPanel('services','🔧 My Services')" id="mob-services">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -171,9 +171,9 @@
 
   <!-- Mobile bottom tab bar -->
   <div class="mobile-bottom-bar">
-    <button onclick="mobileSwitchPanel('overview','📋 Overview')" id="tab-overview" class="active">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      Home
+    <button onclick="mobileSwitchPanel('mypage','👤 My Page');loadMyPage()" id="tab-mypage" class="active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      My Page
     </button>
     <button onclick="mobileSwitchPanel('services','🔧 My Services')" id="tab-services">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -289,7 +289,7 @@
               </div>
 
               <!-- Verification prompt -->
-              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:20px;align-items:center;gap:12px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <div style="flex:1;">
                   <div style="font-weight:600;font-size:0.85rem;color:var(--amber);">Get Verified</div>
@@ -426,7 +426,7 @@
                 <span id="verifStatusBadge" style="display:none;"></span>
               </div>
 
-              <div id="verifApproved" style="display:none;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
+              <div id="verifApproved" style="display:none;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:20px;align-items:center;gap:14px;">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
                 <div>
                   <div style="font-weight:700;color:var(--green);margin-bottom:2px;">You're Verified ✓</div>
@@ -730,23 +730,13 @@
       try { bookings = await window.ST.db.fetchTaskerBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
       try { sub      = await window.ST.db.fetchMySubscription(); } catch(e) { console.warn('[Dashboard] sub:', e.message); }
 
-      /* Stats */
-      var pending   = bookings.filter(function(b) { return b.status === 'pending'; }).length;
-      var completed = bookings.filter(function(b) { return b.status === 'completed'; }).length;
-      document.getElementById('statTotal').textContent   = bookings.length;
-      document.getElementById('statPending').textContent = pending;
-      document.getElementById('statDone').textContent    = completed;
-
+      /* Stats go to My Page panel (loaded by loadMyPage) */
+      /* Sub gate check */
       var hasActive = sub && sub.status === 'active';
-
       if (bookings.length >= FREE_LIMIT && !hasActive) {
-        document.getElementById('subGateBanner').style.display = 'flex';
+        var sgb = document.getElementById('subGateBanner');
+        if (sgb) sgb.style.display = 'flex';
       }
-
-      /* Recent bookings */
-      document.getElementById('recentList').innerHTML = bookings.slice(0,4).length
-        ? bookings.slice(0,4).map(function(b) { return bookingRow(b, true); }).join('')
-        : empty('Post your service to start receiving booking requests.', 'Post a Service', 'post-service.html');
 
       /* Services */
       var svcEl = document.getElementById('servicesCard');
@@ -896,8 +886,7 @@
           if (vp) vp.style.display = 'flex';
           var nb = document.getElementById('navVerifBadge');
           if (nb) nb.style.display = 'inline-block';
-        }
-      } catch(e) {}
+        }      } catch(e) {}
 
       /* Load bookings stats */
       try {
@@ -1078,6 +1067,21 @@
     /* ── Verification panel ──────────────────────────────────── */
     var _verifLoaded = false;
     async function loadVerification() {
+      /* Wire location input FIRST — before any async work, so focus works immediately */
+      if (typeof initLocationInput === 'function') {
+        initLocationInput({
+          inputId:    'verifBusinessAddress',
+          dropdownId: 'verifAddressSuggestions',
+          gps: true,
+          onSelect: function(r) {
+            if (r.lat) {
+              document.getElementById('verifLat').value = r.lat;
+              document.getElementById('verifLon').value = r.lon;
+            }
+          },
+        });
+      }
+
       if (_verifLoaded) return;
       _verifLoaded = true;
 
@@ -1087,17 +1091,23 @@
       try {
         var { data: verif } = await window.supabase.from('verifications')
           .select('*').eq('user_id', user.id).maybeSingle();
-        var { data: taskerRow } = await window.supabase.from('taskers')
-          .select('is_verified, business_name, business_address').eq('user_id', String(user.id)).maybeSingle();
 
-        if (taskerRow?.is_verified || verif?.status === 'approved') {
+        /* Safely check is_verified — column may not exist before migration runs */
+        var taskerIsVerified = false;
+        try {
+          var { data: tr } = await window.supabase.from('taskers')
+            .select('is_verified').eq('user_id', String(user.id)).maybeSingle();
+          taskerIsVerified = tr?.is_verified === true;
+        } catch(e) { /* column doesn't exist yet — treat as unverified */ }
+
+        if (taskerIsVerified || verif?.status === 'approved') {
           document.getElementById('verifApproved').style.display = 'flex';
-          document.getElementById('verifForm').style.display = 'none';
+          document.getElementById('verifForm').style.display     = 'none';
           return;
         }
         if (verif?.status === 'pending') {
           document.getElementById('verifPending').style.display = 'block';
-          document.getElementById('verifForm').style.display = 'none';
+          document.getElementById('verifForm').style.display    = 'none';
           return;
         }
 
@@ -1106,24 +1116,9 @@
           var bn = document.getElementById('verifBusinessName');
           var it = document.getElementById('verifIdType');
           var ba = document.getElementById('verifBusinessAddress');
-          if (bn && verif.business_name) bn.value = verif.business_name;
-          if (it && verif.id_type)       it.value = verif.id_type;
+          if (bn && verif.business_name)    bn.value = verif.business_name;
+          if (it && verif.id_type)          it.value = verif.id_type;
           if (ba && verif.business_address) ba.value = verif.business_address;
-        }
-
-        /* Wire location autocomplete to verification address field */
-        if (typeof initLocationInput === 'function') {
-          initLocationInput({
-            inputId: 'verifBusinessAddress',
-            dropdownId: 'verifAddressSuggestions',
-            gps: true,
-            onSelect: function(r) {
-              if (r.lat) {
-                document.getElementById('verifLat').value = r.lat;
-                document.getElementById('verifLon').value = r.lon;
-              }
-            },
-          });
         }
 
       } catch(e) { console.warn('[Verif]', e.message); }
@@ -1146,7 +1141,6 @@
       if (!idType)          { showToast('Select your ID type.'); return; }
       if (!idNumber)        { showToast('Enter your ID number.'); return; }
       if (!businessAddress) { showToast('Enter your business location.'); return; }
-      if (!lat || !lon)     { showToast('Please select your location from the suggestions so we can pin your exact address.'); return; }
 
       var user = await window.ST.auth.getCurrentUser();
       if (!user) return;
