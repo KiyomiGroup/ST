@@ -118,29 +118,38 @@ function render(page = 1) {
 }
 
 function buildCard(s) {
-  const initials = s.provider_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const avIdx    = (['s1','s2','s3','s4','s5','s6'].indexOf(s.id) + 1) || ((s.id.charCodeAt(0) % 6) + 1);
-  const avClass  = `av-${avIdx}`;
-  const stars    = Array.from({length:5}, (_,i) =>
+  const safeName    = escapeHtml(s.provider_name || 'Provider');
+  const safeService = escapeHtml(s.service_name || '');
+  const safeLoc     = escapeHtml(s.location || 'Lagos');
+  const safeDesc    = escapeHtml((s.description || '').slice(0, 90)) + ((s.description||'').length > 90 ? '&hellip;' : '');
+  const safePhoto   = escapeHtml(s.photo || '');
+  const safeId      = escapeHtml(s.id || '');
+  const safeUserId  = escapeHtml(s.user_id || '');
+  const initials    = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+  const avIdx       = (['s1','s2','s3','s4','s5','s6'].indexOf(s.id) + 1) || ((s.id.charCodeAt(0) % 6) + 1);
+  const avClass     = `av-${avIdx}`;
+  const stars       = Array.from({length:5}, (_,i) =>
     `<span style="color:${i < Math.round(s.rating) ? '#F59E0B' : '#D1D5DB'}">★</span>`).join('');
 
-  const avatar = s.photo
-    ? `<img src="${s.photo}" alt="${s.provider_name}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none'" />`
+  const avatar = safePhoto
+    ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none'" />`
     : initials;
 
-  return `<div class="card tasker-card fade-up" id="svc-${s.id}">
+  const profileUrl = safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html';
+
+  return `<div class="card tasker-card fade-up" id="svc-${safeId}">
     <div class="tc-header">
       <div class="tc-avatar ${avClass}" style="overflow:hidden;">${avatar}</div>
       <div class="tc-meta">
-        <div class="tc-name">${s.provider_name}</div>
-        <div class="tc-service">${s.service_name}</div>
+        <div class="tc-name">${safeName}</div>
+        <div class="tc-service">${safeService}</div>
         <div class="tc-location">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${s.location}
+          ${safeLoc}
         </div>
       </div>
     </div>
-    ${s.description ? `<p class="tc-bio">${s.description.slice(0,90)}${s.description.length>90?'…':''}</p>` : ''}
+    ${safeDesc ? `<p class="tc-bio">${safeDesc}</p>` : ''}
     <div class="tc-stats">
       <div class="tc-stat">
         <div class="tc-stat-value">${stars}</div>
@@ -154,11 +163,12 @@ function buildCard(s) {
     <div class="tc-footer">
       <span class="tc-badge tc-badge-green">Available</span>
       <div style="display:flex;gap:6px;">
-        <a href="tasker-profile.html?id=${escapeHtml(s.user_id)}" class="btn btn-outline btn-sm">View Profile</a>
-        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${s.id}')">Book</button>
+        <a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>
+        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>
       </div>
     </div>
   </div>`;
+}
 }
 
 /* ── Wiring ──────────────────────────────────────────────────── */

@@ -554,9 +554,18 @@ async function postFeedUpdate(caption, imageUrl = null) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post.');
   await ensureUserProfile(user);
-  const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+
+  /* Use business name if set, fall back to personal name */
+  let authorName = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+  try {
+    const { data: userRow } = await window.supabase
+      .from('users').select('name, business_name').eq('id', user.id).maybeSingle();
+    if (userRow?.business_name) authorName = userRow.business_name;
+    else if (userRow?.name)     authorName = userRow.name;
+  } catch(e) { /* use fallback */ }
+
   const { data, error } = await window.supabase.from('feed_posts').insert({
-    user_id: user.id, author_name: name, caption: caption.trim(), content: caption.trim(),
+    user_id: user.id, author_name: authorName, caption: caption.trim(), content: caption.trim(),
     image_url: imageUrl || null, image: imageUrl || null, likes: 0, service: '', location: '',
   }).select().single();
   if (error) throw error;
