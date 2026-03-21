@@ -263,6 +263,16 @@ async function handleTaskSubmit(e) {
     return;
   }
 
+  /* Location must be confirmed (selected from dropdown or GPS) */
+  if (typeof validateLocation === 'function') {
+    const locCheck = validateLocation('taskLocation', 'precise');
+    if (!locCheck.ok) {
+      showToast(locCheck.error);
+      setButtonLoading(submitBtn, null, 'Post My Task');
+      return;
+    }
+  }
+
   /* Build task payload
    * from future-features.js
    */
@@ -356,15 +366,15 @@ function showTaskSuccessModal(payload) {
     if (titleEl) titleEl.textContent = payload.title;
     modal.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
-    /* Auto-redirect to dashboard after 3s so task shows immediately */
+    /* Auto-redirect to dashboard My Tasks panel after 3s so task shows immediately */
     setTimeout(() => {
       modal.classList.remove('modal-open');
       document.body.style.overflow = '';
-      window.location.href = 'dashboard-customer.html';
+      window.location.href = 'dashboard-customer.html?panel=my-tasks';
     }, 3000);
   } else {
     typeof showToast === 'function' && showToast(`Task "${payload.title}" posted successfully!`);
-    setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 1500);
+    setTimeout(() => { window.location.href = 'dashboard-customer.html?panel=my-tasks'; }, 1500);
   }
 }
 
