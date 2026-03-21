@@ -72,6 +72,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
+
+/* Capitalize first letter of user-facing content */
+.tc-name, .tc-service, .live-name, .task-row-title,
+.booking-row-title, .task-live-title, .trend-author,
+.panel-name, .profile-name, .previewName,
+h1, h2, h3, .task-row-card .task-row-title,
+.dashboard-nav-item, .btn:not(.btn-sm) {
+  text-transform: capitalize;
+}
+/* Exceptions — these should NOT be capitalized */
+.nav-logo-text, .eyebrow, .form-label, input, textarea,
+select, .task-row-meta, code, .badge, a[href^="mailto:"],
+a[href^="tel:"], .loc-row-primary { text-transform: none; }
+
+/* Prevent auth state flash — hide role-specific nav items
+   until syncNavbarAuthState runs and reveals the correct ones */
+.nav-customer, .nav-tasker { display: none; }
+#navUserName, #navLogout    { display: none; }
 img { max-width: 100%; display: block; }
 a   { color: inherit; text-decoration: none; }
 ul  { list-style: none; }
