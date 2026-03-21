@@ -215,6 +215,10 @@
     }
 
     async function initPage() {
+      /* Show loading state immediately while we check auth + verification */
+      var submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Checking...'; }
+
       /* Require tasker role — customers cannot post services */
       var user = await window.ST.auth.requireRole('tasker');
       if (!user) return;
@@ -222,8 +226,11 @@
       /* Require identity verification before posting a service */
       if (window.ST?.verify) {
         var verified = await window.ST.verify.requireVerification('list a service');
-        if (!verified) return;
+        if (!verified) return; /* redirects to verify.html */
       }
+
+      /* Restore button */
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post Service'; }
 
       /* Wire location autocomplete + GPS */
       initLocationInput({

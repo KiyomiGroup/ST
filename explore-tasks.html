@@ -134,16 +134,37 @@
   <script src="js/app.js"></script>
   <script src="js/location.js"></script>
   <script>
+    const DUMMY_TASKS = [
+      { id:'dt1',  title:'Fix leaking kitchen sink',          description:'My kitchen sink has been dripping for a week. Need a plumber to fix it today or tomorrow.',              category:'plumber',     budget:8000,  location:'Lekki Phase 1, Lagos',    status:'open', created_at: new Date(Date.now()-3600000).toISOString() },
+      { id:'dt2',  title:'Paint 2-bedroom apartment',         description:'Need a painter for interior walls. Paint will be provided. Apartment in Ikeja GRA.',                     category:'painting',    budget:35000, location:'Ikeja GRA, Lagos',         status:'open', created_at: new Date(Date.now()-7200000).toISOString() },
+      { id:'dt3',  title:'AC servicing and gas recharge',     description:'Two split ACs need servicing. One is not cooling at all. Need a qualified AC technician.',              category:'appliances',  budget:12000, location:'Victoria Island, Lagos',   status:'open', created_at: new Date(Date.now()-10800000).toISOString() },
+      { id:'dt4',  title:'Makeup for wedding aso-ebi',        description:'I need a makeup artist for Saturday. 3 people including myself. Yoruba traditional wedding.',          category:'beauty',      budget:45000, location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-14400000).toISOString() },
+      { id:'dt5',  title:'House deep cleaning',               description:'4-bedroom house needs thorough cleaning. Move-in next week. Post-renovation dust everywhere.',          category:'cleaning',    budget:25000, location:'Ajah, Lagos',              status:'open', created_at: new Date(Date.now()-18000000).toISOString() },
+      { id:'dt6',  title:'Car won\'t start — need mechanic',  description:'My Toyota Camry 2008 won\'t start. Battery seems fine. Looking for a mobile mechanic in Yaba area.',    category:'mechanic',    budget:15000, location:'Yaba, Lagos',              status:'open', created_at: new Date(Date.now()-21600000).toISOString() },
+      { id:'dt7',  title:'Haircut at home — weekend',         description:'Need a barber to come to my house Saturday morning. Fade + beard line-up.',                           category:'barber',      budget:5000,  location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-25200000).toISOString() },
+      { id:'dt8',  title:'Electrical fault in bedroom',       description:'One of my bedroom circuits keeps tripping. Need an electrician to diagnose and fix.',                  category:'electrician', budget:10000, location:'Wuse 2, Abuja',            status:'open', created_at: new Date(Date.now()-28800000).toISOString() },
+      { id:'dt9',  title:'Maths lesson for SS2 student',      description:'My son is struggling with Further Maths ahead of WAEC. Need a tutor 3 days a week.',                 category:'tutoring',    budget:20000, location:'Maitama, Abuja',           status:'open', created_at: new Date(Date.now()-32400000).toISOString() },
+      { id:'dt10', title:'Cook for birthday party (50 guests)', description:'Need a caterer for a 50-person birthday party on Friday evening. Nigerian menu.',                  category:'cooking',     budget:80000, location:'Ikoyi, Lagos',             status:'open', created_at: new Date(Date.now()-36000000).toISOString() },
+      { id:'dt11', title:'Laundry — 2 weeks of clothes',      description:'Been travelling, clothes piled up. Need someone to wash and press about 30 items.',                   category:'laundry',     budget:8000,  location:'Lekki, Lagos',             status:'open', created_at: new Date(Date.now()-43200000).toISOString() },
+      { id:'dt12', title:'Photography for product launch',    description:'Small product launch event, about 2 hours. Need good quality photos for social media.',               category:'photography', budget:30000, location:'Victoria Island, Lagos',   status:'open', created_at: new Date(Date.now()-50400000).toISOString() },
+      { id:'dt13', title:'Blocked bathroom drain',            description:'Shower drain completely blocked. Water is overflowing. Urgent. Plumber needed today.',                 category:'plumber',     budget:6000,  location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-57600000).toISOString() },
+      { id:'dt14', title:'Move furniture to new apartment',   description:'1-bedroom worth of furniture. Moving from Surulere to Lekki. Need truck + 2 helpers.',               category:'moving',      budget:40000, location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-64800000).toISOString() },
+      { id:'dt15', title:'Security guard for weekend event',  description:'Outdoor private event Saturday. Need 2 security guards from 4pm–midnight.',                          category:'security',    budget:30000, location:'Ikeja, Lagos',             status:'open', created_at: new Date(Date.now()-72000000).toISOString() },
+    ];
+
     let ALL_TASKS = [];
     let ACTIVE_TASK_ID = null;
     let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0 };
 
     async function initPage() {
       try {
-        ALL_TASKS = await window.ST.db.fetchTasks({ limit: 100 });
+        const liveTasks = await window.ST.db.fetchTasks({ limit: 100 });
+        /* Live tasks first, then dummy tasks to fill the page */
+        const liveIds = new Set((liveTasks || []).map(t => String(t.id)));
+        const dummyFiltered = DUMMY_TASKS.filter(d => !liveIds.has(d.id));
+        ALL_TASKS = [...(liveTasks || []), ...dummyFiltered];
       } catch (e) {
-        document.getElementById('tasksLoading').innerHTML = `<p style="color:var(--red)">Could not load tasks: ${e.message}</p>`;
-        return;
+        ALL_TASKS = DUMMY_TASKS;
       }
       document.getElementById('tasksLoading').style.display = 'none';
       renderTasks();
