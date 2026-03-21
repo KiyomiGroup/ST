@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Your Identity — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    .verify-page {
+      min-height: 100vh;
+      background: var(--bg-subtle);
+      padding-top: calc(var(--nav-height) + 40px);
+      padding-bottom: 64px;
+    }
+    .verify-card {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .verify-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .verify-icon {
+      width: 64px; height: 64px;
+      background: var(--blue-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      color: var(--blue);
+    }
+    .verify-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+    .verify-sub { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+    .verify-form-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+    }
+
+    .verify-section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .id-hint {
+      font-size: 0.75rem;
+      margin-top: 5px;
+      min-height: 16px;
+      transition: color 0.15s;
+    }
+    .id-hint-ok  { color: var(--green); }
+    .id-hint-err { color: var(--red); }
+
+    .consent-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+    .consent-box p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+    .consent-box p:last-child { margin-bottom: 0; }
+    .consent-check { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
+    .consent-check input { flex-shrink: 0; margin-top: 2px; width: 16px; height: 16px; cursor: pointer; }
+    .consent-check label { font-size: 0.82rem; color: var(--text-primary); cursor: pointer; line-height: 1.5; }
+
+    /* Status states */
+    .status-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px 32px;
+      text-align: center;
+    }
+    .status-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .status-icon-success { background: var(--green-light); color: var(--green); }
+    .status-icon-pending { background: var(--amber-light); color: var(--amber); }
+    .status-icon-rejected { background: var(--red-light); color: var(--red); }
+    .status-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .status-sub { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+
+    @media (max-width: 600px) {
+      .verify-form-card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <div class="verify-page">
+    <div class="verify-card">
+
+      <!-- Header -->
+      <div class="verify-header">
+        <div class="verify-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <div class="verify-title">Verify Your Identity</div>
+        <p class="verify-sub" id="verifySubtitle">
+          StreetTasker connects real people. Identity verification keeps everyone safe —
+          service providers and customers alike.
+        </p>
+      </div>
+
+      <!-- Loading -->
+      <div id="verifyLoading" style="text-align:center;padding:40px;">
+        <div class="skel" style="height:14px;width:60%;margin:0 auto 10px;"></div>
+        <div class="skel" style="height:14px;width:40%;margin:0 auto;"></div>
+      </div>
+
+      <!-- Already verified -->
+      <div id="verifyDone" style="display:none;" class="status-card">
+        <div class="status-icon status-icon-success">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="status-title">You're Verified ✓</div>
+        <p class="status-sub">Your identity has been confirmed. You have full access to StreetTasker.</p>
+        <a id="verifyDoneBtn" href="index.html" class="btn btn-primary">Continue →</a>
+      </div>
+
+      <!-- Pending review -->
+      <div id="verifyPending" style="display:none;" class="status-card">
+        <div class="status-icon status-icon-pending">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="status-title">Verification Under Review</div>
+        <p class="status-sub">We received your submission and are reviewing it. You'll be notified once it's approved — usually within a few hours.</p>
+        <a href="index.html" class="btn btn-outline">Back to Home</a>
+      </div>
+
+      <!-- Rejected — show form to resubmit -->
+      <div id="verifyRejected" style="display:none;background:var(--red-light);border:1px solid var(--red);border-radius:var(--radius-md);padding:16px 18px;margin-bottom:20px;">
+        <div style="font-weight:700;color:var(--red);margin-bottom:4px;">Verification rejected</div>
+        <div id="rejectionReason" style="font-size:0.82rem;color:var(--text-secondary);"></div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">Please correct the details below and resubmit.</div>
+      </div>
+
+      <!-- Verification Form -->
+      <div id="verifyForm" style="display:none;">
+        <div class="verify-form-card">
+
+          <!-- Personal info -->
+          <div class="verify-section-label">Personal Information</div>
+
+          <div class="form-row" style="margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vFirstName">First Name *</label>
+              <input type="text" id="vFirstName" class="form-input" placeholder="As on your ID" autocomplete="given-name" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vLastName">Last Name *</label>
+              <input type="text" id="vLastName" class="form-input" placeholder="As on your ID" autocomplete="family-name" />
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vDob">Date of Birth *</label>
+              <input type="date" id="vDob" class="form-input" autocomplete="bday" />
+              <div class="form-helper">Must be 18 or older.</div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vPhone">Phone Number *</label>
+              <input type="tel" id="vPhone" class="form-input" placeholder="+234 800 000 0000" autocomplete="tel" />
+            </div>
+          </div>
+
+          <!-- Business name (taskers only) -->
+          <div id="vBusinessRow" style="display:none;margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vBusinessName">Business / Trading Name *</label>
+              <input type="text" id="vBusinessName" class="form-input" placeholder="e.g. Adebayo Electrical Services" />
+              <div class="form-helper">This name will appear on your public profile.</div>
+            </div>
+          </div>
+
+          <!-- Government ID -->
+          <div class="verify-section-label" style="margin-top:24px;">Government ID</div>
+
+          <div class="form-row" style="margin-bottom:4px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vIdType">ID Type *</label>
+              <select id="vIdType" class="form-input" style="cursor:pointer;" onchange="onIdTypeChange()">
+                <option value="">Select ID type</option>
+                <option value="nin">NIN (National Identity Number)</option>
+                <option value="bvn">BVN (Bank Verification Number)</option>
+                <option value="drivers_license">Driver's Licence</option>
+                <option value="passport">International Passport</option>
+                <option value="voters_card">Voter's Card (PVC)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="vIdNumber">ID Number *</label>
+              <input type="text" id="vIdNumber" class="form-input" placeholder="Enter your ID number"
+                oninput="onIdNumberInput()" />
+              <div id="vIdHint" class="id-hint"></div>
+            </div>
+          </div>
+
+          <!-- Location (taskers) / Home area (customers) -->
+          <div class="form-group" style="margin-top:16px;position:relative;">
+            <label class="form-label" for="vLocation" id="vLocationLabel">Your Location *</label>
+            <div class="input-wrap" style="position:relative;">
+              <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <input type="text" id="vLocation" class="form-input" style="padding-left:42px;"
+                placeholder="Your area or business address" autocomplete="off" />
+              <div id="vLocationSuggestions" class="location-suggestions"></div>
+            </div>
+            <div class="form-helper" id="vLocationHelper">Used to match you with people near you.</div>
+            <input type="hidden" id="vLat" />
+            <input type="hidden" id="vLon" />
+          </div>
+
+          <!-- Consent -->
+          <div class="consent-box" style="margin-top:24px;">
+            <p>Your ID number is used only to verify your identity and is stored securely. It is never shown to other users, taskers, or customers.</p>
+            <p>By submitting, you confirm that the information provided is accurate and belongs to you. Providing false information may result in permanent account suspension.</p>
+            <div class="consent-check">
+              <input type="checkbox" id="vConsent" />
+              <label for="vConsent">
+                I confirm that all information submitted is accurate, belongs to me, and I am 18 years of age or older. I consent to StreetTasker storing and using this data for identity verification purposes.
+              </label>
+            </div>
+          </div>
+
+          <div id="vError" style="display:none;font-size:0.83rem;color:var(--red);margin-bottom:16px;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);"></div>
+
+          <button class="btn btn-primary btn-full" id="vSubmitBtn" onclick="submitVerificationForm()" style="justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Verify My Identity
+          </button>
+
+          <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:12px;">
+            Verification is instant. You'll know the result immediately.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
+  <script src="js/verify.js"></script>
+  <script>
+  'use strict';
+
+  /* Read URL params */
+  const _params     = new URLSearchParams(window.location.search);
+  const _returnUrl  = _params.get('return')  || null;
+  const _actionName = _params.get('action')  || 'continue';
+  const _role       = _params.get('role')    || null; /* 'tasker' | 'customer' */
+
+  function show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
+  function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+
+  async function initPage() {
+    const user = await window.ST.auth.requireAuth();
+    if (!user) return;
+
+    hide('verifyLoading');
+
+    /* Determine role — from URL param, or from user metadata */
+    const role = _role || user.user_metadata?.role || 'customer';
+
+    /* Update subtitle based on action context */
+    const subtitle = document.getElementById('verifySubtitle');
+    if (_actionName && _actionName !== 'continue') {
+      subtitle.textContent = 'You need to verify your identity before you can ' + _actionName + '. This takes about 30 seconds.';
+    }
+
+    /* Show business name field for taskers */
+    if (role === 'tasker') {
+      show('vBusinessRow');
+      document.getElementById('vLocationLabel').textContent = 'Business Location *';
+      document.getElementById('vLocationHelper').textContent = 'Your actual operating area — used to match you with nearby customers.';
+    }
+
+    /* Check current verification status */
+    const verified = await window.ST.verify.isUserVerified();
+    if (verified) {
+      show('verifyDone');
+      const doneBtn = document.getElementById('verifyDoneBtn');
+      if (_returnUrl && doneBtn) {
+        doneBtn.href = decodeURIComponent(_returnUrl);
+        doneBtn.textContent = 'Continue →';
+      }
+      return;
+    }
+
+    const status = await window.ST.verify.getVerificationStatus();
+    if (status?.status === 'pending') {
+      show('verifyPending');
+      return;
+    }
+    if (status?.status === 'rejected') {
+      const rr = document.getElementById('rejectionReason');
+      if (rr && status.rejection_reason) rr.textContent = status.rejection_reason;
+      show('verifyRejected');
+    }
+
+    /* Pre-fill phone from account */
+    const { data: userRow } = await window.supabase
+      .from('users').select('name, first_name, last_name, dob, phone, business_name').eq('id', user.id).maybeSingle();
+    if (userRow) {
+      if (userRow.first_name) document.getElementById('vFirstName').value = userRow.first_name;
+      if (userRow.last_name)  document.getElementById('vLastName').value  = userRow.last_name;
+      if (userRow.dob)        document.getElementById('vDob').value        = userRow.dob;
+      if (userRow.phone)      document.getElementById('vPhone').value      = userRow.phone;
+      if (userRow.business_name) document.getElementById('vBusinessName').value = userRow.business_name;
+      /* If only full name available, try to split it */
+      if (!userRow.first_name && !userRow.last_name && userRow.name) {
+        const parts = userRow.name.trim().split(' ');
+        if (parts.length >= 2) {
+          document.getElementById('vFirstName').value = parts[0];
+          document.getElementById('vLastName').value  = parts.slice(1).join(' ');
+        }
+      }
+    }
+
+    /* Set max DOB to 18 years ago */
+    const maxDob = new Date();
+    maxDob.setFullYear(maxDob.getFullYear() - 18);
+    document.getElementById('vDob').max = maxDob.toISOString().split('T')[0];
+
+    /* Wire location input */
+    if (typeof initLocationInput === 'function') {
+      initLocationInput({
+        inputId:    'vLocation',
+        dropdownId: 'vLocationSuggestions',
+        gps: true,
+        onSelect: r => {
+          if (r.lat) {
+            document.getElementById('vLat').value = r.lat;
+            document.getElementById('vLon').value = r.lon;
+          }
+        },
+      });
+    }
+
+    show('verifyForm');
+
+    /* Store role for submit */
+    document.getElementById('vSubmitBtn').dataset.role = role;
+  }
+
+  /* ── ID type change — update placeholder and hint ── */
+  function onIdTypeChange() {
+    const type   = document.getElementById('vIdType').value;
+    const input  = document.getElementById('vIdNumber');
+    const hint   = document.getElementById('vIdHint');
+    if (!type) { hint.textContent = ''; hint.className = 'id-hint'; return; }
+    input.placeholder = window.ST.verify.getIdHint(type);
+    input.value = '';
+    hint.textContent = '';
+    hint.className = 'id-hint';
+  }
+  window.onIdTypeChange = onIdTypeChange;
+
+  /* ── Live format validation as user types ── */
+  function onIdNumberInput() {
+    const type   = document.getElementById('vIdType').value;
+    const number = document.getElementById('vIdNumber').value;
+    const hint   = document.getElementById('vIdHint');
+    if (!type || !number) { hint.textContent = ''; return; }
+    const result = window.ST.verify.validateIdFormat(type, number);
+    hint.textContent  = result.hint;
+    hint.className    = 'id-hint ' + (result.ok ? 'id-hint-ok' : 'id-hint-err');
+  }
+  window.onIdNumberInput = onIdNumberInput;
+
+  /* ── Form submission ── */
+  async function submitVerificationForm() {
+    const btn       = document.getElementById('vSubmitBtn');
+    const errEl     = document.getElementById('vError');
+    const role      = btn.dataset.role || 'customer';
+
+    const firstName      = document.getElementById('vFirstName').value.trim();
+    const lastName       = document.getElementById('vLastName').value.trim();
+    const dob            = document.getElementById('vDob').value;
+    const phone          = document.getElementById('vPhone').value.trim();
+    const idType         = document.getElementById('vIdType').value;
+    const idNumber       = document.getElementById('vIdNumber').value.trim();
+    const location       = document.getElementById('vLocation').value.trim();
+    const lat            = document.getElementById('vLat').value;
+    const lon            = document.getElementById('vLon').value;
+    const businessName   = document.getElementById('vBusinessName')?.value?.trim() || '';
+    const consentChecked = document.getElementById('vConsent').checked;
+
+    errEl.style.display = 'none';
+
+    /* Validate */
+    if (!firstName)          { showErr('Enter your first name.'); return; }
+    if (!lastName)           { showErr('Enter your last name.'); return; }
+    if (!dob)                { showErr('Enter your date of birth.'); return; }
+    if (!phone)              { showErr('Enter your phone number.'); return; }
+    if (!idType)             { showErr('Select your ID type.'); return; }
+    if (!idNumber)           { showErr('Enter your ID number.'); return; }
+    if (!location)           { showErr('Enter your location.'); return; }
+    if (role === 'tasker' && !businessName) { showErr('Enter your business or trading name.'); return; }
+    if (!consentChecked)     { showErr('Please read and accept the consent statement to continue.'); return; }
+
+    const fmtCheck = window.ST.verify.validateIdFormat(idType, idNumber);
+    if (!fmtCheck.ok) { showErr(fmtCheck.hint); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Verifying…';
+
+    const result = await window.ST.verify.submitVerification({
+      firstName, lastName, dob, phone,
+      idType, idNumber,
+      businessName:    role === 'tasker' ? businessName : null,
+      businessAddress: location,
+      businessLat:     lat || null,
+      businessLon:     lon || null,
+      role,
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Verify My Identity';
+
+    if (result.ok) {
+      /* Show success state */
+      hide('verifyForm');
+      hide('verifyRejected');
+      show('verifyDone');
+      const doneBtn = document.getElementById('verifyDoneBtn');
+      if (_returnUrl && doneBtn) {
+        doneBtn.href = decodeURIComponent(_returnUrl);
+        doneBtn.textContent = 'Continue →';
+      }
+      showToast('Identity verified! ✓');
+    } else if (result.pending) {
+      hide('verifyForm');
+      show('verifyPending');
+    } else {
+      showErr(result.message);
+    }
+  }
+  window.submitVerificationForm = submitVerificationForm;
+
+  function showErr(msg) {
+    const el = document.getElementById('vError');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  </script>
+</body>
+</html>
