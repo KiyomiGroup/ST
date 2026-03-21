@@ -104,7 +104,13 @@ function initTaskersPage() {
     const locInp = document.getElementById('taskerLocationInput');
     if (locInp) locInp.value = urlLocation;
   }
-  loadServices().then(() => { render(); wireAll(); initBookingModal(); });
+  /* Show dummy data immediately so page never looks empty while Supabase loads */
+  ALL = DUMMY_SERVICES;
+  render();
+  wireAll();
+  initBookingModal();
+  /* Then replace with live data in background */
+  loadServices().then(() => { render(); });
 }
 
 /* ── Filter + sort ───────────────────────────────────────────── */

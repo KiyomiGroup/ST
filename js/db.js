@@ -155,9 +155,13 @@ async function fetchTaskApplications(taskId) {
     const userId = a.taskers?.user_id;
     if (userId && (a.status === 'accepted' || a.status === 'completed')) {
       try {
-        const { data: u } = await window.supabase
-          .from('users').select('phone, name, email').eq('id', userId).maybeSingle();
-        a._taskerContact = u || null;
+        const { data: v } = await window.supabase
+          .from('verifications').select('phone').eq('user_id', userId).maybeSingle();
+        a._taskerContact = {
+          name:  a.taskers?.business_name || a.taskers?.name || 'Tasker',
+          phone: v?.phone || null,
+          email: null,
+        };
       } catch(e) {}
     }
   }));
@@ -507,9 +511,12 @@ async function fetchMyBookings() {
   await Promise.all(rows.map(async b => {
     if ((b.status === 'confirmed' || b.status === 'completed') && b.taskers?.user_id) {
       try {
-        const { data: u } = await window.supabase
-          .from('users').select('phone, name, email').eq('id', b.taskers.user_id).maybeSingle();
-        b._taskerContact = u || null;
+        /* public.users has no phone/email — get phone from verifications */
+        const { data: vt } = await window.supabase
+          .from('verifications').select('phone').eq('user_id', b.taskers.user_id).maybeSingle();
+        const { data: ut } = await window.supabase
+          .from('users').select('name, business_name').eq('id', b.taskers.user_id).maybeSingle();
+        b._taskerContact = { name: ut?.business_name || ut?.name || b.taskers?.name || 'Tasker', phone: vt?.phone || null, email: null };
       } catch(e) {}
     }
   }));
@@ -534,9 +541,12 @@ async function fetchTaskerBookings() {
   await Promise.all(rows.map(async b => {
     if ((b.status === 'confirmed' || b.status === 'completed') && b.customer_id) {
       try {
-        const { data: u } = await window.supabase
-          .from('users').select('phone, name, email').eq('id', b.customer_id).maybeSingle();
-        b._customerContact = u || null;
+        /* public.users has no phone/email — get phone from verifications */
+        const { data: vc } = await window.supabase
+          .from('verifications').select('phone').eq('user_id', b.customer_id).maybeSingle();
+        const { data: uc } = await window.supabase
+          .from('users').select('name').eq('id', b.customer_id).maybeSingle();
+        b._customerContact = { name: uc?.name || 'Customer', phone: vc?.phone || null, email: null };
       } catch(e) {}
     }
   }));
