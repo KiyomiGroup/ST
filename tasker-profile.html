@@ -391,11 +391,15 @@
       const rateUnit = tasker.rate_unit || '/hour';
       const isVerified = tasker.is_verified || verification?.status === 'approved';
       const isPending  = !isVerified && verification?.status === 'pending';
+      const bannerColor = tasker.banner_color || '#121212';
 
       /* Update page title */
       document.title = displayName + ' — StreetTasker';
 
-      /* ── Hero ── */
+      /* ── Hero — apply banner colour ── */
+      const heroSection = document.querySelector('.profile-hero');
+      if (heroSection) heroSection.style.background = bannerColor;
+
       const heroAvatar = document.getElementById('heroAvatar');
       if (photo) {
         heroAvatar.innerHTML = '<img src="' + escapeHtml(photo) + '" alt="' + escapeHtml(displayName) + '" />';
@@ -481,6 +485,26 @@
       hide('profileLoading');
       show('profileHero');
       show('profileMain');
+
+      /* ── Owner check: if logged-in user is the profile owner, swap Book → Edit Page ── */
+      try {
+        const currentUser = await window.ST.auth.getCurrentUser();
+        if (currentUser && currentUser.id === _taskerId) {
+          const bookBtn = document.getElementById('bookBtn');
+          if (bookBtn) {
+            bookBtn.textContent = 'Edit My Page';
+            bookBtn.style.background = 'var(--white)';
+            bookBtn.style.color      = 'var(--blue)';
+            bookBtn.style.border     = '1.5px solid var(--blue)';
+            bookBtn.onclick = function() {
+              window.location.href = 'dashboard-tasker.html#profile';
+            };
+          }
+          /* Hide the "Usually responds" note */
+          const note = bookBtn?.nextElementSibling;
+          if (note) note.textContent = 'This is how customers see your page.';
+        }
+      } catch(e) {}
 
     } catch (err) {
       console.error('[Profile]', err);

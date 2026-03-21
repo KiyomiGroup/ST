@@ -49,9 +49,9 @@
       <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
     </button>
     <div class="nav-divider"></div>
-    <button onclick="mobileSwitchPanel('profile','👤 Edit Profile');loadProfilePanel()" id="mob-profile">
+    <button onclick="mobileSwitchPanel('profile','👤 Edit Page');loadProfilePanel()" id="mob-profile">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Edit Profile
+      Edit Page
     </button>
     <button onclick="mobileSwitchPanel('subscription','⭐ Subscription')" id="mob-subscription">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -127,7 +127,7 @@
               </button>
               <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
-                Edit Profile
+                Edit Page
               </button>
               <button class="dashboard-nav-item" data-panel="verification" onclick="switchPanel('verification',this);loadVerification()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -166,16 +166,13 @@
             <!-- Overview -->
             <!-- My Page -->
             <div id="panel-mypage" class="dashboard-panel">
-              <!-- Header with public link + post button -->
-              <div class="panel-header" style="flex-wrap:wrap;gap:10px;">
-                <div>
-                  <h2 style="margin-bottom:2px;">My Public Page</h2>
-                  <p id="myPageLinkWrap" style="font-size:0.78rem;color:var(--text-muted);"></p>
-                </div>
+              <!-- Header -->
+              <div class="panel-header" style="flex-wrap:wrap;gap:10px;margin-bottom:0;">
+                <h2>My Page</h2>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button class="btn btn-outline btn-sm" id="viewPublicPageBtn" onclick="viewPublicPage()" style="display:none;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    View Page
+                  <button class="btn btn-outline btn-sm" onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Page
                   </button>
                   <button class="btn btn-primary btn-sm" onclick="openPostWorkModal()">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -185,7 +182,7 @@
               </div>
 
               <!-- Verification prompt -->
-              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:20px;align-items:center;gap:12px;">
+              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-top:16px;margin-bottom:0;align-items:center;gap:12px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <div style="flex:1;">
                   <div style="font-weight:600;font-size:0.85rem;color:var(--amber);">Get Verified</div>
@@ -194,21 +191,71 @@
                 <button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none;flex-shrink:0;" onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification()">Verify Now</button>
               </div>
 
-              <!-- Stats -->
-              <div class="dashboard-stats" style="margin-bottom:20px;">
+              <!-- Stats row -->
+              <div class="dashboard-stats" style="margin-top:16px;margin-bottom:20px;">
                 <div class="stat-card"><div class="stat-card-label">Total Bookings</div><div class="stat-card-value" id="statTotal">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" id="statPending">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statDone">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Work Posts</div><div class="stat-card-value" id="statPosts">—</div></div>
               </div>
 
-              <!-- Work posts grid -->
-              <div class="panel-header" style="margin-bottom:12px;">
-                <h3 style="font-size:0.95rem;">Posted Work</h3>
+              <!-- ═══ EMBEDDED PROFILE PREVIEW ═══ -->
+              <div id="profilePreviewWrap" style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--white);">
+
+                <!-- Profile hero banner -->
+                <div id="previewHero" style="background:var(--charcoal);padding:32px 24px 44px;position:relative;">
+                  <div style="display:flex;align-items:flex-end;gap:16px;">
+                    <div id="previewAvatar" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--white);background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:var(--blue);overflow:hidden;flex-shrink:0;transform:translateY(20px);"></div>
+                    <div style="padding-bottom:24px;">
+                      <div id="previewName" style="font-size:1.2rem;font-weight:800;color:var(--white);margin-bottom:2px;"></div>
+                      <div id="previewService" style="font-size:0.83rem;color:rgba(255,255,255,0.6);"></div>
+                      <div id="previewBadges" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Profile body -->
+                <div style="padding:28px 24px 24px;">
+                  <div style="display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:start;">
+
+                    <!-- Left -->
+                    <div>
+                      <!-- Bio -->
+                      <div id="previewBioSection" style="display:none;margin-bottom:20px;">
+                        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">About</div>
+                        <p id="previewBio" style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;"></p>
+                      </div>
+
+                      <!-- Work portfolio -->
+                      <div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Work Portfolio</div>
+                          <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;" onclick="openPostWorkModal()">+ Post Work</button>
+                        </div>
+                        <div id="myWorkGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">
+                          <div style="text-align:center;padding:24px 12px;color:var(--text-muted);font-size:0.82rem;grid-column:1/-1;">No work posts yet — hit <strong>Post Work</strong> to add your first.</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right sidebar -->
+                    <div>
+                      <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+                        <div id="previewRate" style="font-size:1.3rem;font-weight:800;margin-bottom:2px;"></div>
+                        <div id="previewRateUnit" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;"></div>
+                        <div id="previewContactList" style="font-size:0.82rem;"></div>
+                        <div style="margin-top:14px;padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--blue);text-align:center;">
+                          This is how customers see your page
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
               </div>
-              <div id="myWorkGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
-                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;grid-column:1/-1;">Loading your work posts…</div>
-              </div>
+              <!-- ═══ END PROFILE PREVIEW ═══ -->
+
             </div>
 
             <!-- My Services -->
@@ -269,36 +316,92 @@
             </div>
 
 <div id="panel-profile" class="dashboard-panel">
-              <div class="panel-header"><h2>Edit Profile</h2></div>
+              <div class="panel-header">
+                <h2>Edit Page</h2>
+                <button class="btn btn-ghost btn-sm" onclick="switchPanel('mypage',document.querySelector('[data-panel=mypage]'));loadMyPage()">
+                  ← Back to My Page
+                </button>
+              </div>
+              <p style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:24px;line-height:1.6;">Changes save to your public profile page immediately.</p>
 
-              <!-- Avatar row -->
-              <div class="task-row-card" style="align-items:center; gap:20px; margin-bottom:16px;">
-                <div id="profileAvatarPreview" style="width:68px;height:68px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.3rem;color:var(--blue);overflow:hidden;flex-shrink:0;"></div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Profile Photo</div>
-                  <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">JPG, PNG or WebP &middot; max 2 MB</div>
-                  <input type="file" id="profileImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewProfileImage(this)" />
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profileImageFile').click()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Upload Photo
-                  </button>
+              <!-- ── Profile photo + banner ── -->
+              <div class="task-row-card" style="flex-direction:column;gap:0;align-items:stretch;padding:24px;margin-bottom:16px;">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:16px;">Profile Photo &amp; Banner</div>
+
+                <!-- Banner colour picker -->
+                <div class="form-group">
+                  <label class="form-label">Banner Colour</label>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                    <button type="button" class="banner-swatch active" data-color="#121212" style="width:28px;height:28px;border-radius:50%;background:#121212;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#121212')"></button>
+                    <button type="button" class="banner-swatch" data-color="#1E3A5F" style="width:28px;height:28px;border-radius:50%;background:#1E3A5F;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#1E3A5F')"></button>
+                    <button type="button" class="banner-swatch" data-color="#0A84FF" style="width:28px;height:28px;border-radius:50%;background:#0A84FF;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#0A84FF')"></button>
+                    <button type="button" class="banner-swatch" data-color="#16a34a" style="width:28px;height:28px;border-radius:50%;background:#16a34a;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#16a34a')"></button>
+                    <button type="button" class="banner-swatch" data-color="#7c3aed" style="width:28px;height:28px;border-radius:50%;background:#7c3aed;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#7c3aed')"></button>
+                    <button type="button" class="banner-swatch" data-color="#b45309" style="width:28px;height:28px;border-radius:50%;background:#b45309;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#b45309')"></button>
+                    <button type="button" class="banner-swatch" data-color="#be123c" style="width:28px;height:28px;border-radius:50%;background:#be123c;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#be123c')"></button>
+                  </div>
+                  <input type="hidden" id="profileBannerColor" value="#121212" />
+                </div>
+
+                <!-- Photo upload -->
+                <div style="display:flex;align-items:center;gap:20px;margin-top:8px;">
+                  <div id="profileAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.4rem;color:var(--blue);overflow:hidden;flex-shrink:0;"></div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.88rem;margin-bottom:2px;">Profile Photo</div>
+                    <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:10px;">JPG, PNG or WebP · max 2 MB</div>
+                    <input type="file" id="profileImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewProfileImage(this)" />
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profileImageFile').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Change Photo
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Form fields -->
-              <div class="task-row-card" style="flex-direction:column;gap:0;align-items:stretch;padding:24px;">
+              <!-- ── Business & personal info ── -->
+              <div class="task-row-card" style="flex-direction:column;gap:0;align-items:stretch;padding:24px;margin-bottom:16px;">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:16px;">Business Information</div>
 
                 <div class="form-group">
-                  <label class="form-label" for="profileName">Full Name</label>
-                  <input type="text" id="profileName" class="form-input" placeholder="Your full name" />
+                  <label class="form-label" for="profileBusinessName">Business / Trading Name</label>
+                  <input type="text" id="profileBusinessName" class="form-input" placeholder="e.g. Adebayo Electrical Services" />
+                  <div class="form-helper">This is shown on your public profile instead of your personal name.</div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="profileName">Your Full Name</label>
+                    <input type="text" id="profileName" class="form-input" placeholder="Your full name" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profileService">Service / Skill</label>
+                    <input type="text" id="profileService" class="form-input" placeholder="e.g. Electrician, Barber, Cleaner" />
+                  </div>
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label" for="profileBio">Bio</label>
-                  <textarea id="profileBio" class="form-textarea" rows="3" placeholder="Describe your skills and experience..."></textarea>
+                  <label class="form-label" for="profileBio">About You</label>
+                  <textarea id="profileBio" class="form-textarea" rows="4" placeholder="Describe your skills, experience, and what makes you the best choice..."></textarea>
+                  <div class="form-helper">This appears in the About section on your profile.</div>
                 </div>
 
-                <div class="form-group" style="margin-bottom:24px; position:relative;">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="profileRate">Rate (₦)</label>
+                    <input type="number" id="profileRate" class="form-input" placeholder="e.g. 5000" min="0" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profileRateUnit">Rate Unit</label>
+                    <select id="profileRateUnit" class="form-input" style="cursor:pointer;">
+                      <option value="/hour">/hour</option>
+                      <option value="/day">/day</option>
+                      <option value="/job">/job</option>
+                      <option value="/session">/session</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group" style="position:relative;">
                   <label class="form-label" for="profileLocation">Location</label>
                   <div class="input-wrap" style="position:relative;">
                     <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -306,13 +409,15 @@
                     <div id="profileLocationSuggestions" class="location-suggestions"></div>
                   </div>
                 </div>
-
-                <div style="border-top:1px solid var(--border);padding-top:18px;display:flex;align-items:center;gap:14px;">
-                  <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
-                  <span id="profileSaveMsg" style="display:none;font-size:0.83rem;"></span>
-                </div>
-
               </div>
+
+              <!-- ── Save ── -->
+              <div style="display:flex;align-items:center;gap:14px;">
+                <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
+                <button type="button" class="btn btn-ghost" onclick="switchPanel('mypage',document.querySelector('[data-panel=mypage]'));loadMyPage()">Cancel</button>
+                <span id="profileSaveMsg" style="display:none;font-size:0.83rem;"></span>
+              </div>
+
             </div>
 
             <!-- Verification Panel -->
@@ -600,8 +705,19 @@
 
       /* ── CRITICAL: show panels immediately, don't wait for data ── */
       document.getElementById('dashLoading').style.display = 'none';
-      switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
-      loadMyPage();
+      /* Check for URL hash — used by external links to jump to a panel
+         e.g. dashboard-tasker.html#profile opens Edit Page directly */
+      var startHash = window.location.hash.replace('#','');
+      var validPanels = ['mypage','services','bookings','find-tasks','notifications','profile','verification','subscription'];
+      if (startHash && validPanels.indexOf(startHash) !== -1) {
+        switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
+        if (startHash === 'profile')       loadProfilePanel();
+        else if (startHash === 'mypage')   loadMyPage();
+        else if (startHash === 'verification') loadVerification();
+      } else {
+        switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
+        loadMyPage();
+      }
 
       /* Load unread count for bell badge */
       window.ST.db.fetchUnreadNotificationCount().then(function(count) {
@@ -659,38 +775,77 @@
     async function loadProfilePanel() {
       var user = await window.ST.auth.getCurrentUser();
       if (!user) return;
-      var { data } = await window.supabase.from('users').select('name,bio,location,avatar_url').eq('id', user.id).maybeSingle();
-      if (data) {
-        var nameEl = document.getElementById('profileName');
-        var bioEl = document.getElementById('profileBio');
-        var locEl = document.getElementById('profileLocation');
-        if (nameEl) nameEl.value = data.name || user.user_metadata?.name || '';
-        if (bioEl) bioEl.value = data.bio || '';
-        if (locEl) locEl.value = data.location || '';
-        var avatarEl = document.getElementById('profileAvatarPreview');
-        if (avatarEl) {
-          if (data.avatar_url) {
-            avatarEl.innerHTML = '<img src="' + data.avatar_url + '" style="width:100%;height:100%;object-fit:cover;" />';
+
+      /* Load user + tasker data */
+      var { data: ud } = await window.supabase.from('users')
+        .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
+      var { data: td } = await window.supabase.from('taskers')
+        .select('service, service_name, rate_value, rate_unit, location, banner_color').eq('user_id', String(user.id)).maybeSingle();
+
+      if (ud) {
+        var n = document.getElementById('profileName');
+        var b = document.getElementById('profileBio');
+        var l = document.getElementById('profileLocation');
+        var bn = document.getElementById('profileBusinessName');
+        if (n)  n.value  = ud.name || user.user_metadata?.name || '';
+        if (b)  b.value  = ud.bio  || '';
+        if (l)  l.value  = (td && td.location) || ud.location || '';
+        if (bn) bn.value = ud.business_name || (td && td.business_name) || '';
+
+        /* Avatar preview */
+        var av = document.getElementById('profileAvatarPreview');
+        if (av) {
+          if (ud.avatar_url) {
+            av.innerHTML = '<img src="' + ud.avatar_url + '" style="width:100%;height:100%;object-fit:cover;" />';
           } else {
-            avatarEl.textContent = (data.name || user.email || 'U').slice(0,2).toUpperCase();
+            av.textContent = (ud.name || user.email || 'U').slice(0,2).toUpperCase();
           }
         }
       }
+
+      if (td) {
+        var svcEl  = document.getElementById('profileService');
+        var rateEl = document.getElementById('profileRate');
+        var ruEl   = document.getElementById('profileRateUnit');
+        if (svcEl)  svcEl.value  = td.service || td.service_name || '';
+        if (rateEl) rateEl.value = td.rate_value || '';
+        if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
+
+        /* Banner colour swatches */
+        var bannerColor = td.banner_color || '#121212';
+        document.getElementById('profileBannerColor').value = bannerColor;
+        document.querySelectorAll('.banner-swatch').forEach(function(s) {
+          s.style.border = s.dataset.color === bannerColor ? '2px solid var(--blue)' : '2px solid transparent';
+          s.classList.toggle('active', s.dataset.color === bannerColor);
+        });
+      }
     }
+
+    function selectBannerColor(btn, color) {
+      document.getElementById('profileBannerColor').value = color;
+      document.querySelectorAll('.banner-swatch').forEach(function(s) {
+        s.style.border = '2px solid transparent';
+      });
+      btn.style.border = '2px solid var(--blue)';
+      /* Live-preview the banner */
+      var hero = document.getElementById('previewHero');
+      if (hero) hero.style.background = color;
+    }
+    window.selectBannerColor = selectBannerColor;
 
     function previewProfileImage(input) {
       if (!input.files || !input.files[0]) return;
       var file = input.files[0];
-      var check = validateUpload(file, {
-        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        maxBytes: 5 * 1024 * 1024,
-      });
+      var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
       if (!check.ok) { showToast(check.error); input.value = ''; return; }
       _currentProfileImageFile = file;
       var reader = new FileReader();
       reader.onload = function(e) {
         var el = document.getElementById('profileAvatarPreview');
         if (el) el.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;" />';
+        /* Also update the preview in My Page */
+        var prev = document.getElementById('previewAvatar');
+        if (prev) prev.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;" />';
       };
       reader.readAsDataURL(_currentProfileImageFile);
     }
@@ -702,35 +857,61 @@
       var user = await window.ST.auth.getCurrentUser();
       if (!user) return;
       btn.disabled = true; btn.textContent = 'Saving...'; msg.style.display = 'none';
+
       try {
+        /* Upload avatar if changed */
         var avatarUrl = null;
         if (_currentProfileImageFile) {
-          var extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+          var extMap = { 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' };
           var ext  = extMap[_currentProfileImageFile.type] || 'jpg';
           var path = 'avatars/' + user.id + '-' + Date.now() + '.' + ext;
-          var { error: upErr } = await window.supabase.storage.from('profile-images').upload(path, _currentProfileImageFile, { cacheControl: '3600', upsert: true });
+          var { error: upErr } = await window.supabase.storage.from('profile-images')
+            .upload(path, _currentProfileImageFile, { cacheControl:'3600', upsert:true });
           if (!upErr) {
             var { data: urlData } = window.supabase.storage.from('profile-images').getPublicUrl(path);
             avatarUrl = urlData.publicUrl;
           }
         }
-        var updates = {
-          name: document.getElementById('profileName')?.value?.trim() || null,
-          bio: document.getElementById('profileBio')?.value?.trim() || null,
-          location: document.getElementById('profileLocation')?.value?.trim() || null,
+
+        /* Save to users table */
+        var userUpdates = {
+          name:          document.getElementById('profileName')?.value?.trim() || null,
+          bio:           document.getElementById('profileBio')?.value?.trim()  || null,
+          business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
-        if (avatarUrl) updates.avatar_url = avatarUrl;
-        var { error } = await window.supabase.from('users').update(updates).eq('id', user.id);
-        if (error) throw error;
-        if (avatarUrl) {
-          await window.supabase.from('taskers').update({ photo_url: avatarUrl }).eq('user_id', user.id);
-        }
+        if (avatarUrl) userUpdates.avatar_url = avatarUrl;
+        var { error: uErr } = await window.supabase.from('users').update(userUpdates).eq('id', user.id);
+        if (uErr) throw uErr;
+
+        /* Save to taskers table */
+        var taskerUpdates = {
+          location:    document.getElementById('profileLocation')?.value?.trim()  || null,
+          service:     document.getElementById('profileService')?.value?.trim()   || null,
+          service_name:document.getElementById('profileService')?.value?.trim()   || null,
+          rate_value:  parseFloat(document.getElementById('profileRate')?.value)  || null,
+          rate_unit:   document.getElementById('profileRateUnit')?.value          || '/hour',
+          banner_color:document.getElementById('profileBannerColor')?.value       || '#121212',
+          business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
+        };
+        if (avatarUrl) taskerUpdates.photo_url = avatarUrl;
+        await window.supabase.from('taskers').update(taskerUpdates).eq('user_id', String(user.id));
+
         _currentProfileImageFile = null;
-        msg.textContent = 'Profile saved!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
-        showToast('Profile updated!');
+        msg.textContent = 'Page updated!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
+        showToast('Your page has been updated!');
+
+        /* Refresh My Page preview */
+        _myPageLoaded = false;
+        setTimeout(function() {
+          switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
+          loadMyPage();
+        }, 800);
+
       } catch(e) {
         msg.textContent = 'Save failed: ' + e.message; msg.style.color = 'var(--red)'; msg.style.display = 'block';
-      } finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Changes';
+      }
     }
     window.saveProfile = saveProfile;
     window.loadProfilePanel = loadProfilePanel;
@@ -751,49 +932,104 @@
       var user = await window.ST.auth.getCurrentUser();
       if (!user) return;
 
-      /* Public page link */
-      var linkWrap = document.getElementById('myPageLinkWrap');
-      var viewBtn  = document.getElementById('viewPublicPageBtn');
-      var profileUrl = 'tasker-profile.html?id=' + user.id;
-      if (linkWrap) {
-        linkWrap.innerHTML = '<a href="' + profileUrl + '" target="_blank" style="color:var(--blue);font-size:0.78rem;">' +
-          window.location.origin + '/' + profileUrl + '</a>';
-      }
-      if (viewBtn) viewBtn.style.display = 'inline-flex';
-
-      /* Check verification status */
+      /* Check verification */
       try {
-        var { data: verif } = await window.supabase.from('verifications')
-          .select('status').eq('user_id', user.id).maybeSingle();
-        var taskerIsVerified = false;
-        try {
-          var { data: tr } = await window.supabase.from('taskers')
-            .select('is_verified').eq('user_id', String(user.id)).maybeSingle();
-          taskerIsVerified = tr?.is_verified;
-        } catch(e) {}
-
-        if (!taskerIsVerified && (!verif || verif.status === 'rejected')) {
+        var verified = window.ST.verify ? await window.ST.verify.isUserVerified() : false;
+        if (!verified) {
           var vp = document.getElementById('verificationPrompt');
           if (vp) vp.style.display = 'flex';
           var nb = document.getElementById('navVerifBadge');
           if (nb) nb.style.display = 'inline-block';
-        }      } catch(e) {}
+        }
+      } catch(e) {}
 
-      /* Load bookings stats */
+      /* Load stats */
       try {
-        var bookings = await window.ST.db.fetchTaskerBookings();
-        var pending   = bookings.filter(b => b.status === 'pending').length;
-        var completed = bookings.filter(b => b.status === 'completed').length;
-        var total     = bookings.length;
+        var bookings  = await window.ST.db.fetchTaskerBookings();
+        var active    = bookings.filter(function(b){ return b.status==='pending'||b.status==='confirmed'; });
+        var completed = bookings.filter(function(b){ return b.status==='completed'; });
         var sT = document.getElementById('statTotal');
         var sP = document.getElementById('statPending');
         var sD = document.getElementById('statDone');
-        if (sT) sT.textContent = total;
-        if (sP) sP.textContent = pending;
-        if (sD) sD.textContent = completed;
+        if (sT) sT.textContent = bookings.length;
+        if (sP) sP.textContent = active.length;
+        if (sD) sD.textContent = completed.length;
       } catch(e) {}
 
-      /* Load work posts */
+      /* Load profile data to populate the embedded preview */
+      try {
+        var { data: userData } = await window.supabase
+          .from('users').select('name, bio, location, avatar_url, business_name')
+          .eq('id', user.id).maybeSingle();
+        var { data: taskerData } = await window.supabase
+          .from('taskers')
+          .select('service, service_name, category, rate_value, rate_unit, location, is_verified, business_name, banner_color')
+          .eq('user_id', String(user.id)).maybeSingle();
+
+        var displayName = (userData && userData.business_name) || (taskerData && taskerData.business_name) || (userData && userData.name) || (user.user_metadata && user.user_metadata.name) || 'Your Name';
+        var service     = (taskerData && (taskerData.service || taskerData.service_name)) || 'Service Provider';
+        var location    = (taskerData && taskerData.location) || (userData && userData.location) || '';
+        var bio         = (userData && userData.bio) || '';
+        var photo       = (userData && userData.avatar_url) || null;
+        var rate        = (taskerData && taskerData.rate_value) ? '₦' + Number(taskerData.rate_value).toLocaleString() : '';
+        var rateUnit    = (taskerData && taskerData.rate_unit) || '/hour';
+        var isVerified  = taskerData && taskerData.is_verified === true;
+        var bannerColor = (taskerData && taskerData.banner_color) || '#121212';
+
+        /* Hero banner colour */
+        var hero = document.getElementById('previewHero');
+        if (hero) hero.style.background = bannerColor;
+
+        /* Avatar */
+        var avatarEl = document.getElementById('previewAvatar');
+        if (avatarEl) {
+          var initials = displayName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || 'ST';
+          avatarEl.innerHTML = photo
+            ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
+            : initials;
+        }
+
+        /* Name + service */
+        var nameEl = document.getElementById('previewName');
+        if (nameEl) nameEl.textContent = displayName;
+        var svcEl = document.getElementById('previewService');
+        if (svcEl) svcEl.textContent = service + (location ? '  ·  ' + location : '');
+
+        /* Verified badge */
+        var badgesEl = document.getElementById('previewBadges');
+        if (badgesEl) {
+          badgesEl.innerHTML = isVerified
+            ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.68rem;font-weight:700;background:rgba(22,163,74,0.2);color:#4ade80;border:1px solid rgba(22,163,74,0.3);">'
+              + '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
+            : '<span style="padding:2px 8px;border-radius:999px;font-size:0.68rem;font-weight:700;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid rgba(217,119,6,0.3);">Not Verified</span>';
+        }
+
+        /* Bio */
+        var bioSection = document.getElementById('previewBioSection');
+        var bioEl2     = document.getElementById('previewBio');
+        if (bio && bioSection && bioEl2) {
+          bioEl2.textContent = bio;
+          bioSection.style.display = 'block';
+        }
+
+        /* Rate sidebar */
+        var rateEl     = document.getElementById('previewRate');
+        var rateUnitEl = document.getElementById('previewRateUnit');
+        if (rateEl)     rateEl.textContent    = rate || 'Contact for price';
+        if (rateUnitEl) rateUnitEl.textContent = rate ? rateUnit : '';
+
+        /* Contact items */
+        var contactEl = document.getElementById('previewContactList');
+        if (contactEl) {
+          var items = [];
+          if (location) items.push('<div style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);">📍 ' + escapeHtml(location) + '</div>');
+          if (service)  items.push('<div style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);">🔧 ' + escapeHtml(service) + '</div>');
+          items.push('<div style="padding:6px 0;color:var(--green);font-weight:600;">✓ Available</div>');
+          contactEl.innerHTML = items.join('');
+        }
+      } catch(e) { console.warn('[MyPage preview]', e.message); }
+
+      /* Work posts */
       await loadMyWorkPosts(user.id);
     }
     window.loadMyPage = loadMyPage;
@@ -835,12 +1071,7 @@
     function openMyWorkPost(id) { /* future: open lightbox */ }
     window.openMyWorkPost = openMyWorkPost;
 
-    function viewPublicPage() {
-      window.ST.auth.getCurrentUser().then(function(user) {
-        if (user) window.open('tasker-profile.html?id=' + user.id, '_blank');
-      });
-    }
-    window.viewPublicPage = viewPublicPage;
+    /* viewPublicPage removed — My Page panel is the profile view */
 
     function timeAgoFn(iso) {
       if (!iso) return '';
