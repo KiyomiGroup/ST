@@ -200,6 +200,13 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .badge-amber { background: var(--amber-light); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
 .badge-gray  { background: var(--gray-100);    color: var(--gray-600); border: 1px solid var(--border); }
 
+/* ── Navigation auth state — controlled by auth.js ────────────── */
+/* Default: show login/signup, hide logged-in elements.
+   initNavbarInstant() and syncNavbarAuthState() update these instantly. */
+#navUserName   { display: none; }
+#navLogout     { display: none; }
+#navMobileLogout { display: none; }
+
 /* ── Navigation ──────────────────────────────────────────────── */
 #navbar {
   position: fixed; top: 0; left: 0; right: 0;
@@ -1643,12 +1650,4 @@ img { max-width: 100%; height: auto; }
   .task-row > div:first-child { flex-wrap: wrap; }
 }
 
-/* ── Prevent auth-state flash ──────────────────────────────────
-   Hide role-specific nav items immediately; app.js reveals them
-   after syncNavbarAuthState resolves. Without this, logged-in
-   users briefly see Log In / Sign Up before auth loads.        */
-.nav-customer,
-.nav-tasker,
-#navUserName,
-#navLogout,
-#navMobileLogout { display: none; }
+
