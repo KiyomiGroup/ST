@@ -128,7 +128,7 @@ async function submitVerification({
     dob:        dob || null,
   };
   if (businessName?.trim()) _userUpdate.business_name = businessName.trim();
-  await window.supabase.from('users').update(_userUpdate).eq('id', user.id).catch(() => {});
+  try { await window.supabase.from('users').update(_userUpdate).eq('id', user.id); } catch(e) { /* non-fatal */ }
 
   /* Call the server-side verification function */
   try {
@@ -140,15 +140,17 @@ async function submitVerification({
          This is a temporary fallback — run verification_v2.sql to get server-side checks */
       if (rpcErr.message.includes('does not exist') || rpcErr.code === '42883') {
         /* Mark as approved directly since format + age checks already passed above */
-        await window.supabase.from('verifications')
+        const { error: e1 } = await window.supabase.from('verifications')
           .update({ status: 'approved', auto_checked: true, reviewed_at: new Date().toISOString() })
           .eq('user_id', user.id);
-        await window.supabase.from('users')
+        const { error: e2 } = await window.supabase.from('users')
           .update({ is_verified: true, verified_at: new Date().toISOString() })
           .eq('id', user.id);
-        await window.supabase.from('taskers')
+        /* taskers.user_id is TEXT so cast */
+        const { error: e3 } = await window.supabase.from('taskers')
           .update({ is_verified: true, verified_at: new Date().toISOString() })
           .eq('user_id', String(user.id));
+        if (e2) throw new Error('Could not mark user as verified: ' + e2.message);
         return { ok: true, message: 'Identity verified! You can now use all features of StreetTasker.' };
       }
       throw new Error(rpcErr.message);
