@@ -110,7 +110,7 @@ async function submitVerification({
     phone:            phone?.trim() || null,
     id_type:          idType,
     id_number:        idNumber.replace(/\s/g, '').toUpperCase(),
-    business_name:    businessName?.trim() || null,
+    business_name:    businessName?.trim() || '',  /* nullable — empty for customers */
     business_address: businessAddress?.trim() || null,
     business_lat:     businessLat ? parseFloat(businessLat) : null,
     business_lon:     businessLon ? parseFloat(businessLon) : null,
@@ -121,12 +121,14 @@ async function submitVerification({
   if (upsertErr) return { ok: false, message: 'Could not save verification: ' + upsertErr.message };
 
   /* Also store first/last name on users table for display */
-  await window.supabase.from('users').update({
-    first_name:    firstName.trim(),
-    last_name:     lastName.trim(),
-    dob:           dob || null,
-    business_name: businessName?.trim() || null,
-  }).eq('id', user.id).catch(() => {});
+  /* Build users update — only include business_name if provided (customers won't have one) */
+  const _userUpdate = {
+    first_name: firstName.trim(),
+    last_name:  lastName.trim(),
+    dob:        dob || null,
+  };
+  if (businessName?.trim()) _userUpdate.business_name = businessName.trim();
+  await window.supabase.from('users').update(_userUpdate).eq('id', user.id).catch(() => {});
 
   /* Call the server-side verification function */
   try {
