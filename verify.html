@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
     .verify-page {
       min-height: 100vh;
       background: var(--bg-subtle);
@@ -430,24 +431,34 @@
     const fmtCheck = window.ST.verify.validateIdFormat(idType, idNumber);
     if (!fmtCheck.ok) { showErr(fmtCheck.hint); return; }
 
+    const _btnReset = () => {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Verify My Identity';
+    };
+
     btn.disabled = true;
-    btn.innerHTML = '<span class="btn-spinner"></span> Verifying…';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Verifying…';
 
-    const result = await window.ST.verify.submitVerification({
-      firstName, lastName, dob, phone,
-      idType, idNumber,
-      businessName:    role === 'tasker' ? businessName : null,
-      businessAddress: location,
-      businessLat:     lat || null,
-      businessLon:     lon || null,
-      role,
-    });
+    let result;
+    try {
+      result = await window.ST.verify.submitVerification({
+        firstName, lastName, dob, phone,
+        idType, idNumber,
+        businessName:    role === 'tasker' ? businessName : null,
+        businessAddress: location,
+        businessLat:     lat || null,
+        businessLon:     lon || null,
+        role,
+      });
+    } catch(submitErr) {
+      _btnReset();
+      showErr('Verification failed: ' + (submitErr.message || 'Unknown error. Please try again.'));
+      return;
+    }
 
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Verify My Identity';
+    _btnReset();
 
     if (result.ok) {
-      /* Show success state */
       hide('verifyForm');
       hide('verifyRejected');
       show('verifyDone');
@@ -458,6 +469,7 @@
       }
       showToast('Identity verified! ✓');
     } else if (result.pending) {
+      /* RPC not set up yet or DB error — show pending with helpful info */
       hide('verifyForm');
       show('verifyPending');
     } else {
