@@ -1,14 +1,21 @@
+# StreetTasker robots.txt
 User-agent: *
 Allow: /
+
+# Public pages — crawl freely
+Allow: /index.html
 Allow: /find-taskers.html
 Allow: /explore-tasks.html
-Allow: /index.html
 Allow: /signup.html
 Allow: /login.html
+Allow: /404.html
+
+# Private dashboard pages — no need to index
 Disallow: /dashboard-customer.html
 Disallow: /dashboard-tasker.html
 Disallow: /post-task.html
 Disallow: /post-service.html
 Disallow: /verify.html
+Disallow: /subscription.html
 
 Sitemap: https://streettasker.com/sitemap.xml
