@@ -1642,3 +1642,13 @@ img { max-width: 100%; height: auto; }
   .explore-layout main { min-width: 0; }
   .task-row > div:first-child { flex-wrap: wrap; }
 }
+
+/* ── Prevent auth-state flash ──────────────────────────────────
+   Hide role-specific nav items immediately; app.js reveals them
+   after syncNavbarAuthState resolves. Without this, logged-in
+   users briefly see Log In / Sign Up before auth loads.        */
+.nav-customer,
+.nav-tasker,
+#navUserName,
+#navLogout,
+#navMobileLogout { display: none; }
