@@ -408,7 +408,8 @@
       var loc      = tasker.location || '';
       var rating   = tasker.rating ? '&#11088; ' + parseFloat(tasker.rating).toFixed(1) : '';
       var photo    = tasker.photo_url;
-      var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
+      var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean)
+                       .map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
       var userId   = tasker.user_id || '';
 
       var statusColors = { pending:'#f59e0b', accepted:'#16a34a', rejected:'#dc2626' };
@@ -417,63 +418,70 @@
 
       /* Contact reveal — only shown after acceptance */
       var contactHtml = '';
-      if (isAccepted) {
-        var phone = contact && contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
-        contactHtml = '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:14px;flex-wrap:wrap;align-items:center;">'
-          + '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Contact Details</span>'
-          + (phone
-              ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">'
-                + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
-                + (contact.phone) + '</a>'
-              : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file</span>')
-          + (contact && contact.email
-              ? '<a href="mailto:' + contact.email + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;color:var(--text-secondary);text-decoration:none;">'
-                + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>'
-                + contact.email + '</a>'
-              : '')
-          + (userId ? '<a href="tasker-profile.html?id=' + userId + '" target="_blank" style="font-size:0.8rem;color:var(--blue);">View Profile</a>' : '')
-          + '</div>';
+      if (isAccepted && contact) {
+        var phone = contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
+        contactHtml =
+          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:14px;flex-wrap:wrap;align-items:center;">' +
+          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Contact Details</span>' +
+          (phone
+            ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
+              '&#128222; ' + contact.phone + '</a>'
+            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file — ask them to add it during verification</span>') +
+          (userId ? ' <a href="tasker-profile.html?id=' + userId + '" target="_blank" style="font-size:0.8rem;color:var(--blue);">View Profile</a>' : '') +
+          '</div>';
       } else if (a.status === 'pending') {
         contactHtml = '<div style="margin-top:6px;font-size:0.76rem;color:var(--text-muted);">Accept to see contact details</div>';
       }
 
+      var photoHtml = photo
+        ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;" />'
+        : initials;
+
+      var actionBtns = '';
+      if (a.status === 'pending') {
+        var aid = String(a.id).replace(/'/g, '');
+        var tid = String(taskId).replace(/'/g, '');
+        actionBtns = '<div class="app-actions" style="flex-shrink:0;">' +
+          '<button class="btn btn-sm btn-primary" onclick="acceptApp(this)" data-app="' + aid + '" data-task="' + tid + '">Accept</button>' +
+          '<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="rejectApp(this)" data-app="' + aid + '">Decline</button>' +
+          '</div>';
+      }
+      }
+
       return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;">' +
         '<div style="display:flex;gap:12px;align-items:flex-start;">' +
-          '<div class="app-avatar">' +
-            (photo ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='' + initials + ''" />' : initials) +
-          '</div>' +
+          '<div class="app-avatar">' + photoHtml + '</div>' +
           '<div style="flex:1;">' +
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
               '<div style="font-weight:700;font-size:0.9rem;">' + escapeHtml(dispName) + '</div>' +
-              '<span class="status-pill" style="color:' + statusColor + ';border-color:' + statusColor + ';">' + (a.status||'pending') + '</span>' +
+              '<span class="status-pill" style="color:' + statusColor + ';border-color:' + statusColor + ';">' + (a.status || 'pending') + '</span>' +
             '</div>' +
             '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">' + escapeHtml([svc,loc,rating].filter(Boolean).join(' · ')) + '</div>' +
             (a.message ? '<p style="font-size:0.82rem;color:var(--text-secondary);margin-top:7px;padding:8px 10px;background:var(--bg-subtle);border-radius:6px;border-left:3px solid var(--border);">&ldquo;' + escapeHtml(a.message) + '&rdquo;</p>' : '') +
             '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">' + fmtDate(a.created_at) + '</div>' +
             contactHtml +
           '</div>' +
-          (a.status === 'pending'
-            ? '<div class="app-actions" style="flex-shrink:0;">' +
-                '<button class="btn btn-sm btn-primary" onclick="acceptApp('' + a.id + '','' + taskId + '')">Accept</button>' +
-                '<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="rejectApp('' + a.id + '')">Decline</button>' +
-              '</div>'
-            : '') +
+          actionBtns +
         '</div>' +
       '</div>';
     }
 
-    async function acceptApp(appId, taskId) {
+    async function acceptApp(btnEl) {
+      /* btnEl can be a button element (new data-attr approach) or a string ID (legacy) */
+      var appId  = (btnEl && btnEl.dataset) ? btnEl.dataset.app  : btnEl;
+      var taskId = (btnEl && btnEl.dataset) ? btnEl.dataset.task : arguments[1];
       if (!confirm('Accept this tasker for the job?')) return;
       try {
         await window.ST.db.updateApplicationStatus(appId, 'accepted');
-        showToast('&#127881; Application accepted! The tasker has been notified.');
+        showToast('\uD83C\uDF89 Application accepted! The tasker has been notified.');
         appLoaded = false;
         await loadApplications();
       } catch(e) { showToast('Error: ' + e.message); }
     }
     window.acceptApp = acceptApp;
 
-    async function rejectApp(appId) {
+    async function rejectApp(btnEl) {
+      var appId = (btnEl && btnEl.dataset) ? btnEl.dataset.app : btnEl;
       try {
         await window.ST.db.updateApplicationStatus(appId, 'rejected');
         showToast('Application declined.');
