@@ -252,6 +252,7 @@
         gps: true,
         onSelect: r => { FILTERS.location = r.label; render(1); },
         onChange: v => { FILTERS.location = v.trim(); render(1); },
+        mode: 'area',
       });
       const pr = document.getElementById('priceRange');
       if (pr) pr.addEventListener('input', () => {

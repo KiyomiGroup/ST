@@ -230,6 +230,7 @@
         inputId:    'svcLocation',
         dropdownId: 'svcLocationSuggestions',
         gps: true,
+        mode: 'precise',
       });
 
       // Pre-fill from existing service
@@ -323,6 +324,11 @@
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
 
       if (!location)              { showErr('Please enter your location.'); return; }
+      /* Require confirmed street-level location */
+      if (typeof validateLocation === 'function') {
+        var locCheck = validateLocation('svcLocation', 'precise');
+        if (!locCheck.ok) { showErr(locCheck.error); return; }
+      }
       if (description.length < 20){ showErr('Description must be at least 20 characters.'); return; }
 
       btn.disabled    = true;

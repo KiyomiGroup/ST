@@ -151,6 +151,7 @@
         gps: true,
         onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
         onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
+        mode: 'area',
       });
 
       /* Category radio */

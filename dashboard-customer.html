@@ -482,7 +482,13 @@
 
       /* Hide loading, show panels immediately */
       document.getElementById('dashLoading').style.display = 'none';
-      switchPanel('overview', document.querySelector('[data-panel="overview"]'));
+
+      /* Check for ?panel= URL param — used by post-task redirect to land on My Tasks */
+      var urlParams  = new URLSearchParams(window.location.search);
+      var startPanel = urlParams.get('panel') || 'overview';
+      var startBtn   = document.querySelector('[data-panel="' + startPanel + '"]') || document.querySelector('[data-panel="overview"]');
+      switchPanel(startPanel, startBtn);
+      if (startPanel === 'my-tasks') loadMyTasks();
 
       /* Load notification badge */
       window.ST.db.fetchUnreadNotificationCount().then(function(count) {
@@ -647,7 +653,8 @@
           inputId:    'profileLocation',
           dropdownId: 'profileLocationSuggestions',
           gps: true,
-        });
+          mode: 'area',
+      });
       }
     });
   </script>

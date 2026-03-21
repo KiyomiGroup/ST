@@ -919,7 +919,8 @@
     /* Wire profile location input */
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initLocationInput === 'function') {
-        initLocationInput({ inputId: 'profileLocation', dropdownId: 'profileLocationSuggestions', gps: true });
+        initLocationInput({ inputId: 'profileLocation', dropdownId: 'profileLocationSuggestions', gps: true   mode: 'precise',
+      });
       }
     });
 
