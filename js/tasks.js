@@ -291,6 +291,16 @@ async function handleTaskSubmit(e) {
       }
     }
 
+    /* Require identity verification before posting a task.
+       Tasks invite strangers to your location — verification protects both sides. */
+    if (window.ST?.verify) {
+      const verified = await window.ST.verify.requireVerification('post a task');
+      if (!verified) {
+        setButtonLoading(submitBtn, null, 'Post My Task');
+        return;
+      }
+    }
+
     /* Use db.js postTask — handles auth + insert cleanly */
     if (window.ST?.db?.postTask) {
       /* Upload photos first if any */
