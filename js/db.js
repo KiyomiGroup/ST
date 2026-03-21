@@ -146,10 +146,22 @@ async function applyToTask({ taskId, message = '' }) {
 
 async function fetchTaskApplications(taskId) {
   const { data, error } = await window.supabase.from('task_applications')
-    .select('*, taskers:tasker_id(name, service, location, rating, photo_url)')
+    .select('*, taskers:tasker_id(name, service, location, rating, photo_url, user_id, business_name)')
     .eq('task_id', taskId).order('created_at', { ascending: false });
   if (error) return [];
-  return data || [];
+  const rows = data || [];
+  /* For accepted applications fetch tasker contact details */
+  await Promise.all(rows.map(async a => {
+    const userId = a.taskers?.user_id;
+    if (userId && (a.status === 'accepted' || a.status === 'completed')) {
+      try {
+        const { data: u } = await window.supabase
+          .from('users').select('phone, name, email').eq('id', userId).maybeSingle();
+        a._taskerContact = u || null;
+      } catch(e) {}
+    }
+  }));
+  return rows;
 }
 
 async function fetchMyApplications() {

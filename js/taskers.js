@@ -4,23 +4,93 @@
    ============================================================ */
 'use strict';
 
-const STATIC_SERVICES = [
-  { id:'s1', provider_name:'Adebayo Okafor',  service_name:'Electrician',   category:'electrician', location:'Lekki, Lagos',           price:5000,  rating:4.9, reviews:48  },
-  { id:'s2', provider_name:'Chidi Fernandez', service_name:'Barber',         category:'barber',      location:'Victoria Island, Lagos', price:3500,  rating:4.8, reviews:112 },
-  { id:'s3', provider_name:'Fatima Mohammed', service_name:'House Cleaner',  category:'cleaning',    location:'Ikeja, Lagos',           price:4000,  rating:4.7, reviews:73  },
-  { id:'s4', provider_name:'Emeka Obi',       service_name:'Mechanic',       category:'mechanic',    location:'Surulere, Lagos',        price:6000,  rating:4.6, reviews:29  },
-  { id:'s5', provider_name:'Sadia Bello',     service_name:'Make-up Artist', category:'beauty',      location:'Ajah, Lagos',            price:8000,  rating:5.0, reviews:91  },
-  { id:'s6', provider_name:'Kingsley Adu',    service_name:'Plumber',        category:'plumber',     location:'Yaba, Lagos',            price:4500,  rating:4.5, reviews:34  },
+const DUMMY_SERVICES = [
+  /* Electricians */
+  { id:'d1',  user_id:'demo', provider_name:'Adebayo Okafor',    service_name:'Electrician',        category:'electrician', location:'Lekki Phase 1, Lagos',       price:6000,  rating:4.9, reviews:48,  description:'Certified electrician with 8 years experience. Wiring, installations, repairs and maintenance.' },
+  { id:'d2',  user_id:'demo', provider_name:'Emeka Electrical',  service_name:'Electrician',        category:'electrician', location:'Ikeja GRA, Lagos',            price:5500,  rating:4.7, reviews:31,  description:'Residential and commercial electrical work. Fast response, quality guaranteed.' },
+  { id:'d3',  user_id:'demo', provider_name:'Bright Nwosu',      service_name:'Electrician',        category:'electrician', location:'Wuse 2, Abuja',               price:7000,  rating:4.8, reviews:22,  description:'Specialised in solar installations, inverters, and general electrical repairs.' },
+  /* Barbers */
+  { id:'d4',  user_id:'demo', provider_name:'Chidi Cuts',        service_name:'Barber',             category:'barber',      location:'Victoria Island, Lagos',      price:3500,  rating:4.8, reviews:112, description:'Professional barber. Fades, lineups, beard grooming. Home visits available.' },
+  { id:'d5',  user_id:'demo', provider_name:'Style King Barbers', service_name:'Barber',            category:'barber',      location:'Surulere, Lagos',             price:2500,  rating:4.6, reviews:87,  description:'Classic and modern cuts. Walk-ins welcome or book in advance.' },
+  { id:'d6',  user_id:'demo', provider_name:'Taiwo Ojo',         service_name:'Barber',             category:'barber',      location:'Maitama, Abuja',              price:4000,  rating:4.7, reviews:44,  description:'Mobile barber. I come to you. All styles, all hair types.' },
+  /* Cleaners */
+  { id:'d7',  user_id:'demo', provider_name:'Fatima Cleaning Co', service_name:'House Cleaner',     category:'cleaning',    location:'Ikeja, Lagos',                price:8000,  rating:4.7, reviews:73,  description:'Deep cleaning, move-in/move-out, post-construction cleaning. Trusted and thorough.' },
+  { id:'d8',  user_id:'demo', provider_name:'Sparkle Homes',     service_name:'House Cleaner',      category:'cleaning',    location:'Lekki, Lagos',                price:10000, rating:4.9, reviews:56,  description:'Full home cleaning service. Eco-friendly products. Weekly, bi-weekly or one-off.' },
+  { id:'d9',  user_id:'demo', provider_name:'Chisom Uzor',       service_name:'Office Cleaner',     category:'cleaning',    location:'Garki, Abuja',                price:12000, rating:4.5, reviews:18,  description:'Office and commercial space cleaning. Flexible scheduling including weekends.' },
+  /* Plumbers */
+  { id:'d10', user_id:'demo', provider_name:'Kingsley Plumbing', service_name:'Plumber',            category:'plumber',     location:'Yaba, Lagos',                 price:5000,  rating:4.5, reviews:34,  description:'All plumbing work: pipes, boreholes, water heaters, blocked drains. 24hr emergency.' },
+  { id:'d11', user_id:'demo', provider_name:'Tunde Pipes',       service_name:'Plumber',            category:'plumber',     location:'Gbagada, Lagos',              price:4500,  rating:4.4, reviews:21,  description:'Residential plumbing specialist. Free assessment for new clients.' },
+  /* Mechanics */
+  { id:'d12', user_id:'demo', provider_name:'Emeka AutoCare',    service_name:'Mechanic',           category:'mechanic',    location:'Surulere, Lagos',             price:8000,  rating:4.6, reviews:29,  description:'Foreign and local cars. Diagnostics, engine repair, AC regas, brake service.' },
+  { id:'d13', user_id:'demo', provider_name:'Oga Mechanic',      service_name:'Mobile Mechanic',    category:'mechanic',    location:'Wuse, Abuja',                 price:6000,  rating:4.5, reviews:17,  description:'I come to your location. Quick diagnosis and repair for all car brands.' },
+  /* Beauty */
+  { id:'d14', user_id:'demo', provider_name:'Sadia Beauty Studio', service_name:'Make-up Artist',  category:'beauty',      location:'Ajah, Lagos',                 price:15000, rating:5.0, reviews:91,  description:'Bridal, aso-ebi, editorial makeup. Book early for weekends. Portfolio on request.' },
+  { id:'d15', user_id:'demo', provider_name:'Glam by Amaka',     service_name:'Make-up Artist',    category:'beauty',      location:'VI, Lagos',                   price:20000, rating:4.9, reviews:63,  description:'Luxury makeup for weddings, photoshoots, and events. International techniques.' },
+  { id:'d16', user_id:'demo', provider_name:'Precious Nails',    service_name:'Nail Technician',   category:'beauty',      location:'Lekki, Lagos',                price:7000,  rating:4.7, reviews:108, description:'Gel, acrylic, nail art, manicure and pedicure. Home service available.' },
+  { id:'d17', user_id:'demo', provider_name:'Hairitage Braids',  service_name:'Hair Stylist',       category:'beauty',      location:'Gbagada, Lagos',              price:9000,  rating:4.8, reviews:77,  description:'Box braids, knotless braids, cornrows, twists. Natural hair specialist.' },
+  /* Painting */
+  { id:'d18', user_id:'demo', provider_name:'Colour Pro Painters', service_name:'Painter',         category:'painting',    location:'Ikeja, Lagos',                price:25000, rating:4.6, reviews:15,  description:'Interior and exterior painting. Quality finishes, neat work. Per room quotes available.' },
+  { id:'d19', user_id:'demo', provider_name:'Ade Painters Ltd',  service_name:'Painter',            category:'painting',    location:'Lugbe, Abuja',                price:20000, rating:4.4, reviews:9,   description:'Residential and commercial painting. Textured finishes and epoxy floors.' },
+  /* Laundry */
+  { id:'d20', user_id:'demo', provider_name:'FreshPress Laundry', service_name:'Laundry & Ironing', category:'laundry',    location:'Yaba, Lagos',                 price:500,   rating:4.7, reviews:142, description:'Per item pricing. 24hr turnaround. Pickup and delivery available in your area.' },
+  { id:'d21', user_id:'demo', provider_name:'Clean Threads',     service_name:'Dry Cleaning',       category:'laundry',    location:'Asokoro, Abuja',              price:1500,  rating:4.5, reviews:34,  description:'Dry cleaning, alterations, suit pressing. Professional grade equipment.' },
+  /* Tutoring */
+  { id:'d22', user_id:'demo', provider_name:'Mr Bello Maths',    service_name:'Maths Tutor',        category:'tutoring',    location:'Lekki, Lagos',               price:5000,  rating:4.9, reviews:38,  description:'O-Level, JAMB, WAEC maths. Online or in-person. Proven track record.' },
+  { id:'d23', user_id:'demo', provider_name:'EduBright Tutors',  service_name:'Home Tutor',         category:'tutoring',    location:'Maitama, Abuja',              price:7000,  rating:4.8, reviews:25,  description:'Primary, secondary and tertiary tutoring. All subjects. Flexible hours.' },
+  /* Cooking */
+  { id:'d24', user_id:'demo', provider_name:'Mama Cooks',        service_name:'Personal Chef',      category:'cooking',     location:'Victoria Island, Lagos',      price:20000, rating:4.9, reviews:19,  description:'Home cooked Nigerian and continental meals. Events, parties, weekly meal prep.' },
+  { id:'d25', user_id:'demo', provider_name:'Chef Dara',         service_name:'Catering',           category:'cooking',     location:'Ikeja GRA, Lagos',            price:50000, rating:4.7, reviews:12,  description:'Party catering from 20–500 guests. Jollof, pepper soup, egusi, and more.' },
+  /* Security */
+  { id:'d26', user_id:'demo', provider_name:'SafeGuard Security', service_name:'Security Guard',    category:'security',    location:'Lekki Phase 2, Lagos',        price:40000, rating:4.3, reviews:8,   description:'Licensed security officers. Estate, office, event security. Monthly contracts available.' },
+  /* Photography */
+  { id:'d27', user_id:'demo', provider_name:'Lens by Seun',      service_name:'Photographer',       category:'photography', location:'Ikoyi, Lagos',                price:50000, rating:4.9, reviews:54,  description:'Weddings, portraits, events, brand shoots. Drone photography also available.' },
+  { id:'d28', user_id:'demo', provider_name:'Capture Lagos',     service_name:'Videographer',       category:'photography', location:'Surulere, Lagos',             price:60000, rating:4.8, reviews:31,  description:'Wedding films, music videos, corporate videos. Cinematic quality delivery.' },
+  /* Moving */
+  { id:'d29', user_id:'demo', provider_name:'Swift Movers',      service_name:'Moving & Packing',   category:'moving',      location:'Lagos Mainland',              price:30000, rating:4.5, reviews:23,  description:'House and office relocation. We pack, load, transport and unpack. Insured.' },
+  /* AC / Appliances */
+  { id:'d30', user_id:'demo', provider_name:'Cool Air Services', service_name:'AC Technician',      category:'appliances',  location:'Lekki, Lagos',                price:8000,  rating:4.6, reviews:41,  description:'AC installation, servicing, gas recharge, fault repair. All brands covered.' },
 ];
+
+async function loadServices() {
+  try {
+    const services = await window.ST.db.fetchServices({ limit: 100 });
+    if (services && services.length > 0) {
+      /* Live services first, then dummy data to fill out the page */
+      const liveIds = new Set(services.map(s => String(s.user_id)));
+      const liveMapped = services.map((s, i) => ({
+        id:            String(s.id || `s${i}`),
+        user_id:       String(s.user_id || s.id),
+        provider_name: s.provider_name || 'Provider',
+        service_name:  s.service_name || s.service || 'Service',
+        category:      s.category || 'other',
+        location:      s.location || 'Lagos',
+        price:         parseFloat(s.price || s.rate_value || 5000),
+        rate:          s.rate || `₦${Number(s.price || 5000).toLocaleString()}/session`,
+        rating:        parseFloat(s.rating || 4.5),
+        reviews:       parseInt(s.reviews || 0),
+        description:   s.description || s.bio || '',
+        photo:         s.photo || s.photo_url || null,
+        is_live:       true,
+      }));
+      /* Append dummies — mark them so Book button is hidden */
+      ALL = [...liveMapped, ...DUMMY_SERVICES];
+      console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);
+    } else {
+      ALL = DUMMY_SERVICES;
+    }
+  } catch (e) {
+    console.warn('[Taskers] Load failed, using demo data:', e.message);
+    ALL = DUMMY_SERVICES;
+  }
+
 
 let ALL = [];
 let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
 let PAGE = 1;
 const PAGE_SIZE = 8;
 
-/* ── Init ────────────────────────────────────────────────────── */
+/* ── Init ───────────────────────────────────────────────────── */
 function initTaskersPage() {
-  /* Pre-fill search and location from URL params (e.g. from homepage search) */
   const params = new URLSearchParams(window.location.search);
   const urlService  = params.get('service')  || '';
   const urlLocation = params.get('location') || '';
@@ -34,40 +104,7 @@ function initTaskersPage() {
     const locInp = document.getElementById('taskerLocationInput');
     if (locInp) locInp.value = urlLocation;
   }
-
-  loadServices().then(() => {
-    render();
-    wireAll();
-    initBookingModal();
-  });
-}
-
-async function loadServices() {
-  try {
-    const services = await window.ST.db.fetchServices({ limit: 100 });
-    if (services && services.length > 0) {
-      ALL = services.map((s, i) => ({
-        id:           String(s.id || `s${i}`),
-        userId:       String(s.user_id || s.id),
-        provider_name: s.provider_name || 'Provider',
-        service_name: s.service_name || s.service || 'Service',
-        category:     s.category || 'other',
-        location:     s.location || 'Lagos',
-        price:        parseFloat(s.price || s.rate_value || 5000),
-        rate:         s.rate || `₦${Number(s.price || 5000).toLocaleString()}/session`,
-        rating:       parseFloat(s.rating || 4.5),
-        reviews:      parseInt(s.reviews || 0),
-        description:  s.description || s.bio || '',
-        photo:        s.photo || s.photo_url || null,
-      }));
-      console.log(`[Taskers] ${ALL.length} services loaded from Supabase ✓`);
-    } else {
-      ALL = STATIC_SERVICES;
-    }
-  } catch (e) {
-    console.warn('[Taskers] Load failed, using static data:', e.message);
-    ALL = STATIC_SERVICES;
-  }
+  loadServices().then(() => { render(); wireAll(); initBookingModal(); });
 }
 
 /* ── Filter + sort ───────────────────────────────────────────── */
@@ -161,10 +198,12 @@ function buildCard(s) {
       </div>
     </div>
     <div class="tc-footer">
-      <span class="tc-badge tc-badge-green">Available</span>
+      <span class="tc-badge tc-badge-green">${s.user_id === 'demo' ? 'Demo listing' : 'Available'}</span>
       <div style="display:flex;gap:6px;">
-        <a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>
-        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>
+        ${s.user_id !== 'demo' ? `<a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>` : ''}
+        ${s.user_id !== 'demo'
+          ? `<button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="showToast('Sign up to book this service!')">Book</button>`}
       </div>
     </div>
   </div>`;
