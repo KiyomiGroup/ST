@@ -1,47 +1,54 @@
-<!-- Street Taskers Navbar -->
+<!-- StreetTasker Navbar — inline, no async fetch, instant render -->
 <nav id="navbar">
   <div class="nav-inner">
 
-    <a href="index.html" class="nav-logo" aria-label="Street Taskers home">
-      <img src="images/logo-nav.png" alt="Street Taskers"
+    <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
+      <img src="images/logo-nav.png" alt="StreetTasker"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
       <span class="nav-logo-text" style="display:none;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Street Taskers
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        StreetTasker
       </span>
     </a>
 
+    <!-- Always-visible 4 links — same on every page, every state -->
     <ul class="nav-links" role="navigation">
-      <li><a href="find-taskers.html" class="nav-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Find Services
-      </a></li>
-      <li><a href="explore-tasks.html" class="nav-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-        Explore Tasks
-      </a></li>
-
-      <!-- Logged-out only -->
-      <li class="nav-loggedout"><a href="post-task.html" class="nav-link">Post a Task</a></li>
-      <li class="nav-loggedout"><a href="post-service.html" class="nav-link">Post a Service</a></li>
-
-      <!-- Customer-only -->
-      <li class="nav-customer" style="display:none;"><a href="post-task.html" class="nav-link">Post a Task</a></li>
-      <li class="nav-customer" style="display:none;"><a href="dashboard-customer.html" class="nav-link">Dashboard</a></li>
-
-      <!-- Tasker-only -->
-      <li class="nav-tasker" style="display:none;"><a href="post-service.html" class="nav-link">Post Service</a></li>
-      <li class="nav-tasker" style="display:none;"><a href="dashboard-tasker.html" class="nav-link">Dashboard</a></li>
+      <li>
+        <a href="find-taskers.html" class="nav-link" id="nav-find">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find Services
+        </a>
+      </li>
+      <li>
+        <a href="explore-tasks.html" class="nav-link" id="nav-explore">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          Explore Tasks
+        </a>
+      </li>
+      <li>
+        <!-- href set instantly by initNavbarAuth() from localStorage -->
+        <a href="post-task.html" class="nav-link" id="nav-action">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span id="nav-action-label">Post a Task</span>
+        </a>
+      </li>
+      <li>
+        <a href="dashboard-customer.html" class="nav-link" id="nav-dashboard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+      </li>
     </ul>
 
     <div class="nav-divider" aria-hidden="true"></div>
 
     <div class="nav-actions">
-      <a href="login.html"  class="btn btn-ghost  btn-sm nav-loggedout">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm nav-loggedout">Sign Up</a>
-
-      <span id="navUserName" class="nav-user-chip" style="display:none;"></span>
-      <button id="navLogout" class="btn btn-ghost btn-sm" style="display:none;" onclick="window.ST.auth.logoutUser()">
+      <!-- Logged-out state — hidden once auth resolves -->
+      <a href="login.html"  class="btn btn-ghost  btn-sm" id="nav-login">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm" id="nav-signup">Sign Up</a>
+      <!-- Logged-in state — hidden until auth resolves -->
+      <span id="navUserName" class="nav-user-chip"></span>
+      <button id="navLogout" class="btn btn-ghost btn-sm" onclick="window.ST?.auth?.logoutUser()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Logout
       </button>
@@ -50,21 +57,19 @@
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
+
   </div>
 </nav>
 
+<!-- Mobile menu -->
 <div class="nav-mobile" id="navMobile">
   <a href="find-taskers.html" class="nav-link">Find Services</a>
   <a href="explore-tasks.html" class="nav-link">Explore Tasks</a>
-  <a href="post-task.html"    class="nav-link nav-loggedout">Post a Task</a>
-  <a href="post-service.html" class="nav-link nav-loggedout">Post a Service</a>
-  <a href="post-task.html"    class="nav-link nav-customer" style="display:none;">Post a Task</a>
-  <a href="dashboard-customer.html" class="nav-link nav-customer" style="display:none;">Dashboard</a>
-  <a href="post-service.html" class="nav-link nav-tasker" style="display:none;">Post Service</a>
-  <a href="dashboard-tasker.html" class="nav-link nav-tasker" style="display:none;">Dashboard</a>
+  <a href="post-task.html" class="nav-link" id="nav-mobile-action">Post a Task</a>
+  <a href="dashboard-customer.html" class="nav-link" id="nav-mobile-dashboard">Dashboard</a>
   <div class="nav-mobile-actions">
-    <a href="login.html"  class="btn btn-ghost   btn-full nav-loggedout">Log In</a>
-    <a href="signup.html" class="btn btn-primary  btn-full nav-loggedout">Sign Up</a>
-    <button id="navMobileLogout" class="btn btn-ghost btn-full" style="display:none;" onclick="window.ST.auth.logoutUser()">Logout</button>
+    <a href="login.html"  class="btn btn-ghost   btn-full" id="nav-mobile-login">Log In</a>
+    <a href="signup.html" class="btn btn-primary  btn-full" id="nav-mobile-signup">Sign Up</a>
+    <button id="navMobileLogout" class="btn btn-ghost btn-full" style="display:none;" onclick="window.ST?.auth?.logoutUser()">Logout</button>
   </div>
 </div>
