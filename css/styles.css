@@ -293,12 +293,14 @@ p  { color: var(--text-secondary); font-weight: 400; }
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  overflow: hidden; margin-bottom: 16px;
+  overflow: visible; margin-bottom: 16px;
+  position: relative;
 }
 .hero-search-field {
   display: flex; align-items: center; gap: 10px;
   flex: 1; padding: 0 16px; min-width: 0;
 }
+.hero-search-field:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); overflow: hidden; }
 .hero-search-field + .hero-search-field { border-left: 1px solid var(--border); }
 .hero-search-field svg { flex-shrink: 0; stroke: var(--text-muted); }
 .hero-search-field input {
@@ -307,7 +309,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
   background: transparent; padding: 15px 0;
 }
 .hero-search-field input::placeholder { color: var(--text-muted); }
-.hero-search .btn { border-radius: 0; padding: 15px 24px; flex-shrink: 0; }
+.hero-search .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 15px 24px; flex-shrink: 0; }
 
 .hero-cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
@@ -456,7 +458,8 @@ p  { color: var(--text-secondary); font-weight: 400; }
   display: flex; background: var(--white);
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 28px;
+  box-shadow: var(--shadow-sm); overflow: visible; margin-top: 28px;
+  position: relative;
 }
 .search-bar .sf {
   display: flex; align-items: center; gap: 10px;
@@ -470,7 +473,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
   background: transparent; padding: 14px 0;
 }
 .search-bar input::placeholder { color: var(--text-muted); }
-.search-bar .btn { border-radius: 0; padding: 14px 24px; flex-shrink: 0; }
+.search-bar .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 14px 24px; flex-shrink: 0; }
 
 /* ── Taskers layout ───────────────────────────────────────────── */
 .taskers-layout { display: grid; grid-template-columns: 252px 1fr; gap: 28px; padding: 48px 0; align-items: start; }
@@ -1181,29 +1184,226 @@ p  { color: var(--text-secondary); font-weight: 400; }
   .dashboard-stats { grid-template-columns: 1fr; }
 }
 
-/* ── Location Suggestions ────────────────────────────────────── */
+/* ── Location Input Widget ───────────────────────────────────── */
+/*
+   GPS lives INSIDE the dropdown as the first row.
+   Input itself is clean — just a pin icon on the left.
+   Pattern: Uber / Airbnb / Google Maps style.
+*/
+
+/* ── Input: just needs position:relative on its wrapper ── */
 .location-suggestions {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 5px);
   left: 0;
   right: 0;
   background: var(--white);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 300;
   display: none;
-  max-height: 200px;
-  overflow-y: auto;
+  overflow: hidden;
+  animation: loc-appear 0.13s var(--ease) both;
 }
-.location-suggestion-item {
-  padding: 9px 14px;
+@keyframes loc-appear {
+  from { opacity:0; transform:translateY(-5px) scale(0.99); }
+  to   { opacity:1; transform:translateY(0)   scale(1); }
+}
+
+/* ── Each row ── */
+.loc-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
   cursor: pointer;
-  font-size: 0.875rem;
-  border-bottom: 1px solid var(--border-light, #f1f5f9);
+  transition: background var(--t) var(--ease);
+  border-bottom: 1px solid var(--gray-100, #f5f5f5);
 }
-.location-suggestion-item:last-child { border-bottom: none; }
-.location-suggestion-item:hover { background: var(--blue-light); color: var(--blue); }
+.loc-row:last-child { border-bottom: none; }
+.loc-row:hover { background: var(--gray-50, #fafafa); }
+
+/* ── GPS row — has its own distinct styling ── */
+.loc-row-gps {
+  background: var(--blue-light);
+  border-bottom: 1px solid rgba(10,132,255,0.12);
+}
+.loc-row-gps:hover { background: rgba(10,132,255,0.12); }
+
+/* ── Icon column ── */
+.loc-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.loc-row:hover .loc-row-icon {
+  background: var(--white);
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+
+/* GPS icon is blue */
+.loc-row-icon-gps {
+  background: white;
+  border-color: rgba(10,132,255,0.25);
+  color: var(--blue);
+}
+.loc-row-gps:hover .loc-row-icon-gps {
+  background: white;
+  color: var(--blue);
+}
+
+/* Spinning animation for GPS loading */
+.loc-spin {
+  animation: loc-rotate 0.9s linear infinite;
+  stroke: var(--blue);
+}
+@keyframes loc-rotate { to { transform: rotate(360deg); } }
+
+/* ── Text column ── */
+.loc-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.loc-row-primary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.loc-row-gps .loc-row-primary { color: var(--blue); font-weight: 600; }
+
+/* ── Separator between GPS row and suggestions ── */
+.loc-sep {
+  height: 1px;
+  background: rgba(10,132,255,0.1);
+  margin: 0;
+}
+
+/* ── Empty state ── */
+.loc-row-empty {
+  color: var(--text-muted);
+  font-size: 0.83rem;
+  font-style: italic;
+  cursor: default;
+  justify-content: center;
+  padding: 14px;
+  border-bottom: none;
+}
+.loc-row-empty:hover { background: transparent; }
+
+/* ── No GPS button needed — remove old padding hacks ── */
+input.has-gps-btn { padding-right: inherit !important; }
+
+
+/* ============================================================
+   SHARED MOBILE DASHBOARD NAV
+   Used by both dashboard-customer.html and dashboard-tasker.html
+   ============================================================ */
+
+/* Hidden by default on desktop */
+.mobile-dash-header  { display: none; }
+.mobile-nav-dropdown { display: none; }
+.mobile-bottom-bar   { display: none; }
+.mobile-overlay      { display: none; }
+
+.mobile-dash-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
+
+.mobile-menu-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 6px; border-radius: 8px; color: var(--text-primary);
+}
+.mobile-menu-btn:hover { background: var(--bg-subtle); }
+
+/* Slide-down dropdown */
+.mobile-nav-dropdown {
+  position: fixed;
+  top: 57px; left: 0; right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 999;
+  padding: 8px 0 16px;
+  animation: slideDown 0.18s ease;
+}
+.mobile-nav-dropdown.open { display: block; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+.mobile-nav-dropdown a,
+.mobile-nav-dropdown button {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 13px 20px;
+  font-size: 0.95rem; font-weight: 500;
+  color: var(--text-primary); background: none;
+  border: none; text-align: left; cursor: pointer;
+  text-decoration: none; font-family: var(--font);
+}
+.mobile-nav-dropdown a:hover,
+.mobile-nav-dropdown button:hover { background: var(--bg-subtle); }
+.mobile-nav-dropdown button.active { color: var(--blue); background: var(--blue-light); }
+.mobile-nav-dropdown .nav-divider  { height: 1px; background: var(--border); margin: 8px 16px; }
+
+.mobile-nav-badge {
+  background: #dc2626; color: #fff;
+  border-radius: 999px; font-size: 0.65rem;
+  font-weight: 700; padding: 1px 6px; margin-left: auto;
+}
+
+/* Bottom tab bar */
+.mobile-bottom-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 env(safe-area-inset-bottom, 0px);
+  z-index: 100;
+  justify-content: space-around;
+}
+.mobile-bottom-bar button {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  background: none; border: none;
+  font-size: 0.62rem; font-weight: 500;
+  color: var(--text-muted); cursor: pointer;
+  padding: 4px 8px; border-radius: 8px;
+  font-family: var(--font); flex: 1;
+}
+.mobile-bottom-bar button.active { color: var(--blue); }
+.mobile-bottom-bar button svg    { flex-shrink: 0; }
+
+/* Overlay when dropdown open */
+.mobile-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3); z-index: 998;
+}
+.mobile-overlay.open { display: block; }
+
+/* Mobile breakpoint — show mobile nav, hide desktop sidebar */
+@media (max-width: 768px) {
+  .mobile-dash-header { display: flex !important; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .mobile-bottom-bar  { display: flex !important; }
+  .dashboard-sidebar  { display: none !important; }
+  .dashboard-header   { display: none !important; }
+  .dashboard-grid     { display: block !important; }
+  .dashboard-body .container { padding: 0 !important; }
+  main { padding: 16px 14px 80px !important; }
+}
 
 /* ============================================================
    SPRINT 3.5 — Mobile Layout Fixes
