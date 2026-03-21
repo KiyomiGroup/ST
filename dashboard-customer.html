@@ -556,11 +556,16 @@
         return;
       }
 
-      var name = (user.user_metadata && user.user_metadata.name) || user.email.split('@')[0] || 'there';
-      document.getElementById('dashGreeting').textContent = 'Welcome back, ' + name;
+      /* Safe name — user.email can be null for Google OAuth */
+      var name = (user.user_metadata && user.user_metadata.name)
+        || (user.email ? user.email.split('@')[0] : null)
+        || 'there';
+      var greetEl = document.getElementById('dashGreeting');
+      if (greetEl) greetEl.textContent = 'Welcome back, ' + name;
 
-      /* Hide loading, show panels immediately */
-      document.getElementById('dashLoading').style.display = 'none';
+      /* Hide loading spinner — must happen before switchPanel */
+      var loadEl = document.getElementById('dashLoading');
+      if (loadEl) loadEl.style.display = 'none';
 
       /* Check for ?panel= URL param — used by post-task redirect to land on My Tasks */
       var urlParams  = new URLSearchParams(window.location.search);

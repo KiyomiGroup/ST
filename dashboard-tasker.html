@@ -700,11 +700,16 @@
         return;
       }
 
-      var name = (user.user_metadata && user.user_metadata.name) || user.email.split('@')[0] || 'Tasker';
-      document.getElementById('dashGreeting').textContent = 'Welcome back, ' + name;
+      /* Safe name — user.email can be null for Google OAuth */
+      var name = (user.user_metadata && user.user_metadata.name)
+        || (user.email ? user.email.split('@')[0] : null)
+        || 'Tasker';
+      var greetEl = document.getElementById('dashGreeting');
+      if (greetEl) greetEl.textContent = 'Welcome back, ' + name;
 
       /* ── CRITICAL: show panels immediately, don't wait for data ── */
-      document.getElementById('dashLoading').style.display = 'none';
+      var loadEl = document.getElementById('dashLoading');
+      if (loadEl) loadEl.style.display = 'none';
       /* Check for URL hash — used by external links to jump to a panel
          e.g. dashboard-tasker.html#profile opens Edit Page directly */
       var startHash = window.location.hash.replace('#','');
