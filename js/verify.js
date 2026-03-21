@@ -101,34 +101,43 @@ async function submitVerification({
   }
 
   /* Upsert the verification record */
-  const { error: upsertErr } = await window.supabase.from('verifications').upsert({
+  /* Step 1: Delete any existing rejected row so upsert works cleanly */
+  await window.supabase.from('verifications')
+    .delete().eq('user_id', user.id).eq('status', 'rejected');
+
+  /* Step 2: Upsert the verification row — reset to pending */
+  const verifPayload = {
     user_id:          user.id,
     role:             role || 'customer',
     first_name:       firstName.trim(),
     last_name:        lastName.trim(),
     dob:              dob || null,
-    phone:            phone?.trim() || null,
+    phone:            phone ? phone.trim() : null,
     id_type:          idType,
     id_number:        idNumber.replace(/\s/g, '').toUpperCase(),
-    business_name:    businessName?.trim() || '',  /* nullable — empty for customers */
-    business_address: businessAddress?.trim() || null,
+    business_address: businessAddress ? businessAddress.trim() : null,
     business_lat:     businessLat ? parseFloat(businessLat) : null,
     business_lon:     businessLon ? parseFloat(businessLon) : null,
     status:           'pending',
     submitted_at:     new Date().toISOString(),
-  }, { onConflict: 'user_id' });
-
-  if (upsertErr) return { ok: false, message: 'Could not save verification: ' + upsertErr.message };
-
-  /* Also store first/last name on users table for display */
-  /* Build users update — only include business_name if provided (customers won't have one) */
-  const _userUpdate = {
-    first_name: firstName.trim(),
-    last_name:  lastName.trim(),
-    dob:        dob || null,
   };
-  if (businessName?.trim()) _userUpdate.business_name = businessName.trim();
-  try { await window.supabase.from('users').update(_userUpdate).eq('id', user.id); } catch(e) { /* non-fatal */ }
+  /* Only include business_name if provided — column is nullable */
+  if (businessName && businessName.trim()) verifPayload.business_name = businessName.trim();
+
+  const { error: upsertErr } = await window.supabase
+    .from('verifications')
+    .upsert(verifPayload, { onConflict: 'user_id' });
+
+  if (upsertErr) return { ok: false, message: 'Could not save: ' + upsertErr.message };
+
+  /* Step 3: Update users table with name/dob for the name-coherence check */
+  const _userUpdate = { first_name: firstName.trim(), last_name: lastName.trim() };
+  if (dob) _userUpdate.dob = dob;
+  if (businessName && businessName.trim()) _userUpdate.business_name = businessName.trim();
+  const { error: userUpdateErr } = await window.supabase
+    .from('users').update(_userUpdate).eq('id', user.id);
+  /* Non-fatal but log it */
+  if (userUpdateErr) console.warn('[Verify] users update:', userUpdateErr.message);
 
   /* Call the server-side verification function */
   try {
@@ -160,11 +169,17 @@ async function submitVerification({
     if (result && result.ok) {
       return { ok: true, message: 'Identity verified! You can now use all features of StreetTasker.' };
     } else {
-      return {
-        ok: false,
-        message: (result && result.reason) || 'Verification failed. Please check your details and try again.',
-        code: result && result.code,
+      /* Map codes to user-friendly messages */
+      const codeMessages = {
+        'FORMAT_INVALID': 'Your ID number format is invalid. Check that you selected the right ID type and entered the number correctly.',
+        'NAME_MISMATCH':  'The name you entered does not match your account name. Use the same first and last name you signed up with.',
+        'UNDERAGE':       'You must be 18 or older to use StreetTasker.',
+        'No pending verification found': 'Your previous submission was already processed. Please refresh the page.',
       };
+      const code    = (result && result.code)   || '';
+      const reason  = (result && result.reason) || '';
+      const message = codeMessages[code] || codeMessages[reason] || reason || 'Verification failed. Please check your details and try again.';
+      return { ok: false, message, code };
     }
   } catch (e) {
     /* Surface the actual error so the user sees it */
