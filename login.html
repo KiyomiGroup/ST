@@ -115,6 +115,58 @@
   <script src="js/app.js"></script>
   <script>
     function initPage() {
+      /* ── Google OAuth callback ─────────────────────────────────
+         After Google redirects back, Supabase fires onAuthStateChange.
+         We read the role from the URL param (set by signup.html) and
+         save it to the user's profile.
+      ─────────────────────────────────────────────────────────── */
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('oauth') === '1') {
+        const banner = document.getElementById('loginErr');
+        if (banner) {
+          banner.textContent = 'Signing you in with Google…';
+          banner.style.background = 'var(--blue-light)';
+          banner.style.color      = 'var(--blue)';
+          banner.style.display    = 'block';
+        }
+        /* Get role from URL param or localStorage fallback */
+        const oauthRole = urlParams.get('role')
+          || (function(){ try { return localStorage.getItem('st_pending_role'); } catch(e){ return null; } })()
+          || 'customer';
+
+        window.supabase.auth.onAuthStateChange(async (event, session) => {
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
+            /* Save role to user metadata and public users table */
+            await window.supabase.auth.updateUser({ data: { role: oauthRole } }).catch(() => {});
+            await window.supabase.from('users').upsert({
+              id:   session.user.id,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              role: oauthRole,
+              email: session.user.email,
+            }, { onConflict: 'id' }).catch(() => {});
+            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+          }
+        });
+
+        /* Fallback: session may already be set */
+        setTimeout(async () => {
+          const { data: { session } } = await window.supabase.auth.getSession();
+          if (session?.user) {
+            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
+            await window.supabase.auth.updateUser({ data: { role: oauthRole } }).catch(() => {});
+            await window.supabase.from('users').upsert({
+              id:   session.user.id,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              role: oauthRole,
+              email: session.user.email,
+            }, { onConflict: 'id' }).catch(() => {});
+            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+          }
+        }, 1500);
+        return;
+      }
+
       /* ── Email confirmation redirect ──────────────────────────
          Supabase appends #access_token=...&type=signup to the URL
          when a user clicks the confirmation link. Detect this and
