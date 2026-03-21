@@ -94,33 +94,41 @@ function setActiveNavLink() {
  */
 document.addEventListener('DOMContentLoaded', async () => {
 
-  /* Load shared components */
+  /* Step 1: Load navbar HTML */
   await loadComponent('#navbar-placeholder', 'components/navbar.html');
-  await loadComponent('#footer-placeholder', 'components/footer.html');
 
-  /* Initialize page-specific module */
+  /* Step 2: Apply auth state INSTANTLY from localStorage — zero network delay.
+     This runs synchronously so the navbar never flickers. */
+  if (window.ST?.auth?.initNavbarInstant) {
+    window.ST.auth.initNavbarInstant();
+  }
+
+  /* Step 3: Load footer (non-blocking, doesn't affect visible UI) */
+  loadComponent('#footer-placeholder', 'components/footer.html');
+
+  /* Step 4: Run page-specific init */
   if (typeof initPage === 'function') {
     initPage();
   }
 
-  /* Init animations */
+  /* Step 5: Init animations */
   initScrollAnimations();
 
-  /* Sync navbar auth state */
+  /* Step 6: Verify auth with Supabase in background (updates if stale) */
   if (window.ST?.auth?.syncNavbarAuthState) {
-    await window.ST.auth.syncNavbarAuthState().catch(() => {});
+    window.ST.auth.syncNavbarAuthState().catch(() => {});
   }
 
-  /* Listen for auth state changes */
+  /* Step 7: Keep navbar in sync on auth changes (login/logout) */
   if (window.supabase) {
-    window.supabase.auth.onAuthStateChange(async (_event, session) => {
+    window.supabase.auth.onAuthStateChange((_event, _session) => {
       if (window.ST?.auth?.syncNavbarAuthState) {
-        await window.ST.auth.syncNavbarAuthState().catch(() => {});
+        window.ST.auth.syncNavbarAuthState().catch(() => {});
       }
     });
   }
 
-  console.log('[StreetTasker] App initialized ✓');
+  console.log('[StreetTasker] App ready ✓');
 });
 
 /* ── Scroll Animations ───────────────────────────────────────── */

@@ -23,46 +23,102 @@ function getDashboardUrl(role) {
 }
 
 /* ── Navbar sync ─────────────────────────────────────────────── */
+/* ── Instant navbar init from localStorage (runs before network) ── */
+function initNavbarInstant() {
+  /* Read cached role from localStorage — set at login/signup */
+  const cachedRole = localStorage.getItem('st_role') || 'customer';
+  const cachedName = localStorage.getItem('st_name') || '';
+  const isLoggedIn = !!localStorage.getItem('st_session');
+  _applyNavState(isLoggedIn, cachedRole, cachedName);
+}
+
+function _applyNavState(loggedIn, role, name) {
+  const id = (i) => document.getElementById(i);
+
+  /* The 4 nav links are always visible — just update their href and label */
+  if (loggedIn) {
+    /* Logged in — update action link and show user info */
+    const actionLink  = id('nav-action');
+    const actionLabel = id('nav-action-label');
+    const dashLink    = id('nav-dashboard');
+    const mAction     = id('nav-mobile-action');
+    const mDash       = id('nav-mobile-dashboard');
+
+    if (role === 'tasker') {
+      if (actionLink)  actionLink.href  = 'post-service.html';
+      if (actionLabel) actionLabel.textContent = 'Post Service';
+      if (dashLink)    dashLink.href    = 'dashboard-tasker.html';
+      if (mAction)     mAction.href     = 'post-service.html';
+      if (mAction)     mAction.textContent = 'Post Service';
+      if (mDash)       mDash.href       = 'dashboard-tasker.html';
+    } else {
+      if (actionLink)  actionLink.href  = 'post-task.html';
+      if (actionLabel) actionLabel.textContent = 'Post a Task';
+      if (dashLink)    dashLink.href    = 'dashboard-customer.html';
+      if (mAction)     mAction.href     = 'post-task.html';
+      if (mAction)     mAction.textContent = 'Post a Task';
+      if (mDash)       mDash.href       = 'dashboard-customer.html';
+    }
+
+    /* Show name chip + logout, hide login/signup */
+    const chip = id('navUserName');
+    if (chip && name) { chip.textContent = name; chip.style.display = 'inline-flex'; }
+    const lo = id('navLogout'); if (lo) lo.style.display = 'inline-flex';
+    const ml = id('navMobileLogout'); if (ml) ml.style.display = 'flex';
+    const li = id('nav-login');    if (li) li.style.display = 'none';
+    const si = id('nav-signup');   if (si) si.style.display = 'none';
+    const mli = id('nav-mobile-login');  if (mli) mli.style.display = 'none';
+    const msi = id('nav-mobile-signup'); if (msi) msi.style.display = 'none';
+  } else {
+    /* Logged out — show login/signup, hide user info */
+    const li = id('nav-login');    if (li) li.style.display = '';
+    const si = id('nav-signup');   if (si) si.style.display = '';
+    const mli = id('nav-mobile-login');  if (mli) mli.style.display = '';
+    const msi = id('nav-mobile-signup'); if (msi) msi.style.display = '';
+    const lo = id('navLogout');    if (lo) lo.style.display = 'none';
+    const ml = id('navMobileLogout'); if (ml) ml.style.display = 'none';
+    const chip = id('navUserName'); if (chip) chip.style.display = 'none';
+    /* Reset action links to default */
+    const actionLabel = id('nav-action-label');
+    if (actionLabel) actionLabel.textContent = 'Post a Task';
+  }
+}
+
 async function syncNavbarAuthState() {
   const user = await getCurrentUser();
-  const $ = (s) => document.querySelectorAll(s);
-  const show = (s) => $(s).forEach(el => (el.style.display = ''));
-  const hide = (s) => $(s).forEach(el => (el.style.display = 'none'));
 
   if (user) {
-    hide('.nav-loggedout');
-    /* Ensure public.users row exists — covers Google OAuth sign-ins */
+    const role = await getUserRole(user);
+    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
+
+    /* Cache in localStorage for instant next-page render */
     try {
-      const { data: existing } = await window.supabase.from('users').select('id').eq('id', user.id).maybeSingle();
+      localStorage.setItem('st_role',    role);
+      localStorage.setItem('st_name',    name);
+      localStorage.setItem('st_session', '1');
+    } catch(e) {}
+
+    /* Ensure public.users row exists (covers Google OAuth) */
+    try {
+      const { data: existing } = await window.supabase
+        .from('users').select('id').eq('id', user.id).maybeSingle();
       if (!existing) {
-        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
-        const role_ = user.user_metadata?.role || 'customer';
         await window.supabase.from('users').upsert(
-          { id: user.id, name, email: user.email, role: role_ },
+          { id: user.id, name, role },
           { onConflict: 'id' }
         );
       }
-    } catch(e) { /* silent */ }
-    const role = await getUserRole(user);
-    if (role === 'tasker') { show('.nav-tasker'); hide('.nav-customer'); }
-    else                   { show('.nav-customer'); hide('.nav-tasker'); }
+    } catch(e) {}
 
-    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
-    const chip = document.getElementById('navUserName');
-    if (chip) { chip.textContent = name; chip.style.display = 'inline-flex'; }
-
-    const lo = document.getElementById('navLogout');
-    const ml = document.getElementById('navMobileLogout');
-    if (lo) lo.style.display = 'inline-flex';
-    if (ml) ml.style.display = 'flex';
+    _applyNavState(true, role, name);
   } else {
-    show('.nav-loggedout');
-    hide('.nav-customer');
-    hide('.nav-tasker');
-    ['navUserName','navDashboardLink','navMobileDashboard','navLogout','navMobileLogout'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
+    /* Clear cache */
+    try {
+      localStorage.removeItem('st_role');
+      localStorage.removeItem('st_name');
+      localStorage.removeItem('st_session');
+    } catch(e) {}
+    _applyNavState(false, 'customer', '');
   }
 }
 
@@ -91,10 +147,24 @@ async function signUpUser({ name, email, password, role, phone = '' }) {
 async function loginUser(email, password) {
   const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  /* Cache for instant navbar render on next page load */
+  try {
+    const role = data.user?.user_metadata?.role || 'customer';
+    const name = data.user?.user_metadata?.name || email.split('@')[0];
+    localStorage.setItem('st_role',    role);
+    localStorage.setItem('st_name',    name);
+    localStorage.setItem('st_session', '1');
+  } catch(e) {}
   return { user: data.user, session: data.session };
 }
 
 async function logoutUser() {
+  /* Clear cached auth state so navbar shows logged-out instantly on next page */
+  try {
+    localStorage.removeItem('st_role');
+    localStorage.removeItem('st_name');
+    localStorage.removeItem('st_session');
+  } catch(e) {}
   await window.supabase.auth.signOut();
   window.location.replace('index.html');
 }
@@ -129,5 +199,5 @@ async function requireRole(role) {
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl,
-  signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState,
+  signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
 };
