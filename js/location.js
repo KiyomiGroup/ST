@@ -164,7 +164,7 @@ function _hint(input, mode) {
 /* Build dropdown */
 function _build(dropdown, input, suggs, onSelect, showGps, mode) {
   dropdown.innerHTML = '';
-  dropdown.style.display = '';
+  dropdown.style.display = 'block';
 
   if (showGps) {
     const row = document.createElement('div');
