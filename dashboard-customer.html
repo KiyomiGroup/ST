@@ -341,7 +341,13 @@
       appLoaded = true;
       var container = document.getElementById('appTaskList');
       try {
-        var tasks = await window.ST.db.fetchMyTasks();
+        var sess2 = await window.supabase.auth.getSession();
+        var uid2 = sess2.data.session && sess2.data.session.user.id;
+        if (!uid2) throw new Error('Not logged in');
+        var tRes2 = await window.supabase.from('tasks').select('*')
+          .or('customer_id.eq.' + uid2 + ',user_id.eq.' + uid2)
+          .order('created_at', { ascending: false });
+        var tasks = tRes2.data || [];
         if (!tasks.length) {
           container.innerHTML = empty('Post a task to start receiving applications from taskers.', 'Post a Task', 'post-task.html');
           return;
@@ -353,7 +359,12 @@
         for (var i = 0; i < Math.min(tasks.length, 10); i++) {
           var task = tasks[i];
           var apps;
-          try { apps = await window.ST.db.fetchTaskApplications(task.id); } catch(e) { apps = []; }
+          try {
+            var appRes = await window.supabase.from('task_applications')
+              .select('*, taskers:tasker_id(name, service, location, rating, photo_url, user_id, business_name)')
+              .eq('task_id', task.id).order('created_at', { ascending: false });
+            apps = appRes.data || [];
+          } catch(e) { apps = []; }
           if (!apps.length) continue;
           totalApps += apps.length;
 
@@ -390,7 +401,13 @@
       if (!el) return;
       el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Loading tasks...</div>';
       try {
-        var tasks = await window.ST.db.fetchMyTasks();
+        var sess2 = await window.supabase.auth.getSession();
+        var uid2 = sess2.data.session && sess2.data.session.user.id;
+        if (!uid2) throw new Error('Not logged in');
+        var tRes2 = await window.supabase.from('tasks').select('*')
+          .or('customer_id.eq.' + uid2 + ',user_id.eq.' + uid2)
+          .order('created_at', { ascending: false });
+        var tasks = tRes2.data || [];
         el.innerHTML = tasks.length
           ? tasks.map(taskCard).join('')
           : empty('No tasks posted yet. Each task gets matched with local providers.', 'Post a Task', 'post-task.html');
@@ -472,7 +489,7 @@
       var taskId = (btnEl && btnEl.dataset) ? btnEl.dataset.task : arguments[1];
       if (!confirm('Accept this tasker for the job?')) return;
       try {
-        await window.ST.db.updateApplicationStatus(appId, 'accepted');
+        await window.supabase.from('task_applications').update({ status: 'accepted' }).eq('id', appId);
         showToast('\uD83C\uDF89 Application accepted! The tasker has been notified.');
         appLoaded = false;
         await loadApplications();
@@ -483,7 +500,7 @@
     async function rejectApp(btnEl) {
       var appId = (btnEl && btnEl.dataset) ? btnEl.dataset.app : btnEl;
       try {
-        await window.ST.db.updateApplicationStatus(appId, 'rejected');
+        await window.supabase.from('task_applications').update({ status: 'rejected' }).eq('id', appId);
         showToast('Application declined.');
         appLoaded = false;
         await loadApplications();
@@ -497,8 +514,15 @@
       custNotifLoaded = true;
       var el = document.getElementById('custNotifList');
       try {
-        var notifs = await window.ST.db.fetchMyNotifications({ limit: 40 });
-        await window.ST.db.markAllNotificationsRead();
+        var nSess = await window.supabase.auth.getSession();
+        var nUid = nSess.data.session && nSess.data.session.user.id;
+        if (!nUid) throw new Error('Not logged in');
+        var nRes = await window.supabase.from('notifications').select('*')
+          .eq('user_id', nUid).order('created_at', { ascending: false }).limit(40);
+        var notifs = nRes.data || [];
+        /* Mark all read */
+        await window.supabase.from('notifications').update({ is_read: true })
+          .eq('user_id', nUid).eq('is_read', false);
         var badge3 = document.getElementById('custNotifBadge');
         if (badge3) badge3.style.display = 'none';
         if (!notifs.length) { el.innerHTML = empty('No notifications yet.', null, null); return; }
@@ -545,7 +569,11 @@
 
     async function markCustAllRead() {
       try {
-        await window.ST.db.markAllNotificationsRead();
+        var mSess = await window.supabase.auth.getSession();
+        var mUid = mSess.data.session && mSess.data.session.user.id;
+        if (!mUid) return;
+        await window.supabase.from('notifications').update({ is_read: true })
+          .eq('user_id', mUid).eq('is_read', false);
         var b = document.getElementById('custNotifBadge');
         if (b) b.style.display = 'none';
         custNotifLoaded = false;
@@ -590,25 +618,60 @@
       if (startPanel === 'my-tasks') loadMyTasks();
 
       /* Load notification badge */
-      window.ST.db.fetchUnreadNotificationCount().then(function(count) {
+      window.supabase.auth.getSession().then(function(s) {
+        var uid = s.data.session && s.data.session.user.id;
+        if (!uid) return;
+        return window.supabase.from('notifications').select('id', { count: 'exact', head: true })
+          .eq('user_id', uid).eq('is_read', false);
+      }).then(function(res) {
+        if (!res) return;
+        var count = res.count || 0;
         if (count > 0) {
           var nb = document.getElementById('custNotifBadge');
           if (nb) { nb.textContent = count > 9 ? '9+' : String(count); nb.style.display = 'inline'; }
         }
       }).catch(function(){});
 
-      /* Load data independently */
+      /* Load data — direct Supabase queries using known user ID */
       var tasks    = [];
       var bookings = [];
+      var userId   = user.id;
 
-      try { tasks    = await window.ST.db.fetchMyTasks(); }    catch(e) { console.warn('[Dashboard] tasks:', e.message); }
-      try { bookings = await window.ST.db.fetchMyBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
+      /* Fetch tasks directly with user ID we already have */
+      try {
+        var tRes = await window.supabase.from('tasks').select('*')
+          .or('customer_id.eq.' + userId + ',user_id.eq.' + userId)
+          .order('created_at', { ascending: false });
+        tasks = tRes.data || [];
+      } catch(e) { console.warn('[Dashboard] tasks error:', e.message); }
 
+      /* Update stats immediately */
       var active = tasks.filter(function(t) { return t.status === 'open' || t.status === 'active'; }).length;
       var done   = tasks.filter(function(t) { return t.status === 'completed'; }).length;
       document.getElementById('statTotal').textContent  = tasks.length;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statDone').textContent   = done;
+
+      /* Update lists immediately after tasks load */
+      document.getElementById('recentList').innerHTML = tasks.slice(0,4).length
+        ? tasks.slice(0,4).map(taskCard).join('')
+        : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
+
+      document.getElementById('allTasksList').innerHTML = tasks.length
+        ? tasks.map(taskCard).join('')
+        : empty('No tasks posted yet.', 'Post a Task', 'post-task.html');
+
+      /* Fetch bookings */
+      try {
+        var bRes = await window.supabase.from('bookings').select('*')
+          .eq('customer_id', userId)
+          .order('created_at', { ascending: false });
+        bookings = bRes.data || [];
+      } catch(e) { console.warn('[Dashboard] bookings error:', e.message); }
+
+      document.getElementById('bookingsList').innerHTML = bookings.length
+        ? bookings.map(bookingCard).join('')
+        : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
 
       var FREE_TASK_LIMIT = 10;
       if (tasks.length >= FREE_TASK_LIMIT) {
@@ -627,7 +690,9 @@
           var total = 0;
           for (var i = 0; i < Math.min(tasks.length, 5); i++) {
             try {
-              var apps = await window.ST.db.fetchTaskApplications(tasks[i].id);
+              var apRes = await window.supabase.from('task_applications').select('id, status')
+                .eq('task_id', tasks[i].id);
+              var apps = apRes.data || [];
               var pending = apps.filter(function(a) { return a.status === 'pending'; }).length;
               total += pending;
             } catch(e) {}
@@ -639,24 +704,14 @@
         })();
       }
 
-      document.getElementById('recentList').innerHTML = tasks.slice(0,4).length
-        ? tasks.slice(0,4).map(taskCard).join('')
-        : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
-
-      document.getElementById('allTasksList').innerHTML = tasks.length
-        ? tasks.map(taskCard).join('')
-        : empty('No tasks posted yet. Each task gets matched with providers.', 'Post a Task', 'post-task.html');
-
-      document.getElementById('bookingsList').innerHTML = bookings.length
-        ? bookings.map(bookingCard).join('')
-        : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
     }
 
     /* ── Profile editing ─────────────────────────────────────── */
     let _currentProfileImageFile = null;
 
     async function loadProfilePanel() {
-      const user = await window.ST.auth.getCurrentUser();
+      var pSess = await window.supabase.auth.getSession();
+      var user = pSess.data.session && pSess.data.session.user;
       if (!user) return;
       const { data } = await window.supabase.from('users').select('name,bio,location,avatar_url').eq('id', user.id).maybeSingle();
       if (data) {
@@ -698,7 +753,8 @@
     async function saveProfile() {
       const btn = document.getElementById('saveProfileBtn');
       const msg = document.getElementById('profileSaveMsg');
-      const user = await window.ST.auth.getCurrentUser();
+      var spSess = await window.supabase.auth.getSession();
+      var user = spSess.data.session && spSess.data.session.user;
       if (!user) return;
 
       btn.disabled = true;

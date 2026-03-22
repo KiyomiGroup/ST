@@ -585,7 +585,7 @@
 
     async function doBooking(id, status) {
       try {
-        await window.ST.db.updateBookingStatus(id, status);
+        await window.supabase.from('bookings').update({ status: status }).eq('id', id);
         showToast(status === 'confirmed' ? 'Booking confirmed!' : 'Job marked as completed!');
         setTimeout(function() { location.reload(); }, 800);
       } catch(e) { showToast('Error: ' + e.message); }
@@ -616,7 +616,7 @@
     async function confirmDeleteService(id) {
       if (!confirm('Delete this service? This cannot be undone.')) return;
       try {
-        await window.ST.db.deleteService(id);
+        await window.supabase.from('services').delete().eq('id', id);
         var el = document.getElementById('svc-' + id);
         if (el) el.remove();
         showToast('Service deleted.');
@@ -630,7 +630,9 @@
       findTasksLoaded = true;
       var el = document.getElementById('findTasksList');
       try {
-        var tasks = await window.ST.db.fetchTasks({ limit: 20 });
+        var ftRes = await window.supabase.from('tasks').select('*')
+          .eq('status', 'open').order('created_at', { ascending: false }).limit(20);
+        var tasks = ftRes.data || [];
         if (!tasks.length) { el.innerHTML = empty('No open tasks right now. Check back soon.', null, null); return; }
         el.innerHTML = tasks.map(function(t) {
           return '<div class="task-row-card" style="margin-bottom:12px;">' +
@@ -652,9 +654,17 @@
       notifLoaded = true;
       var el = document.getElementById('notifList');
       try {
-        var notifs = await window.ST.db.fetchMyNotifications({ limit: 40 });
+        var nSess = await window.supabase.auth.getSession();
+        var nUid = nSess.data.session && nSess.data.session.user.id;
+        if (!nUid) throw new Error('Not logged in');
+        var nRes = await window.supabase.from('notifications').select('*')
+          .eq('user_id', nUid).order('created_at', { ascending: false }).limit(40);
+        var notifs = nRes.data || [];
         updateNotifBadge(0);
-        await window.ST.db.markAllNotificationsRead();
+        var mSess = await window.supabase.auth.getSession();
+        var mUid = mSess.data.session && mSess.data.session.user.id;
+        if (mUid) await window.supabase.from('notifications').update({ is_read: true })
+          .eq('user_id', mUid).eq('is_read', false);
         if (!notifs.length) { el.innerHTML = empty('No notifications yet.', null, null); return; }
         el.innerHTML = notifs.map(function(n) {
           return '<div class="task-row-card ' + (n.read ? '' : 'notif-unread') + '" style="margin-bottom:8px;' + (n.read ? 'opacity:0.75;' : '') + '">' +
@@ -680,7 +690,10 @@
 
     async function markAllRead() {
       try {
-        await window.ST.db.markAllNotificationsRead();
+        var mSess = await window.supabase.auth.getSession();
+        var mUid = mSess.data.session && mSess.data.session.user.id;
+        if (mUid) await window.supabase.from('notifications').update({ is_read: true })
+          .eq('user_id', mUid).eq('is_read', false);
         updateNotifBadge(0);
         notifLoaded = false;
         await loadNotifications();
@@ -732,19 +745,55 @@
       }
 
       /* Load unread count for bell badge */
-      window.ST.db.fetchUnreadNotificationCount().then(function(count) {
-        updateNotifBadge(count);
-      }).catch(function() {});
+      window.supabase.auth.getSession().then(function(s) {
+        var uid = s.data.session && s.data.session.user.id;
+        if (!uid) return Promise.resolve({ count: 0 });
+        return window.supabase.from('notifications').select('id', { count: 'exact', head: true })
+          .eq('user_id', uid).eq('is_read', false);
+      }).then(function(res) {
+        if (res) updateNotifBadge(res.count || 0);
+      }).catch(function(){});
 
-      /* Load each section independently so one failure doesn't break everything */
+      /* Load each section — direct queries using known user ID */
       var services  = [];
       var bookings  = [];
       var sub       = null;
-      var FREE_LIMIT = 3; /* free tier: 3 concurrent active bookings */
+      var FREE_LIMIT = 3;
+      var userId    = user.id;
 
-      try { services = await window.ST.db.fetchMyServices(); } catch(e) { console.warn('[Dashboard] services:', e.message); }
-      try { bookings = await window.ST.db.fetchTaskerBookings(); } catch(e) { console.warn('[Dashboard] bookings:', e.message); }
-      try { sub      = await window.ST.db.fetchMySubscription(); } catch(e) { console.warn('[Dashboard] sub:', e.message); }
+      try {
+        var sRes = await window.supabase.from('services').select('*, users(name, business_name)')
+          .eq('user_id', userId).order('created_at', { ascending: false });
+        if (sRes.data && sRes.data.length > 0) {
+          services = sRes.data.map(function(s) {
+            return { id: String(s.id), service_name: s.service_name, category: s.category,
+              price: s.price, rate_unit: s.rate_unit || '/hour', location: s.location,
+              description: s.description, photo: s.photo, user_id: s.user_id, available: s.available,
+              provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider', fromServices: true };
+          });
+        } else {
+          /* Fallback: taskers table */
+          var tRes = await window.supabase.from('taskers').select('*').eq('user_id', String(userId));
+          services = (tRes.data || []).map(function(t) {
+            return { id: String(t.id), service_name: t.service, category: t.category,
+              price: t.rate_value, rate_unit: t.rate_unit || '/hour', location: t.location,
+              description: t.bio, photo: t.photo_url, user_id: t.user_id, available: t.available,
+              provider_name: t.business_name || t.name || 'Provider', fromServices: false };
+          });
+        }
+      } catch(e) { console.warn('[Dashboard] services error:', e.message); }
+
+      try {
+        var bkRes = await window.supabase.from('bookings').select('*, tasks(title, description, budget, location)')
+          .eq('tasker_id', userId).order('created_at', { ascending: false });
+        bookings = bkRes.data || [];
+      } catch(e) { console.warn('[Dashboard] bookings error:', e.message); }
+
+      try {
+        var subRes = await window.supabase.from('subscriptions').select('*')
+          .eq('user_id', userId).order('start_date', { ascending: false }).limit(1).maybeSingle();
+        sub = subRes.data || null;
+      } catch(e) { console.warn('[Dashboard] sub error:', e.message); }
 
       /* Stats go to My Page panel (loaded by loadMyPage) */
       /* Sub gate check */
@@ -785,7 +834,8 @@
     var _currentProfileImageFile = null;
 
     async function loadProfilePanel() {
-      var user = await window.ST.auth.getCurrentUser();
+      var _sess = await window.supabase.auth.getSession();
+      var user = _sess.data.session && _sess.data.session.user;
       if (!user) return;
 
       /* Load user + tasker data */
@@ -866,7 +916,8 @@
     async function saveProfile() {
       var btn = document.getElementById('saveProfileBtn');
       var msg = document.getElementById('profileSaveMsg');
-      var user = await window.ST.auth.getCurrentUser();
+      var _sess = await window.supabase.auth.getSession();
+      var user = _sess.data.session && _sess.data.session.user;
       if (!user) return;
       btn.disabled = true; btn.textContent = 'Saving...'; msg.style.display = 'none';
 
@@ -941,7 +992,8 @@
       if (_myPageLoaded) return;
       _myPageLoaded = true;
 
-      var user = await window.ST.auth.getCurrentUser();
+      var _sess = await window.supabase.auth.getSession();
+      var user = _sess.data.session && _sess.data.session.user;
       if (!user) return;
 
       /* Check verification */
@@ -957,7 +1009,13 @@
 
       /* Load stats */
       try {
-        var bookings  = await window.ST.db.fetchTaskerBookings();
+        var bSess = await window.supabase.auth.getSession();
+        var bUid = bSess.data.session && bSess.data.session.user.id;
+        if (!bUid) throw new Error('Not logged in');
+        var bkRes = await window.supabase.from('bookings')
+          .select('*, tasks(title, description, budget, location)')
+          .eq('tasker_id', bUid).order('created_at', { ascending: false });
+        var bookings  = bkRes.data || [];
         var active    = bookings.filter(function(b){ return b.status==='pending'||b.status==='confirmed'; });
         var completed = bookings.filter(function(b){ return b.status==='completed'; });
         var sT = document.getElementById('statTotal');
@@ -1148,7 +1206,8 @@
       if (!caption) { errEl.textContent = 'Please describe the work.'; errEl.style.display = 'block'; return; }
       if (caption.length > 2000) { errEl.textContent = 'Caption too long (max 2000 chars).'; errEl.style.display = 'block'; return; }
 
-      var user = await window.ST.auth.getCurrentUser();
+      var _sess = await window.supabase.auth.getSession();
+      var user = _sess.data.session && _sess.data.session.user;
       if (!user) { showToast('Please log in.'); return; }
 
       btn.disabled = true; btn.textContent = 'Posting…';
@@ -1204,7 +1263,8 @@
       if (_verifLoaded) return;
       _verifLoaded = true;
 
-      var user = await window.ST.auth.getCurrentUser();
+      var _sess = await window.supabase.auth.getSession();
+      var user = _sess.data.session && _sess.data.session.user;
       if (!user) return;
 
       try {
