@@ -208,6 +208,13 @@
   <div id="navbar-placeholder"></div>
 
   <!-- Loading state -->
+  <!-- Decision bar — shown when arriving from applications flow -->
+  <div id="decisionBar" style="display:none;position:sticky;top:var(--nav-height);z-index:200;background:var(--white);border-bottom:2px solid var(--blue);padding:12px 0;">
+    <div style="max-width:860px;margin:0 auto;padding:0 24px;">
+      <div id="decisionBarBody"></div>
+    </div>
+  </div>
+
   <div id="profileLoading" style="padding-top:calc(var(--nav-height) + 48px); max-width:860px; margin:0 auto; padding-left:24px; padding-right:24px;">
     <div style="display:flex;gap:20px;align-items:center;margin-bottom:32px;">
       <div class="skel skel-avatar"></div>
@@ -521,6 +528,82 @@
       hide('profileLoading');
       show('profileHero');
       show('profileMain');
+
+      /* ── Decision bar — shown when arriving from Applications panel ── */
+      const taskParam = params.get('task');
+      const appParam  = params.get('app');
+      if (taskParam && appParam) {
+        /* Check current status of this application */
+        const { data: appRow } = await window.supabase.from('task_applications')
+          .select('status, message, applicant_whatsapp').eq('id', appParam).maybeSingle();
+        const appStatus = appRow && appRow.status;
+        const wpRaw = appRow && appRow.applicant_whatsapp || '';
+        const wpDigits = wpRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+
+        const bar = document.getElementById('decisionBar');
+        const barBody = document.getElementById('decisionBarBody');
+        if (bar && barBody) {
+          if (appStatus === 'pending') {
+            barBody.innerHTML =
+              '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+              '<span style="font-size:0.88rem;font-weight:600;flex:1;">Hire this tasker for your task?</span>' +
+              '<button id="acceptBtn" style="padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;cursor:pointer;">Accept Application</button>' +
+              '<button id="rejectBtn" style="padding:9px 16px;background:none;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.88rem;cursor:pointer;color:var(--red);">Decline</button>' +
+              '</div>';
+            bar.style.display = 'block';
+            document.getElementById('acceptBtn').onclick = async function() {
+              this.disabled = true; this.textContent = 'Accepting...';
+              try {
+                await window.supabase.from('task_applications').update({ status: 'accepted' }).eq('id', appParam);
+                await window.supabase.from('task_applications').update({ status: 'closed' })
+                  .eq('task_id', taskParam).eq('status', 'pending').neq('id', appParam);
+                await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', taskParam);
+                /* Notify tasker */
+                try {
+                  await window.supabase.from('notifications').insert({
+                    user_id: String(_taskerId), type: 'application_accepted',
+                    title: 'Application Accepted!',
+                    message: 'Your application was accepted. The customer will contact you.',
+                    data: { task_id: taskParam }, is_read: false,
+                  });
+                } catch(e2) {}
+                barBody.innerHTML = wpDigits
+                  ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span>' +
+                    '<a href="https://wa.me/234' + wpDigits + '" target="_blank" style="padding:9px 16px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;text-decoration:none;">WhatsApp</a>' +
+                    '<a href="tel:+234' + wpDigits + '" style="padding:9px 16px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.88rem;text-decoration:none;color:var(--text-primary);">Call</a>' +
+                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back to Applications</a>' +
+                    '</div>'
+                  : '<div><span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span> <a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:12px;">Back to Applications</a></div>';
+              } catch(err) {
+                this.disabled = false; this.textContent = 'Accept Application';
+                showToast('Error: ' + err.message);
+              }
+            };
+            document.getElementById('rejectBtn').onclick = async function() {
+              if (!confirm('Decline this application?')) return;
+              this.disabled = true;
+              try {
+                await window.supabase.from('task_applications').update({ status: 'rejected' }).eq('id', appParam);
+                window.location.href = 'dashboard-customer.html?panel=applications';
+              } catch(err) {
+                this.disabled = false;
+                showToast('Error: ' + err.message);
+              }
+            };
+          } else if (appStatus === 'accepted') {
+            barBody.innerHTML = wpDigits
+              ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+                '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
+                '<a href="https://wa.me/234' + wpDigits + '" target="_blank" style="padding:9px 16px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;text-decoration:none;">WhatsApp</a>' +
+                '<a href="tel:+234' + wpDigits + '" style="padding:9px 16px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.88rem;text-decoration:none;color:var(--text-primary);">Call</a>' +
+                '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back</a>' +
+                '</div>'
+              : '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Already Accepted</span>';
+            bar.style.display = 'block';
+          }
+        }
+      }
 
       /* ── Owner check: if logged-in user is the profile owner, swap Book → Edit Page ── */
       try {

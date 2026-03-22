@@ -576,13 +576,15 @@
       var appId  = String(a.id);
       var tid    = String(taskId);
       var actions = '';
+      var profileUrl = userId ? 'tasker-profile.html?id=' + encodeURIComponent(userId) + '&task=' + encodeURIComponent(tid) + '&app=' + encodeURIComponent(appId) : '#';
       if (isPending) {
-        actions = '<div style="margin-top:10px;">' +
-          '<button class="btn btn-primary btn-sm" data-open-app="' + appId + '" data-task="' + tid + '" style="width:100%;">View and Decide</button>' +
+        actions = '<div style="margin-top:10px;display:flex;gap:8px;">' +
+          '<a href="' + profileUrl + '" class="btn btn-primary btn-sm" style="flex:1;text-align:center;text-decoration:none;">View Profile & Decide</a>' +
+          '<button class="btn btn-ghost btn-sm" data-modal-reject data-app="' + appId + '" style="color:var(--red);">Decline</button>' +
           '</div>';
       } else if (isAccepted) {
         actions = '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">' +
-          '<button class="btn btn-ghost btn-sm" data-open-app="' + appId + '" data-task="' + tid + '" style="color:var(--green);">View Contact</button>' +
+          '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="color:var(--green);text-decoration:none;">View Contact</a>' +
           '<span style="padding:2px 8px;background:var(--green-light);color:var(--green);border-radius:var(--radius-pill);font-size:0.74rem;font-weight:700;">Accepted</span>' +
           '</div>';
       } else if (a.status === 'closed') {
