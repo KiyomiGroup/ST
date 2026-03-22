@@ -82,7 +82,7 @@ async function loadServices() {
     console.warn('[Taskers] Load failed, using demo data:', e.message);
     ALL = DUMMY_SERVICES;
   }
-
+}
 
 let ALL = [];
 let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
@@ -213,7 +213,6 @@ function buildCard(s) {
       </div>
     </div>
   </div>`;
-}
 }
 
 /* ── Wiring ──────────────────────────────────────────────────── */
