@@ -409,6 +409,30 @@
                     <div id="profileLocationSuggestions" class="location-suggestions"></div>
                   </div>
                 </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="profileWhatsapp">
+                      WhatsApp Number
+                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — customers will use this to contact you</span>
+                    </label>
+                    <div class="input-wrap" style="position:relative;">
+                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;">+234</span>
+                      <input type="tel" id="profileWhatsapp" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+                    </div>
+                    <div class="form-helper">Enter your number without the leading 0 or country code.</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profilePhone">
+                      Calling Number
+                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — optional if different</span>
+                    </label>
+                    <div class="input-wrap" style="position:relative;">
+                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;">+234</span>
+                      <input type="tel" id="profilePhone" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- ── Save ── -->
@@ -842,7 +866,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color').eq('user_id', String(user.id)).maybeSingle();
+        .select('service, service_name, rate_value, rate_unit, location, banner_color, whatsapp, phone').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -871,6 +895,10 @@
         var ruEl   = document.getElementById('profileRateUnit');
         if (svcEl)  svcEl.value  = td.service || td.service_name || '';
         if (rateEl) rateEl.value = td.rate_value || '';
+        var wpEl = document.getElementById('profileWhatsapp');
+        var phEl = document.getElementById('profilePhone');
+        if (wpEl) wpEl.value = (td.whatsapp || '').replace(/^\+?234/, '').replace(/^0/, '');
+        if (phEl) phEl.value = (td.phone || '').replace(/^\+?234/, '').replace(/^0/, '');
         if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
 
         /* Banner colour swatches */
@@ -913,6 +941,15 @@
     }
     window.previewProfileImage = previewProfileImage;
 
+    function formatNigerianNumber(raw) {
+      if (!raw) return null;
+      var digits = raw.replace(/\D/g, '');
+      if (!digits) return null;
+      /* Strip leading 0 or 234, then prepend +234 */
+      digits = digits.replace(/^234/, '').replace(/^0/, '');
+      return '+234' + digits;
+    }
+
     async function saveProfile() {
       var btn = document.getElementById('saveProfileBtn');
       var msg = document.getElementById('profileSaveMsg');
@@ -954,6 +991,8 @@
           rate_value:  parseFloat(document.getElementById('profileRate')?.value)  || null,
           rate_unit:   document.getElementById('profileRateUnit')?.value          || '/hour',
           banner_color:document.getElementById('profileBannerColor')?.value       || '#121212',
+          whatsapp:    formatNigerianNumber(document.getElementById('profileWhatsapp')?.value?.trim()),
+          phone:       formatNigerianNumber(document.getElementById('profilePhone')?.value?.trim()),
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
         if (avatarUrl) taskerUpdates.photo_url = avatarUrl;

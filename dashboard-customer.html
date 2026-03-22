@@ -463,69 +463,97 @@
 
     function applicationCard(a, taskId) {
       var tasker   = a.taskers || {};
-      var contact  = a._taskerContact || null;
-      var dispName = tasker.business_name || tasker.name || (contact && contact.name) || 'Tasker';
-      var svc      = tasker.service || '';
+      var dispName = tasker.business_name || tasker.name || 'Tasker';
+      var svc      = tasker.service || tasker.service_name || '';
       var loc      = tasker.location || '';
-      var rating   = tasker.rating ? '&#11088; ' + parseFloat(tasker.rating).toFixed(1) : '';
-      var photo    = tasker.photo_url;
+      var rating   = tasker.rating ? parseFloat(tasker.rating).toFixed(1) : '';
+      var photo    = tasker.photo_url || '';
+      var userId   = tasker.user_id || String(a.tasker_id || '');
       var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean)
                        .map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
-      var userId   = tasker.user_id || '';
+
+      /* Contact info from application or tasker profile */
+      var wpRaw    = a.applicant_whatsapp || tasker.whatsapp || tasker.phone || '';
+      var wpDigits = wpRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+      var wpLink   = wpDigits ? 'https://wa.me/234' + wpDigits : '';
+      var callLink = wpDigits ? 'tel:+234' + wpDigits : '';
+      var numDisplay = wpDigits ? '+234 ' + wpDigits.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3') : '';
 
       var statusColors = { pending:'#f59e0b', accepted:'#16a34a', rejected:'#dc2626' };
       var statusColor  = statusColors[a.status] || '#6b7280';
+      var statusLabel  = { pending:'Pending', accepted:'Accepted', rejected:'Declined' }[a.status] || a.status;
+      var isPending    = a.status === 'pending';
       var isAccepted   = a.status === 'accepted' || a.status === 'completed';
 
-      /* Contact reveal — only shown after acceptance */
-      var contactHtml = '';
-      if (isAccepted && contact) {
-        var phone = contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
-        contactHtml =
-          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:14px;flex-wrap:wrap;align-items:center;">' +
-          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Contact Details</span>' +
-          (phone
-            ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
-              '&#128222; ' + contact.phone + '</a>'
-            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file. Ask them to add it during verification</span>') +
-          (userId ? ' <a href="tasker-profile.html?id=' + userId + '" target="_blank" style="font-size:0.8rem;color:var(--blue);">View Profile</a>' : '') +
-          '</div>';
-      } else if (a.status === 'pending') {
-        contactHtml = '<div style="margin-top:6px;font-size:0.76rem;color:var(--text-muted);">Accept to see contact details</div>';
-      }
-
       var photoHtml = photo
-        ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;" />'
+        ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.textContent=\''+initials+'\'" />'
         : initials;
 
-      var actionBtns = '';
-      if (a.status === 'pending') {
-        var aid = String(a.id).replace(/'/g, '');
-        var tid = String(taskId).replace(/'/g, '');
-        actionBtns = '<div class="app-actions" style="flex-shrink:0;">' +
-          '<button class="btn btn-sm btn-primary" onclick="acceptApp(this)" data-app="' + aid + '" data-task="' + tid + '">Accept</button>' +
-          '<button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="rejectApp(this)" data-app="' + aid + '">Decline</button>' +
+      /* Contact buttons — visible immediately so customer can vet before deciding */
+      var contactRow = '';
+      if (wpLink) {
+        contactRow =
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+          '<a href="' + wpLink + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;text-decoration:none;">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 16.953c-.263.738-1.303 1.362-2.145 1.545-.572.122-1.319.22-3.833-.823-3.239-1.334-5.33-4.598-5.489-4.813-.15-.206-1.259-1.674-1.259-3.192 0-1.519.796-2.264 1.079-2.573.24-.259.534-.389.822-.389.099 0 .198.004.289.009.28.012.42.029.604.47.215.516.735 1.793.799 1.924.063.131.126.308.037.495-.08.178-.148.259-.27.408-.12.15-.235.265-.355.426-.109.141-.232.293-.094.535.137.24.611 1.006 1.311 1.629.902.805 1.661 1.054 1.898 1.176.182.093.397.072.539-.076l.4-.479c.161-.194.322-.264.535-.176.214.087 1.355.638 1.587.755.232.116.386.174.443.272.057.099.057.567-.207 1.116z"/></svg>' +
+            'WhatsApp' +
+          '</a>' +
+          '<a href="' + callLink + '" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--text-primary);border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;text-decoration:none;">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.34 2 2 0 0 1 3.54 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 5.59 5.59l.87-1.87a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 14.54v2.38z"/></svg>' +
+            (numDisplay ? numDisplay : 'Call') +
+          '</a>' +
+          (userId ? '<a href="tasker-profile.html?id=' + escapeHtml(userId) + '" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;color:var(--blue);text-decoration:none;">View Profile</a>' : '') +
           '</div>';
+      } else {
+        contactRow = userId
+          ? '<div style="margin-top:10px;"><a href="tasker-profile.html?id=' + escapeHtml(userId) + '" target="_blank" style="font-size:0.82rem;color:var(--blue);font-weight:600;">View Profile</a> &nbsp;<span style="font-size:0.76rem;color:var(--text-muted);">(no WhatsApp provided)</span></div>'
+          : '';
       }
-      return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;">' +
+
+      /* Action buttons */
+      var actionBtns = '';
+      if (isPending) {
+        var aid = String(a.id).replace(/'/g,'');
+        var tid = String(taskId).replace(/'/g,'');
+        actionBtns =
+          '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">' +
+          '<button class="btn btn-primary btn-sm" onclick="acceptApp(this)" data-app="' + aid + '" data-task="' + tid + '" style="flex:1;">Accept</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="rejectApp(this)" data-app="' + aid + '" style="color:var(--red);flex:1;">Decline</button>' +
+          '</div>';
+      } else if (isAccepted) {
+        actionBtns = '<div style="margin-top:12px;padding:8px 12px;background:var(--green-light);border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;color:var(--green);">Accepted</div>';
+      }
+
+      /* Parse message — extract proposed price tag */
+      var msgRaw   = a.message || '';
+      var priceMatch = msgRaw.match(/\|\s*Proposed rate:\s*(₦[\d,]+)/);
+      var msgClean = msgRaw.replace(/\|\s*Proposed rate:.*$/, '').trim();
+      var priceTag = priceMatch
+        ? ' <span style="padding:2px 8px;background:var(--blue-light);color:var(--blue);border-radius:var(--radius-pill);font-size:0.74rem;font-weight:700;">' + priceMatch[1] + '</span>'
+        : '';
+
+      return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;padding:16px;">' +
         '<div style="display:flex;gap:12px;align-items:flex-start;">' +
-          '<div class="app-avatar">' + photoHtml + '</div>' +
-          '<div style="flex:1;">' +
-            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-              '<div style="font-weight:700;font-size:0.9rem;">' + escapeHtml(dispName) + '</div>' +
-              '<span class="status-pill" style="color:' + statusColor + ';border-color:' + statusColor + ';">' + (a.status || 'pending') + '</span>' +
+          '<div class="app-avatar" style="flex-shrink:0;">' + photoHtml + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">' +
+              '<span style="font-weight:700;font-size:0.95rem;">' + escapeHtml(dispName) + '</span>' +
+              priceTag +
+              '<span style="padding:2px 8px;border-radius:var(--radius-pill);font-size:0.72rem;font-weight:700;border:1px solid;color:' + statusColor + ';border-color:' + statusColor + ';">' + statusLabel + '</span>' +
             '</div>' +
-            '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">' + escapeHtml([svc,loc,rating].filter(Boolean).join(' · ')) + '</div>' +
-            (a.message ? '<p style="font-size:0.82rem;color:var(--text-secondary);margin-top:7px;padding:8px 10px;background:var(--bg-subtle);border-radius:6px;border-left:3px solid var(--border);">&ldquo;' + escapeHtml(a.message) + '&rdquo;</p>' : '') +
-            '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">' + fmtDate(a.created_at) + '</div>' +
-            contactHtml +
+            '<div style="font-size:0.8rem;color:var(--text-muted);">' +
+              [svc, loc, rating ? '★ ' + rating : ''].filter(Boolean).map(escapeHtml).join(' · ') +
+            '</div>' +
+            (msgClean ? '<p style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--radius-md);border-left:3px solid var(--blue);line-height:1.55;margin-bottom:0;">' + escapeHtml(msgClean) + '</p>' : '') +
+            contactRow +
           '</div>' +
-          actionBtns +
         '</div>' +
+        '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;">' + fmtDate(a.created_at) + '</div>' +
+        actionBtns +
       '</div>';
     }
 
-    async function acceptApp(btnEl) {
+        async function acceptApp(btnEl) {
       /* btnEl can be a button element (new data-attr approach) or a string ID (legacy) */
       var appId  = (btnEl && btnEl.dataset) ? btnEl.dataset.app  : btnEl;
       var taskId = (btnEl && btnEl.dataset) ? btnEl.dataset.task : arguments[1];

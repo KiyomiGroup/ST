@@ -160,24 +160,45 @@
 
   <!-- Apply modal -->
   <div class="modal-overlay" id="applyModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width:480px;text-align:left;">
+    <div class="modal-box" style="max-width:500px;text-align:left;">
       <button class="modal-close-x" onclick="closeApply()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      <h2 style="margin-bottom:6px;" id="applyTitle">Apply to Task</h2>
-      <p style="font-size:0.84rem;margin-bottom:20px;" id="applyDesc"></p>
+      <h2 style="margin-bottom:4px;" id="applyTitle">Apply to Task</h2>
+      <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;" id="applyDesc"></p>
+
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your message *</label>
-        <textarea id="applyMsg" rows="4" placeholder="Describe your experience and why you're the right fit..."
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;"
+        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your pitch *</label>
+        <textarea id="applyMsg" rows="3" placeholder="Describe your experience and why you're the right fit for this job..."
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;box-sizing:border-box;"
           onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
       </div>
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your proposed price (₦) <span style="font-weight:400;color:var(--text-muted);">optional</span></label>
-        <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;"
-          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">
+            WhatsApp number *
+          </label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-muted);pointer-events:none;">+234</span>
+            <input id="applyWhatsapp" type="tel" maxlength="11" placeholder="8012345678"
+              style="width:100%;padding:10px 13px 10px 52px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;box-sizing:border-box;"
+              onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+          <div style="font-size:0.74rem;color:var(--text-muted);margin-top:4px;">Customer will reach you here</div>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">
+            Proposed price (₦)
+            <span style="font-weight:400;color:var(--text-muted);">optional</span>
+          </label>
+          <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
+            style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
       </div>
+
       <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.83rem;color:var(--red);margin-bottom:14px;"></div>
       <button class="btn btn-primary btn-full" id="applyBtn" onclick="submitApply()">Send Application</button>
+      <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:10px;">Your contact details are only shared with the customer if they accept your application.</p>
     </div>
   </div>
 
@@ -406,15 +427,29 @@
       }
     }
 
-    function openApply(id, title, desc) {
+    async function openApply(id, title, desc) {
       ACTIVE_TASK_ID = id;
       document.getElementById('applyTitle').textContent = 'Apply: ' + title;
       document.getElementById('applyDesc').textContent  = desc + (desc.length >= 80 ? '…' : '');
-      document.getElementById('applyMsg').value   = '';
-      document.getElementById('applyPrice').value = '';
+      document.getElementById('applyMsg').value      = '';
+      document.getElementById('applyPrice').value    = '';
+      document.getElementById('applyWhatsapp').value = '';
       document.getElementById('applyErr').style.display = 'none';
       document.getElementById('applyModal').classList.add('modal-open');
       document.body.style.overflow = 'hidden';
+      /* Pre-fill WhatsApp from tasker profile if available */
+      try {
+        var s = await window.supabase.auth.getSession();
+        var uid = s.data.session && s.data.session.user.id;
+        if (uid) {
+          var tr = await window.supabase.from('taskers').select('whatsapp, phone').eq('user_id', String(uid)).maybeSingle();
+          var wp = (tr.data && (tr.data.whatsapp || tr.data.phone)) || '';
+          if (wp) {
+            var digits = wp.replace(/\D/g,'').replace(/^234/,'').replace(/^0/,'');
+            document.getElementById('applyWhatsapp').value = digits;
+          }
+        }
+      } catch(e) { /* silent — pre-fill is best-effort */ }
     }
     window.openApply = openApply;
 
@@ -433,15 +468,43 @@
         return;
       }
       const msg  = document.getElementById('applyMsg').value.trim();
-      const price= document.getElementById('applyPrice').value.trim();
+      const price = document.getElementById('applyPrice').value.trim();
+      const wpRaw = document.getElementById('applyWhatsapp').value.trim();
       const err  = document.getElementById('applyErr');
       const btn  = document.getElementById('applyBtn');
+
       if (!msg) { err.textContent = 'Please write a message.'; err.style.display = 'block'; return; }
+      if (!wpRaw) { err.textContent = 'Please enter your WhatsApp number so the customer can reach you.'; err.style.display = 'block'; return; }
+      const wpDigits = wpRaw.replace(/\D/g, '').replace(/^234/, '').replace(/^0/, '');
+      if (wpDigits.length < 7 || wpDigits.length > 10) { err.textContent = 'Please enter a valid Nigerian phone number (e.g. 8012345678).'; err.style.display = 'block'; return; }
+      const wpFormatted = '+234' + wpDigits;
 
       btn.disabled = true; btn.textContent = 'Sending...';
       try {
-        const fullMsg = msg + (price ? ` | Proposed rate: ₦${price}` : '');
-        await window.ST.db.applyToTask({ taskId: ACTIVE_TASK_ID, message: fullMsg });
+        const fullMsg = msg + (price ? ` | Proposed rate: ₦${Number(price).toLocaleString()}` : '');
+        /* Save whatsapp to tasker profile for future pre-fill */
+        try {
+          const sess = await window.supabase.auth.getSession();
+          const uid = sess.data.session && sess.data.session.user.id;
+          if (uid) await window.supabase.from('taskers').update({ whatsapp: wpFormatted }).eq('user_id', String(uid));
+        } catch(e2) { /* non-blocking */ }
+        /* Insert application with contact info */
+        const sess2 = await window.supabase.auth.getSession();
+        const uid2 = sess2.data.session && sess2.data.session.user.id;
+        if (!uid2) throw new Error('Please log in to apply.');
+        /* Check for duplicate */
+        const { data: existing } = await window.supabase.from('task_applications')
+          .select('id').eq('task_id', ACTIVE_TASK_ID).eq('tasker_id', uid2).maybeSingle();
+        if (existing) throw new Error('already applied');
+        const { error: appErr } = await window.supabase.from('task_applications').insert({
+          task_id: ACTIVE_TASK_ID,
+          tasker_id: uid2,
+          message: fullMsg,
+          status: 'pending',
+          applicant_whatsapp: wpFormatted,
+          applicant_phone: wpFormatted,
+        });
+        if (appErr) throw appErr;
         closeApply();
         showToast('Application sent! The task owner has been notified.');
       } catch(e) {
