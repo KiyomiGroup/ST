@@ -387,6 +387,7 @@
         allServices = await window.ST.db.fetchServices({ limit: 6 });
         renderServices(allServices);
       } catch(e) {
+        console.warn('[ST] loadServicesSection error:', e);
         document.getElementById('servicesList').innerHTML =
           `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load services. <a href="find-taskers.html" style="color:var(--blue);">Browse all →</a></div>`;
       }
@@ -470,6 +471,7 @@
             + '</div></div>';
         }).join('');
       } catch(e) {
+        console.warn('[ST] loadTasksSection error:', e);
         document.getElementById('tasksList').innerHTML =
           `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load tasks. <a href="explore-tasks.html" style="color:var(--blue);">Browse all →</a></div>`;
       }
@@ -487,16 +489,45 @@
       const el = document.getElementById('featuredTaskersList');
       if (!el) return;
       try {
-        /* Fetch from taskers table — those with a service listed and available */
-        const { data: taskers } = await window.supabase
+        /* Fetch from taskers table — fetch broadly and filter client-side
+           (avoids issues with empty-string service vs null, and text-type rating sort) */
+        const { data: rawTaskers, error: tErr } = await window.supabase
           .from('taskers')
-          .select('id, user_id, service, service_name, category, location, bio, photo_url, rate_value, rate_unit, is_verified, business_name')
+          .select('id, user_id, service, service_name, category, location, bio, photo_url, rate_value, rate_unit, is_verified, business_name, created_at')
           .eq('available', true)
-          .not('service', 'is', null)
-          .order('is_verified', { ascending: false })
-          .limit(6);
+          .order('created_at', { ascending: false })
+          .limit(30);
 
-        if (!taskers || !taskers.length) {
+        if (tErr) throw tErr;
+
+        /* Filter: must have a non-empty service string */
+        const taskers = (rawTaskers || []).filter(t => t.service && t.service.trim()).slice(0, 6);
+
+        /* If still empty, fall through to fetchServices as backup */
+        if (!taskers.length) {
+          try {
+            const svcList = await window.ST.db.fetchServices({ limit: 6 });
+            if (svcList.length) {
+              el.innerHTML = svcList.map((s, i) => {
+                const safeName = escapeHtml(s.provider_name || 'Provider');
+                const safeSvc  = escapeHtml(s.service_name || '');
+                const safeLoc  = escapeHtml(s.location || 'Lagos');
+                const av = ['av-1','av-2','av-3','av-4','av-5','av-6'][i % 6];
+                const uid = escapeHtml(s.user_id || '');
+                const profileUrl = uid ? 'tasker-profile.html?id=' + uid : 'find-taskers.html';
+                const rate = s.price ? '&#8358;' + Number(s.price).toLocaleString() : '';
+                return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
+                  + '<div class="live-card-top"><div class="live-avatar ' + av + '">' + (safeName[0]||'S') + (safeName[1]||'T') + '</div>'
+                  + '<div style="text-align:right;">' + (rate ? '<div class="live-price">' + rate + '</div><div class="live-price-type">' + escapeHtml(s.rate_unit||'/hr') + '</div>' : '') + '</div></div>'
+                  + '<div class="live-name">' + safeName + '</div>'
+                  + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + safeLoc + '</div>'
+                  + (safeSvc ? '<div class="live-cat">' + safeSvc + '</div>' : '')
+                  + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
+                  + '</div>';
+              }).join('');
+              return;
+            }
+          } catch(e2) { /* fall through to empty state */ }
           el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:0.88rem;">No providers listed yet. <a href="post-service.html" style="color:var(--blue);">Be the first!</a></div>';
           return;
         }

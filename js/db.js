@@ -338,34 +338,47 @@ async function deleteService(serviceId) {
 }
 
 async function fetchServices({ category = '', limit = 60 } = {}) {
-  let q = window.supabase.from('services').select(`
-    id, service_name, category, price, rate_unit, location, description, photo, user_id, available,
-    users ( id, name, business_name )
-  `).eq('available', true).order('created_at', { ascending: false }).limit(limit);
+  /* Step 1: fetch services without the users join (avoids RLS issues for anon visitors) */
+  let q = window.supabase.from('services').select(
+    'id, service_name, category, price, rate_unit, location, description, photo, user_id, available, created_at'
+  ).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
 
-  const { data, error } = await q;
-  if (!error && data && data.length > 0) {
-    return data.map(s => ({
+  const { data: svcData, error: svcErr } = await q;
+
+  if (!svcErr && svcData && svcData.length > 0) {
+    /* Step 2: batch-fetch provider names separately — single query, no join */
+    const userIds = [...new Set(svcData.map(s => s.user_id).filter(Boolean))];
+    let nameMap = {};
+    if (userIds.length > 0) {
+      try {
+        const { data: uRows } = await window.supabase
+          .from('users').select('id, name, business_name').in('id', userIds);
+        (uRows || []).forEach(u => { nameMap[u.id] = u.business_name || u.name || null; });
+      } catch(e) { /* name lookup failed — use fallback */ }
+    }
+    return svcData.map(s => ({
       id: String(s.id), service_name: s.service_name, category: s.category,
       pricing_type: 'per_job', price: s.price,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
       available: s.available !== false,
-      /* Business name takes priority over personal name */
-      provider_name: s.users?.business_name || s.users?.name || 'Provider',
+      provider_name: nameMap[s.user_id] || 'Provider',
     }));
   }
 
-  let tq = window.supabase.from('taskers').select('*').order('rating', { ascending: false }).limit(limit);
+  /* Fallback: pull from taskers table (rating column is TEXT — can't sort numerically) */
+  let tq = window.supabase.from('taskers').select('*')
+    .eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) tq = tq.eq('category', category);
   const { data: td } = await tq;
-  return (td || []).filter(t => t.service).map(t => ({
+  /* Filter: service must be a non-empty string (could be '' or null) */
+  return (td || []).filter(t => t.service && t.service.trim()).map(t => ({
     id: String(t.id), service_name: t.service, category: t.category,
-    pricing_type: 'per_job', price: t.rate_value, rate_unit: '/hour',
+    pricing_type: 'per_job', price: t.rate_value, rate_unit: t.rate_unit || '/hour',
     location: t.location, description: t.bio, photo: t.photo_url,
     user_id: t.user_id || t.id, available: t.available !== false,
-    provider_name: t.name || 'Provider', rating: t.rating,
+    provider_name: t.business_name || t.name || 'Provider', rating: t.rating,
   }));
 }
 
