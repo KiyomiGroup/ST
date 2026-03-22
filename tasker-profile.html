@@ -588,7 +588,8 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWorkModal({}); });
 
   async function openBooking() {
-    const user = await window.ST.auth.getCurrentUser();
+    const sess = await window.supabase.auth.getSession();
+    const user = sess.data.session && sess.data.session.user;
     if (!user) {
       window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
       return;
@@ -597,15 +598,35 @@
     const btn = document.getElementById('bookBtn');
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      await window.ST.db.createBooking({ taskerId: _taskerId });
+      /* Direct booking insert — bypasses ST.db wrapper */
+      const { data: existing } = await window.supabase.from('bookings')
+        .select('id,status').eq('customer_id', user.id).eq('tasker_id', _taskerId)
+        .in('status', ['pending','confirmed']).maybeSingle();
+      if (existing) {
+        showToast('You already have an active booking with this tasker.');
+        btn.disabled = false; btn.textContent = 'Book This Service';
+        return;
+      }
+      const { error } = await window.supabase.from('bookings').insert({
+        customer_id: user.id,
+        tasker_id: _taskerId,
+        status: 'pending',
+        notes: '',
+      });
+      if (error) throw error;
+      /* Notify the tasker */
+      try {
+        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'A customer';
+        await window.supabase.from('notifications').insert({
+          user_id: _taskerId, type: 'new_booking', title: 'New Booking Request',
+          message: name + ' sent you a booking request.',
+          data: { customer_id: user.id }, is_read: false,
+        });
+      } catch(e2) { /* non-blocking */ }
       showToast('Booking request sent!');
       btn.textContent = 'Request Sent ✓';
     } catch(e) {
-      if (e.message === 'SUBSCRIPTION_REQUIRED') {
-        showToast('This tasker has reached their free booking limit.');
-      } else {
-        showToast('Could not send booking: ' + e.message);
-      }
+      showToast('Could not send booking: ' + e.message);
       btn.disabled = false;
       btn.textContent = 'Book This Service';
     }

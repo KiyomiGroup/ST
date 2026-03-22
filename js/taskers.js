@@ -53,7 +53,16 @@ const DUMMY_SERVICES = [
 
 async function loadServices() {
   try {
-    const services = await window.ST.db.fetchServices({ limit: 100 });
+    const _sRes = await window.supabase.from('services')
+      .select('*, users:user_id(name, business_name)')
+      .eq('available', true).order('created_at', { ascending: false }).limit(100);
+    const services = (_sRes.data || []).map(s => ({
+      id: String(s.id), service_name: s.service_name || s.service, category: s.category,
+      price: s.price, rate_unit: s.rate_unit || '/job', location: s.location,
+      description: s.description, photo: s.photo, user_id: s.user_id,
+      provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider',
+      available: s.available, fromServices: true,
+    }));
     if (services && services.length > 0) {
       /* Live services first, then dummy data to fill out the page */
       const liveIds = new Set(services.map(s => String(s.user_id)));
@@ -342,7 +351,8 @@ async function handleBookingSubmit(e) {
   const svc      = ALL.find(x => x.id === modal?.dataset.activeSvc);
 
   /* Auth check */
-  const user = await window.ST.auth.getCurrentUser();
+  const sess = await window.supabase.auth.getSession();
+  const user = sess.data.session && sess.data.session.user;
   if (!user) {
     closeBookingModal();
     showToast('Please log in to book a service.');
@@ -366,7 +376,23 @@ async function handleBookingSubmit(e) {
       return;
     }
 
-    await window.ST.db.createBooking({ taskerId, scheduledTime: scheduled });
+    const _bSess = await window.supabase.auth.getSession();
+    const _bUser = _bSess.data.session && _bSess.data.session.user;
+    if (!_bUser) throw new Error('Not logged in');
+    const { error: _bErr } = await window.supabase.from('bookings').insert({
+      customer_id: _bUser.id, tasker_id: taskerId,
+      scheduled_time: scheduled || null, status: 'pending',
+      notes: form.bookingNotes?.value?.trim() || '',
+    });
+    if (_bErr) throw _bErr;
+    /* Notify tasker */
+    try {
+      await window.supabase.from('notifications').insert({
+        user_id: String(taskerId), type: 'new_booking', title: 'New Booking Request',
+        message: (_bUser.user_metadata?.name || _bUser.email?.split('@')[0] || 'A customer') + ' sent you a booking request.',
+        is_read: false,
+      });
+    } catch(e2) {}
     closeBookingModal();
     showToast(`Booking request sent to ${svc?.provider_name || 'the provider'}!`);
     form.reset();

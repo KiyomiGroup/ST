@@ -242,7 +242,8 @@
 
     async function initPage() {
       try {
-        const liveTasks = await window.ST.db.fetchTasks({ limit: 100 });
+        const _tRes = await window.supabase.from('tasks').select('*').eq('status','open').order('created_at',{ascending:false}).limit(100);
+        const liveTasks = _tRes.data || [];
         /* Live tasks first, then dummy tasks to fill the page */
         const liveIds = new Set((liveTasks || []).map(t => String(t.id)));
         const dummyFiltered = DUMMY_TASKS.filter(d => !liveIds.has(d.id));
@@ -460,7 +461,8 @@
     window.closeApply = closeApply;
 
     async function submitApply() {
-      const user = await window.ST.auth.getCurrentUser();
+      const _aSess = await window.supabase.auth.getSession();
+      const user = _aSess.data.session && _aSess.data.session.user;
       if (!user) {
         closeApply();
         showToast('Please log in to apply to tasks.');

@@ -271,6 +271,13 @@
               <div id="findTasksList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading tasks...</div></div>
             </div>
 
+            <!-- My Applications -->
+            <div id="panel-my-applications" class="dashboard-panel">
+              <div class="panel-header"><h2>My Applications</h2><a href="explore-tasks.html" class="btn btn-ghost btn-sm">Find More Tasks</a></div>
+              <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:16px;">Tasks you've applied to. You'll be notified when a customer accepts.</p>
+              <div id="myApplicationsList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
+            </div>
+
             <!-- Bookings -->
             <div id="panel-bookings" class="dashboard-panel">
               <div class="panel-header"><h2>Incoming Bookings</h2></div>
@@ -599,8 +606,8 @@
             '<div><div class="booking-row-title">' + escapeHtml(who) + '</div>' +
             '<div class="booking-row-meta">' + escapeHtml(task) + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
             '<div class="booking-row-actions">' + badge(b.status) +
-              (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" onclick="doBooking(\'' + b.id + '\',\'confirmed\')">Confirm</button>' : '') +
-              (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   onclick="doBooking(\'' + b.id + '\',\'completed\')">Mark Done</button>' : '') +
+              (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" data-booking-action="confirmed" data-booking-id="' + b.id + '">Confirm</button>' : '') +
+              (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   data-booking-action="completed" data-booking-id="' + b.id + '">Mark Done</button>' : '') +
             '</div>' +
           '</div>' +
           contactHtml +
@@ -610,11 +617,31 @@
     async function doBooking(id, status) {
       try {
         await window.supabase.from('bookings').update({ status: status }).eq('id', id);
-        showToast(status === 'confirmed' ? 'Booking confirmed!' : 'Job marked as completed!');
-        setTimeout(function() { location.reload(); }, 800);
+        /* Notify customer when booking is confirmed */
+        if (status === 'confirmed') {
+          try {
+            var bk = await window.supabase.from('bookings').select('customer_id').eq('id', id).maybeSingle();
+            if (bk.data && bk.data.customer_id) {
+              await window.supabase.from('notifications').insert({
+                user_id: bk.data.customer_id, type: 'booking_confirmed',
+                title: 'Booking Confirmed', message: 'Your booking has been confirmed by the tasker.',
+                data: { booking_id: id }, is_read: false
+              });
+            }
+          } catch(e2) { /* non-blocking */ }
+        }
+        showToast(status === 'confirmed' ? 'Booking confirmed! Customer has been notified.' : 'Job marked as complete!');
+        setTimeout(function() { location.reload(); }, 1000);
       } catch(e) { showToast('Error: ' + e.message); }
     }
     window.doBooking = doBooking;
+
+    /* Delegated click for booking action buttons */
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-booking-action]');
+      if (!btn) return;
+      doBooking(btn.dataset.bookingId, btn.dataset.bookingAction);
+    });
 
     function serviceCard(s, idx) {
       var init  = (s.service_name || s.service || '?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
@@ -649,6 +676,75 @@
     window.confirmDeleteService = confirmDeleteService;
 
     /* ── Find Tasks ───────────────────────────────────────────── */
+    var _myAppsLoaded = false;
+    async function loadMyApplications() {
+      if (_myAppsLoaded) return;
+      _myAppsLoaded = true;
+      var el = document.getElementById('myApplicationsList');
+      if (!el) return;
+      el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div>';
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var uid = sess.data.session && sess.data.session.user.id;
+        if (!uid) { el.innerHTML = '<p style="padding:16px;color:var(--text-muted);">Please log in.</p>'; return; }
+
+        var res = await window.supabase.from('task_applications')
+          .select('*, tasks!task_id(id, title, description, budget, location, status, created_at)')
+          .eq('tasker_id', uid)
+          .order('created_at', { ascending: false });
+        var apps = res.data || [];
+
+        if (!apps.length) {
+          el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">' +
+            '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 12px;opacity:0.4;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+            '<p style="font-weight:600;margin-bottom:6px;">No applications yet</p>' +
+            '<p style="font-size:0.84rem;">Browse open tasks and apply to get hired.</p>' +
+            '<a href="explore-tasks.html" class="btn btn-primary btn-sm" style="margin-top:14px;">Browse Tasks</a>' +
+            '</div>';
+          return;
+        }
+
+        /* Count pending for badge */
+        var pending = apps.filter(function(a){ return a.status === 'pending'; }).length;
+        var badge = document.getElementById('myAppBadge');
+        if (badge && pending > 0) { badge.textContent = String(pending); badge.style.display = 'inline'; }
+
+        var statusColors = { pending:'#f59e0b', accepted:'#16a34a', rejected:'#dc2626', closed:'#9ca3af' };
+        var statusLabel  = { pending:'Pending', accepted:'Accepted!', rejected:'Declined', closed:'Closed' };
+
+        el.innerHTML = apps.map(function(a) {
+          var task    = a.tasks || {};
+          var color   = statusColors[a.status] || '#f59e0b';
+          var label   = statusLabel[a.status] || a.status;
+          var isAccepted = a.status === 'accepted';
+          var msgClean = (a.message || '').replace(/\|\s*Proposed rate:.*$/, '').trim();
+          var priceMatch = (a.message || '').match(/\|\s*Proposed rate:\s*(\S+)/);
+
+          return '<div class="task-row-card" style="flex-direction:column;align-items:stretch;margin-bottom:10px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="font-weight:700;font-size:0.92rem;margin-bottom:2px;">' + escapeHtml(task.title || 'Task') + '</div>' +
+                '<div style="font-size:0.78rem;color:var(--text-muted);">' +
+                  (task.budget ? '₦' + Number(task.budget).toLocaleString() + ' budget · ' : '') +
+                  (task.location ? escapeHtml(task.location) + ' · ' : '') +
+                  fmtDate(a.created_at) +
+                '</div>' +
+              '</div>' +
+              '<span style="padding:3px 9px;border-radius:var(--radius-pill);font-size:0.72rem;font-weight:700;border:1px solid;color:' + color + ';border-color:' + color + ';flex-shrink:0;">' + label + '</span>' +
+            '</div>' +
+            (msgClean ? '<p style="font-size:0.82rem;color:var(--text-secondary);margin-top:8px;padding:8px 10px;background:var(--bg-subtle);border-radius:var(--radius-md);border-left:3px solid var(--blue);line-height:1.5;">' + escapeHtml(msgClean) + (priceMatch ? ' <strong>· ' + escapeHtml(priceMatch[1]) + '</strong>' : '') + '</p>' : '') +
+            (isAccepted ? '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;color:var(--green);">You were accepted! Check your notifications for customer contact details.</div>' : '') +
+            '<div style="margin-top:10px;display:flex;gap:8px;">' +
+              (task.id ? '<a href="explore-tasks.html" class="btn btn-ghost btn-sm">View Task</a>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;padding:16px;">Could not load applications: ' + e.message + '</p>';
+      }
+    }
+    window.loadMyApplications = loadMyApplications;
+
     async function loadFindTasks() {
       if (findTasksLoaded) return;
       findTasksLoaded = true;
@@ -757,7 +853,7 @@
       /* Check for URL hash — used by external links to jump to a panel
          e.g. dashboard-tasker.html#profile opens Edit Page directly */
       var startHash = window.location.hash.replace('#','');
-      var validPanels = ['mypage','services','bookings','find-tasks','notifications','profile','verification','subscription'];
+      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','subscription'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
         if (startHash === 'profile')       loadProfilePanel();

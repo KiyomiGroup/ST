@@ -290,33 +290,27 @@
     }
 
     function bookingCard(b) {
-      var contact    = b._taskerContact;
-      var service    = (b.taskers && (b.taskers.service || b.taskers.name)) || 'Service Provider';
-      var isActive   = b.status === 'confirmed' || b.status === 'completed';
-
-      /* Contact reveal — only shown when booking is confirmed */
-      var contactHtml = '';
-      if (isActive && contact) {
-        var phone = contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
-        contactHtml =
-          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
-          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Tasker Contact</span>' +
-          (phone
-            ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-              contact.phone + '</a>'
-            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file</span>') +
-          (contact.email
-            ? '<a href="mailto:' + contact.email + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;color:var(--text-secondary);text-decoration:none;">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>' +
-              contact.email + '</a>'
-            : '') +
-          '</div>';
-      } else if (b.status === 'pending') {
-        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Waiting for the tasker to confirm. Their contact details will appear here once confirmed.</div>';
-      }
-
+      var service  = (b.taskers && (b.taskers.service || b.taskers.service_name || b.taskers.name)) || 'Service Booking';
+      var isActive = b.status === 'confirmed' || b.status === 'completed';
       var profileUrl = b.tasker_id ? 'tasker-profile.html?id=' + b.tasker_id : '#';
+
+      /* Contact — use whatsapp stored on tasker row */
+      var wpRaw    = (b.taskers && (b.taskers.whatsapp || b.taskers.phone)) || '';
+      var wpDigits = wpRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+      var contactHtml = '';
+      if (isActive && wpDigits) {
+        contactHtml =
+          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
+          '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Tasker Contact</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<a href="https://wa.me/234' + wpDigits + '" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;text-decoration:none;">WhatsApp</a>' +
+          '<a href="tel:+234' + wpDigits + '" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;color:var(--text-primary);text-decoration:none;">Call</a>' +
+          '</div></div>';
+      } else if (b.status === 'pending') {
+        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Waiting for the tasker to confirm your booking.</div>';
+      } else if (isActive) {
+        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Contact not available — tasker has not added their WhatsApp yet.</div>';
+      }
 
       return '<div class="booking-row-card" style="flex-direction:column;align-items:stretch;">' +
         '<div style="display:flex;gap:12px;align-items:flex-start;">' +
@@ -521,6 +515,18 @@
         await window.supabase.from('task_applications').update({ status: 'closed' })
           .eq('task_id', taskId).eq('status', 'pending').neq('id', appId);
         await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', taskId);
+        /* Notify the accepted tasker */
+        try {
+          var appData = _appDataMap[String(appId)];
+          if (appData && appData.tasker_id) {
+            await window.supabase.from('notifications').insert({
+              user_id: String(appData.tasker_id), type: 'application_accepted',
+              title: 'Application Accepted!',
+              message: 'Your application was accepted. Check My Applications to see details.',
+              data: { task_id: taskId, application_id: appId }, is_read: false,
+            });
+          }
+        } catch(e2) { /* non-blocking */ }
         showToast('Accepted! Contact details are now visible.');
         closeApplicantModal();
         appLoaded = false;
@@ -682,8 +688,9 @@
 
       var user;
       try {
-        user = await window.ST.auth.requireAuth();
-        if (!user) return; /* requireAuth handles redirect */
+        var _s = await window.supabase.auth.getSession();
+        if (!_s.data.session) { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname); return; }
+        user = _s.data.session.user;
       } catch(authErr) {
         if (loadEl) {
           loadEl.innerHTML = '<p style="color:var(--red);text-align:center;padding:32px;">Please <a href="login.html" style="color:var(--blue);">log in</a> to view your dashboard.</p>';
@@ -753,7 +760,8 @@
           var total = 0;
           for (var i = 0; i < Math.min(tasks.length, 5); i++) {
             try {
-              var apps = await window.ST.db.fetchTaskApplications(tasks[i].id);
+              var _ar = await window.supabase.from('task_applications').select('id,status').eq('task_id', tasks[i].id);
+              var apps = _ar.data || [];
               var pending = apps.filter(function(a) { return a.status === 'pending'; }).length;
               total += pending;
             } catch(e) {}
@@ -773,7 +781,9 @@
         ? tasks.map(taskCard).join('')
         : empty('No tasks posted yet. Each task gets matched with providers.', 'Post a Task', 'post-task.html');
 
-      var bkRes=await window.supabase.from('bookings').select('*').eq('customer_id',user.id).order('created_at',{ascending:false}).catch(function(){return {data:[]};});
+      var bkRes=await window.supabase.from('bookings')
+        .select('*, taskers:tasker_id(name, service, service_name, whatsapp, phone, user_id)')
+        .eq('customer_id',user.id).order('created_at',{ascending:false}).catch(function(){return {data:[]};});
       bookings=bkRes.data||[];
       document.getElementById('bookingsList').innerHTML = bookings.length
         ? bookings.map(bookingCard).join('')
@@ -784,8 +794,6 @@
     let _currentProfileImageFile = null;
 
     async function loadProfilePanel() {
-      const user = await window.ST.auth.getCurrentUser();
-      if (!user) return;
       var pSess=await window.supabase.auth.getSession();var pUser=pSess.data.session&&pSess.data.session.user;if(!pUser)return;var puid=pUser.id;const { data } = await window.supabase.from('users').select('name,bio,location,avatar_url').eq('id', puid).maybeSingle();
       if (data) {
         const nameEl = document.getElementById('profileName');
@@ -826,7 +834,8 @@
     async function saveProfile() {
       const btn = document.getElementById('saveProfileBtn');
       const msg = document.getElementById('profileSaveMsg');
-      const user = await window.ST.auth.getCurrentUser();
+      var _sp=await window.supabase.auth.getSession();
+      const user=_sp.data.session&&_sp.data.session.user;
       if (!user) return;
 
       btn.disabled = true;

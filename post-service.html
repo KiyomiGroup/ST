@@ -220,7 +220,9 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Checking...'; }
 
       /* Require tasker role — customers cannot post services */
-      var user = await window.ST.auth.requireRole('tasker');
+      var _initSess = await window.supabase.auth.getSession();
+      var user = _initSess.data.session && _initSess.data.session.user;
+      if (!user) { window.location.href = 'login.html?redirect=post-service.html'; return; }
       if (!user) return;
 
       /* Require identity verification before posting a service */
@@ -242,7 +244,11 @@
 
       // Pre-fill from existing service
       try {
-        var svcs = await window.ST.db.fetchMyServices();
+        var _sess = await window.supabase.auth.getSession();
+        var _uid = _sess.data.session && _sess.data.session.user.id;
+        if (!_uid) return;
+        var _sRes = await window.supabase.from('services').select('id').eq('user_id', _uid);
+        var svcs = _sRes.data || [];
         var svc  = svcs[0];
         if (svc) {
           if (svc.service_name) document.getElementById('svcName').value     = svc.service_name;
@@ -346,7 +352,15 @@
         if (file) {
           document.getElementById('uploadProgress').style.display = 'flex';
           try {
-            photoUrl = await window.ST.db.uploadServiceImage(file);
+            /* Upload image directly to Supabase storage */
+            var ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+            var path = 'services/' + Date.now() + '.' + ext;
+            var { error: upErr, data: upData } = await window.supabase.storage
+              .from('service-images').upload(path, file, { cacheControl: '3600', upsert: true });
+            if (!upErr) {
+              var { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(path);
+              photoUrl = urlData.publicUrl;
+            }
             uploadedPhotoUrl = photoUrl;
           } catch(uploadErr) {
             console.warn('[Upload]', uploadErr.message);
@@ -356,16 +370,34 @@
           }
         }
 
-        await window.ST.db.postService({
-          serviceName: serviceName,
-          category:    category,
-          pricingType: pricingTypeFromUnit(document.getElementById('svcRateUnit').value),
-          price:       rateValues.numericValue,   /* plain Number — guaranteed */
-          rateUnit:    rateValues.rateUnit,
-          location:    location,
-          description: description,
-          photoUrl:    photoUrl,
+        var _postSess = await window.supabase.auth.getSession();
+        var _postUser = _postSess.data.session && _postSess.data.session.user;
+        if (!_postUser) throw new Error('Please log in to post a service.');
+        var { error: svcErr } = await window.supabase.from('services').insert({
+          user_id:      _postUser.id,
+          service_name: serviceName,
+          category:     category,
+          price:        rateValues.numericValue,
+          rate_unit:    rateValues.rateUnit,
+          location:     location,
+          description:  description,
+          photo:        photoUrl || null,
+          available:    true,
         });
+        if (svcErr) throw svcErr;
+        /* Also upsert into taskers table so profile page works */
+        await window.supabase.from('taskers').upsert({
+          user_id:      String(_postUser.id),
+          service:      serviceName,
+          service_name: serviceName,
+          category:     category,
+          rate_value:   rateValues.numericValue,
+          rate_unit:    rateValues.rateUnit,
+          location:     location,
+          bio:          description,
+          photo_url:    photoUrl || null,
+          available:    true,
+        }, { onConflict: 'user_id' });
 
         succEl.style.display = 'block';
         document.getElementById('serviceForm').reset();
