@@ -264,6 +264,7 @@
     'use strict';
     var appLoaded = false;
     var custNotifLoaded = false;
+    var _appDataMap = {}; /* stores application data by ID for modal lookup */
 
     function switchPanel(id, btn) {
       document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
@@ -481,10 +482,8 @@
       if (!modalEl || !body) return;
 
       /* Find app data from rendered card data attribute */
-      var card = document.getElementById('app-' + appId);
-      if (!card) return;
-      var appData = null;
-      try { appData = JSON.parse(card.dataset.app); } catch(e) { return; }
+      var appData = _appDataMap[String(appId)];
+      if (!appData) { console.warn('App data not found for', appId); return; }
 
       _currentApplicant = appData;
 
@@ -661,7 +660,8 @@
         actions = '<div style="margin-top:8px;font-size:0.76rem;color:var(--text-muted);">Closed — another applicant was accepted</div>';
       }
 
-      return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;padding:14px;" data-app='' + JSON.stringify(a).replace(/'/g,"&#39;") + ''>' +
+      _appDataMap[String(a.id)] = a;
+      return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;padding:14px;">' +
         '<div style="display:flex;gap:10px;align-items:flex-start;">' +
           '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;overflow:hidden;">' + photoHtml + '</div>' +
           '<div style="flex:1;min-width:0;">' +
