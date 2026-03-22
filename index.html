@@ -436,11 +436,22 @@
     }
     window.filterCat = filterCat;
 
+    const DUMMY_TASKS_HOME = [
+      { title:'Fix leaking kitchen sink', category:'plumber', location:'Lekki, Lagos', budget:8000, description:'My kitchen sink has been dripping for a week. Need a plumber asap.' },
+      { title:'AC servicing and gas recharge', category:'appliances', location:'Victoria Island, Lagos', budget:12000, description:'Two split ACs need servicing. One is not cooling at all.' },
+      { title:'Makeup for wedding aso-ebi', category:'beauty', location:'Surulere, Lagos', budget:45000, description:'Need a makeup artist for Saturday. 3 people including myself.' },
+      { title:'Electrical fault in bedroom', category:'electrician', location:'Ikeja, Lagos', budget:10000, description:'One bedroom circuit keeps tripping. Need an electrician to diagnose.' },
+      { title:'House deep cleaning', category:'cleaning', location:'Ajah, Lagos', budget:25000, description:'4-bedroom house needs thorough cleaning after renovation.' },
+    ];
+
     async function loadTasksSection() {
       try {
         const tasks = await window.ST.db.fetchTasks({ limit: 5 });
         const el    = document.getElementById('tasksList');
-        if (!tasks.length) {
+        /* Merge live tasks with dummy fallback — always show something */
+        const liveIds = new Set((tasks||[]).map(t => String(t.id)));
+        const combined = [...(tasks||[]), ...DUMMY_TASKS_HOME].slice(0, 5);
+        if (!combined.length) {
           el.innerHTML = `<div style="text-align:center;padding:40px 24px;">
             <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px;">No open tasks yet. Post the first one!</p>
             <a href="post-task.html" class="btn btn-primary btn-sm">Post a Task</a></div>`;
@@ -450,13 +461,13 @@
           default: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
           electrician: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
         };
-        el.innerHTML = tasks.slice(0,5).map((t, i) => {
+        el.innerHTML = combined.map((t, i) => {
           const icon    = icons[t.category] || icons.default;
           const safeTitle = escapeHtml(t.title || 'Untitled task');
           const safeLoc   = escapeHtml(t.location || 'Lagos');
           const safeCat   = escapeHtml(t.category || '');
           const safeDesc  = escapeHtml((t.description||'').slice(0,80)) + ((t.description||'').length>80?'&hellip;':'');
-          return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href='explore-tasks.html'">'
+          return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
             + '<div class="task-live-icon">' + icon + '</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<div class="task-live-title">' + safeTitle + '</div>'
@@ -472,8 +483,23 @@
         }).join('');
       } catch(e) {
         console.warn('[ST] loadTasksSection error:', e);
-        document.getElementById('tasksList').innerHTML =
-          `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load tasks. <a href="explore-tasks.html" style="color:var(--blue);">Browse all →</a></div>`;
+        /* Even on error — show dummy tasks so page never stays skeleton */
+        const el = document.getElementById('tasksList');
+        if (el) {
+          const icons = { default: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>` };
+          el.innerHTML = DUMMY_TASKS_HOME.map((t, i) => {
+            const safeTitle = escapeHtml(t.title);
+            const safeLoc   = escapeHtml(t.location);
+            const safeDesc  = escapeHtml(t.description);
+            return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
+              + '<div class="task-live-icon">' + icons.default + '</div>'
+              + '<div style="flex:1;min-width:0;"><div class="task-live-title">' + safeTitle + '</div>'
+              + '<div class="task-live-meta"><span>' + safeLoc + '</span></div>'
+              + '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">' + safeDesc + '</p></div>'
+              + '<div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;' + Number(t.budget).toLocaleString() + '</div>'
+              + '<span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div></div>';
+          }).join('');
+        }
       }
     }
 
