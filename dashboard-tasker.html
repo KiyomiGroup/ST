@@ -691,12 +691,19 @@
 
     /* ── Init ─────────────────────────────────────────────────── */
     async function initPage() {
+      /* Hide spinner immediately so the layout is never blocked */
+      var loadEl = document.getElementById('dashLoading');
+      if (loadEl) loadEl.style.display = 'none';
+
       var user;
       try {
         user = await window.ST.auth.requireAuth();
         if (!user) return;
       } catch(authErr) {
-        document.getElementById('dashLoading').innerHTML = '<p style="color:var(--red);text-align:center;">Auth error. <a href="login.html">Log in again</a></p>';
+        if (loadEl) {
+          loadEl.innerHTML = '<p style="color:var(--red);text-align:center;padding:32px;">Please <a href="login.html" style="color:var(--blue);">log in</a> to view your dashboard.</p>';
+          loadEl.style.display = 'block';
+        }
         return;
       }
 
@@ -707,9 +714,7 @@
       var greetEl = document.getElementById('dashGreeting');
       if (greetEl) greetEl.textContent = 'Welcome back, ' + name;
 
-      /* ── CRITICAL: show panels immediately, don't wait for data ── */
-      var loadEl = document.getElementById('dashLoading');
-      if (loadEl) loadEl.style.display = 'none';
+      /* Panels are already visible (spinner hidden at top of initPage) */
       /* Check for URL hash — used by external links to jump to a panel
          e.g. dashboard-tasker.html#profile opens Edit Page directly */
       var startHash = window.location.hash.replace('#','');

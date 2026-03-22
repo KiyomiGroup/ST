@@ -204,12 +204,10 @@ function buildCard(s) {
       </div>
     </div>
     <div class="tc-footer">
-      <span class="tc-badge tc-badge-green">${s.user_id === 'demo' ? 'Demo listing' : 'Available'}</span>
+      <span class="tc-badge tc-badge-green">Available</span>
       <div style="display:flex;gap:6px;">
-        ${s.user_id !== 'demo' ? `<a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>` : ''}
-        ${s.user_id !== 'demo'
-          ? `<button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>`
-          : `<button class="btn btn-ghost btn-sm" onclick="showToast('Sign up to book this service!')">Book</button>`}
+        <a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>
+        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>
       </div>
     </div>
   </div>`;
@@ -359,6 +357,14 @@ async function handleBookingSubmit(e) {
     const date = form.bookingDate?.value;
     const time = form.bookingTime?.value || '09:00';
     const scheduled = date ? `${date}T${time}` : null;
+
+    /* Demo listings simulate a booking without touching the DB */
+    if (svc && svc.user_id === 'demo') {
+      closeBookingModal();
+      showToast(`Booking request sent to ${svc.provider_name}! Sign up to manage bookings.`);
+      form.reset();
+      return;
+    }
 
     await window.ST.db.createBooking({ taskerId, scheduledTime: scheduled });
     closeBookingModal();

@@ -124,11 +124,17 @@ async function syncNavbarAuthState() {
 
 /* ── Auth operations ─────────────────────────────────────────── */
 async function signUpUser({ name, email, password, role, phone = '' }) {
+  /* Supabase silently resends confirmation for duplicate emails instead of erroring.
+     Detect this by checking identities array on the returned user object. */
   const { data, error } = await window.supabase.auth.signUp({
     email, password, options: { data: { name, role } },
   });
   if (error) throw error;
   if (!data.user) throw new Error('Sign-up failed — try again.');
+  /* Empty identities = email already registered */
+  if (!data.user.identities || data.user.identities.length === 0) {
+    throw new Error('An account with this email already exists. Please log in instead.');
+  }
 
   await window.supabase.from('users').upsert(
     { id: data.user.id, name, email, role, phone: phone || null },
@@ -159,14 +165,19 @@ async function loginUser(email, password) {
 }
 
 async function logoutUser() {
-  /* Clear cached auth state so navbar shows logged-out instantly on next page */
+  /* Clear ALL cached auth state */
   try {
     localStorage.removeItem('st_role');
     localStorage.removeItem('st_name');
     localStorage.removeItem('st_session');
+    /* Also clear any Supabase persisted session keys */
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('sb-') || k.startsWith('supabase')) localStorage.removeItem(k);
+    });
   } catch(e) {}
-  await window.supabase.auth.signOut();
-  window.location.replace('index.html');
+  try { await window.supabase.auth.signOut(); } catch(e) {}
+  /* Force a clean reload of homepage with no cache */
+  window.location.href = 'index.html?_=' + Date.now();
 }
 
 async function requireAuth() {

@@ -547,25 +547,28 @@
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initPage() {
+      /* Hide spinner immediately — never let it block the UI */
+      var loadEl = document.getElementById('dashLoading');
+      if (loadEl) loadEl.style.display = 'none';
+
       var user;
       try {
         user = await window.ST.auth.requireAuth();
-        if (!user) return;
+        if (!user) return; /* requireAuth handles redirect */
       } catch(authErr) {
-        document.getElementById('dashLoading').innerHTML = '<p style="color:var(--red);text-align:center;">Auth error. <a href="login.html">Log in again</a></p>';
+        if (loadEl) {
+          loadEl.innerHTML = '<p style="color:var(--red);text-align:center;padding:32px;">Please <a href="login.html" style="color:var(--blue);">log in</a> to view your dashboard.</p>';
+          loadEl.style.display = 'block';
+        }
         return;
       }
 
-      /* Safe name — user.email can be null for Google OAuth */
+      /* Safe name */
       var name = (user.user_metadata && user.user_metadata.name)
         || (user.email ? user.email.split('@')[0] : null)
         || 'there';
       var greetEl = document.getElementById('dashGreeting');
       if (greetEl) greetEl.textContent = 'Welcome back, ' + name;
-
-      /* Hide loading spinner — must happen before switchPanel */
-      var loadEl = document.getElementById('dashLoading');
-      if (loadEl) loadEl.style.display = 'none';
 
       /* Check for ?panel= URL param — used by post-task redirect to land on My Tasks */
       var urlParams  = new URLSearchParams(window.location.search);

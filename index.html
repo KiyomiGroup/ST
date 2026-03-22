@@ -140,9 +140,10 @@
           <h1 class="fade-up d1">Find trusted<br>workers <em>near you</em></h1>
           <p class="fade-up d2">Street Taskers connects customers with skilled local providers. Post a task and get matched instantly, or list your service and start earning today.</p>
           <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
-            <div class="hero-search-field">
+            <div class="hero-search-field" style="position:relative;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" id="heroServiceInput" name="service" placeholder="Service (e.g. Barber, Cleaner)" autocomplete="off" />
+              <div id="heroServiceSuggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);z-index:200;display:none;max-height:220px;overflow-y:auto;"></div>
             </div>
             <div class="hero-search-field" style="position:relative;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -392,6 +393,7 @@
 
     async function initPage() {
       /* Wire hero location autocomplete + GPS */
+      initServiceAutocomplete();
       initLocationInput({
         inputId:    'heroLocationInput',
         dropdownId: 'heroLocationSuggestions',
@@ -673,6 +675,43 @@
           + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
           + '</div>';
       }).join('');
+    }
+
+    /* ── Service search autocomplete ─────────────────────────── */
+    const SERVICE_SUGGESTIONS = [
+      'Barber','Electrician','House Cleaner','Plumber','Mechanic','Make-up Artist',
+      'Photographer','Painter','Laundry','Tutor','Personal Chef','Catering',
+      'Security Guard','AC Technician','Carpenter','Tailor','Delivery','Moving',
+      'Nail Technician','Hair Stylist','Videographer','Pest Control','Tiler',
+      'Generator Repair','CCTV Installation','Interior Design','Event Planning',
+    ];
+
+    function initServiceAutocomplete() {
+      const inp = document.getElementById('heroServiceInput');
+      const drop = document.getElementById('heroServiceSuggestions');
+      if (!inp || !drop) return;
+
+      inp.addEventListener('input', () => {
+        const q = inp.value.trim().toLowerCase();
+        if (!q) { drop.style.display = 'none'; return; }
+        const matches = SERVICE_SUGGESTIONS.filter(s => s.toLowerCase().startsWith(q))
+          .concat(SERVICE_SUGGESTIONS.filter(s => s.toLowerCase().includes(q) && !s.toLowerCase().startsWith(q)))
+          .slice(0, 6);
+        if (!matches.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = matches.map(s => {
+          const hi = s.slice(0, s.toLowerCase().indexOf(q.charAt(0).toLowerCase()) + q.length);
+          return `<div style="padding:10px 14px;cursor:pointer;font-size:0.88rem;border-bottom:1px solid var(--border-light);"
+            onmousedown="document.getElementById('heroServiceInput').value='${s}';document.getElementById('heroServiceSuggestions').style.display='none';"
+            onmouseover="this.style.background='var(--bg-subtle)'" onmouseout="this.style.background=''">${s}</div>`;
+        }).join('');
+        drop.style.display = 'block';
+      });
+
+      inp.addEventListener('blur', () => setTimeout(() => { drop.style.display = 'none'; }, 150));
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Escape') drop.style.display = 'none';
+        if (e.key === 'Enter') drop.style.display = 'none';
+      });
     }
 
     function handleHeroSearch(e) {

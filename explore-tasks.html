@@ -136,7 +136,19 @@
             Loading tasks...
           </div>
           <div id="tasksGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
-          <div id="tasksEmpty" class="empty-state" style="display:none;">
+          <!-- Task detail side panel -->
+      <div id="taskDetailPanel" style="display:none;position:fixed;top:0;right:0;width:min(480px,100vw);height:100vh;background:var(--white);border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(0,0,0,0.08);z-index:300;overflow-y:auto;padding:24px;box-sizing:border-box;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 id="detailTitle" style="font-size:1.1rem;font-weight:700;margin:0;"></h3>
+          <button onclick="closeTaskDetail()" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-muted);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div id="detailContent"></div>
+      </div>
+      <div id="taskDetailOverlay" onclick="closeTaskDetail()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:299;"></div>
+
+      <div id="tasksEmpty" class="empty-state" style="display:none;">
             <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
             <h3>No tasks found</h3>
             <p>Try a different search or check back later.</p>
@@ -299,12 +311,12 @@
       const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
       const desc = t.description || '';
       const since = tAgo(t.created_at);
-      return `<div class="task-row">
+      return `<div class="task-row" onclick="openTaskDetail('${t.id}')" style="cursor:pointer;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;">
           <div style="font-size:1rem;font-weight:700;color:var(--text-primary);">${t.title||'Untitled Task'}</div>
           <div style="font-size:1.05rem;font-weight:800;color:var(--blue);flex-shrink:0;">₦${Number(t.budget||0).toLocaleString()}</div>
         </div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.55;">${desc.slice(0,200)}${desc.length>200?'…':''}</p>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.55;">${desc.slice(0,120)}${desc.length>120?'…':''}</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">
           <span>📍 ${t.location||'Location TBD'}</span>
           <span>🏷 ${cat}</span>
@@ -313,10 +325,63 @@
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">
           <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
-          <button class="btn btn-primary btn-sm" onclick="openApply('${t.id}','${(t.title||'').replace(/'/g,"\\'")}','${desc.slice(0,80).replace(/'/g,"\\'")}')">Apply to Task</button>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openApply('${t.id}','${(t.title||'').replace(/'/g,"\\'")}','${desc.slice(0,80).replace(/'/g,"\\'")}')">Apply to Task</button>
         </div>
       </div>`;
     }
+
+    /* ── Task detail panel ───────────────────────────────────── */
+    function openTaskDetail(taskId) {
+      const t = ALL_TASKS.find(x => String(x.id) === String(taskId));
+      if (!t) return;
+      const dead = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}) : 'Open-ended';
+      const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
+      const desc = t.description || 'No description provided.';
+      const since = tAgo(t.created_at);
+      document.getElementById('detailTitle').textContent = t.title || 'Untitled Task';
+      document.getElementById('detailContent').innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <span class="task-row-badge status-open">Open</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
+        </div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--blue);margin-bottom:20px;">₦${Number(t.budget||0).toLocaleString()}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Category</div>
+            <div style="font-size:0.9rem;font-weight:600;">${cat}</div>
+          </div>
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Deadline</div>
+            <div style="font-size:0.9rem;font-weight:600;">${dead}</div>
+          </div>
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;grid-column:1/-1;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Location</div>
+            <div style="font-size:0.9rem;font-weight:600;">📍 ${t.location||'Location TBD'}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:24px;">
+          <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px;">What's needed</div>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.65;white-space:pre-wrap;">${escapeHtml(desc)}</p>
+        </div>
+        ${t.urgent ? '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:var(--radius-md);padding:10px 14px;font-size:0.84rem;font-weight:600;color:#92400e;margin-bottom:16px;">Urgent — needs to be done quickly</div>' : ''}
+        <button class="btn btn-primary btn-lg" style="width:100%;" onclick="openApply('${t.id}','${(t.title||'').replace(/'/g,"\'")}','${desc.slice(0,80).replace(/'/g,"\'")}')">
+          Apply to This Task
+        </button>
+        <p style="font-size:0.76rem;color:var(--text-muted);text-align:center;margin-top:10px;">You need to be logged in as a Tasker to apply.</p>
+      `;
+      document.getElementById('taskDetailPanel').style.display = 'block';
+      document.getElementById('taskDetailOverlay').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      ACTIVE_TASK_ID = taskId;
+    }
+
+    function closeTaskDetail() {
+      document.getElementById('taskDetailPanel').style.display = 'none';
+      document.getElementById('taskDetailOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    window.openTaskDetail  = openTaskDetail;
+    window.closeTaskDetail = closeTaskDetail;
 
     function tAgo(iso) {
       if (!iso) return '—';

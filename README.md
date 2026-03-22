@@ -1,96 +1,134 @@
-# Street Taskers — Frontend
+# Street Taskers
 
-Local services marketplace connecting customers with skilled taskers across Lagos.
+Nigeria's local services marketplace connecting customers with skilled service providers.
 
-## Sprint Status
+## What Street Taskers does
 
-| Sprint | Status | Notes |
-|--------|--------|-------|
-| Sprint 1 | ✅ Complete | Foundation: design system, pages, layout |
-| Sprint 2 | ✅ Complete | Interactive UI: forms, listings, social feed, subscription |
-| Sprint 3 | 🔜 Next | Supabase backend, map discovery, booking engine |
-| Sprint 4 | 📋 Planned | Paystack subscriptions, AI assistant, notifications |
+Customers post tasks they need done. Taskers list their services. The platform matches them, handles bookings, and manages the relationship from first contact to job completion.
+
+## Current status
+
+Sprint 2 is complete. The site is live at streettasker.com.
+
+| Sprint | Status | What was built |
+|--------|--------|----------------|
+| Sprint 1 | Complete | Design system, all page layouts, navigation |
+| Sprint 2 | Complete | Live Supabase backend, auth, task posting, bookings, dashboards |
+| Sprint 3 | Next | Map discovery, real-time notifications, Mapbox integration |
+| Sprint 4 | Planned | Paystack payments, AI task description helper |
 
 ## Pages
 
-| Page | File | Sprint |
-|------|------|--------|
-| Homepage | `index.html` | 1 |
-| Find Taskers | `find-taskers.html` | 2 (enhanced) |
-| Post a Task | `post-task.html` | 2 (enhanced) |
-| Social Feed | `social-feed.html` | 2 (new) |
-| Subscription / Pricing | `subscription.html` | 2 (new) |
-| Login | `login.html` | 1 |
-| Sign Up | `signup.html` | 1 |
+| Page | File | Who uses it |
+|------|------|-------------|
+| Homepage | `index.html` | Everyone |
+| Find Services | `find-taskers.html` | Customers looking for providers |
+| Explore Tasks | `explore-tasks.html` | Taskers looking for work |
+| Post a Task | `post-task.html` | Customers |
+| Post a Service | `post-service.html` | Taskers |
+| Customer Dashboard | `dashboard-customer.html` | Logged-in customers |
+| Tasker Dashboard | `dashboard-tasker.html` | Logged-in taskers |
+| Tasker Profile | `tasker-profile.html` | Public profile page |
+| Login | `login.html` | Everyone |
+| Sign Up | `signup.html` | New users |
+| Verify Identity | `verify.html` | Taskers going through verification |
+| Subscription Plans | `subscription.html` | Taskers considering upgrade |
+| Terms of Service | `terms.html` | Legal |
+| Privacy Policy | `privacy.html` | Legal |
+| 404 | `404.html` | Error fallback |
 
-## File Structure
+**Removed pages:** `social-feed.html` was removed in Sprint 2. It is no longer part of the platform.
+
+## File structure
 
 ```
-street-tasker/
+/
 ├── index.html
 ├── find-taskers.html
+├── explore-tasks.html
 ├── post-task.html
-├── social-feed.html
-├── subscription.html
+├── post-service.html
+├── dashboard-customer.html
+├── dashboard-tasker.html
+├── tasker-profile.html
 ├── login.html
 ├── signup.html
+├── verify.html
+├── subscription.html
+├── terms.html
+├── privacy.html
+├── 404.html
 ├── css/
-│   ├── styles.css          # Design system (variables, reset, base components)
-│   ├── tasks.css           # Task form + tasker card v2 styles
-│   ├── subscription.css    # Subscription tiers + plan cards
-│   └── feed.css            # Social feed + post cards
+│   ├── styles.css          Main design system and all shared styles
+│   ├── tasks.css           Task form and tasker card styles
+│   ├── subscription.css    Subscription tier styles
+│   └── feed.css            Kept for now, may be removed in Sprint 3
 ├── js/
-│   ├── app.js              # Bootstrap, component loader, scroll animations
-│   ├── ui.js               # Toast, placeholder data, card builder
-│   ├── tasks.js            # Task posting form — Sprint 2
-│   ├── taskers.js          # Tasker listings, filtering, booking modal — Sprint 2
-│   ├── feed.js             # Social feed likes/comments — Sprint 2
-│   ├── subscription.js     # Subscription tier UI — Sprint 2
-│   └── future-features.js  # Supabase integration stubs — Sprint 3+
+│   ├── supabaseClient.js   Supabase client initialisation
+│   ├── auth.js             Login, signup, logout, session management
+│   ├── db.js               All Supabase database calls
+│   ├── app.js              Page bootstrap, navbar, scroll animations
+│   ├── taskers.js          Find Services page — listings, filtering, booking modal
+│   ├── tasks.js            Post a Task form logic
+│   ├── location.js         Location autocomplete using Nominatim
+│   ├── sanitize.js         XSS protection utilities
+│   ├── ui.js               Toast notifications, placeholder data
+│   ├── subscription.js     Subscription tier UI
+│   ├── verify.js           Identity verification flow
+│   └── future-features.js  Stubs for Sprint 3 and 4 features
 ├── components/
-│   ├── navbar.html         # Shared navigation (loaded via fetch)
-│   ├── footer.html         # Shared footer (loaded via fetch)
-│   ├── task-card.html      # Tasker card reference markup
-│   └── feed-post.html      # Feed post reference markup
+│   ├── navbar.html         Shared navigation bar
+│   └── footer.html         Shared footer
 └── images/
-    ├── logo-nav.png        # Transparent logo for navbar
-    ├── logo-full.jpeg      # Full street-sign logo
-    ├── favicon.png         # Browser tab icon
-    └── apple-touch-icon.png
+    ├── logo-nav.png
+    ├── logo.png
+    └── favicon.png
 ```
 
-## Local Development
+## Running locally
 
-Components are loaded via `fetch()` — must run a local server:
+Components load via `fetch()` so a local server is required:
 
 ```bash
-# Option 1
 npx serve .
-
-# Option 2
+# or
 python3 -m http.server 3000
-
-# Then open: http://localhost:3000
 ```
 
-## Sprint 2 Features
+Then open `http://localhost:3000`
 
-- **Task Posting Form**: validated form with draft saving, character counter, budget chips, category quick-select, progress indicator
-- **Tasker Listings**: live filtering (category, rating, price, availability), search with debounce, sort, pagination, booking modal
-- **Social Feed**: like/comment interactions (in-memory), share, save, suggested taskers, trending services sidebar
-- **Subscription Plans**: Free / Starter (₦9,999/mo) / Pro (₦29,999/mo), annual billing toggle, free slot meter, comparison table, FAQ
+## Database
 
-## Sprint 3 Integration Points
+The project uses Supabase. Key public tables:
 
-All `showSprintAlert()` calls mark where Supabase integration goes:
-- Task posting → `supabase.from('tasks').insert()`
-- Auth → `supabase.auth.signUp()` / `supabase.auth.signIn()`
-- Tasker data → `supabase.from('tasker_profiles').select()`
-- Booking → `supabase.from('bookings').insert()`
-- Map → Mapbox GL JS + PostGIS spatial queries
+- `users` — user profiles (name, role, bio, location)
+- `tasks` — tasks posted by customers
+- `services` — services listed by taskers
+- `taskers` — tasker profiles with service details
+- `bookings` — bookings between customers and taskers
+- `task_applications` — tasker applications to customer tasks
+- `notifications` — in-app notifications
+- `reviews` — post-job reviews
+- `subscriptions` — tasker subscription records
+- `verifications` — identity verification submissions
 
-## Sprint 4 Integration Points
+## Two user roles
 
-- Payments → Paystack subscription API
-- AI → Anthropic Claude API for task description improvement
-- Push notifications → Supabase Edge Functions + FCM
+**Customer** — posts tasks, browses services, makes bookings, accepts or rejects applications.
+
+**Tasker** — lists services, applies to tasks, accepts bookings, manages their profile and verification.
+
+## Authentication
+
+Email and password via Supabase Auth. Users must confirm their email before logging in. Google OAuth is configured but requires custom domain setup in the Supabase dashboard to work on the live domain.
+
+## Known Sprint 3 integration points
+
+All `showSprintAlert()` calls in the codebase mark where live integrations will go:
+- Map discovery — Mapbox GL JS
+- Real-time notifications — Supabase Realtime
+- Payment processing — Paystack
+
+## Email setup (action required)
+
+Confirmation emails currently come from Supabase's default sender. To send from a Street Taskers address, configure a custom SMTP provider in the Supabase dashboard under Authentication > Email Templates. Update the sender name and address there — no code changes are needed.
