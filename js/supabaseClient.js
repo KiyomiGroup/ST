@@ -3,7 +3,7 @@
 // ⚠️  REPLACE THESE WITH YOUR REAL VALUES FROM supabase.com/dashboard
 // Project Settings → API → Project URL and anon/public key
 const SUPABASE_URL      = 'https://ftoiqbacutnbjnztguts.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0b2lxYmFjdXRuYmpuenRndXRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzM1MTIsImV4cCI6MjA4ODY0OTUxMn0.SD8O8ncF6JaxCukI0ho60SJUTKuiDsDZb54QwjCvHb0';
+const SUPABASE_ANON_KEY = 'PASTE_YOUR_REAL_ANON_KEY_HERE';
 // Real key looks like: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi...
 
 (function initSupabaseClient() {

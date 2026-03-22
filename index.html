@@ -138,7 +138,7 @@
             Nigeria's Local Services Marketplace
           </div>
           <h1 class="fade-up d1">Find trusted<br>workers <em>near you</em></h1>
-          <p class="fade-up d2">Street Taskers connects customers with skilled local providers. Post a task and get matched instantly — or list your service and start earning today.</p>
+          <p class="fade-up d2">Street Taskers connects customers with skilled local providers. Post a task and get matched instantly, or list your service and start earning today.</p>
           <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
             <div class="hero-search-field">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -192,7 +192,7 @@
       <div class="section-header center fade-up" style="margin-bottom:0;">
         <div class="eyebrow">Two Ways to Use Street Taskers</div>
         <h2>Post a task <em style="color:var(--blue);font-style:normal;">or</em> offer a service</h2>
-        <p>Whether you need something done or you have a skill to offer — this platform works for you.</p>
+        <p>Whether you need something done or you have a skill to offer, this platform works for you.</p>
       </div>
       <div class="dual-cta fade-up d2">
         <a href="post-task.html" class="dual-cta-card">
@@ -223,7 +223,7 @@
       <div class="section-header fade-up">
         <div class="eyebrow">Live Listings</div>
         <h2>Services near you</h2>
-        <p>Browse available providers — book directly or filter by category.</p>
+        <p>Browse available providers, book directly or filter by category.</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;" class="fade-up d1">
         <button class="btn btn-sm cat-chip active" onclick="filterCat(this,'')">All</button>
@@ -277,14 +277,14 @@
         <button class="how-tab" onclick="switchFlow(this,'tasker')">I Offer Services</button>
       </div>
       <div class="how-panel active fade-up d2" id="how-customer">
-        <div class="step-block"><div class="step-num">Step 01</div><h3>Post a Task</h3><p>Describe the job, set your budget, drop your location. Free to post — takes under 2 minutes.</p></div>
+        <div class="step-block"><div class="step-num">Step 01</div><h3>Post a Task</h3><p>Describe the job, set your budget, drop your location. Free to post, takes under 2 minutes.</p></div>
         <div class="step-block"><div class="step-num">Step 02</div><h3>Get Instant Matches</h3><p>We show you the top 5 matching providers by category, location, and availability right away.</p></div>
         <div class="step-block"><div class="step-num">Step 03</div><h3>Book &amp; Done</h3><p>Pick the best provider, confirm the booking, and get the job done on your schedule.</p></div>
       </div>
       <div class="how-panel" id="how-tasker">
-        <div class="step-block"><div class="step-num">Step 01</div><h3>List Your Service</h3><p>Post your skill, set your rate (hourly, daily, per job), upload a photo — go live immediately.</p></div>
+        <div class="step-block"><div class="step-num">Step 01</div><h3>List Your Service</h3><p>Post your skill, set your rate (hourly, daily, per job), upload a photo and go live right away.</p></div>
         <div class="step-block"><div class="step-num">Step 02</div><h3>Get Discovered</h3><p>Customers searching your category see your listing. Browse open tasks and apply for jobs too.</p></div>
-        <div class="step-block"><div class="step-num">Step 03</div><h3>Accept &amp; Earn</h3><p>Confirm bookings from your dashboard. Free plan gives 5 bookings — upgrade anytime for more.</p></div>
+        <div class="step-block"><div class="step-num">Step 03</div><h3>Accept &amp; Earn</h3><p>Confirm bookings from your dashboard. Free plan gives 5 bookings, upgrade anytime for more.</p></div>
       </div>
     </div>
   </section>
@@ -382,14 +382,28 @@
       } catch(e) {}
     }
 
+    const DUMMY_SERVICES_HOME = [
+      { provider_name:'Adebayo Okafor',    service_name:'Electrician',    category:'electrician', price:6000,  rate_unit:'/hour', location:'Lekki, Lagos',           description:'Certified electrician, 8 years experience. Wiring, installations and repairs.',   user_id:'demo' },
+      { provider_name:'Chidi Cuts',        service_name:'Barber',         category:'barber',      price:3500,  rate_unit:'/cut',  location:'Victoria Island, Lagos',  description:'Professional barber. Fades, lineups, beard grooming. Home visits available.',     user_id:'demo' },
+      { provider_name:'Fatima Cleaning Co',service_name:'House Cleaner',  category:'cleaning',    price:8000,  rate_unit:'/day',  location:'Ikeja, Lagos',            description:'Deep cleaning, move-in and post-construction cleaning. Trusted and thorough.',    user_id:'demo' },
+      { provider_name:'Kingsley Plumbing', service_name:'Plumber',        category:'plumber',     price:5000,  rate_unit:'/hour', location:'Yaba, Lagos',             description:'All plumbing work including pipes, boreholes and blocked drains. 24hr emergency.', user_id:'demo' },
+      { provider_name:'Sadia Beauty Studio',service_name:'Make-up Artist',category:'beauty',      price:15000, rate_unit:'/job',  location:'Ajah, Lagos',             description:'Bridal, aso-ebi and editorial makeup. Book early for weekends.',               user_id:'demo' },
+      { provider_name:'Emeka AutoCare',    service_name:'Mechanic',       category:'mechanic',    price:8000,  rate_unit:'/hour', location:'Surulere, Lagos',         description:'Foreign and local cars. Diagnostics, engine repair, AC regas and brake service.', user_id:'demo' },
+    ];
+
     async function loadServicesSection() {
       try {
-        allServices = await window.ST.db.fetchServices({ limit: 6 });
-        renderServices(allServices);
+        const live = await window.ST.db.fetchServices({ limit: 6 });
+        /* Always show something: live data first, dummy fills the rest */
+        const combined = live && live.length > 0
+          ? [...live, ...DUMMY_SERVICES_HOME].slice(0, 6)
+          : DUMMY_SERVICES_HOME;
+        allServices = combined;
+        renderServices(combined);
       } catch(e) {
         console.warn('[ST] loadServicesSection error:', e);
-        document.getElementById('servicesList').innerHTML =
-          `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load services. <a href="find-taskers.html" style="color:var(--blue);">Browse all →</a></div>`;
+        allServices = DUMMY_SERVICES_HOME;
+        renderServices(DUMMY_SERVICES_HOME);
       }
     }
 
@@ -515,9 +529,7 @@
       const el = document.getElementById('featuredTaskersList');
       if (!el) return;
       try {
-        /* Fetch from taskers table — fetch broadly and filter client-side
-           (avoids issues with empty-string service vs null, and text-type rating sort) */
-        const { data: rawTaskers, error: tErr } = await window.supabase
+        const { data: rawTaskers } = await window.supabase
           .from('taskers')
           .select('id, user_id, service, service_name, category, location, bio, photo_url, rate_value, rate_unit, is_verified, business_name, created_at')
           .eq('available', true)
@@ -553,46 +565,60 @@
               }).join('');
               return;
             }
-          } catch(e2) { /* fall through to empty state */ }
-          el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:0.88rem;">No providers listed yet. <a href="post-service.html" style="color:var(--blue);">Be the first!</a></div>';
+          } catch(e2) { /* fall through to dummy */ }
+          /* Always show dummy data rather than empty state */
+          renderFeaturedCards(DUMMY_SERVICES_HOME.map((s, i) => ({
+            uid: '', name: s.provider_name, service: s.service_name,
+            loc: s.location, bio: s.description, photo: '', rate: '&#8358;' + Number(s.price).toLocaleString(),
+            rateUnit: s.rate_unit, verified: false, av: ['av-1','av-2','av-3','av-4','av-5','av-6'][i%6],
+          })), el);
           return;
         }
 
         const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
-        el.innerHTML = taskers.map((t, i) => {
-          const uid        = escapeHtml(t.user_id || t.id || '');
-          const name       = escapeHtml(t.business_name || t.service || 'Provider');
-          const service    = escapeHtml(t.service || t.service_name || '');
-          const loc        = escapeHtml(t.location || 'Lagos');
-          const bio        = escapeHtml((t.bio || '').slice(0, 75)) + ((t.bio||'').length > 75 ? '&hellip;' : '');
-          const photo      = escapeHtml(t.photo_url || '');
-          const rate       = t.rate_value ? '&#8358;' + Number(t.rate_value).toLocaleString() : '';
-          const rateUnit   = escapeHtml(t.rate_unit || '/hour');
-          const verified   = t.is_verified;
-          const init       = name.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-          const av         = AV[i % 6];
-          const profileUrl = uid ? 'tasker-profile.html?id=' + uid : 'find-taskers.html';
-          const photoHtml  = photo
-            ? '<img src="' + photo + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
-            : init;
-
-          return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
-            + '<div class="live-card-top">'
-            + '<div class="live-avatar ' + av + '" style="border-radius:50%;' + (photo?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
-            + '<div style="text-align:right;">'
-            + (rate ? '<div class="live-price">' + rate + '</div><div class="live-price-type">' + rateUnit + '</div>' : '')
-            + (verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
-            + '</div></div>'
-            + '<div class="live-name">' + name + '</div>'
-            + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + loc + '</div>'
-            + (service ? '<div class="live-cat">' + service + '</div>' : '')
-            + (bio ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + bio + '</p>' : '')
-            + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
-            + '</div>';
-        }).join('');
+        renderFeaturedCards(taskers.map((t, i) => ({
+          uid:      escapeHtml(t.user_id || t.id || ''),
+          name:     escapeHtml(t.business_name || t.service || 'Provider'),
+          service:  escapeHtml(t.service || t.service_name || ''),
+          loc:      escapeHtml(t.location || 'Lagos'),
+          bio:      escapeHtml((t.bio || '').slice(0, 75)) + ((t.bio||'').length > 75 ? '&hellip;' : ''),
+          photo:    escapeHtml(t.photo_url || ''),
+          rate:     t.rate_value ? '&#8358;' + Number(t.rate_value).toLocaleString() : '',
+          rateUnit: escapeHtml(t.rate_unit || '/hour'),
+          verified: t.is_verified,
+          av:       AV[i % 6],
+        })), el);
       } catch(e) {
-        if (el) el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:0.84rem;">Could not load providers. <a href="find-taskers.html" style="color:var(--blue);">Browse all →</a></div>';
+        /* On any error, show dummy cards rather than an error message */
+        if (el) renderFeaturedCards(DUMMY_SERVICES_HOME.map((s, i) => ({
+          uid: '', name: s.provider_name, service: s.service_name,
+          loc: s.location, bio: s.description, photo: '', rate: '&#8358;' + Number(s.price).toLocaleString(),
+          rateUnit: s.rate_unit, verified: false, av: ['av-1','av-2','av-3','av-4','av-5','av-6'][i%6],
+        })), el);
       }
+    }
+
+    function renderFeaturedCards(cards, el) {
+      el.innerHTML = cards.map((c, i) => {
+        const profileUrl = c.uid ? 'tasker-profile.html?id=' + c.uid : 'find-taskers.html';
+        const init = c.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+        const photoHtml = c.photo
+          ? '<img src="' + c.photo + '" alt="' + c.name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
+          : init;
+        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
+          + '<div class="live-card-top">'
+          + '<div class="live-avatar ' + c.av + '" style="border-radius:50%;' + (c.photo?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
+          + '<div style="text-align:right;">'
+          + (c.rate ? '<div class="live-price">' + c.rate + '</div><div class="live-price-type">' + c.rateUnit + '</div>' : '')
+          + (c.verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
+          + '</div></div>'
+          + '<div class="live-name">' + c.name + '</div>'
+          + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + c.loc + '</div>'
+          + (c.service ? '<div class="live-cat">' + c.service + '</div>' : '')
+          + (c.bio ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + c.bio + '</p>' : '')
+          + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
+          + '</div>';
+      }).join('');
     }
 
     function handleHeroSearch(e) {

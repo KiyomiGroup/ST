@@ -426,7 +426,7 @@
           (phone
             ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
               '&#128222; ' + contact.phone + '</a>'
-            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file — ask them to add it during verification</span>') +
+            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file. Ask them to add it during verification</span>') +
           (userId ? ' <a href="tasker-profile.html?id=' + userId + '" target="_blank" style="font-size:0.8rem;color:var(--blue);">View Profile</a>' : '') +
           '</div>';
       } else if (a.status === 'pending') {

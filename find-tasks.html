@@ -232,7 +232,7 @@
 
     function openApply(id, title, desc) {
       ACTIVE_TASK_ID = id;
-      document.getElementById('applyTitle').textContent = 'Apply — ' + title;
+      document.getElementById('applyTitle').textContent = 'Apply: ' + title;
       document.getElementById('applyDesc').textContent  = desc + (desc.length >= 80 ? '…' : '');
       document.getElementById('applyMsg').value   = '';
       document.getElementById('applyPrice').value = '';
