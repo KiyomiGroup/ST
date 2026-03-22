@@ -273,7 +273,11 @@
             <div id="sidebarRate" style="font-size:1.5rem;font-weight:800;margin-bottom:4px;"></div>
             <div id="sidebarRateUnit" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;"></div>
             <button class="btn btn-primary profile-book-btn" id="bookBtn" onclick="openBooking()">Book This Service</button>
-            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;">Usually responds within 24 hours</p>
+            <a id="whatsappBtn" href="#" target="_blank" style="display:none;width:100%;justify-content:center;align-items:center;gap:8px;padding:11px 20px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-size:0.88rem;font-weight:600;text-decoration:none;margin-top:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 16.953c-.263.738-1.303 1.362-2.145 1.545-.572.122-1.319.22-3.833-.823-3.239-1.334-5.33-4.598-5.489-4.813-.15-.206-1.259-1.674-1.259-3.192 0-1.519.796-2.264 1.079-2.573.24-.259.534-.389.822-.389.099 0 .198.004.289.009.28.012.42.029.604.47.215.516.735 1.793.799 1.924.063.131.126.308.037.495-.08.178-.148.259-.27.408-.12.15-.235.265-.355.426-.109.141-.232.293-.094.535.137.24.611 1.006 1.311 1.629.902.805 1.661 1.054 1.898 1.176.182.093.397.072.539-.076l.4-.479c.161-.194.322-.264.535-.176.214.087 1.355.638 1.587.755.232.116.386.174.443.272.057.099.057.567-.207 1.116z"/></svg>
+              WhatsApp
+            </a>
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;" id="profileNote">Usually responds within 24 hours</p>
           </div>
 
           <!-- Contact & info -->
@@ -336,22 +340,40 @@
     if (!_taskerId) { show('profileError'); hide('profileLoading'); return; }
 
     try {
-      /* Load tasker row */
-      const { data: tasker, error } = await window.supabase
-        .from('taskers')
-        .select('*')
-        .eq('user_id', _taskerId)
-        .maybeSingle();
+      /* Load tasker row — try user_id first, then id column (handles both UUID and text IDs) */
+      let tasker = null;
+      const { data: t1 } = await window.supabase.from('taskers').select('*')
+        .eq('user_id', String(_taskerId)).maybeSingle();
+      if (t1) {
+        tasker = t1;
+      } else {
+        /* Try by taskers.id directly */
+        const { data: t2 } = await window.supabase.from('taskers').select('*')
+          .eq('id', String(_taskerId)).maybeSingle();
+        tasker = t2;
+      }
 
-      if (error || !tasker) { show('profileError'); hide('profileLoading'); return; }
-      _tasker = tasker;
-
-      /* Load user row for business_name and name */
+      /* Load user row regardless of whether tasker row exists */
       const { data: userRow } = await window.supabase
         .from('users')
-        .select('name, bio, business_name, avatar_url, email, location')
+        .select('name, bio, business_name, avatar_url, location')
         .eq('id', _taskerId)
         .maybeSingle();
+
+      /* If no tasker row but we have a user row, synthesize a minimal tasker object */
+      if (!tasker && userRow) {
+        tasker = {
+          user_id: _taskerId,
+          name: userRow.name || userRow.business_name || 'Service Provider',
+          bio: userRow.bio || '',
+          location: userRow.location || '',
+          is_verified: userRow.is_verified || false,
+          available: true,
+        };
+      }
+
+      if (!tasker) { show('profileError'); hide('profileLoading'); return; }
+      _tasker = tasker;
 
       /* Load verification status */
       const { data: verification } = await window.supabase
@@ -462,6 +484,20 @@
         document.getElementById('sidebarRateUnit').textContent = '';
       }
 
+      /* ── WhatsApp button ── */
+      const wpNum = tasker.whatsapp || tasker.phone || '';
+      if (wpNum) {
+        const wpDigits = wpNum.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+        if (wpDigits) {
+          const wpBtn = document.getElementById('whatsappBtn');
+          if (wpBtn) {
+            wpBtn.href = 'https://wa.me/234' + wpDigits + '?text=' +
+              encodeURIComponent('Hi, I found you on Street Taskers. I\'d like to discuss your ' + service + ' service.');
+            wpBtn.style.display = 'flex';
+          }
+        }
+      }
+
       /* ── Contact/details ── */
       const contactItems = [];
       if (location) {
@@ -488,7 +524,8 @@
 
       /* ── Owner check: if logged-in user is the profile owner, swap Book → Edit Page ── */
       try {
-        const currentUser = await window.ST.auth.getCurrentUser();
+        const _sess = await window.supabase.auth.getSession();
+        const currentUser = _sess.data.session && _sess.data.session.user;
         if (currentUser && currentUser.id === _taskerId) {
           const bookBtn = document.getElementById('bookBtn');
           if (bookBtn) {
