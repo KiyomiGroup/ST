@@ -165,7 +165,7 @@
 
             <!-- Overview -->
             <!-- My Page -->
-            <div id="panel-mypage" class="dashboard-panel">
+            <div id="panel-mypage" class="dashboard-panel active">
               <!-- Header -->
               <div class="panel-header" style="flex-wrap:wrap;gap:10px;margin-bottom:0;">
                 <h2>My Page</h2>
@@ -691,19 +691,21 @@
 
     /* ── Init ─────────────────────────────────────────────────── */
     async function initPage() {
-      /* Hide spinner immediately so the layout is never blocked */
+      /* Hide spinner immediately */
       var loadEl = document.getElementById('dashLoading');
       if (loadEl) loadEl.style.display = 'none';
 
-      var user;
+      /* Direct session check */
+      var user = null;
       try {
-        user = await window.ST.auth.requireAuth();
-        if (!user) return;
-      } catch(authErr) {
-        if (loadEl) {
-          loadEl.innerHTML = '<p style="color:var(--red);text-align:center;padding:32px;">Please <a href="login.html" style="color:var(--blue);">log in</a> to view your dashboard.</p>';
-          loadEl.style.display = 'block';
+        var sess = await window.supabase.auth.getSession();
+        if (!sess.data.session) {
+          window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+          return;
         }
+        user = sess.data.session.user;
+      } catch(e) {
+        window.location.href = 'login.html';
         return;
       }
 

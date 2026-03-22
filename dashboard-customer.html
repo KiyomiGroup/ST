@@ -147,7 +147,7 @@
             </div>
 
             <!-- Overview Panel -->
-            <div id="panel-overview" class="dashboard-panel">
+            <div id="panel-overview" class="dashboard-panel active">
               <div class="dashboard-stats">
                 <div class="stat-card"><div class="stat-card-label">Posted Tasks</div><div class="stat-card-value" id="statTotal">—</div></div>
                 <div class="stat-card"><div class="stat-card-label">Active Tasks</div><div class="stat-card-value" id="statActive">—</div></div>
@@ -510,7 +510,7 @@
             (n.message || '').toLowerCase().includes('applied');
           var clickStyle = isAppNotif ? 'cursor:pointer;' : '';
           var clickAttr  = isAppNotif
-            ? 'onclick="switchPanel('applications',document.querySelector('[data-panel=applications]')); appLoaded=false; loadApplications();""'
+            ? 'data-notif-action="applications"'
             : '';
           return '<div class="task-row-card" style="margin-bottom:8px;' + (n.read ? 'opacity:0.8;' : 'border-left:3px solid var(--blue);') + clickStyle + '" ' + clickAttr + '>' +
             '<div class="task-row-icon" style="background:' + (isAppNotif ? 'var(--blue-light)' : 'var(--bg-subtle)') + ';">' +
@@ -527,6 +527,16 @@
             (!n.read ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px;"></div>' : '') +
             '</div>';
         }).join('');
+        /* Delegated click handler for notification action cards */
+        el.onclick = function(e) {
+          var card = e.target.closest('[data-notif-action]');
+          if (!card) return;
+          if (card.dataset.notifAction === 'applications') {
+            switchPanel('applications', document.querySelector('[data-panel="applications"]'));
+            appLoaded = false;
+            loadApplications();
+          }
+        };
       } catch(e) {
         el.innerHTML = '<p style="color:var(--red);font-size:0.84rem;padding:16px;">Could not load notifications.</p>';
       }
@@ -547,19 +557,21 @@
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initPage() {
-      /* Hide spinner immediately — never let it block the UI */
+      /* Hide spinner immediately — panels are visible via CSS active class */
       var loadEl = document.getElementById('dashLoading');
       if (loadEl) loadEl.style.display = 'none';
 
-      var user;
+      /* Direct session check — fastest possible auth */
+      var user = null;
       try {
-        user = await window.ST.auth.requireAuth();
-        if (!user) return; /* requireAuth handles redirect */
-      } catch(authErr) {
-        if (loadEl) {
-          loadEl.innerHTML = '<p style="color:var(--red);text-align:center;padding:32px;">Please <a href="login.html" style="color:var(--blue);">log in</a> to view your dashboard.</p>';
-          loadEl.style.display = 'block';
+        var sess = await window.supabase.auth.getSession();
+        if (!sess.data.session) {
+          window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+          return;
         }
+        user = sess.data.session.user;
+      } catch(e) {
+        window.location.href = 'login.html';
         return;
       }
 
