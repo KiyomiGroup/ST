@@ -235,9 +235,30 @@
         <button class="btn btn-sm cat-chip" onclick="filterCat(this,'mechanic')">Mechanic</button>
       </div>
       <div class="live-grid" id="servicesList">
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:var(--radius-sm);margin-bottom:10px;"></div><div class="skel" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:80%;"></div></div>
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:var(--radius-sm);margin-bottom:10px;"></div><div class="skel" style="height:14px;width:55%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:70%;"></div></div>
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:var(--radius-sm);margin-bottom:10px;"></div><div class="skel" style="height:14px;width:65%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:75%;"></div></div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-1">AO</div><div style="text-align:right;"><div class="live-price">&#8358;6,000</div><div class="live-price-type">/hour</div></div></div>
+          <div class="live-name">Adebayo Okafor</div>
+          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Lekki, Lagos</div>
+          <div class="live-cat">Electrician</div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Certified electrician, 8 years experience. Wiring, installations and repairs.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-2">CC</div><div style="text-align:right;"><div class="live-price">&#8358;3,500</div><div class="live-price-type">/cut</div></div></div>
+          <div class="live-name">Chidi Cuts</div>
+          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Victoria Island, Lagos</div>
+          <div class="live-cat">Barber</div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Professional barber. Fades, lineups and beard grooming. Home visits available.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-3">FC</div><div style="text-align:right;"><div class="live-price">&#8358;8,000</div><div class="live-price-type">/day</div></div></div>
+          <div class="live-name">Fatima Cleaning Co</div>
+          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ikeja, Lagos</div>
+          <div class="live-cat">Cleaning</div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Deep cleaning, move-in and post-construction cleaning. Trusted and thorough.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
       </div>
       <div class="text-center mt-32 fade-up">
         <a href="find-taskers.html" class="btn btn-outline btn-lg">View all services</a>
@@ -254,9 +275,27 @@
         <p>These people need help right now. If you offer a matching service, apply and get hired.</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;" id="tasksList">
-        <div class="task-live-card"><div class="task-live-icon skel" style="background:var(--gray-100);border:none;"></div><div style="flex:1;"><div class="skel" style="height:14px;width:55%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:80%;"></div></div></div>
-        <div class="task-live-card"><div class="task-live-icon skel" style="background:var(--gray-100);border:none;"></div><div style="flex:1;"><div class="skel" style="height:14px;width:45%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:70%;"></div></div></div>
-        <div class="task-live-card"><div class="task-live-icon skel" style="background:var(--gray-100);border:none;"></div><div style="flex:1;"><div class="skel" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:75%;"></div></div></div>
+        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
+          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div style="flex:1;min-width:0;"><div class="task-live-title">Fix leaking kitchen sink</div>
+          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Lekki Phase 1, Lagos</span><span>plumber</span></div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">Kitchen sink dripping for a week. Need a plumber today or tomorrow.</p></div>
+          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;8,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+        </div>
+        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
+          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div style="flex:1;min-width:0;"><div class="task-live-title">AC servicing and gas recharge</div>
+          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Victoria Island, Lagos</span><span>appliances</span></div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">Two split ACs need servicing. One is not cooling at all.</p></div>
+          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;12,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+        </div>
+        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
+          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div style="flex:1;min-width:0;"><div class="task-live-title">House deep cleaning needed</div>
+          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Ajah, Lagos</span><span>cleaning</span></div>
+          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">4-bedroom house needs thorough cleaning after renovation.</p></div>
+          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;25,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+        </div>
       </div>
       <div class="text-center mt-32 fade-up">
         <a href="explore-tasks.html" class="btn btn-outline btn-lg">Browse all open tasks</a>
@@ -298,9 +337,24 @@
         <p>Browse profiles, see their work, and book directly.</p>
       </div>
       <div class="live-grid" id="featuredTaskersList">
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:80%;"></div></div>
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:55%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:70%;"></div></div>
-        <div class="live-card"><div class="skel" style="height:40px;width:40px;border-radius:50%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:65%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:75%;"></div></div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-1" style="border-radius:50%;">AO</div><div style="text-align:right;"><div class="live-price">&#8358;6,000</div><div class="live-price-type">/hour</div></div></div>
+          <div class="live-name">Adebayo Okafor</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Lekki, Lagos</div>
+          <div class="live-cat">Electrician</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Certified electrician, 8 years experience. Wiring, installations and repairs.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-2" style="border-radius:50%;">CC</div><div style="text-align:right;"><div class="live-price">&#8358;3,500</div><div class="live-price-type">/cut</div></div></div>
+          <div class="live-name">Chidi Cuts</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Victoria Island, Lagos</div>
+          <div class="live-cat">Barber</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Professional barber. Fades, lineups and beard grooming. Home visits available.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
+        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
+          <div class="live-card-top"><div class="live-avatar av-5" style="border-radius:50%;">SB</div><div style="text-align:right;"><div class="live-price">&#8358;15,000</div><div class="live-price-type">/job</div></div></div>
+          <div class="live-name">Sadia Beauty Studio</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ajah, Lagos</div>
+          <div class="live-cat">Beauty</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Bridal, aso-ebi and editorial makeup. Book early for weekends.</p>
+          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        </div>
       </div>
       <div class="text-center mt-32 fade-up">
         <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse all providers &rarr;</a>
@@ -427,9 +481,9 @@
         const type      = PRICING_LABELS[s.pricing_type] || '/job';
         const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
         const photoHtml = safePhoto
-          ? '<img src="' + safePhoto + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />'
+          ? '<img src="' + safePhoto + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
           : init;
-        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href='' + profileUrl + ''">'
+        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'" + profileUrl + "\'">'
           + '<div class="live-card-top">'
           + '<div class="live-avatar ' + av + '" style="' + (safePhoto?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
           + '<div style="text-align:right;"><div class="live-price">&#8358;' + Number(s.price||0).toLocaleString() + '</div><div class="live-price-type">' + type + '</div></div>'
