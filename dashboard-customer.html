@@ -240,6 +240,14 @@
     </div>
   </div>
 
+  <!-- Applicant Detail Modal -->
+  <div id="applicantModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;">
+    <div style="background:var(--white);border-radius:var(--radius-xl);max-width:460px;width:100%;position:relative;margin:auto;">
+      <button onclick="closeApplicantModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px;z-index:1;line-height:1;font-size:1.1rem;">&#x2715;</button>
+      <div id="applicantModalBody" style="padding:24px;"></div>
+    </div>
+  </div>
+
   <div id="footer-placeholder"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -505,6 +513,12 @@
       if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
     }
     window.closeApplicantModal = closeApplicantModal;
+
+    /* Close on backdrop click */
+    document.addEventListener('click', function(e) {
+      var modal = document.getElementById('applicantModal');
+      if (modal && e.target === modal) closeApplicantModal();
+    });
 
     async function acceptAppFromModal(btnEl) {
       var appId  = btnEl.dataset.app;
