@@ -242,7 +242,7 @@ function buildCard(s) {
     ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none'" />`
     : initials;
 
-  const profileUrl = safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html';
+  const profileUrl = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
 
   return `<div class="card tasker-card fade-up" id="svc-${safeId}">
     <div class="tc-header">
