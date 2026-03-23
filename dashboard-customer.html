@@ -367,11 +367,28 @@
             apps = aRes.data || [];
             for (var j = 0; j < apps.length; j++) {
               try {
+                var tid_j = String(apps[j].tasker_id);
+                /* Try taskers table first */
                 var tRow = await window.supabase.from('taskers')
-                  .select('name, service, location, rating, photo_url, user_id, business_name, whatsapp')
-                  .eq('user_id', String(apps[j].tasker_id)).maybeSingle();
-                apps[j].taskers = tRow.data || {};
-              } catch(e2) { apps[j].taskers = {}; }
+                  .select('name, service, service_name, location, rating, photo_url, user_id, business_name, whatsapp, phone')
+                  .eq('user_id', tid_j).maybeSingle();
+                /* Also fetch from users table for name fallback */
+                var uRow = await window.supabase.from('users')
+                  .select('name, business_name, avatar_url')
+                  .eq('id', tid_j).maybeSingle();
+                var t = tRow.data || {};
+                var u = uRow.data || {};
+                apps[j].taskers = {
+                  name:          t.name          || u.name          || u.business_name || '',
+                  business_name: t.business_name || u.business_name || '',
+                  service:       t.service       || t.service_name  || '',
+                  location:      t.location      || '',
+                  rating:        t.rating        || '',
+                  photo_url:     t.photo_url     || u.avatar_url    || '',
+                  user_id:       tid_j,
+                  whatsapp:      t.whatsapp      || t.phone         || apps[j].applicant_whatsapp || '',
+                };
+              } catch(e2) { apps[j].taskers = { user_id: String(apps[j].tasker_id) }; }
             }
           } catch(e) { apps = []; }
           if (!apps.length) continue;
@@ -439,6 +456,10 @@
       if (!appData) return;
       var tasker   = appData.taskers || {};
       var dispName = tasker.business_name || tasker.name || 'Service Provider';
+      /* If name still generic, show shortened tasker ID so at least it's unique */
+      if (dispName === 'Service Provider' && a.tasker_id) {
+        dispName = 'Tasker #' + String(a.tasker_id).slice(0,6).toUpperCase();
+      }
       var svc      = tasker.service || tasker.service_name || '';
       var loc      = tasker.location || '';
       var rating   = tasker.rating ? parseFloat(tasker.rating).toFixed(1) : '';
@@ -556,6 +577,10 @@
       _appDataMap[String(a.id)] = a;
       var tasker   = a.taskers || {};
       var dispName = tasker.business_name || tasker.name || 'Service Provider';
+      /* If name still generic, show shortened tasker ID so at least it's unique */
+      if (dispName === 'Service Provider' && a.tasker_id) {
+        dispName = 'Tasker #' + String(a.tasker_id).slice(0,6).toUpperCase();
+      }
       var svc      = tasker.service || '';
       var loc      = tasker.location || '';
       var photo    = tasker.photo_url || '';
@@ -584,10 +609,22 @@
           '<button class="btn btn-ghost btn-sm" data-modal-reject data-app="' + appId + '" style="color:var(--red);">Decline</button>' +
           '</div>';
       } else if (isAccepted) {
-        actions = '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">' +
-          '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="color:var(--green);text-decoration:none;">View Contact</a>' +
-          '<span style="padding:2px 8px;background:var(--green-light);color:var(--green);border-radius:var(--radius-pill);font-size:0.74rem;font-weight:700;">Accepted</span>' +
-          '</div>';
+        var wp  = (a.taskers && (a.taskers.whatsapp || a.taskers.phone)) || a.applicant_whatsapp || '';
+        var wpD = wp.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+        if (wpD) {
+          actions = '<div style="margin-top:10px;padding:12px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
+            '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Contact Details — Accepted</div>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<a href="https://wa.me/234' + wpD + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#25D366;color:#fff;border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;text-decoration:none;">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 16.953c-.263.738-1.303 1.362-2.145 1.545-.572.122-1.319.22-3.833-.823-3.239-1.334-5.33-4.598-5.489-4.813-.15-.206-1.259-1.674-1.259-3.192 0-1.519.796-2.264 1.079-2.573.24-.259.534-.389.822-.389.099 0 .198.004.289.009.28.012.42.029.604.47.215.516.735 1.793.799 1.924.063.131.126.308.037.495-.08.178-.148.259-.27.408-.12.15-.235.265-.355.426-.109.141-.232.293-.094.535.137.24.611 1.006 1.311 1.629.902.805 1.661 1.054 1.898 1.176.182.093.397.072.539-.076l.4-.479c.161-.194.322-.264.535-.176z"/></svg>' +
+              'WhatsApp' +
+            '</a>' +
+            '<a href="tel:+234' + wpD + '" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);color:var(--text-primary);border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;text-decoration:none;">Call</a>' +
+            (userId ? '<a href="' + profileUrl + '" style="display:inline-flex;align-items:center;gap:5px;padding:8px 12px;font-size:0.82rem;color:var(--blue);text-decoration:none;">View Profile</a>' : '') +
+            '</div></div>';
+        } else {
+          actions = '<div style="margin-top:10px;padding:10px 14px;background:var(--bg-subtle);border-radius:var(--radius-md);font-size:0.83rem;color:var(--text-muted);">Accepted — tasker has not added a WhatsApp number yet. <a href="' + profileUrl + '" style="color:var(--blue);">View Profile</a></div>';
+        }
       } else if (a.status === 'closed') {
         actions = '<div style="margin-top:6px;font-size:0.75rem;color:var(--text-muted);">Closed - another applicant was accepted</div>';
       }
