@@ -129,40 +129,72 @@
           banner.style.color      = 'var(--blue)';
           banner.style.display    = 'block';
         }
-        /* Get role from URL param or localStorage fallback */
+
         const oauthRole = urlParams.get('role')
           || (function(){ try { return localStorage.getItem('st_pending_role'); } catch(e){ return null; } })()
-          || 'customer';
+          || null; /* null = came from login, not signup */
+
+        async function handleOAuthUser(session) {
+          if (!session?.user) return;
+          const uid = session.user.id;
+
+          /* Check if this user already has an account in public.users */
+          const { data: existingUser } = await window.supabase
+            .from('users').select('id, role').eq('id', uid).maybeSingle();
+
+          if (!existingUser) {
+            /* Brand new account — need role selection before proceeding */
+            /* Sign them out first so they don't get auto-logged in */
+            if (!oauthRole) {
+              /* Came from login page, not signup — block access */
+              await window.supabase.auth.signOut();
+              if (banner) {
+                banner.textContent = 'No account found with this Google account. Please sign up first.';
+                banner.style.background = 'var(--red-light)';
+                banner.style.color      = 'var(--red)';
+                banner.style.display    = 'block';
+              }
+              return;
+            }
+            /* Came from signup — create their account with the chosen role */
+            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
+            await window.supabase.auth.updateUser({ data: { role: oauthRole } }).catch(() => {});
+            await window.supabase.from('users').insert({
+              id:    uid,
+              name:  session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              role:  oauthRole,
+              email: session.user.email,
+            }).catch(() => {});
+            /* If tasker, also create taskers row */
+            if (oauthRole === 'tasker') {
+              await window.supabase.from('taskers').upsert({
+                user_id: String(uid),
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Tasker',
+                available: true,
+              }, { onConflict: 'user_id' }).catch(() => {});
+            }
+            localStorage.setItem('st_role', oauthRole);
+            localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
+            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+          } else {
+            /* Existing account — log them in to their correct dashboard */
+            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
+            const role = existingUser.role || oauthRole || 'customer';
+            localStorage.setItem('st_role', role);
+            localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
+            window.location.replace(role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+          }
+        }
 
         window.supabase.auth.onAuthStateChange(async (event, session) => {
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
-            /* Save role to user metadata and public users table */
-            await window.supabase.auth.updateUser({ data: { role: oauthRole } }).catch(() => {});
-            await window.supabase.from('users').upsert({
-              id:   session.user.id,
-              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-              role: oauthRole,
-              email: session.user.email,
-            }, { onConflict: 'id' }).catch(() => {});
-            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+            await handleOAuthUser(session);
           }
         });
 
-        /* Fallback: session may already be set */
         setTimeout(async () => {
           const { data: { session } } = await window.supabase.auth.getSession();
-          if (session?.user) {
-            try { localStorage.removeItem('st_pending_role'); } catch(e) {}
-            await window.supabase.auth.updateUser({ data: { role: oauthRole } }).catch(() => {});
-            await window.supabase.from('users').upsert({
-              id:   session.user.id,
-              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-              role: oauthRole,
-              email: session.user.email,
-            }, { onConflict: 'id' }).catch(() => {});
-            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
-          }
+          if (session?.user) await handleOAuthUser(session);
         }, 1500);
         return;
       }
@@ -290,7 +322,11 @@
 
     async function handleGoogleSignIn() {
       try {
-        const { error } = await window.supabase.auth.signInWithOAuth({ provider: 'google' });
+        /* Pass oauth=1 but NO role — callback will block if account doesn't exist */
+        const { error } = await window.supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/login.html?oauth=1' }
+        });
         if (error) throw error;
       } catch(e) { showToast('Google sign-in failed: ' + e.message); }
     }
