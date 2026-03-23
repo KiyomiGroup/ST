@@ -39,8 +39,50 @@
     .upload-change-btn { margin-top: 8px; font-size: 0.78rem; color: var(--blue); cursor: pointer; background: none; border: none; padding: 0; }
     .rate-hint-ok  { color: #16a34a; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
     .rate-hint-err { color: #dc2626; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
+
+    /* Verify prompt card */
+    .verify-prompt {
+      display: none;
+      background: var(--white);
+      border: 1.5px solid var(--blue-border);
+      border-radius: var(--radius-xl);
+      padding: 36px 40px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .verify-prompt-icon {
+      width: 64px; height: 64px; background: var(--blue-light); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; color: var(--blue);
+    }
+    .verify-prompt h2 { font-size: 1.25rem; margin-bottom: 10px; }
+    .vp-sub { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 24px; }
+    .vp-saved {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--green-light); border: 1px solid rgba(22,163,74,0.2);
+      border-radius: var(--radius-md); padding: 12px 16px;
+      font-size: 0.83rem; color: var(--green); text-align: left; margin-bottom: 24px;
+    }
+    .vp-steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; text-align: left; }
+    .vp-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; background: var(--bg-subtle);
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+    }
+    .vp-step-num {
+      width: 24px; height: 24px; flex-shrink: 0; background: var(--blue); color: var(--white);
+      border-radius: 50%; font-size: 0.72rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .vp-step-text { font-size: 0.84rem; line-height: 1.5; }
+    .vp-step-text strong { display: block; margin-bottom: 2px; font-weight: 600; color: var(--text-primary); }
+    .vp-step-text span { color: var(--text-secondary); }
+    .vp-actions { display: flex; flex-direction: column; gap: 10px; }
+    .vp-later { font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; }
+    .vp-later a { color: var(--blue); }
+
     @media (max-width: 640px) {
-      .service-form-card { padding: 24px 20px; }
+      .service-form-card, .verify-prompt { padding: 24px 20px; }
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -50,33 +92,29 @@
 
   <div class="service-form-page">
     <div class="service-form-wrap">
+
       <a href="dashboard-tasker.html" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);text-decoration:none;margin-bottom:20px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         Back to Dashboard
       </a>
 
-      <div class="service-form-card">
+      <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
+
+      <!-- STEP 1: Form — always shown first, no verification gate -->
+      <div class="service-form-card" id="formCard">
         <div class="service-form-heading">
           <h1>Post Your Service</h1>
-          <p>Your listing goes live immediately and appears on Find Services for customers to book.</p>
+          <p id="formSubtitle">Fill in your details below. Your listing will be saved, then you'll verify your identity before it goes live.</p>
         </div>
-
-        <div id="successMsg" style="display:none; padding:16px 18px; background:#f0fdf4; border:1px solid rgba(22,163,74,0.2); border-radius:8px; margin-bottom:20px;">
-          <strong style="color:#16a34a; font-size:0.9rem;">✓ Service posted!</strong>
-          <p style="font-size:0.83rem; color:#16a34a; margin-top:2px;">Your listing is now live. Redirecting to dashboard...</p>
-        </div>
-        <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
 
         <form id="serviceForm" novalidate autocomplete="off">
 
-          <!-- Service Name -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcName">Service Name *</label>
             <input type="text" id="svcName" class="service-form-input"
               placeholder="e.g. Professional House Cleaning" maxlength="100" required />
           </div>
 
-          <!-- Category -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcCategory">Category *</label>
             <select id="svcCategory" class="service-form-select" required>
@@ -94,14 +132,12 @@
             </select>
           </div>
 
-          <!-- Rate — separate price + unit -->
           <div class="service-form-group">
             <label class="service-form-label">Rate *</label>
             <div style="display:flex;gap:10px;align-items:center;">
               <div style="position:relative;flex:1;">
-                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text-muted);pointer-events:none;">₦</span>
-                <input type="number" id="svcPrice" class="service-form-input"
-                  style="padding-left:28px;"
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text-muted);pointer-events:none;">&#8358;</span>
+                <input type="number" id="svcPrice" class="service-form-input" style="padding-left:28px;"
                   placeholder="e.g. 5000" min="0" step="1" required />
               </div>
               <span style="color:var(--text-muted);font-weight:600;flex-shrink:0;">/</span>
@@ -118,7 +154,6 @@
             <div id="rateParsedHint" class="rate-hint-ok" style="margin-top:5px;font-size:0.76rem;min-height:16px;"></div>
           </div>
 
-          <!-- Location -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcLocation">Location *</label>
             <div style="position:relative;">
@@ -128,7 +163,6 @@
             </div>
           </div>
 
-          <!-- Description -->
           <div class="service-form-group">
             <label class="service-form-label" for="svcDescription">
               About Your Service *
@@ -141,7 +175,6 @@
             </div>
           </div>
 
-          <!-- Image Upload -->
           <div class="service-form-group">
             <label class="service-form-label">Profile / Work Photo
               <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
@@ -164,14 +197,76 @@
             </div>
           </div>
 
-          <!-- Submit -->
           <div style="padding-top:8px; border-top:1px solid var(--border); margin-top:8px;">
             <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-              Post My Service
+              Save &amp; Continue
             </button>
+            <p style="font-size:0.76rem; color:var(--text-muted); text-align:center; margin-top:10px;">
+              Your listing is saved first. You'll verify your identity in the next step.
+            </p>
           </div>
         </form>
       </div>
+
+      <!-- STEP 2: Verify prompt — revealed after save, form hidden -->
+      <div class="verify-prompt" id="verifyPrompt">
+
+        <div class="verify-prompt-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+
+        <h2>Almost live &#8212; one last step</h2>
+        <p class="vp-sub">Your service has been saved. To keep the platform safe for customers, all providers verify their identity once before going live. It takes about 2 minutes.</p>
+
+        <div class="vp-saved">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+          <div>
+            <strong style="font-weight:600;">Your listing is saved as a draft.</strong>
+            Nothing you filled in is lost. It goes live the moment you're verified.
+          </div>
+        </div>
+
+        <div class="vp-steps">
+          <div class="vp-step">
+            <div class="vp-step-num">1</div>
+            <div class="vp-step-text">
+              <strong>Verify your identity</strong>
+              <span>Takes ~2 minutes. We accept NIN, BVN, driver's licence, or passport.</span>
+            </div>
+          </div>
+          <div class="vp-step">
+            <div class="vp-step-num">2</div>
+            <div class="vp-step-text">
+              <strong>Your listing goes live automatically</strong>
+              <span>Once approved, your draft is published with no extra steps needed.</span>
+            </div>
+          </div>
+          <div class="vp-step">
+            <div class="vp-step-num">3</div>
+            <div class="vp-step-text">
+              <strong>Customers start finding you</strong>
+              <span>You appear on Find Services and receive bookings from day one.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vp-actions">
+          <a id="verifyNowBtn" href="verify.html" class="btn btn-primary btn-lg" style="justify-content:center;">
+            Verify My Identity Now
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <button onclick="goToDashboard()" class="btn btn-ghost btn-lg" style="justify-content:center;">
+            Verify later &#8212; go to my dashboard
+          </button>
+        </div>
+
+        <p class="vp-later">
+          Your draft is safe in your dashboard. You can verify anytime from
+          <a href="dashboard-tasker.html">My Dashboard</a>.
+        </p>
+
+      </div>
+
     </div>
   </div>
 
@@ -184,15 +279,12 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script src="js/verify.js"></script>
   <script>
     'use strict';
-    let uploadedPhotoUrl = null;
-
-    function pricingTypeFromUnit(unit) {
-      var map = {'hour':'per_hour','day':'per_day','job':'per_job','session':'per_session','visit':'per_visit','week':'per_week','month':'per_month'};
-      return map[unit] || 'per_job';
-    }
+    var uploadedPhotoUrl = null;
+    var savedServiceId   = null;
 
     function getRateValues() {
       var priceVal = parseFloat(document.getElementById('svcPrice').value);
@@ -207,66 +299,56 @@
       if (!document.getElementById('svcPrice').value) { hint.textContent = ''; return; }
       if (isNaN(price) || price <= 0) {
         hint.className = 'rate-hint-err';
-        hint.textContent = '⚠ Enter a valid amount';
+        hint.textContent = 'Enter a valid amount';
         return;
       }
       hint.className = 'rate-hint-ok';
-      hint.textContent = '✓ ₦' + price.toLocaleString() + ' / ' + unit;
+      hint.textContent = 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
     }
 
     async function initPage() {
-      /* Show loading state immediately while we check auth + verification */
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Checking...'; }
-
-      /* Require tasker role — customers cannot post services */
-      var _initSess = await window.supabase.auth.getSession();
-      var user = _initSess.data.session && _initSess.data.session.user;
-      if (!user) { window.location.href = 'login.html?redirect=post-service.html'; return; }
-      if (!user) return;
-
-      /* Require identity verification before posting a service */
-      if (window.ST?.verify) {
-        var verified = await window.ST.verify.requireVerification('list a service');
-        if (!verified) return; /* redirects to verify.html */
+      /* Auth check only — NO verification gate. Let them fill the form first. */
+      var sess = await window.supabase.auth.getSession();
+      var user = sess.data.session && sess.data.session.user;
+      if (!user) {
+        window.location.href = 'login.html?redirect=post-service.html';
+        return;
       }
 
-      /* Restore button */
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post Service'; }
+      /* Wire location autocomplete if available */
+      if (typeof initLocationInput === 'function') {
+        initLocationInput({
+          inputId:    'svcLocation',
+          dropdownId: 'svcLocationSuggestions',
+          gps:  true,
+          mode: 'precise',
+        });
+      }
 
-      /* Wire location autocomplete + GPS */
-      initLocationInput({
-        inputId:    'svcLocation',
-        dropdownId: 'svcLocationSuggestions',
-        gps: true,
-        mode: 'precise',
-      });
-
-      // Pre-fill from existing service
+      /* Pre-fill from existing draft (available=false) */
       try {
-        var _sess = await window.supabase.auth.getSession();
-        var _uid = _sess.data.session && _sess.data.session.user.id;
-        if (!_uid) return;
-        var _sRes = await window.supabase.from('services').select('id').eq('user_id', _uid);
-        var svcs = _sRes.data || [];
-        var svc  = svcs[0];
-        if (svc) {
-          if (svc.service_name) document.getElementById('svcName').value     = svc.service_name;
-          if (svc.category)     document.getElementById('svcCategory').value = svc.category;
-          if (svc.location)     document.getElementById('svcLocation').value = svc.location;
-          if (svc.description)  document.getElementById('svcDescription').value = svc.description;
-          if (svc.photo) { uploadedPhotoUrl = svc.photo; showPhotoPreview(svc.photo); }
-          if (svc.price) {
-            document.getElementById('svcPrice').value = Number(svc.price);
-            var unitMap2 = {per_hour:'hour',per_day:'day',per_job:'job',per_service:'session',per_week:'week',per_month:'month'};
-            var rawUnit = svc.rate_unit || '';
-            var u = rawUnit.replace('/','') || unitMap2[svc.pricing_type] || 'job';
-            document.getElementById('svcRateUnit').value = u;
+        var draftRes = await window.supabase.from('services')
+          .select('*').eq('user_id', user.id).eq('available', false)
+          .order('created_at', { ascending: false }).limit(1);
+        var draft = draftRes.data && draftRes.data[0];
+        if (draft) {
+          savedServiceId = draft.id;
+          if (draft.service_name) document.getElementById('svcName').value        = draft.service_name;
+          if (draft.category)     document.getElementById('svcCategory').value    = draft.category;
+          if (draft.location)     document.getElementById('svcLocation').value    = draft.location;
+          if (draft.description)  document.getElementById('svcDescription').value = draft.description;
+          if (draft.photo)        { uploadedPhotoUrl = draft.photo; showPhotoPreview(draft.photo); }
+          if (draft.price) {
+            document.getElementById('svcPrice').value = Number(draft.price);
+            var rawUnit = (draft.rate_unit || '/job').replace('/', '');
+            document.getElementById('svcRateUnit').value = rawUnit || 'job';
             onRateInput();
           }
           updateDescCount();
+          document.getElementById('formSubtitle').textContent =
+            'You have a saved draft. Update the details below, then continue to verify.';
         }
-      } catch(e) {}
+      } catch(e) { /* non-fatal */ }
 
       document.getElementById('svcPrice').addEventListener('input', onRateInput);
       document.getElementById('svcRateUnit').addEventListener('change', onRateInput);
@@ -293,10 +375,7 @@
     }
 
     function handleFileSelected(file) {
-      var check = validateUpload(file, {
-        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        maxBytes: 5 * 1024 * 1024,
-      });
+      var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
       if (!check.ok) { showToast(check.error); return; }
       var reader = new FileReader();
       reader.onload = function(e) { showPhotoPreview(e.target.result); };
@@ -317,16 +396,10 @@
     }
     window.clearPhoto = clearPhoto;
 
-    function saveDraftAndExit() {
-      showToast('Service saved as draft. Verify anytime from your dashboard to go live.');
-      setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1500);
-    }
-
     async function handleSubmit(e) {
       e.preventDefault();
-      var errEl  = document.getElementById('errorMsg');
-      var succEl = document.getElementById('successMsg');
-      var btn    = document.getElementById('submitBtn');
+      var errEl = document.getElementById('errorMsg');
+      var btn   = document.getElementById('submitBtn');
       errEl.style.display = 'none';
 
       var serviceName = document.getElementById('svcName').value.trim();
@@ -336,50 +409,59 @@
       var description = document.getElementById('svcDescription').value.trim();
       var file        = document.getElementById('photoFile').files[0];
 
-      // Validate
-      if (!serviceName)           { showErr('Please enter a service name.'); return; }
-      if (!category)              { showErr('Please select a category.'); return; }
+      if (!serviceName)                                          { showErr('Please enter a service name.'); return; }
+      if (!category)                                             { showErr('Please select a category.'); return; }
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
-
-      if (!location)              { showErr('Please enter your location.'); return; }
-      /* Require confirmed street-level location */
-      if (typeof validateLocation === 'function') {
-        var locCheck = validateLocation('svcLocation', 'precise');
-        if (!locCheck.ok) { showErr(locCheck.error); return; }
-      }
-      if (description.length < 20){ showErr('Description must be at least 20 characters.'); return; }
+      if (!location)                                             { showErr('Please enter your location.'); return; }
+      if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
 
       btn.disabled    = true;
-      btn.textContent = 'Posting...';
+      btn.textContent = 'Saving...';
 
       try {
+        /* Upload photo if selected */
         var photoUrl = uploadedPhotoUrl;
         if (file) {
           document.getElementById('uploadProgress').style.display = 'flex';
           try {
-            /* Upload image directly to Supabase storage */
-            var ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+            var ext  = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
             var path = 'services/' + Date.now() + '.' + ext;
-            var { error: upErr, data: upData } = await window.supabase.storage
+            var upRes = await window.supabase.storage
               .from('service-images').upload(path, file, { cacheControl: '3600', upsert: true });
-            if (!upErr) {
-              var { data: urlData } = window.supabase.storage.from('service-images').getPublicUrl(path);
-              photoUrl = urlData.publicUrl;
+            if (!upRes.error) {
+              var urlRes = window.supabase.storage.from('service-images').getPublicUrl(path);
+              photoUrl = urlRes.data.publicUrl;
+              uploadedPhotoUrl = photoUrl;
             }
-            uploadedPhotoUrl = photoUrl;
-          } catch(uploadErr) {
-            console.warn('[Upload]', uploadErr.message);
-            photoUrl = null;
-          } finally {
-            document.getElementById('uploadProgress').style.display = 'none';
-          }
+          } catch(upErr) { console.warn('[Upload]', upErr.message); }
+          finally { document.getElementById('uploadProgress').style.display = 'none'; }
         }
 
-        var _postSess = await window.supabase.auth.getSession();
-        var _postUser = _postSess.data.session && _postSess.data.session.user;
-        if (!_postUser) throw new Error('Please log in to post a service.');
-        var { error: svcErr } = await window.supabase.from('services').insert({
-          user_id:      _postUser.id,
+        var sessRes  = await window.supabase.auth.getSession();
+        var postUser = sessRes.data.session && sessRes.data.session.user;
+        if (!postUser) throw new Error('Session expired. Please log in again.');
+
+        /* Check if already verified — verified users skip the prompt */
+        var isVerified = false;
+        try {
+          var verifRes = await window.supabase.from('verifications')
+            .select('status').eq('user_id', postUser.id).maybeSingle();
+          if (verifRes.data && verifRes.data.status === 'approved') isVerified = true;
+        } catch(e) {}
+        if (!isVerified) {
+          try {
+            var uvRes = await window.supabase.from('users')
+              .select('is_verified').eq('id', postUser.id).maybeSingle();
+            if (uvRes.data && uvRes.data.is_verified === true) isVerified = true;
+          } catch(e) {}
+        }
+
+        /*
+          available = true  → already verified, listing goes live now
+          available = false → draft, will publish automatically after verification
+        */
+        var payload = {
+          user_id:      postUser.id,
           service_name: serviceName,
           category:     category,
           price:        rateValues.numericValue,
@@ -387,12 +469,24 @@
           location:     location,
           description:  description,
           photo:        photoUrl || null,
-          available:    true,
-        });
-        if (svcErr) throw svcErr;
-        /* Also upsert into taskers table so profile page works */
+          available:    isVerified,
+        };
+
+        /* Upsert: update existing draft or insert fresh record */
+        var svcRes;
+        if (savedServiceId) {
+          svcRes = await window.supabase.from('services')
+            .update(payload).eq('id', savedServiceId).select('id').single();
+        } else {
+          svcRes = await window.supabase.from('services')
+            .insert(payload).select('id').single();
+        }
+        if (svcRes.error) throw svcRes.error;
+        savedServiceId = svcRes.data && svcRes.data.id;
+
+        /* Sync taskers table */
         await window.supabase.from('taskers').upsert({
-          user_id:      String(_postUser.id),
+          user_id:      String(postUser.id),
           service:      serviceName,
           service_name: serviceName,
           category:     category,
@@ -401,40 +495,28 @@
           location:     location,
           bio:          description,
           photo_url:    photoUrl || null,
-          available:    true,
+          available:    isVerified,
         }, { onConflict: 'user_id' });
 
-        /* Check if coming from onboarding */
-        var fromOnboarding = new URLSearchParams(window.location.search).get('from') === 'onboarding';
-
-        /* Check if user is already verified */
-        var { data: verif } = await window.supabase.from('verifications')
-          .select('status').eq('user_id', _postUser.id).maybeSingle();
-        var isVerified = verif && verif.status === 'approved';
-
-        document.getElementById('serviceForm').reset();
-        document.getElementById('svcRateUnit').value = 'job';
-        document.getElementById('rateParsedHint').textContent = '';
-        clearPhoto();
-        updateDescCount();
-
         if (isVerified) {
-          /* Already verified — service goes live immediately */
-          /* Update service to available=true */
-          showToast('Service posted and live! Redirecting to your dashboard...');
-          setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1800);
+          /* Live immediately */
+          showToast('Service posted and live! Redirecting...');
+          setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1600);
         } else {
-          /* Show verify prompt */
-          succEl.style.display = 'none';
+          /* Show verify prompt — pass return URL so verify.html bounces back */
+          var returnUrl = encodeURIComponent(window.location.href);
+          document.getElementById('verifyNowBtn').href =
+            'verify.html?return=' + returnUrl + '&action=post_service';
+
+          document.getElementById('formCard').style.display    = 'none';
           document.getElementById('verifyPrompt').style.display = 'block';
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
       } catch(err) {
-        showErr(err.message || 'Failed to post service. Please try again.');
-      } finally {
+        showErr(err.message || 'Failed to save. Please try again.');
         btn.disabled    = false;
-        btn.textContent = 'Post My Service';
+        btn.textContent = 'Save & Continue';
       }
 
       function showErr(msg) {
@@ -443,6 +525,12 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+
+    function goToDashboard() {
+      showToast('Draft saved. Verify from your dashboard whenever you\'re ready.');
+      setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1400);
+    }
+    window.goToDashboard = goToDashboard;
   </script>
 </body>
 </html>
