@@ -238,12 +238,12 @@
       { id:'dt17', title:'Generator changeover switch',          description:'Need an electrician to install a changeover switch for my generator. House in Lekki.',                     category:'electrician', budget:18000, location:'Lekki Phase 1, Lagos',    status:'open', created_at: new Date(Date.now()-86400000).toISOString() },
       { id:'dt18', title:'Install outdoor security lights',      description:'Need 4 security floodlights installed around the compound. I have the lights already.',                   category:'electrician', budget:12000, location:'Wuse, Abuja',              status:'open', created_at: new Date(Date.now()-93600000).toISOString() },
       { id:'dt19', title:'Haircut for my 3 sons',                description:'Three boys need haircuts at home. Ages 5, 9 and 13. Fade styles. Saturday morning.',                      category:'barber',      budget:9000,  location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-100800000).toISOString() },
-      { id:'dt20', title:'Barber for groom's squad',            description:'6 guys need fresh cuts for a wedding on Sunday. Home service preferred. Fades and beards.',               category:'barber',      budget:30000, location:'VI, Lagos',                status:'open', created_at: new Date(Date.now()-108000000).toISOString() },
+      { id:'dt20', title:'Barber for groom\'s squad',            description:'6 guys need fresh cuts for a wedding on Sunday. Home service preferred. Fades and beards.',               category:'barber',      budget:30000, location:'VI, Lagos',                status:'open', created_at: new Date(Date.now()-108000000).toISOString() },
       { id:'dt21', title:'Office space cleaning (weekly)',       description:'Looking for a cleaner for our small office. Every Monday morning, about 3 hours. Ongoing contract.',       category:'cleaning',    budget:15000, location:'Garki, Abuja',             status:'open', created_at: new Date(Date.now()-115200000).toISOString() },
       { id:'dt22', title:'Clean Airbnb between guests',          description:'I run a 2-bed Airbnb. Need reliable cleaner for changeovers. Usually 2–3 times per week.',               category:'cleaning',    budget:10000, location:'Lekki, Lagos',             status:'open', created_at: new Date(Date.now()-122400000).toISOString() },
       { id:'dt23', title:'Fix water heater not heating',         description:'My electric water heater stopped working. Need a plumber or technician to diagnose and repair.',          category:'plumber',     budget:9000,  location:'Maitama, Abuja',           status:'open', created_at: new Date(Date.now()-129600000).toISOString() },
       { id:'dt24', title:'Borehole pump stopped working',        description:'Borehole submersible pump is dead. Need someone to check if it can be repaired or replaced.',            category:'plumber',     budget:35000, location:'Ikorodu, Lagos',           status:'open', created_at: new Date(Date.now()-136800000).toISOString() },
-      { id:'dt25', title:'Full car service due',                 description:'2015 Honda Accord needs full service. Oil, filters, plugs, tyres checked. I'm in Gbagada.',              category:'mechanic',    budget:22000, location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-144000000).toISOString() },
+      { id:'dt25', title:'Full car service due',                 description:'2015 Honda Accord needs full service. Oil, filters, plugs, tyres checked. I\'m in Gbagada.',              category:'mechanic',    budget:22000, location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-144000000).toISOString() },
     ];
 
     let ALL_TASKS = [];
@@ -276,16 +276,14 @@
       if (sf) sf.addEventListener('submit', e => { e.preventDefault(); renderTasks(); });
 
       /* Location with Nominatim autocomplete + GPS */
-      if (typeof initLocationInput === 'function') {
-        initLocationInput({
-          inputId:    'taskLocationInput',
-          dropdownId: 'taskLocationSuggestions',
-          gps: true,
-          onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
-          onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
-          mode: 'area',
-        });
-      }
+      if (typeof initLocationInput === 'function') initLocationInput({
+        inputId:    'taskLocationInput',
+        dropdownId: 'taskLocationSuggestions',
+        gps: true,
+        onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
+        onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
+        mode: 'area',
+      });
 
       /* Category radio */
       document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));
@@ -302,7 +300,7 @@
       /* Reset */
       document.getElementById('taskFilterReset')?.addEventListener('click', () => {
         TASK_FILTERS = { search:'', category:'', location:'', minBudget:0 };
-        if (si) si.value = ''; const liEl = document.getElementById('taskLocationInput'); if (liEl) liEl.value = '';
+        if (si) si.value = ''; const _liEl = document.getElementById('taskLocationInput'); if (_liEl) _liEl.value = '';
         if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
         document.querySelectorAll('[name="tcat"]')[0].checked = true;
         renderTasks();
