@@ -933,7 +933,12 @@
       .eq('user_id', String(_taskerId)).maybeSingle();
 
     const wpRaw    = (tRow && (tRow.whatsapp || tRow.phone)) || '';
-    const wpDigits = wpRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+    /* Robust Nigerian number normalisation:
+       Handles +2348012345678 / 2348012345678 / 08012345678 / 8012345678 */
+    const _wpStripped = wpRaw.replace(/[^\d]/g,'');
+    const wpDigits = _wpStripped.startsWith('234') ? _wpStripped.slice(3)
+                   : _wpStripped.startsWith('0')   ? _wpStripped.slice(1)
+                   : _wpStripped;
     const svcName  = (tRow && (tRow.service_name || tRow.service || tRow.business_name || tRow.name)) || 'this service';
 
     /* Show contact modal */

@@ -117,7 +117,7 @@
 
           <div class="service-form-group">
             <label class="service-form-label" for="svcCategory">Category *</label>
-            <select id="svcCategory" class="service-form-select" required>
+            <select id="svcCategory" class="service-form-select" required onchange="onCategoryChange(this.value)">
               <option value="">Select a category...</option>
               <option value="barber">Barber / Hair</option>
               <option value="electrician">Electrician</option>
@@ -130,6 +130,12 @@
               <option value="moving">Moving / Delivery</option>
               <option value="other">Other</option>
             </select>
+            <div id="otherCategoryWrap" style="display:none;margin-top:10px;">
+              <input type="text" id="svcCategoryOther" class="service-form-input"
+                placeholder="Describe your category (e.g. Pet Care, Event Planning)..."
+                maxlength="60" />
+              <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px;">Optional — helps customers find you.</div>
+            </div>
           </div>
 
           <div class="service-form-group">
@@ -195,6 +201,20 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
               Uploading photo...
             </div>
+          </div>
+
+          <!-- WhatsApp contact — required so customers can reach the provider -->
+          <div class="service-form-group">
+            <label class="service-form-label" for="svcWhatsapp">
+              WhatsApp Number *
+              <span style="font-weight:400;color:var(--text-muted);"> — customers will contact you here after booking</span>
+            </label>
+            <div style="position:relative;">
+              <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;font-weight:600;">+234</span>
+              <input type="tel" id="svcWhatsapp" class="service-form-input" style="padding-left:54px;"
+                placeholder="8012345678" maxlength="11" required />
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Enter number without leading 0 or country code. This is shown to customers who book you.</div>
           </div>
 
           <div style="padding-top:8px; border-top:1px solid var(--border); margin-top:8px;">
@@ -306,6 +326,12 @@
       hint.textContent = 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
     }
 
+    function onCategoryChange(val) {
+      var wrap = document.getElementById('otherCategoryWrap');
+      if (wrap) wrap.style.display = val === 'other' ? 'block' : 'none';
+    }
+    window.onCategoryChange = onCategoryChange;
+
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
       var sess = await window.supabase.auth.getSession();
@@ -314,6 +340,17 @@
         window.location.href = 'login.html?redirect=post-service.html';
         return;
       }
+
+      /* Pre-fill WhatsApp from existing tasker record */
+      try {
+        var wpRes = await window.supabase.from('taskers')
+          .select('whatsapp').eq('user_id', user.id).maybeSingle();
+        if (wpRes.data && wpRes.data.whatsapp) {
+          var wpPre = wpRes.data.whatsapp.replace(/^\+?234/, '').replace(/^0/, '');
+          var wpEl = document.getElementById('svcWhatsapp');
+          if (wpEl && !wpEl.value) wpEl.value = wpPre;
+        }
+      } catch(e) {}
 
       /* Wire location autocomplete if available */
       if (typeof initLocationInput === 'function') {
@@ -334,7 +371,16 @@
         if (draft) {
           savedServiceId = draft.id;
           if (draft.service_name) document.getElementById('svcName').value        = draft.service_name;
-          if (draft.category)     document.getElementById('svcCategory').value    = draft.category;
+          if (draft.category) {
+            var knownCats = ['barber','electrician','cleaning','mechanic','plumber','beauty','carpentry','painting','moving','other'];
+            if (knownCats.includes(draft.category)) {
+              document.getElementById('svcCategory').value = draft.category;
+            } else {
+              document.getElementById('svcCategory').value = 'other';
+              document.getElementById('svcCategoryOther').value = draft.category;
+              onCategoryChange('other');
+            }
+          }
           if (draft.location)     document.getElementById('svcLocation').value    = draft.location;
           if (draft.description)  document.getElementById('svcDescription').value = draft.description;
           if (draft.photo)        { uploadedPhotoUrl = draft.photo; showPhotoPreview(draft.photo); }
@@ -404,6 +450,9 @@
 
       var serviceName = document.getElementById('svcName').value.trim();
       var category    = document.getElementById('svcCategory').value;
+      var categoryOther = document.getElementById('svcCategoryOther')?.value?.trim();
+      /* If "Other" selected and user typed a custom category, use that value */
+      if (category === 'other' && categoryOther) category = categoryOther.toLowerCase().replace(/\s+/g, '_');
       var rateValues  = getRateValues();
       var location    = document.getElementById('svcLocation').value.trim();
       var description = document.getElementById('svcDescription').value.trim();
@@ -414,6 +463,10 @@
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
       if (!location)                                             { showErr('Please enter your location.'); return; }
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
+      var svcWhatsappRaw = (document.getElementById('svcWhatsapp')?.value || '').trim();
+      var svcWhatsappDigits = svcWhatsappRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
+      if (!svcWhatsappDigits || svcWhatsappDigits.length < 7) { showErr('Please enter a valid WhatsApp number so customers can reach you.'); return; }
+      var svcWhatsappFull = '+234' + svcWhatsappDigits;
 
       btn.disabled    = true;
       btn.textContent = 'Saving...';
@@ -471,6 +524,12 @@
           photo:        photoUrl || null,
           available:    isVerified,
         };
+        /* Always persist WhatsApp so the booking modal can show it immediately */
+        try {
+          await window.supabase.from('taskers')
+            .update({ whatsapp: svcWhatsappFull, phone: svcWhatsappFull })
+            .eq('user_id', postUser.id);
+        } catch(wpErr) { console.warn('[WhatsApp save]', wpErr.message); }
 
         /* Upsert: update existing draft or insert fresh record */
         var svcRes;

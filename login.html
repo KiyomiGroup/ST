@@ -283,10 +283,31 @@
             setTimeout(() => { window.location.href = redirect; }, 800);
           } else {
             /* Role-based dashboard redirect */
-            const role    = await window.ST.auth.getUserRole(user);
-            const dashUrl = window.ST.auth.getDashboardUrl(role);
-            showToast('Welcome back! Taking you to your dashboard...');
-            setTimeout(() => { window.location.href = dashUrl; }, 800);
+            const role = await window.ST.auth.getUserRole(user);
+
+            if (role === 'tasker') {
+              /* Check if this tasker has ever filled in their profile (service field set) */
+              try {
+                const { data: tRow } = await window.supabase.from('taskers')
+                  .select('service, service_name, location')
+                  .eq('user_id', user.id).maybeSingle();
+                const hasProfile = tRow && (tRow.service || tRow.service_name) && tRow.location;
+                if (!hasProfile) {
+                  /* New tasker — go straight to Edit Page to fill profile */
+                  showToast('Welcome! Let\'s set up your profile first.');
+                  setTimeout(() => {
+                    window.location.href = 'dashboard-tasker.html?setup=1';
+                  }, 800);
+                  return;
+                }
+              } catch(e) {}
+              showToast('Welcome back! Taking you to your dashboard...');
+              setTimeout(() => { window.location.href = 'dashboard-tasker.html'; }, 800);
+            } else {
+              /* Customer */
+              showToast('Welcome back! Taking you to your dashboard...');
+              setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 800);
+            }
           }
 
         } catch (authErr) {

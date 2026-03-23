@@ -49,10 +49,6 @@
       <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
     </button>
     <div class="nav-divider"></div>
-    <button onclick="mobileSwitchPanel('profile','👤 Edit Page');loadProfilePanel()" id="mob-profile">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Edit Page
-    </button>
     <button onclick="mobileSwitchPanel('subscription','⭐ Subscription')" id="mob-subscription">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       Subscription
@@ -125,15 +121,7 @@
                 Notifications
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
-              <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
-                Edit Page
-              </button>
-              <button class="dashboard-nav-item" data-panel="verification" onclick="switchPanel('verification',this);loadVerification()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Verification
-                <span id="navVerifBadge" style="display:none;background:var(--amber);color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:auto;">!</span>
-              </button>
+
               <button class="dashboard-nav-item" data-panel="subscription" onclick="switchPanel('subscription',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Subscription
@@ -335,19 +323,42 @@
               <div class="task-row-card" style="flex-direction:column;gap:0;align-items:stretch;padding:24px;margin-bottom:16px;">
                 <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:16px;">Profile Photo &amp; Banner</div>
 
-                <!-- Banner colour picker -->
-                <div class="form-group">
-                  <label class="form-label">Banner Colour</label>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-                    <button type="button" class="banner-swatch active" data-color="#121212" style="width:28px;height:28px;border-radius:50%;background:#121212;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#121212')"></button>
-                    <button type="button" class="banner-swatch" data-color="#1E3A5F" style="width:28px;height:28px;border-radius:50%;background:#1E3A5F;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#1E3A5F')"></button>
-                    <button type="button" class="banner-swatch" data-color="#0A84FF" style="width:28px;height:28px;border-radius:50%;background:#0A84FF;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#0A84FF')"></button>
-                    <button type="button" class="banner-swatch" data-color="#16a34a" style="width:28px;height:28px;border-radius:50%;background:#16a34a;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#16a34a')"></button>
-                    <button type="button" class="banner-swatch" data-color="#7c3aed" style="width:28px;height:28px;border-radius:50%;background:#7c3aed;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#7c3aed')"></button>
-                    <button type="button" class="banner-swatch" data-color="#b45309" style="width:28px;height:28px;border-radius:50%;background:#b45309;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#b45309')"></button>
-                    <button type="button" class="banner-swatch" data-color="#be123c" style="width:28px;height:28px;border-radius:50%;background:#be123c;border:2px solid transparent;cursor:pointer;" onclick="selectBannerColor(this,'#be123c')"></button>
+                <!-- Banner colour picker + image upload -->
+                <div class="form-group" style="margin-bottom:16px;">
+                  <label class="form-label" style="margin-bottom:8px;">Banner Style</label>
+
+                  <!-- Swatch row — more colours + custom picker -->
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+                    <button type="button" class="banner-swatch active" data-color="#121212" title="Charcoal" style="width:32px;height:32px;border-radius:50%;background:#121212;border:3px solid var(--blue);cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#121212')"></button>
+                    <button type="button" class="banner-swatch" data-color="#1E3A5F" title="Navy" style="width:32px;height:32px;border-radius:50%;background:#1E3A5F;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#1E3A5F')"></button>
+                    <button type="button" class="banner-swatch" data-color="#0A84FF" title="Blue" style="width:32px;height:32px;border-radius:50%;background:#0A84FF;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#0A84FF')"></button>
+                    <button type="button" class="banner-swatch" data-color="#16a34a" title="Green" style="width:32px;height:32px;border-radius:50%;background:#16a34a;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#16a34a')"></button>
+                    <button type="button" class="banner-swatch" data-color="#7c3aed" title="Purple" style="width:32px;height:32px;border-radius:50%;background:#7c3aed;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#7c3aed')"></button>
+                    <button type="button" class="banner-swatch" data-color="#b45309" title="Amber" style="width:32px;height:32px;border-radius:50%;background:#b45309;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#b45309')"></button>
+                    <button type="button" class="banner-swatch" data-color="#be123c" title="Red" style="width:32px;height:32px;border-radius:50%;background:#be123c;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#be123c')"></button>
+                    <button type="button" class="banner-swatch" data-color="#0f766e" title="Teal" style="width:32px;height:32px;border-radius:50%;background:#0f766e;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#0f766e')"></button>
+                    <button type="button" class="banner-swatch" data-color="#d97706" title="Gold" style="width:32px;height:32px;border-radius:50%;background:#d97706;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#d97706')"></button>
+                    <button type="button" class="banner-swatch" data-color="#0e7490" title="Cyan" style="width:32px;height:32px;border-radius:50%;background:#0e7490;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#0e7490')"></button>
+                    <button type="button" class="banner-swatch" data-color="#374151" title="Slate" style="width:32px;height:32px;border-radius:50%;background:#374151;border:3px solid transparent;cursor:pointer;flex-shrink:0;" onclick="selectBannerColor(this,'#374151')"></button>
+                    <!-- Custom colour input -->
+                    <label title="Pick any colour" style="width:32px;height:32px;border-radius:50%;border:2px dashed var(--border-strong);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;" title="Custom colour">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                      <input type="color" id="bannerCustomColor" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="selectBannerColorCustom(this.value)" />
+                    </label>
                   </div>
                   <input type="hidden" id="profileBannerColor" value="#121212" />
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Choose a colour — or upload an image below to use as your banner.</div>
+
+                  <!-- Banner image upload -->
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <input type="file" id="bannerImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewBannerImage(this)" />
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('bannerImageFile').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      Upload Banner Image
+                    </button>
+                    <span id="bannerImageName" style="font-size:0.76rem;color:var(--text-muted);"></span>
+                    <button type="button" id="bannerImageClear" style="display:none;background:none;border:none;color:var(--red);font-size:0.76rem;cursor:pointer;padding:0;" onclick="clearBannerImage()">✕ Remove</button>
+                  </div>
                 </div>
 
                 <!-- Photo upload -->
@@ -443,9 +454,13 @@
               </div>
 
               <!-- ── Save ── -->
-              <div style="display:flex;align-items:center;gap:14px;">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
                 <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
                 <button type="button" class="btn btn-ghost" onclick="switchPanel('mypage',document.querySelector('[data-panel=mypage]'));loadMyPage()">Cancel</button>
+                <button type="button" class="btn btn-sm" style="background:var(--amber);color:#fff;border:none;margin-left:auto;" onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Get Verified
+                </button>
                 <span id="profileSaveMsg" style="display:none;font-size:0.83rem;"></span>
               </div>
 
@@ -824,6 +839,20 @@
 
     /* ── Init ─────────────────────────────────────────────────── */
     async function initPage() {
+      /* If arriving from first-time login, go straight to Edit Page */
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('setup') === '1') {
+        /* Show a welcome banner */
+        setTimeout(function() {
+          var editBtn = document.querySelector('[data-panel="profile"]');
+          switchPanel('profile', editBtn);
+          loadProfilePanel();
+          showToast('Welcome! Fill in your profile details to go live.');
+          /* Clean URL without reloading */
+          history.replaceState({}, '', 'dashboard-tasker.html');
+        }, 400);
+      }
+
       /* Hide spinner immediately */
       var loadEl = document.getElementById('dashLoading');
       if (loadEl) loadEl.style.display = 'none';
@@ -986,7 +1015,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color, whatsapp, phone').eq('user_id', String(user.id)).maybeSingle();
+        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img, whatsapp, phone').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -1025,23 +1054,95 @@
         var bannerColor = td.banner_color || '#121212';
         document.getElementById('profileBannerColor').value = bannerColor;
         document.querySelectorAll('.banner-swatch').forEach(function(s) {
-          s.style.border = s.dataset.color === bannerColor ? '2px solid var(--blue)' : '2px solid transparent';
+          s.style.border = s.dataset.color === bannerColor ? '3px solid var(--blue)' : '3px solid transparent';
           s.classList.toggle('active', s.dataset.color === bannerColor);
         });
+        /* Also sync custom color picker */
+        var cp = document.getElementById('bannerCustomColor');
+        if (cp) cp.value = bannerColor;
+        /* If a banner image is saved, show its name */
+        if (td.banner_img) {
+          _currentBannerImageUrl = td.banner_img;
+          document.getElementById('bannerImageName').textContent = 'Saved image active';
+          document.getElementById('bannerImageClear').style.display = 'inline';
+        }
       }
     }
 
+    var _currentBannerImageFile = null;
+    var _currentBannerImageUrl  = null;
+
     function selectBannerColor(btn, color) {
       document.getElementById('profileBannerColor').value = color;
+      /* Update swatch borders */
       document.querySelectorAll('.banner-swatch').forEach(function(s) {
-        s.style.border = '2px solid transparent';
+        s.style.border = '3px solid transparent';
       });
-      btn.style.border = '2px solid var(--blue)';
+      btn.style.border = '3px solid var(--blue)';
+      /* Update custom colour picker to match */
+      var cp = document.getElementById('bannerCustomColor');
+      if (cp) cp.value = color;
+      /* Clear any banner image so colour takes effect */
+      _clearBannerImageState();
       /* Live-preview the banner */
       var hero = document.getElementById('previewHero');
-      if (hero) hero.style.background = color;
+      if (hero) { hero.style.backgroundImage = ''; hero.style.background = color; }
     }
     window.selectBannerColor = selectBannerColor;
+
+    function selectBannerColorCustom(color) {
+      document.getElementById('profileBannerColor').value = color;
+      /* Deselect all swatches */
+      document.querySelectorAll('.banner-swatch').forEach(function(s) {
+        s.style.border = '3px solid transparent';
+      });
+      _clearBannerImageState();
+      var hero = document.getElementById('previewHero');
+      if (hero) { hero.style.backgroundImage = ''; hero.style.background = color; }
+    }
+    window.selectBannerColorCustom = selectBannerColorCustom;
+
+    function previewBannerImage(input) {
+      if (!input.files || !input.files[0]) return;
+      var file = input.files[0];
+      var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
+      if (!check.ok) { showToast(check.error); input.value = ''; return; }
+      _currentBannerImageFile = file;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        /* Live-preview: use image as banner background */
+        var hero = document.getElementById('previewHero');
+        if (hero) {
+          hero.style.backgroundImage = 'url("' + e.target.result + '")';
+          hero.style.backgroundSize = 'cover';
+          hero.style.backgroundPosition = 'center';
+        }
+        document.getElementById('bannerImageName').textContent = file.name;
+        document.getElementById('bannerImageClear').style.display = 'inline';
+        /* Deselect colour swatches visually */
+        document.querySelectorAll('.banner-swatch').forEach(function(s) { s.style.border = '3px solid transparent'; });
+      };
+      reader.readAsDataURL(file);
+    }
+    window.previewBannerImage = previewBannerImage;
+
+    function _clearBannerImageState() {
+      _currentBannerImageFile = null;
+      _currentBannerImageUrl  = null;
+      var inp = document.getElementById('bannerImageFile');
+      if (inp) inp.value = '';
+      document.getElementById('bannerImageName').textContent = '';
+      document.getElementById('bannerImageClear').style.display = 'none';
+    }
+
+    function clearBannerImage() {
+      _clearBannerImageState();
+      /* Restore the currently selected colour on the preview */
+      var color = document.getElementById('profileBannerColor').value || '#121212';
+      var hero = document.getElementById('previewHero');
+      if (hero) { hero.style.backgroundImage = ''; hero.style.background = color; }
+    }
+    window.clearBannerImage = clearBannerImage;
 
     function previewProfileImage(input) {
       if (!input.files || !input.files[0]) return;
@@ -1103,6 +1204,21 @@
         var { error: uErr } = await window.supabase.from('users').update(userUpdates).eq('id', user.id);
         if (uErr) throw uErr;
 
+        /* Upload banner image if changed */
+        var bannerImageUrl = _currentBannerImageUrl;
+        if (_currentBannerImageFile) {
+          var extMapB = { 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' };
+          var extB  = extMapB[_currentBannerImageFile.type] || 'jpg';
+          var pathB = 'banners/' + user.id + '-' + Date.now() + '.' + extB;
+          var { error: bErr } = await window.supabase.storage.from('profile-images')
+            .upload(pathB, _currentBannerImageFile, { cacheControl:'3600', upsert:true });
+          if (!bErr) {
+            var { data: bUrlData } = window.supabase.storage.from('profile-images').getPublicUrl(pathB);
+            bannerImageUrl = bUrlData.publicUrl;
+            _currentBannerImageUrl = bannerImageUrl;
+          }
+        }
+
         /* Save to taskers table */
         var taskerUpdates = {
           location:    document.getElementById('profileLocation')?.value?.trim()  || null,
@@ -1115,10 +1231,12 @@
           phone:       formatNigerianNumber(document.getElementById('profilePhone')?.value?.trim()),
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
-        if (avatarUrl) taskerUpdates.photo_url = avatarUrl;
+        if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
+        if (bannerImageUrl) taskerUpdates.banner_img = bannerImageUrl;
         await window.supabase.from('taskers').update(taskerUpdates).eq('user_id', String(user.id));
 
         _currentProfileImageFile = null;
+        _currentBannerImageFile  = null;
         msg.textContent = 'Page updated!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
         showToast('Your page has been updated!');
 
@@ -1192,7 +1310,7 @@
           .eq('id', user.id).maybeSingle();
         var { data: taskerData } = await window.supabase
           .from('taskers')
-          .select('service, service_name, category, rate_value, rate_unit, location, is_verified, business_name, banner_color')
+          .select('service, service_name, category, rate_value, rate_unit, location, is_verified, business_name, banner_color, banner_img')
           .eq('user_id', String(user.id)).maybeSingle();
 
         var displayName = (userData && userData.business_name) || (taskerData && taskerData.business_name) || (userData && userData.name) || (user.user_metadata && user.user_metadata.name) || 'Your Name';
@@ -1204,10 +1322,20 @@
         var rateUnit    = (taskerData && taskerData.rate_unit) || '/hour';
         var isVerified  = taskerData && taskerData.is_verified === true;
         var bannerColor = (taskerData && taskerData.banner_color) || '#121212';
+        var bannerImg   = taskerData && taskerData.banner_img;
 
-        /* Hero banner colour */
+        /* Hero banner — image takes priority over colour */
         var hero = document.getElementById('previewHero');
-        if (hero) hero.style.background = bannerColor;
+        if (hero) {
+          if (bannerImg) {
+            hero.style.backgroundImage    = 'url("' + bannerImg + '")';
+            hero.style.backgroundSize     = 'cover';
+            hero.style.backgroundPosition = 'center';
+          } else {
+            hero.style.backgroundImage = '';
+            hero.style.background = bannerColor;
+          }
+        }
 
         /* Avatar */
         var avatarEl = document.getElementById('previewAvatar');
