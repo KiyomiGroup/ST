@@ -244,9 +244,18 @@ function buildCard(s) {
 
   const profileUrl = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
 
+  /* full-width image at top of card when photo available */
+  const cardImgHtml = safePhoto
+    ? `<div style="margin:-16px -16px 14px;overflow:hidden;height:160px;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;">
+        <img src="${safePhoto}" alt="${safeName}"
+          style="width:100%;height:100%;object-fit:cover;display:block;"
+          onerror="this.parentNode.style.display='none'" />
+      </div>` : '';
+
   return `<div class="card tasker-card fade-up" id="svc-${safeId}">
+    ${cardImgHtml}
     <div class="tc-header">
-      <div class="tc-avatar ${avClass}" style="overflow:hidden;">${avatar}</div>
+      <div class="tc-avatar ${avClass}" style="overflow:hidden;">${safePhoto ? '' : avatar}</div>
       <div class="tc-meta">
         <div class="tc-name">${safeName}</div>
         <div class="tc-service">${safeService}</div>
