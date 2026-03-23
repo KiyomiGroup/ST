@@ -924,11 +924,35 @@
         if (sgb) sgb.style.display = 'flex';
       }
 
-      /* Services */
+      /* Services — split drafts from live */
       var svcEl = document.getElementById('servicesCard');
-      svcEl.innerHTML = services.length
-        ? '<div class="task-row-list" style="gap:12px;">' + services.map(function(s,i) { return serviceCard(s,i); }).join('') + '</div>'
-        : empty('Set up your service profile so customers can find and book you.', 'Post a Service', 'post-service.html');
+      var liveSvcs  = services.filter(function(s){ return s.available !== false; });
+      var draftSvcs = services.filter(function(s){ return s.available === false; });
+      var svcHtml = '';
+
+      if (draftSvcs.length > 0) {
+        svcHtml += '<div style="margin-bottom:16px;padding:14px 16px;background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius-lg);">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+            '<span style="font-weight:700;font-size:0.85rem;color:#92400e;">Draft Services — Verify to Go Live</span>' +
+          '</div>' +
+          draftSvcs.map(function(s) {
+            return '<div style="background:var(--white);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
+              '<div style="flex:1;">' +
+                '<div style="font-weight:600;font-size:0.88rem;">' + escapeHtml(s.service_name || s.service || 'Service') + '</div>' +
+                '<div style="font-size:0.76rem;color:var(--text-muted);margin-top:2px;">₦' + Number(s.price||0).toLocaleString() + ' · ' + escapeHtml(s.location||'') + '</div>' +
+              '</div>' +
+              '<a href="verify.html?role=tasker&return=dashboard-tasker.html" style="white-space:nowrap;padding:6px 12px;background:var(--blue);color:#fff;border-radius:var(--radius-md);font-size:0.78rem;font-weight:700;text-decoration:none;">Verify to Post</a>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }
+
+      svcHtml += liveSvcs.length
+        ? '<div class="task-row-list" style="gap:12px;">' + liveSvcs.map(function(s,i) { return serviceCard(s,i); }).join('') + '</div>'
+        : (draftSvcs.length === 0 ? empty('Set up your service profile so customers can find and book you.', 'Post a Service', 'post-service.html') : '');
+
+      svcEl.innerHTML = svcHtml;
 
       /* Bookings panel */
       var incoming = bookings.filter(function(b) { return b.status === 'pending' || b.status === 'confirmed'; });

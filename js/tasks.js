@@ -349,24 +349,63 @@ async function handleTaskSubmit(e) {
 }
 
 /* ── Success modal ───────────────────────────────────────────── */
-function showTaskSuccessModal(payload) {
+async function showTaskSuccessModal(payload) {
   const modal = document.getElementById('taskSuccessModal');
-  if (modal) {
-    const titleEl = modal.querySelector('[data-task-title]');
-    if (titleEl) titleEl.textContent = payload.title;
-    modal.classList.add('modal-open');
-    document.body.style.overflow = 'hidden';
-    /* Auto-redirect to dashboard My Tasks panel after 3s so task shows immediately */
-    setTimeout(() => {
-      modal.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      window.location.href = 'dashboard-customer.html?panel=my-tasks';
-    }, 3000);
-  } else {
-    typeof showToast === 'function' && showToast(`Task "${payload.title}" posted successfully!`);
+  if (!modal) {
+    typeof showToast === 'function' && showToast(`Task "${payload.title}" posted!`);
     setTimeout(() => { window.location.href = 'dashboard-customer.html?panel=my-tasks'; }, 1500);
+    return;
   }
+
+  /* Set task title in both modal states */
+  modal.querySelectorAll('[data-task-title]').forEach(el => { el.textContent = payload.title; });
+
+  /* Check if user is already verified */
+  let isVerified = false;
+  try {
+    const sess = await window.supabase.auth.getSession();
+    const uid  = sess.data.session && sess.data.session.user.id;
+    if (uid) {
+      const { data: vRow } = await window.supabase.from('verifications')
+        .select('status').eq('user_id', uid).maybeSingle();
+      isVerified = vRow && vRow.status === 'approved';
+
+      /* Store task_id for draft save */
+      if (payload.id) {
+        try { sessionStorage.setItem('st_last_task_id', String(payload.id)); } catch(e) {}
+      }
+    }
+  } catch(e) {}
+
+  /* Show correct modal state */
+  const verifyNeeded   = document.getElementById('modalVerifyNeeded');
+  const alreadyVerified = document.getElementById('modalAlreadyVerified');
+  if (isVerified) {
+    if (verifyNeeded)    verifyNeeded.style.display = 'none';
+    if (alreadyVerified) alreadyVerified.style.display = 'block';
+    /* Task already has status=open since user is verified */
+  } else {
+    if (verifyNeeded)    verifyNeeded.style.display = 'block';
+    if (alreadyVerified) alreadyVerified.style.display = 'none';
+    /* Mark task as draft until verified */
+    if (payload.id) {
+      try {
+        await window.supabase.from('tasks').update({ status: 'draft' }).eq('id', payload.id);
+      } catch(e) {}
+    }
+  }
+
+  modal.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
 }
+
+function saveDraftTask() {
+  /* Task is already saved as draft in DB — just redirect to dashboard */
+  closeTaskModal();
+  showToast && showToast('Task saved as draft. Verify anytime to post it live.');
+  setTimeout(() => { window.location.href = 'dashboard-customer.html?panel=my-tasks'; }, 1400);
+}
+window.saveDraftTask = saveDraftTask;
 
 function closeTaskModal() {
   const modal = document.getElementById('taskSuccessModal');
@@ -425,6 +464,7 @@ function closeSprintModal() {
 
 /* ── Expose globals ──────────────────────────────────────────── */
 window.initTaskForm    = initTaskForm;
+window.showTaskSuccessModal = showTaskSuccessModal;
 window.closeTaskModal  = closeTaskModal;
 window.closeSprintModal = closeSprintModal;
 window.clearDraft      = clearDraft;

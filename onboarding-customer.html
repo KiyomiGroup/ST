@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Street Taskers</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    body { background: var(--bg-subtle); }
+    .ob-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: calc(var(--nav-height) + 24px) 16px 48px; }
+    .ob-card { background: var(--white); border-radius: var(--radius-xl); border: 1px solid var(--border); max-width: 520px; width: 100%; padding: 40px; text-align: center; }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+
+<div class="ob-wrap">
+  <div class="ob-card">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:8px;" id="welcomeName">Welcome to Street Taskers!</h1>
+    <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:32px;line-height:1.6;">You're all set. What would you like to do?</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <a href="find-taskers.html" style="padding:20px;border:2px solid var(--blue);border-radius:var(--radius-lg);background:var(--blue-light);text-decoration:none;display:flex;align-items:center;gap:14px;text-align:left;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem;color:var(--blue);">Find a Service Provider</div>
+          <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">Browse electricians, barbers, cleaners, mechanics and more near you</div>
+        </div>
+      </a>
+
+      <a href="post-task.html" style="padding:20px;border:2px solid var(--border);border-radius:var(--radius-lg);background:var(--white);text-decoration:none;display:flex;align-items:center;gap:14px;text-align:left;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem;color:var(--text-primary);">Post a Task</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Describe what you need, set your budget — taskers will apply</div>
+        </div>
+      </a>
+
+      <a href="index.html" style="display:block;font-size:0.84rem;color:var(--text-muted);margin-top:4px;text-decoration:none;">Browse the homepage first →</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script>
+  async function initPage() {
+    var sess = await window.supabase.auth.getSession();
+    if (!sess.data.session) { window.location.href = 'login.html'; return; }
+    var user = sess.data.session.user;
+    var name = (user.user_metadata && (user.user_metadata.name || user.user_metadata.full_name))
+      || user.email.split('@')[0] || 'there';
+    var firstName = name.split(' ')[0];
+    var el = document.getElementById('welcomeName');
+    if (el) el.textContent = 'Welcome, ' + firstName + '! 👋';
+    localStorage.setItem('st_role', 'customer');
+    localStorage.setItem('st_name', name);
+  }
+</script>
+</body>
+</html>

@@ -151,16 +151,28 @@
     </div>
   </div>
 
-  <!-- Success modal -->
+  <!-- Success modal — verify to publish -->
   <div class="modal-overlay" id="taskSuccessModal" role="dialog" aria-modal="true">
-    <div class="modal-box">
-      <button class="modal-close-x" onclick="closeTaskModal()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      <div class="modal-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <h2>Task captured!</h2>
-      <p>Your task "<span data-task-title></span>" is now live. Local providers will send you quotes shortly.</p>
-      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="closeTaskModal(); window.location.href='dashboard-customer.html?panel=my-tasks'">Go to Dashboard</button>
-        <button class="btn btn-outline" onclick="closeTaskModal()">Post Another</button>
+    <div class="modal-box" style="max-width:440px;">
+      <div id="modalVerifyNeeded">
+        <div class="modal-icon" style="background:#fef3c7;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h2 style="margin-bottom:8px;">Task saved — verify to post</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a id="verifyToPostBtn" href="verify.html?role=customer&return=dashboard-customer.html%3Fpanel%3Dmy-tasks" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
+          <button class="btn btn-ghost" onclick="saveDraftTask()">Save as Draft — Verify Later</button>
+        </div>
+      </div>
+      <div id="modalAlreadyVerified" style="display:none;">
+        <div class="modal-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h2>Task is live!</h2>
+        <p>Your task "<span data-task-title></span>" is now live. Taskers will apply shortly.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="closeTaskModal();window.location.href='dashboard-customer.html?panel=my-tasks'">Go to Dashboard</button>
+          <button class="btn btn-outline" onclick="closeTaskModal()">Post Another</button>
+        </div>
       </div>
     </div>
   </div>

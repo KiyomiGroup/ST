@@ -160,14 +160,17 @@ async function submitVerification({
           .update({ is_verified: true, verified_at: new Date().toISOString() })
           .eq('user_id', String(user.id));
         if (e2) throw new Error('Could not mark user as verified: ' + e2.message);
-        return { ok: true, message: 'Identity verified! You can now use all features of StreetTasker.' };
+        /* Publish all draft tasks and services */
+        await _publishDrafts(user.id);
+        return { ok: true, message: 'Identity verified! Your drafts are now live.' };
       }
       throw new Error(rpcErr.message);
     }
 
     /* result is a JSONB object: { ok, reason, code } */
     if (result && result.ok) {
-      return { ok: true, message: 'Identity verified! You can now use all features of StreetTasker.' };
+      await _publishDrafts(user.id);
+      return { ok: true, message: 'Identity verified! Your drafts are now live.' };
     } else {
       /* Map codes to user-friendly messages */
       const codeMessages = {
@@ -224,6 +227,18 @@ async function requireVerification(actionName) {
 }
 
 /* Expose globally */
+async function _publishDrafts(userId) {
+  try {
+    /* Publish draft tasks */
+    await window.supabase.from('tasks').update({ status: 'open' })
+      .or('customer_id.eq.' + userId + ',user_id.eq.' + userId)
+      .eq('status', 'draft');
+    /* Publish draft services (available=false means draft) */
+    await window.supabase.from('services').update({ available: true })
+      .eq('user_id', userId).eq('available', false);
+  } catch(e) { console.warn('[Verify] Could not publish drafts:', e.message); }
+}
+
 window.ST = window.ST || {};
 window.ST.verify = {
   validateIdFormat,

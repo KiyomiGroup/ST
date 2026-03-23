@@ -165,17 +165,10 @@
               role:  oauthRole,
               email: session.user.email,
             }).catch(() => {});
-            /* If tasker, also create taskers row */
-            if (oauthRole === 'tasker') {
-              await window.supabase.from('taskers').upsert({
-                user_id: String(uid),
-                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Tasker',
-                available: true,
-              }, { onConflict: 'user_id' }).catch(() => {});
-            }
             localStorage.setItem('st_role', oauthRole);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
-            window.location.replace(oauthRole === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+            /* New account — send to onboarding */
+            window.location.replace(oauthRole === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html');
           } else {
             /* Existing account — log them in to their correct dashboard */
             try { localStorage.removeItem('st_pending_role'); } catch(e) {}
@@ -219,7 +212,14 @@
         window.supabase.auth.onAuthStateChange(async (event, session) => {
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
             const role = await window.ST.auth.getUserRole(session.user);
-            const dest = window.ST.auth.getDashboardUrl(role);
+            /* Check if first login (no users row yet) */
+            const { data: existingRow } = await window.supabase.from('users').select('id').eq('id', session.user.id).maybeSingle();
+            let dest;
+            if (!existingRow) {
+              dest = role === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html';
+            } else {
+              dest = window.ST.auth.getDashboardUrl(role);
+            }
             window.location.replace(dest);
           }
         });

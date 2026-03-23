@@ -317,6 +317,11 @@
     }
     window.clearPhoto = clearPhoto;
 
+    function saveDraftAndExit() {
+      showToast('Service saved as draft. Verify anytime from your dashboard to go live.');
+      setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1500);
+    }
+
     async function handleSubmit(e) {
       e.preventDefault();
       var errEl  = document.getElementById('errorMsg');
@@ -399,14 +404,31 @@
           available:    true,
         }, { onConflict: 'user_id' });
 
-        succEl.style.display = 'block';
+        /* Check if coming from onboarding */
+        var fromOnboarding = new URLSearchParams(window.location.search).get('from') === 'onboarding';
+
+        /* Check if user is already verified */
+        var { data: verif } = await window.supabase.from('verifications')
+          .select('status').eq('user_id', _postUser.id).maybeSingle();
+        var isVerified = verif && verif.status === 'approved';
+
         document.getElementById('serviceForm').reset();
         document.getElementById('svcRateUnit').value = 'job';
         document.getElementById('rateParsedHint').textContent = '';
         clearPhoto();
         updateDescCount();
-        showToast('Service posted! Redirecting...');
-        setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1800);
+
+        if (isVerified) {
+          /* Already verified — service goes live immediately */
+          /* Update service to available=true */
+          showToast('Service posted and live! Redirecting to your dashboard...');
+          setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1800);
+        } else {
+          /* Show verify prompt */
+          succEl.style.display = 'none';
+          document.getElementById('verifyPrompt').style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
       } catch(err) {
         showErr(err.message || 'Failed to post service. Please try again.');

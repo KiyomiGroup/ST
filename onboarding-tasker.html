@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set Up Your Tasker Profile — Street Taskers</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <style>
+    body { background: var(--bg-subtle); }
+    .ob-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: calc(var(--nav-height) + 32px) 16px 60px; }
+    .ob-card { background: var(--white); border-radius: var(--radius-xl); border: 1px solid var(--border); max-width: 580px; width: 100%; padding: 36px 40px; }
+    .ob-steps { display: flex; gap: 6px; margin-bottom: 28px; }
+    .ob-step { height: 4px; flex: 1; border-radius: 99px; background: var(--border); transition: background 0.3s; }
+    .ob-step.active { background: var(--blue); }
+    .ob-step.done { background: var(--green); }
+    .ob-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+    .ob-sub { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+    .ob-avatar-wrap { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .ob-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; color: var(--blue); overflow: hidden; flex-shrink: 0; cursor: pointer; border: 2px dashed var(--blue); }
+    .ob-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .cat-btn { padding: 10px 8px; border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--white); cursor: pointer; font-size: 0.78rem; font-weight: 600; text-align: center; transition: all 0.15s; }
+    .cat-btn.selected { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+    .ob-next { margin-top: 24px; }
+    .ob-skip { display: block; text-align: center; margin-top: 12px; font-size: 0.83rem; color: var(--text-muted); cursor: pointer; text-decoration: none; }
+    .ob-skip:hover { color: var(--blue); }
+    @media (max-width: 520px) { .ob-card { padding: 24px 18px; } .form-row-2 { grid-template-columns: 1fr; } .cat-grid { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+
+<div class="ob-wrap">
+  <div class="ob-card" id="obCard">
+
+    <!-- Step indicators -->
+    <div class="ob-steps" id="obSteps">
+      <div class="ob-step active" id="s1"></div>
+      <div class="ob-step" id="s2"></div>
+      <div class="ob-step" id="s3"></div>
+    </div>
+
+    <!-- STEP 1: Photo + Name + Category -->
+    <div id="step1">
+      <div class="ob-title">Set up your profile</div>
+      <div class="ob-sub">This is what customers see when you apply for tasks or post a service. Fill it in well to get hired faster.</div>
+
+      <!-- Avatar -->
+      <div class="ob-avatar-wrap">
+        <div class="ob-avatar" id="avatarPreview" onclick="document.getElementById('photoInput').click()">
+          <span id="avatarInitials">?</span>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;margin-bottom:4px;">Business / Profile Photo</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">Click to upload. JPG, PNG — max 2MB</div>
+          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handlePhotoSelect(this)" />
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('photoInput').click()">Upload Photo</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Business / Display Name *</label>
+        <input type="text" id="obName" class="form-input" placeholder="e.g. Emeka Electrical Services or your full name" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Category *</label>
+        <div class="cat-grid" id="catGrid">
+          <button type="button" class="cat-btn" data-cat="electrician" onclick="selectCat(this)">⚡ Electrician</button>
+          <button type="button" class="cat-btn" data-cat="plumber" onclick="selectCat(this)">🔧 Plumber</button>
+          <button type="button" class="cat-btn" data-cat="mechanic" onclick="selectCat(this)">🚗 Mechanic</button>
+          <button type="button" class="cat-btn" data-cat="cleaning" onclick="selectCat(this)">🧹 Cleaner</button>
+          <button type="button" class="cat-btn" data-cat="barber" onclick="selectCat(this)">✂️ Barber</button>
+          <button type="button" class="cat-btn" data-cat="beauty" onclick="selectCat(this)">💅 Beauty</button>
+          <button type="button" class="cat-btn" data-cat="painting" onclick="selectCat(this)">🎨 Painter</button>
+          <button type="button" class="cat-btn" data-cat="tutoring" onclick="selectCat(this)">📚 Tutor</button>
+          <button type="button" class="cat-btn" data-cat="cooking" onclick="selectCat(this)">👨‍🍳 Chef/Cook</button>
+          <button type="button" class="cat-btn" data-cat="photography" onclick="selectCat(this)">📷 Photographer</button>
+          <button type="button" class="cat-btn" data-cat="moving" onclick="selectCat(this)">📦 Moving</button>
+          <button type="button" class="cat-btn" data-cat="other" onclick="selectCat(this)">✨ Other</button>
+        </div>
+      </div>
+
+      <div id="step1Err" style="display:none;color:var(--red);font-size:0.83rem;margin-top:8px;"></div>
+      <button class="btn btn-primary btn-full ob-next" onclick="goStep2()">Continue →</button>
+    </div>
+
+    <!-- STEP 2: Bio + Location + Rate + WhatsApp -->
+    <div id="step2" style="display:none">
+      <div class="ob-title">Your service details</div>
+      <div class="ob-sub">Tell customers what you do, where you work, and how much you charge.</div>
+
+      <div class="form-group">
+        <label class="form-label">About You / What You Do *</label>
+        <textarea id="obBio" class="form-textarea" rows="4" placeholder="Describe your experience, skills, and what makes you the right choice. E.g. I'm a certified electrician with 8 years experience in Lagos..."  style="resize:vertical;"></textarea>
+        <div style="font-size:0.76rem;color:var(--text-muted);margin-top:4px;"><span id="bioCount">0</span>/300 characters</div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Your Rate (₦) *</label>
+          <input type="number" id="obRate" class="form-input" placeholder="e.g. 5000" min="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rate Unit</label>
+          <select id="obRateUnit" class="form-input" style="cursor:pointer;">
+            <option value="/hour">/hour</option>
+            <option value="/day">/day</option>
+            <option value="/job" selected>/job</option>
+            <option value="/session">/session</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">Your Location *</label>
+        <div class="input-wrap" style="position:relative;">
+          <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" id="obLocation" class="form-input" placeholder="e.g. Lekki, Lagos" autocomplete="off" />
+          <div id="obLocationSuggestions" class="location-suggestions"></div>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">WhatsApp Number *</label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-muted);pointer-events:none;">+234</span>
+            <input type="tel" id="obWhatsapp" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+          </div>
+          <div style="font-size:0.74rem;color:var(--text-muted);margin-top:3px;">Customers contact you here after booking</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Calling Number <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;">optional</span></label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-muted);pointer-events:none;">+234</span>
+            <input type="tel" id="obPhone" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+          </div>
+        </div>
+      </div>
+
+      <div id="step2Err" style="display:none;color:var(--red);font-size:0.83rem;margin-top:8px;"></div>
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button class="btn btn-ghost" onclick="goBack(2)" style="flex:0 0 auto;">← Back</button>
+        <button class="btn btn-primary" onclick="goStep3()" style="flex:1;">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: What next? -->
+    <div id="step3" style="display:none">
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="ob-title">Profile saved!</div>
+        <div class="ob-sub">Your profile is live. What do you want to do first?</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button onclick="goPostService()" style="padding:18px 20px;border:2px solid var(--blue);border-radius:var(--radius-lg);background:var(--blue-light);cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;color:var(--blue);">Post a Service</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">Let customers find and book you directly</div>
+          </div>
+        </button>
+
+        <button onclick="goBrowseTasks()" style="padding:18px 20px;border:2px solid var(--border);border-radius:var(--radius-lg);background:var(--white);cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">Browse Open Tasks</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Apply for tasks customers have posted</div>
+          </div>
+        </button>
+
+        <a href="index.html" class="ob-skip">Skip for now — take me to the homepage</a>
+      </div>
+    </div>
+
+    <!-- Saving state -->
+    <div id="stepSaving" style="display:none;text-align:center;padding:40px 0;">
+      <div style="margin:0 auto 16px;width:40px;height:40px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      </div>
+      <div style="font-weight:600;color:var(--text-secondary);">Saving your profile...</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/sanitize.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script src="js/location.js"></script>
+<script>
+  var _selectedCat = '';
+  var _photoFile   = null;
+  var _photoUrl    = '';
+  var _currentUser = null;
+
+  async function initPage() {
+    /* Auth check */
+    var sess = await window.supabase.auth.getSession();
+    if (!sess.data.session) {
+      window.location.href = 'login.html?redirect=onboarding-tasker.html';
+      return;
+    }
+    _currentUser = sess.data.session.user;
+
+    /* Pre-fill name from auth metadata */
+    var meta = _currentUser.user_metadata || {};
+    var name = meta.name || meta.full_name || '';
+    if (name) {
+      document.getElementById('obName').value = name;
+      updateAvatarInitials(name);
+    }
+
+    /* Wire location autocomplete */
+    if (typeof initLocationInput === 'function') {
+      initLocationInput({
+        inputId: 'obLocation',
+        suggestionsId: 'obLocationSuggestions',
+        mode: 'area',
+      });
+    }
+
+    /* Bio char count */
+    var bioEl = document.getElementById('obBio');
+    bioEl.addEventListener('input', function() {
+      document.getElementById('bioCount').textContent = bioEl.value.length;
+    });
+  }
+
+  function updateAvatarInitials(name) {
+    var initials = name.replace(/[^a-zA-Z ]/g,'').trim().split(' ')
+      .filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase() || '?';
+    var el = document.getElementById('avatarInitials');
+    if (el) el.textContent = initials;
+  }
+
+  function handlePhotoSelect(input) {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { showToast('Photo must be under 2MB'); return; }
+    _photoFile = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var preview = document.getElementById('avatarPreview');
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;" />';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function selectCat(btn) {
+    document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    _selectedCat = btn.dataset.cat;
+  }
+
+  function setStep(n) {
+    [1,2,3].forEach(function(i) {
+      var el = document.getElementById('step' + i);
+      if (el) el.style.display = i === n ? 'block' : 'none';
+    });
+    document.getElementById('stepSaving').style.display = 'none';
+    /* Update step indicators */
+    [1,2,3].forEach(function(i) {
+      var dot = document.getElementById('s' + i);
+      dot.classList.remove('active','done');
+      if (i < n) dot.classList.add('done');
+      else if (i === n) dot.classList.add('active');
+    });
+  }
+
+  function goBack(fromStep) { setStep(fromStep - 1); }
+
+  function goStep2() {
+    var name = document.getElementById('obName').value.trim();
+    var errEl = document.getElementById('step1Err');
+    if (!name) { errEl.textContent = 'Please enter your business or display name.'; errEl.style.display = 'block'; return; }
+    if (!_selectedCat) { errEl.textContent = 'Please select your category.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    updateAvatarInitials(name);
+    setStep(2);
+  }
+
+  async function goStep3() {
+    var bio      = document.getElementById('obBio').value.trim();
+    var rate     = document.getElementById('obRate').value.trim();
+    var rateUnit = document.getElementById('obRateUnit').value;
+    var location = document.getElementById('obLocation').value.trim();
+    var wpRaw    = document.getElementById('obWhatsapp').value.trim();
+    var phoneRaw = document.getElementById('obPhone').value.trim();
+    var errEl    = document.getElementById('step2Err');
+
+    if (!bio || bio.length < 20) { errEl.textContent = 'Please write at least 20 characters about yourself.'; errEl.style.display = 'block'; return; }
+    if (!rate || isNaN(rate) || Number(rate) <= 0) { errEl.textContent = 'Please enter your rate.'; errEl.style.display = 'block'; return; }
+    if (!location) { errEl.textContent = 'Please enter your location.'; errEl.style.display = 'block'; return; }
+    if (!wpRaw) { errEl.textContent = 'Please enter your WhatsApp number so customers can reach you.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    /* Format numbers */
+    function fmt(raw) {
+      if (!raw) return null;
+      var d = raw.replace(/\D/g,'').replace(/^234/,'').replace(/^0/,'');
+      return d ? '+234' + d : null;
+    }
+    var whatsapp = fmt(wpRaw);
+    var phone    = fmt(phoneRaw) || whatsapp;
+
+    /* Show saving state */
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('stepSaving').style.display = 'block';
+
+    try {
+      /* Upload photo if selected */
+      if (_photoFile) {
+        var ext  = _photoFile.type === 'image/png' ? 'png' : _photoFile.type === 'image/webp' ? 'webp' : 'jpg';
+        var path = 'avatars/' + _currentUser.id + '-' + Date.now() + '.' + ext;
+        var { data: upData, error: upErr } = await window.supabase.storage
+          .from('profile-images').upload(path, _photoFile, { cacheControl: '3600', upsert: true });
+        if (!upErr) {
+          var { data: urlData } = window.supabase.storage.from('profile-images').getPublicUrl(path);
+          _photoUrl = urlData.publicUrl;
+        }
+      }
+
+      var name     = document.getElementById('obName').value.trim();
+      var rateNum  = parseFloat(rate);
+
+      /* Save to users table */
+      await window.supabase.from('users').upsert({
+        id: _currentUser.id,
+        name: name,
+        bio: bio,
+        location: location,
+        role: 'tasker',
+        ..._photoUrl ? { avatar_url: _photoUrl } : {},
+      }, { onConflict: 'id' });
+
+      /* Save/update taskers table */
+      await window.supabase.from('taskers').upsert({
+        user_id:      String(_currentUser.id),
+        name:         name,
+        business_name: name,
+        service:      _selectedCat,
+        service_name: _selectedCat.charAt(0).toUpperCase() + _selectedCat.slice(1),
+        category:     _selectedCat,
+        bio:          bio,
+        rate_value:   rateNum,
+        rate_unit:    rateUnit,
+        location:     location,
+        whatsapp:     whatsapp,
+        phone:        phone,
+        available:    true,
+        ..._photoUrl ? { photo_url: _photoUrl } : {},
+      }, { onConflict: 'user_id' });
+
+      /* Update auth metadata */
+      await window.supabase.auth.updateUser({
+        data: { name: name, role: 'tasker' }
+      });
+
+      localStorage.setItem('st_role', 'tasker');
+      localStorage.setItem('st_name', name);
+
+      setStep(3);
+    } catch(err) {
+      document.getElementById('stepSaving').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+      errEl.textContent = 'Could not save profile: ' + err.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function goPostService() {
+    /* Pass flag so post-service knows to ask about verification after */
+    window.location.href = 'post-service.html?from=onboarding';
+  }
+
+  function goBrowseTasks() {
+    window.location.href = 'explore-tasks.html';
+  }
+</script>
+</body>
+</html>
