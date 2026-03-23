@@ -215,8 +215,8 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
   <script src="js/location.js"></script>
+  <script src="js/app.js"></script>
   <script>
     const DUMMY_TASKS = [
       { id:'dt1',  title:'Fix leaking kitchen sink',          description:'My kitchen sink has been dripping for a week. Need a plumber to fix it today or tomorrow.',              category:'plumber',     budget:8000,  location:'Lekki Phase 1, Lagos',    status:'open', created_at: new Date(Date.now()-3600000).toISOString() },
@@ -276,14 +276,16 @@
       if (sf) sf.addEventListener('submit', e => { e.preventDefault(); renderTasks(); });
 
       /* Location with Nominatim autocomplete + GPS */
-      initLocationInput({
-        inputId:    'taskLocationInput',
-        dropdownId: 'taskLocationSuggestions',
-        gps: true,
-        onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
-        onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
-        mode: 'area',
-      });
+      if (typeof initLocationInput === 'function') {
+        initLocationInput({
+          inputId:    'taskLocationInput',
+          dropdownId: 'taskLocationSuggestions',
+          gps: true,
+          onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
+          onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
+          mode: 'area',
+        });
+      }
 
       /* Category radio */
       document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));
@@ -300,7 +302,7 @@
       /* Reset */
       document.getElementById('taskFilterReset')?.addEventListener('click', () => {
         TASK_FILTERS = { search:'', category:'', location:'', minBudget:0 };
-        if (si) si.value = ''; if (li) li.value = '';
+        if (si) si.value = ''; const liEl = document.getElementById('taskLocationInput'); if (liEl) liEl.value = '';
         if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
         document.querySelectorAll('[name="tcat"]')[0].checked = true;
         renderTasks();

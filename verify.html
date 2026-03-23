@@ -308,9 +308,14 @@
     if (verified) {
       show('verifyDone');
       const doneBtn = document.getElementById('verifyDoneBtn');
-      if (_returnUrl && doneBtn) {
-        doneBtn.href = decodeURIComponent(_returnUrl);
-        doneBtn.textContent = 'Continue →';
+      if (doneBtn) {
+        if (_actionName === 'post_service') {
+          doneBtn.href = 'dashboard-tasker.html';
+          doneBtn.textContent = 'View My Dashboard →';
+        } else if (_returnUrl) {
+          doneBtn.href = decodeURIComponent(_returnUrl);
+          doneBtn.textContent = 'Continue →';
+        }
       }
       return;
     }
@@ -463,9 +468,16 @@
       hide('verifyRejected');
       show('verifyDone');
       const doneBtn = document.getElementById('verifyDoneBtn');
-      if (_returnUrl && doneBtn) {
-        doneBtn.href = decodeURIComponent(_returnUrl);
-        doneBtn.textContent = 'Continue →';
+      if (doneBtn) {
+        /* After verifying to post a service, send them to their tasker dashboard
+           where they can see their newly-live service — not back to the form. */
+        if (_actionName === 'post_service') {
+          doneBtn.href = 'dashboard-tasker.html';
+          doneBtn.textContent = 'View My Dashboard →';
+        } else if (_returnUrl) {
+          doneBtn.href = decodeURIComponent(_returnUrl);
+          doneBtn.textContent = 'Continue →';
+        }
       }
       showToast('Identity verified! ✓');
     } else if (result.pending) {

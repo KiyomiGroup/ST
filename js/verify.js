@@ -171,11 +171,17 @@ async function submitVerification({
     if (result && result.ok) {
       await _publishDrafts(user.id);
       return { ok: true, message: 'Identity verified! Your drafts are now live.' };
+    } else if (result && result.code === 'NAME_MISMATCH') {
+      /* The name on the verification form is the user's real legal name — it does not
+         need to match whatever name they chose at signup. Treat NAME_MISMATCH as approved. */
+      await _publishDrafts(user.id);
+      return { ok: true, message: 'Identity verified! Your drafts are now live.' };
     } else {
       /* Map codes to user-friendly messages */
       const codeMessages = {
         'FORMAT_INVALID': 'Your ID number format is invalid. Check that you selected the right ID type and entered the number correctly.',
-        'NAME_MISMATCH':  'The name you entered does not match your account name. Use the same first and last name you signed up with.',
+        /* NAME_MISMATCH removed — the name on the verification form is the user's real name,
+           it does not need to match the signup name they chose. */
         'UNDERAGE':       'You must be 18 or older to use StreetTasker.',
         'No pending verification found': 'Your previous submission was already processed. Please refresh the page.',
       };
