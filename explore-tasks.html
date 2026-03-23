@@ -251,18 +251,23 @@
     let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0 };
 
     async function initPage() {
-      try {
-        const _tRes = await window.supabase.from('tasks').select('*').eq('status','open').order('created_at',{ascending:false}).limit(100);
-        const liveTasks = _tRes.data || [];
-        /* Live tasks first, then dummy tasks to fill the page */
-        const liveIds = new Set((liveTasks || []).map(t => String(t.id)));
-        const dummyFiltered = DUMMY_TASKS.filter(d => !liveIds.has(d.id));
-        ALL_TASKS = [...(liveTasks || []), ...dummyFiltered];
-      } catch (e) {
-        ALL_TASKS = DUMMY_TASKS;
-      }
+      /* Show dummy tasks immediately — page never stuck on loading */
+      ALL_TASKS = [...DUMMY_TASKS];
       document.getElementById('tasksLoading').style.display = 'none';
       renderTasks();
+      /* Merge in live DB tasks */
+      try {
+        const _tRes = await window.supabase.from('tasks').select('*')
+          .in('status', ['open','in_progress']).order('created_at', {ascending:false}).limit(100);
+        const liveTasks = (_tRes.data || []).filter(t => t.status !== 'draft');
+        if (liveTasks.length > 0) {
+          const liveIds = new Set(liveTasks.map(t => String(t.id)));
+          ALL_TASKS = [...liveTasks, ...DUMMY_TASKS.filter(d => !liveIds.has(d.id))];
+          renderTasks();
+        }
+      } catch (e) {
+        console.warn('[Tasks] DB load failed, showing dummy tasks:', e.message);
+      }
 
       /* Search */
       const si = document.getElementById('taskSearchInput');
@@ -371,7 +376,17 @@
       const desc = t.description || 'No description provided.';
       const since = tAgo(t.created_at);
       document.getElementById('detailTitle').textContent = t.title || 'Untitled Task';
+      /* Image from DB task (real tasks may have photos array or photo_url) */
+      const taskImages = t.photos || (t.photo_url ? [t.photo_url] : []);
+      const imgHtml = taskImages.length > 0
+        ? `<div style="margin-bottom:20px;border-radius:var(--radius-lg);overflow:hidden;max-height:220px;">
+            <img src="${escapeHtml(taskImages[0])}" alt="${escapeHtml(t.title||'')}"
+              style="width:100%;height:220px;object-fit:cover;"
+              onerror="this.parentNode.style.display='none'" />
+          </div>` : '';
+
       document.getElementById('detailContent').innerHTML = `
+        ${imgHtml}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
           <span class="task-row-badge status-open">Open</span>
           <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
