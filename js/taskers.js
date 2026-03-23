@@ -270,8 +270,7 @@ function buildCard(s) {
     <div class="tc-footer">
       <span class="tc-badge tc-badge-green">Available</span>
       <div style="display:flex;gap:6px;">
-        <a href="${profileUrl}" class="btn btn-outline btn-sm">View Profile</a>
-        <button class="btn btn-primary btn-sm" onclick="openBookingModal('${safeId}')">Book</button>
+        <a href="${profileUrl}" class="btn btn-primary btn-sm" style="text-decoration:none;">View Profile</a>
       </div>
     </div>
   </div>`;
