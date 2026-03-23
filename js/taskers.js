@@ -149,7 +149,7 @@ async function loadServices() {
 }
 
 let ALL = [];
-let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
+let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'recent' };
 let PAGE = 1;
 const PAGE_SIZE = 8;
 
@@ -194,6 +194,7 @@ function filtered() {
   if (FILTERS.location)  list = list.filter(s => (s.location || '').toLowerCase().includes(FILTERS.location.toLowerCase()));
   if (maxPrice < 999999) list = list.filter(s => s.price <= maxPrice);
   if (minRating)         list = list.filter(s => s.rating >= minRating);
+  if (sortBy === 'recent')     list.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
   if (sortBy === 'rating')     list.sort((a,b) => b.rating - a.rating);
   if (sortBy === 'price_asc')  list.sort((a,b) => a.price - b.price);
   if (sortBy === 'price_desc') list.sort((a,b) => b.price - a.price);
