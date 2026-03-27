@@ -423,6 +423,19 @@ async function handleBookingSubmit(e) {
     setTimeout(() => { window.location.href = 'login.html?redirect=find-taskers.html'; }, 1200);
     return;
   }
+  /* Guard: tasker can't book their own service */
+  if (svc && svc.user_id && String(svc.user_id) === String(user.id)) {
+    closeBookingModal();
+    showToast('You cannot book your own service.');
+    return;
+  }
+  /* Guard: taskers should be browsing tasks, not booking services */
+  const _role = (user.user_metadata && user.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
+  if (_role === 'tasker') {
+    closeBookingModal();
+    showToast('Taskers browse tasks, not services. Head to Find Tasks instead.');
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = 'Booking...';
