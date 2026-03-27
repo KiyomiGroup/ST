@@ -294,6 +294,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <!-- role-guard-injected -->
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
@@ -590,6 +591,20 @@
       setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1400);
     }
     window.goToDashboard = goToDashboard;
+  </script>
+  <script>
+    /* ── Role guard: only taskers can post services ── */
+    (async function() {
+      try {
+        var _gs = await window.supabase.auth.getSession();
+        var _gu = _gs.data.session && _gs.data.session.user;
+        if (!_gu) return; /* auth.js handles redirect */
+        var role = (_gu.user_metadata && _gu.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
+        if (role !== 'tasker') {
+          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Service listings are for taskers only. If you need help, post a task instead.</p><a href="post-task.html" class="btn btn-primary" style="text-decoration:none;">Post a Task</a><a href="dashboard-customer.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
+        }
+      } catch(e) {}
+    })();
   </script>
 </body>
 </html>

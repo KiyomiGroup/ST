@@ -293,5 +293,19 @@
       }
     }
   </script>
+  <script>
+    /* ── Role guard: only customers can post tasks ── */
+    (async function() {
+      try {
+        var _gs = await window.supabase.auth.getSession();
+        var _gu = _gs.data.session && _gs.data.session.user;
+        if (!_gu) return;
+        var role = (_gu.user_metadata && _gu.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
+        if (role === 'tasker') {
+          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don't post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
+        }
+      } catch(e) {}
+    })();
+  </script>
 </body>
 </html>
