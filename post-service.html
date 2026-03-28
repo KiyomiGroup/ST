@@ -203,19 +203,7 @@
             </div>
           </div>
 
-          <!-- WhatsApp contact — required so customers can reach the provider -->
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcWhatsapp">
-              WhatsApp Number *
-              <span style="font-weight:400;color:var(--text-muted);"> — customers will contact you here after booking</span>
-            </label>
-            <div style="position:relative;">
-              <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;font-weight:600;">+234</span>
-              <input type="tel" id="svcWhatsapp" class="service-form-input" style="padding-left:54px;"
-                placeholder="8012345678" maxlength="11" required />
-            </div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Enter number without leading 0 or country code. This is shown to customers who book you.</div>
-          </div>
+
 
           <div style="padding-top:8px; border-top:1px solid var(--border); margin-top:8px;">
             <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
@@ -342,16 +330,7 @@
         return;
       }
 
-      /* Pre-fill WhatsApp from existing tasker record */
-      try {
-        var wpRes = await window.supabase.from('taskers')
-          .select('whatsapp').eq('user_id', user.id).maybeSingle();
-        if (wpRes.data && wpRes.data.whatsapp) {
-          var wpPre = wpRes.data.whatsapp.replace(/^\+?234/, '').replace(/^0/, '');
-          var wpEl = document.getElementById('svcWhatsapp');
-          if (wpEl && !wpEl.value) wpEl.value = wpPre;
-        }
-      } catch(e) {}
+
 
       /* Wire location autocomplete if available */
       if (typeof initLocationInput === 'function') {
@@ -464,10 +443,7 @@
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
       if (!location)                                             { showErr('Please enter your location.'); return; }
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
-      var svcWhatsappRaw = (document.getElementById('svcWhatsapp')?.value || '').trim();
-      var svcWhatsappDigits = svcWhatsappRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
-      if (!svcWhatsappDigits || svcWhatsappDigits.length < 7) { showErr('Please enter a valid WhatsApp number so customers can reach you.'); return; }
-      var svcWhatsappFull = '+234' + svcWhatsappDigits;
+
 
       btn.disabled    = true;
       btn.textContent = 'Saving...';
@@ -525,12 +501,7 @@
           photo:        photoUrl || null,
           available:    isVerified,
         };
-        /* Always persist WhatsApp so the booking modal can show it immediately */
-        try {
-          await window.supabase.from('taskers')
-            .update({ whatsapp: svcWhatsappFull, phone: svcWhatsappFull })
-            .eq('user_id', postUser.id);
-        } catch(wpErr) { console.warn('[WhatsApp save]', wpErr.message); }
+
 
         /* Upsert: update existing draft or insert fresh record */
         var svcRes;

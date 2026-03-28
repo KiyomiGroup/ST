@@ -13,6 +13,8 @@
     .notif-unread { border-left:3px solid var(--blue); }
 
   </style>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payments.js"></script>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -450,25 +452,10 @@
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label" for="profileWhatsapp">
-                      WhatsApp Number
-                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — customers will use this to contact you</span>
-                    </label>
-                    <div class="input-wrap" style="position:relative;">
-                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;">+234</span>
-                      <input type="tel" id="profileWhatsapp" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
-                    </div>
-                    <div class="form-helper">Enter your number without the leading 0 or country code.</div>
+                    <div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--blue);">Customers contact you via in-platform messaging after accepting a booking.</div>
                   </div>
                   <div class="form-group">
-                    <label class="form-label" for="profilePhone">
-                      Calling Number
-                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — optional if different</span>
-                    </label>
-                    <div class="input-wrap" style="position:relative;">
-                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.88rem;color:var(--text-muted);pointer-events:none;">+234</span>
-                      <input type="tel" id="profilePhone" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
-                    </div>
+                    
                   </div>
                 </div>
               </div>
@@ -614,24 +601,38 @@
 
       /* Contact reveal — only shown when booking is confirmed */
       var contactHtml = '';
-      if (isActive && contact) {
-        var phone = contact.phone ? contact.phone.replace(/[^+\d]/g,'') : '';
+      if (isActive) {
+        var who2 = (contact && contact.name) || 'Customer';
         contactHtml =
-          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
-          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Customer Contact</span>' +
-          (phone
-            ? '<a href="tel:' + phone + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--green);text-decoration:none;">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-              contact.phone + '</a>'
-            : '<span style="font-size:0.82rem;color:var(--text-muted);">No phone on file</span>') +
-          (contact.email
-            ? '<a href="mailto:' + contact.email + '" style="display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;color:var(--text-secondary);text-decoration:none;">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>' +
-              contact.email + '</a>'
-            : '') +
+          '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:12px;flex-wrap:wrap;align-items:center;">' +
+          '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Booking Confirmed</span>' +
+          '<button onclick="openTaskerChat('booking','' + b.id + '','' + (b.customer_id||'') + '')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;cursor:pointer;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+          'Message Customer</button>' +
           '</div>';
       } else if (b.status === 'pending') {
-        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Confirm this booking to see customer contact details.</div>';
+        contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Confirm this booking to start messaging the customer.</div>';
+      }
+
+      /* Sprint 4: payment status UI for tasker */
+      var tPayHtml = '';
+      if (b.payment_status === 'paid') {
+        tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '<span style="font-size:0.82rem;font-weight:700;color:var(--green);">Payment secured in escrow</span>' +
+          '<button onclick="openCodeEntry('' + b.id + '')" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Enter Completion Code</button>' +
+          '</div>';
+      } else if (b.status === 'awaiting_code') {
+        tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<span style="font-size:0.82rem;font-weight:700;color:var(--blue);">Customer confirmed job done — enter your code to receive payment</span>' +
+          '<button onclick="openCodeEntry('' + b.id + '')" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;">Enter Code</button>' +
+          '</div>';
+      } else if (b.payment_status === 'released') {
+        tPayHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--green);font-weight:600;">✓ Payment released to you</div>';
+      } else if (b.payment_status === 'disputed') {
+        tPayHtml = '<div style="margin-top:8px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.78rem;color:var(--red);">⚠ Dispute open — payment frozen pending review.</div>';
+      } else if (!b.payment_status || b.payment_status === 'unpaid') {
+        tPayHtml = '<div style="margin-top:8px;font-size:0.76rem;color:var(--text-muted);">Awaiting customer payment.</div>';
       }
 
       return '<div class="booking-row-card" id="bk-' + b.id + '">' +
@@ -962,7 +963,7 @@
           if (!b.customer_id) return;
           try {
             var uRes = await window.supabase.from('users')
-              .select('name, first_name, last_name, whatsapp, location')
+              .select('name, first_name, last_name, location')
               .eq('id', b.customer_id).maybeSingle();
             var u = (uRes && uRes.data) || {};
             var vRes = await window.supabase.from('verifications')
@@ -973,8 +974,6 @@
               : u.name || 'Customer';
             b._customerContact = {
               name:     fullName,
-              phone:    v.phone || u.whatsapp || null,
-              whatsapp: u.whatsapp || v.phone || null,
               location: u.location || '',
             };
           } catch(e2) { b._customerContact = null; }
@@ -990,21 +989,19 @@
       /* ── Profile completeness check ── */
       try {
         var pRes = await window.supabase.from('taskers')
-          .select('bio, location, service, photo_url, business_name, whatsapp')
+          .select('bio, location, service, photo_url, business_name')
           .eq('user_id', String(userId)).maybeSingle();
         var pData = (pRes && pRes.data) || {};
         var hasPhoto    = !!pData.photo_url;
         var hasService  = !!pData.service;
         var hasBio      = !!pData.bio;
         var hasLocation = !!pData.location;
-        var hasWhatsapp = !!pData.whatsapp;
         var missing = [];
         if (!hasPhoto)    missing.push('profile photo');
         if (!hasBio)      missing.push('bio');
         if (!hasLocation) missing.push('location');
         if (!hasService)  missing.push('service type');
-        if (!hasWhatsapp) missing.push('WhatsApp number');
-        var completionPct = Math.round(([hasPhoto,hasService,hasBio,hasLocation,hasWhatsapp].filter(Boolean).length / 5) * 100);
+        var completionPct = Math.round(([hasPhoto,hasService,hasBio,hasLocation].filter(Boolean).length / 4) * 100);
 
         var profileBanner = document.getElementById('profileCompleteBanner');
         var profileBar    = document.getElementById('profileCompleteBar');
@@ -1092,7 +1089,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img, whatsapp, phone').eq('user_id', String(user.id)).maybeSingle();
+        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -1121,10 +1118,6 @@
         var ruEl   = document.getElementById('profileRateUnit');
         if (svcEl)  svcEl.value  = td.service || td.service_name || '';
         if (rateEl) rateEl.value = td.rate_value || '';
-        var wpEl = document.getElementById('profileWhatsapp');
-        var phEl = document.getElementById('profilePhone');
-        if (wpEl) wpEl.value = (td.whatsapp || '').replace(/^\+?234/, '').replace(/^0/, '');
-        if (phEl) phEl.value = (td.phone || '').replace(/^\+?234/, '').replace(/^0/, '');
         if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
 
         /* Banner colour swatches */
@@ -1304,8 +1297,6 @@
           rate_value:  parseFloat(document.getElementById('profileRate')?.value)  || null,
           rate_unit:   document.getElementById('profileRateUnit')?.value          || '/hour',
           banner_color:document.getElementById('profileBannerColor')?.value       || '#121212',
-          whatsapp:    formatNigerianNumber(document.getElementById('profileWhatsapp')?.value?.trim()),
-          phone:       formatNigerianNumber(document.getElementById('profilePhone')?.value?.trim()),
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
         if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
@@ -1715,6 +1706,81 @@
       var src = document.getElementById('navNotifBadge');
       if (src) badgeObs.observe(src, { attributes: true, childList: true, characterData: true });
     });
-  </script>
+  
+    /* ── In-platform messaging helper ─────────────────────── */
+    async function openTaskerChat(contextType, contextId, otherUserId) {
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var cu = sess.data.session && sess.data.session.user;
+        if (!cu) { window.location.href = 'login.html'; return; }
+        sessionStorage.setItem('st_chat_context', JSON.stringify({
+          contextType: contextType,
+          contextId:   contextId,
+          taskerId:    cu.id,
+          customerId:  otherUserId,
+          senderRole:  'tasker',
+        }));
+        window.location.href = 'messages.html';
+      } catch(e) { showToast('Could not open messages: ' + e.message); }
+    }
+    window.openTaskerChat = openTaskerChat;
+
+    /* ── Sprint 4: Completion code entry ──────────────────── */
+    function openCodeEntry(bookingId) {
+      var modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+      modal.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);text-align:center;">' +
+        '<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+        '</div>' +
+        '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Enter Completion Code</h2>' +
+        '<p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px;">The customer gives you this 6-digit code after confirming the job is done. Enter it to receive your payment.</p>' +
+        '<input id="codeInput" type="text" maxlength="6" inputmode="numeric" placeholder="000000" ' +
+          'style="width:100%;padding:14px;text-align:center;font-size:1.8rem;font-weight:900;letter-spacing:0.15em;border:2px solid var(--border);border-radius:var(--radius-md);font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:14px;" ' +
+          'onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />' +
+        '<div id="codeErr" style="display:none;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);margin-bottom:14px;"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="codeSubmit" onclick="submitCode('' + bookingId + '')" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Claim Payment</button>' +
+          '<button onclick="this.closest('div[style]').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        '</div>' +
+        '</div>';
+      document.body.appendChild(modal);
+      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+      setTimeout(function() { var ci = document.getElementById('codeInput'); if(ci) ci.focus(); }, 100);
+    }
+    window.openCodeEntry = openCodeEntry;
+
+    async function submitCode(bookingId) {
+      var code = (document.getElementById('codeInput')?.value || '').trim();
+      var btn  = document.getElementById('codeSubmit');
+      var err  = document.getElementById('codeErr');
+      if (!code || code.length < 4) { err.textContent = 'Please enter the 6-digit code.'; err.style.display='block'; return; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+      try {
+        await window.ST.payments.submitCompletionCode(bookingId, code);
+        /* Success! */
+        var overlay = document.querySelector('[style*="backdrop-filter"]');
+        if (overlay) overlay.remove();
+        var success = document.createElement('div');
+        success.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+        success.innerHTML =
+          '<div style="background:#fff;border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
+          '<div style="width:60px;height:60px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</div>' +
+          '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">Payment Released!</h2>' +
+          '<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;">Your payment is on its way. Well done on completing the job!</p>' +
+          '<button onclick="this.closest('div[style]').remove();location.reload();" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>' +
+          '</div>';
+        document.body.appendChild(success);
+        success.onclick = function(e) { if (e.target === success) { success.remove(); location.reload(); } };
+      } catch(e) {
+        if (err) { err.textContent = e.message; err.style.display = 'block'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Claim Payment'; }
+      }
+    }
+    window.submitCode = submitCode;
+</script>
 </body>
 </html>
