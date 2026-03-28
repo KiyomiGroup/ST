@@ -1769,7 +1769,7 @@
           '</div>' +
           '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">Payment Released!</h2>' +
           '<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;">Your payment is on its way. Well done on completing the job!</p>' +
-          '<button onclick="this.closest('div[style]').remove();location.reload();" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>' +
+          '<button onclick="closeCodeModal();location.reload();" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>' +
           '</div>';
         document.body.appendChild(success);
         success.onclick = function(e) { if (e.target === success) { success.remove(); location.reload(); } };
