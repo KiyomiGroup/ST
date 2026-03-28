@@ -13,8 +13,6 @@
     .app-actions { display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end; }
     .status-pill { font-size:0.7rem;font-weight:700;text-transform:capitalize;padding:2px 8px;border-radius:999px;border:1px solid; }
   </style>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script src="js/payments.js"></script>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -1165,5 +1163,9 @@
     }
     window.openDisputeModal = openDisputeModal;
 </script>
+
+  <!-- Paystack — loaded last so it never blocks page render -->
+  <script src="https://js.paystack.co/v1/inline.js" defer></script>
+  <script src="js/payments.js" defer></script>
 </body>
 </html>

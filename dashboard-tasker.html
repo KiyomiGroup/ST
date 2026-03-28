@@ -13,8 +13,6 @@
     .notif-unread { border-left:3px solid var(--blue); }
 
   </style>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script src="js/payments.js"></script>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -1782,5 +1780,9 @@
     }
     window.submitCode = submitCode;
 </script>
+
+  <!-- Paystack — loaded last so it never blocks page render -->
+  <script src="https://js.paystack.co/v1/inline.js" defer></script>
+  <script src="js/payments.js" defer></script>
 </body>
 </html>
