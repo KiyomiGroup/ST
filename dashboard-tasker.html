@@ -558,8 +558,8 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/location.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
   <script src="js/verify.js"></script>
   <script>
     'use strict';
@@ -604,7 +604,7 @@
         contactHtml =
           '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;gap:12px;flex-wrap:wrap;align-items:center;">' +
           '<span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--green);">Booking Confirmed</span>' +
-          '<button onclick="openTaskerChat('booking','' + b.id + '','' + (b.customer_id||'') + '')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;cursor:pointer;">' +
+          '<button onclick="openTaskerChat(&quot;booking&quot;,&quot;' + b.id + '&quot;,&quot;' + (b.customer_id||'') + '&quot;)" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;cursor:pointer;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
           'Message Customer</button>' +
           '</div>';
@@ -618,12 +618,12 @@
         tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
           '<span style="font-size:0.82rem;font-weight:700;color:var(--green);">Payment secured in escrow</span>' +
-          '<button onclick="openCodeEntry('' + b.id + '')" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Enter Completion Code</button>' +
+          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Enter Completion Code</button>' +
           '</div>';
       } else if (b.status === 'awaiting_code') {
         tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
           '<span style="font-size:0.82rem;font-weight:700;color:var(--blue);">Customer confirmed job done — enter your code to receive payment</span>' +
-          '<button onclick="openCodeEntry('' + b.id + '')" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;">Enter Code</button>' +
+          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;">Enter Code</button>' +
           '</div>';
       } else if (b.payment_status === 'released') {
         tPayHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--green);font-weight:600;">✓ Payment released to you</div>';
@@ -1727,44 +1727,28 @@
     function openCodeEntry(bookingId) {
       var modal = document.createElement('div');
       modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-
-      /* Build inner HTML using a separate div to avoid quote-nesting issues */
-      var inner = document.createElement('div');
-      inner.style.cssText = 'background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);text-align:center;';
-      inner.innerHTML =
+      modal.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);text-align:center;">' +
         '<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
           '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
         '</div>' +
         '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Enter Completion Code</h2>' +
         '<p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px;">The customer gives you this 6-digit code after confirming the job is done. Enter it to receive your payment.</p>' +
         '<input id="codeInput" type="text" maxlength="6" inputmode="numeric" placeholder="000000" ' +
-          'style="width:100%;padding:14px;text-align:center;font-size:1.8rem;font-weight:900;letter-spacing:0.15em;border:2px solid var(--border);border-radius:var(--radius-md);font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:14px;" />' +
+          'style="width:100%;padding:14px;text-align:center;font-size:1.8rem;font-weight:900;letter-spacing:0.15em;border:2px solid var(--border);border-radius:var(--radius-md);font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:14px;" ' +
+          'onfocus="this.style.borderColor=&quot;var(--blue)&quot;" onblur="this.style.borderColor=&quot;var(--border)&quot;" />' +
         '<div id="codeErr" style="display:none;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);margin-bottom:14px;"></div>' +
         '<div style="display:flex;gap:8px;">' +
-          '<button id="codeSubmit" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Claim Payment</button>' +
-          '<button id="codeCancelBtn" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+          '<button id="codeSubmit" onclick="submitCode(&quot;' + bookingId + '&quot;)" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Claim Payment</button>' +
+          '<button onclick="this.closest(&quot;div[style]&quot;).remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        '</div>' +
         '</div>';
-
-      modal.appendChild(inner);
       document.body.appendChild(modal);
-
-      /* Wire buttons after DOM insertion — no inline onclick needed */
-      document.getElementById('codeInput').addEventListener('focus', function() { this.style.borderColor = 'var(--blue)'; });
-      document.getElementById('codeInput').addEventListener('blur',  function() { this.style.borderColor = 'var(--border)'; });
-      document.getElementById('codeSubmit').onclick   = function() { submitCode(bookingId); };
-      document.getElementById('codeCancelBtn').onclick = function() { closeCodeModal(); };
-
-      modal.onclick = function(e) { if (e.target === modal) closeCodeModal(); };
-      setTimeout(function() { var ci = document.getElementById('codeInput'); if (ci) ci.focus(); }, 100);
-
-      /* Store modal ref for closeCodeModal */
-      window._codeModal = modal;
+      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+      setTimeout(function() { var ci = document.getElementById('codeInput'); if(ci) ci.focus(); }, 100);
     }
     window.openCodeEntry = openCodeEntry;
-
-    function closeCodeModal() {
-      if (window._codeModal) { window._codeModal.remove(); window._codeModal = null; }
-    }
+    function closeCodeModal() { var m = document.getElementById("codeEntryModal"); if(m) m.remove(); }
     window.closeCodeModal = closeCodeModal;
 
     async function submitCode(bookingId) {
@@ -1776,23 +1760,21 @@
       try {
         await window.ST.payments.submitCompletionCode(bookingId, code);
         /* Success! */
-        closeCodeModal(); /* close the entry modal */
+        var overlay = document.querySelector('[style*="backdrop-filter"]');
+        if (overlay) overlay.remove();
         var success = document.createElement('div');
         success.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-        var si = document.createElement('div');
-        si.style.cssText = 'background:#fff;border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,0.12);';
-        si.innerHTML =
+        success.innerHTML =
+          '<div style="background:#fff;border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
           '<div style="width:60px;height:60px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
             '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
           '</div>' +
           '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">Payment Released!</h2>' +
           '<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;">Your payment is on its way. Well done on completing the job!</p>' +
-          '<button id="codeSuccessBtn" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>';
-        success.appendChild(si);
+          '<button onclick="this.closest(&quot;div[style]&quot;).remove();location.reload();" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>' +
+          '</div>';
         document.body.appendChild(success);
-        var csb = document.getElementById('codeSuccessBtn');
-        if (csb) csb.onclick = function() { closeCodeModal(); location.reload(); };
-        success.onclick = function(e) { if (e.target === success) { closeCodeModal(); location.reload(); } };
+        success.onclick = function(e) { if (e.target === success) { success.remove(); location.reload(); } };
       } catch(e) {
         if (err) { err.textContent = e.message; err.style.display = 'block'; }
         if (btn) { btn.disabled = false; btn.textContent = 'Claim Payment'; }

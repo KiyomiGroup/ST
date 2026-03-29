@@ -313,7 +313,7 @@
           '<div style="margin-top:10px;padding:10px 12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
           '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Booking Confirmed</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
-          '<button onclick="openInAppChat('booking','' + b.id + '','' + (b.tasker_id||'') + '')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;cursor:pointer;">' +
+          '<button onclick="openInAppChat(\"booking\",\"' + b.id + '\",\"' + (b.tasker_id||'') + '\")" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:600;cursor:pointer;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
           'Message Tasker</button>' +
           '</div></div>';
@@ -328,7 +328,7 @@
           payHtml = '<div style="margin-top:10px;padding:12px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);">' +
             '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#b45309;margin-bottom:8px;">Payment Required</div>' +
             '<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">Pay securely to lock in this booking. Funds are held in escrow until the job is done.</p>' +
-            '<button onclick="openPaymentModal('' + b.id + '',' + (b.taskers && b.taskers.service_name ? "'" + (b.taskers.service_name||'Service').replace(/'/g,'&#39;') + "'" : "'Service'") + ')" ' +
+            '<button onclick="openPaymentModal(&quot;' + b.id + '&quot;,&quot;' + ((b.taskers && b.taskers.service_name) ? (b.taskers.service_name||'Service').replace(/'/g,'') : 'Service') + '&quot;)" ' +
             'style="padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">Pay Now</button>' +
             '</div>';
         }
@@ -336,8 +336,8 @@
         payHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
           '<span style="font-size:0.82rem;color:var(--green);font-weight:700;">Payment held in escrow</span>' +
-          '<button onclick="confirmComplete('' + b.id + '')" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Confirm Job Done</button>' +
-          '<button onclick="openDisputeModal('' + b.id + '')" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.78rem;cursor:pointer;color:var(--red);">Report Issue</button>' +
+          '<button onclick="confirmComplete(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Confirm Job Done</button>' +
+          '<button onclick="openDisputeModal(&quot;' + b.id + '&quot;)" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.78rem;cursor:pointer;color:var(--red);">Report Issue</button>' +
           '</div>';
       } else if (b.payment_status === 'released') {
         payHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--green);font-weight:600;">✓ Payment released — job complete</div>';
@@ -511,7 +511,7 @@
       if (isAccepted) {
         contactHtml = '<div style="background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">' +
           '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Connected via StreetTasker</div>' +
-          '<button onclick="openInAppChat('task_application','' + appId + '','' + userId + '')" ' +
+          '<button onclick="openInAppChat(\"task_application\",\"' + appId + '\",\"' + userId + '\")" ' +
           'style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;cursor:pointer;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
           'Open Messages</button>' +
@@ -648,8 +648,7 @@
         actions = '<div style="margin-top:10px;padding:12px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
           '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Application Accepted</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
-          '<button onclick="openInAppChat('task_application',' + "'" + appId + "'," + "'" + userId + "')" +
-            ' style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;cursor:pointer;">' +
+          '<button onclick="openInAppChat(\"task_application\",\"' + appId + '\",\"' + userId + '\")" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.84rem;font-weight:600;cursor:pointer;">' +
             '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
             'Message Tasker' +
           '</button>' +
@@ -1039,10 +1038,10 @@
           '<div><div style="font-weight:800;font-size:1rem;">Send a message to <span id="firstMsgName"></span></div>' +
           '<div style="font-size:0.78rem;color:var(--text-muted);">Start the conversation to get things moving.</div></div></div>' +
           '<textarea id="firstMsgText" rows="4" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;box-sizing:border-box;margin-bottom:12px;" ' +
-          'onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>' +
+          'onfocus="this.style.borderColor=&quot;var(--blue)&quot;" onblur="this.style.borderColor=&quot;var(--border)&quot;"></textarea>' +
           '<div style="display:flex;gap:8px;">' +
           '<button id="firstMsgSend" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">Send Message</button>' +
-          '<button onclick="document.getElementById('firstMsgModal').remove()" style="padding:11px 16px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:0.9rem;">Skip</button>' +
+          '<button onclick="document.getElementById(&quot;firstMsgModal&quot;).remove()" style="padding:11px 16px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:0.9rem;">Skip</button>' +
           '</div></div>';
         document.body.appendChild(modal);
       }
@@ -1096,8 +1095,8 @@
           'Secured by Paystack. Card, bank transfer, USSD all accepted.' +
         '</div>' +
         '<div style="display:flex;gap:8px;">' +
-          '<button id="payNowBtn" onclick="doPayNow('' + bookingId + '',' + amount + ')" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Pay &#8358;' + Number(amount).toLocaleString() + ' Now</button>' +
-          '<button onclick="document.getElementById('paymentModal').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+          '<button id="payNowBtn" onclick="doPayNow(&quot;' + bookingId + '&quot;,' + amount + ')" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Pay &#8358;' + Number(amount).toLocaleString() + ' Now</button>' +
+          '<button onclick="document.getElementById(&quot;paymentModal&quot;).remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
         '</div>' +
         '</div>';
       modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
@@ -1143,7 +1142,7 @@
             (result.code || '------') +
           '</div>' +
           '<p style="font-size:0.76rem;color:var(--text-muted);margin-bottom:16px;">Keep this code safe. It expires once used.</p>' +
-          '<button onclick="this.closest('div[style]').remove();bookingsLoaded=false;loadBookings();" style="width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Done</button>' +
+          '<button onclick="this.closest(&quot;div[style]&quot;).remove();bookingsLoaded=false;loadBookings();" style="width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Done</button>' +
           '</div>';
         document.body.appendChild(modal);
         modal.onclick = function(e) { if (e.target === modal) { modal.remove(); bookingsLoaded=false; loadBookings(); } };
