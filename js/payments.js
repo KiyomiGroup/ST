@@ -14,7 +14,7 @@
    ============================================================ */
 'use strict';
 
-const PAYSTACK_PUBLIC_KEY = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; /* Replace with live key */
+const PAYSTACK_PUBLIC_KEY = 'pk_live_cd782742c439571c4b3773383f7cda0c36166c62';
 const PLATFORM_COMMISSION = 0.12; /* 12% commission */
 
 /* ── Commission calculator ───────────────────────────────────── */

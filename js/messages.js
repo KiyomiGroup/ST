@@ -69,11 +69,17 @@ async function canCustomerMessage(customerId, taskerId, contextId, contextType) 
 
 /* ── Load messages for a thread ──────────────────────────────  */
 async function loadMessages(threadId) {
-  const { data, error } = await window.supabase
+  const queryPromise = window.supabase
     .from('messages')
     .select('id, sender_id, body, created_at, flagged')
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Messages timed out. Check your connection.')), 10000)
+  );
+
+  const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
   if (error) throw error;
   return data || [];
 }
@@ -150,8 +156,8 @@ function subscribeToThread(threadId, onMessage) {
 
 /* ── Load all conversations for a user ─────────────────────── */
 async function loadConversations(userId) {
-  /* Get all threads where user is sender or receiver */
-  const { data, error } = await window.supabase
+  /* Race the Supabase query against a 10-second timeout */
+  const queryPromise = window.supabase
     .from('message_threads')
     .select(`
       id, customer_id, tasker_id, context_type, context_id,
@@ -161,6 +167,12 @@ async function loadConversations(userId) {
     `)
     .or('customer_id.eq.' + userId + ',tasker_id.eq.' + userId)
     .order('last_message_at', { ascending: false });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out. Check your connection.')), 10000)
+  );
+
+  const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
   if (error) throw error;
   return data || [];
 }
