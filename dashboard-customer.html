@@ -115,6 +115,10 @@
                 Notifications
                 <span id="custNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
+              <a href="messages.html" class="dashboard-nav-item" style="text-decoration:none;color:inherit;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Messages
+              </a>
               <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
@@ -611,7 +615,8 @@
       var svc      = tasker.service || '';
       var loc      = tasker.location || '';
       var photo    = tasker.photo_url || '';
-      var userId   = tasker.user_id || String(a.tasker_id || '');
+      /* tasker_id on task_applications IS the auth user id of the tasker */
+      var userId   = String(a.tasker_id || tasker.user_id || '');
       var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ')
                        .filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
       var msgRaw   = a.message || '';
@@ -995,11 +1000,15 @@
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
         if (!cu) { window.location.href = 'login.html'; return; }
+        if (!taskerId || taskerId === 'undefined' || taskerId === 'null') {
+          showToast('Cannot open chat — tasker ID missing. Try refreshing.');
+          return;
+        }
         sessionStorage.setItem('st_chat_context', JSON.stringify({
           contextType: contextType,
-          contextId:   contextId,
-          taskerId:    taskerId,
-          customerId:  cu.id,
+          contextId:   String(contextId),
+          taskerId:    String(taskerId),
+          customerId:  String(cu.id),
         }));
         window.location.href = 'messages.html';
       } catch(e) { showToast('Could not open messages: ' + e.message); }
@@ -1097,9 +1106,29 @@
           customerEmail: cu && cu.email, customerName: localStorage.getItem('st_name') || '',
         });
         document.getElementById('paymentModal').remove();
-        showToast('Payment successful! Funds held in escrow.');
-        bookingsLoaded = false;
-        loadBookings();
+        /* Show a prominent success confirmation */
+        var successModal = document.createElement('div');
+        successModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:24px;';
+        successModal.innerHTML =
+          '<div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.14);">' +
+          '<div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</div>' +
+          '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#121212;">Payment Confirmed! 🎉</h2>' +
+          '<p style="font-size:0.88rem;color:#4A4A4A;margin-bottom:16px;line-height:1.6;">Your payment is securely held in escrow. The tasker has been notified to get started.</p>' +
+          '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">' +
+            '<div style="font-size:0.76rem;font-weight:700;text-transform:uppercase;color:#16a34a;margin-bottom:6px;">What happens next</div>' +
+            '<div style="font-size:0.82rem;color:#4A4A4A;line-height:1.7;">' +
+              '1. Tasker completes the job<br>' +
+              '2. You confirm it's done in your Bookings tab<br>' +
+              '3. You'll get a 6-digit code to give the tasker<br>' +
+              '4. Tasker enters code → payment released' +
+            '</div>' +
+          '</div>' +
+          '<button onclick="this.closest('div[style]').remove();bookingsLoaded=false;loadBookings();" style="width:100%;padding:13px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Got it — View Bookings</button>' +
+          '</div>';
+        document.body.appendChild(successModal);
+        successModal.onclick = function(e) { if (e.target === successModal) { successModal.remove(); bookingsLoaded=false; loadBookings(); } };
       } catch(e) {
         if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
         if (e.message !== 'Payment cancelled.') showToast('Payment error: ' + e.message);
@@ -1147,7 +1176,7 @@
 </script>
 
   <!-- Paystack — loaded last so it never blocks page render -->
-  <script src="https://js.paystack.co/v1/inline.js" defer></script>
-  <script src="js/payments.js" defer></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payments.js"></script>
 </body>
 </html>

@@ -118,6 +118,10 @@
                 Notifications
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
+              <a href="messages.html" class="dashboard-nav-item" style="text-decoration:none;color:inherit;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Messages
+              </a>
 
               
             </nav>
@@ -815,6 +819,51 @@
     window.markAllRead = markAllRead;
 
     /* ── Init ─────────────────────────────────────────────────── */
+    async function checkProfileCompletion(userId) {
+      var pRes  = await window.supabase.from('taskers')
+        .select('bio, location, service, service_name, photo_url, whatsapp')
+        .eq('user_id', String(userId)).maybeSingle();
+      var uRes  = await window.supabase.from('users')
+        .select('name, bio, avatar_url').eq('id', String(userId)).maybeSingle();
+      var pData = (pRes && pRes.data) || {};
+      var uData = (uRes && uRes.data) || {};
+
+      var hasPhoto    = !!(pData.photo_url || uData.avatar_url);
+      var hasService  = !!(pData.service || pData.service_name);
+      var hasBio      = !!(pData.bio || uData.bio);
+      var hasLocation = !!pData.location;
+      var hasWhatsapp = !!pData.whatsapp;
+
+      var checks  = [hasPhoto, hasService, hasBio, hasLocation, hasWhatsapp];
+      var missing = [];
+      if (!hasPhoto)    missing.push('profile photo');
+      if (!hasBio)      missing.push('about / bio');
+      if (!hasLocation) missing.push('location');
+      if (!hasService)  missing.push('service type');
+      if (!hasWhatsapp) missing.push('WhatsApp number');
+
+      var completionPct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
+
+      var profileBanner  = document.getElementById('profileCompleteBanner');
+      var profileBar     = document.getElementById('profileCompleteBar');
+      var profilePct     = document.getElementById('profileCompletePct');
+      var profileMissing = document.getElementById('profileMissingItems');
+
+      if (completionPct >= 100) {
+        if (profileBanner) profileBanner.style.display = 'none';
+      } else {
+        if (profileBanner) profileBanner.style.display = 'flex';
+        if (profileBar)    profileBar.style.width = completionPct + '%';
+        if (profilePct)    profilePct.textContent = completionPct + '%';
+        if (profileMissing && missing.length) {
+          profileMissing.innerHTML = '<strong>Still needed:</strong> ' + missing.map(function(m){
+            return '<span style="display:inline-block;padding:1px 8px;background:rgba(37,99,235,0.1);border-radius:99px;font-size:0.72rem;margin:2px;">'+m+'</span>';
+          }).join('');
+        }
+      }
+    }
+    window.checkProfileCompletion = checkProfileCompletion;
+
     async function initPage() {
       /* If arriving from first-time login, go straight to Edit Page */
       var params = new URLSearchParams(window.location.search);
@@ -937,36 +986,7 @@
       /* Subscription loading removed — Sprint 4 uses per-task payments */
 
       /* ── Profile completeness check ── */
-      try {
-        var pRes = await window.supabase.from('taskers')
-          .select('bio, location, service, photo_url, business_name')
-          .eq('user_id', String(userId)).maybeSingle();
-        var pData = (pRes && pRes.data) || {};
-        var hasPhoto    = !!pData.photo_url;
-        var hasService  = !!pData.service;
-        var hasBio      = !!pData.bio;
-        var hasLocation = !!pData.location;
-        var missing = [];
-        if (!hasPhoto)    missing.push('profile photo');
-        if (!hasBio)      missing.push('bio');
-        if (!hasLocation) missing.push('location');
-        if (!hasService)  missing.push('service type');
-        var completionPct = Math.round(([hasPhoto,hasService,hasBio,hasLocation].filter(Boolean).length / 4) * 100);
-
-        var profileBanner = document.getElementById('profileCompleteBanner');
-        var profileBar    = document.getElementById('profileCompleteBar');
-        var profilePct    = document.getElementById('profileCompletePct');
-        var profileMissing = document.getElementById('profileMissingItems');
-
-        if (completionPct < 100 && profileBanner) {
-          profileBanner.style.display = 'flex';
-          if (profileBar)    profileBar.style.width = completionPct + '%';
-          if (profilePct)    profilePct.textContent = completionPct + '%';
-          if (profileMissing && missing.length) profileMissing.textContent = 'Missing: ' + missing.join(', ');
-        } else if (profileBanner) {
-          profileBanner.style.display = 'none';
-        }
-      } catch(e2) { /* non-blocking */ }
+      try { await checkProfileCompletion(userId); } catch(e2) { /* non-blocking */ }
 
       /* Stats go to My Page panel (loaded by loadMyPage) */
 
@@ -1237,8 +1257,10 @@
 
         _currentProfileImageFile = null;
         _currentBannerImageFile  = null;
-        msg.textContent = 'Page updated!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
+        msg.textContent = '✓ Page updated!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
         showToast('Your page has been updated!');
+        /* Recheck profile completion so banner updates/hides immediately */
+        try { await checkProfileCompletion(user.id); } catch(_e) {}
 
         /* Refresh My Page preview */
         _myPageLoaded = false;
