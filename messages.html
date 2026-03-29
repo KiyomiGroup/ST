@@ -369,30 +369,55 @@
   /* ── Load all conversation threads ── */
   async function loadThreadList() {
     var list = document.getElementById('threadList');
+    list.innerHTML =
+      '<div class="msg-loading">' +
+        '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+        ' Loading conversations…' +
+      '</div>';
     try {
       _threads = await window.ST.messages.loadConversations(_currentUser.id);
       if (!_threads.length) {
         list.innerHTML =
           '<div style="padding:28px 18px;text-align:center;">' +
-            '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border-strong)" stroke-width="1.5" style="margin:0 auto 12px;display:block;" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+            '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 12px;display:block;" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
             '<div style="font-size:0.84rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">No conversations yet</div>' +
-            '<div style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">Accept a task application or book a service to start chatting with someone.</div>' +
+            '<div style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">Accept a task application or book a service to start chatting.</div>' +
           '</div>';
         return;
       }
       list.innerHTML = _threads.map(renderThreadItem).join('');
     } catch(e) {
-      /* Distinguish between "table missing" and other errors */
-      var isMissingTable = e.message && (e.message.includes('does not exist') || e.message.includes('relation') || e.message.includes('42P01'));
-      if (isMissingTable) {
+      var msg = (e && e.message) || String(e) || 'Unknown error';
+      var isTable = msg.includes('does not exist') || msg.includes('relation') ||
+                    msg.includes('42P01') || msg.includes('message_threads');
+      var isTimeout = msg.includes('TIMEOUT') || msg.includes('timed out');
+
+      if (isTable) {
+        list.innerHTML =
+          '<div style="padding:20px 16px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+              '<span style="font-size:0.82rem;font-weight:700;color:#92400e;">Database setup needed</span>' +
+            '</div>' +
+            '<p style="font-size:0.76rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">' +
+              'The <code>message_threads</code> table doesn't exist yet in your Supabase database. ' +
+              'Run the SQL setup script provided to enable messaging.' +
+            '</p>' +
+            '<a href="dashboard-customer.html" style="font-size:0.78rem;color:var(--blue);font-weight:600;">← Back to Dashboard</a>' +
+          '</div>';
+      } else if (isTimeout) {
         list.innerHTML =
           '<div style="padding:20px 16px;text-align:center;">' +
-            '<div style="font-size:0.82rem;font-weight:700;color:var(--amber);margin-bottom:8px;">⚙️ Messaging Setup Required</div>' +
-            '<div style="font-size:0.76rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">The messaging tables need to be created in your Supabase database. Run the SQL setup script from your README to enable messaging.</div>' +
-            '<a href="dashboard-customer.html" style="font-size:0.78rem;color:var(--blue);">← Back to Dashboard</a>' +
+            '<div style="font-size:0.82rem;font-weight:700;color:var(--red);margin-bottom:8px;">Connection timed out</div>' +
+            '<div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:12px;">Check your internet connection and try again.</div>' +
+            '<button onclick="loadThreadList()" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:0.82rem;cursor:pointer;">Retry</button>' +
           '</div>';
       } else {
-        list.innerHTML = '<div style="padding:16px;font-size:0.82rem;color:var(--red);">Could not load conversations: ' + escapeHtml(e.message) + '</div>';
+        list.innerHTML =
+          '<div style="padding:16px;font-size:0.82rem;color:var(--red);">' +
+            'Error: ' + escapeHtml(msg) +
+            '<br><button onclick="loadThreadList()" style="margin-top:8px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.78rem;">Retry</button>' +
+          '</div>';
       }
     }
   }
