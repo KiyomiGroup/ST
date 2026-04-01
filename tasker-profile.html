@@ -799,12 +799,10 @@
                     data: { task_id: taskParam }, is_read: false,
                   });
                 } catch(e2) {}
-                barBody.innerHTML = wpDigits
-                  ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span>' +
-                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back to Applications</a>' +
-                    '</div>'
-                  : '<div><span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span> <a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:12px;">Back to Applications</a></div>';
+                                barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted! You can now message the tasker.</span>' +
+                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Back to Applications</a>' +
+                    '</div>';
               } catch(err) {
                 this.disabled = false; this.textContent = 'Accept Application';
                 showToast('Error: ' + err.message);
@@ -822,12 +820,11 @@
               }
             };
           } else if (appStatus === 'accepted') {
-            barBody.innerHTML = wpDigits
-              ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-                '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
-                '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back</a>' +
-                '</div>'
-              : '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Already Accepted</span>';
+            barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+              '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
+              '<a href="messages.html" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Open Messages</a>' +
+              '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--text-muted);margin-left:8px;">Back</a>' +
+              '</div>';
             bar.style.display = 'block';
           }
         }
@@ -1721,12 +1718,10 @@
                     data: { task_id: taskParam }, is_read: false,
                   });
                 } catch(e2) {}
-                barBody.innerHTML = wpDigits
-                  ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span>' +
-                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back to Applications</a>' +
-                    '</div>'
-                  : '<div><span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted!</span> <a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:12px;">Back to Applications</a></div>';
+                barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted! You can now message the tasker.</span>' +
+                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Back to Applications</a>' +
+                    '</div>';
               } catch(err) {
                 this.disabled = false; this.textContent = 'Accept Application';
                 showToast('Error: ' + err.message);
@@ -1744,12 +1739,11 @@
               }
             };
           } else if (appStatus === 'accepted') {
-            barBody.innerHTML = wpDigits
-              ? '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-                '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
-                '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);">Back</a>' +
-                '</div>'
-              : '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Already Accepted</span>';
+            barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+              '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
+              '<a href="messages.html" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Open Messages</a>' +
+              '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--text-muted);margin-left:8px;">Back</a>' +
+              '</div>';
             bar.style.display = 'block';
           }
         }
@@ -1841,19 +1835,16 @@
     const body     = document.getElementById('bookContactBody');
     if (!modal || !body) { showToast('Booking failed: modal missing'); return; }
 
-    if (wpDigits) {
-      body.innerHTML =
-        '<div style="text-align:center;margin-bottom:20px;">' +
-          '<div style="width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
-            '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '</div>' +
-          '<h3 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Ready to book!</h3>' +
-          '<p style="font-size:0.86rem;color:var(--text-muted);line-height:1.5;">Contact the provider directly to confirm the job details and schedule.</p>' +
+    /* Booking confirmed — direct to messages */
+    body.innerHTML =
+      '<div style="text-align:center;">' +
+        '<div style="width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
         '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:10px;">' +
-          '<button onclick="submitBookingRequest()" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.95rem;font-weight:700;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message & Book via StreetTasker</button>' +
-        '</div>';
-    } else {
+        '<h3 style="margin-bottom:6px;">Booking Sent!</h3>' +
+        '<p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;">The provider has been notified. Once they confirm, you can message them directly.</p>' +
+        '<a href="dashboard-customer.html?panel=bookings" style="display:inline-block;padding:10px 20px;background:var(--blue);color:#fff;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;text-decoration:none;">View My Bookings</a>' +
+      '</div>'; else {
       body.innerHTML =
         '<div style="text-align:center;padding:12px 0;">' +
           '<p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:16px;">This provider hasn\'t added a contact number yet. Send them a booking request and they\'ll follow up.</p>' +

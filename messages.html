@@ -269,7 +269,7 @@
     try {
       var { data, error } = await window.supabase
         .from('message_threads')
-        .select('id, customer_id, tasker_id, context_type, last_message, last_message_at, customer_unread, tasker_unread, customer:customer_id(id, name, avatar_url), tasker:tasker_id(id, name, avatar_url)')
+        .select('id, customer_id, tasker_id, context_type, context_id, last_message, last_message_at, customer_unread, tasker_unread, customer:customer_id(id, name, avatar_url), tasker:tasker_id(id, name, avatar_url)')
         .or('customer_id.eq.' + _user.id + ',tasker_id.eq.' + _user.id)
         .order('last_message_at', { ascending: false });
 
@@ -339,7 +339,34 @@
     document.getElementById('inputBar').style.display  = 'flex';
     document.getElementById('chatHeadAvatar').textContent = initials;
     document.getElementById('chatHeadName').textContent   = name;
-    document.getElementById('chatHeadSub').textContent    = t.context_type === 'booking' ? 'Booking conversation' : 'Task application conversation';
+    /* Load the task/booking title for context sub-heading */
+    var contextSub = t.context_type === 'booking' ? 'Service booking' : 'Task application';
+    document.getElementById('chatHeadSub').textContent = contextSub;
+    if (t.context_id) {
+      (async function() {
+        try {
+          if (t.context_type === 'booking') {
+            var { data: bk } = await window.supabase.from('bookings')
+              .select('notes, tasks(title), taskers(service, service_name, business_name)')
+              .eq('id', t.context_id).maybeSingle();
+            if (bk) {
+              var label = (bk.tasks && bk.tasks.title)
+                || (bk.taskers && (bk.taskers.service_name || bk.taskers.service || bk.taskers.business_name))
+                || (bk.notes && bk.notes.slice(0,40))
+                || 'Service booking';
+              document.getElementById('chatHeadSub').textContent = label;
+            }
+          } else {
+            var { data: app } = await window.supabase.from('task_applications')
+              .select('tasks(title)')
+              .eq('id', t.context_id).maybeSingle();
+            if (app && app.tasks && app.tasks.title) {
+              document.getElementById('chatHeadSub').textContent = app.tasks.title;
+            }
+          }
+        } catch(_e) { /* keep fallback text */ }
+      })();
+    }
 
     await renderMessages(threadId);
 
@@ -503,6 +530,14 @@
     }
   }
   window.openOrCreateThread = openOrCreateThread;
+
+  /* ── Boot ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    initPage().catch(function(e) {
+      console.error('[Messages] init error:', e);
+      sidebarStatus('⚠ Failed to load. <button onclick="location.reload()" style="padding:4px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.78rem;">Retry</button>');
+    });
+  });
   </script>
 </body>
 </html>
