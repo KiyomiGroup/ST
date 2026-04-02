@@ -436,10 +436,24 @@
 
                 <div class="form-row">
                   <div class="form-group">
-                    <div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--blue);">Customers contact you via in-platform messaging after accepting a booking.</div>
+                    <label class="form-label" for="profileWhatsapp">
+                      WhatsApp Number *
+                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — customers reach you here after booking</span>
+                    </label>
+                    <div style="position:relative;">
+                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-muted);pointer-events:none;">+234</span>
+                      <input type="tel" id="profileWhatsapp" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+                    </div>
                   </div>
                   <div class="form-group">
-                    
+                    <label class="form-label" for="profilePhone">
+                      Calling Number
+                      <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;"> — optional</span>
+                    </label>
+                    <div style="position:relative;">
+                      <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-muted);pointer-events:none;">+234</span>
+                      <input type="tel" id="profilePhone" class="form-input" style="padding-left:52px;" placeholder="8012345678" maxlength="11" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1065,7 +1079,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img').eq('user_id', String(user.id)).maybeSingle();
+        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img, bio, whatsapp, phone').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -1102,6 +1116,14 @@
         if (svcEl)  svcEl.value  = td.service || td.service_name || '';
         if (rateEl) rateEl.value = td.rate_value || '';
         if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
+        /* Populate whatsapp/phone — strip +234 prefix for display */
+        var wpEl = document.getElementById('profileWhatsapp');
+        var phEl = document.getElementById('profilePhone');
+        if (wpEl) wpEl.value = (td.whatsapp || '').replace(/^\+?234/, '').replace(/^0/, '');
+        if (phEl) phEl.value = (td.phone || '').replace(/^\+?234/, '').replace(/^0/, '');
+        /* Also populate bio if stored in taskers (prefer users.bio but show taskers.bio as fallback) */
+        var bioEl = document.getElementById('profileBio');
+        if (bioEl && !bioEl.value && td.bio) bioEl.value = td.bio;
 
         /* Banner colour swatches */
         var bannerColor = td.banner_color || '#121212';
@@ -1294,8 +1316,17 @@
           }
         }
 
-        /* Save to taskers table */
+        /* Format Nigerian numbers helper */
+        function fmtNGN(raw) {
+          if (!raw) return null;
+          var d = raw.replace(/\D/g,'').replace(/^234/,'').replace(/^0/,'');
+          return d ? '+234' + d : null;
+        }
+
+        /* Save to taskers table — use upsert so it works even if row doesn't exist yet */
+        var bioVal = document.getElementById('profileBio')?.value?.trim() || null;
         var taskerUpdates = {
+          user_id:     String(user.id),
           location:    document.getElementById('profileLocation')?.value?.trim()  || null,
           service:     document.getElementById('profileService')?.value?.trim()   || null,
           service_name:document.getElementById('profileService')?.value?.trim()   || null,
@@ -1303,11 +1334,16 @@
           rate_unit:   document.getElementById('profileRateUnit')?.value          || '/hour',
           banner_color:document.getElementById('profileBannerColor')?.value       || '#121212',
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
+          bio:         bioVal,
+          whatsapp:    fmtNGN(document.getElementById('profileWhatsapp')?.value?.trim()),
+          phone:       fmtNGN(document.getElementById('profilePhone')?.value?.trim()),
+          name:        document.getElementById('profileName')?.value?.trim() || null,
         };
         if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
         if (bannerImageUrl) taskerUpdates.banner_img = bannerImageUrl;
-        var { error: tErr } = await window.supabase.from('taskers').update(taskerUpdates).eq('user_id', String(user.id));
-        if (tErr) console.warn('[saveProfile] taskers update error:', tErr.message);
+        var { error: tErr } = await window.supabase.from('taskers')
+          .upsert(taskerUpdates, { onConflict: 'user_id' });
+        if (tErr) console.warn('[saveProfile] taskers upsert error:', tErr.message);
 
         _currentProfileImageFile = null;
         _currentBannerImageFile  = null;
