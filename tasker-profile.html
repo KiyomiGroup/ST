@@ -919,208 +919,131 @@
         'Send Booking Request' +
       '</button>' +
       '<p style="font-size:0.76rem;color:var(--text-muted);text-align:center;margin-top:10px;">All communication stays on StreetTasker. No phone numbers shared.</p>';
-    modal.classList.add('modal-open');<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tasker Profile — StreetTasker</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
-  <style>
-    .profile-page { padding-top: calc(var(--nav-height) + 32px); padding-bottom: 64px; }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 
-    /* ── Hero banner ── */
-    .profile-hero {
-      background: var(--charcoal);
-      padding: 48px 0 0;
-      margin-top: var(--nav-height);
-    }
-    .profile-hero-inner {
-      max-width: 860px; margin: 0 auto; padding: 0 24px;
-      display: flex; align-items: flex-end; gap: 24px; padding-bottom: 0;
-    }
-    .profile-avatar-wrap {
-      position: relative; flex-shrink: 0;
-      width: 96px; height: 96px;
-      border-radius: 50%;
-      border: 3px solid var(--white);
-      overflow: hidden;
-      background: var(--blue-light);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; font-weight: 800; color: var(--blue);
-      transform: translateY(24px);
-    }
-    .profile-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-hero-info { flex: 1; min-width: 0; padding-bottom: 28px; }
-    .profile-name {
-      font-size: 1.4rem; font-weight: 800;
-      color: var(--white); margin-bottom: 2px; line-height: 1.2;
-    }
-    .profile-service {
-      font-size: 0.875rem; color: rgba(255,255,255,0.6); margin-bottom: 10px;
-    }
-    .profile-badges { display: flex; gap: 8px; flex-wrap: wrap; }
-    .profile-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 3px 10px; border-radius: var(--radius-pill);
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
-    }
-    .badge-verified {
-      background: rgba(22,163,74,0.18);
-      color: #4ade80;
-      border: 1px solid rgba(22,163,74,0.3);
-    }
-    .badge-pending {
-      background: rgba(217,119,6,0.18);
-      color: #fbbf24;
-      border: 1px solid rgba(217,119,6,0.3);
-    }
-    .badge-category {
-      background: rgba(10,132,255,0.2);
-      color: rgba(255,255,255,0.8);
-      border: 1px solid rgba(10,132,255,0.3);
-    }
+    /* Create booking record silently */
+    try {
+      const { data: existing } = await window.supabase.from('bookings')
+        .select('id').eq('customer_id', user.id).eq('tasker_id', _taskerId)
+        .in('status', ['pending','confirmed']).maybeSingle();
+      if (!existing) {
+        await window.supabase.from('bookings').insert({
+          customer_id: user.id, tasker_id: _taskerId, status: 'pending'
+        });
+        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'A customer';
+        await window.supabase.from('notifications').insert({
+          user_id: _taskerId, type: 'new_booking', title: 'New Booking Request',
+          message: name + ' wants to book your service.',
+          data: { from: user.id }, is_read: false,
+        });
+      }
+    } catch(e2) { /* non-blocking */ }
+  }
+  window.openBooking = openBooking;
 
-    /* ── Content area ── */
-    .profile-content {
-      max-width: 860px; margin: 0 auto; padding: 40px 24px 0;
-    }
-    .profile-grid {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 28px;
-      align-items: start;
-    }
-    @media (max-width: 680px) {
-      .profile-grid { grid-template-columns: 1fr; }
-      .profile-hero-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .profile-avatar-wrap { transform: none; width: 80px; height: 80px; font-size: 1.6rem; }
-    }
+  async function submitBookingRequest() {
+    const sess = await window.supabase.auth.getSession();
+    const user = sess.data.session && sess.data.session.user;
+    if (!user) return;
 
-    /* ── Sections ── */
-    .profile-section {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-    .profile-section-title {
-      font-size: 0.78rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--text-muted); margin-bottom: 16px;
-    }
+    const modal = document.getElementById('bookContactModal');
+    const body  = document.getElementById('bookContactBody');
+    if (!body) return;
 
-    /* ── Stats row ── */
-    .profile-stats {
-      display: flex; gap: 0;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden; margin-bottom: 20px;
-    }
-    .profile-stat {
-      flex: 1; padding: 14px 12px; text-align: center;
-      border-right: 1px solid var(--border);
-    }
-    .profile-stat:last-child { border-right: none; }
-    .profile-stat-val { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
-    .profile-stat-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    body.innerHTML =
+      '<div style="text-align:center;padding:24px;">' +
+        '<svg style="animation:spin 1s linear infinite;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+        '<p style="margin-top:12px;color:var(--text-muted);">Sending request...</p>' +
+      '</div>';
 
-    /* ── Work posts grid ── */
-    .work-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
-    }
-    .work-card {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      cursor: pointer;
-      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
-    }
-    .work-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .work-card-image {
-      width: 100%; aspect-ratio: 1;
-      background: var(--bg-subtle);
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; position: relative;
-    }
-    .work-card-image img { width: 100%; height: 100%; object-fit: cover; }
-    .work-card-placeholder {
-      width: 100%; height: 100%;
-      background: linear-gradient(135deg, var(--charcoal) 0%, #1E3A5F 100%);
-      display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.25);
-    }
-    .work-card-body { padding: 10px 12px; }
-    .work-card-caption {
-      font-size: 0.8rem; color: var(--text-secondary);
-      line-height: 1.4; display: -webkit-box;
-      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .work-card-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+    try {
+      const { data: existing } = await window.supabase.from('bookings')
+        .select('id').eq('customer_id', user.id).eq('tasker_id', _taskerId)
+        .in('status', ['pending','confirmed']).maybeSingle();
 
-    /* ── Sidebar ── */
-    .profile-sidebar { position: sticky; top: calc(var(--nav-height) + 24px); }
-    .profile-contact-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 0.85rem;
-    }
-    .profile-contact-item:last-child { border-bottom: none; }
-    .profile-contact-icon {
-      width: 32px; height: 32px;
-      background: var(--bg-subtle); border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; color: var(--text-muted);
-    }
-    .profile-contact-label { font-size: 0.72rem; color: var(--text-muted); }
-    .profile-contact-val { font-weight: 500; color: var(--text-primary); margin-top: 1px; }
+      if (!existing) {
+        await window.supabase.from('bookings').insert({
+          customer_id: user.id, tasker_id: _taskerId, status: 'pending'
+        });
+        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'A customer';
+        await window.supabase.from('notifications').insert({
+          user_id: _taskerId, type: 'new_booking', title: 'New Booking Request',
+          message: name + ' sent you a booking request.',
+          data: { from: user.id }, is_read: false,
+        });
+      }
 
-    /* ── Book button ── */
-    .profile-book-btn {
-      width: 100%; margin-top: 16px;
-      padding: 13px; font-size: 0.9rem; font-weight: 700;
-    }
+      /* Set chat context and go to messages */
+      sessionStorage.setItem('st_chat_context', JSON.stringify({
+        contextType: 'booking',
+        contextId:   (existing && existing.id) || '',
+        taskerId:    _taskerId,
+        customerId:  user.id,
+      }));
 
-    /* ── Empty states ── */
-    .profile-empty {
-      text-align: center; padding: 32px 16px;
-      color: var(--text-muted); font-size: 0.85rem;
-    }
-    .profile-empty svg { opacity: 0.3; margin: 0 auto 12px; display: block; }
+      body.innerHTML =
+        '<div style="text-align:center;padding:20px;">' +
+          '<div style="width:52px;height:52px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</div>' +
+          '<h3 style="font-size:1rem;font-weight:800;margin-bottom:8px;">Booking Request Sent!</h3>' +
+          '<p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;">Now message the provider to confirm details and schedule.</p>' +
+          '<a href="messages.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--blue);color:#fff;border-radius:var(--radius-md);font-size:0.92rem;font-weight:700;text-decoration:none;">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+            'Message Provider' +
+          '</a>' +
+        '</div>';
 
-    /* ── Loading skeleton ── */
-    .skel { background: var(--gray-100); border-radius: var(--radius-sm); animation: shimmer 1.4s ease infinite; }
-    .skel-text { height: 14px; margin-bottom: 8px; }
-    .skel-avatar { width: 96px; height: 96px; border-radius: 50%; }
-    @keyframes shimmer {
-      0%   { opacity: 1; }
-      50%  { opacity: 0.5; }
-      100% { opacity: 1; }
+    } catch(e) {
+      body.innerHTML = '<p style="color:var(--red);padding:16px;text-align:center;">Error: ' + escapeHtml((e && e.message) || 'Failed') + '</p>';
     }
+  }
+  window.submitBookingRequest = submitBookingRequest;
 
-    /* ── Work post lightbox ── */
-    .work-modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-      z-index: 1000; display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-    }
-    .work-modal {
-      background: var(--white); border-radius: var(--radius-lg);
-      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-    }
-    .work-modal-img { width: 100%; max-height: 340px; object-fit: cover; }
-    .work-modal-body { padding: 20px 24px; }
-    .work-modal-caption { font-size: 0.9rem; color: var(--text-primary); line-height: 1.6; }
-    .work-modal-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 10px; }
-    .work-modal-close {
-      position: absolute; top: 16px; right: 16px;
-      background: rgba(0,0,0,0.5); border: none; color: white;
-      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; line-height: 1;
-    }
-  </style>
-</script>
+  function closeBookingContactModal() {
+    const m = document.getElementById('bookContactModal');
+    if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+  }
+  window.closeBookingContactModal = closeBookingContactModal;
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
+  function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+  function pinIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  }
+  function tagIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
+  }
+  function checkIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+  </script>
+
+  <!-- Book/Contact modal -->
+  <div id="bookContactModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;"
+    onclick="if(event.target===this)closeBookingContactModal()">
+    <div style="background:var(--white);border-radius:var(--radius-xl);max-width:440px;width:100%;box-shadow:var(--shadow-xl);position:relative;overflow:hidden;">
+      <button onclick="closeBookingContactModal()" style="position:absolute;top:14px;right:14px;background:var(--bg-subtle);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-muted);">✕</button>
+      <div id="bookContactBody" style="padding:28px;"></div>
+    </div>
+  </div>
+
+  <!-- Work post lightbox -->
+  <div id="workModal" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:20px;"
+    onclick="closeWorkModal(event)">
+    <div style="background:var(--white);border-radius:var(--radius-lg);max-width:600px;width:100%;position:relative;overflow:hidden;">
+      <button class="work-modal-close" onclick="closeWorkModal({currentTarget:this})">✕</button>
+      <img id="workModalImg" src="" alt="" style="width:100%;display:none;max-height:420px;object-fit:cover;" />
+      <div style="padding:20px;">
+        <div id="workModalCaption" style="font-size:0.9rem;color:var(--text-primary);line-height:1.6;"></div>
+        <div id="workModalMeta" style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
