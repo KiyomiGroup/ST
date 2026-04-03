@@ -152,11 +152,19 @@ async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmai
     .from('payment_requests').select('*').eq('id', requestId).maybeSingle();
   if (reqErr) throw reqErr;
   if (!req) throw new Error('Payment request not found.');
-  if (req.status !== 'pending') throw new Error('This request has already been ' + req.status + '.');
 
-  await window.supabase.from('payment_requests')
-    .update({ status: 'accepted' }).eq('id', requestId);
+  /* Only block if the payment was already fully completed — not just "accepted"
+     because "accepted" means the button was clicked but Paystack may not have
+     launched yet (e.g. popup was closed, page reloaded). */
+  if (req.status === 'paid') throw new Error('This payment has already been completed.');
 
+  /* Mark accepted only if still pending — idempotent if already accepted */
+  if (req.status === 'pending') {
+    await window.supabase.from('payment_requests')
+      .update({ status: 'accepted' }).eq('id', requestId);
+  }
+
+  /* Store agreed price on thread so header badge shows for both parties */
   await window.supabase.from('message_threads')
     .update({ agreed_price: req.amount }).eq('id', threadId);
 

@@ -95,11 +95,6 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
 
 /* ── Called after Paystack confirms payment ──────────────────── */
 async function onPaymentSuccess(reference, paymentId, bookingId) {
-  /* In production: verify server-side via Supabase Edge Function
-     that calls https://api.paystack.co/transaction/verify/:reference
-     before trusting the client.
-     For Sprint 4 launch: we trust the Paystack callback and update DB immediately. */
-
   var code = generateCompletionCode();
 
   /* Update payment record */
@@ -116,6 +111,21 @@ async function onPaymentSuccess(reference, paymentId, bookingId) {
       payment_ref:     reference,
     })
     .eq('id', bookingId);
+
+  /* Mark the payment_request as paid (if one exists for this booking's thread) */
+  try {
+    var { data: bkThread } = await window.supabase
+      .from('message_threads')
+      .select('id')
+      .or('context_id.eq.'+bookingId)
+      .maybeSingle();
+    if (bkThread) {
+      await window.supabase.from('payment_requests')
+        .update({ status: 'paid' })
+        .eq('thread_id', bkThread.id)
+        .in('status', ['pending', 'accepted']);
+    }
+  } catch(_e) { /* non-blocking */ }
 
   /* Notify the tasker */
   try {
