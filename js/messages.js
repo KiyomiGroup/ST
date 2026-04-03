@@ -1,6 +1,7 @@
 /* ============================================================
    STREET TASKER — messages.js
    In-platform messaging between customers and taskers.
+   Includes payment negotiation flow (Sprint 5).
    ============================================================ */
 'use strict';
 
@@ -41,6 +42,7 @@ async function loadConversations(userId) {
       .select(`
         id, customer_id, tasker_id, context_type, context_id,
         last_message, last_message_at, customer_unread, tasker_unread,
+        agreed_price,
         customer:customer_id(id, name, first_name, last_name, avatar_url),
         tasker:tasker_id(id, name, first_name, last_name, avatar_url)
       `)
@@ -57,7 +59,7 @@ async function loadMessages(threadId) {
   const result = await safeQuery(() =>
     window.supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, flagged')
+      .select('id, sender_id, body, created_at, flagged, type, payment_request_id')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
   );
@@ -65,7 +67,7 @@ async function loadMessages(threadId) {
   return result.data || [];
 }
 
-/* ── Send a message ── */
+/* ── Send a regular message ── */
 async function sendMessage(threadId, senderId, receiverId, body) {
   const trimmed = body.trim();
   if (!trimmed) return null;
@@ -74,13 +76,12 @@ async function sendMessage(threadId, senderId, receiverId, body) {
   const result = await safeQuery(() =>
     window.supabase
       .from('messages')
-      .insert({ thread_id: threadId, sender_id: senderId, receiver_id: receiverId, body: trimmed, flagged: violated })
+      .insert({ thread_id: threadId, sender_id: senderId, receiver_id: receiverId, body: trimmed, flagged: violated, type: 'text' })
       .select()
       .single()
   );
   if (result.error) throw result.error;
 
-  /* Update thread last_message */
   await safeQuery(() =>
     window.supabase.from('message_threads')
       .update({ last_message: trimmed.slice(0, 80), last_message_at: new Date().toISOString() })
@@ -89,6 +90,86 @@ async function sendMessage(threadId, senderId, receiverId, body) {
 
   if (violated) handleContactViolation(senderId).catch(() => {});
   return result.data;
+}
+
+/* ── Send a payment request message (tasker only) ── */
+async function sendPaymentRequest(threadId, senderId, receiverId, amountNaira) {
+  if (!amountNaira || isNaN(amountNaira) || amountNaira <= 0) {
+    throw new Error('Please enter a valid amount.');
+  }
+
+  const reqResult = await safeQuery(() =>
+    window.supabase.from('payment_requests').insert({
+      thread_id:   threadId,
+      tasker_id:   senderId,
+      customer_id: receiverId,
+      amount:      Math.round(amountNaira),
+      status:      'pending',
+    }).select().single()
+  );
+  if (reqResult.error) throw reqResult.error;
+
+  const requestId = reqResult.data.id;
+  const formatted = Number(amountNaira).toLocaleString('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
+  const msgBody = 'PAYMENT_REQUEST:' + requestId + ':' + Math.round(amountNaira);
+
+  const msgResult = await safeQuery(() =>
+    window.supabase.from('messages').insert({
+      thread_id:          threadId,
+      sender_id:          senderId,
+      receiver_id:        receiverId,
+      body:               msgBody,
+      flagged:            false,
+      type:               'payment_request',
+      payment_request_id: requestId,
+    }).select().single()
+  );
+  if (msgResult.error) throw msgResult.error;
+
+  await safeQuery(() =>
+    window.supabase.from('message_threads')
+      .update({ last_message: ('Payment request: ' + formatted).slice(0, 80), last_message_at: new Date().toISOString() })
+      .eq('id', threadId)
+  );
+
+  try {
+    await window.supabase.from('notifications').insert({
+      user_id: receiverId,
+      type:    'payment_request',
+      title:   'Payment request: ' + formatted,
+      message: 'Your service provider has sent a payment request. Review and pay securely through the platform.',
+      data:    { thread_id: threadId, payment_request_id: requestId },
+      is_read: false,
+    });
+  } catch(_e) {}
+
+  return { requestId, messageId: msgResult.data.id };
+}
+
+/* ── Customer accepts a payment request ── */
+async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmail, customerName) {
+  const { data: req, error: reqErr } = await window.supabase
+    .from('payment_requests').select('*').eq('id', requestId).maybeSingle();
+  if (reqErr) throw reqErr;
+  if (!req) throw new Error('Payment request not found.');
+  if (req.status !== 'pending') throw new Error('This request has already been ' + req.status + '.');
+
+  await window.supabase.from('payment_requests')
+    .update({ status: 'accepted' }).eq('id', requestId);
+
+  await window.supabase.from('message_threads')
+    .update({ agreed_price: req.amount }).eq('id', threadId);
+
+  if (window.ST && window.ST.payments) {
+    return await window.ST.payments.initiatePayment({
+      bookingId,
+      taskId:      null,
+      amountNaira: req.amount,
+      customerEmail,
+      customerName,
+    });
+  }
+  throw new Error('Payment system not loaded. Please refresh and try again.');
 }
 
 /* ── Contact violation handler ── */
@@ -100,7 +181,7 @@ async function handleContactViolation(userId) {
     if (violations >= MAX_VIOLATIONS) {
       await window.supabase.from('users').update({ is_flagged: true, flagged_reason: 'Repeated contact sharing violations' }).eq('id', userId);
     }
-  } catch (e) { /* non-blocking */ }
+  } catch (e) {}
 }
 
 /* ── Subscribe to realtime messages ── */
@@ -147,6 +228,7 @@ async function markRead(threadId, userId, role) {
 window.ST = window.ST || {};
 window.ST.messages = {
   loadConversations, loadMessages, sendMessage,
+  sendPaymentRequest, acceptPaymentRequest,
   subscribeToThread, getOrCreateThread, markRead,
   CONTACT_PATTERNS,
 };
