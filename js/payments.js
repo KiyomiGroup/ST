@@ -36,26 +36,45 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
 
-  var amounts   = calculateAmounts(amountNaira);
-  var reference = 'ST-' + Date.now() + '-' + bookingId.slice(0, 8);
+  var amounts = calculateAmounts(amountNaira);
 
-  /* Save payment record to DB before redirecting */
-  var { data: payment, error: payErr } = await window.supabase
+  /* Check if a pending payment already exists for this booking (e.g. user closed
+     the popup last time). Re-use it with a fresh reference so Paystack accepts it. */
+  var payment;
+  var { data: existing } = await window.supabase
     .from('payments')
-    .insert({
-      booking_id:    bookingId,
-      task_id:       taskId || null,
-      customer_id:   user.id,
-      amount:        amounts.total,
-      platform_fee:  amounts.platformFee,
-      tasker_amount: amounts.taskerAmount,
-      status:        'pending',
-      reference:     reference,
-    })
-    .select()
-    .single();
+    .select('*')
+    .eq('booking_id', bookingId)
+    .eq('status', 'pending')
+    .maybeSingle();
 
-  if (payErr) throw payErr;
+  if (existing) {
+    /* Re-use existing record, just update the reference for the new attempt */
+    var freshRef = 'ST-' + Date.now() + '-' + bookingId.slice(0, 8);
+    await window.supabase.from('payments')
+      .update({ reference: freshRef, amount: amounts.total, platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount })
+      .eq('id', existing.id);
+    payment = Object.assign({}, existing, { reference: freshRef });
+  } else {
+    /* No existing pending payment — create a new one */
+    var reference = 'ST-' + Date.now() + '-' + bookingId.slice(0, 8);
+    var { data: created, error: payErr } = await window.supabase
+      .from('payments')
+      .insert({
+        booking_id:    bookingId,
+        task_id:       taskId || null,
+        customer_id:   user.id,
+        amount:        amounts.total,
+        platform_fee:  amounts.platformFee,
+        tasker_amount: amounts.taskerAmount,
+        status:        'pending',
+        reference:     reference,
+      })
+      .select()
+      .single();
+    if (payErr) throw payErr;
+    payment = created;
+  }
 
   /* Launch Paystack popup */
   return new Promise(function(resolve, reject) {
@@ -63,10 +82,13 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
       reject(new Error('Paystack not loaded. Check your internet connection.'));
       return;
     }
+
+    var settled = false;
+
     var handler = PaystackPop.setup({
       key:       PAYSTACK_PUBLIC_KEY,
       email:     customerEmail || user.email,
-      amount:    amounts.total * 100, /* Paystack uses kobo */
+      amount:    amounts.total * 100,
       currency:  'NGN',
       reference: reference,
       metadata: {
@@ -75,18 +97,19 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
           { display_name: 'Booking ID', variable_name: 'booking_id', value: bookingId },
         ]
       },
-      callback: async function(response) {
-        try {
-          /* Verify payment was successful and update DB */
-          await onPaymentSuccess(response.reference, payment.id, bookingId);
-          resolve({ reference: response.reference, paymentId: payment.id });
-        } catch(e) {
-          reject(e);
-        }
+      callback: function(response) {
+        if (settled) return;
+        settled = true;
+        onPaymentSuccess(response.reference, payment.id, bookingId)
+          .then(function(result) {
+            resolve({ reference: response.reference, paymentId: payment.id, code: result.code });
+          })
+          .catch(function(e) { reject(e); });
       },
       onClose: function() {
-        /* Payment popup closed without completing */
-        reject(new Error('Payment cancelled.'));
+        if (settled) return;
+        settled = true;
+        reject(new Error('Payment window closed. Click pay again to retry.'));
       },
     });
     handler.openIframe();
