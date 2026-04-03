@@ -436,17 +436,10 @@
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label" for="profileWhatsapp">WhatsApp Number</label>
-                    <div style="position:relative;">
-                      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.83rem;color:var(--text-muted);pointer-events:none;">+234</span>
-                      <input type="tel" id="profileWhatsapp" class="form-input" placeholder="8012345678" style="padding-left:44px;" maxlength="11" />
-                    </div>
-                    <div class="form-helper">Your WhatsApp number (without 0 or +234) — shown after bookings are confirmed.</div>
+                    <div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--blue);">Customers contact you via in-platform messaging after accepting a booking.</div>
                   </div>
                   <div class="form-group">
-                    <div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--blue);margin-top:22px;">
-                      <strong>Tip:</strong> Customers can also message you through the platform after booking.
-                    </div>
+                    
                   </div>
                 </div>
               </div>
@@ -852,10 +845,10 @@
     /* ── Init ─────────────────────────────────────────────────── */
     async function checkProfileCompletion(userId) {
       var pRes  = await window.supabase.from('taskers')
-        .select('bio, location, service, service_name, photo_url, whatsapp')
+        .select('bio, location, service, service_name, photo_url, rate_value, rate_unit')
         .eq('user_id', String(userId)).maybeSingle();
       var uRes  = await window.supabase.from('users')
-        .select('name, bio, avatar_url, whatsapp').eq('id', String(userId)).maybeSingle();
+        .select('name, bio, avatar_url').eq('id', String(userId)).maybeSingle();
       var pData = (pRes && pRes.data) || {};
       var uData = (uRes && uRes.data) || {};
 
@@ -863,17 +856,15 @@
       var hasService  = !!(pData.service || pData.service_name);
       var hasBio      = !!(pData.bio || uData.bio);
       var hasLocation = !!pData.location;
-      var hasName     = !!(uData.name || (uData.name && uData.name.length > 0));
+      var hasRate     = !!(pData.rate_value && (pData.rate_value > 0));
 
-      /* 4 required fields: name, service, bio, location.
-         Photo is encouraged but not blocking. WhatsApp is optional. */
-      var checks  = [hasName, hasService, hasBio, hasLocation];
+      var checks  = [hasPhoto, hasService, hasBio, hasLocation, hasRate];
       var missing = [];
-      if (!hasName)     missing.push('your name');
-      if (!hasService)  missing.push('service type');
+      if (!hasPhoto)    missing.push('profile photo');
       if (!hasBio)      missing.push('about / bio');
       if (!hasLocation) missing.push('location');
-      if (!hasPhoto)    missing.push('profile photo (optional but recommended)');
+      if (!hasService)  missing.push('service type');
+      if (!hasRate)     missing.push('hourly rate');
 
       var completionPct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
 
@@ -1074,7 +1065,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img, whatsapp, bio').eq('user_id', String(user.id)).maybeSingle();
+        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -1082,7 +1073,7 @@
         var l = document.getElementById('profileLocation');
         var bn = document.getElementById('profileBusinessName');
         if (n)  n.value  = ud.name || user.user_metadata?.name || '';
-        if (b)  b.value  = (td && td.bio) || ud.bio || '';
+        if (b)  b.value  = ud.bio  || '';
         if (l)  l.value  = (td && td.location) || ud.location || '';
         if (bn) bn.value = ud.business_name || (td && td.business_name) || '';
 
@@ -1111,13 +1102,6 @@
         if (svcEl)  svcEl.value  = td.service || td.service_name || '';
         if (rateEl) rateEl.value = td.rate_value || '';
         if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
-
-        /* WhatsApp — strip +234 or 234 prefix for display */
-        var wpEl = document.getElementById('profileWhatsapp');
-        if (wpEl && td.whatsapp) {
-          var wpDisplay = td.whatsapp.replace(/^\+?234/, '').replace(/^0/, '');
-          wpEl.value = wpDisplay;
-        }
 
         /* Banner colour swatches */
         var bannerColor = td.banner_color || '#121212';
@@ -1286,20 +1270,12 @@
         }
 
         /* Save to users table */
-        var bioVal = document.getElementById('profileBio')?.value?.trim() || null;
         var userUpdates = {
           name:          document.getElementById('profileName')?.value?.trim() || null,
-          bio:           bioVal,
+          bio:           document.getElementById('profileBio')?.value?.trim()  || null,
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
         if (avatarUrl) userUpdates.avatar_url = avatarUrl;
-
-        /* Format WhatsApp number */
-        var wpRaw    = document.getElementById('profileWhatsapp')?.value?.trim() || '';
-        var wpDigits = wpRaw.replace(/\D/g,'').replace(/^234/,'').replace(/^0/,'');
-        var wpFormatted = wpDigits ? '+234' + wpDigits : null;
-        if (wpFormatted) userUpdates.whatsapp = wpFormatted;
-
         var { error: uErr } = await window.supabase.from('users').update(userUpdates).eq('id', user.id);
         if (uErr) throw uErr;
 
@@ -1318,53 +1294,56 @@
           }
         }
 
-        /* Save to taskers table — bio and whatsapp go here too so completion check works */
+        /* Get form values and validate before saving */
+        var serviceValue = document.getElementById('profileService')?.value?.trim() || null;
+        var locationValue = document.getElementById('profileLocation')?.value?.trim() || null;
+        var rateValueStr = document.getElementById('profileRate')?.value?.trim() || '';
+        var rateValue = rateValueStr ? parseFloat(rateValueStr) : null;
+        var rateUnit = document.getElementById('profileRateUnit')?.value || '/hour';
+        var bioValue = document.getElementById('profileBio')?.value?.trim() || null;
+
+        /* Save to taskers table — ENSURE ALL FIELDS SAVED */
         var taskerUpdates = {
-          location:    document.getElementById('profileLocation')?.value?.trim()  || null,
-          service:     document.getElementById('profileService')?.value?.trim()   || null,
-          service_name:document.getElementById('profileService')?.value?.trim()   || null,
-          bio:         bioVal,
-          rate_value:  parseFloat(document.getElementById('profileRate')?.value)  || null,
-          rate_unit:   document.getElementById('profileRateUnit')?.value          || '/hour',
-          banner_color:document.getElementById('profileBannerColor')?.value       || '#121212',
+          user_id:       String(user.id),  /* Ensure user_id is set */
+          location:      locationValue,     /* FIX: was missing sometimes */
+          service:       serviceValue,      /* FIX: was missing sometimes */
+          service_name:  serviceValue,      /* Keep both in sync */
+          rate_value:    rateValue,         /* FIX: was missing sometimes */
+          rate_unit:     rateUnit,          /* FIX: ensure saved */
+          bio:           bioValue,          /* FIX: sync bio to taskers too */
+          banner_color:  document.getElementById('profileBannerColor')?.value || '#121212',
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
-        if (wpFormatted) taskerUpdates.whatsapp = wpFormatted;
         if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
         if (bannerImageUrl) taskerUpdates.banner_img = bannerImageUrl;
-        var { error: tErr } = await window.supabase.from('taskers').update(taskerUpdates).eq('user_id', String(user.id));
-        if (tErr) console.warn('[saveProfile] taskers update error:', tErr.message);
+        
+        /* Use upsert instead of update to ensure row exists */
+        var { error: tErr } = await window.supabase.from('taskers')
+          .upsert(taskerUpdates, { onConflict: 'user_id' });
+        if (tErr) {
+          console.warn('[saveProfile] taskers upsert error:', tErr.message);
+          throw tErr;
+        }
 
         _currentProfileImageFile = null;
         _currentBannerImageFile  = null;
-        msg.textContent = '✓ Page updated!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
-        showToast('Your page has been updated!');
+        msg.textContent = '✓ Profile updated successfully!'; msg.style.color = 'var(--green)'; msg.style.display = 'block';
+        showToast('Your profile has been saved!');
+        
         /* Recheck profile completion so banner updates/hides immediately */
-        var pctAfterSave = 0;
-        try {
-          await checkProfileCompletion(user.id);
-          /* Re-read the pct to decide whether to redirect */
-          var pctEl = document.getElementById('profileCompletePct');
-          pctAfterSave = pctEl ? parseInt(pctEl.textContent) || 0 : 0;
-        } catch(_e) {}
-
-        /* Only go to My Page when profile is 100% complete, otherwise stay so user can finish */
-        _myPageLoaded = false;
-        if (pctAfterSave >= 100) {
-          setTimeout(function() {
-            switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
-            loadMyPage();
-          }, 800);
-        } else {
-          /* Refresh completions check text in place */
-          var pctElR = document.getElementById('profileCompletePct');
-          var pctNow = pctElR ? parseInt(pctElR.textContent) || 0 : 0;
-          msg.textContent = '✓ Saved! Profile is ' + pctNow + '% complete — fill in the remaining fields to go live.';
-          msg.style.color = 'var(--blue)';
-          msg.style.display = 'block';
+        try { await checkProfileCompletion(user.id); } catch(_e) {
+          console.warn('[saveProfile] completion check error:', _e);
         }
 
+        /* Refresh My Page preview */
+        _myPageLoaded = false;
+        setTimeout(function() {
+          switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
+          loadMyPage();
+        }, 800);
+
       } catch(e) {
+        console.error('[saveProfile] Error:', e);
         msg.textContent = 'Save failed: ' + e.message; msg.style.color = 'var(--red)'; msg.style.display = 'block';
       } finally {
         btn.disabled = false; btn.textContent = 'Save Changes';
