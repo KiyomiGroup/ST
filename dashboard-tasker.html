@@ -1065,7 +1065,7 @@
       var { data: ud } = await window.supabase.from('users')
         .select('name, bio, location, avatar_url, business_name').eq('id', user.id).maybeSingle();
       var { data: td } = await window.supabase.from('taskers')
-        .select('service, service_name, rate_value, rate_unit, location, banner_color, banner_img').eq('user_id', String(user.id)).maybeSingle();
+        .select('name, service, service_name, category, rate_value, rate_unit, location, banner_color, banner_img, bio, business_name').eq('user_id', String(user.id)).maybeSingle();
 
       if (ud) {
         var n = document.getElementById('profileName');
@@ -1099,9 +1099,17 @@
         var svcEl  = document.getElementById('profileService');
         var rateEl = document.getElementById('profileRate');
         var ruEl   = document.getElementById('profileRateUnit');
+        var bioEl  = document.getElementById('profileBio');
+        var bnEl   = document.getElementById('profileBusinessName');
+        var locEl  = document.getElementById('profileLocation');
         if (svcEl)  svcEl.value  = td.service || td.service_name || '';
         if (rateEl) rateEl.value = td.rate_value || '';
         if (ruEl && td.rate_unit) ruEl.value = td.rate_unit;
+        /* Also fill bio/business/location from taskers table as fallback
+           (these may have been saved to taskers but not users) */
+        if (bioEl && !bioEl.value && td.bio)             bioEl.value = td.bio;
+        if (bnEl  && !bnEl.value  && td.business_name)   bnEl.value  = td.business_name;
+        if (locEl && !locEl.value && td.location)         locEl.value = td.location;
 
         /* Banner colour swatches */
         var bannerColor = td.banner_color || '#121212';
@@ -1294,44 +1302,42 @@
           }
         }
 
-        /* Get form values and validate before saving */
-        var serviceValue = document.getElementById('profileService')?.value?.trim() || null;
+        /* Get form values */
+        var serviceValue  = document.getElementById('profileService')?.value?.trim() || null;
         var locationValue = document.getElementById('profileLocation')?.value?.trim() || null;
-        var rateValueStr = document.getElementById('profileRate')?.value?.trim() || '';
-        var rateValue = rateValueStr ? parseFloat(rateValueStr) : null;
-        var rateUnit = document.getElementById('profileRateUnit')?.value || '/hour';
-        var bioValue = document.getElementById('profileBio')?.value?.trim() || null;
+        var rateValueStr  = document.getElementById('profileRate')?.value?.trim() || '';
+        var rateValue     = rateValueStr ? parseFloat(rateValueStr) : null;
+        var rateUnit      = document.getElementById('profileRateUnit')?.value || '/hour';
+        var bioValue      = document.getElementById('profileBio')?.value?.trim() || null;
+        var nameValue     = document.getElementById('profileName')?.value?.trim() || null;
+        var bizName       = document.getElementById('profileBusinessName')?.value?.trim() || null;
 
-        /* Save to taskers table — Use alternative approach (no onConflict needed) */
-        var taskerUpdates = {
+        /* Build the upsert payload — every field that should be saved */
+        var taskerPayload = {
           user_id:       String(user.id),
+          name:          nameValue,
+          business_name: bizName,
           location:      locationValue,
           service:       serviceValue,
           service_name:  serviceValue,
+          category:      serviceValue ? serviceValue.toLowerCase().replace(/[^a-z]/g, '') : null,
           rate_value:    rateValue,
           rate_unit:     rateUnit,
           bio:           bioValue,
           banner_color:  document.getElementById('profileBannerColor')?.value || '#121212',
-          business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
+          available:     true,
         };
-        if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
-        if (bannerImageUrl) taskerUpdates.banner_img = bannerImageUrl;
-        
-        /* Try update first, if no rows affected then insert */
-        var { error: tErr } = await window.supabase.from('taskers')
-          .update(taskerUpdates)
-          .eq('user_id', String(user.id));
-        
-        if (tErr) {
-          console.warn('[saveProfile] Update failed, trying insert:', tErr.message);
-          /* If update failed, try insert */
-          var { error: tInsertErr } = await window.supabase.from('taskers')
-            .insert(taskerUpdates);
-          if (tInsertErr) {
-            console.warn('[saveProfile] taskers insert error:', tInsertErr.message);
-            throw tInsertErr;
-          }
-        }
+        if (avatarUrl)      taskerPayload.photo_url  = avatarUrl;
+        if (bannerImageUrl) taskerPayload.banner_img = bannerImageUrl;
+
+        /* Upsert: insert if no row exists, update if it does.
+           This is the correct pattern — update alone silently discards data
+           when the taskers row doesn't exist yet (new tasker). */
+        var { error: tErr } = await window.supabase
+          .from('taskers')
+          .upsert(taskerPayload, { onConflict: 'user_id' });
+
+        if (tErr) throw tErr;
 
         _currentProfileImageFile = null;
         _currentBannerImageFile  = null;
