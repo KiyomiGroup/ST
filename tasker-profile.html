@@ -915,41 +915,62 @@
     }
     if (!_taskerId) return;
 
-    /* Show booking modal with in-platform message */
-    const svcNameBk = (_taskerId && 'this service') || 'this service';
+    const modal = document.getElementById('bookContactModal');
+    const body  = document.getElementById('bookContactBody');
+    if (!modal || !body) return;
+
+    /* Build service/price info from _tasker data */
+    const svcName  = (_tasker && (_tasker.service_name || _tasker.service)) || 'this service';
+    const price    = _tasker && _tasker.rate_value ? Number(_tasker.rate_value) : 0;
+    const rateUnit = (_tasker && _tasker.rate_unit) || '/hour';
+    const priceStr = price ? '₦' + price.toLocaleString('en-NG') + ' ' + rateUnit : 'Price TBD';
+
+    /* Today as min date for scheduling */
+    const today = new Date().toISOString().split('T')[0];
+
     body.innerHTML =
-      '<div style="text-align:center;margin-bottom:24px;">' +
-        '<div style="width:56px;height:56px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
-          '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-        '</div>' +
-        '<h3 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Book this service</h3>' +
-        '<p style="font-size:0.86rem;color:var(--text-muted);line-height:1.5;">Send a booking request and message the tasker directly through StreetTasker.</p>' +
+      '<h3 style="font-size:1.1rem;font-weight:800;margin-bottom:4px;">Book ' + escapeHtml(svcName) + '</h3>' +
+      '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:20px;">Fill in the details below and send your request.</p>' +
+
+      /* Service summary */
+      '<div style="background:var(--bg-subtle,#f8fafc);border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">' +
+        '<span style="font-size:0.85rem;color:var(--text-secondary);">' + escapeHtml(svcName) + '</span>' +
+        '<span style="font-weight:700;color:var(--blue,#0a84ff);font-size:0.9rem;">' + escapeHtml(priceStr) + '</span>' +
       '</div>' +
-      '<button onclick="submitBookingRequest()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.95rem;font-weight:700;cursor:pointer;">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-        'Send Booking Request' +
-      '</button>' +
-      '<p style="font-size:0.76rem;color:var(--text-muted);text-align:center;margin-top:10px;">All communication stays on StreetTasker. No phone numbers shared.</p>';
+
+      /* Date */
+      '<div style="margin-bottom:14px;">' +
+        '<label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:5px;">Preferred date *</label>' +
+        '<input type="date" id="bkDate" min="' + today + '" style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:8px;font-size:0.88rem;outline:none;font-family:inherit;" />' +
+      '</div>' +
+
+      /* Time */
+      '<div style="margin-bottom:14px;">' +
+        '<label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:5px;">Preferred time</label>' +
+        '<select id="bkTime" style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:8px;font-size:0.88rem;background:#fff;outline:none;font-family:inherit;">' +
+          '<option value="">Choose a time…</option>' +
+          '<option>Morning (7am – 12pm)</option>' +
+          '<option>Afternoon (12pm – 5pm)</option>' +
+          '<option>Evening (5pm – 9pm)</option>' +
+          '<option>Flexible</option>' +
+        '</select>' +
+      '</div>' +
+
+      /* Notes */
+      '<div style="margin-bottom:18px;">' +
+        '<label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:5px;">Additional notes</label>' +
+        '<textarea id="bkNotes" rows="3" placeholder="Describe what you need, your address, or any special requests…" style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:8px;font-size:0.88rem;resize:none;font-family:inherit;outline:none;"></textarea>' +
+      '</div>' +
+
+      /* Error */
+      '<div id="bkErr" style="display:none;padding:10px 12px;background:var(--red-light,#fef2f2);border-radius:8px;font-size:0.82rem;color:var(--red,#dc2626);margin-bottom:14px;"></div>' +
+
+      /* CTA */
+      '<button id="bkSubmitBtn" onclick="submitBookingRequest()" style="width:100%;padding:14px;background:var(--blue,#0a84ff);color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Send Booking Request</button>' +
+      '<p style="font-size:0.73rem;color:var(--text-muted);text-align:center;margin-top:10px;">All communication stays on StreetTasker. No phone numbers shared.</p>';
+
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-
-    /* Create booking record silently */
-    try {
-      const { data: existing } = await window.supabase.from('bookings')
-        .select('id').eq('customer_id', user.id).eq('tasker_id', _taskerId)
-        .in('status', ['pending','confirmed']).maybeSingle();
-      if (!existing) {
-        await window.supabase.from('bookings').insert({
-          customer_id: user.id, tasker_id: _taskerId, status: 'pending'
-        });
-        const name = user.user_metadata?.name || user.email?.split('@')[0] || 'A customer';
-        await window.supabase.from('notifications').insert({
-          user_id: _taskerId, type: 'new_booking', title: 'New Booking Request',
-          message: name + ' wants to book your service.',
-          data: { from: user.id }, is_read: false,
-        });
-      }
-    } catch(e2) { /* non-blocking */ }
   }
   window.openBooking = openBooking;
 
@@ -958,56 +979,86 @@
     const user = sess.data.session && sess.data.session.user;
     if (!user) return;
 
+    const dateEl  = document.getElementById('bkDate');
+    const timeEl  = document.getElementById('bkTime');
+    const notesEl = document.getElementById('bkNotes');
+    const errEl   = document.getElementById('bkErr');
+    const btn     = document.getElementById('bkSubmitBtn');
+
+    const dateVal  = dateEl  && dateEl.value.trim();
+    const timeVal  = timeEl  && timeEl.value;
+    const notesVal = notesEl && notesEl.value.trim();
+
+    if (!dateVal) {
+      if (errEl) { errEl.textContent = 'Please select a preferred date.'; errEl.style.display = 'block'; }
+      return;
+    }
+    if (errEl) errEl.style.display = 'none';
+    if (btn)   { btn.disabled = true; btn.textContent = 'Sending…'; }
+
     const modal = document.getElementById('bookContactModal');
     const body  = document.getElementById('bookContactBody');
-    if (!body) return;
-
-    body.innerHTML =
-      '<div style="text-align:center;padding:24px;">' +
-        '<svg style="animation:spin 1s linear infinite;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
-        '<p style="margin-top:12px;color:var(--text-muted);">Sending request...</p>' +
-      '</div>';
 
     try {
+      /* Check for existing pending booking */
       const { data: existing } = await window.supabase.from('bookings')
         .select('id').eq('customer_id', user.id).eq('tasker_id', _taskerId)
         .in('status', ['pending','confirmed']).maybeSingle();
 
-      if (!existing) {
-        await window.supabase.from('bookings').insert({
-          customer_id: user.id, tasker_id: _taskerId, status: 'pending'
-        });
+      let bookingId = existing && existing.id;
+
+      if (!bookingId) {
+        const scheduledStr = dateVal + (timeVal ? ' — ' + timeVal : '');
+        const { data: created, error: bkErr } = await window.supabase.from('bookings').insert({
+          customer_id:    user.id,
+          tasker_id:      _taskerId,
+          status:         'pending',
+          notes:          notesVal || null,
+          scheduled_time: scheduledStr,
+        }).select('id').single();
+        if (bkErr) throw bkErr;
+        bookingId = created.id;
+
+        /* Notify tasker */
         const name = user.user_metadata?.name || user.email?.split('@')[0] || 'A customer';
+        const svcName = (_tasker && (_tasker.service_name || _tasker.service)) || 'your service';
         await window.supabase.from('notifications').insert({
-          user_id: _taskerId, type: 'new_booking', title: 'New Booking Request',
-          message: name + ' sent you a booking request.',
-          data: { from: user.id }, is_read: false,
+          user_id: _taskerId, type: 'new_booking',
+          title:   '📅 New Booking Request',
+          message: name + ' wants to book ' + svcName + ' on ' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + (notesVal ? '. Note: ' + notesVal.slice(0,80) : ''),
+          data:    { booking_id: bookingId, from: user.id },
+          is_read: false,
         });
       }
 
-      /* Set chat context and go to messages */
+      /* Store context for messages page */
       sessionStorage.setItem('st_chat_context', JSON.stringify({
         contextType: 'booking',
-        contextId:   (existing && existing.id) || '',
+        contextId:   bookingId,
         taskerId:    _taskerId,
         customerId:  user.id,
       }));
 
-      body.innerHTML =
-        '<div style="text-align:center;padding:20px;">' +
-          '<div style="width:52px;height:52px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      /* Success state */
+      if (body) body.innerHTML =
+        '<div style="text-align:center;padding:20px 10px;">' +
+          '<div style="width:56px;height:56px;border-radius:50%;background:var(--green-light,#dcfce7);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+            '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green,#16a34a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
           '</div>' +
-          '<h3 style="font-size:1rem;font-weight:800;margin-bottom:8px;">Booking Request Sent!</h3>' +
-          '<p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;">Now message the provider to confirm details and schedule.</p>' +
-          '<a href="messages.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--blue);color:#fff;border-radius:var(--radius-md);font-size:0.92rem;font-weight:700;text-decoration:none;">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-            'Message Provider' +
+          '<h3 style="font-weight:800;margin-bottom:8px;">Booking Request Sent! 🎉</h3>' +
+          '<p style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:20px;">Your request has been sent for <strong>' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + '</strong>. The tasker will confirm shortly.</p>' +
+          '<a href="messages.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;background:var(--blue,#0a84ff);color:#fff;border-radius:10px;font-size:0.92rem;font-weight:700;text-decoration:none;margin-bottom:10px;">' +
+            '💬 Message Provider' +
           '</a>' +
+          '<button onclick="closeBookingContactModal()" style="width:100%;padding:11px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;background:none;font-size:0.88rem;cursor:pointer;font-family:inherit;">Close</button>' +
         '</div>';
 
     } catch(e) {
-      body.innerHTML = '<p style="color:var(--red);padding:16px;text-align:center;">Error: ' + escapeHtml((e && e.message) || 'Failed') + '</p>';
+      if (body) body.innerHTML =
+        '<div style="padding:24px;text-align:center;">' +
+          '<p style="color:var(--red,#dc2626);margin-bottom:16px;">Error: ' + escapeHtml((e && e.message) || 'Booking failed. Please try again.') + '</p>' +
+          '<button onclick="openBooking()" style="padding:10px 20px;background:var(--blue,#0a84ff);color:#fff;border:none;border-radius:8px;cursor:pointer;">Try Again</button>' +
+        '</div>';
     }
   }
   window.submitBookingRequest = submitBookingRequest;
