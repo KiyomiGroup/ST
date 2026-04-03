@@ -108,13 +108,17 @@ const DUMMY_SERVICES = [
 
 async function loadServices() {
   try {
+    /* Fetch services + user name + tasker photo_url in one round trip */
     const _sRes = await window.supabase.from('services')
-      .select('*, users:user_id(name, business_name)')
+      .select('*, users:user_id(name, business_name, avatar_url)')
       .eq('available', true).order('created_at', { ascending: false }).limit(100);
     const services = (_sRes.data || []).map(s => ({
       id: String(s.id), service_name: s.service_name || s.service, category: s.category,
       price: s.price, rate_unit: s.rate_unit || '/job', location: s.location,
-      description: s.description, photo: s.photo, user_id: s.user_id,
+      description: s.description,
+      /* Use service photo first, then user avatar_url */
+      photo: s.photo || (s.users && s.users.avatar_url) || null,
+      user_id: s.user_id,
       provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider',
       available: s.available, fromServices: true,
     }));
@@ -256,7 +260,7 @@ function buildCard(s) {
   return `<div class="card tasker-card fade-up" id="svc-${safeId}">
     ${cardImgHtml}
     <div class="tc-header">
-      <div class="tc-avatar ${avClass}" style="overflow:hidden;">${safePhoto ? '' : avatar}</div>
+      <div class="tc-avatar ${avClass}" style="overflow:hidden;">${avatar}</div>
       <div class="tc-meta">
         <div class="tc-name">${safeName}</div>
         <div class="tc-service">${safeService}</div>

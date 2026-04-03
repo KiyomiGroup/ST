@@ -127,9 +127,14 @@ async function _reverse(lat, lon, precise) {
 /* Instant local area match */
 function _instant(q) {
   const ql = q.toLowerCase();
-  const s  = _NIGERIA.filter(c => c.toLowerCase().startsWith(ql));
-  const c  = _NIGERIA.filter(x => !x.toLowerCase().startsWith(ql) && x.toLowerCase().includes(ql));
-  return [...s, ...c].slice(0, 6).map(label => ({ label, lat: null, lon: null, precise: false, instant: true }));
+  /* Only show places that START with what the user typed */
+  const matches = _NIGERIA.filter(c => c.toLowerCase().startsWith(ql));
+  /* If fewer than 3 startsWith results, also include contains matches */
+  if (matches.length < 3) {
+    const extra = _NIGERIA.filter(x => !x.toLowerCase().startsWith(ql) && x.toLowerCase().includes(ql));
+    return [...matches, ...extra].slice(0, 6).map(label => ({ label, lat: null, lon: null, precise: false, instant: true }));
+  }
+  return matches.slice(0, 6).map(label => ({ label, lat: null, lon: null, precise: false, instant: true }));
 }
 
 /* SVGs */
@@ -258,9 +263,10 @@ function initLocationInput(cfg) {
 
   input.addEventListener('focus', () => {
     const val = input.value.trim();
-    const pop = _POPULAR.map(l => ({ label: l, lat: null, lon: null, precise: false, instant: true }));
-    if (!val) { _build(drop, input, pop, cfg.onSelect, useGps, mode); return; }
-    _build(drop, input, _instant(val), cfg.onSelect, useGps && val.length <= 2, mode);
+    /* Don't show anything until the user has typed — avoids overwhelming dropdown on click */
+    if (!val) { _close(drop); return; }
+    /* If they already have text, show instant matches */
+    _build(drop, input, _instant(val), cfg.onSelect, false, mode);
   });
 
   input.addEventListener('input', () => {
@@ -270,18 +276,16 @@ function initLocationInput(cfg) {
     _hint(input, mode);
     if (typeof cfg.onChange === 'function') cfg.onChange(val);
     clearTimeout(_debounceTimers[cfg.inputId]);
-    if (!val) {
-      const pop = _POPULAR.map(l => ({ label: l, lat: null, lon: null, precise: false, instant: true }));
-      _build(drop, input, pop, cfg.onSelect, useGps, mode); return;
-    }
-    _build(drop, input, _instant(val), cfg.onSelect, useGps && val.length <= 2, mode);
-    if (val.length >= 2) {
-      _debounceTimers[cfg.inputId] = setTimeout(async () => {
-        if (input.value.trim() !== val) return;
-        const results = await _nominatim(val, precise);
-        if (input.value.trim() === val) _build(drop, input, results, cfg.onSelect, false, mode);
-      }, 350);
-    }
+    if (!val) { _close(drop); return; }
+    /* Only start suggesting after 2 chars to avoid noise */
+    if (val.length < 2) { _close(drop); return; }
+    _build(drop, input, _instant(val), cfg.onSelect, false, mode);
+    /* Debounce Nominatim for street-level results */
+    _debounceTimers[cfg.inputId] = setTimeout(async () => {
+      if (input.value.trim() !== val) return;
+      const results = await _nominatim(val, precise);
+      if (input.value.trim() === val) _build(drop, input, results, cfg.onSelect, false, mode);
+    }, 400);
   });
 
   input.addEventListener('blur',    () => { setTimeout(() => _close(drop), 180); });
