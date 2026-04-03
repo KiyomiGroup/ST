@@ -123,6 +123,11 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
               </button>
+              <button class="dashboard-nav-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadWalletPanel()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                My Wallet
+                <span id="custWalletBadge" style="display:none;background:#16a34a;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
+              </button>
               <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Edit Profile
@@ -180,6 +185,12 @@
             <div id="panel-bookings" class="dashboard-panel">
               <div class="panel-header"><h2>My Bookings</h2><a href="find-taskers.html" class="btn btn-ghost btn-sm">Find Services</a></div>
               <div class="task-row-list" id="bookingsList"><p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Loading...</p></div>
+            </div>
+
+            <!-- Wallet Panel -->
+            <div id="panel-wallet" class="dashboard-panel">
+              <div class="panel-header"><h2>My Wallet</h2></div>
+              <div id="walletPanelContent"><p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Loading wallet...</p></div>
             </div>
 
             <!-- Profile Panel -->
@@ -327,10 +338,20 @@
             'style="padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">Pay Now</button>' +
             '</div>';
         }
+      } else if (b.payment_status === 'paid' && b.status === 'provider_done') {
+        /* Provider marked job done — customer needs to confirm */
+        payHtml =
+          '<div style="margin-top:10px;padding:12px 14px;background:#fffbeb;border:2px solid #f59e0b;border-radius:var(--radius-md);">' +
+          '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#b45309;margin-bottom:8px;">🔔 Action Required — Provider Says Job is Done</div>' +
+          '<p style="font-size:0.82rem;color:#92400e;margin-bottom:10px;">Your service provider has marked the job as complete. Please confirm to release their payment.</p>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button onclick="confirmComplete(&quot;' + b.id + '&quot;)" style="flex:1;min-width:120px;padding:9px 14px;background:#f59e0b;color:#fff;border:none;border-radius:var(--radius-md);font-size:0.85rem;font-weight:700;cursor:pointer;">✓ Yes, Confirm Done</button>' +
+            '<button onclick="openDisputeModal(&quot;' + b.id + '&quot;)" style="padding:9px 12px;background:none;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.82rem;cursor:pointer;color:var(--red);">Report Issue</button>' +
+          '</div></div>';
       } else if (b.payment_status === 'paid') {
         payHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '<span style="font-size:0.82rem;color:var(--green);font-weight:700;">Payment held in escrow</span>' +
+          '<span style="font-size:0.82rem;color:var(--green);font-weight:700;">Payment held in escrow — job in progress</span>' +
           '<button onclick="confirmComplete(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Confirm Job Done</button>' +
           '<button onclick="openDisputeModal(&quot;' + b.id + '&quot;)" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.78rem;cursor:pointer;color:var(--red);">Report Issue</button>' +
           '</div>';
@@ -1063,39 +1084,70 @@
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
         document.body.appendChild(modal);
       }
-      /* Fetch booking to get amount */
+      modal.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);"><p style="text-align:center;color:var(--text-muted);font-size:0.88rem;">Loading...</p></div>';
+      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+
+      /* Fetch booking + wallet balance */
+      var sess = await window.supabase.auth.getSession();
+      var cu = sess.data.session && sess.data.session.user;
       var { data: bk } = await window.supabase.from('bookings')
-        .select('id, tasks(budget,title), notes')
-        .eq('id', bookingId).maybeSingle();
+        .select('id, tasker_id, tasks(budget,title), notes').eq('id', bookingId).maybeSingle();
       var amount = (bk && bk.tasks && bk.tasks.budget) || 0;
       var title  = (bk && bk.tasks && bk.tasks.title) || serviceName || 'Service';
       var amounts = window.ST.payments.calculateAmounts(amount);
+      var wallet = cu ? await window.ST.payments.getWallet(cu.id) : { balance: 0 };
+      var walletBal = wallet.balance || 0;
+      var canUseWallet = walletBal >= amount && amount > 0;
+
       modal.innerHTML =
-        '<div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
+        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
         '<h2 style="margin-bottom:4px;font-size:1.1rem;font-weight:800;">Secure Payment</h2>' +
-        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:20px;">Funds are held in escrow and released only after you confirm the job is done.</p>' +
-        '<div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:14px;margin-bottom:20px;">' +
-          '<div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Payment Breakdown</div>' +
+        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;">Funds are held in escrow and released only after you confirm the job is done.</p>' +
+        '<div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">' +
+          '<div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Payment Breakdown</div>' +
           '<div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;"><span>' + escapeHtml(title) + '</span><span style="font-weight:700;">&#8358;' + Number(amount).toLocaleString() + '</span></div>' +
           '<div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;"><span>Platform fee (12%)</span><span>&#8358;' + amounts.platformFee.toLocaleString() + '</span></div>' +
           '<div style="height:1px;background:var(--border);margin:8px 0;"></div>' +
-          '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:0.95rem;"><span>You pay</span><span style="color:var(--blue);">&#8358;' + Number(amount).toLocaleString() + '</span></div>' +
+          '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:0.95rem;"><span>Total</span><span style="color:var(--blue);">&#8358;' + Number(amount).toLocaleString() + '</span></div>' +
           '<div style="font-size:0.72rem;color:var(--green);margin-top:4px;">Tasker receives: &#8358;' + amounts.taskerAmount.toLocaleString() + '</div>' +
         '</div>' +
-        '<div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.78rem;color:var(--blue);margin-bottom:20px;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
-          'Secured by Paystack. Card, bank transfer, USSD all accepted.' +
+        /* Wallet option */
+        '<div style="margin-bottom:12px;padding:12px 14px;border:2px solid ' + (canUseWallet ? 'var(--green)' : 'var(--border)') + ';border-radius:var(--radius-md);background:' + (canUseWallet ? '#f0fdf4' : '#fafafa') + ';">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:' + (canUseWallet ? '10px' : '0') + ';">' +
+            '<div>' +
+              '<div style="font-size:0.85rem;font-weight:700;color:' + (canUseWallet ? 'var(--green)' : 'var(--text-muted)') + ';">💰 Pay from Wallet</div>' +
+              '<div style="font-size:0.75rem;color:var(--text-muted);">Balance: &#8358;' + Number(walletBal).toLocaleString() + '</div>' +
+            '</div>' +
+            (canUseWallet ? '' : '<a href="#" onclick="event.preventDefault();document.getElementById('paymentModal').remove();switchPanel('wallet',document.querySelector('[data-panel=wallet]'));loadWalletPanel();" style="font-size:0.75rem;color:var(--blue);font-weight:600;white-space:nowrap;">Top Up →</a>') +
+          '</div>' +
+          (canUseWallet ? '<button id="payWalletBtn" onclick="doPayWallet(&quot;' + bookingId + '&quot;,' + amount + ',&quot;' + (bk && bk.tasker_id ? bk.tasker_id : '') + '&quot;)" style="width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">Pay &#8358;' + Number(amount).toLocaleString() + ' from Wallet</button>' : '') +
         '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button id="payNowBtn" onclick="doPayNow(&quot;' + bookingId + '&quot;,' + amount + ')" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;">Pay &#8358;' + Number(amount).toLocaleString() + ' Now</button>' +
-          '<button onclick="document.getElementById(&quot;paymentModal&quot;).remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        /* Paystack option */
+        '<div style="padding:12px 14px;border:2px solid var(--blue-border);border-radius:var(--radius-md);background:var(--blue-light);margin-bottom:14px;">' +
+          '<div style="font-size:0.85rem;font-weight:700;color:var(--blue);margin-bottom:10px;">💳 Pay via Paystack</div>' +
+          '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Card, bank transfer, USSD all accepted.</div>' +
+          '<button id="payNowBtn" onclick="doPayNow(&quot;' + bookingId + '&quot;,' + amount + ',&quot;' + (bk && bk.tasker_id ? bk.tasker_id : '') + '&quot;)" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">Pay &#8358;' + Number(amount).toLocaleString() + ' via Paystack</button>' +
         '</div>' +
+        '<button onclick="document.getElementById(&quot;paymentModal&quot;).remove()" style="width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-size:0.88rem;">Cancel</button>' +
         '</div>';
-      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
     }
     window.openPaymentModal = openPaymentModal;
 
-    async function doPayNow(bookingId, amount) {
+    async function doPayWallet(bookingId, amount, taskerUserId) {
+      var btn = document.getElementById('payWalletBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+      try {
+        await window.ST.payments.payFromWallet({ bookingId: bookingId, amountNaira: amount, taskerUserId: taskerUserId || null });
+        document.getElementById('paymentModal').remove();
+        _showPaymentSuccess(bookingId);
+      } catch(e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Pay from Wallet'; }
+        showToast('Payment error: ' + e.message);
+      }
+    }
+    window.doPayWallet = doPayWallet;
+
+    async function doPayNow(bookingId, amount, taskerUserId) {
       var btn = document.getElementById('payNowBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Opening payment…'; }
       try {
@@ -1104,37 +1156,176 @@
         await window.ST.payments.initiatePayment({
           bookingId: bookingId, amountNaira: amount,
           customerEmail: cu && cu.email, customerName: localStorage.getItem('st_name') || '',
+          taskerUserId: taskerUserId || null,
         });
-        document.getElementById('paymentModal').remove();
-        /* Show a prominent success confirmation */
-        var successModal = document.createElement('div');
-        successModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:24px;';
-        successModal.innerHTML =
-          '<div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.14);">' +
-          '<div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
-            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '</div>' +
-          '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#121212;">Payment Confirmed! 🎉</h2>' +
-          '<p style="font-size:0.88rem;color:#4A4A4A;margin-bottom:16px;line-height:1.6;">Your payment is securely held in escrow. The tasker has been notified to get started.</p>' +
-          '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">' +
-            '<div style="font-size:0.76rem;font-weight:700;text-transform:uppercase;color:#16a34a;margin-bottom:6px;">What happens next</div>' +
-            '<div style="font-size:0.82rem;color:#4A4A4A;line-height:1.7;">' +
-              '1. Tasker completes the job<br>' +
-              '2. You confirm it's done in your Bookings tab<br>' +
-              '3. You'll get a 6-digit code to give the tasker<br>' +
-              '4. Tasker enters code → payment released' +
-            '</div>' +
-          '</div>' +
-          '<button onclick="this.closest('div[style]').remove();bookingsLoaded=false;loadBookings();" style="width:100%;padding:13px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Got it — View Bookings</button>' +
-          '</div>';
-        document.body.appendChild(successModal);
-        successModal.onclick = function(e) { if (e.target === successModal) { successModal.remove(); bookingsLoaded=false; loadBookings(); } };
+        var m = document.getElementById('paymentModal');
+        if (m) m.remove();
+        _showPaymentSuccess(bookingId);
       } catch(e) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
-        if (e.message !== 'Payment cancelled.') showToast('Payment error: ' + e.message);
+        if (btn) { btn.disabled = false; btn.textContent = 'Pay via Paystack'; }
+        if (e.message !== 'Payment cancelled.' && e.message !== 'Payment window closed. Click pay again to retry.') showToast('Payment error: ' + e.message);
       }
     }
     window.doPayNow = doPayNow;
+
+    function _showPaymentSuccess(bookingId) {
+      var s = document.createElement('div');
+      s.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:24px;';
+      s.innerHTML =
+        '<div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.14);">' +
+        '<div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
+          '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+        '</div>' +
+        '<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#121212;">Payment Confirmed! 🎉</h2>' +
+        '<p style="font-size:0.88rem;color:#4A4A4A;margin-bottom:16px;line-height:1.6;">Your payment is securely held in escrow. The service provider has been notified.</p>' +
+        '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">' +
+          '<div style="font-size:0.76rem;font-weight:700;text-transform:uppercase;color:#16a34a;margin-bottom:6px;">What happens next</div>' +
+          '<div style="font-size:0.82rem;color:#4A4A4A;line-height:1.8;">' +
+            '1. Provider completes the job<br>2. Provider marks job as done<br>3. You confirm in Bookings tab<br>4. Give provider the 6-digit code<br>5. Code entered → payment released' +
+          '</div>' +
+        '</div>' +
+        '<button onclick="this.closest('[style*=fixed]').remove();bookingsLoaded=false;loadBookings();" style="width:100%;padding:13px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Got it — View Bookings</button>' +
+        '</div>';
+      document.body.appendChild(s);
+      s.onclick = function(e) { if (e.target === s) { s.remove(); bookingsLoaded=false; loadBookings(); } };
+    }
+
+    /* ====== WALLET PANEL ====== */
+    var walletLoaded = false;
+    async function loadWalletPanel() {
+      if (walletLoaded) return;
+      walletLoaded = true;
+      var c = document.getElementById('walletPanelContent');
+      if (!c) return;
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var cu = sess.data.session && sess.data.session.user;
+        if (!cu) { c.innerHTML = '<p style="color:var(--text-muted);">Please log in.</p>'; return; }
+        var wallet = await window.ST.payments.getWallet(cu.id);
+        var txns   = await window.ST.payments.fetchWalletTransactions(cu.id, 15);
+        var tLabel = { topup:'Top-up', earning:'Earning', withdrawal:'Withdrawal', escrow_hold:'Payment Sent', escrow_release:'Escrow Released' };
+        var tColor = { topup:'#16a34a', earning:'#16a34a', withdrawal:'#dc2626', escrow_hold:'#d97706', escrow_release:'#16a34a' };
+        c.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">' +
+            '<div style="padding:20px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:var(--radius-lg);color:#fff;">' +
+              '<div style="font-size:0.72rem;font-weight:600;opacity:0.8;text-transform:uppercase;margin-bottom:6px;">Available Balance</div>' +
+              '<div style="font-size:1.5rem;font-weight:900;">₦' + Number(wallet.balance||0).toLocaleString() + '</div>' +
+              '<div style="font-size:0.72rem;opacity:0.7;margin-top:4px;">Ready to use</div>' +
+            '</div>' +
+            '<div style="padding:20px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);">' +
+              '<div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">In Escrow</div>' +
+              '<div style="font-size:1.5rem;font-weight:900;color:#d97706;">₦' + Number(wallet.pending_balance||0).toLocaleString() + '</div>' +
+              '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Held for active jobs</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">' +
+            '<button onclick="openTopUpModal()" style="flex:1;min-width:120px;padding:11px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">+ Top Up Wallet</button>' +
+            '<button onclick="openWithdrawModal()" style="flex:1;min-width:120px;padding:11px 16px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);font-weight:700;font-size:0.88rem;cursor:pointer;">Withdraw to Bank</button>' +
+          '</div>' +
+          '<div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Transaction History</div>' +
+          (wallet._stub
+            ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">Wallet tables not yet set up. Run the SQL in <code>payments.js</code> comments in Supabase.</p>'
+            : (!txns.length
+              ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">No transactions yet. Top up your wallet to get started.</p>'
+              : txns.map(function(t){
+                  var cr = t.type==='topup'||t.type==='earning'||t.type==='escrow_release';
+                  return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">' +
+                    '<div style="width:34px;height:34px;border-radius:50%;background:'+(cr?'#f0fdf4':'#fef2f2')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;">'+(cr?'↓':'↑')+'</div>' +
+                    '<div style="flex:1;min-width:0;"><div style="font-size:0.84rem;font-weight:600;">'+(tLabel[t.type]||t.type)+'</div>' +
+                    '<div style="font-size:0.73rem;color:var(--text-muted);">'+(t.note?t.note.slice(0,50):'')+'</div></div>' +
+                    '<div style="font-weight:700;font-size:0.9rem;color:'+(tColor[t.type]||'#333')+';white-space:nowrap;">'+(cr?'+':'-')+'₦'+Number(t.amount||0).toLocaleString()+'</div></div>';
+                }).join('')
+            )
+          );
+      } catch(e) { c.innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>'; }
+    }
+    window.loadWalletPanel = loadWalletPanel;
+
+    function openTopUpModal() {
+      var m = document.createElement('div');
+      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+      m.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
+        '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Top Up Wallet</h2>' +
+        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;">Add funds. Balance stays on site until you use it to pay or withdraw.</p>' +
+        '<label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Amount (₦)</label>' +
+        '<input id="topupAmt" type="number" min="100" placeholder="e.g. 5000" style="width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.95rem;box-sizing:border-box;outline:none;margin-bottom:10px;" />' +
+        '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
+          ['1000','2500','5000','10000'].map(function(v){return '<button onclick="document.getElementById('topupAmt').value=''+v+''" style="flex:1;padding:8px 4px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-size:0.8rem;font-weight:600;">₦'+Number(v).toLocaleString()+'</button>';}).join('') +
+        '</div>' +
+        '<div id="topupErr" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="topupBtn" onclick="doTopUp()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Proceed to Pay</button>' +
+          '<button onclick="this.closest('[style*=fixed]').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        '</div></div>';
+      document.body.appendChild(m);
+      m.onclick = function(e){ if(e.target===m) m.remove(); };
+    }
+    window.openTopUpModal = openTopUpModal;
+
+    async function doTopUp() {
+      var amount = parseFloat(document.getElementById('topupAmt')?.value);
+      var btn = document.getElementById('topupBtn');
+      var err = document.getElementById('topupErr');
+      if (!amount||amount<100) { err.textContent='Min top-up ₦100.'; err.style.display='block'; return; }
+      if (btn) { btn.disabled=true; btn.textContent='Opening Paystack…'; }
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var cu = sess.data.session && sess.data.session.user;
+        await window.ST.payments.topUpWallet(amount, cu&&cu.email);
+        document.querySelector('[style*="backdrop-filter"]')?.remove();
+        showToast('Wallet topped up! ₦'+Number(amount).toLocaleString()+' added.');
+        walletLoaded=false; loadWalletPanel();
+      } catch(e) {
+        if (err) { err.textContent=e.message; err.style.display='block'; }
+        if (btn) { btn.disabled=false; btn.textContent='Proceed to Pay'; }
+      }
+    }
+    window.doTopUp = doTopUp;
+
+    function openWithdrawModal() {
+      var m = document.createElement('div');
+      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+      m.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
+        '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Withdraw to Bank</h2>' +
+        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;">Min ₦500. Processed within 24 hours.</p>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Amount (₦)</label><input id="wdAmt" type="number" min="500" placeholder="500+" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Bank Name</label><input id="wdBank" type="text" placeholder="e.g. GTBank" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Account Number</label><input id="wdAcct" type="text" maxlength="10" placeholder="10-digit number" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Account Name</label><input id="wdName" type="text" placeholder="Name on account" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+        '</div>' +
+        '<div id="wdErr" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="wdBtn" onclick="doWithdraw()" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Request Withdrawal</button>' +
+          '<button onclick="this.closest('[style*=fixed]').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        '</div></div>';
+      document.body.appendChild(m);
+      m.onclick = function(e){ if(e.target===m) m.remove(); };
+    }
+    window.openWithdrawModal = openWithdrawModal;
+
+    async function doWithdraw() {
+      var amt  = parseFloat(document.getElementById('wdAmt')?.value);
+      var bank = (document.getElementById('wdBank')?.value||'').trim();
+      var acct = (document.getElementById('wdAcct')?.value||'').trim();
+      var name = (document.getElementById('wdName')?.value||'').trim();
+      var btn  = document.getElementById('wdBtn');
+      var err  = document.getElementById('wdErr');
+      if (!amt||amt<500||!bank||!acct||!name) { err.textContent='Fill all fields. Min ₦500.'; err.style.display='block'; return; }
+      if (btn) { btn.disabled=true; btn.textContent='Processing…'; }
+      try {
+        await window.ST.payments.withdrawFromWallet(amt, bank, acct, name);
+        document.querySelector('[style*="backdrop-filter"]')?.remove();
+        showToast('Withdrawal submitted! ₦'+Number(amt).toLocaleString()+' will be processed within 24h.');
+        walletLoaded=false; loadWalletPanel();
+      } catch(e) {
+        if (err) { err.textContent=e.message; err.style.display='block'; }
+        if (btn) { btn.disabled=false; btn.textContent='Request Withdrawal'; }
+      }
+    }
+    window.doWithdraw = doWithdraw;
 
     async function confirmComplete(bookingId) {
       if (!confirm('Confirm that the job has been completed? This will release payment to the tasker.')) return;

@@ -122,7 +122,11 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Messages
               </a>
-
+              <button class="dashboard-nav-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadTaskerWallet()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                My Wallet
+                <span id="taskerWalletBadge" style="display:none;background:#16a34a;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
+              </button>
               
             </nav>
             <div class="sidebar-cta-wrap" style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
@@ -279,6 +283,12 @@
             <div id="panel-bookings" class="dashboard-panel">
               <div class="panel-header"><h2>Incoming Bookings</h2></div>
               <div class="task-row-list" id="bookingsList"><p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Loading your bookings...</p></div>
+            </div>
+
+            <!-- Wallet Panel -->
+            <div id="panel-wallet" class="dashboard-panel">
+              <div class="panel-header"><h2>My Wallet</h2></div>
+              <div id="taskerWalletContent"><p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Loading wallet...</p></div>
             </div>
 
             <!-- Notifications -->
@@ -599,25 +609,44 @@
         contactHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Confirm this booking to start messaging the customer.</div>';
       }
 
-      /* Sprint 4: payment status UI for tasker */
+      /* Payment status UI for tasker */
       var tPayHtml = '';
-      if (b.payment_status === 'paid') {
-        tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '<span style="font-size:0.82rem;font-weight:700;color:var(--green);">Payment secured in escrow</span>' +
-          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Enter Completion Code</button>' +
+      if (b.payment_status === 'paid' && b.status === 'in_progress') {
+        /* Payment received, job in progress — show Mark as Done */
+        tPayHtml =
+          '<div style="margin-top:10px;padding:12px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+            '<span style="font-size:0.82rem;font-weight:700;color:var(--green);">Payment secured — complete the job then mark as done</span>' +
+          '</div>' +
+          '<button onclick="doMarkJobDone(&quot;' + b.id + '&quot;)" style="width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.85rem;font-weight:700;cursor:pointer;">✓ Mark Job as Done</button>' +
           '</div>';
-      } else if (b.status === 'awaiting_code') {
-        tPayHtml = '<div style="margin-top:10px;padding:10px 14px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-          '<span style="font-size:0.82rem;font-weight:700;color:var(--blue);">Customer confirmed job done — enter your code to receive payment</span>' +
-          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;">Enter Code</button>' +
+      } else if (b.payment_status === 'paid' && b.status === 'provider_done') {
+        /* Marked done, waiting for customer to confirm */
+        tPayHtml =
+          '<div style="margin-top:10px;padding:10px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);">' +
+          '<span style="font-size:0.82rem;font-weight:700;color:#b45309;">⏳ Waiting for customer to confirm job completion...</span>' +
+          '</div>';
+      } else if (b.payment_status === 'paid' && b.status === 'awaiting_code') {
+        tPayHtml =
+          '<div style="margin-top:10px;padding:10px 14px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<span style="font-size:0.82rem;font-weight:700;color:var(--blue);">🎉 Customer confirmed! Enter your code to receive payment.</span>' +
+          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">Enter Code →</button>' +
+          '</div>';
+      } else if (b.payment_status === 'paid') {
+        /* paid but status not yet in_progress (e.g. still confirmed) */
+        tPayHtml =
+          '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '<span style="font-size:0.82rem;font-weight:700;color:var(--green);">Payment in escrow</span>' +
+          '<button onclick="doMarkJobDone(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;">Mark as Done</button>' +
           '</div>';
       } else if (b.payment_status === 'released') {
-        tPayHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--green);font-weight:600;">✓ Payment released to you</div>';
+        tPayHtml = '<div style="margin-top:8px;font-size:0.78rem;color:var(--green);font-weight:600;">✓ Payment released to your wallet</div>';
       } else if (b.payment_status === 'disputed') {
         tPayHtml = '<div style="margin-top:8px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.78rem;color:var(--red);">⚠ Dispute open — payment frozen pending review.</div>';
       } else if (!b.payment_status || b.payment_status === 'unpaid') {
-        tPayHtml = '<div style="margin-top:8px;font-size:0.76rem;color:var(--text-muted);">Awaiting customer payment.</div>';
+        tPayHtml = '<div style="margin-top:8px;font-size:0.76rem;color:var(--text-muted);">⏳ Awaiting customer payment.</div>';
       }
 
       return '<div class="booking-row-card" id="bk-' + b.id + '">' +
@@ -628,7 +657,7 @@
             '<div class="booking-row-meta">' + escapeHtml(task) + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
             '<div class="booking-row-actions">' + badge(b.status) +
               (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" data-booking-action="confirmed" data-booking-id="' + b.id + '">Confirm</button>' : '') +
-              (actions && b.status === 'confirmed' ? '<button class="btn btn-sm btn-ghost"   data-booking-action="completed" data-booking-id="' + b.id + '">Mark Done</button>' : '') +
+              (actions && (b.status === 'in_progress' || b.status === 'confirmed') && b.payment_status === 'paid' ? '<button class="btn btn-sm btn-primary" style="background:var(--green);border-color:var(--green);" onclick="doMarkJobDone(&quot;' + b.id + '&quot;)">Mark as Done</button>' : '') +
             '</div>' +
           '</div>' +
           contactHtml +
@@ -636,22 +665,23 @@
     }
 
     async function doBooking(id, status) {
+      /* 'completed' now goes through doMarkJobDone → markJobDone flow */
+      if (status === 'completed') { doMarkJobDone(id); return; }
       try {
         await window.supabase.from('bookings').update({ status: status }).eq('id', id);
-        /* Notify customer when booking is confirmed */
         if (status === 'confirmed') {
           try {
             var bk = await window.supabase.from('bookings').select('customer_id').eq('id', id).maybeSingle();
             if (bk.data && bk.data.customer_id) {
               await window.supabase.from('notifications').insert({
                 user_id: bk.data.customer_id, type: 'booking_confirmed',
-                title: 'Booking Confirmed', message: 'Your booking has been confirmed by the tasker.',
+                title: 'Booking Confirmed ✅', message: 'Your booking has been confirmed by the service provider.',
                 data: { booking_id: id }, is_read: false
               });
             }
-          } catch(e2) { /* non-blocking */ }
+          } catch(e2) {}
         }
-        showToast(status === 'confirmed' ? 'Booking confirmed! Customer has been notified.' : 'Job marked as complete!');
+        showToast(status === 'confirmed' ? 'Booking confirmed! Customer has been notified.' : 'Updated!');
         setTimeout(function() { location.reload(); }, 1000);
       } catch(e) { showToast('Error: ' + e.message); }
     }
@@ -1976,6 +2006,122 @@
       }
     }
     window.submitCode = submitCode;
+
+    /* ====== MARK JOB DONE (Service Provider) ====== */
+    async function doMarkJobDone(bookingId) {
+      if (!confirm('Mark this job as done? The customer will be notified to confirm and release payment.')) return;
+      try {
+        await window.ST.payments.markJobDone(bookingId);
+        showToast('Job marked as done! Customer has been notified to confirm. ✅');
+        setTimeout(function(){ location.reload(); }, 1200);
+      } catch(e) { showToast('Error: ' + e.message); }
+    }
+    window.doMarkJobDone = doMarkJobDone;
+
+    /* ====== TASKER WALLET PANEL ====== */
+    var taskerWalletLoaded = false;
+    async function loadTaskerWallet() {
+      if (taskerWalletLoaded) return;
+      taskerWalletLoaded = true;
+      var c = document.getElementById('taskerWalletContent');
+      if (!c) return;
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var cu = sess.data.session && sess.data.session.user;
+        if (!cu) { c.innerHTML = '<p style="color:var(--text-muted);">Please log in.</p>'; return; }
+        var wallet = await window.ST.payments.getWallet(cu.id);
+        var txns   = await window.ST.payments.fetchWalletTransactions(cu.id, 15);
+        var tLabel = { topup:'Top-up', earning:'Earnings', withdrawal:'Withdrawal', escrow_hold:'In Escrow', escrow_release:'Escrow Released' };
+        var tColor = { topup:'#16a34a', earning:'#16a34a', withdrawal:'#dc2626', escrow_hold:'#d97706', escrow_release:'#16a34a' };
+
+        /* Update badge */
+        var badge = document.getElementById('taskerWalletBadge');
+        if (badge && wallet.balance > 0) {
+          badge.style.display = 'inline';
+          badge.textContent = '₦' + Number(wallet.balance).toLocaleString();
+        }
+
+        c.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">' +
+            '<div style="padding:20px;background:linear-gradient(135deg,#15803d,#16a34a);border-radius:var(--radius-lg);color:#fff;">' +
+              '<div style="font-size:0.72rem;font-weight:600;opacity:0.8;text-transform:uppercase;margin-bottom:6px;">Available to Withdraw</div>' +
+              '<div style="font-size:1.5rem;font-weight:900;">₦' + Number(wallet.balance||0).toLocaleString() + '</div>' +
+              '<div style="font-size:0.72rem;opacity:0.7;margin-top:4px;">Your earnings</div>' +
+            '</div>' +
+            '<div style="padding:20px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);">' +
+              '<div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Pending (Escrow)</div>' +
+              '<div style="font-size:1.5rem;font-weight:900;color:#d97706;">₦' + Number(wallet.pending_balance||0).toLocaleString() + '</div>' +
+              '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Released after job confirmed</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:24px;">' +
+            '<button onclick="openTaskerWithdrawModal()" style="width:100%;padding:12px 16px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.9rem;cursor:pointer;">Withdraw to Bank Account</button>' +
+          '</div>' +
+          '<div style="padding:12px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);margin-bottom:20px;font-size:0.82rem;color:#92400e;">' +
+            '<strong>How earnings work:</strong> When a customer pays for your job, the amount (minus 12% platform fee) appears in Pending. Once the customer confirms the job is done and you enter your completion code, the earnings move to Available and you can withdraw anytime.' +
+          '</div>' +
+          '<div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Transaction History</div>' +
+          (wallet._stub
+            ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">Wallet tables not yet set up. Run the SQL in <code>payments.js</code> in Supabase editor.</p>'
+            : (!txns.length
+              ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">No transactions yet. Complete jobs to start earning!</p>'
+              : txns.map(function(t){
+                  var cr = t.type==='topup'||t.type==='earning'||t.type==='escrow_release';
+                  return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">' +
+                    '<div style="width:34px;height:34px;border-radius:50%;background:'+(cr?'#f0fdf4':'#fef2f2')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;">'+(cr?'↓':'↑')+'</div>' +
+                    '<div style="flex:1;min-width:0;"><div style="font-size:0.84rem;font-weight:600;">'+(tLabel[t.type]||t.type)+'</div>' +
+                    '<div style="font-size:0.73rem;color:var(--text-muted);">'+(t.note?t.note.slice(0,50):'')+'</div></div>' +
+                    '<div style="font-weight:700;font-size:0.9rem;color:'+(tColor[t.type]||'#333')+';white-space:nowrap;">'+(cr?'+':'-')+'₦'+Number(t.amount||0).toLocaleString()+'</div></div>';
+                }).join('')
+            )
+          );
+      } catch(e) { c.innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>'; }
+    }
+    window.loadTaskerWallet = loadTaskerWallet;
+
+    function openTaskerWithdrawModal() {
+      var m = document.createElement('div');
+      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+      m.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
+        '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Withdraw Earnings</h2>' +
+        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;">Min ₦500. Processed within 24 hours.</p>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Amount (₦)</label><input id="twdAmt" type="number" min="500" placeholder="500+" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Bank Name</label><input id="twdBank" type="text" placeholder="e.g. GTBank" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Account Number</label><input id="twdAcct" type="text" maxlength="10" placeholder="10-digit number" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+          '<div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Account Name</label><input id="twdName" type="text" placeholder="Name on account" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;box-sizing:border-box;outline:none;" /></div>' +
+        '</div>' +
+        '<div id="twdErr" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="twdBtn" onclick="doTaskerWithdraw()" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Request Withdrawal</button>' +
+          '<button onclick="this.closest('[style*=fixed]').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
+        '</div></div>';
+      document.body.appendChild(m);
+      m.onclick = function(e){ if(e.target===m) m.remove(); };
+    }
+    window.openTaskerWithdrawModal = openTaskerWithdrawModal;
+
+    async function doTaskerWithdraw() {
+      var amt  = parseFloat(document.getElementById('twdAmt')?.value);
+      var bank = (document.getElementById('twdBank')?.value||'').trim();
+      var acct = (document.getElementById('twdAcct')?.value||'').trim();
+      var name = (document.getElementById('twdName')?.value||'').trim();
+      var btn  = document.getElementById('twdBtn');
+      var err  = document.getElementById('twdErr');
+      if (!amt||amt<500||!bank||!acct||!name) { err.textContent='Fill all fields. Min ₦500.'; err.style.display='block'; return; }
+      if (btn) { btn.disabled=true; btn.textContent='Processing…'; }
+      try {
+        await window.ST.payments.withdrawFromWallet(amt, bank, acct, name);
+        document.querySelector('[style*="backdrop-filter"]')?.remove();
+        showToast('Withdrawal submitted! ₦'+Number(amt).toLocaleString()+' will be processed within 24h.');
+        taskerWalletLoaded=false; loadTaskerWallet();
+      } catch(e) {
+        if (err) { err.textContent=e.message; err.style.display='block'; }
+        if (btn) { btn.disabled=false; btn.textContent='Request Withdrawal'; }
+      }
+    }
+    window.doTaskerWithdraw = doTaskerWithdraw;
 </script>
 
   <!-- Paystack — loaded last so it never blocks page render -->
