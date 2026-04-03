@@ -264,10 +264,50 @@
   var _role    = 'customer';
   var _threads = [];
   var _active  = null;
-  var _realtimeSub = null;
+  var _realtimeSub     = null;  /* per-thread realtime sub */
+  var _globalThreadSub = null;  /* watches ALL threads for this user */
+  var _globalNotifSub  = null;  /* watches notifications for this user */
 
   function esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Toast (inline — messages.html may not load ui.js) ─── */
+  function showToast(msg, type) {
+    var existing = document.getElementById('msgToastContainer');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'msgToastContainer';
+      existing.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;';
+      document.body.appendChild(existing);
+    }
+    var toast = document.createElement('div');
+    toast.style.cssText = 'background:' + (type==='error' ? '#dc2626' : '#1e293b') + ';color:#fff;padding:10px 18px;border-radius:9999px;font-size:0.83rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);opacity:1;transition:opacity 0.3s;max-width:320px;text-align:center;';
+    toast.textContent = msg;
+    existing.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { toast.remove(); }, 350);
+    }, 3500);
+  }
+
+  /* ── Notification badge on sidebar Messages link ───────── */
+  function updateMsgNavBadge(count) {
+    var links = document.querySelectorAll('a[href="messages.html"]');
+    links.forEach(function(a) {
+      var badge = a.querySelector('.nav-msg-badge');
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'nav-msg-badge';
+          badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:#ef4444;color:#fff;border-radius:9999px;font-size:0.68rem;font-weight:700;margin-left:6px;';
+          a.appendChild(badge);
+        }
+        badge.textContent = count > 99 ? '99+' : String(count);
+      } else if (badge) {
+        badge.remove();
+      }
+    });
   }
 
   function sidebarStatus(html) {
@@ -331,6 +371,7 @@
 
     renderSidebar(_role);
     await loadThreadList();
+    startGlobalSubscriptions();
 
     /* Auto-open thread if arriving from a message button */
     var ctx = sessionStorage.getItem('st_chat_context');
@@ -356,31 +397,7 @@
       if (res.error) throw res.error;
       _threads = res.data || [];
 
-      if (!_threads.length) {
-        sidebarStatus(
-          '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="display:block;margin:0 auto 10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-          '<strong style="color:var(--text-primary);font-size:0.84rem;">No conversations yet</strong><br>' +
-          '<span style="font-size:0.76rem;">Accept an application or book a service to start chatting.</span>'
-        );
-        return;
-      }
-
-      document.getElementById('threadList').innerHTML = _threads.map(function(t) {
-        var isCustomer = _user.id === t.customer_id;
-        var other   = isCustomer ? t.tasker : t.customer;
-        var name    = (other && other.name) || (isCustomer ? 'Tasker' : 'Customer');
-        var initials= name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
-        var unread  = isCustomer ? (t.customer_unread||0) : (t.tasker_unread||0);
-        var preview = t.last_message ? esc(t.last_message.slice(0,40)) : '<em>No messages yet</em>';
-        return '<div class="msg-thread-item" id="ti-'+t.id+'" onclick="openThread(\''+t.id+'\')">'+
-          '<div class="msg-thread-avatar">'+esc(initials)+'</div>'+
-          '<div class="msg-thread-info">'+
-            '<div class="msg-thread-name">'+esc(name)+'</div>'+
-            '<div class="msg-thread-preview">'+preview+'</div>'+
-          '</div>'+
-          (unread>0 ? '<div class="msg-thread-unread">'+unread+'</div>' : '')+
-        '</div>';
-      }).join('');
+      renderThreadList();
     } catch(e) {
       sidebarStatus(
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="display:block;margin:0 auto 8px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+
@@ -389,6 +406,36 @@
       );
     }
   }
+  /* ── Render thread list from _threads cache ───────────────── */
+  function renderThreadList() {
+    if (!_threads.length) {
+      sidebarStatus(
+        '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="display:block;margin:0 auto 10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+        '<strong style="color:var(--text-primary);font-size:0.84rem;">No conversations yet</strong><br>' +
+        '<span style="font-size:0.76rem;">Accept an application or book a service to start chatting.</span>'
+      );
+      return;
+    }
+    var html = _threads.map(function(t) {
+      var isCustomer = _user.id === t.customer_id;
+      var other    = isCustomer ? t.tasker : t.customer;
+      var name     = (other && other.name) || (isCustomer ? 'Tasker' : 'Customer');
+      var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
+      var unread   = isCustomer ? (t.customer_unread||0) : (t.tasker_unread||0);
+      var preview  = t.last_message ? esc(t.last_message.slice(0,40)) : '<em>No messages yet</em>';
+      var isActive = t.id === _active;
+      return '<div class="msg-thread-item' + (isActive ? ' active' : '') + '" id="ti-'+t.id+'" onclick="openThread(\''+t.id+'\')">' +
+        '<div class="msg-thread-avatar">'+esc(initials)+'</div>' +
+        '<div class="msg-thread-info">' +
+          '<div class="msg-thread-name">'+esc(name)+'</div>' +
+          '<div class="msg-thread-preview">'+preview+'</div>' +
+        '</div>' +
+        (unread>0 ? '<div class="msg-thread-unread">'+unread+'</div>' : '') +
+      '</div>';
+    }).join('');
+    document.getElementById('threadList').innerHTML = html;
+  }
+
   window.loadThreadList = loadThreadList;
 
   /* ── Open a thread ────────────────────────────────────────── */
@@ -447,9 +494,22 @@
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){ appendBubble(payload.new); })
       .subscribe();
 
-    /* Mark read */
+    /* Mark read: clear unread count in DB + local cache + UI */
     var col = isCustomer ? 'customer_unread' : 'tasker_unread';
     window.supabase.from('message_threads').update({[col]:0}).eq('id',threadId).then(function(){}).catch(function(){});
+    if (t) {
+      if (isCustomer) t.customer_unread = 0;
+      else            t.tasker_unread   = 0;
+    }
+    /* Remove unread badge from this thread item immediately */
+    var badge = document.querySelector('#ti-'+threadId+' .msg-thread-unread');
+    if (badge) badge.remove();
+    /* Recompute nav badge */
+    var totalUnread = _threads.reduce(function(sum, th) {
+      var u = (_user.id === th.customer_id) ? (th.customer_unread||0) : (th.tasker_unread||0);
+      return sum + u;
+    }, 0);
+    updateMsgNavBadge(totalUnread);
   }
   window.openThread = openThread;
 
@@ -518,21 +578,54 @@
     if (!text) return;
     var t = _threads.find(function(x){ return x.id === _active; });
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
-    if (!receiverId) { alert('Cannot send — missing receiver.'); return; }
+    if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
+
+    /* Optimistic UI: show bubble immediately */
+    appendBubble({ id: 'tmp-'+Date.now(), sender_id: _user.id, body: text, created_at: new Date().toISOString() });
+
     input.value = '';
     input.style.height = 'auto';
+
     try {
+      /* 1. Insert message */
       await window.supabase.from('messages').insert({
         thread_id: _active, sender_id: _user.id,
         receiver_id: receiverId, body: text, flagged: false,
       });
-      window.supabase.from('message_threads')
-        .update({last_message:text.slice(0,80),last_message_at:new Date().toISOString()})
-        .eq('id',_active).then(function(){}).catch(function(){});
-      if (t) t.last_message = text;
+
+      /* 2. Update thread last_message + increment receiver's unread count */
+      var isCustomer = _user.id === (t && t.customer_id);
+      var unreadCol  = isCustomer ? 'tasker_unread' : 'customer_unread';
+      /* Get current unread count then increment */
+      var curUnread  = isCustomer ? (t.tasker_unread||0) : (t.customer_unread||0);
+      await window.supabase.from('message_threads').update({
+        last_message:     text.slice(0, 80),
+        last_message_at:  new Date().toISOString(),
+        [unreadCol]:      curUnread + 1,
+      }).eq('id', _active);
+
+      /* Update local thread cache */
+      if (t) {
+        t.last_message = text;
+        t.last_message_at = new Date().toISOString();
+        if (isCustomer) t.tasker_unread  = curUnread + 1;
+        else            t.customer_unread = curUnread + 1;
+      }
+
+      /* 3. Insert notification for the recipient */
+      var senderName = (_user.user_metadata && (_user.user_metadata.name || _user.user_metadata.email)) || 'Someone';
+      await window.supabase.from('notifications').insert({
+        user_id:  receiverId,
+        type:     'new_message',
+        title:    '💬 New message from ' + senderName,
+        message:  text.length > 80 ? text.slice(0, 80) + '…' : text,
+        data:     { thread_id: _active, sender_id: _user.id },
+        is_read:  false,
+      });
+
     } catch(e) {
-      input.value = text;
-      alert('Send failed: '+((e&&e.message)||String(e)));
+      /* Show error but don't restore text since we already showed optimistic bubble */
+      showToast('Send failed: ' + ((e && e.message) || String(e)));
     }
   }
   window.sendMsg = sendMsg;
@@ -575,6 +668,70 @@
       sidebarStatus('⚠ Could not open conversation:<br><span style="font-size:0.76rem;color:var(--red);">'+esc((e&&e.message)||String(e))+'</span>');
     }
   }
+  /* ── Global realtime subscriptions ────────────────────────── */
+  function startGlobalSubscriptions() {
+    if (!_user) return;
+
+    /* Watch message_threads for changes to THIS user's unread counts */
+    if (_globalThreadSub) { try { _globalThreadSub.unsubscribe(); } catch(e){} }
+    _globalThreadSub = window.supabase
+      .channel('user-threads:' + _user.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'message_threads',
+      }, function(payload) {
+        var updated = payload.new;
+        /* Only care if this thread involves our user */
+        if (updated.customer_id !== _user.id && updated.tasker_id !== _user.id) return;
+
+        /* Update local thread cache */
+        var idx = _threads.findIndex(function(t) { return t.id === updated.id; });
+        if (idx !== -1) {
+          _threads[idx].last_message     = updated.last_message;
+          _threads[idx].last_message_at  = updated.last_message_at;
+          _threads[idx].customer_unread  = updated.customer_unread;
+          _threads[idx].tasker_unread    = updated.tasker_unread;
+        }
+
+        /* Refresh the sidebar list to show new unread badge + preview */
+        renderThreadList();
+
+        /* If this is NOT the active thread, show a toast notification */
+        if (updated.id !== _active) {
+          var isCustomer = _user.id === updated.customer_id;
+          var myUnread   = isCustomer ? updated.customer_unread : updated.tasker_unread;
+          if (myUnread > 0 && updated.last_message) {
+            showToast('💬 New message: ' + updated.last_message.slice(0, 60));
+          }
+        }
+
+        /* Update total unread badge in nav */
+        var totalUnread = _threads.reduce(function(sum, t) {
+          var u = (_user.id === t.customer_id) ? (t.customer_unread||0) : (t.tasker_unread||0);
+          return sum + u;
+        }, 0);
+        updateMsgNavBadge(totalUnread);
+      })
+      .subscribe();
+
+    /* Watch notifications for real-time message alerts */
+    if (_globalNotifSub) { try { _globalNotifSub.unsubscribe(); } catch(e){} }
+    _globalNotifSub = window.supabase
+      .channel('user-notifs:' + _user.id)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: 'user_id=eq.' + _user.id,
+      }, function(payload) {
+        var n = payload.new;
+        if (n.type === 'new_message') {
+          /* Only toast if not already visible in active thread */
+          var threadId = n.data && n.data.thread_id;
+          if (threadId && threadId === _active) return; /* already reading it */
+          showToast(n.title || '💬 New message');
+        }
+      })
+      .subscribe();
+  }
+
   window.openOrCreateThread = openOrCreateThread;
   </script>
 </body>
