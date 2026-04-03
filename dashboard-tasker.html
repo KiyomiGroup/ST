@@ -1205,6 +1205,9 @@
         img.style.transform = 'translateY(0px)';
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        /* Reset drag hint */
+        var hint = document.getElementById('cropDragHint');
+        if (hint) hint.style.opacity = '1';
         /* Wire drag events */
         viewport.onmousedown  = cropDragStart;
         viewport.ontouchstart = cropDragStartTouch;
@@ -1247,6 +1250,9 @@
       if (vp) vp.style.cursor = 'grab';
       document.onmousemove = null; document.onmouseup = null;
       document.ontouchmove = null; document.ontouchend = null;
+      /* Hide drag hint once user has interacted */
+      var hint = document.getElementById('cropDragHint');
+      if (hint) hint.style.opacity = '0';
     }
 
     function confirmBannerCrop() {
@@ -1975,5 +1981,69 @@
   <!-- Paystack — loaded last so it never blocks page render -->
   <script src="https://js.paystack.co/v1/inline.js" defer></script>
   <script src="js/payments.js" defer></script>
+
+  <!-- ── Banner crop modal ────────────────────────────────────── -->
+  <div id="bannerCropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:560px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.2);">
+
+      <!-- Header -->
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;font-size:1rem;">Position Banner Image</div>
+          <div style="font-size:0.76rem;color:var(--text-muted);margin-top:2px;">Drag the image up or down to choose the crop area</div>
+        </div>
+        <button onclick="closeBannerCrop()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.4rem;line-height:1;padding:4px;">&#215;</button>
+      </div>
+
+      <!-- Viewport — the crop window shown to the user -->
+      <div id="bannerCropViewport" style="
+        width:100%;
+        height:180px;
+        overflow:hidden;
+        position:relative;
+        cursor:grab;
+        background:var(--charcoal);
+        user-select:none;
+        -webkit-user-select:none;
+      ">
+        <img id="bannerCropImg"
+          src=""
+          alt="Banner preview"
+          style="
+            width:100%;
+            height:auto;
+            display:block;
+            position:absolute;
+            top:0; left:0;
+            transform:translateY(0px);
+            pointer-events:none;
+            user-select:none;
+          "
+        />
+        <!-- Overlay hint — fades after first drag -->
+        <div id="cropDragHint" style="
+          position:absolute;inset:0;
+          display:flex;align-items:center;justify-content:center;
+          background:rgba(0,0,0,0.28);
+          color:#fff;font-size:0.82rem;font-weight:600;
+          gap:8px;pointer-events:none;
+          transition:opacity 0.3s;
+        ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 8 22 12 18 16"/><polyline points="6 8 2 12 6 16"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          Drag to reposition
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="padding:16px 22px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);">
+        <button class="btn btn-ghost btn-sm" onclick="closeBannerCrop()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmBannerCrop()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Use This Crop
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
