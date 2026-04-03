@@ -1302,27 +1302,35 @@
         var rateUnit = document.getElementById('profileRateUnit')?.value || '/hour';
         var bioValue = document.getElementById('profileBio')?.value?.trim() || null;
 
-        /* Save to taskers table — ENSURE ALL FIELDS SAVED */
+        /* Save to taskers table — Use alternative approach (no onConflict needed) */
         var taskerUpdates = {
-          user_id:       String(user.id),  /* Ensure user_id is set */
-          location:      locationValue,     /* FIX: was missing sometimes */
-          service:       serviceValue,      /* FIX: was missing sometimes */
-          service_name:  serviceValue,      /* Keep both in sync */
-          rate_value:    rateValue,         /* FIX: was missing sometimes */
-          rate_unit:     rateUnit,          /* FIX: ensure saved */
-          bio:           bioValue,          /* FIX: sync bio to taskers too */
+          user_id:       String(user.id),
+          location:      locationValue,
+          service:       serviceValue,
+          service_name:  serviceValue,
+          rate_value:    rateValue,
+          rate_unit:     rateUnit,
+          bio:           bioValue,
           banner_color:  document.getElementById('profileBannerColor')?.value || '#121212',
           business_name: document.getElementById('profileBusinessName')?.value?.trim() || null,
         };
         if (avatarUrl)     taskerUpdates.photo_url   = avatarUrl;
         if (bannerImageUrl) taskerUpdates.banner_img = bannerImageUrl;
         
-        /* Use upsert instead of update to ensure row exists */
+        /* Try update first, if no rows affected then insert */
         var { error: tErr } = await window.supabase.from('taskers')
-          .upsert(taskerUpdates, { onConflict: 'user_id' });
+          .update(taskerUpdates)
+          .eq('user_id', String(user.id));
+        
         if (tErr) {
-          console.warn('[saveProfile] taskers upsert error:', tErr.message);
-          throw tErr;
+          console.warn('[saveProfile] Update failed, trying insert:', tErr.message);
+          /* If update failed, try insert */
+          var { error: tInsertErr } = await window.supabase.from('taskers')
+            .insert(taskerUpdates);
+          if (tInsertErr) {
+            console.warn('[saveProfile] taskers insert error:', tInsertErr.message);
+            throw tInsertErr;
+          }
         }
 
         _currentProfileImageFile = null;
@@ -1369,16 +1377,31 @@
       var user = _sess.data.session && _sess.data.session.user;
       if (!user) return;
 
-      /* Check verification */
+      /* Check verification — first fetch data then check */
       try {
-        var verified = window.ST.verify ? await window.ST.verify.isUserVerified() : false;
-        if (!verified) {
+        var { data: taskerCheckData } = await window.supabase
+          .from('taskers')
+          .select('is_verified')
+          .eq('user_id', String(user.id))
+          .maybeSingle();
+        
+        var isAlreadyVerified = taskerCheckData && taskerCheckData.is_verified === true;
+        
+        if (!isAlreadyVerified) {
           var vp = document.getElementById('verificationPrompt');
           if (vp) vp.style.display = 'flex';
           var nb = document.getElementById('navVerifBadge');
           if (nb) nb.style.display = 'inline-block';
+        } else {
+          /* Hide verification prompt if already verified */
+          var vp = document.getElementById('verificationPrompt');
+          if (vp) vp.style.display = 'none';
+          var nb = document.getElementById('navVerifBadge');
+          if (nb) nb.style.display = 'none';
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn('[loadMyPage] verification check error:', e);
+      }
 
       /* Load stats */
       try {
