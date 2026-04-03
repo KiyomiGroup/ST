@@ -355,14 +355,15 @@
                   <input type="hidden" id="profileBannerColor" value="#121212" />
                   <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Choose a colour — or upload an image below to use as your banner.</div>
 
-                  <!-- Banner image upload -->
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <input type="file" id="bannerImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="previewBannerImage(this)" />
+                  <!-- Banner image upload with crop -->
+                  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <input type="file" id="bannerImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="openBannerCrop(this)" />
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('bannerImageFile').click()">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                       Upload Banner Image
                     </button>
                     <span id="bannerImageName" style="font-size:0.76rem;color:var(--text-muted);"></span>
+                    <button type="button" id="bannerImageCropBtn" style="display:none;font-size:0.76rem;color:var(--blue);background:none;border:1px solid var(--blue);border-radius:var(--radius-md);padding:3px 8px;cursor:pointer;" onclick="document.getElementById('bannerImageFile').click()">✎ Reposition</button>
                     <button type="button" id="bannerImageClear" style="display:none;background:none;border:none;color:var(--red);font-size:0.76rem;cursor:pointer;padding:0;" onclick="clearBannerImage()">✕ Remove</button>
                   </div>
                 </div>
@@ -1179,34 +1180,124 @@
     }
     window.selectBannerColorCustom = selectBannerColorCustom;
 
-    function previewBannerImage(input) {
+    /* ── Banner crop logic ──────────────────────────────────── */
+    var _bannerCropFile   = null;
+    var _bannerCropDataUrl= null;
+    var _cropDragStart    = null;
+    var _cropImgTop       = 0;
+
+    function openBannerCrop(input) {
       if (!input.files || !input.files[0]) return;
       var file = input.files[0];
-      var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
-      if (!check.ok) { showToast(check.error); input.value = ''; return; }
-      _currentBannerImageFile = file;
+      if (typeof validateUpload === 'function') {
+        var check = validateUpload(file, { allowedTypes: ['image/jpeg','image/png','image/webp'], maxBytes: 5*1024*1024 });
+        if (!check.ok) { showToast(check.error); input.value = ''; return; }
+      }
+      _bannerCropFile = file;
       var reader = new FileReader();
       reader.onload = function(e) {
-        /* Live-preview: use image as banner background */
+        _bannerCropDataUrl = e.target.result;
+        var modal   = document.getElementById('bannerCropModal');
+        var img     = document.getElementById('bannerCropImg');
+        var viewport= document.getElementById('bannerCropViewport');
+        img.src = e.target.result;
+        _cropImgTop = 0;
+        img.style.transform = 'translateY(0px)';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        /* Wire drag events */
+        viewport.onmousedown  = cropDragStart;
+        viewport.ontouchstart = cropDragStartTouch;
+      };
+      reader.readAsDataURL(file);
+    }
+    window.openBannerCrop = openBannerCrop;
+
+    function cropDragStart(e) {
+      e.preventDefault();
+      _cropDragStart = e.clientY;
+      document.getElementById('bannerCropViewport').style.cursor = 'grabbing';
+      document.onmousemove = cropDragMove;
+      document.onmouseup   = cropDragEnd;
+    }
+    function cropDragStartTouch(e) {
+      _cropDragStart = e.touches[0].clientY;
+      document.ontouchmove = cropDragMoveTouch;
+      document.ontouchend  = cropDragEnd;
+    }
+    function cropDragMove(e) {
+      if (_cropDragStart === null) return;
+      var img = document.getElementById('bannerCropImg');
+      var viewport = document.getElementById('bannerCropViewport');
+      var delta = e.clientY - _cropDragStart;
+      var viewH = viewport.offsetHeight;
+      var imgH  = img.naturalHeight * (viewport.offsetWidth / img.naturalWidth);
+      var maxTop = 0;
+      var minTop = viewH - imgH;
+      _cropImgTop = Math.min(maxTop, Math.max(minTop, _cropImgTop + delta));
+      img.style.transform = 'translateY(' + _cropImgTop + 'px)';
+      _cropDragStart = e.clientY;
+    }
+    function cropDragMoveTouch(e) {
+      cropDragMove({ clientY: e.touches[0].clientY });
+    }
+    function cropDragEnd() {
+      _cropDragStart = null;
+      var vp = document.getElementById('bannerCropViewport');
+      if (vp) vp.style.cursor = 'grab';
+      document.onmousemove = null; document.onmouseup = null;
+      document.ontouchmove = null; document.ontouchend = null;
+    }
+
+    function confirmBannerCrop() {
+      /* Use canvas to crop the image at the chosen position */
+      var img      = document.getElementById('bannerCropImg');
+      var viewport = document.getElementById('bannerCropViewport');
+      var vW = viewport.offsetWidth;
+      var vH = viewport.offsetHeight;
+      var scaleX = img.naturalWidth / vW;
+      var srcY   = Math.max(0, -_cropImgTop * scaleX);
+      var srcH   = Math.min(img.naturalHeight - srcY, vH * scaleX);
+      var canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = Math.round(srcH);
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, srcY, img.naturalWidth, srcH, 0, 0, canvas.width, canvas.height);
+      var croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      /* Convert data URL to File */
+      fetch(croppedDataUrl).then(function(r){ return r.blob(); }).then(function(blob) {
+        _currentBannerImageFile = new File([blob], 'banner.jpg', { type: 'image/jpeg' });
+        /* Apply to previews */
         var hero = document.getElementById('previewHero');
         if (hero) {
-          hero.style.backgroundImage = 'url("' + e.target.result + '")';
+          hero.style.backgroundImage = 'url("' + croppedDataUrl + '")';
           hero.style.backgroundSize = 'cover';
           hero.style.backgroundPosition = 'center';
         }
         var prev = document.getElementById('profileBannerPreview');
         if (prev) {
-          prev.style.backgroundImage = 'url("' + e.target.result + '")';
+          prev.style.backgroundImage = 'url("' + croppedDataUrl + '")';
           prev.style.backgroundSize = 'cover';
           prev.style.backgroundPosition = 'center';
         }
-        document.getElementById('bannerImageName').textContent = file.name;
+        document.getElementById('bannerImageName').textContent = 'Banner image set ✓';
         document.getElementById('bannerImageClear').style.display = 'inline';
-        /* Deselect colour swatches visually */
-        document.querySelectorAll('.banner-swatch').forEach(function(s) { s.style.border = '3px solid transparent'; });
-      };
-      reader.readAsDataURL(file);
+        var cropBtn = document.getElementById('bannerImageCropBtn');
+        if (cropBtn) cropBtn.style.display = 'inline';
+        document.querySelectorAll('.banner-swatch').forEach(function(s){ s.style.border = '3px solid transparent'; });
+        closeBannerCrop();
+      });
     }
+    window.confirmBannerCrop = confirmBannerCrop;
+
+    function closeBannerCrop() {
+      var m = document.getElementById('bannerCropModal');
+      if (m) m.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    window.closeBannerCrop = closeBannerCrop;
+
+    function previewBannerImage(input) { openBannerCrop(input); }
     window.previewBannerImage = previewBannerImage;
 
     function _clearBannerImageState() {
@@ -1312,6 +1403,43 @@
         var nameValue     = document.getElementById('profileName')?.value?.trim() || null;
         var bizName       = document.getElementById('profileBusinessName')?.value?.trim() || null;
 
+        /* Read existing DB values so we never accidentally overwrite with defaults */
+        var existingT = {};
+        try {
+          var eRes = await window.supabase.from('taskers')
+            .select('banner_color, banner_img, whatsapp, phone, photo_url')
+            .eq('user_id', String(user.id)).maybeSingle();
+          existingT = (eRes && eRes.data) || {};
+        } catch(_e) {}
+
+        /* Helper to format Nigerian phone numbers */
+        function _fmtNGN(raw) {
+          if (!raw) return null;
+          var d = raw.replace(/\D/g,'').replace(/^234/,'').replace(/^0/,'');
+          return d ? '+234' + d : null;
+        }
+
+        /* Banner: use newly selected colour only if the user actually opened the Edit panel
+           and changed it. The hidden input starts at #121212 — if loadProfilePanel ran, it
+           was set to the real saved colour. We read the input value but fall back to the
+           existing DB colour to prevent silent overwrite. */
+        var rawBannerColor = document.getElementById('profileBannerColor')?.value;
+        var finalBannerColor = (rawBannerColor && rawBannerColor !== '#121212')
+          ? rawBannerColor
+          : (existingT.banner_color || rawBannerColor || '#121212');
+
+        /* Banner image: keep existing if not re-uploaded this session */
+        var finalBannerImg = bannerImageUrl || existingT.banner_img || null;
+
+        /* Photo: keep existing if not re-uploaded */
+        var finalPhotoUrl = avatarUrl || existingT.photo_url || null;
+
+        /* WhatsApp/phone from form */
+        var wpRaw = document.getElementById('profileWhatsapp')?.value?.trim();
+        var phRaw = document.getElementById('profilePhone')?.value?.trim();
+        var finalWhatsapp = wpRaw ? _fmtNGN(wpRaw) : (existingT.whatsapp || null);
+        var finalPhone    = phRaw ? _fmtNGN(phRaw)    : (existingT.phone    || null);
+
         /* Build the upsert payload — every field that should be saved */
         var taskerPayload = {
           user_id:       String(user.id),
@@ -1324,11 +1452,13 @@
           rate_value:    rateValue,
           rate_unit:     rateUnit,
           bio:           bioValue,
-          banner_color:  document.getElementById('profileBannerColor')?.value || '#121212',
+          banner_color:  finalBannerColor,
+          banner_img:    finalBannerImg,
+          photo_url:     finalPhotoUrl,
+          whatsapp:      finalWhatsapp,
+          phone:         finalPhone,
           available:     true,
         };
-        if (avatarUrl)      taskerPayload.photo_url  = avatarUrl;
-        if (bannerImageUrl) taskerPayload.banner_img = bannerImageUrl;
 
         /* Upsert: insert if no row exists, update if it does.
            This is the correct pattern — update alone silently discards data

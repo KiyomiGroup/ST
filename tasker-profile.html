@@ -671,9 +671,20 @@
       /* Update page title */
       document.title = displayName + ' — StreetTasker';
 
-      /* ── Hero — apply banner colour ── */
+      /* ── Hero — apply banner image (priority) or colour ── */
+      const bannerImg   = tasker.banner_img || null;
       const heroSection = document.querySelector('.profile-hero');
-      if (heroSection) heroSection.style.background = bannerColor;
+      if (heroSection) {
+        if (bannerImg) {
+          heroSection.style.backgroundImage    = 'url("' + bannerImg + '")';
+          heroSection.style.backgroundSize     = 'cover';
+          heroSection.style.backgroundPosition = 'center';
+          heroSection.style.backgroundRepeat   = 'no-repeat';
+        } else {
+          heroSection.style.backgroundImage = '';
+          heroSection.style.background      = bannerColor;
+        }
+      }
 
       const heroAvatar = document.getElementById('heroAvatar');
       if (photo) {
