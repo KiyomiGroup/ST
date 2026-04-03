@@ -749,8 +749,16 @@
         throw new Error('Payment module not loaded.');
       }
     } catch(e) {
-      showToast((e&&e.message)||'Payment failed. Please try again.', 'error');
-      if (btn) { btn.textContent = 'Pay '+Number(amount).toLocaleString('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0})+' securely'; btn.disabled = false; }
+      var msg = (e && e.message) || 'Payment failed. Please try again.';
+      var isClosed = msg.indexOf('closed') !== -1 || msg.indexOf('cancelled') !== -1;
+      /* Show softer toast if they just closed the popup, error toast for real failures */
+      showToast(msg, isClosed ? '' : 'error');
+      /* Always re-enable the button so they can try again */
+      if (btn) {
+        var fmtAmt = Number(amount).toLocaleString('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0});
+        btn.textContent = 'Pay ' + fmtAmt + ' securely';
+        btn.disabled = false;
+      }
     }
   }
   window.handleAcceptPayment = handleAcceptPayment;
