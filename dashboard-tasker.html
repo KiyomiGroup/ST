@@ -550,9 +550,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/payments.js"></script>
-  <script src="js/supabaseClient.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
@@ -2021,22 +2021,43 @@
     window.doMarkJobDone = doMarkJobDone;
 
     /* ====== TASKER WALLET PANEL ====== */
-    var taskerWalletLoaded = false;
+    var _walletLoading = false;
     async function loadTaskerWallet() {
-      if (taskerWalletLoaded) return;
-      taskerWalletLoaded = true;
+      /* Prevent double-load but DON'T lock permanently — use a loading flag instead */
+      if (_walletLoading) return;
+      _walletLoading = true;
+
       var c = document.getElementById('taskerWalletContent');
-      if (!c) return;
+      if (!c) { _walletLoading = false; return; }
+
+      /* Show spinner while loading */
+      c.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:0.88rem;">' +
+        '<svg style="animation:spin 1s linear infinite;display:inline-block;margin-bottom:8px;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+        '<div>Loading wallet…</div></div>';
+
       try {
-        /* Guard: payments.js must be loaded before this runs */
-        if (!window.ST || !window.ST.payments || !window.ST.payments.getWallet) {
-          taskerWalletLoaded = false;
-          c.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Payment module loading… <a href="javascript:void(0)" onclick="taskerWalletLoaded=false;loadTaskerWallet()" style="color:var(--blue);">Click to retry</a></p>';
-          return;
+        /* Safety: if payments.js somehow not loaded, wait up to 3s */
+        var waited = 0;
+        while ((!window.ST || !window.ST.payments || !window.ST.payments.getWallet) && waited < 3000) {
+          await new Promise(function(r){ setTimeout(r, 200); });
+          waited += 200;
         }
+        if (!window.ST || !window.ST.payments || !window.ST.payments.getWallet) {
+          c.innerHTML = '<div style="padding:20px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;">' +
+            '<p style="font-weight:700;color:#92400e;margin:0 0 8px;">⚠ Payment module not loaded</p>' +
+            '<p style="font-size:0.83rem;color:#78350f;margin:0 0 12px;">Refresh the page and try again.</p>' +
+            '<button onclick="_walletLoading=false;loadTaskerWallet()" style="padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Retry</button>' +
+            '</div>';
+          _walletLoading = false; return;
+        }
+
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
-        if (!cu) { c.innerHTML = '<p style="color:var(--text-muted);">Please log in.</p>'; return; }
+        if (!cu) {
+          c.innerHTML = '<p style="color:var(--text-muted);padding:16px 0;">Please log in to view your wallet.</p>';
+          _walletLoading = false; return;
+        }
+
         var wallet = await window.ST.payments.getWallet(cu.id);
         var txns   = await window.ST.payments.fetchWalletTransactions(cu.id, 15);
         var tLabel = { topup:'Top-up', earning:'Earnings', withdrawal:'Withdrawal', escrow_hold:'In Escrow', escrow_release:'Escrow Released' };
@@ -2070,7 +2091,32 @@
           '</div>' +
           '<div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Transaction History</div>' +
           (wallet._stub
-            ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">Wallet tables not yet set up. Run the SQL in <code>payments.js</code> in Supabase editor.</p>'
+            ? '<div style="padding:16px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;margin-top:8px;">' +
+              '<p style="font-weight:700;color:#92400e;margin:0 0 6px;">⚠ Wallet tables not set up</p>' +
+              '<p style="font-size:0.83rem;color:#78350f;margin:0 0 10px;">Run this SQL in your Supabase SQL Editor to enable the wallet:</p>' +
+              '<pre style="font-size:0.72rem;background:#fff;border:1px solid #f59e0b;border-radius:6px;padding:10px;overflow-x:auto;white-space:pre-wrap;color:#374151;">' +
+              'CREATE TABLE IF NOT EXISTS wallets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid UNIQUE REFERENCES auth.users(id),
+  balance numeric DEFAULT 0,
+  pending_balance numeric DEFAULT 0,
+  updated_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id),
+  type text, amount numeric, reference text,
+  booking_id uuid, status text DEFAULT 'completed',
+  note text, created_at timestamptz DEFAULT now()
+);
+ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own_wallet" ON wallets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_txns_read" ON wallet_transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);' +
+              '</pre>' +
+              '<button onclick="_walletLoading=false;loadTaskerWallet()" style="margin-top:10px;padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Check Again</button>' +
+              '</div>'
             : (!txns.length
               ? '<p style="font-size:0.84rem;color:var(--text-muted);padding:20px 0;text-align:center;">No transactions yet. Complete jobs to start earning!</p>'
               : txns.map(function(t){
@@ -2084,13 +2130,17 @@
             )
           );
       } catch(e) {
-        taskerWalletLoaded = false; /* allow retry */
+        console.error('[Wallet] loadTaskerWallet error:', e.message, e);
+        _walletLoading = false; /* always allow retry on error */
         c.innerHTML =
           '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);">' +
           '<p style="color:#dc2626;font-weight:700;margin:0 0 6px;">Could not load wallet</p>' +
-          '<p style="color:#991b1b;font-size:0.82rem;margin:0 0 12px;">' + (e.message||String(e)) + '</p>' +
-          '<button onclick="taskerWalletLoaded=false;loadTaskerWallet()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Retry</button>' +
+          '<p style="color:#991b1b;font-size:0.82rem;margin:0 0 12px;">' + (e.message || String(e)) + '</p>' +
+          '<button onclick="_walletLoading=false;loadTaskerWallet()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Retry</button>' +
           '</div>';
+      } finally {
+        /* Always release the loading lock when done */
+        _walletLoading = false;
       }
     }
     window.loadTaskerWallet = loadTaskerWallet;
@@ -2131,7 +2181,7 @@
         await window.ST.payments.withdrawFromWallet(amt, bank, acct, name);
         document.querySelector('[style*="backdrop-filter"]')?.remove();
         showToast('Withdrawal submitted! ₦'+Number(amt).toLocaleString()+' will be processed within 24h.');
-        taskerWalletLoaded=false; loadTaskerWallet();
+        _walletLoading=false; loadTaskerWallet();
       } catch(e) {
         if (err) { err.textContent=e.message; err.style.display='block'; }
         if (btn) { btn.disabled=false; btn.textContent='Request Withdrawal'; }
