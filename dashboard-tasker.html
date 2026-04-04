@@ -550,6 +550,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
@@ -2026,6 +2028,12 @@
       var c = document.getElementById('taskerWalletContent');
       if (!c) return;
       try {
+        /* Guard: payments.js must be loaded before this runs */
+        if (!window.ST || !window.ST.payments || !window.ST.payments.getWallet) {
+          taskerWalletLoaded = false;
+          c.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Payment module loading… <a href="javascript:void(0)" onclick="taskerWalletLoaded=false;loadTaskerWallet()" style="color:var(--blue);">Click to retry</a></p>';
+          return;
+        }
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
         if (!cu) { c.innerHTML = '<p style="color:var(--text-muted);">Please log in.</p>'; return; }
@@ -2075,7 +2083,15 @@
                 }).join('')
             )
           );
-      } catch(e) { c.innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>'; }
+      } catch(e) {
+        taskerWalletLoaded = false; /* allow retry */
+        c.innerHTML =
+          '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);">' +
+          '<p style="color:#dc2626;font-weight:700;margin:0 0 6px;">Could not load wallet</p>' +
+          '<p style="color:#991b1b;font-size:0.82rem;margin:0 0 12px;">' + (e.message||String(e)) + '</p>' +
+          '<button onclick="taskerWalletLoaded=false;loadTaskerWallet()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Retry</button>' +
+          '</div>';
+      }
     }
     window.loadTaskerWallet = loadTaskerWallet;
 
@@ -2125,8 +2141,7 @@
 </script>
 
   <!-- Paystack — loaded last so it never blocks page render -->
-  <script src="https://js.paystack.co/v1/inline.js" defer></script>
-  <script src="js/payments.js" defer></script>
+
 
   <!-- ── Banner crop modal ────────────────────────────────────── -->
   <div id="bannerCropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px;">

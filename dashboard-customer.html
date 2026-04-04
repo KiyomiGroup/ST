@@ -257,6 +257,8 @@
   <div id="footer-placeholder"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
@@ -1192,11 +1194,21 @@
 
     /* ====== WALLET PANEL ====== */
     var walletLoaded = false;
+    /* Retry helper if payments.js not yet available */
+    function _waitForPayments(fn, el) {
+      if (window.ST && window.ST.payments) { fn(); return; }
+      if (el) el.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Payment module loading… <a href="javascript:void(0)" onclick="walletLoaded=false;loadWalletPanel()" style="color:var(--blue);">Retry</a></p>';
+    }
     async function loadWalletPanel() {
       if (walletLoaded) return;
       walletLoaded = true;
       var c = document.getElementById('walletPanelContent');
       if (!c) return;
+      if (!window.ST || !window.ST.payments || !window.ST.payments.getWallet) {
+        walletLoaded = false;
+        c.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Payment module loading… <a href="javascript:void(0)" onclick="walletLoaded=false;loadWalletPanel()" style="color:var(--blue);">Click to retry</a></p>';
+        return;
+      }
       try {
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
@@ -1237,7 +1249,15 @@
                 }).join('')
             )
           );
-      } catch(e) { c.innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>'; }
+      } catch(e) {
+        walletLoaded = false;
+        c.innerHTML =
+          '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);">' +
+          '<p style="color:#dc2626;font-weight:700;margin:0 0 6px;">Could not load wallet</p>' +
+          '<p style="color:#991b1b;font-size:0.82rem;margin:0 0 12px;">' + (e.message||String(e)) + '</p>' +
+          '<button onclick="walletLoaded=false;loadWalletPanel()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Retry</button>' +
+          '</div>';
+      }
     }
     window.loadWalletPanel = loadWalletPanel;
 
@@ -1367,7 +1387,6 @@
 </script>
 
   <!-- Paystack — loaded last so it never blocks page render -->
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script src="js/payments.js"></script>
+
 </body>
 </html>
