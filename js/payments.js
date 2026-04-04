@@ -7,27 +7,28 @@
    - When booking: pay from wallet OR pay fresh via Paystack
    - Service Providers: receive earnings into wallet after job completion
    - Both users: withdraw to bank account (account number + bank code)
-   - Admin: 12% platform fee goes to admin Paystack subaccount
+   - Admin: 12% platform fee recorded
 
    ESCROW FLOW:
    1. Customer pays (wallet or Paystack) → funds held in escrow
-   2. Service provider marks job as done (dashboard or chat)
+   2. Service provider marks job as done
    3. Customer confirms → 6-digit code generated
    4. Provider enters code → earnings credited to provider wallet
    5. Either party withdraws wallet balance to bank anytime
 
-   SUPABASE TABLES NEEDED (SQL editor):
-   CREATE TABLE wallets (
+   SUPABASE TABLES NEEDED (run in SQL Editor):
+
+   CREATE TABLE IF NOT EXISTS wallets (
      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
      user_id uuid UNIQUE REFERENCES auth.users(id),
      balance numeric DEFAULT 0,
      pending_balance numeric DEFAULT 0,
      updated_at timestamptz DEFAULT now()
    );
-   CREATE TABLE wallet_transactions (
+   CREATE TABLE IF NOT EXISTS wallet_transactions (
      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
      user_id uuid REFERENCES auth.users(id),
-     type text, -- topup | earning | withdrawal | escrow_hold | escrow_release
+     type text,
      amount numeric,
      reference text,
      booking_id uuid,
@@ -37,9 +38,9 @@
    );
    ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
    ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
-   CREATE POLICY "users manage own wallet" ON wallets USING (auth.uid() = user_id);
-   CREATE POLICY "users view own txns" ON wallet_transactions USING (auth.uid() = user_id);
-   -- Service role bypass needed for cross-user wallet updates (use Supabase Edge Function in prod)
+   CREATE POLICY "own_wallet" ON wallets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+   CREATE POLICY "own_txns_read" ON wallet_transactions FOR SELECT USING (auth.uid() = user_id);
+   CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
    ============================================================ */
 'use strict';
 
@@ -53,7 +54,7 @@ function calculateAmounts(totalNaira) {
   return { total: totalNaira, platformFee: fee, taskerAmount: payout };
 }
 
-/* ── Generate a secure 6-digit completion code ───────────────── */
+/* ── Secure 6-digit completion code ─────────────────────────── */
 function generateCompletionCode() {
   var arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
@@ -64,26 +65,83 @@ function generateCompletionCode() {
    WALLET FUNCTIONS
 ══════════════════════════════════════════════════════════════ */
 
-/* ── Get or create wallet for current user ───────────────────── */
+/* ── Check if wallet tables exist ───────────────────────────── */
+async function _walletsExist() {
+  try {
+    var { error } = await window.supabase
+      .from('wallets').select('id').limit(1);
+    /* If table missing, error.code = '42P01' or message contains 'relation' */
+    if (error && (error.code === '42P01' || (error.message && error.message.includes('relation')))) {
+      return false;
+    }
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+/* ── Get or create wallet ────────────────────────────────────── */
 async function getWallet(userId) {
   try {
+    /* First check the table exists to give a clear error */
     var { data, error } = await window.supabase
       .from('wallets').select('*').eq('user_id', userId).maybeSingle();
-    if (error && error.code !== 'PGRST116') throw error;
-    if (!data) {
-      var { data: created, error: ce } = await window.supabase
-        .from('wallets').insert({ user_id: userId, balance: 0, pending_balance: 0 })
-        .select().single();
-      if (ce) {
-        console.warn('Wallets table not yet created:', ce.message);
-        return { user_id: userId, balance: 0, pending_balance: 0, _stub: true };
-      }
-      return created;
+
+    /* Table doesn't exist */
+    if (error && (error.code === '42P01' || (error.message && error.message.includes('relation')))) {
+      console.warn('[Payments] wallets table not found. Run SQL setup in Supabase.');
+      return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: 'table_missing' };
     }
-    return data;
+
+    /* Any other error (RLS, network, etc.) */
+    if (error && error.code !== 'PGRST116') {
+      console.warn('[Payments] getWallet error:', error.code, error.message);
+      return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: error.message };
+    }
+
+    /* Wallet exists — return it */
+    if (data) return data;
+
+    /* No wallet row yet — create one */
+    var { data: created, error: ce } = await window.supabase
+      .from('wallets')
+      .insert({ user_id: userId, balance: 0, pending_balance: 0 })
+      .select().single();
+
+    if (ce) {
+      console.warn('[Payments] wallet insert error:', ce.code, ce.message);
+      return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: ce.message };
+    }
+    return created;
+
   } catch(e) {
-    console.warn('getWallet error:', e.message);
-    return { user_id: userId, balance: 0, pending_balance: 0, _stub: true };
+    console.warn('[Payments] getWallet exception:', e.message);
+    return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: e.message };
+  }
+}
+
+/* ── Fetch wallet transaction history ───────────────────────── */
+async function fetchWalletTransactions(userId, limit) {
+  try {
+    var { data, error } = await window.supabase
+      .from('wallet_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit || 20);
+
+    /* Table missing — not a fatal error, just return empty */
+    if (error && (error.code === '42P01' || (error.message && error.message.includes('relation')))) {
+      return [];
+    }
+    if (error) {
+      console.warn('[Payments] fetchWalletTransactions error:', error.message);
+      return [];
+    }
+    return data || [];
+  } catch(e) {
+    console.warn('[Payments] fetchWalletTransactions exception:', e.message);
+    return [];
   }
 }
 
@@ -99,31 +157,31 @@ async function topUpWallet(amountNaira, userEmail) {
     if (typeof PaystackPop === 'undefined') {
       reject(new Error('Paystack not loaded. Check your internet connection.')); return;
     }
-    var settled = false;
     var handler = PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY, email: userEmail || user.email,
-      amount: Math.round(amountNaira) * 100, currency: 'NGN', reference: reference,
-      metadata: { custom_fields: [
-        { display_name: 'Platform', variable_name: 'platform', value: 'StreetTasker' },
-        { display_name: 'Type', variable_name: 'type', value: 'wallet_topup' },
-      ]},
+      key:      PAYSTACK_PUBLIC_KEY,
+      email:    userEmail || user.email,
+      amount:   Math.round(amountNaira) * 100,
+      ref:      reference,
+      currency: 'NGN',
+      metadata: { user_id: user.id, type: 'topup' },
       callback: async function(response) {
-        if (settled) return; settled = true;
         try {
+          /* Credit wallet */
           var wallet = await getWallet(user.id);
           if (!wallet._stub) {
             await window.supabase.from('wallets')
               .update({ balance: (wallet.balance || 0) + Math.round(amountNaira), updated_at: new Date().toISOString() })
               .eq('user_id', user.id);
-            window.supabase.from('wallet_transactions').insert({
-              user_id: user.id, type: 'topup', amount: Math.round(amountNaira),
-              reference: response.reference, status: 'completed', note: 'Wallet top-up via Paystack',
-            }).catch(function(){});
+            await window.supabase.from('wallet_transactions').insert({
+              user_id: user.id, type: 'topup', amount: amountNaira,
+              reference: response.reference, status: 'completed',
+              note: 'Wallet top-up via Paystack',
+            });
           }
           resolve({ reference: response.reference, amount: amountNaira });
         } catch(e) { reject(e); }
       },
-      onClose: function() { if (settled) return; settled = true; reject(new Error('Top-up cancelled.')); },
+      onClose: function() { reject(new Error('Payment window closed.')); },
     });
     handler.openIframe();
   });
@@ -132,11 +190,12 @@ async function topUpWallet(amountNaira, userEmail) {
 /* ── Withdraw from wallet to bank ───────────────────────────── */
 async function withdrawFromWallet(amountNaira, bankCode, accountNumber, accountName) {
   var { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) throw new Error('Not logged in.');
+  if (!user) throw new Error('Please log in first.');
+
   var wallet = await getWallet(user.id);
   if (wallet._stub) throw new Error('Wallet system not yet set up. Please contact support.');
   if ((wallet.balance || 0) < amountNaira) throw new Error('Insufficient wallet balance.');
-  if (amountNaira < 500) throw new Error('Minimum withdrawal is ₦500.');
+  if (!bankCode || !accountNumber) throw new Error('Please provide bank code and account number.');
 
   var newBalance = (wallet.balance || 0) - Math.round(amountNaira);
   await window.supabase.from('wallets')
@@ -144,310 +203,224 @@ async function withdrawFromWallet(amountNaira, bankCode, accountNumber, accountN
     .eq('user_id', user.id);
 
   await window.supabase.from('wallet_transactions').insert({
-    user_id: user.id, type: 'withdrawal', amount: Math.round(amountNaira), status: 'pending',
-    note: 'Withdrawal to ' + accountName + ' — ' + bankCode + ' ' + accountNumber,
-    reference: 'WD-' + Date.now() + '-' + user.id.slice(0, 6),
-  }).catch(function(){});
+    user_id: user.id, type: 'withdrawal', amount: amountNaira,
+    reference: 'WD-' + Date.now(), status: 'pending',
+    note: 'Withdrawal to ' + (accountName || accountNumber),
+  });
 
-  /* TODO: POST to Supabase Edge Function → Paystack Transfer API in production */
-  return { success: true, newBalance: newBalance };
+  /* Note: Actual bank transfer requires Paystack Transfer API via Edge Function.
+     The DB record is created here; a Supabase Edge Function should process it. */
+  return { success: true, newBalance };
 }
-
-/* ── Fetch wallet transaction history ───────────────────────── */
-async function fetchWalletTransactions(userId, limit) {
-  var { data } = await window.supabase.from('wallet_transactions')
-    .select('*').eq('user_id', userId)
-    .order('created_at', { ascending: false }).limit(limit || 20);
-  return data || [];
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PAYMENT FUNCTIONS
-══════════════════════════════════════════════════════════════ */
 
 /* ── Pay from wallet balance ─────────────────────────────────── */
 async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
   var amounts = calculateAmounts(amountNaira);
+
   var wallet = await getWallet(user.id);
   if (wallet._stub) throw new Error('Wallet system not set up. Please pay via Paystack.');
   if ((wallet.balance || 0) < amountNaira) {
     throw new Error('Insufficient wallet balance (₦' + Number(wallet.balance||0).toLocaleString() + '). Top up or pay via Paystack.');
   }
 
-  /* Deduct from customer wallet */
+  /* Deduct from customer */
   await window.supabase.from('wallets')
-    .update({ balance: (wallet.balance||0) - Math.round(amountNaira), updated_at: new Date().toISOString() })
+    .update({ balance: wallet.balance - amountNaira, updated_at: new Date().toISOString() })
     .eq('user_id', user.id);
 
-  /* Add to provider pending_balance */
-  if (taskerUserId) {
-    try {
-      var tWallet = await getWallet(taskerUserId);
-      if (!tWallet._stub) {
-        await window.supabase.from('wallets')
-          .update({ pending_balance: (tWallet.pending_balance||0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
-          .eq('user_id', taskerUserId);
-      }
-    } catch(e) {}
+  /* Record hold on tasker wallet as pending */
+  var taskerWallet = await getWallet(taskerUserId);
+  if (!taskerWallet._stub) {
+    await window.supabase.from('wallets')
+      .update({ pending_balance: (taskerWallet.pending_balance||0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
+      .eq('user_id', taskerUserId);
   }
 
-  var reference = 'ST-W-' + Date.now() + '-' + bookingId.slice(0, 8);
+  /* Log transactions */
   var code = generateCompletionCode();
+  await window.supabase.from('wallet_transactions').insert([
+    { user_id: user.id, type: 'escrow_hold', amount: amountNaira, booking_id: bookingId,
+      status: 'completed', note: 'Payment held in escrow for booking' },
+  ]);
 
-  /* Create payment record */
-  await window.supabase.from('payments').insert({
-    booking_id: bookingId, task_id: taskId||null, customer_id: user.id,
-    amount: amounts.total, platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount,
-    status: 'paid', reference: reference, paid_at: new Date().toISOString(),
-  }).catch(async function() {
-    await window.supabase.from('payments')
-      .update({ status: 'paid', paid_at: new Date().toISOString(), reference: reference })
-      .eq('booking_id', bookingId).eq('status', 'pending');
-  });
-
+  /* Update booking */
   await window.supabase.from('bookings')
-    .update({ payment_status: 'paid', status: 'in_progress', completion_code: code, payment_ref: reference })
+    .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira })
     .eq('id', bookingId);
 
-  /* Log transaction */
-  window.supabase.from('wallet_transactions').insert({
-    user_id: user.id, type: 'escrow_hold', amount: amounts.total,
-    reference: reference, booking_id: bookingId, status: 'completed', note: 'Payment held in escrow',
-  }).catch(function(){});
-
-  /* Notify tasker */
-  try {
-    var { data: bk } = await window.supabase.from('bookings').select('tasker_id').eq('id', bookingId).maybeSingle();
-    if (bk && bk.tasker_id) {
-      await window.supabase.from('notifications').insert({
-        user_id: bk.tasker_id, type: 'payment_received',
-        title: 'Payment Received! 💰',
-        message: 'Customer paid from their wallet. Get started, then mark the job as done when complete.',
-        data: { booking_id: bookingId }, is_read: false,
-      });
-    }
-  } catch(e) {}
-
-  return { reference, code, source: 'wallet' };
+  return { success: true, completionCode: code };
 }
 
 /* ── Initiate Paystack payment ───────────────────────────────── */
-async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, customerName, taskerUserId }) {
+async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, customerName }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
-  var amounts = calculateAmounts(amountNaira);
 
-  var payment;
-  var { data: existing } = await window.supabase.from('payments')
-    .select('*').eq('booking_id', bookingId).eq('status', 'pending').maybeSingle();
+  var amounts   = calculateAmounts(amountNaira);
+  var reference = 'ST-' + Date.now() + '-' + (bookingId || '').slice(0, 8);
+  var code      = generateCompletionCode();
 
-  var reference = 'ST-' + Date.now() + '-' + bookingId.slice(0, 8);
-  if (existing) {
-    await window.supabase.from('payments')
-      .update({ reference: reference, amount: amounts.total, platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount })
-      .eq('id', existing.id);
-    payment = Object.assign({}, existing, { reference: reference });
-  } else {
-    var { data: created, error: payErr } = await window.supabase.from('payments')
-      .insert({ booking_id: bookingId, task_id: taskId||null, customer_id: user.id,
-        amount: amounts.total, platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount,
-        status: 'pending', reference: reference })
-      .select().single();
-    if (payErr) throw payErr;
-    payment = created;
-  }
+  var { data: payment, error: payErr } = await window.supabase
+    .from('payments')
+    .insert({
+      booking_id:    bookingId,
+      task_id:       taskId || null,
+      customer_id:   user.id,
+      amount:        amounts.total,
+      platform_fee:  amounts.platformFee,
+      tasker_amount: amounts.taskerAmount,
+      payment_reference: reference,
+      status:        'pending',
+    })
+    .select('id').single();
+
+  if (payErr) throw payErr;
 
   return new Promise(function(resolve, reject) {
     if (typeof PaystackPop === 'undefined') {
-      reject(new Error('Paystack not loaded.')); return;
+      reject(new Error('Paystack not loaded. Check your internet connection.')); return;
     }
-    var settled = false;
     var handler = PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY, email: customerEmail || user.email,
-      amount: amounts.total * 100, currency: 'NGN', reference: reference,
-      metadata: { custom_fields: [
-        { display_name: 'Platform', variable_name: 'platform', value: 'StreetTasker' },
-        { display_name: 'Booking ID', variable_name: 'booking_id', value: bookingId },
-      ]},
-      callback: function(response) {
-        if (settled) return; settled = true;
-        _onPaystackSuccess(response.reference, payment.id, bookingId, amounts, taskerUserId)
-          .then(function(result) { resolve({ reference: response.reference, paymentId: payment.id, code: result.code, source: 'paystack' }); })
-          .catch(function(e) { reject(e); });
+      key:      PAYSTACK_PUBLIC_KEY,
+      email:    customerEmail || user.email,
+      amount:   Math.round(amountNaira) * 100,
+      ref:      reference,
+      currency: 'NGN',
+      metadata: { booking_id: bookingId, payment_id: payment.id, user_id: user.id },
+      callback: async function(response) {
+        try {
+          /* Mark payment paid + update booking */
+          await window.supabase.from('payments')
+            .update({ status: 'paid', paid_at: new Date().toISOString() })
+            .eq('id', payment.id);
+          await window.supabase.from('bookings')
+            .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira })
+            .eq('id', bookingId);
+          resolve({ reference: response.reference, paymentId: payment.id, completionCode: code });
+        } catch(e) { reject(e); }
       },
-      onClose: function() {
-        if (settled) return; settled = true;
-        reject(new Error('Payment window closed. Click pay again to retry.'));
-      },
+      onClose: function() { reject(new Error('Payment window closed.')); },
     });
     handler.openIframe();
   });
 }
 
-/* ── Called after Paystack confirms payment ──────────────────── */
-async function _onPaystackSuccess(reference, paymentId, bookingId, amounts, taskerUserId) {
-  var code = generateCompletionCode();
-
-  await window.supabase.from('payments')
-    .update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', paymentId);
-
-  await window.supabase.from('bookings')
-    .update({ payment_status: 'paid', status: 'in_progress', completion_code: code, payment_ref: reference })
-    .eq('id', bookingId);
-
-  /* Add to provider pending_balance */
-  if (taskerUserId && amounts) {
-    try {
-      var tWallet = await getWallet(taskerUserId);
-      if (!tWallet._stub) {
-        await window.supabase.from('wallets')
-          .update({ pending_balance: (tWallet.pending_balance||0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
-          .eq('user_id', taskerUserId);
-      }
-    } catch(e) {}
-  }
-
-  /* Mark payment_request paid */
-  try {
-    var { data: bkThread } = await window.supabase.from('message_threads')
-      .select('id').or('context_id.eq.' + bookingId).maybeSingle();
-    if (bkThread) {
-      await window.supabase.from('payment_requests')
-        .update({ status: 'paid' }).eq('thread_id', bkThread.id).in('status', ['pending', 'accepted']);
-    }
-  } catch(_e) {}
-
-  /* Notify tasker */
-  try {
-    var { data: bk } = await window.supabase.from('bookings')
-      .select('tasker_id').eq('id', bookingId).maybeSingle();
-    if (bk && bk.tasker_id) {
-      await window.supabase.from('notifications').insert({
-        user_id: bk.tasker_id, type: 'payment_received',
-        title: 'Payment Received! 💰',
-        message: 'The customer has paid. Get started, then mark the job as done when complete.',
-        data: { booking_id: bookingId, reference: reference }, is_read: false,
-      });
-    }
-  } catch(e) {}
-
-  return { code };
-}
-
-/* ── Service provider marks job as done ──────────────────────── */
+/* ── Mark job as done (tasker side) ─────────────────────────── */
 async function markJobDone(bookingId) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
 
+  await window.supabase.from('bookings')
+    .update({ status: 'awaiting_confirmation' })
+    .eq('id', bookingId);
+
+  /* Notify customer */
   var { data: bk } = await window.supabase.from('bookings')
-    .select('status, payment_status, customer_id, tasker_id')
-    .eq('id', bookingId).maybeSingle();
-
-  if (!bk) throw new Error('Booking not found.');
-  if (bk.payment_status !== 'paid') throw new Error('Customer has not paid yet.');
-  if (bk.status === 'completed') throw new Error('This job is already completed.');
-  if (String(bk.tasker_id) !== String(user.id)) throw new Error('Only the service provider can mark this job as done.');
-
-  await window.supabase.from('bookings').update({ status: 'provider_done' }).eq('id', bookingId);
-
-  try {
+    .select('customer_id').eq('id', bookingId).maybeSingle();
+  if (bk && bk.customer_id) {
     await window.supabase.from('notifications').insert({
-      user_id: bk.customer_id, type: 'job_marked_done',
-      title: 'Job Marked Complete ✅',
-      message: 'Your service provider has marked the job as done. Please confirm in your Bookings tab to release payment.',
+      user_id: bk.customer_id, type: 'job_done',
+      title: '✅ Job Marked Complete',
+      message: 'The provider says the job is done. If you agree, confirm completion to release payment.',
       data: { booking_id: bookingId }, is_read: false,
     });
-  } catch(e) {}
-
+  }
   return { success: true };
 }
 
-/* ── Customer confirms job done → reveal code ────────────────── */
+/* ── Confirm job complete (customer side) → returns code ─────── */
 async function confirmJobComplete(bookingId) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
 
   var { data: bk } = await window.supabase.from('bookings')
-    .select('completion_code, payment_status, tasker_id')
-    .eq('id', bookingId).eq('customer_id', user.id).maybeSingle();
+    .select('completion_code, payment_status, status, tasker_id')
+    .eq('id', bookingId).maybeSingle();
 
   if (!bk) throw new Error('Booking not found.');
   if (bk.payment_status !== 'paid') throw new Error('Payment not made yet.');
+  if (bk.status === 'completed') throw new Error('This booking is already completed.');
+  if (bk.status === 'disputed') throw new Error('This booking is under dispute.');
 
-  await window.supabase.from('bookings').update({ status: 'awaiting_code' }).eq('id', bookingId);
+  await window.supabase.from('bookings')
+    .update({ status: 'awaiting_confirmation' }).eq('id', bookingId);
 
-  try {
+  /* Notify tasker */
+  if (bk.tasker_id) {
     await window.supabase.from('notifications').insert({
-      user_id: bk.tasker_id, type: 'job_confirmed',
-      title: 'Job Confirmed — Claim Your Payment! 🎉',
-      message: 'Customer confirmed the job is done. Enter your completion code in Bookings to receive payment.',
+      user_id: bk.tasker_id, type: 'job_completion',
+      title: '🎉 Job Confirmed — Enter Your Code!',
+      message: 'The customer confirmed the job is done. Enter your 6-digit completion code to receive your payment.',
       data: { booking_id: bookingId }, is_read: false,
     });
-  } catch(e) {}
-
+  }
   return { code: bk.completion_code };
 }
 
-/* ── Tasker submits completion code → releases earnings to wallet */
+/* ── Submit completion code (tasker side) → releases payment ─── */
 async function submitCompletionCode(bookingId, enteredCode) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
 
-  var { data: bk } = await window.supabase.from('bookings')
-    .select('completion_code, status, payment_status, code_attempts, tasker_id, customer_id')
+  var { data: bk, error } = await window.supabase.from('bookings')
+    .select('completion_code, status, payment_status, code_attempts, tasker_id, customer_id, amount')
     .eq('id', bookingId).maybeSingle();
 
-  if (!bk) throw new Error('Booking not found.');
+  if (error || !bk) throw new Error('Booking not found.');
   if (bk.payment_status !== 'paid') throw new Error('Payment not made for this booking.');
   if (bk.status === 'completed') throw new Error('This booking is already completed.');
-  if (bk.status === 'disputed')  throw new Error('This booking is under dispute.');
+  if (bk.status === 'disputed') throw new Error('This booking is under dispute.');
 
   var attempts = (bk.code_attempts || 0) + 1;
   if (attempts > 3) throw new Error('Too many incorrect attempts. Contact support.');
 
-  if (enteredCode.trim() !== String(bk.completion_code).trim()) {
+  if (String(enteredCode).trim() !== String(bk.completion_code).trim()) {
     await window.supabase.from('bookings').update({ code_attempts: attempts }).eq('id', bookingId);
     var remaining = 3 - attempts;
-    throw new Error('Incorrect code. ' + (remaining > 0 ? remaining + ' attempt' + (remaining===1?'':'s') + ' remaining.' : 'No attempts left. Contact support.'));
+    throw new Error('Incorrect code. ' + (remaining > 0
+      ? remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining.'
+      : 'No attempts left. Contact support.'));
   }
 
-  /* Mark completed */
+  /* Code correct — release payment */
+  var amounts = calculateAmounts(bk.amount || 0);
+
   await window.supabase.from('bookings')
     .update({ status: 'completed', payment_status: 'released', completed_at: new Date().toISOString() })
     .eq('id', bookingId);
-  await window.supabase.from('payments')
-    .update({ status: 'released', released_at: new Date().toISOString() }).eq('booking_id', bookingId);
 
-  /* Release pending_balance → balance for provider */
+  /* Credit tasker wallet */
   try {
-    var { data: payRec } = await window.supabase.from('payments')
-      .select('tasker_amount').eq('booking_id', bookingId).maybeSingle();
-    var earn = payRec ? (payRec.tasker_amount || 0) : 0;
-    var tWallet = await getWallet(bk.tasker_id);
-    if (!tWallet._stub) {
+    var taskerWallet = await getWallet(bk.tasker_id);
+    if (!taskerWallet._stub) {
       await window.supabase.from('wallets').update({
-        balance: (tWallet.balance||0) + earn,
-        pending_balance: Math.max(0, (tWallet.pending_balance||0) - earn),
-        updated_at: new Date().toISOString(),
+        balance:         (taskerWallet.balance || 0) + amounts.taskerAmount,
+        pending_balance: Math.max(0, (taskerWallet.pending_balance || 0) - (bk.amount || 0)),
+        updated_at:      new Date().toISOString(),
       }).eq('user_id', bk.tasker_id);
-      window.supabase.from('wallet_transactions').insert({
-        user_id: bk.tasker_id, type: 'earning', amount: earn,
-        booking_id: bookingId, status: 'completed', note: 'Payment released for completed job',
-      }).catch(function(){});
+
+      await window.supabase.from('wallet_transactions').insert({
+        user_id: bk.tasker_id, type: 'escrow_release',
+        amount:  amounts.taskerAmount, booking_id: bookingId,
+        status: 'completed',
+        note: '₦' + Number(amounts.taskerAmount).toLocaleString() + ' released after job completion',
+      });
     }
-  } catch(e) { console.warn('Wallet release error:', e.message); }
+  } catch(we) {
+    console.warn('[Payments] wallet credit error:', we.message);
+  }
 
   /* Notify customer */
   try {
     await window.supabase.from('notifications').insert({
       user_id: bk.customer_id, type: 'job_completed',
-      title: 'Job Completed! ⭐',
-      message: 'The job is complete and payment has been released. Please leave a review.',
+      title: '✅ Job Completed!',
+      message: 'Great news! The job is complete. Please leave a review.',
       data: { booking_id: bookingId }, is_read: false,
     });
-  } catch(e) {}
+  } catch(ne) { /* non-blocking */ }
 
   return { success: true };
 }
@@ -459,8 +432,6 @@ async function raiseDispute(bookingId, reason) {
 
   await window.supabase.from('bookings')
     .update({ status: 'disputed', dispute_reason: reason }).eq('id', bookingId);
-  await window.supabase.from('payments')
-    .update({ status: 'disputed' }).eq('booking_id', bookingId);
 
   try {
     var { data: bk } = await window.supabase.from('bookings')
@@ -478,22 +449,32 @@ async function raiseDispute(bookingId, reason) {
         });
       }
     }
-  } catch(e) {}
+  } catch(e) { /* non-blocking */ }
   return { success: true };
 }
 
 /* ── Fetch payment for a booking ─────────────────────────────── */
 async function fetchPayment(bookingId) {
-  var { data } = await window.supabase.from('payments')
-    .select('*').eq('booking_id', bookingId).maybeSingle();
-  return data;
+  try {
+    var { data } = await window.supabase.from('payments')
+      .select('*').eq('booking_id', bookingId).maybeSingle();
+    return data;
+  } catch(e) { return null; }
 }
 
 /* ── Expose globally ─────────────────────────────────────────── */
 window.ST = window.ST || {};
 window.ST.payments = {
-  calculateAmounts, getWallet, topUpWallet, withdrawFromWallet,
-  fetchWalletTransactions, payFromWallet, initiatePayment,
-  markJobDone, confirmJobComplete, submitCompletionCode,
-  raiseDispute, fetchPayment,
+  calculateAmounts,
+  getWallet,
+  fetchWalletTransactions,
+  topUpWallet,
+  withdrawFromWallet,
+  payFromWallet,
+  initiatePayment,
+  markJobDone,
+  confirmJobComplete,
+  submitCompletionCode,
+  raiseDispute,
+  fetchPayment,
 };
