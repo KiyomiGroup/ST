@@ -118,10 +118,10 @@
                 Notifications
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
-              <a href="messages.html" class="dashboard-nav-item" style="text-decoration:none;color:inherit;">
+              <button class="dashboard-nav-item" data-panel="messages" onclick="switchPanel('messages',this);loadMessagesPanel()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Messages
-              </a>
+              </button>
               <button class="dashboard-nav-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadTaskerWallet()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 My Wallet
@@ -300,7 +300,30 @@
               <div id="notifList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
             </div>
 
-
+            <!-- MESSAGES PANEL -->
+            <div id="panel-messages" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Messages</h2>
+              </div>
+              
+              <!-- Conversations list view -->
+              <div id="messagesConversationList" style="display:flex;flex-direction:column;gap:8px;padding:16px;">
+                <div style="text-align:center;padding:32px;color:var(--text-muted);">Loading conversations...</div>
+              </div>
+              
+              <!-- Message thread view -->
+              <div id="messagesThreadView" style="display:none;flex-direction:column;height:100%;padding:16px;">
+                <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
+                  <button class="btn btn-ghost btn-sm" onclick="backToConversationList()">← Back</button>
+                  <h3 id="messagesThreadName" style="margin:0;flex:1;font-size:0.95rem;"></h3>
+                </div>
+                <div id="messagesDisplay" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:8px 0;margin-bottom:12px;"></div>
+                <div style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px;">
+                  <textarea id="messageInputField" class="form-input" placeholder="Type your message..." style="flex:1;max-height:100px;resize:vertical;min-height:40px;"></textarea>
+                  <button class="btn btn-primary" onclick="sendMessageInPanel()" style="height:fit-content;white-space:nowrap;">Send</button>
+                </div>
+              </div>
+            </div>
 
 <div id="panel-profile" class="dashboard-panel">
               <div class="panel-header">
@@ -965,7 +988,7 @@
       /* Check for URL hash — used by external links to jump to a panel
          e.g. dashboard-tasker.html#profile opens Edit Page directly */
       var startHash = window.location.hash.replace('#','');
-      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification',];
+      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','messages','profile','verification',];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
         if (startHash === 'profile')       loadProfilePanel();
@@ -2144,6 +2167,157 @@ CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (aut
       }
     }
     window.loadTaskerWallet = loadTaskerWallet;
+
+    /* ====== MESSAGES PANEL ====== */
+    var _currentMessageConversationId = null;
+    var _messageRefreshInterval = null;
+
+    async function loadMessagesPanel() {
+      var list = document.getElementById('messagesConversationList');
+      if (!list) return;
+      
+      try {
+        var { data: { user } } = await window.supabase.auth.getUser();
+        if (!user) return;
+        
+        var { data: conversations } = await window.supabase
+          .from('conversations')
+          .select('id, customer_id, tasker_id, last_message_at, customer:customer_id(id, name, avatar_url), tasker:tasker_id(id, name, avatar_url)')
+          .or(`customer_id.eq.${user.id},tasker_id.eq.${user.id}`)
+          .order('last_message_at', { ascending: false });
+        
+        if (!conversations || conversations.length === 0) {
+          list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">No messages yet. Messages appear here after you confirm a booking or accept an application.</div>';
+          return;
+        }
+        
+        list.innerHTML = '';
+        conversations.forEach(function(conv) {
+          var otherUser = conv.customer_id === user.id ? conv.tasker : conv.customer;
+          if (!otherUser) return;
+          
+          var row = document.createElement('div');
+          row.style.cssText = 'padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:all 0.2s;display:flex;gap:12px;align-items:center;';
+          row.onmouseover = function() { row.style.background = 'var(--bg-subtle)'; };
+          row.onmouseout = function() { row.style.background = 'transparent'; };
+          
+          var avatar = document.createElement('img');
+          avatar.src = otherUser.avatar_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23e5e7eb%22/%3E%3C/svg%3E';
+          avatar.style.cssText = 'width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;';
+          row.appendChild(avatar);
+          
+          var content = document.createElement('div');
+          content.style.cssText = 'flex:1;min-width:0;';
+          content.innerHTML = 
+            '<div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">' + (otherUser.name || 'User') + '</div>' +
+            '<div style="font-size:0.8rem;color:var(--text-muted);">' + new Date(conv.last_message_at).toLocaleDateString() + '</div>';
+          row.appendChild(content);
+          
+          row.onclick = function() {
+            openMessageThread(conv.id, otherUser.name || 'User');
+          };
+          
+          list.appendChild(row);
+        });
+        
+      } catch(e) {
+        console.error('[loadMessagesPanel]', e);
+        list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">Error: ' + e.message + '</div>';
+      }
+    }
+    window.loadMessagesPanel = loadMessagesPanel;
+
+    function backToConversationList() {
+      _currentMessageConversationId = null;
+      if (_messageRefreshInterval) clearInterval(_messageRefreshInterval);
+      document.getElementById('messagesConversationList').style.display = 'flex';
+      document.getElementById('messagesThreadView').style.display = 'none';
+    }
+    window.backToConversationList = backToConversationList;
+
+    async function openMessageThread(conversationId, otherUserName) {
+      _currentMessageConversationId = conversationId;
+      document.getElementById('messagesConversationList').style.display = 'none';
+      document.getElementById('messagesThreadView').style.display = 'flex';
+      document.getElementById('messagesThreadName').textContent = otherUserName;
+      document.getElementById('messageInputField').value = '';
+      
+      await refreshMessageThread();
+      if (_messageRefreshInterval) clearInterval(_messageRefreshInterval);
+      _messageRefreshInterval = setInterval(refreshMessageThread, 2000);
+      
+      setTimeout(function() { document.getElementById('messageInputField').focus(); }, 100);
+    }
+    window.openMessageThread = openMessageThread;
+
+    async function refreshMessageThread() {
+      if (!_currentMessageConversationId) return;
+      
+      try {
+        var { data: messages } = await window.supabase
+          .from('messages')
+          .select('id, sender_id, content, created_at')
+          .eq('conversation_id', _currentMessageConversationId)
+          .order('created_at', { ascending: true });
+        
+        var { data: { user } } = await window.supabase.auth.getUser();
+        var display = document.getElementById('messagesDisplay');
+        if (!display) return;
+        
+        display.innerHTML = '';
+        (messages || []).forEach(function(msg) {
+          var isSent = msg.sender_id === user.id;
+          var bubble = document.createElement('div');
+          bubble.style.cssText = 'display:flex;' + (isSent ? 'justify-content:flex-end;' : 'justify-content:flex-start;');
+          
+          var content = document.createElement('div');
+          content.style.cssText = 
+            'max-width:70%;padding:10px 14px;border-radius:var(--radius-md);word-wrap:break-word;word-break:break-word;line-height:1.4;' +
+            (isSent ? 'background:var(--blue);color:#fff;' : 'background:var(--bg-subtle);color:var(--text-primary);');
+          content.textContent = msg.content;
+          
+          bubble.appendChild(content);
+          display.appendChild(bubble);
+        });
+        
+        display.scrollTop = display.scrollHeight;
+      } catch(e) {
+        console.error('[refreshMessageThread]', e);
+      }
+    }
+
+    async function sendMessageInPanel() {
+      if (!_currentMessageConversationId) return;
+      var input = document.getElementById('messageInputField');
+      var content = input.value.trim();
+      if (!content) return;
+      
+      input.disabled = true;
+      try {
+        var { data: { user } } = await window.supabase.auth.getUser();
+        var { data: conv } = await window.supabase.from('conversations').select('customer_id, tasker_id').eq('id', _currentMessageConversationId).single();
+        if (!conv) throw new Error('Conversation not found');
+        
+        var receiverId = conv.customer_id === user.id ? conv.tasker_id : conv.customer_id;
+        var { error } = await window.supabase.from('messages').insert({
+          conversation_id: _currentMessageConversationId,
+          sender_id: user.id,
+          receiver_id: receiverId,
+          content: content
+        });
+        
+        if (error) throw error;
+        input.value = '';
+        await refreshMessageThread();
+      } catch(e) {
+        console.error('[sendMessageInPanel]', e);
+        showToast('Error: ' + e.message, 'error');
+      } finally {
+        input.disabled = false;
+        input.focus();
+      }
+    }
+    window.sendMessageInPanel = sendMessageInPanel;
 
     function openTaskerWithdrawModal() {
       var m = document.createElement('div');
