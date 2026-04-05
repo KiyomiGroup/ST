@@ -1272,7 +1272,10 @@
           taskerId:    String(taskerId),
           customerId:  String(cu.id),
         }));
-        window.location.href = 'messages.html';
+        /* Open messages panel inline — no page navigation */
+        var msgNavBtn = document.querySelector('[data-panel="messages"]');
+        switchPanel('messages', msgNavBtn);
+        setTimeout(initMessagesPanel, 50);
       } catch(e) { showToast('Could not open messages: ' + e.message); }
     }
     window.openInAppChat = openInAppChat;

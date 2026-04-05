@@ -2182,7 +2182,10 @@
           customerId:  otherUserId,
           senderRole:  'tasker',
         }));
-        window.location.href = 'messages.html';
+        /* Open messages panel inline */
+        var msgNavBtn = document.querySelector('[data-panel="messages"]');
+        switchPanel('messages', msgNavBtn);
+        setTimeout(initMessagesPanel, 50);
       } catch(e) { showToast('Could not open messages: ' + e.message); }
     }
     window.openTaskerChat = openTaskerChat;

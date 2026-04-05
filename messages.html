@@ -349,29 +349,30 @@
     document.getElementById('dashSidebar').innerHTML = html;
   }
 
-  /* ── Boot ── */
+  /* ── Boot ── redirect to the correct dashboard with messages panel open ── */
   async function initPage() {
+    /* Determine role from cache first for instant redirect */
+    var cachedRole = localStorage.getItem('st_role') || 'customer';
+    var dashUrl = cachedRole === 'tasker'
+      ? 'dashboard-tasker.html#messages'
+      : 'dashboard-customer.html#messages';
+
+    /* Confirm auth before redirecting */
     try {
       var res = await window.supabase.auth.getSession();
-      _user = res.data && res.data.session && res.data.session.user;
-    } catch(e) { sidebarStatus('⚠ Could not connect. Refresh to try again.'); return; }
-
-    if (!_user) { window.location.href = 'login.html?redirect=messages.html'; return; }
-
-    _role = (_user.user_metadata && _user.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
-
-    renderSidebar(_role);
-    await loadThreadList();
-    startGlobalSubscriptions();
-
-    var ctx = sessionStorage.getItem('st_chat_context');
-    if (ctx) {
-      try {
-        var c = JSON.parse(ctx);
-        sessionStorage.removeItem('st_chat_context');
-        await openOrCreateThread(c);
-      } catch(e) {}
+      var u = res.data && res.data.session && res.data.session.user;
+      if (!u) { window.location.href = 'login.html?redirect=messages.html'; return; }
+      /* Update role from live session */
+      var role = (u.user_metadata && u.user_metadata.role) || cachedRole;
+      dashUrl = role === 'tasker'
+        ? 'dashboard-tasker.html#messages'
+        : 'dashboard-customer.html#messages';
+    } catch(e) {
+      /* Network error — still redirect to dashboard, it will handle auth */
     }
+
+    /* Redirect into the dashboard messages panel */
+    window.location.replace(dashUrl);
   }
 
   /* ── Thread list ── */
