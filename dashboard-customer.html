@@ -1295,22 +1295,78 @@
       if (!list) return;
       
       try {
-        var { data: { user } } = await window.supabase.auth.getUser();
-        if (!user) return;
+        /* CRITICAL FIX 1: Check if Supabase is initialized */
+        if (!window.supabase) {
+          console.error('[loadMessagesPanel] Supabase not initialized');
+          list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ System not ready. Please refresh the page.</div>';
+          return;
+        }
         
-        var { data: conversations } = await window.supabase
+        /* CRITICAL FIX 2: Check if auth.getUser exists */
+        if (!window.supabase.auth || !window.supabase.auth.getUser) {
+          console.error('[loadMessagesPanel] Supabase auth not available');
+          list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Authentication not available. Please refresh.</div>';
+          return;
+        }
+        
+        var { data: { user }, error: userError } = await window.supabase.auth.getUser();
+        if (userError) {
+          console.error('[loadMessagesPanel] Auth error:', userError);
+          list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Authentication error: ' + userError.message + '</div>';
+          return;
+        }
+        
+        if (!user) {
+          list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Please log in to view messages.</div>';
+          return;
+        }
+        
+        /* CRITICAL FIX 3: Add timeout and explicit error handling for query */
+        var queryPromise = window.supabase
           .from('conversations')
           .select('id, customer_id, tasker_id, last_message_at, customer:customer_id(id, name, avatar_url), tasker:tasker_id(id, name, avatar_url)')
-          .or(`customer_id.eq.${user.id},tasker_id.eq.${user.id}`)
           .order('last_message_at', { ascending: false });
         
-        if (!conversations || conversations.length === 0) {
-          list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">No messages yet. Messages appear here after you confirm a booking or accept an application.</div>';
+        /* CRITICAL FIX 4: Set 10 second timeout for database query */
+        var timeoutPromise = new Promise(function(_, reject) {
+          setTimeout(function() { reject(new Error('Query timeout - conversations table not responding')); }, 10000);
+        });
+        
+        var { data: conversations, error } = await Promise.race([queryPromise, timeoutPromise]).catch(function(err) {
+          throw err;
+        });
+        
+        /* CRITICAL FIX 5: Always check for query errors */
+        if (error) {
+          console.error('[loadMessagesPanel] Query error:', error);
+          console.error('[loadMessagesPanel] Error code:', error.code);
+          console.error('[loadMessagesPanel] Error details:', error.details);
+          
+          if (error.code === '42P01') {
+            list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Conversations table not found. Database not initialized.</div>';
+          } else if (error.code === '42501') {
+            list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Permission denied. Check RLS policies on conversations table.</div>';
+          } else {
+            list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Database error: ' + (error.message || 'Unknown error') + '</div>';
+          }
+          return;
+        }
+        
+        if (!conversations) conversations = [];
+        
+        /* Filter conversations on client-side */
+        var userConversations = conversations.filter(function(conv) {
+          return conv && (conv.customer_id === user.id || conv.tasker_id === user.id);
+        });
+        
+        if (userConversations.length === 0) {
+          list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">No messages yet.<br>Messages appear after you confirm a booking or accept an application.</div>';
           return;
         }
         
         list.innerHTML = '';
-        conversations.forEach(function(conv) {
+        userConversations.forEach(function(conv) {
+          if (!conv) return;
           var otherUser = conv.customer_id === user.id ? conv.tasker : conv.customer;
           if (!otherUser) return;
           
@@ -1339,8 +1395,14 @@
         });
         
       } catch(e) {
-        console.error('[loadMessagesPanel]', e);
-        list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">Error: ' + e.message + '</div>';
+        console.error('[loadMessagesPanel] Exception:', e);
+        console.error('[loadMessagesPanel] Stack:', e.stack);
+        
+        if (e.message && e.message.includes('timeout')) {
+          list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Server timeout. Check Supabase status and try again.</div>';
+        } else {
+          list.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:0.85rem;">⚠ Error: ' + (e.message || 'Unknown error') + '<br><small style="margin-top:8px;display:block;color:#6b7280;">Check browser console (F12) for details</small></div>';
+        }
       }
     }
     window.loadMessagesPanel = loadMessagesPanel;
