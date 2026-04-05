@@ -2185,7 +2185,7 @@
         /* Open messages panel inline */
         var msgNavBtn = document.querySelector('[data-panel="messages"]');
         switchPanel('messages', msgNavBtn);
-        setTimeout(initMessagesPanel, 50);
+        if (typeof window.initMessagesPanel === 'function') window.initMessagesPanel();
       } catch(e) { showToast('Could not open messages: ' + e.message); }
     }
     window.openTaskerChat = openTaskerChat;
