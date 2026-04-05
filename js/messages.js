@@ -36,22 +36,34 @@ async function safeQuery(queryFn) {
 
 /* ── Load all conversations for a user ── */
 async function loadConversations(userId) {
+  /* Fetch threads without JOIN to avoid FK dependency on public.users */
   const result = await safeQuery(() =>
     window.supabase
       .from('message_threads')
-      .select(`
-        id, customer_id, tasker_id, context_type, context_id,
-        last_message, last_message_at, customer_unread, tasker_unread,
-        agreed_price,
-        customer:customer_id(id, name, first_name, last_name, avatar_url),
-        tasker:tasker_id(id, name, first_name, last_name, avatar_url)
-      `)
+      .select('id, customer_id, tasker_id, context_type, context_id, last_message, last_message_at, customer_unread, tasker_unread, agreed_price')
       .or('customer_id.eq.' + userId + ',tasker_id.eq.' + userId)
       .order('last_message_at', { ascending: false })
   );
-
   if (result.error) throw result.error;
-  return result.data || [];
+  const threads = result.data || [];
+
+  /* Fetch names for the other party in each thread */
+  const otherIds = [...new Set(threads.map(t => userId === t.customer_id ? t.tasker_id : t.customer_id).filter(Boolean))];
+  const nameMap = {};
+  if (otherIds.length > 0) {
+    try {
+      const uRes = await window.supabase.from('users').select('id,name,first_name,last_name,avatar_url').in('id', otherIds);
+      (uRes.data || []).forEach(u => { nameMap[u.id] = u; });
+    } catch(_e) {}
+  }
+
+  return threads.map(t => {
+    const isCustomer = userId === t.customer_id;
+    const otherId    = isCustomer ? t.tasker_id : t.customer_id;
+    t.customer = isCustomer ? { id: userId } : (nameMap[otherId] || { id: otherId });
+    t.tasker   = isCustomer ? (nameMap[otherId] || { id: otherId }) : { id: userId };
+    return t;
+  });
 }
 
 /* ── Load messages for a thread ── */
