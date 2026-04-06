@@ -254,7 +254,7 @@ async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
 }
 
 /* ── Initiate Paystack payment ───────────────────────────────── */
-async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, customerName }) {
+async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, customerName, taskerUserId }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
 
@@ -262,12 +262,23 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
   var reference = 'ST-' + Date.now() + '-' + (bookingId || '').slice(0, 8);
   var code      = generateCompletionCode();
 
+  /* If taskerUserId not passed, try to get it from the booking */
+  var resolvedTaskerId = taskerUserId || null;
+  if (!resolvedTaskerId && bookingId) {
+    try {
+      var bkLookup = await window.supabase.from('bookings')
+        .select('tasker_id').eq('id', bookingId).maybeSingle();
+      if (bkLookup.data) resolvedTaskerId = bkLookup.data.tasker_id;
+    } catch(_e) {}
+  }
+
   var { data: payment, error: payErr } = await window.supabase
     .from('payments')
     .insert({
       booking_id:    bookingId,
       task_id:       taskId || null,
       customer_id:   user.id,
+      tasker_id:     resolvedTaskerId || null,
       amount:        amounts.total,
       platform_fee:  amounts.platformFee,
       tasker_amount: amounts.taskerAmount,
@@ -288,16 +299,46 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
       amount:   Math.round(amountNaira) * 100,
       ref:      reference,
       currency: 'NGN',
-      metadata: { booking_id: bookingId, payment_id: payment.id, user_id: user.id },
+      metadata: { booking_id: bookingId, payment_id: payment.id, user_id: user.id, tasker_id: resolvedTaskerId },
       callback: async function(response) {
         try {
-          /* Mark payment paid + update booking */
+          /* Mark payment paid */
           await window.supabase.from('payments')
             .update({ status: 'paid', paid_at: new Date().toISOString() })
             .eq('id', payment.id);
+
+          /* Update booking — store amount so submitCompletionCode can read it */
           await window.supabase.from('bookings')
             .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira })
             .eq('id', bookingId);
+
+          /* ── CRITICAL: Credit tasker's pending_balance ──
+             Money is now in escrow. Tasker sees it as "Pending" until job confirmed. */
+          if (resolvedTaskerId) {
+            try {
+              var taskerWallet = await getWallet(resolvedTaskerId);
+              if (!taskerWallet._stub) {
+                await window.supabase.from('wallets').update({
+                  pending_balance: (taskerWallet.pending_balance || 0) + amounts.taskerAmount,
+                  updated_at: new Date().toISOString(),
+                }).eq('user_id', resolvedTaskerId);
+
+                /* Log escrow hold on tasker's transaction history */
+                await window.supabase.from('wallet_transactions').insert({
+                  user_id:    resolvedTaskerId,
+                  type:       'escrow_hold',
+                  amount:     amounts.taskerAmount,
+                  booking_id: bookingId,
+                  reference:  response.reference,
+                  status:     'pending',
+                  note:       'Payment held in escrow — job not yet confirmed',
+                });
+              }
+            } catch(we) {
+              console.warn('[Payments] Could not credit tasker pending_balance:', we.message);
+            }
+          }
+
           resolve({ reference: response.reference, paymentId: payment.id, completionCode: code });
         } catch(e) { reject(e); }
       },
