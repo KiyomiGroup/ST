@@ -2334,27 +2334,7 @@
             ? '<div style="padding:16px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;margin-top:8px;">' +
               '<p style="font-weight:700;color:#92400e;margin:0 0 6px;">⚠ Wallet tables not set up</p>' +
               '<p style="font-size:0.83rem;color:#78350f;margin:0 0 10px;">Run this SQL in your Supabase SQL Editor to enable the wallet:</p>' +
-              '<pre style="font-size:0.72rem;background:#fff;border:1px solid #f59e0b;border-radius:6px;padding:10px;overflow-x:auto;white-space:pre-wrap;color:#374151;">' +
-              'CREATE TABLE IF NOT EXISTS wallets (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid UNIQUE REFERENCES auth.users(id),
-  balance numeric DEFAULT 0,
-  pending_balance numeric DEFAULT 0,
-  updated_at timestamptz DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS wallet_transactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id),
-  type text, amount numeric, reference text,
-  booking_id uuid, status text DEFAULT 'completed',
-  note text, created_at timestamptz DEFAULT now()
-);
-ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own_wallet" ON wallets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_txns_read" ON wallet_transactions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);' +
-              '</pre>' +
+              '<pre style="font-size:0.72rem;background:#fff;border:1px solid #f59e0b;border-radius:6px;padding:10px;overflow-x:auto;white-space:pre-wrap;color:#374151;">CREATE TABLE IF NOT EXISTS wallets (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid UNIQUE REFERENCES auth.users(id), balance numeric DEFAULT 0, pending_balance numeric DEFAULT 0, updated_at timestamptz DEFAULT now()); CREATE TABLE IF NOT EXISTS wallet_transactions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES auth.users(id), type text, amount numeric, reference text, booking_id uuid, status text DEFAULT \'completed\', note text, created_at timestamptz DEFAULT now()); ALTER TABLE wallets ENABLE ROW LEVEL SECURITY; ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY; CREATE POLICY "own_wallet" ON wallets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id); CREATE POLICY "own_txns_read" ON wallet_transactions FOR SELECT USING (auth.uid() = user_id); CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);</pre>' +
               '<button onclick="_walletLoading=false;loadTaskerWallet()" style="margin-top:10px;padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;">Check Again</button>' +
               '</div>'
             : (!txns.length
@@ -2996,30 +2976,16 @@ CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (aut
   async function openOrCreateThread(ctx) {
     if (!ctx || !ctx.customerId || !ctx.taskerId) { sidebarStatus('⚠ Missing context. <a href="javascript:history.back()" style="color:var(--blue);font-size:0.78rem;">← Go back</a>'); return; }
     try {
-      /* Query for existing thread - allow either direction (customer-tasker or tasker-customer) */
-      var q1 = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
-      if (ctx.contextId) q1 = q1.eq('context_id',ctx.contextId);
-      var ex1 = await q1.maybeSingle();
-      
-      /* If not found, try reverse (tasker-customer) */
+      var q = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
+      if (ctx.contextId) q = q.eq('context_id',ctx.contextId);
+      var ex = await q.maybeSingle();
       var threadId;
-      if (ex1.data) { threadId = ex1.data.id; }
+      if (ex.data) { threadId = ex.data.id; }
       else {
-        /* No existing thread - create new one */
-        var ins = { 
-          customer_id:ctx.customerId, 
-          tasker_id:ctx.taskerId, 
-          context_type:ctx.contextType||'booking', 
-          context_id:ctx.contextId||null,
-          last_message_at:new Date().toISOString(), 
-          customer_unread:0, 
-          tasker_unread:0 
-        };
+        var ins = { customer_id:ctx.customerId, tasker_id:ctx.taskerId, context_type:ctx.contextType||'task_application', last_message_at:new Date().toISOString(), customer_unread:0, tasker_unread:0 };
+        if (ctx.contextId) ins.context_id = ctx.contextId;
         var cr = await window.supabase.from('message_threads').insert(ins).select('id').single();
-        if (cr.error) {
-          console.error('Insert error:', cr.error);
-          throw cr.error;
-        }
+        if (cr.error) throw cr.error;
         threadId = cr.data.id;
       }
       await loadThreadList();
@@ -3027,7 +2993,6 @@ CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (aut
       var firstMsg = sessionStorage.getItem('st_first_msg');
       if (firstMsg) { sessionStorage.removeItem('st_first_msg'); document.getElementById('msgInput').value = firstMsg; await sendMsg(); }
     } catch(e) {
-      console.error('openOrCreateThread error:', e);
       sidebarStatus('⚠ Could not open conversation:<br><span style="font-size:0.76rem;color:var(--red);">'+esc((e&&e.message)||String(e))+'</span>');
     }
   }
