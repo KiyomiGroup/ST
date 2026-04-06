@@ -2128,7 +2128,8 @@
       var userName  = (_user.user_metadata && _user.user_metadata.name) || '';
 
       if (window.ST && window.ST.messages) {
-        await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName);
+        /* Pass taskerUserId explicitly so acceptPaymentRequest doesn't need to re-fetch */
+        await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName, t.tasker_id || null);
         /* Mark card as paid in UI */
         var card = document.getElementById('prc-'+requestId);
         if (card) {
