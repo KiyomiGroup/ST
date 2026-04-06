@@ -194,7 +194,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Applications
     </button>
-    <button onclick="mobileSwitchPanel('bookings','📅 Bookings')" id="mob-bookings">
+    <button onclick="mobileSwitchPanel('bookings','📅 Bookings');loadBookings()" id="mob-bookings">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Bookings
     </button>
@@ -277,7 +277,7 @@
                 Messages
                 <span id="msgNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
-              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this)">
+              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this);loadBookings()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
               </button>
@@ -1114,14 +1114,45 @@
         ? tasks.map(taskCard).join('')
         : empty('No tasks posted yet. Each task gets matched with providers.', 'Post a Task', 'post-task.html');
 
-      var bkRes=await window.supabase.from('bookings')
-        .select('*, taskers:tasker_id(name, service, service_name, business_name, location, user_id)')
-        .eq('customer_id',user.id).order('created_at',{ascending:false}).catch(function(){return {data:[]};});
-      bookings=bkRes.data||[];
-      document.getElementById('bookingsList').innerHTML = bookings.length
-        ? bookings.map(bookingCard).join('')
-        : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
+      /* Load bookings into the panel */
+      loadBookings();
     }
+
+    /* ── Bookings ───────────────────────────────────────────── */
+    var bookingsLoaded = false;
+
+    async function loadBookings() {
+      var el = document.getElementById('bookingsList');
+      if (!el) return;
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Loading bookings...</p>';
+
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var user = sess.data.session && sess.data.session.user;
+        if (!user) {
+          el.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Please log in to view bookings.</p>';
+          return;
+        }
+
+        var bkRes = await window.supabase
+          .from('bookings')
+          .select('*, taskers:tasker_id(name, service, service_name, business_name, location, user_id)')
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false });
+
+        var bookings = (bkRes.data) || [];
+
+        el.innerHTML = bookings.length
+          ? bookings.map(bookingCard).join('')
+          : empty('No bookings yet. Browse services and book a provider.', 'Find Services', 'find-taskers.html');
+
+        bookingsLoaded = true;
+      } catch(e) {
+        console.error('[Bookings]', e);
+        el.innerHTML = '<p style="color:var(--red);font-size:0.88rem;padding:16px 0;">Could not load bookings. <button onclick="loadBookings()" style="color:var(--blue);background:none;border:none;cursor:pointer;font-size:0.88rem;">Retry</button></p>';
+      }
+    }
+    window.loadBookings = loadBookings;
 
     /* ── Profile editing ─────────────────────────────────────── */
     let _currentProfileImageFile = null;
