@@ -2996,16 +2996,30 @@ CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (aut
   async function openOrCreateThread(ctx) {
     if (!ctx || !ctx.customerId || !ctx.taskerId) { sidebarStatus('⚠ Missing context. <a href="javascript:history.back()" style="color:var(--blue);font-size:0.78rem;">← Go back</a>'); return; }
     try {
-      var q = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
-      if (ctx.contextId) q = q.eq('context_id',ctx.contextId);
-      var ex = await q.maybeSingle();
+      /* Query for existing thread - allow either direction (customer-tasker or tasker-customer) */
+      var q1 = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
+      if (ctx.contextId) q1 = q1.eq('context_id',ctx.contextId);
+      var ex1 = await q1.maybeSingle();
+      
+      /* If not found, try reverse (tasker-customer) */
       var threadId;
-      if (ex.data) { threadId = ex.data.id; }
+      if (ex1.data) { threadId = ex1.data.id; }
       else {
-        var ins = { customer_id:ctx.customerId, tasker_id:ctx.taskerId, context_type:ctx.contextType||'task_application', last_message_at:new Date().toISOString(), customer_unread:0, tasker_unread:0 };
-        if (ctx.contextId) ins.context_id = ctx.contextId;
+        /* No existing thread - create new one */
+        var ins = { 
+          customer_id:ctx.customerId, 
+          tasker_id:ctx.taskerId, 
+          context_type:ctx.contextType||'booking', 
+          context_id:ctx.contextId||null,
+          last_message_at:new Date().toISOString(), 
+          customer_unread:0, 
+          tasker_unread:0 
+        };
         var cr = await window.supabase.from('message_threads').insert(ins).select('id').single();
-        if (cr.error) throw cr.error;
+        if (cr.error) {
+          console.error('Insert error:', cr.error);
+          throw cr.error;
+        }
         threadId = cr.data.id;
       }
       await loadThreadList();
@@ -3013,6 +3027,7 @@ CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (aut
       var firstMsg = sessionStorage.getItem('st_first_msg');
       if (firstMsg) { sessionStorage.removeItem('st_first_msg'); document.getElementById('msgInput').value = firstMsg; await sendMsg(); }
     } catch(e) {
+      console.error('openOrCreateThread error:', e);
       sidebarStatus('⚠ Could not open conversation:<br><span style="font-size:0.76rem;color:var(--red);">'+esc((e&&e.message)||String(e))+'</span>');
     }
   }
