@@ -159,7 +159,7 @@ async function sendPaymentRequest(threadId, senderId, receiverId, amountNaira) {
 }
 
 /* ── Customer accepts a payment request ── */
-async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmail, customerName, taskerUserIdOverride) {
+async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmail, customerName, taskerUserIdHint) {
   const { data: req, error: reqErr } = await window.supabase
     .from('payment_requests').select('*').eq('id', requestId).maybeSingle();
   if (reqErr) throw reqErr;
@@ -172,23 +172,17 @@ async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmai
       .update({ status: 'accepted' }).eq('id', requestId);
   }
 
-  /* Store agreed price on thread so header badge shows for both parties */
+  /* Store agreed price on thread */
   await window.supabase.from('message_threads')
     .update({ agreed_price: req.amount }).eq('id', threadId);
 
-  /* Use override if provided (faster), otherwise look up from thread */
-  var taskerUserId = taskerUserIdOverride || null;
+  /* Resolve tasker ID — use hint, then req.tasker_id, then fetch from thread */
+  let taskerUserId = taskerUserIdHint || req.tasker_id || null;
   if (!taskerUserId) {
     try {
-      var threadRes = await window.supabase
-        .from('message_threads').select('tasker_id').eq('id', threadId).maybeSingle();
-      if (threadRes.data) taskerUserId = threadRes.data.tasker_id;
+      const tRes = await window.supabase.from('message_threads').select('tasker_id').eq('id', threadId).maybeSingle();
+      if (tRes.data) taskerUserId = tRes.data.tasker_id;
     } catch(_e) {}
-  }
-
-  /* If still no taskerUserId, try from the payment_request sender */
-  if (!taskerUserId && req.sender_id) {
-    taskerUserId = req.sender_id;
   }
 
   if (window.ST && window.ST.payments) {
@@ -198,7 +192,7 @@ async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmai
       amountNaira:  req.amount,
       customerEmail,
       customerName,
-      taskerUserId, /* Pass tasker ID so their wallet gets credited */
+      taskerUserId,
     });
   }
   throw new Error('Payment system not loaded. Please refresh and try again.');
