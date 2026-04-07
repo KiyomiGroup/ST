@@ -1950,6 +1950,15 @@
     if (m.type === 'payment_request') {
       return buildPaymentRequestBubble(m, isMine, timeStr);
     }
+    if (m.type === 'payment_confirmed') {
+      var parts  = (m.body || '').split(':');
+      var code   = parts[1] || '';
+      var total  = parseInt(parts[2], 10) || 0;
+      var earn   = parseInt(parts[3], 10) || 0;
+      var fee    = parseInt(parts[4], 10) || 0;
+      /* Customer (sender) sees the code; tasker sees the card without the code (code given verbally) */
+      return buildPaymentConfirmedBubble(isMine ? code : '', total, earn, fee, isMine);
+    }
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
@@ -2128,18 +2137,47 @@
       var userName  = (_user.user_metadata && _user.user_metadata.name) || '';
 
       if (window.ST && window.ST.messages) {
-        /* Pass taskerUserId explicitly so acceptPaymentRequest doesn't need to re-fetch */
-        await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName, t.tasker_id || null);
+        var result = await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName, t.tasker_id || null);
+        
         /* Mark card as paid in UI */
         var card = document.getElementById('prc-'+requestId);
         if (card) {
           var actDiv = card.querySelector('.prc-actions');
-          if (actDiv) actDiv.innerHTML = '<span class="prc-status-badge paid">✓ Payment sent</span>';
+          if (actDiv) actDiv.innerHTML = '<span class="prc-status-badge paid">✓ Payment sent — funds in escrow</span>';
         }
-        /* Mark request as paid in DB after Paystack succeeds */
+
+        /* Mark request as paid in DB */
         await window.supabase.from('payment_requests')
           .update({ status: 'paid' }).eq('id', requestId);
-        showToast('Payment successful! The tasker has been notified.');
+
+        /* Show the 6-digit code in the chat as a special system message */
+        var completionCode = result && result.completionCode;
+        var paidAmt  = Number(amount);
+        var fee      = Math.round(paidAmt * 0.12);
+        var earning  = paidAmt - fee;
+        var sysBody  = 'PAYMENT_CONFIRMED:' + (completionCode || '') + ':' + paidAmt + ':' + earning + ':' + fee;
+
+        try {
+          /* Insert a system message into the thread */
+          var sysMsg = await window.supabase.from('messages').insert({
+            thread_id:   threadId,
+            sender_id:   _user.id,
+            receiver_id: t.tasker_id || t.customer_id,
+            body:        sysBody,
+            type:        'payment_confirmed',
+            flagged:     false,
+          }).select().single();
+
+          /* Append the confirmation card immediately to chat */
+          var chatBody = document.getElementById('chatBody');
+          if (chatBody && sysMsg.data) {
+            var confirmCard = buildPaymentConfirmedBubble(completionCode, paidAmt, earning, fee, true);
+            chatBody.appendChild(confirmCard);
+            chatBody.scrollTop = chatBody.scrollHeight;
+          }
+        } catch(_se) {}
+
+        showToast('✅ Payment confirmed! Share the 6-digit code with the tasker when the job is done.');
       } else {
         throw new Error('Payment module not loaded.');
       }
@@ -2157,6 +2195,39 @@
     }
   }
   window.handleAcceptPayment = handleAcceptPayment;
+
+  /* ── Build payment-confirmed card (shown in customer chat after payment) ── */
+  function buildPaymentConfirmedBubble(code, totalPaid, earning, fee, isMine) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-bubble-wrap ' + (isMine ? 'mine' : 'theirs');
+    wrap.style.maxWidth = '360px';
+    wrap.innerHTML =
+      '<div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:18px 20px;width:100%;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+          '<div style="width:32px;height:32px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</div>' +
+          '<div style="font-weight:800;font-size:0.92rem;color:#14532d;">Payment Confirmed ✓</div>' +
+        '</div>' +
+        '<div style="font-size:0.8rem;color:#166534;margin-bottom:12px;line-height:1.6;">' +
+          '<strong>₦' + Number(totalPaid).toLocaleString() + '</strong> is held securely in escrow.<br>' +
+          'Tasker earns <strong>₦' + Number(earning).toLocaleString() + '</strong> (₦' + Number(fee).toLocaleString() + ' platform fee).' +
+        '</div>' +
+        (code ? (
+          '<div style="background:#fff;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px;">' +
+            '<div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#16a34a;margin-bottom:6px;letter-spacing:0.05em;">Your 6-digit completion code</div>' +
+            '<div style="font-size:2rem;font-weight:900;letter-spacing:0.2em;color:#14532d;">' + esc(String(code)) + '</div>' +
+            '<div style="font-size:0.72rem;color:#6b7280;margin-top:6px;">Give this to the tasker ONLY after the job is done</div>' +
+          '</div>'
+        ) : '') +
+        '<div style="font-size:0.72rem;color:#4b5563;line-height:1.6;">' +
+          '1. Tasker completes the job<br>' +
+          '2. You give them this code<br>' +
+          '3. They enter it → payment released' +
+        '</div>' +
+      '</div>';
+    return wrap;
+  }
 
   /* ── Open or create thread ── */
   async function openOrCreateThread(ctx) {

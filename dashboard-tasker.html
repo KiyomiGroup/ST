@@ -2765,6 +2765,16 @@
     if (m.type === 'payment_request') {
       return buildPaymentRequestBubble(m, isMine, timeStr);
     }
+    if (m.type === 'payment_confirmed') {
+      var parts  = (m.body || '').split(':');
+      var total  = parseInt(parts[2], 10) || 0;
+      var earn   = parseInt(parts[3], 10) || 0;
+      var fee    = parseInt(parts[4], 10) || 0;
+      /* Tasker sees payment details + Enter Code button; they get the code verbally from customer */
+      var t      = _threads.find(function(x){ return x.id === _active; });
+      var bkId   = (t && t.context_id) || '';
+      return buildTaskerPaymentCard(total, earn, fee, bkId, timeStr);
+    }
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
@@ -2971,6 +2981,39 @@
     }
   }
   window.handleAcceptPayment = handleAcceptPayment;
+
+  /* ── Tasker payment received card in chat ── */
+  function buildTaskerPaymentCard(totalPaid, earning, fee, bookingId, timeStr) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-bubble-wrap theirs';
+    wrap.style.maxWidth = '360px';
+    wrap.innerHTML =
+      '<div style="background:#fffbeb;border:2px solid #fbbf24;border-radius:16px;padding:18px 20px;width:100%;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+          '<div style="width:32px;height:32px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' +
+          '</div>' +
+          '<div style="font-weight:800;font-size:0.92rem;color:#92400e;">💰 Payment received!</div>' +
+        '</div>' +
+        '<div style="font-size:0.8rem;color:#78350f;margin-bottom:14px;line-height:1.6;">' +
+          '<strong>₦' + Number(totalPaid).toLocaleString() + '</strong> is held in escrow for you.<br>' +
+          'Your earning: <strong>₦' + Number(earning).toLocaleString() + '</strong> (₦' + Number(fee).toLocaleString() + ' platform fee).' +
+        '</div>' +
+        '<div style="background:#fff;border:1px solid #fbbf24;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.78rem;color:#4b5563;line-height:1.7;">' +
+          '<strong>Next steps:</strong><br>' +
+          '1. Complete the job<br>' +
+          '2. Ask the customer for their 6-digit code<br>' +
+          '3. Enter the code below to release your payment' +
+        '</div>' +
+        (bookingId ? (
+          '<button onclick="openCodeEntry('' + esc(bookingId) + '')" style="width:100%;padding:11px;background:#d97706;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;">Enter 6-digit code → Claim Payment</button>'
+        ) : (
+          '<p style="font-size:0.78rem;color:#6b7280;text-align:center;">Go to Bookings to enter the code</p>'
+        )) +
+      '</div>' +
+      '<div class="msg-time" style="margin-top:4px;">' + timeStr + '</div>';
+    return wrap;
+  }
 
   /* ── Open or create thread ── */
   async function openOrCreateThread(ctx) {
