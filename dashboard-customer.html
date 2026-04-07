@@ -1850,11 +1850,18 @@
         try {
           if (t.context_type === 'booking') {
             var bk = await window.supabase.from('bookings')
-              .select('notes,tasks(title),taskers(service,service_name,business_name)')
+              .select('notes, task_id, status, payment_status')
               .eq('id', t.context_id).maybeSingle();
             if (bk.data) {
               var d = bk.data;
-              var label = (d.tasks&&d.tasks.title)||(d.taskers&&(d.taskers.service_name||d.taskers.service||d.taskers.business_name))||(d.notes&&d.notes.slice(0,40))||'Service booking';
+              var label = 'Service booking';
+              if (d.task_id) {
+                try {
+                  var tkRes = await window.supabase.from('tasks').select('title').eq('id', d.task_id).maybeSingle();
+                  if (tkRes.data && tkRes.data.title) label = tkRes.data.title;
+                } catch(_te) {}
+              }
+              if (d.notes && label === 'Service booking') label = d.notes.slice(0, 40);
               document.getElementById('chatHeadSub').textContent = label;
             }
           } else {
