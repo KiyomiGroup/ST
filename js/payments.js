@@ -44,6 +44,8 @@
    ============================================================ */
 'use strict';
 
+/* TESTING: swap to pk_test_... and your test secret key while testing
+   LIVE:    pk_live_cd782742c439571c4b3773383f7cda0c36166c62 */
 const PAYSTACK_PUBLIC_KEY = 'pk_live_cd782742c439571c4b3773383f7cda0c36166c62';
 const PLATFORM_COMMISSION = 0.12;
 
@@ -202,30 +204,47 @@ async function topUpWallet(amountNaira, userEmail) {
   });
 }
 
-/* ── Withdraw from wallet to bank ───────────────────────────── */
+/* ── Withdraw from wallet to bank — calls Edge Function ─────── */
 async function withdrawFromWallet(amountNaira, bankCode, accountNumber, accountName) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in first.');
 
   var wallet = await getWallet(user.id);
-  if (wallet._stub) throw new Error('Wallet system not yet set up. Please contact support.');
-  if ((wallet.balance || 0) < amountNaira) throw new Error('Insufficient wallet balance.');
-  if (!bankCode || !accountNumber) throw new Error('Please provide bank code and account number.');
+  if (wallet._stub) throw new Error('Wallet system not set up. Contact support.');
+  if ((wallet.balance || 0) < amountNaira) {
+    throw new Error('Insufficient balance (₦' + Number(wallet.balance||0).toLocaleString() + ' available).');
+  }
+  if (!accountNumber || accountNumber.length !== 10) throw new Error('Account number must be exactly 10 digits.');
+  if (!bankCode) throw new Error('Please enter your bank name.');
+  if (!accountName) throw new Error('Please enter the account name.');
 
-  var newBalance = (wallet.balance || 0) - Math.round(amountNaira);
-  await window.supabase.from('wallets')
-    .update({ balance: newBalance, updated_at: new Date().toISOString() })
-    .eq('user_id', user.id);
+  /* Call the Supabase Edge Function — this is where the real bank transfer happens */
+  var session = await window.supabase.auth.getSession();
+  var token   = session.data.session && session.data.session.access_token;
+  if (!token) throw new Error('Session expired. Please log in again.');
 
-  await window.supabase.from('wallet_transactions').insert({
-    user_id: user.id, type: 'withdrawal', amount: amountNaira,
-    reference: 'WD-' + Date.now(), status: 'pending',
-    note: 'Withdrawal to ' + (accountName || accountNumber),
+  var edgeFnUrl = 'https://ftoiqbacutnbjnztguts.supabase.co/functions/v1/process-withdrawal';
+
+  var res = await fetch(edgeFnUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer ' + token,
+    },
+    body: JSON.stringify({
+      amount:         Math.round(amountNaira),
+      bank_name:      bankCode,        /* We pass the bank name — Edge Fn resolves the code */
+      account_number: accountNumber,
+      account_name:   accountName,
+    }),
   });
 
-  /* Note: Actual bank transfer requires Paystack Transfer API via Edge Function.
-     The DB record is created here; a Supabase Edge Function should process it. */
-  return { success: true, newBalance };
+  var data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Withdrawal failed. Please try again.');
+  }
+
+  return { success: true, newBalance: data.new_balance, message: data.message };
 }
 
 /* ── Pay from wallet balance ─────────────────────────────────── */
