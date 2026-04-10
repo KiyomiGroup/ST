@@ -236,34 +236,43 @@ async function withdrawFromWallet(amountNaira, bankCode, accountNumber, accountN
   if (!bankCode) throw new Error('Please enter your bank name.');
   if (!accountName) throw new Error('Please enter the account name.');
 
-  /* Call the Supabase Edge Function — this is where the real bank transfer happens */
-  var session = await window.supabase.auth.getSession();
-  var token   = session.data.session && session.data.session.access_token;
-  if (!token) throw new Error('Session expired. Please log in again.');
+ /* Call the Supabase Edge Function — this is where the real bank transfer happens */
 
-  var edgeFnUrl = 'https://ftoiqbacutnbjnztguts.supabase.co/functions/v1/process-withdrawal';
+const { data: { session } } = await window.supabase.auth.getSession();
 
-  var res = await fetch(edgeFnUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': 'Bearer ' + token,
-    },
-    body: JSON.stringify({
-      amount:         Math.round(amountNaira),
-      bank_name:      bankCode,        /* We pass the bank name — Edge Fn resolves the code */
-      account_number: accountNumber,
-      account_name:   accountName,
-    }),
-  });
-
-  var data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.error || 'Withdrawal failed. Please try again.');
-  }
-
-  return { success: true, newBalance: data.new_balance, message: data.message };
+if (!session || !session.access_token) {
+  throw new Error('Session expired. Please log in again.');
 }
+
+const token = session.access_token;
+
+var edgeFnUrl = 'https://ftoiqbacutnbjnztguts.supabase.co/functions/v1/process-withdrawal';
+
+var res = await fetch(edgeFnUrl, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + token,
+  },
+  body: JSON.stringify({
+    amount: Math.round(amountNaira),
+    bank_name: bankCode,
+    account_number: accountNumber,
+    account_name: accountName,
+  }),
+});
+
+var data = await res.json();
+
+if (!res.ok || !data.success) {
+  throw new Error(data.error || 'Withdrawal failed. Please try again.');
+}
+
+return {
+  success: true,
+  newBalance: data.new_balance,
+  message: data.message
+};
 
 /* ── Pay from wallet balance ─────────────────────────────────── */
 async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
