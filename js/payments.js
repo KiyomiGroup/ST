@@ -183,9 +183,8 @@ async function topUpWallet(amountNaira, userEmail) {
       metadata: { user_id: user.id, type: 'topup' },
       /* Bug fix: same async-callback issue as initiatePayment — plain wrapper
          immediately invokes an async IIFE so Paystack never receives a Promise. */
-      callback: function(response) {
-        (async function() {
-          try {
+      callback: async function(response) {
+  try {
             /* Credit wallet */
             var wallet = await getWallet(user.id);
             if (!wallet._stub) {
