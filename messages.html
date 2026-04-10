@@ -643,12 +643,23 @@
     return wrap;
   }
 
-  function appendBubble(m) {
+  function appendBubble(m, tmpId) {
     var body = document.getElementById('chatBody');
     if (!body || body.style.display === 'none') return;
     var empty = body.querySelector('div[style*="text-align:center"]');
     if (empty) empty.remove();
-    body.appendChild(buildBubble(m));
+
+    /* Dedup: the Realtime INSERT event fires for our OWN sends too.
+       If this is our own message coming back from the DB, find and
+       remove the optimistic temp bubble we already appended. */
+    if (!tmpId && m.sender_id === (_user && _user.id)) {
+      var temp = body.querySelector('[data-tmp-id]');
+      if (temp) temp.remove();
+    }
+
+    var bubble = buildBubble(m);
+    if (tmpId) bubble.dataset.tmpId = tmpId;
+    body.appendChild(bubble);
     body.scrollTop = body.scrollHeight;
   }
 
@@ -662,7 +673,8 @@
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
     if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
 
-    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' });
+    var tmpId = 'tmp-'+Date.now();
+    appendBubble({ id:tmpId, sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' }, tmpId);
     input.value = ''; input.style.height = 'auto';
 
     try {
