@@ -273,7 +273,7 @@ return {
   newBalance: data.new_balance,
   message: data.message
 };
-
+}
 /* ── Pay from wallet balance ─────────────────────────────────── */
 async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
   var { data: { user } } = await window.supabase.auth.getUser();
