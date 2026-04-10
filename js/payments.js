@@ -215,7 +215,7 @@ async function topUpWallet(amountNaira, userEmail) {
     console.error("Payment callback error:", e);
     reject(e);
   }
-}
+},
       onClose: function() { reject(new Error('Payment window closed.')); },
     });
     handler.openIframe();
