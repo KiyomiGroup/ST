@@ -735,14 +735,25 @@
       if (t.context_type === 'booking' && t.context_id) {
         bookingId = t.context_id;
       } else if (t.context_type === 'task_application' && t.context_id) {
-        /* Find the booking linked to this application */
-        var bkRes = await window.supabase
-          .from('bookings')
-          .select('id')
-          .eq('application_id', t.context_id)
-          .eq('customer_id', _user.id)
-          .maybeSingle();
-        bookingId = bkRes.data && bkRes.data.id;
+        /* application_id column doesn't exist on bookings — look up via task_applications */
+        try {
+          var appRes = await window.supabase
+            .from('task_applications')
+            .select('task_id')
+            .eq('id', t.context_id)
+            .maybeSingle();
+          if (appRes.data && appRes.data.task_id) {
+            var bkRes2 = await window.supabase
+              .from('bookings')
+              .select('id')
+              .eq('task_id', appRes.data.task_id)
+              .eq('customer_id', _user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            bookingId = bkRes2.data && bkRes2.data.id;
+          }
+        } catch(_appErr) {}
       }
 
       /* Fallback: find any booking between these two parties */
