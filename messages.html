@@ -649,16 +649,22 @@
     var empty = body.querySelector('div[style*="text-align:center"]');
     if (empty) empty.remove();
 
-    /* Dedup: the Realtime INSERT event fires for our OWN sends too.
-       If this is our own message coming back from the DB, find and
-       remove the optimistic temp bubble we already appended. */
+    /* Bug fix: Supabase Realtime fires an INSERT event for our OWN sends too,
+       so without deduplication every message appears twice.
+       Strategy: sendMsg stamps a data-tmp-body attribute on the optimistic
+       bubble it appends immediately. When the real DB row arrives via Realtime
+       (tmpId is undefined), we find the matching temp bubble by body text and
+       remove it before inserting the confirmed one.
+       Using body text (not a timestamp) is robust against the small delay
+       between optimistic render and the Realtime event arriving. */
     if (!tmpId && m.sender_id === (_user && _user.id)) {
-      var temp = body.querySelector('[data-tmp-id]');
+      var escaped = (m.body || '').replace(/"/g, '&quot;');
+      var temp = body.querySelector('[data-tmp-body="' + escaped + '"]');
       if (temp) temp.remove();
     }
 
     var bubble = buildBubble(m);
-    if (tmpId) bubble.dataset.tmpId = tmpId;
+    if (tmpId) bubble.dataset.tmpBody = (m.body || '');
     body.appendChild(bubble);
     body.scrollTop = body.scrollHeight;
   }
@@ -673,8 +679,8 @@
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
     if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
 
-    var tmpId = 'tmp-'+Date.now();
-    appendBubble({ id:tmpId, sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' }, tmpId);
+    var _tmpBody = text;
+    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' }, _tmpBody);
     input.value = ''; input.style.height = 'auto';
 
     try {
