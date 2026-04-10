@@ -185,6 +185,12 @@ async function topUpWallet(amountNaira, userEmail) {
          immediately invokes an async IIFE so Paystack never receives a Promise. */
       callback: async function(response) {
   try {
+     
+  } catch (e) {
+    console.error("Payment callback error:", e);
+    reject(e);
+  }
+}
             /* Credit wallet */
             var wallet = await getWallet(user.id);
             if (!wallet._stub) {
