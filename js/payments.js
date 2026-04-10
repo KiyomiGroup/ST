@@ -181,22 +181,26 @@ async function topUpWallet(amountNaira, userEmail) {
       ref:      reference,
       currency: 'NGN',
       metadata: { user_id: user.id, type: 'topup' },
-      callback: async function(response) {
-        try {
-          /* Credit wallet */
-          var wallet = await getWallet(user.id);
-          if (!wallet._stub) {
-            await window.supabase.from('wallets')
-              .update({ balance: (wallet.balance || 0) + Math.round(amountNaira), updated_at: new Date().toISOString() })
-              .eq('user_id', user.id);
-            await window.supabase.from('wallet_transactions').insert({
-              user_id: user.id, type: 'topup', amount: amountNaira,
-              reference: response.reference, status: 'completed',
-              note: 'Wallet top-up via Paystack',
-            });
-          }
-          resolve({ reference: response.reference, amount: amountNaira });
-        } catch(e) { reject(e); }
+      /* Bug fix: same async-callback issue as initiatePayment — plain wrapper
+         immediately invokes an async IIFE so Paystack never receives a Promise. */
+      callback: function(response) {
+        (async function() {
+          try {
+            /* Credit wallet */
+            var wallet = await getWallet(user.id);
+            if (!wallet._stub) {
+              await window.supabase.from('wallets')
+                .update({ balance: (wallet.balance || 0) + Math.round(amountNaira), updated_at: new Date().toISOString() })
+                .eq('user_id', user.id);
+              await window.supabase.from('wallet_transactions').insert({
+                user_id: user.id, type: 'topup', amount: amountNaira,
+                reference: response.reference, status: 'completed',
+                note: 'Wallet top-up via Paystack',
+              });
+            }
+            resolve({ reference: response.reference, amount: amountNaira });
+          } catch(e) { reject(e); }
+        })();
       },
       onClose: function() { reject(new Error('Payment window closed.')); },
     });
@@ -345,70 +349,79 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
       ref:      reference,
       currency: 'NGN',
       metadata: { booking_id: bookingId, payment_id: payment.id, user_id: user.id, tasker_id: resolvedTaskerId },
-      callback: async function(response) {
-        try {
-          /* 1. Mark payment as paid */
-          await window.supabase.from('payments')
-            .update({ status: 'paid', paid_at: new Date().toISOString() })
-            .eq('id', payment.id);
+      /* Bug fix: Paystack inline.js v1 validates typeof callback === 'function'
+         and may call it synchronously in some builds. An async function IS a
+         function, but returning a Promise from the callback confuses Paystack's
+         internal flow-control and can cause it to reject the handler entirely.
+         Fix: use a plain sync wrapper that immediately invokes an async IIFE,
+         keeping resolve/reject reachable via closure without leaking a Promise
+         back to Paystack. */
+      callback: function(response) {
+        (async function() {
+          try {
+            /* 1. Mark payment as paid */
+            await window.supabase.from('payments')
+              .update({ status: 'paid', paid_at: new Date().toISOString() })
+              .eq('id', payment.id);
 
-          /* 2. Update booking with payment status + completion code */
-          await window.supabase.from('bookings')
-            .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira, status: 'confirmed' })
-            .eq('id', bookingId);
+            /* 2. Update booking with payment status + completion code */
+            await window.supabase.from('bookings')
+              .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira, status: 'confirmed' })
+              .eq('id', bookingId);
 
-          /* 3. Write escrow record readable by TASKER (they own this row) 
-                RLS NOTE: customer cannot update tasker's wallet directly.
-                Instead we write to a shared escrow_payments table that tasker can read.
-                The tasker's wallet shows pending from this table. */
-          if (resolvedTaskerId) {
-            try {
-              /* Upsert escrow entry — tasker_id = owner for RLS purposes on read */
-              await window.supabase.from('escrow_payments').insert({
-                booking_id:   bookingId,
-                payment_id:   payment.id,
-                customer_id:  user.id,
-                tasker_id:    resolvedTaskerId,
-                amount:       amounts.total,
-                tasker_amount: amounts.taskerAmount,
-                platform_fee: amounts.platformFee,
-                reference:    response.reference,
-                status:       'held',
-                paid_at:      new Date().toISOString(),
-              });
-            } catch(escrowErr) {
-              /* If escrow_payments table not yet created, fall back to direct wallet update */
-              console.warn('[Payments] escrow_payments insert failed, trying direct wallet:', escrowErr.message);
+            /* 3. Write escrow record readable by TASKER (they own this row) 
+                  RLS NOTE: customer cannot update tasker's wallet directly.
+                  Instead we write to a shared escrow_payments table that tasker can read.
+                  The tasker's wallet shows pending from this table. */
+            if (resolvedTaskerId) {
               try {
-                /* Try to read tasker wallet (may fail if RLS blocks) */
-                var twRes = await window.supabase.from('wallets').select('id,pending_balance').eq('user_id', resolvedTaskerId).maybeSingle();
-                if (twRes.data) {
-                  await window.supabase.from('wallets')
-                    .update({ pending_balance: (twRes.data.pending_balance || 0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
-                    .eq('user_id', resolvedTaskerId);
-                }
-              } catch(_we) {}
+                /* Upsert escrow entry — tasker_id = owner for RLS purposes on read */
+                await window.supabase.from('escrow_payments').insert({
+                  booking_id:   bookingId,
+                  payment_id:   payment.id,
+                  customer_id:  user.id,
+                  tasker_id:    resolvedTaskerId,
+                  amount:       amounts.total,
+                  tasker_amount: amounts.taskerAmount,
+                  platform_fee: amounts.platformFee,
+                  reference:    response.reference,
+                  status:       'held',
+                  paid_at:      new Date().toISOString(),
+                });
+              } catch(escrowErr) {
+                /* If escrow_payments table not yet created, fall back to direct wallet update */
+                console.warn('[Payments] escrow_payments insert failed, trying direct wallet:', escrowErr.message);
+                try {
+                  /* Try to read tasker wallet (may fail if RLS blocks) */
+                  var twRes = await window.supabase.from('wallets').select('id,pending_balance').eq('user_id', resolvedTaskerId).maybeSingle();
+                  if (twRes.data) {
+                    await window.supabase.from('wallets')
+                      .update({ pending_balance: (twRes.data.pending_balance || 0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
+                      .eq('user_id', resolvedTaskerId);
+                  }
+                } catch(_we) {}
+              }
             }
-          }
 
-          /* 4. Notify tasker that payment was received */
-          if (resolvedTaskerId) {
-            try {
-              var fmtAmt = '₦' + Number(amounts.total).toLocaleString();
-              var fmtEarning = '₦' + Number(amounts.taskerAmount).toLocaleString();
-              await window.supabase.from('notifications').insert({
-                user_id:  resolvedTaskerId,
-                type:     'payment_received',
-                title:    '💰 Payment received! ' + fmtAmt,
-                message:  'A customer has paid ' + fmtAmt + ' for your service. Your earning (' + fmtEarning + ' after 12% fee) is held in escrow. Complete the job, get the customer to confirm, then enter the code to release payment.',
-                data:     { booking_id: bookingId, payment_id: payment.id, completion_code: code },
-                is_read:  false,
-              });
-            } catch(_ne) {}
-          }
+            /* 4. Notify tasker that payment was received */
+            if (resolvedTaskerId) {
+              try {
+                var fmtAmt = '₦' + Number(amounts.total).toLocaleString();
+                var fmtEarning = '₦' + Number(amounts.taskerAmount).toLocaleString();
+                await window.supabase.from('notifications').insert({
+                  user_id:  resolvedTaskerId,
+                  type:     'payment_received',
+                  title:    '💰 Payment received! ' + fmtAmt,
+                  message:  'A customer has paid ' + fmtAmt + ' for your service. Your earning (' + fmtEarning + ' after 12% fee) is held in escrow. Complete the job, get the customer to confirm, then enter the code to release payment.',
+                  data:     { booking_id: bookingId, payment_id: payment.id, completion_code: code },
+                  is_read:  false,
+                });
+              } catch(_ne) {}
+            }
 
-          resolve({ reference: response.reference, paymentId: payment.id, completionCode: code, taskerUserId: resolvedTaskerId });
-        } catch(e) { reject(e); }
+            resolve({ reference: response.reference, paymentId: payment.id, completionCode: code, taskerUserId: resolvedTaskerId });
+          } catch(e) { reject(e); }
+        })();
       },
       onClose: function() { reject(new Error('Payment window closed.')); },
     });
