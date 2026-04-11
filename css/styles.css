@@ -62,7 +62,11 @@
 
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -103,7 +107,7 @@ h3 { font-size: clamp(1rem,2vw,1.2rem); font-weight: 600; }
 p  { color: var(--text-secondary); font-weight: 400; }
 
 /* ── Layout ─────────────────────────────────────────────────── */
-.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; width: 100%; box-sizing: border-box; }
 .section    { padding: 88px 0; }
 .section-sm { padding: 56px 0; }
 
@@ -308,7 +312,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .hero-inner {
   position: relative; z-index: 1;
   display: grid; grid-template-columns: 1fr 1fr;
-  align-items: center; gap: 80px; width: 100%;
+  align-items: center; gap: clamp(24px, 5vw, 80px); width: 100%;
 }
 .hero-content h1 em { font-style: normal; color: var(--blue); }
 .hero-content p { font-size: 1.08rem; line-height: 1.7; margin-bottom: 32px; }
@@ -339,9 +343,10 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .hero-cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .hero-stats {
-  display: flex; gap: 40px;
+  display: flex; gap: clamp(16px, 4vw, 40px);
   margin-top: 48px; padding-top: 40px;
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .stat-num { display: block; font-size: 1.5rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.04em; }
 .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
@@ -501,7 +506,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .search-bar .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 14px 24px; flex-shrink: 0; }
 
 /* ── Taskers layout ───────────────────────────────────────────── */
-.taskers-layout { display: grid; grid-template-columns: 252px 1fr; gap: 28px; padding: 48px 0; align-items: start; }
+.taskers-layout { display: grid; grid-template-columns: 252px 1fr; gap: 28px; padding: 48px 0; align-items: start; width: 100%; }
 .filter-sidebar { position: sticky; top: calc(var(--nav-height) + 20px); }
 
 .filter-panel { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
@@ -773,25 +778,48 @@ p  { color: var(--text-secondary); font-weight: 400; }
   .filter-sidebar { position:static; }
 }
 @media (max-width:768px) {
+  /* Nav */
   .nav-links,.nav-actions { display:none; }
   .nav-toggle { display:flex; }
+  .nav-inner { padding: 0 14px; }
+
+  /* Grids */
   .grid-2,.grid-3,.grid-4 { grid-template-columns:repeat(2,1fr); }
   .step-grid { grid-template-columns:1fr; }
   .trend-grid { grid-template-columns:1fr 1fr; }
-  .hero-search { flex-direction:column; }
+
+  /* Hero */
+  .hero { padding: 80px 0 48px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .hero-panel { display: none; }           /* hide the right-side panel card */
+  .hero-search { flex-direction: column; border-radius: var(--radius-lg); }
   .hero-search-field + .hero-search-field { border-left:none; border-top:1px solid var(--border); }
-  .hero-search .btn { border-radius:var(--radius-sm); margin:8px; }
-  .cta-banner { flex-direction:column; padding:36px 28px; }
+  .hero-search .btn { border-radius: 0 0 var(--radius-md) var(--radius-md); margin: 0; padding: 14px; width: 100%; }
+  .hero-stats { flex-wrap: wrap; gap: 16px; margin-top: 28px; padding-top: 24px; }
+
+  /* Sections */
+  .cta-banner { flex-direction:column; padding:36px 20px; text-align: center; }
+  .cta-actions { justify-content: center; }
   .footer-top { grid-template-columns:1fr; gap:24px; }
-  .task-card,.auth-card { padding:28px 22px; }
+  .task-card,.auth-card { padding:24px 18px; }
   .form-row { grid-template-columns:1fr; }
+
+  /* Page sections padding */
+  .section { padding: 56px 0; }
 }
+
 @media (max-width:480px) {
+  .container { padding: 0 14px; }
   .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
   .trend-grid { grid-template-columns:1fr; }
   .taskers-grid { grid-template-columns:1fr; }
   .role-grid { grid-template-columns:1fr; }
-  .hero-stats { flex-direction:column; gap:20px; border-top:none; padding-top:24px; }
+  .hero-stats { flex-direction:column; gap:14px; border-top:none; padding-top:20px; }
+  .hero h1 { font-size: clamp(1.6rem, 7vw, 2.4rem); }
+  .hero-content p { font-size: 0.95rem; }
+  .section { padding: 40px 0; }
+  .page-hero { padding: 48px 0 28px; }
+  .page-hero h1 { font-size: 1.5rem; }
 }
 
 /* ============================================================
@@ -1491,12 +1519,12 @@ img { max-width: 100%; height: auto; }
 }
 
 @media (max-width: 480px) {
-  .container { padding: 0 12px; }
+  .container { padding: 0 14px; }
   .booking-grid, .stats-row { grid-template-columns: 1fr; }
   .dashboard-header { padding: 16px 12px; }
   .btn-full { width: 100%; }
-  h1 { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
-  .page-hero { padding: 48px 0 32px; }
+  h1 { font-size: clamp(1.4rem, 6vw, 2rem) !important; }
+  .page-hero { padding: 40px 0 24px; }
   .task-form-card-body { padding: 16px; }
 
   /* Application cards */
@@ -1652,3 +1680,199 @@ img { max-width: 100%; height: auto; }
 }
 
 
+
+
+/* ================================================================
+   MOBILE-FIRST OVERFLOW FIX — prevents ALL horizontal scroll
+   ================================================================ */
+
+/* Hard lock — nothing can ever make the page scroll sideways */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Every direct child of body is constrained */
+body > * {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* All elements use border-box so padding never adds width */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Images and media never overflow their container */
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent wide tables from overflowing — scroll within container */
+table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  /* Container always fits screen with comfortable padding */
+  .container {
+    width: 100%;
+    padding: 0 16px;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  /* Any flex row that hasn't been made responsive — force wrap */
+  .hero-cta,
+  .cta-actions,
+  .panel-header,
+  .booking-row-actions,
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  /* Find-taskers: filter sidebar hidden on mobile, show as overlay */
+  .taskers-layout {
+    grid-template-columns: 1fr !important;
+    padding: 24px 0;
+  }
+  .filter-sidebar {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(0,0,0,0.5);
+    align-items: flex-end;
+    padding: 0;
+  }
+  .filter-sidebar.mobile-open { display: flex; }
+  .filter-sidebar .filter-panel,
+  .filter-sidebar .filter-card {
+    width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px 16px 48px;
+    margin: 0;
+    background: var(--white);
+  }
+
+  /* Taskers grid — full width single column */
+  .taskers-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Tasker card — comfortable on mobile */
+  .tasker-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Page hero search bar */
+  .page-hero {
+    padding: 48px 0 28px;
+    overflow: hidden;
+  }
+  .page-hero h1 {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+  }
+
+  /* Section headers */
+  .section-header {
+    max-width: 100%;
+    padding: 0 4px;
+    margin-bottom: 32px;
+  }
+
+  /* Stats rows */
+  .stats-row,
+  .booking-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Hero panel (right side card) — hide on mobile, it pushes content */
+  .hero-panel { display: none !important; }
+  .hero-inner {
+    grid-template-columns: 1fr !important;
+    gap: 28px;
+  }
+
+  /* Nav search box */
+  .hero-search {
+    flex-direction: column;
+    border-radius: var(--radius-md);
+  }
+  .hero-search-field {
+    width: 100%;
+    min-width: 0;
+  }
+  .hero-search .btn {
+    width: 100%;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+    margin: 0 !important;
+  }
+
+  /* Category chips */
+  .cat-chips,
+  .filter-chips {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Long text items that force overflow */
+  .task-row-title,
+  .tasker-card .tc-name,
+  .booking-row-title {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  /* Modals — slide up from bottom */
+  .modal-overlay {
+    align-items: flex-end !important;
+  }
+  .modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    margin: 0 !important;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  /* Footer */
+  .footer-top { grid-template-columns: 1fr; }
+  .footer-links { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 14px; }
+
+  /* Single column everything */
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+  .stats-row, .booking-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Typography scale down */
+  h1 { font-size: clamp(1.5rem, 7vw, 2.2rem) !important; }
+  h2 { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+
+  /* Buttons full width in forms */
+  .form-submit-btn { width: 100%; }
+
+  /* Cards tighter padding */
+  .card, .tasker-card, .task-row-card {
+    padding: 14px !important;
+  }
+
+  /* Nav chip */
+  .nav-user-chip {
+    max-width: 90px;
+    font-size: 0.72rem;
+  }
+}
