@@ -2534,6 +2534,7 @@ function openMessagesPanel() {
   var _threads = [];
   var _active  = null;      /* active thread id */
   var _activeThread = null; /* full thread object */
+  var _sending = false;     /* prevent double message sends */
   var _realtimeSub     = null;
   var _globalThreadSub = null;
   var _globalNotifSub  = null;
@@ -2906,14 +2907,16 @@ function openMessagesPanel() {
   /* ── Send regular message ── */
   async function sendMsg() {
     if (!_active || !_user) return;
+    if (_sending) return;   /* prevent double-fire from Enter + click */
     var input = document.getElementById('msgInput');
     var text  = input.value.trim();
     if (!text) return;
+    _sending = true;
     var t = _threads.find(function(x){ return x.id === _active; });
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
-    if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
+    if (!receiverId) { showToast('Cannot send — missing receiver.'); _sending = false; return; }
 
-    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' });
+    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text', _isTmp:true });
     input.value = ''; input.style.height = 'auto';
 
     try {
@@ -2926,6 +2929,7 @@ function openMessagesPanel() {
       var senderName = (_user.user_metadata&&(_user.user_metadata.name||_user.user_metadata.email))||'Someone';
       await window.supabase.from('notifications').insert({ user_id:receiverId, type:'new_message', title:'💬 New message from '+senderName, message:text.length>80?text.slice(0,80)+'…':text, data:{thread_id:_active,sender_id:_user.id}, is_read:false });
     } catch(e) { showToast('Send failed: '+((e&&e.message)||String(e)), 'error'); }
+    finally { _sending = false; }
   }
   window.sendMsg = sendMsg;
 
