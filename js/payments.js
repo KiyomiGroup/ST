@@ -46,7 +46,7 @@
 
 /* TESTING: swap to pk_test_... and your test secret key while testing
    LIVE:    pk_live_cd782742c439571c4b3773383f7cda0c36166c62 */
-const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca982';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca98';
 const PLATFORM_COMMISSION = 0.12;
 
 /* ── Commission calculator ───────────────────────────────────── */
