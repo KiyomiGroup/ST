@@ -810,10 +810,32 @@
                     data: { task_id: taskParam }, is_read: false,
                   });
                 } catch(e2) {}
-                                barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-                    '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted! You can now message the tasker.</span>' +
-                    '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Back to Applications</a>' +
-                    '</div>';
+                                /* Get current user id for messaging */
+                const _custSess = await window.supabase.auth.getSession();
+                const _custId   = _custSess.data.session && _custSess.data.session.user.id;
+                barBody.innerHTML =
+                  '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                  '<span style="font-size:0.88rem;font-weight:700;color:var(--green);flex:1;min-width:0;">✓ Application Accepted!</span>' +
+                  '<button id="msgAfterAcceptBtn" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;cursor:pointer;">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                    'Message Tasker' +
+                  '</button>' +
+                  '<a href="dashboard-customer.html?panel=applications" style="display:inline-flex;align-items:center;padding:9px 16px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.88rem;font-weight:600;color:var(--text-primary);text-decoration:none;">Back to Dashboard</a>' +
+                  '</div>';
+                /* Wire message button */
+                document.getElementById('msgAfterAcceptBtn').onclick = function() {
+                  if (_custId && _taskerId) {
+                    sessionStorage.setItem('st_chat_context', JSON.stringify({
+                      contextType: 'task_application',
+                      contextId:   String(appParam),
+                      taskerId:    String(_taskerId),
+                      customerId:  String(_custId),
+                    }));
+                    window.location.href = 'dashboard-customer.html?panel=messages';
+                  } else {
+                    window.location.href = 'dashboard-customer.html?panel=messages';
+                  }
+                };
               } catch(err) {
                 this.disabled = false; this.textContent = 'Accept Application';
                 showToast('Error: ' + err.message);
@@ -831,12 +853,34 @@
               }
             };
           } else if (appStatus === 'accepted') {
-            barBody.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-              '<span style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Accepted</span>' +
-              '<a href="messages.html" style="font-size:0.82rem;color:var(--blue);margin-left:8px;">Open Messages</a>' +
-              '<a href="dashboard-customer.html?panel=applications" style="font-size:0.82rem;color:var(--text-muted);margin-left:8px;">Back</a>' +
+            /* Get current user id for message button */
+            const _alreadyAccSess = await window.supabase.auth.getSession();
+            const _alreadyAccId   = _alreadyAccSess.data.session && _alreadyAccSess.data.session.user.id;
+            barBody.innerHTML =
+              '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+              '<span style="font-size:0.88rem;font-weight:700;color:var(--green);flex:1;min-width:0;">✓ Already Accepted</span>' +
+              '<button id="msgAlreadyAcceptBtn" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:600;font-size:0.88rem;cursor:pointer;">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                'Message Tasker' +
+              '</button>' +
+              '<a href="dashboard-customer.html?panel=applications" style="display:inline-flex;align-items:center;padding:9px 16px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.88rem;font-weight:600;color:var(--text-primary);text-decoration:none;">Back to Dashboard</a>' +
               '</div>';
             bar.style.display = 'block';
+            /* Wire message button */
+            setTimeout(function() {
+              var msgBtn = document.getElementById('msgAlreadyAcceptBtn');
+              if (msgBtn) msgBtn.onclick = function() {
+                if (_alreadyAccId && _taskerId) {
+                  sessionStorage.setItem('st_chat_context', JSON.stringify({
+                    contextType: 'task_application',
+                    contextId:   String(appParam),
+                    taskerId:    String(_taskerId),
+                    customerId:  String(_alreadyAccId),
+                  }));
+                }
+                window.location.href = 'dashboard-customer.html?panel=messages';
+              };
+            }, 50);
           }
         }
       }
