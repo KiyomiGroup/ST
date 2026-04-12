@@ -170,6 +170,175 @@
     }
     .msg-mobile-back { display: none; align-items: center; gap: 6px; padding: 0; background: none; border: none; cursor: pointer; color: var(--blue); font-size: 0.84rem; font-weight: 600; }
   </style>
+
+  <style id="mobile-menu-enhanced">
+    /* ── Enhanced mobile dropdown: profile avatar block ── */
+    .mob-menu-user {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 20px 16px;
+      background: linear-gradient(135deg, var(--blue-light) 0%, transparent 100%);
+    }
+    .mob-menu-avatar {
+      width: 52px !important;
+      height: 52px !important;
+      border-radius: 50% !important;
+      background: var(--blue) !important;
+      color: #fff !important;
+      font-weight: 800 !important;
+      font-size: 1.2rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--blue);
+      letter-spacing: -0.02em;
+    }
+    .mob-menu-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .mob-menu-role {
+      font-size: 0.75rem;
+      color: var(--blue);
+      margin-top: 3px;
+      font-weight: 600;
+      background: var(--blue-light);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      border: 1px solid var(--blue-border);
+    }
+
+    /* ── Dropdown: tighten up menu items ── */
+    .mobile-nav-dropdown {
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    .mobile-nav-dropdown button,
+    .mobile-nav-dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 11px 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.12s, color 0.12s;
+      text-decoration: none;
+      border-radius: 0;
+    }
+    .mobile-nav-dropdown button:hover,
+    .mobile-nav-dropdown a:hover {
+      background: var(--bg-subtle);
+    }
+    .mobile-nav-dropdown button.active {
+      color: var(--blue);
+      background: var(--blue-light);
+      font-weight: 600;
+    }
+    .mobile-nav-dropdown button svg,
+    .mobile-nav-dropdown a svg {
+      flex-shrink: 0;
+      color: var(--text-muted);
+    }
+    .mobile-nav-dropdown button.active svg { color: var(--blue); }
+    .mobile-nav-dropdown .nav-divider { height: 1px; background: var(--border); margin: 6px 0; }
+    .mob-menu-section-label {
+      padding: 10px 20px 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* ── Bottom bar: 5 items, ensure even spacing ── */
+    .mobile-bottom-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 6px 0 env(safe-area-inset-bottom, 0px);
+      z-index: 100;
+      justify-content: space-around;
+      align-items: flex-end;
+    }
+    .mobile-bottom-bar button,
+    .mobile-bottom-bar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      flex: 1;
+      background: none;
+      border: none;
+      font-size: 0.6rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 2px 6px;
+      border-radius: 0;
+      font-family: var(--font);
+      text-decoration: none;
+    }
+    .mobile-bottom-bar button.active { color: var(--blue); }
+    .mobile-bottom-bar button svg,
+    .mobile-bottom-bar a svg { flex-shrink: 0; }
+
+    /* Post Service center button */
+    .mobile-create-btn {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 3px !important;
+      flex: 1 !important;
+      padding: 0 2px 6px !important;
+      text-decoration: none !important;
+      color: var(--text-muted) !important;
+    }
+    .mobile-create-icon {
+      width: 46px !important;
+      height: 46px !important;
+      border-radius: 50% !important;
+      background: var(--blue) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 4px 12px rgba(10,132,255,0.35) !important;
+      margin-top: -18px !important;
+      border: 3px solid #fff !important;
+      transition: transform 0.15s, box-shadow 0.15s !important;
+    }
+    .mobile-create-icon svg { stroke: #fff !important; }
+    .mobile-create-btn span {
+      font-size: 0.6rem !important;
+      font-weight: 500 !important;
+      color: var(--text-muted) !important;
+      margin-top: 2px !important;
+    }
+    .mobile-create-btn:active .mobile-create-icon {
+      transform: scale(0.92) !important;
+      box-shadow: 0 2px 6px rgba(10,132,255,0.25) !important;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-bottom-bar { display: flex !important; }
+    }
+  </style>
 </head>
 <body>
 <script>
@@ -200,6 +369,8 @@ function openMessagesPanel() {
 
   <!-- Mobile dropdown nav -->
   <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+
+    <!-- Profile avatar header -->
     <div class="mob-menu-user" id="mobMenuUser">
       <div class="mob-menu-avatar" id="mobMenuAvatar">T</div>
       <div>
@@ -208,55 +379,61 @@ function openMessagesPanel() {
       </div>
     </div>
     <div class="nav-divider"></div>
-    <div class="mob-menu-section-label">MY ACCOUNT</div>
-    <button onclick="mobileSwitchPanel('mypage','👤 My Page');loadMyPage()" class="active" id="mob-mypage">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Page
+
+    <!-- DASHBOARD SECTIONS -->
+    <div class="mob-menu-section-label">DASHBOARD</div>
+    <button onclick="mobileSwitchPanel('mypage','My Page');loadMyPage();closeMobileMenu()" class="active" id="mob-mypage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Overview
     </button>
-    <button onclick="mobileSwitchPanel('services','🔧 My Services')" id="mob-services">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      My Services
-    </button>
-    <button onclick="mobileSwitchPanel('bookings','📅 Bookings');loadBookings()" id="mob-bookings">
+    <button onclick="mobileSwitchPanel('bookings','Bookings');loadBookings();closeMobileMenu()" id="mob-bookings">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Bookings
-    </button>
-    <button onclick="mobileSwitchPanel('find-tasks','🗂 Find Tasks');loadFindTasks()" id="mob-find-tasks">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Find Tasks
-    </button>
-    <button onclick="mobileSwitchPanel('notifications','Notifications');loadNotifications()" id="mob-notifications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      Notifications
-      <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
     </button>
     <button onclick="mobileSwitchPanel('messages','Messages');openMessagesPanel();closeMobileMenu()" id="mob-messages">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Messages
     </button>
+    <button onclick="mobileSwitchPanel('notifications','Notifications');loadNotifications();closeMobileMenu()" id="mob-notifications">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
+    </button>
     <button onclick="mobileSwitchPanel('wallet','Wallet');loadTaskerWallet();closeMobileMenu()" id="mob-wallet">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       My Wallet
     </button>
-    <button onclick="mobileSwitchPanel('services','My Services')" id="mob-services-2">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      My Services
-    </button>
-    <button onclick="mobileSwitchPanel('find-tasks','Find Tasks');loadFindTasks();closeMobileMenu()" id="mob-find-tasks-2">
+    <button onclick="mobileSwitchPanel('find-tasks','Find Tasks');loadFindTasks();closeMobileMenu()" id="mob-find-tasks">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Find Tasks
+    </button>
+
+    <div class="nav-divider"></div>
+
+    <!-- ACCOUNT -->
+    <div class="mob-menu-section-label">ACCOUNT</div>
+    <button onclick="mobileSwitchPanel('services','My Services');closeMobileMenu()" id="mob-services">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      My Services
     </button>
     <button onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();closeMobileMenu()" id="mob-profile">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Edit Profile
     </button>
+    <button onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification();closeMobileMenu()" id="mob-verification">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Verification
+    </button>
+
     <div class="nav-divider"></div>
+
     <!-- SUPPORT -->
     <div class="mob-menu-section-label">SUPPORT</div>
-    <a href="find-taskers.html" onclick="closeMobileMenu()" style="text-decoration:none;">
+    <a href="find-taskers.html" onclick="closeMobileMenu()" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 16px;font-size:0.9rem;font-weight:500;color:var(--text-primary);">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Find Services
     </a>
+
     <div class="nav-divider"></div>
     <button onclick="if(window.ST&&window.ST.auth)window.ST.auth.logoutUser();else{localStorage.clear();window.location.href='login.html';}" class="mob-logout-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -265,15 +442,15 @@ function openMessagesPanel() {
   </div>
   <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
-  <!-- Mobile bottom tab bar -->
+  <!-- Mobile bottom tab bar — 5 items, Post Service centered -->
   <div class="mobile-bottom-bar">
     <button onclick="mobileSwitchPanel('mypage','My Page');loadMyPage()" id="tab-mypage" class="active">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </button>
-    <button onclick="mobileSwitchPanel('find-tasks','Find Tasks');loadFindTasks()" id="tab-find-tasks">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Tasks
+    <button onclick="mobileSwitchPanel('bookings','Bookings');loadBookings()" id="tab-bookings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Bookings
     </button>
     <a href="post-service.html" class="mobile-create-btn" id="tab-create">
       <div class="mobile-create-icon">
@@ -288,10 +465,6 @@ function openMessagesPanel() {
     <button onclick="mobileSwitchPanel('wallet','Wallet');loadTaskerWallet()" id="tab-wallet">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       Wallet
-    </button>
-    <button onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel()" id="tab-profile">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profile
     </button>
   </div>
 
@@ -931,7 +1104,7 @@ function openMessagesPanel() {
           '<div style="display:flex;gap:8px;">' +
             '<input id="inlineCode_' + b.id + '" type="text" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit code" ' +
               'style="flex:1;padding:10px 13px;border:1.5px solid var(--blue);border-radius:var(--radius-md);font-size:1rem;font-weight:700;letter-spacing:0.12em;font-family:var(--font);outline:none;" />' +
-            '<button onclick="submitInlineCode('' + b.id + '')" style="padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.88rem;font-weight:700;cursor:pointer;white-space:nowrap;">Claim →</button>' +
+            '<button onclick="submitInlineCode(\''+b.id+'\')" style="padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.88rem;font-weight:700;cursor:pointer;white-space:nowrap;">Claim →</button>' +
           '</div>' +
           '<div id="inlineCodeErr_' + b.id + '" style="display:none;margin-top:6px;font-size:0.8rem;color:var(--red);"></div>' +
           '</div>';
@@ -2392,7 +2565,7 @@ function openMessagesPanel() {
         /* Success! */
         if (btn) btn.textContent = '✓ Claimed!';
         showToast('Payment released to your wallet! 🎉');
-        setTimeout(function(){ loadBookings(); }, 1000);
+        setTimeout(function(){ _bookingsLoaded = false; loadBookings(); }, 800);
       } catch(e) {
         if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
         if (btn) { btn.disabled = false; btn.textContent = 'Claim →'; }
