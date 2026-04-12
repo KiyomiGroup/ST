@@ -1422,10 +1422,19 @@
       /* Fetch booking + wallet balance */
       var sess = await window.supabase.auth.getSession();
       var cu = sess.data.session && sess.data.session.user;
+      /* Fix: Supabase PostgREST JOIN (tasks(budget,title)) requires a defined FK
+         relationship. Use two separate queries instead to avoid 400 Bad Request. */
       var { data: bk } = await window.supabase.from('bookings')
-        .select('id, tasker_id, tasks(budget,title), notes').eq('id', bookingId).maybeSingle();
-      var amount = (bk && bk.tasks && bk.tasks.budget) || 0;
-      var title  = (bk && bk.tasks && bk.tasks.title) || serviceName || 'Service';
+        .select('id, tasker_id, task_id, service_id, amount, notes').eq('id', bookingId).maybeSingle();
+      var amount = (bk && bk.amount) || 0;
+      var title  = serviceName || 'Service';
+      /* Try to enrich with task title if we have a task_id */
+      if (bk && bk.task_id && !amount) {
+        try {
+          var { data: tk } = await window.supabase.from('tasks').select('budget,title').eq('id', bk.task_id).maybeSingle();
+          if (tk) { amount = tk.budget || 0; title = tk.title || title; }
+        } catch(_e) {}
+      }
       var amounts = window.ST.payments.calculateAmounts(amount);
       var wallet = cu ? await window.ST.payments.getWallet(cu.id) : { balance: 0 };
       var walletBal = wallet.balance || 0;
@@ -1924,7 +1933,14 @@
               document.getElementById('chatHeadSub').textContent = label;
             }
           } else {
-            var app = await window.supabase.from('task_applications').select('tasks(title)').eq('id',t.context_id).maybeSingle();
+            /* Fix: avoid broken JOIN — fetch application then task separately */
+            var app = await window.supabase.from('task_applications').select('task_id').eq('id',t.context_id).maybeSingle();
+            if (app.data && app.data.task_id) {
+              try {
+                var tkDetail = await window.supabase.from('tasks').select('title').eq('id',app.data.task_id).maybeSingle();
+                if (tkDetail.data) app.data.tasks = tkDetail.data;
+              } catch(_e) {}
+            }
             if (app.data&&app.data.tasks&&app.data.tasks.title) document.getElementById('chatHeadSub').textContent = app.data.tasks.title;
           }
         } catch(_e) {}
