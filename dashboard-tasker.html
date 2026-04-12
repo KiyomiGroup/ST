@@ -2835,8 +2835,78 @@ function openMessagesPanel() {
       var fee    = parseInt(parts[4], 10) || 0;
       /* Tasker sees payment details + Enter Code button; they get the code verbally from customer */
       var t      = _threads.find(function(x){ return x.id === _active; });
-      var bkId   = (t && t.context_id) || '';
-      return buildTaskerPaymentCard(total, earn, fee, bkId, timeStr);
+
+      /* Fix: t.context_id is the booking_id ONLY when context_type === 'booking'.
+         For task-based threads (context_type === 'task' or 'task_application'),
+         context_id is a task_id or application_id — NOT a booking_id.
+         Passing a task_id to submitCompletionCode causes "Booking not found."
+         Build the card now with an empty bkId placeholder, then resolve the
+         real booking_id asynchronously and update the button once we have it. */
+      var bkId = '';
+      if (t) {
+        if (t.context_type === 'booking') {
+          /* Direct: context_id IS the booking_id */
+          bkId = t.context_id || '';
+        }
+        /* For task/task_application threads, bkId stays '' for now.
+           We resolve it below and patch the button once found. */
+      }
+
+      var card = buildTaskerPaymentCard(total, earn, fee, bkId, timeStr);
+
+      /* Async resolution for task-based threads */
+      if (t && t.context_type !== 'booking' && t.context_id) {
+        (async function() {
+          try {
+            var resolvedBkId = null;
+
+            if (t.context_type === 'task_application') {
+              /* task_applications.id → task_id → bookings.task_id */
+              var appRes = await window.supabase
+                .from('task_applications').select('task_id').eq('id', t.context_id).maybeSingle();
+              if (appRes.data && appRes.data.task_id) {
+                var bkRes = await window.supabase
+                  .from('bookings').select('id')
+                  .eq('task_id', appRes.data.task_id)
+                  .eq('tasker_id', _user.id)
+                  .order('created_at', { ascending: false }).limit(1).maybeSingle();
+                resolvedBkId = bkRes.data && bkRes.data.id;
+              }
+            } else {
+              /* context_type === 'task' — context_id IS the task_id */
+              var bkRes2 = await window.supabase
+                .from('bookings').select('id')
+                .eq('task_id', t.context_id)
+                .eq('tasker_id', _user.id)
+                .order('created_at', { ascending: false }).limit(1).maybeSingle();
+              resolvedBkId = bkRes2.data && bkRes2.data.id;
+            }
+
+            if (resolvedBkId) {
+              /* Patch the "Enter 6-digit code" button with the real booking ID */
+              var btn = card.querySelector('button[onclick^="openCodeEntry"]');
+              if (btn) {
+                btn.setAttribute('onclick', "openCodeEntry('" + resolvedBkId + "')");
+              } else {
+                /* Button was hidden (bkId was '') — reveal it now */
+                var inner = card.querySelector('[style*="fffbeb"]');
+                if (inner) {
+                  var noBtn = inner.querySelector('p');
+                  if (noBtn) {
+                    var newBtn = document.createElement('button');
+                    newBtn.setAttribute('onclick', "openCodeEntry('" + resolvedBkId + "')");
+                    newBtn.style.cssText = 'width:100%;padding:11px;background:#d97706;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;';
+                    newBtn.textContent = 'Enter 6-digit code → Claim Payment';
+                    noBtn.replaceWith(newBtn);
+                  }
+                }
+              }
+            }
+          } catch(_re) { /* non-critical — button still works from Bookings panel */ }
+        })();
+      }
+
+      return card;
     }
 
     var wrap = document.createElement('div');
