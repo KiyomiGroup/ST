@@ -2534,7 +2534,6 @@ function openMessagesPanel() {
   var _threads = [];
   var _active  = null;      /* active thread id */
   var _activeThread = null; /* full thread object */
-  var _sending = false;     /* prevent double message sends */
   var _realtimeSub     = null;
   var _globalThreadSub = null;
   var _globalNotifSub  = null;
@@ -2750,23 +2749,7 @@ function openMessagesPanel() {
     if (_realtimeSub) { try { _realtimeSub.unsubscribe(); } catch(e){} }
     _realtimeSub = window.supabase
       .channel('thread:'+threadId)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){
-        /* Skip own messages — already shown optimistically by sendMsg */
-        if (_user && payload.new && payload.new.sender_id === _user.id) {
-          /* Replace the temp bubble id with the real DB id so future dedup works */
-          var body = document.getElementById('chatBody');
-          if (body) {
-            var tmpBubbles = body.querySelectorAll('[data-tmp="1"]');
-            if (tmpBubbles.length > 0) {
-              tmpBubbles[tmpBubbles.length - 1].dataset.id = payload.new.id;
-              delete tmpBubbles[tmpBubbles.length - 1].dataset.tmp;
-            }
-          }
-        } else {
-          /* Other user's message — append it */
-          appendBubble(payload.new);
-        }
-      })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){ appendBubble(payload.new); })
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_threads',filter:'id=eq.'+threadId}, function(payload){
         /* Refresh agreed price in header if it changes */
         if (payload.new && payload.new.agreed_price && payload.new.agreed_price !== (t.agreed_price)) {
@@ -2858,8 +2841,6 @@ function openMessagesPanel() {
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
-    wrap.dataset.id = m.id;
-    if (m._isTmp) wrap.dataset.tmp = '1';
     wrap.innerHTML = '<div class="msg-bubble">'+esc(m.body||'')+'</div><div class="msg-time">'+timeStr+'</div>';
     return wrap;
   }
@@ -2925,16 +2906,14 @@ function openMessagesPanel() {
   /* ── Send regular message ── */
   async function sendMsg() {
     if (!_active || !_user) return;
-    if (_sending) return;   /* prevent double-fire from Enter + click */
     var input = document.getElementById('msgInput');
     var text  = input.value.trim();
     if (!text) return;
-    _sending = true;
     var t = _threads.find(function(x){ return x.id === _active; });
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
-    if (!receiverId) { showToast('Cannot send — missing receiver.'); _sending = false; return; }
+    if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
 
-    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text', _isTmp:true });
+    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' });
     input.value = ''; input.style.height = 'auto';
 
     try {
@@ -2947,7 +2926,6 @@ function openMessagesPanel() {
       var senderName = (_user.user_metadata&&(_user.user_metadata.name||_user.user_metadata.email))||'Someone';
       await window.supabase.from('notifications').insert({ user_id:receiverId, type:'new_message', title:'💬 New message from '+senderName, message:text.length>80?text.slice(0,80)+'…':text, data:{thread_id:_active,sender_id:_user.id}, is_read:false });
     } catch(e) { showToast('Send failed: '+((e&&e.message)||String(e)), 'error'); }
-    finally { _sending = false; }
   }
   window.sendMsg = sendMsg;
 
@@ -2999,46 +2977,19 @@ function openMessagesPanel() {
       var t = _threads.find(function(x){ return x.id === threadId; });
       if (!t) throw new Error('Conversation not found. Please refresh.');
 
-      /* Resolve the actual booking ID.
-         context_id on a thread may be a booking_id (context_type='booking')
-         or a task_application_id (context_type='task_application').
-         For task applications we look up the booking that was created from it. */
-      var bookingId = null;
+      /* Get context_type and context_id directly from thread
+         context_type = 'booking' (service) or 'task' (task)
+         context_id = booking_id or task_id */
+      var contextType = t.context_type || 'booking';  /* default to 'booking' for legacy */
+      var contextId = t.context_id;
 
-      if (t.context_type === 'booking' && t.context_id) {
-        bookingId = t.context_id;
-      } else if (t.context_type === 'task_application' && t.context_id) {
-        /* Find the booking linked to this application */
-        var bkRes = await window.supabase
-          .from('bookings')
-          .select('id')
-          .eq('application_id', t.context_id)
-          .eq('customer_id', _user.id)
-          .maybeSingle();
-        bookingId = bkRes.data && bkRes.data.id;
-      }
-
-      /* Fallback: find any booking between these two parties */
-      if (!bookingId && t.customer_id && t.tasker_id) {
-        var fallbackRes = await window.supabase
-          .from('bookings')
-          .select('id')
-          .eq('customer_id', t.customer_id)
-          .eq('tasker_id', t.tasker_id)
-          .in('status', ['pending','accepted','in_progress'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        bookingId = fallbackRes.data && fallbackRes.data.id;
-      }
-
-      if (!bookingId) throw new Error('No booking found for this conversation. Please contact support.');
+      if (!contextId) throw new Error('No booking/task found for this conversation. Please contact support.');
 
       var userEmail = (_user.user_metadata && _user.user_metadata.email) || _user.email;
       var userName  = (_user.user_metadata && _user.user_metadata.name) || '';
 
       if (window.ST && window.ST.messages) {
-        await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName);
+        await window.ST.messages.acceptPaymentRequest(requestId, threadId, contextType, contextId, userEmail, userName);
         /* Mark card as paid in UI */
         var card = document.getElementById('prc-'+requestId);
         if (card) {

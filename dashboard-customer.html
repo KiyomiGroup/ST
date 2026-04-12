@@ -2187,46 +2187,19 @@
       var t = _threads.find(function(x){ return x.id === threadId; });
       if (!t) throw new Error('Conversation not found. Please refresh.');
 
-      /* Resolve the actual booking ID.
-         context_id on a thread may be a booking_id (context_type='booking')
-         or a task_application_id (context_type='task_application').
-         For task applications we look up the booking that was created from it. */
-      var bookingId = null;
+      /* Get context_type and context_id directly from thread
+         context_type = 'booking' (service) or 'task' (task)
+         context_id = booking_id or task_id */
+      var contextType = t.context_type || 'booking';  /* default to 'booking' for legacy */
+      var contextId = t.context_id;
 
-      if (t.context_type === 'booking' && t.context_id) {
-        bookingId = t.context_id;
-      } else if (t.context_type === 'task_application' && t.context_id) {
-        /* Find the booking linked to this application */
-        var bkRes = await window.supabase
-          .from('bookings')
-          .select('id')
-          /* application_id not on bookings — use fallback */.eq('task_id', t.context_id)
-          .eq('customer_id', _user.id)
-          .maybeSingle();
-        bookingId = bkRes.data && bkRes.data.id;
-      }
-
-      /* Fallback: find any booking between these two parties */
-      if (!bookingId && t.customer_id && t.tasker_id) {
-        var fallbackRes = await window.supabase
-          .from('bookings')
-          .select('id')
-          .eq('customer_id', t.customer_id)
-          .eq('tasker_id', t.tasker_id)
-          .in('status', ['pending','accepted','in_progress'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        bookingId = fallbackRes.data && fallbackRes.data.id;
-      }
-
-      if (!bookingId) throw new Error('No booking found for this conversation. Please contact support.');
+      if (!contextId) throw new Error('No booking/task found for this conversation. Please contact support.');
 
       var userEmail = (_user.user_metadata && _user.user_metadata.email) || _user.email;
       var userName  = (_user.user_metadata && _user.user_metadata.name) || '';
 
       if (window.ST && window.ST.messages) {
-        var result = await window.ST.messages.acceptPaymentRequest(requestId, threadId, bookingId, userEmail, userName, t.tasker_id || null);
+        var result = await window.ST.messages.acceptPaymentRequest(requestId, threadId, contextType, contextId, userEmail, userName, t.tasker_id || null);
         
         /* Mark card as paid in UI */
         var card = document.getElementById('prc-'+requestId);
