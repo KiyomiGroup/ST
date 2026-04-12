@@ -1937,7 +1937,22 @@
     if (_realtimeSub) { try { _realtimeSub.unsubscribe(); } catch(e){} }
     _realtimeSub = window.supabase
       .channel('thread:'+threadId)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){ appendBubble(payload.new); })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){
+        /* Skip own messages — already shown optimistically by sendMsg */
+        if (_user && payload.new && payload.new.sender_id === _user.id) {
+          /* Replace the temp bubble id with the real DB id so future dedup works */
+          var body = document.getElementById('chatBody');
+          if (body) {
+            var tmpBubbles = body.querySelectorAll('[data-tmp="1"]');
+            if (tmpBubbles.length > 0) {
+              tmpBubbles[tmpBubbles.length - 1].dataset.id = payload.new.id;
+              delete tmpBubbles[tmpBubbles.length - 1].dataset.tmp;
+            }
+          }
+          return;
+        }
+        appendBubble(payload.new);
+      })
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_threads',filter:'id=eq.'+threadId}, function(payload){
         /* Refresh agreed price in header if it changes */
         if (payload.new && payload.new.agreed_price && payload.new.agreed_price !== (t.agreed_price)) {
@@ -2028,6 +2043,8 @@
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
+    if (m.id)    wrap.dataset.id  = String(m.id);
+    if (m._isTmp) wrap.dataset.tmp = '1';
     wrap.innerHTML = '<div class="msg-bubble">'+esc(m.body||'')+'</div><div class="msg-time">'+timeStr+'</div>';
     return wrap;
   }
@@ -2044,6 +2061,8 @@
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
+    if (m.id)    wrap.dataset.id  = String(m.id);
+    if (m._isTmp) wrap.dataset.tmp = '1';
     wrap.style.maxWidth = '340px';
 
     var card = document.createElement('div');
@@ -2091,16 +2110,19 @@
   }
 
   /* ── Send regular message ── */
+  var _sending = false;
   async function sendMsg() {
     if (!_active || !_user) return;
+    if (_sending) return;   /* prevent double-fire from Enter + click */
     var input = document.getElementById('msgInput');
     var text  = input.value.trim();
     if (!text) return;
+    _sending = true;
     var t = _threads.find(function(x){ return x.id === _active; });
     var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
     if (!receiverId) { showToast('Cannot send — missing receiver.'); return; }
 
-    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text' });
+    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text', _isTmp:true });
     input.value = ''; input.style.height = 'auto';
 
     try {
@@ -2113,6 +2135,7 @@
       var senderName = (_user.user_metadata&&(_user.user_metadata.name||_user.user_metadata.email))||'Someone';
       await window.supabase.from('notifications').insert({ user_id:receiverId, type:'new_message', title:'💬 New message from '+senderName, message:text.length>80?text.slice(0,80)+'…':text, data:{thread_id:_active,sender_id:_user.id}, is_read:false });
     } catch(e) { showToast('Send failed: '+((e&&e.message)||String(e)), 'error'); }
+    finally { _sending = false; }
   }
   window.sendMsg = sendMsg;
 
