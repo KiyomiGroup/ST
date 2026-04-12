@@ -863,7 +863,7 @@ function openMessagesPanel() {
     function bookingRow(b, actions) {
       var contact    = b._customerContact;
       var who        = (contact && contact.name) || (b.customer_id ? b.customer_id.slice(0,8) : 'Customer');
-      var task       = (b.tasks && b.tasks.title) || (b.notes ? b.notes.slice(0,40) : 'Booking request');
+      var task       = (b._task && b._task.title) || (b.notes ? b.notes.slice(0,40) : 'Booking request');
       var isActive   = b.status === 'confirmed' || b.status === 'completed';
 
       /* Contact reveal — only shown when booking is confirmed */
@@ -1285,10 +1285,21 @@ function openMessagesPanel() {
       } catch(e) { console.warn('[Dashboard] services error:', e.message); }
 
       try {
+        /* Fix: avoid broken PostgREST JOIN — fetch bookings then enrich with task data separately */
         var bkRes = await window.supabase.from('bookings')
-          .select('*, tasks(title, description, budget, location)')
+          .select('id, customer_id, tasker_id, task_id, service_id, status, payment_status, amount, notes, created_at, completion_code, code_attempts')
           .eq('tasker_id', userId).order('created_at', { ascending: false });
         bookings = bkRes.data || [];
+        /* Enrich with task titles separately for bookings that have a task_id */
+        var taskIds = [...new Set(bookings.map(function(b){ return b.task_id; }).filter(Boolean))];
+        var taskTitleMap = {};
+        if (taskIds.length > 0) {
+          try {
+            var tkRes = await window.supabase.from('tasks').select('id, title, description, budget, location').in('id', taskIds);
+            (tkRes.data || []).forEach(function(t){ taskTitleMap[t.id] = t; });
+          } catch(_te) {}
+        }
+        bookings.forEach(function(b){ b._task = taskTitleMap[b.task_id] || null; });
         /* Enrich each booking with customer name from users table */
         await Promise.all(bookings.map(async function(b) {
           if (!b.customer_id) return;
@@ -1349,7 +1360,13 @@ function openMessagesPanel() {
       svcEl.innerHTML = svcHtml;
 
       /* Bookings panel */
-      var incoming = bookings.filter(function(b) { return b.status === 'pending' || b.status === 'confirmed'; });
+      /* Fix: include all statuses a tasker needs to act on — not just pending/confirmed.
+         'in_progress', 'provider_done', 'awaiting_code', 'awaiting_confirmation' all
+         need visibility so the tasker can mark done or enter the completion code. */
+      var incoming = bookings.filter(function(b) {
+        return ['pending','confirmed','in_progress','provider_done',
+                'awaiting_code','awaiting_confirmation'].indexOf(b.status) !== -1;
+      });
       document.getElementById('bookingsList').innerHTML = incoming.length
         ? incoming.map(function(b) { return bookingRow(b, true); }).join('')
         : empty('No pending bookings right now.', null, null);
@@ -1854,10 +1871,12 @@ function openMessagesPanel() {
         var bUid = bSess.data.session && bSess.data.session.user.id;
         if (!bUid) throw new Error('Not logged in');
         var bkRes = await window.supabase.from('bookings')
-          .select('*, tasks(title, description, budget, location)')
+          .select('id, customer_id, tasker_id, task_id, status, payment_status, amount, created_at')
           .eq('tasker_id', bUid).order('created_at', { ascending: false });
         var bookings  = bkRes.data || [];
-        var active    = bookings.filter(function(b){ return b.status==='pending'||b.status==='confirmed'; });
+        var active    = bookings.filter(function(b){
+          return ['pending','confirmed','in_progress','provider_done','awaiting_code','awaiting_confirmation'].indexOf(b.status) !== -1;
+        });
         var completed = bookings.filter(function(b){ return b.status==='completed'; });
         var sT = document.getElementById('statTotal');
         var sP = document.getElementById('statPending');
@@ -2736,7 +2755,13 @@ function openMessagesPanel() {
               document.getElementById('chatHeadSub').textContent = label;
             }
           } else {
-            var app = await window.supabase.from('task_applications').select('tasks(title)').eq('id',t.context_id).maybeSingle();
+            var app = await window.supabase.from('task_applications').select('task_id').eq('id',t.context_id).maybeSingle();
+            if (app.data && app.data.task_id) {
+              try {
+                var tkTitle = await window.supabase.from('tasks').select('title').eq('id',app.data.task_id).maybeSingle();
+                if (tkTitle.data) app.data.tasks = tkTitle.data;
+              } catch(_te) {}
+            }
             if (app.data&&app.data.tasks&&app.data.tasks.title) document.getElementById('chatHeadSub').textContent = app.data.tasks.title;
           }
         } catch(_e) {}
@@ -2833,76 +2858,51 @@ function openMessagesPanel() {
       var total  = parseInt(parts[2], 10) || 0;
       var earn   = parseInt(parts[3], 10) || 0;
       var fee    = parseInt(parts[4], 10) || 0;
-      /* Tasker sees payment details + Enter Code button; they get the code verbally from customer */
       var t      = _threads.find(function(x){ return x.id === _active; });
 
-      /* Fix: t.context_id is the booking_id ONLY when context_type === 'booking'.
-         For task-based threads (context_type === 'task' or 'task_application'),
-         context_id is a task_id or application_id — NOT a booking_id.
-         Passing a task_id to submitCompletionCode causes "Booking not found."
-         Build the card now with an empty bkId placeholder, then resolve the
-         real booking_id asynchronously and update the button once we have it. */
-      var bkId = '';
-      if (t) {
-        if (t.context_type === 'booking') {
-          /* Direct: context_id IS the booking_id */
-          bkId = t.context_id || '';
-        }
-        /* For task/task_application threads, bkId stays '' for now.
-           We resolve it below and patch the button once found. */
-      }
-
+      /* Fix: context_id is the booking_id ONLY when context_type === 'booking'.
+         For task-based threads it is a task_id or application_id, NOT a booking_id.
+         Passing the wrong ID to submitCompletionCode caused "Booking not found."
+         Solution: render a placeholder card immediately (so chat doesn't stall),
+         then resolve the real booking_id async and replace the placeholder once found. */
+      var bkId = (t && t.context_type === 'booking') ? (t.context_id || '') : '';
       var card = buildTaskerPaymentCard(total, earn, fee, bkId, timeStr);
 
-      /* Async resolution for task-based threads */
-      if (t && t.context_type !== 'booking' && t.context_id) {
+      if (t && !bkId && t.context_id) {
+        /* Mark card so we can target it after async resolution */
+        card.dataset.pendingBkResolve = '1';
+
         (async function() {
           try {
             var resolvedBkId = null;
 
             if (t.context_type === 'task_application') {
-              /* task_applications.id → task_id → bookings.task_id */
               var appRes = await window.supabase
                 .from('task_applications').select('task_id').eq('id', t.context_id).maybeSingle();
               if (appRes.data && appRes.data.task_id) {
-                var bkRes = await window.supabase
-                  .from('bookings').select('id')
-                  .eq('task_id', appRes.data.task_id)
-                  .eq('tasker_id', _user.id)
+                var bkRes = await window.supabase.from('bookings').select('id')
+                  .eq('task_id', appRes.data.task_id).eq('tasker_id', _user.id)
                   .order('created_at', { ascending: false }).limit(1).maybeSingle();
                 resolvedBkId = bkRes.data && bkRes.data.id;
               }
             } else {
-              /* context_type === 'task' — context_id IS the task_id */
-              var bkRes2 = await window.supabase
-                .from('bookings').select('id')
-                .eq('task_id', t.context_id)
-                .eq('tasker_id', _user.id)
+              /* context_type === 'task': context_id is the task_id directly */
+              var bkRes2 = await window.supabase.from('bookings').select('id')
+                .eq('task_id', t.context_id).eq('tasker_id', _user.id)
                 .order('created_at', { ascending: false }).limit(1).maybeSingle();
               resolvedBkId = bkRes2.data && bkRes2.data.id;
             }
 
             if (resolvedBkId) {
-              /* Patch the "Enter 6-digit code" button with the real booking ID */
-              var btn = card.querySelector('button[onclick^="openCodeEntry"]');
-              if (btn) {
-                btn.setAttribute('onclick', "openCodeEntry('" + resolvedBkId + "')");
-              } else {
-                /* Button was hidden (bkId was '') — reveal it now */
-                var inner = card.querySelector('[style*="fffbeb"]');
-                if (inner) {
-                  var noBtn = inner.querySelector('p');
-                  if (noBtn) {
-                    var newBtn = document.createElement('button');
-                    newBtn.setAttribute('onclick', "openCodeEntry('" + resolvedBkId + "')");
-                    newBtn.style.cssText = 'width:100%;padding:11px;background:#d97706;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;';
-                    newBtn.textContent = 'Enter 6-digit code → Claim Payment';
-                    noBtn.replaceWith(newBtn);
-                  }
-                }
+              /* Replace the whole inner card now we have the real booking ID.
+                 buildTaskerPaymentCard uses innerHTML so we must replace the node,
+                 not try to patch individual elements inside it. */
+              var newCard = buildTaskerPaymentCard(total, earn, fee, resolvedBkId, timeStr);
+              if (card.parentNode) {
+                card.parentNode.replaceChild(newCard, card);
               }
             }
-          } catch(_re) { /* non-critical — button still works from Bookings panel */ }
+          } catch(_re) { /* non-critical — Enter Code also works from Bookings tab */ }
         })();
       }
 
