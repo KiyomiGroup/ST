@@ -50,7 +50,7 @@
       Test keys are 40 chars (pk_test_ + 32). Live keys are 43 chars.
       Get yours at: https://dashboard.paystack.com/#/settings/developers
       The key below was malformed (49 chars) and caused 400 errors. */
-const PAYSTACK_PUBLIC_KEY = 'pk_test_REPLACE_WITH_YOUR_REAL_KEY_FROM_PAYSTACK_DASHBOARD';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca98';
 const PLATFORM_COMMISSION = 0.12;
 
 /* ── Commission calculator ───────────────────────────────────── */
