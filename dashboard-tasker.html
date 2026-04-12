@@ -2750,7 +2750,23 @@ function openMessagesPanel() {
     if (_realtimeSub) { try { _realtimeSub.unsubscribe(); } catch(e){} }
     _realtimeSub = window.supabase
       .channel('thread:'+threadId)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){ appendBubble(payload.new); })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'thread_id=eq.'+threadId}, function(payload){
+        /* Skip own messages — already shown optimistically by sendMsg */
+        if (_user && payload.new && payload.new.sender_id === _user.id) {
+          /* Replace the temp bubble id with the real DB id so future dedup works */
+          var body = document.getElementById('chatBody');
+          if (body) {
+            var tmpBubbles = body.querySelectorAll('[data-tmp="1"]');
+            if (tmpBubbles.length > 0) {
+              tmpBubbles[tmpBubbles.length - 1].dataset.id = payload.new.id;
+              delete tmpBubbles[tmpBubbles.length - 1].dataset.tmp;
+            }
+          }
+        } else {
+          /* Other user's message — append it */
+          appendBubble(payload.new);
+        }
+      })
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_threads',filter:'id=eq.'+threadId}, function(payload){
         /* Refresh agreed price in header if it changes */
         if (payload.new && payload.new.agreed_price && payload.new.agreed_price !== (t.agreed_price)) {
@@ -2842,6 +2858,8 @@ function openMessagesPanel() {
 
     var wrap = document.createElement('div');
     wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
+    wrap.dataset.id = m.id;
+    if (m._isTmp) wrap.dataset.tmp = '1';
     wrap.innerHTML = '<div class="msg-bubble">'+esc(m.body||'')+'</div><div class="msg-time">'+timeStr+'</div>';
     return wrap;
   }
