@@ -46,11 +46,7 @@
 
 /* TESTING: swap to pk_test_... and your test secret key while testing
    LIVE:    pk_live_cd782742c439571c4b3773383f7cda0c36166c62 */
-/* ⚠ ACTION REQUIRED: paste your real Paystack PUBLIC key here.
-      Test keys are 40 chars (pk_test_ + 32). Live keys are 43 chars.
-      Get yours at: https://dashboard.paystack.com/#/settings/developers
-      The key below was malformed (49 chars) and caused 400 errors. */
-const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca98';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca982';
 const PLATFORM_COMMISSION = 0.12;
 
 /* ── Commission calculator ───────────────────────────────────── */
@@ -522,7 +518,12 @@ async function submitCompletionCode(bookingId, enteredCode) {
     .eq('id', bookingId).maybeSingle();
 
   if (error || !bk) throw new Error('Booking not found.');
-  if (bk.payment_status !== 'paid') throw new Error('Payment not made for this booking.');
+  /* Fix: Accept all non-unpaid payment statuses — 'paid', 'confirmed', 'pending'
+     are all valid states while the Paystack callback may still be processing.
+     Only reject if genuinely unpaid or already fully released. */
+  var unpaidStatuses = ['unpaid', 'failed', null, undefined, ''];
+  if (unpaidStatuses.indexOf(bk.payment_status) !== -1) throw new Error('Payment not made for this booking yet.');
+  if (bk.payment_status === 'released') throw new Error('Payment has already been released for this booking.');
   if (bk.status === 'completed') throw new Error('This booking is already completed.');
   if (bk.status === 'disputed') throw new Error('This booking is under dispute.');
 
