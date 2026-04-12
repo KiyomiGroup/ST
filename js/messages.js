@@ -159,7 +159,7 @@ async function sendPaymentRequest(threadId, senderId, receiverId, amountNaira) {
 }
 
 /* ── Customer accepts a payment request ── */
-async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmail, customerName, taskerUserIdHint) {
+async function acceptPaymentRequest(requestId, threadId, contextType, contextId, customerEmail, customerName, taskerUserIdHint) {
   const { data: req, error: reqErr } = await window.supabase
     .from('payment_requests').select('*').eq('id', requestId).maybeSingle();
   if (reqErr) throw reqErr;
@@ -187,8 +187,10 @@ async function acceptPaymentRequest(requestId, threadId, bookingId, customerEmai
 
   if (window.ST && window.ST.payments) {
     return await window.ST.payments.initiatePayment({
-      bookingId,
-      taskId:       null,
+      contextType:  contextType,  /* 'task' or 'booking' */
+      contextId:    contextId,    /* task_id or booking_id */
+      bookingId:    contextType === 'booking' ? contextId : null,
+      taskId:       contextType === 'task' ? contextId : null,
       amountNaira:  req.amount,
       customerEmail,
       customerName,

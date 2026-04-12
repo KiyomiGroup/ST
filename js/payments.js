@@ -315,20 +315,23 @@ async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
 }
 
 /* ── Initiate Paystack payment ───────────────────────────────── */
-async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, customerName, taskerUserId }) {
+async function initiatePayment({ contextType, contextId, bookingId, taskId, amountNaira, customerEmail, customerName, taskerUserId }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
 
   var amounts   = calculateAmounts(amountNaira);
-  var reference = 'ST-' + Date.now() + '-' + (bookingId || '').slice(0, 8);
+  var lookupId  = contextId || bookingId || taskId;
+  var reference = 'ST-' + Date.now() + '-' + (lookupId || '').slice(0, 8);
   var code      = generateCompletionCode();
 
-  /* Resolve tasker ID if not passed — look it up from the booking */
+  /* Resolve tasker ID if not passed — look it up from the correct table based on context */
   var resolvedTaskerId = taskerUserId || null;
-  if (!resolvedTaskerId && bookingId) {
+  if (!resolvedTaskerId && lookupId) {
     try {
-      var bkL = await window.supabase.from('bookings').select('tasker_id').eq('id', bookingId).maybeSingle();
-      if (bkL.data) resolvedTaskerId = bkL.data.tasker_id;
+      /* Determine which table to query based on contextType */
+      var lookupTable = (contextType === 'task') ? 'task_applications' : 'bookings';
+      var lookup = await window.supabase.from(lookupTable).select('tasker_id').eq('id', lookupId).maybeSingle();
+      if (lookup.data) resolvedTaskerId = lookup.data.tasker_id;
     } catch(_e) {}
   }
 
@@ -336,8 +339,8 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
   var { data: payment, error: payErr } = await window.supabase
     .from('payments')
     .insert({
-      booking_id:    bookingId,
-      task_id:       taskId || null,
+      booking_id:    bookingId || (contextType === 'booking' ? contextId : null),
+      task_id:       taskId || (contextType === 'task' ? contextId : null),
       customer_id:   user.id,
       amount:        amounts.total,
       platform_fee:  amounts.platformFee,
@@ -350,7 +353,8 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
   /* If payments table missing that column, retry without payment_reference */
   if (payErr && payErr.message && payErr.message.includes('payment_reference')) {
     var retry = await window.supabase.from('payments').insert({
-      booking_id: bookingId, task_id: taskId || null,
+      booking_id: bookingId || (contextType === 'booking' ? contextId : null),
+      task_id: taskId || (contextType === 'task' ? contextId : null),
       customer_id: user.id, amount: amounts.total,
       platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount,
       reference: reference, status: 'pending',
@@ -371,7 +375,7 @@ async function initiatePayment({ bookingId, taskId, amountNaira, customerEmail, 
       amount:   Math.round(amountNaira) * 100,
       ref:      reference,
       currency: 'NGN',
-      metadata: { booking_id: bookingId, payment_id: payment.id, user_id: user.id, tasker_id: resolvedTaskerId },
+      metadata: { booking_id: bookingId || (contextType === 'booking' ? contextId : null), task_id: taskId || (contextType === 'task' ? contextId : null), payment_id: payment.id, user_id: user.id, tasker_id: resolvedTaskerId },
       /* Bug fix: Paystack inline.js v1 validates typeof callback === 'function'
          and may call it synchronously in some builds. An async function IS a
          function, but returning a Promise from the callback confuses Paystack's
