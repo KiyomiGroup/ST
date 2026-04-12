@@ -208,7 +208,7 @@ function openMessagesPanel() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
       My Services
     </button>
-    <button onclick="mobileSwitchPanel('bookings','📅 Bookings')" id="mob-bookings">
+    <button onclick="mobileSwitchPanel('bookings','📅 Bookings');loadBookings()" id="mob-bookings">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Bookings
     </button>
@@ -255,7 +255,7 @@ function openMessagesPanel() {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       My Page
     </button>
-    <button onclick="mobileSwitchPanel('bookings','Bookings')" id="tab-bookings">
+    <button onclick="mobileSwitchPanel('bookings','Bookings');loadBookings()" id="tab-bookings">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Bookings
     </button>
@@ -296,7 +296,7 @@ function openMessagesPanel() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                 My Services
               </button>
-              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this)">
+              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this);loadBookings()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Bookings
               </button>
@@ -900,11 +900,18 @@ function openMessagesPanel() {
           '<div style="margin-top:10px;padding:10px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);">' +
           '<span style="font-size:0.82rem;font-weight:700;color:#b45309;">⏳ Waiting for customer to confirm job completion...</span>' +
           '</div>';
-      } else if (b.payment_status === 'paid' && b.status === 'awaiting_code') {
+      } else if (b.payment_status === 'paid' && (b.status === 'awaiting_code' || b.status === 'awaiting_confirmation')) {
         tPayHtml =
-          '<div style="margin-top:10px;padding:10px 14px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-          '<span style="font-size:0.82rem;font-weight:700;color:var(--blue);">🎉 Customer confirmed! Enter your code to receive payment.</span>' +
-          '<button onclick="openCodeEntry(&quot;' + b.id + '&quot;)" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">Enter Code →</button>' +
+          '<div style="margin-top:10px;padding:12px 14px;background:var(--blue-light);border:1.5px solid var(--blue);border-radius:var(--radius-md);">' +
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">' +
+            '<span style="font-size:0.85rem;font-weight:700;color:var(--blue);">🎉 Customer confirmed! Enter your 6-digit code to receive payment.</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<input id="inlineCode_' + b.id + '" type="text" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit code" ' +
+              'style="flex:1;padding:10px 13px;border:1.5px solid var(--blue);border-radius:var(--radius-md);font-size:1rem;font-weight:700;letter-spacing:0.12em;font-family:var(--font);outline:none;" />' +
+            '<button onclick="submitInlineCode('' + b.id + '')" style="padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.88rem;font-weight:700;cursor:pointer;white-space:nowrap;">Claim →</button>' +
+          '</div>' +
+          '<div id="inlineCodeErr_' + b.id + '" style="display:none;margin-top:6px;font-size:0.8rem;color:var(--red);"></div>' +
           '</div>';
       } else if (b.payment_status === 'paid') {
         /* paid but status not yet in_progress (e.g. still confirmed) */
@@ -1375,6 +1382,67 @@ function openMessagesPanel() {
 
       /* Subscription slot counter removed — Sprint 4 uses per-task payments */
     }
+
+    /* ── Bookings panel loader ──────────────────────────────── */
+    var _bookingsLoaded = false;
+
+    async function loadBookings() {
+      var el = document.getElementById('bookingsList');
+      if (!el) return;
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:20px 0;text-align:center;">Loading bookings...</p>';
+
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var user = sess.data.session && sess.data.session.user;
+        if (!user) {
+          el.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:16px 0;">Please log in to view bookings.</p>';
+          return;
+        }
+
+        var bkRes = await window.supabase.from('bookings')
+          .select('id,customer_id,tasker_id,task_id,service_id,status,payment_status,amount,notes,scheduled_time,created_at,completion_code,code_attempts')
+          .eq('tasker_id', user.id)
+          .order('created_at', { ascending: false });
+
+        var allBookings = bkRes.data || [];
+
+        /* Enrich with customer names */
+        var custIds = [...new Set(allBookings.map(function(b){ return b.customer_id; }).filter(Boolean))];
+        var custMap = {};
+        if (custIds.length > 0) {
+          try {
+            var cRes = await window.supabase.from('users').select('id,name,first_name,last_name').in('id', custIds);
+            (cRes.data || []).forEach(function(u){
+              var n = (u.first_name && u.last_name) ? u.first_name + ' ' + u.last_name : u.name || 'Customer';
+              custMap[u.id] = { name: n };
+            });
+          } catch(_e) {}
+        }
+        allBookings.forEach(function(b){ b._customerContact = custMap[b.customer_id] || null; });
+
+        /* Show active + recently completed (last 30 days) */
+        var active = allBookings.filter(function(b) {
+          if (['pending','confirmed','in_progress','provider_done',
+               'awaiting_code','awaiting_confirmation'].indexOf(b.status) !== -1) return true;
+          /* Also show recently completed so tasker can see payment released */
+          if (b.status === 'completed') {
+            var age = Date.now() - new Date(b.created_at).getTime();
+            return age < 30 * 24 * 60 * 60 * 1000;
+          }
+          return false;
+        });
+
+        el.innerHTML = active.length
+          ? active.map(function(b){ return bookingRow(b, true); }).join('')
+          : empty('No active bookings right now.', null, null);
+
+        _bookingsLoaded = true;
+      } catch(e) {
+        console.error('[Bookings]', e);
+        el.innerHTML = '<p style="color:var(--red);font-size:0.88rem;padding:16px 0;">Could not load bookings. <button onclick="loadBookings()" style="color:var(--blue);background:none;border:none;cursor:pointer;font-size:0.88rem;">Retry</button></p>';
+      }
+    }
+    window.loadBookings = loadBookings;
 
     /* ── Profile editing ─────────────────────────────────────── */
     var _currentProfileImageFile = null;
@@ -2271,6 +2339,32 @@ function openMessagesPanel() {
       setTimeout(function() { var ci = document.getElementById('codeInput'); if(ci) ci.focus(); }, 100);
     }
     window.openCodeEntry = openCodeEntry;
+
+    /* ── Inline code entry directly in bookings card ─────── */
+    async function submitInlineCode(bookingId) {
+      var input = document.getElementById('inlineCode_' + bookingId);
+      var errEl = document.getElementById('inlineCodeErr_' + bookingId);
+      var btn   = input && input.nextElementSibling;
+      if (!input) return;
+      var code = input.value.trim();
+      if (!code || code.length < 4) {
+        if (errEl) { errEl.textContent = 'Please enter the 6-digit code.'; errEl.style.display = 'block'; }
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+      if (errEl) errEl.style.display = 'none';
+      try {
+        await window.ST.payments.submitCompletionCode(bookingId, code);
+        /* Success! */
+        if (btn) btn.textContent = '✓ Claimed!';
+        showToast('Payment released to your wallet! 🎉');
+        setTimeout(function(){ loadBookings(); }, 1000);
+      } catch(e) {
+        if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Claim →'; }
+      }
+    }
+    window.submitInlineCode = submitInlineCode;
     function closeCodeModal() { var m = document.getElementById("codeEntryModal"); if(m) m.remove(); }
     window.closeCodeModal = closeCodeModal;
 
@@ -2869,33 +2963,54 @@ function openMessagesPanel() {
       var bkId = (t && t.context_type === 'booking') ? (t.context_id || '') : '';
       var card = buildTaskerPaymentCard(total, earn, fee, bkId, timeStr);
 
-      if (t && !bkId && t.context_id) {
-        (async function() {
-          try {
-            var resolvedId = null;
-            if (t.context_type === 'task_application') {
-              var aRes = await window.supabase.from('task_applications')
-                .select('task_id').eq('id', t.context_id).maybeSingle();
-              if (aRes.data && aRes.data.task_id) {
-                var bRes = await window.supabase.from('bookings').select('id')
-                  .eq('task_id', aRes.data.task_id).eq('tasker_id', _user.id)
-                  .order('created_at', { ascending: false }).limit(1).maybeSingle();
-                resolvedId = bRes.data && bRes.data.id;
-              }
-            } else {
-              /* context_type === 'task': context_id is the task_id */
-              var bRes2 = await window.supabase.from('bookings').select('id')
-                .eq('task_id', t.context_id).eq('tasker_id', _user.id)
+      /* Always try async resolution — even if bkId exists, verify it's valid */
+      (async function() {
+        try {
+          var resolvedId = bkId || null;
+
+          /* Path 1: thread context is directly a booking */
+          if (!resolvedId && t && t.context_type === 'booking' && t.context_id) {
+            resolvedId = t.context_id;
+          }
+
+          /* Path 2: context is a task_application — find booking via task */
+          if (!resolvedId && t && t.context_type === 'task_application' && t.context_id) {
+            var aRes = await window.supabase.from('task_applications')
+              .select('task_id').eq('id', t.context_id).maybeSingle();
+            if (aRes.data && aRes.data.task_id) {
+              var bRes = await window.supabase.from('bookings').select('id')
+                .eq('task_id', aRes.data.task_id).eq('tasker_id', _user.id)
                 .order('created_at', { ascending: false }).limit(1).maybeSingle();
-              resolvedId = bRes2.data && bRes2.data.id;
+              resolvedId = bRes.data && bRes.data.id;
             }
-            if (resolvedId && card.parentNode) {
-              var newCard = buildTaskerPaymentCard(total, earn, fee, resolvedId, timeStr);
-              card.parentNode.replaceChild(newCard, card);
-            }
-          } catch(_e) {}
-        })();
-      }
+          }
+
+          /* Path 3: context is a task_id directly */
+          if (!resolvedId && t && t.context_type === 'task' && t.context_id) {
+            var bRes3 = await window.supabase.from('bookings').select('id')
+              .eq('task_id', t.context_id).eq('tasker_id', _user.id)
+              .order('created_at', { ascending: false }).limit(1).maybeSingle();
+            resolvedId = bRes3.data && bRes3.data.id;
+          }
+
+          /* Path 4 (fallback): find most recent paid booking for this tasker+customer pair */
+          if (!resolvedId && t && t.customer_id && _user && _user.id) {
+            var bRes4 = await window.supabase.from('bookings').select('id')
+              .eq('tasker_id', _user.id).eq('customer_id', t.customer_id)
+              .eq('payment_status', 'paid').neq('status', 'completed')
+              .order('created_at', { ascending: false }).limit(1).maybeSingle();
+            resolvedId = bRes4.data && bRes4.data.id;
+          }
+
+          if (resolvedId && resolvedId !== bkId && card.parentNode) {
+            var newCard = buildTaskerPaymentCard(total, earn, fee, resolvedId, timeStr);
+            card.parentNode.replaceChild(newCard, card);
+          } else if (resolvedId && !bkId && card.parentNode) {
+            var newCard2 = buildTaskerPaymentCard(total, earn, fee, resolvedId, timeStr);
+            card.parentNode.replaceChild(newCard2, card);
+          }
+        } catch(_e) {}
+      })();
       return card;
     }
 
