@@ -374,9 +374,9 @@ function openMessagesPanel() {
     <!-- Profile avatar header -->
     <div class="mob-menu-user" id="mobMenuUser">
       <div class="mob-menu-avatar" id="mobMenuAvatar">T</div>
-      <div>
+      <div class="mob-menu-user-info">
         <div class="mob-menu-name" id="mobMenuName">My Account</div>
-        <div class="mob-menu-role">Tasker</div>
+        <div class="mob-menu-role" id="mobMenuRole">Tasker</div>
       </div>
     </div>
     <div class="nav-divider" style="height:1px;background:var(--border);margin:0;"></div>
@@ -2440,14 +2440,44 @@ function openMessagesPanel() {
 
   <script>
     /* Populate mobile menu user header */
-  function initMobMenuUser() {
+  async function initMobMenuUser() {
     try {
-      var name   = localStorage.getItem('st_name') || ('My Account');
-      var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || ('T');
-      var nameEl = document.getElementById('mobMenuName');
-      var avatEl = document.getElementById('mobMenuAvatar');
+      var name     = localStorage.getItem('st_name') || 'My Account';
+      var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '?';
+      var nameEl   = document.getElementById('mobMenuName');
+      var roleEl   = document.getElementById('mobMenuRole');
+      var avatEl   = document.getElementById('mobMenuAvatar');
       if (nameEl) nameEl.textContent = name;
+      if (roleEl) roleEl.textContent = 'Tasker';
       if (avatEl) avatEl.textContent = initials;
+      /* Try to load profile photo from Supabase */
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var user = sess.data.session && sess.data.session.user;
+        if (user) {
+          var photoUrl = user.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture);
+          if (!photoUrl) {
+            var uRes = await window.supabase.from('users').select('name,avatar_url').eq('id', user.id).maybeSingle();
+            if (uRes.data) {
+              if (uRes.data.name) {
+                var fullName = uRes.data.name;
+                if (nameEl) nameEl.textContent = fullName;
+                var ini2 = fullName.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+                if (avatEl) avatEl.textContent = ini2 || initials;
+              }
+              photoUrl = uRes.data.avatar_url;
+            }
+          }
+          if (photoUrl && avatEl) {
+            var img = document.createElement('img');
+            img.src = photoUrl;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+            img.onerror = function(){ avatEl.textContent = initials; };
+            avatEl.innerHTML = '';
+            avatEl.appendChild(img);
+          }
+        }
+      } catch(_e) {}
     } catch(e) {}
   }
   document.addEventListener('DOMContentLoaded', initMobMenuUser);
