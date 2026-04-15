@@ -1353,9 +1353,9 @@ input.has-gps-btn { padding-right: inherit !important; }
 
 /* Hidden by default on desktop */
 .mobile-dash-header  { display: none; }
-.mobile-nav-dropdown { display: none; }
+.mobile-nav-dropdown { display: block; }
 .mobile-bottom-bar   { display: none; }
-.mobile-overlay      { display: none; }
+.mobile-overlay      { display: block; opacity: 0; pointer-events: none; }
 
 .mobile-dash-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
 
@@ -1428,12 +1428,14 @@ input.has-gps-btn { padding-right: inherit !important; }
 
 /* Overlay when dropdown open */
 .mobile-overlay {
-  display: none;
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45); z-index: 9998;
   backdrop-filter: blur(1px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
 }
-.mobile-overlay.open { display: block; }
+.mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
 /* Mobile breakpoint — show mobile nav, hide desktop sidebar */
 @media (max-width: 768px) {
@@ -1947,4 +1949,19 @@ img { max-width: 100%; height: auto; }
     max-width: 100vw;
     overflow: hidden;
   }
+}
+
+/* ================================================================
+   DASHBOARD PAGES: hide the standard site navbar on mobile.
+   The dashboard has its own mobile-dash-header + slide drawer.
+   ================================================================ */
+@media (max-width: 768px) {
+  .has-mobile-header #navbar      { display: none !important; }
+  .has-mobile-header #navMobile   { display: none !important; }
+  .has-mobile-header .nav-mobile  { display: none !important; }
+  /* No gap from the hidden navbar */
+  .has-mobile-header body         { padding-top: 0 !important; }
+  .has-mobile-header .dashboard-page { padding-top: 0 !important; margin-top: 0 !important; }
+  /* Dashboard body fills screen from header bar downward */
+  .has-mobile-header .dashboard-body { margin-top: 0 !important; }
 }
