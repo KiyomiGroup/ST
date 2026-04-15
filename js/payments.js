@@ -183,39 +183,33 @@ async function topUpWallet(amountNaira, userEmail) {
       metadata: { user_id: user.id, type: 'topup' },
       /* Bug fix: same async-callback issue as initiatePayment — plain wrapper
          immediately invokes an async IIFE so Paystack never receives a Promise. */
-   callback: async function(response) {
-  try {
-
-    console.log("PAYSTACK CALLBACK FIRED", response);
-
-    /* Credit wallet */
-    var wallet = await getWallet(user.id);
-
-    if (!wallet._stub) {
-      await window.supabase.from('wallets')
-        .update({
-          balance: (wallet.balance || 0) + Math.round(amountNaira),
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      await window.supabase.from('wallet_transactions').insert({
-        user_id: user.id,
-        type: 'topup',
-        amount: amountNaira,
-        reference: response.reference,
-        status: 'completed',
-        note: 'Wallet top-up via Paystack',
-      });
-    }
-
-    resolve({ reference: response.reference, amount: amountNaira });
-
-  } catch (e) {
-    console.error("Payment callback error:", e);
-    reject(e);
-  }
-},
+      callback: function(response) {
+        /* Paystack v1 rejects async callbacks — wrap in plain function + async IIFE */
+        (async function() {
+          try {
+            var wallet = await getWallet(user.id);
+            if (!wallet._stub) {
+              await window.supabase.from('wallets')
+                .update({
+                  balance: (wallet.balance || 0) + Math.round(amountNaira),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('user_id', user.id);
+              await window.supabase.from('wallet_transactions').insert({
+                user_id:   user.id,
+                type:      'topup',
+                amount:    amountNaira,
+                reference: response.reference,
+                status:    'completed',
+                note:      'Wallet top-up via Paystack',
+              });
+            }
+            resolve({ reference: response.reference, amount: amountNaira });
+          } catch(e) {
+            reject(e);
+          }
+        })();
+      },
       onClose: function() { reject(new Error('Payment window closed.')); },
     });
     handler.openIframe();
