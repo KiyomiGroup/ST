@@ -1816,24 +1816,92 @@
     window.loadWalletPanel = loadWalletPanel;
 
     function openTopUpModal() {
-      var m = document.createElement('div');
-      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-      m.innerHTML =
-        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
-        '<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">Top Up Wallet</h2>' +
-        '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;">Add funds. Balance stays on site until you use it to pay or withdraw.</p>' +
-        '<label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Amount (₦)</label>' +
-        '<input id="topupAmt" type="number" min="100" placeholder="e.g. 5000" style="width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.95rem;box-sizing:border-box;outline:none;margin-bottom:10px;" />' +
-        '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
-          ['1000','2500','5000','10000'].map(function(v){return '<button onclick="document.getElementById("topupAmt").value='+v+'" style="flex:1;padding:8px 4px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-size:0.8rem;font-weight:600;">₦'+Number(v).toLocaleString()+'</button>';}).join('') +
-        '</div>' +
-        '<div id="topupErr" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);"></div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button id="topupBtn" onclick="doTopUp()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Proceed to Pay</button>' +
-          '<button onclick="this.closest("[style*=fixed]").remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
-        '</div></div>';
-      document.body.appendChild(m);
-      m.onclick = function(e){ if(e.target===m) m.remove(); };
+      /* Build modal with DOM methods — avoids ALL innerHTML quote-escaping bugs */
+      var overlay = document.createElement('div');
+      overlay.id = 'topupOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
+
+      var box = document.createElement('div');
+      box.style.cssText = 'background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);position:relative;';
+
+      /* ── Close (×) button — top right ── */
+      var xBtn = document.createElement('button');
+      xBtn.textContent = '✕';
+      xBtn.style.cssText = 'position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.1rem;color:var(--text-muted);cursor:pointer;line-height:1;padding:4px 6px;border-radius:6px;';
+      xBtn.onclick = function() { overlay.remove(); };
+      box.appendChild(xBtn);
+
+      /* ── Title ── */
+      var h2 = document.createElement('h2');
+      h2.style.cssText = 'font-size:1.1rem;font-weight:800;margin-bottom:6px;';
+      h2.textContent = 'Top Up Wallet';
+      box.appendChild(h2);
+
+      var sub = document.createElement('p');
+      sub.style.cssText = 'font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;';
+      sub.textContent = 'Add funds. Balance stays on site until you use it to pay or withdraw.';
+      box.appendChild(sub);
+
+      /* ── Amount label + input ── */
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;';
+      lbl.textContent = 'Amount (₦)';
+      box.appendChild(lbl);
+
+      var inp = document.createElement('input');
+      inp.id = 'topupAmt';
+      inp.type = 'number';
+      inp.min = '100';
+      inp.placeholder = 'e.g. 5000';
+      inp.style.cssText = 'width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.95rem;box-sizing:border-box;outline:none;margin-bottom:10px;font-family:inherit;';
+      box.appendChild(inp);
+
+      /* ── Quick-amount chips ── */
+      var chips = document.createElement('div');
+      chips.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;';
+      [1000, 2500, 5000, 10000].forEach(function(v) {
+        var btn = document.createElement('button');
+        btn.textContent = '₦' + v.toLocaleString('en-NG');
+        btn.style.cssText = 'flex:1;min-width:60px;padding:8px 4px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-size:0.8rem;font-weight:600;font-family:inherit;touch-action:manipulation;';
+        /* Fix: assign value directly in JS — no innerHTML/onclick string escaping needed */
+        btn.addEventListener('click', function() { inp.value = v; inp.focus(); });
+        chips.appendChild(btn);
+      });
+      box.appendChild(chips);
+
+      /* ── Error message ── */
+      var errDiv = document.createElement('div');
+      errDiv.id = 'topupErr';
+      errDiv.style.cssText = 'display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red);';
+      box.appendChild(errDiv);
+
+      /* ── Action buttons ── */
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;';
+
+      var payBtn = document.createElement('button');
+      payBtn.id = 'topupBtn';
+      payBtn.textContent = 'Proceed to Pay';
+      payBtn.style.cssText = 'flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;font-family:inherit;font-size:0.92rem;touch-action:manipulation;';
+      payBtn.onclick = doTopUp;
+      row.appendChild(payBtn);
+
+      /* Fix: Cancel button closes via direct reference — no querySelector needed */
+      var cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-family:inherit;font-size:0.92rem;touch-action:manipulation;';
+      cancelBtn.onclick = function() { overlay.remove(); };
+      row.appendChild(cancelBtn);
+
+      box.appendChild(row);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      /* Tap backdrop to close */
+      overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+      /* Focus input */
+      setTimeout(function() { inp.focus(); }, 80);
     }
     window.openTopUpModal = openTopUpModal;
 
@@ -1847,7 +1915,7 @@
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
         await window.ST.payments.topUpWallet(amount, cu&&cu.email);
-        document.querySelector('[style*="backdrop-filter"]')?.remove();
+        var _ov = document.getElementById('topupOverlay'); if (_ov) _ov.remove();
         showToast('Wallet topped up! ₦'+Number(amount).toLocaleString()+' added.');
         walletLoaded=false; loadWalletPanel();
       } catch(e) {
