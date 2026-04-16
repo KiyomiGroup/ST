@@ -15,9 +15,9 @@
     .feed-topbar {
       background: var(--white);
       border-bottom: 1px solid var(--border);
-      padding: 16px 0;
+      padding: 12px 0;
       position: sticky;
-      top: var(--nav-height);
+      top: 0;
       z-index: 90;
     }
     .feed-topbar-inner {
@@ -71,9 +71,9 @@
     /* ── Welcome Banner ───────────────────────────────────────── */
     .feed-welcome {
       background: linear-gradient(135deg, #0A84FF 0%, #006AE8 100%);
-      padding: 28px 0 32px;
+      padding: 24px 0 28px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
     .feed-welcome::before {
       content: '';
@@ -182,8 +182,9 @@
     .cat-pill:hover { color: var(--blue); border-bottom-color: var(--blue-border); }
     .cat-pill.active { color: var(--blue); border-bottom-color: var(--blue); }
     .cat-pill-icon {
-      font-size: 1.2rem;
-      line-height: 1;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
     }
 
     /* ── Main Feed Grid ───────────────────────────────────────── */
@@ -424,7 +425,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      /* SVG icon centered */
       flex-shrink: 0;
     }
     .urgent-title {
@@ -487,7 +488,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      /* SVG icon centered */
       flex-shrink: 0;
     }
     .otc-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 4px; }
@@ -594,7 +595,7 @@
       color: var(--text-secondary);
     }
     .cat-grid-item:hover { background: var(--blue-light); color: var(--blue); box-shadow: var(--shadow-xs); }
-    .cat-grid-item-icon { font-size: 1.3rem; }
+    .cat-grid-item-icon { width: 22px; height: 22px; flex-shrink: 0; }
 
     /* ── Skeleton ─────────────────────────────────────────────── */
     .skel { background: linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: var(--radius-sm); }
@@ -696,46 +697,60 @@
     <div class="cat-scroll-bar">
       <div class="cat-scroll-inner" id="catScrollInner">
         <a href="find-taskers.html?category=all" class="cat-pill active" data-cat="">
-          <span class="cat-pill-icon">🏠</span>All
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All
         </a>
         <a href="find-taskers.html?category=electrician" class="cat-pill" data-cat="electrician">
-          <span class="cat-pill-icon">⚡</span>Electrician
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Electrician
         </a>
         <a href="find-taskers.html?category=plumber" class="cat-pill" data-cat="plumber">
-          <span class="cat-pill-icon">🔧</span>Plumber
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+          Plumber
         </a>
-        <a href="find-taskers.html?category=cleaner" class="cat-pill" data-cat="cleaning">
-          <span class="cat-pill-icon">🧹</span>Cleaning
+        <a href="find-taskers.html?category=cleaning" class="cat-pill" data-cat="cleaning">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M21 11V9a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2"/><path d="M12 7v10"/></svg>
+          Cleaning
         </a>
         <a href="find-taskers.html?category=barber" class="cat-pill" data-cat="barber">
-          <span class="cat-pill-icon">✂️</span>Barber
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg>
+          Barber
         </a>
         <a href="find-taskers.html?category=mechanic" class="cat-pill" data-cat="mechanic">
-          <span class="cat-pill-icon">🚗</span>Mechanic
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Mechanic
         </a>
         <a href="find-taskers.html?category=beauty" class="cat-pill" data-cat="beauty">
-          <span class="cat-pill-icon">💄</span>Beauty
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Beauty
         </a>
-        <a href="find-taskers.html?category=photographer" class="cat-pill" data-cat="photographer">
-          <span class="cat-pill-icon">📸</span>Photography
+        <a href="find-taskers.html?category=photography" class="cat-pill" data-cat="photography">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          Photography
         </a>
-        <a href="find-taskers.html?category=chef" class="cat-pill" data-cat="chef">
-          <span class="cat-pill-icon">👨‍🍳</span>Chef
+        <a href="find-taskers.html?category=cooking" class="cat-pill" data-cat="cooking">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          Chef
         </a>
-        <a href="find-taskers.html?category=tutor" class="cat-pill" data-cat="tutor">
-          <span class="cat-pill-icon">📚</span>Tutoring
+        <a href="find-taskers.html?category=tutoring" class="cat-pill" data-cat="tutoring">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Tutoring
         </a>
-        <a href="find-taskers.html?category=carpenter" class="cat-pill" data-cat="carpenter">
-          <span class="cat-pill-icon">🪚</span>Carpenter
+        <a href="find-taskers.html?category=carpentry" class="cat-pill" data-cat="carpentry">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>
+          Carpentry
         </a>
-        <a href="find-taskers.html?category=painter" class="cat-pill" data-cat="painter">
-          <span class="cat-pill-icon">🎨</span>Painter
+        <a href="find-taskers.html?category=painting" class="cat-pill" data-cat="painting">
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>
+          Painting
         </a>
         <a href="find-taskers.html?category=laundry" class="cat-pill" data-cat="laundry">
-          <span class="cat-pill-icon">👕</span>Laundry
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Laundry
         </a>
         <a href="find-taskers.html?category=security" class="cat-pill" data-cat="security">
-          <span class="cat-pill-icon">🛡️</span>Security
+          <svg class="cat-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security
         </a>
       </div>
     </div>
@@ -854,7 +869,7 @@
 
             <!-- Post a task promo -->
             <div class="aside-promo fade-up">
-              <h4>Got something to fix? 🛠️</h4>
+              <h4>Got something to fix?</h4>
               <p>Post your task and get matched with top local providers in minutes.</p>
               <a href="post-task.html" class="aside-promo-btn">Post a Task — It's Free</a>
             </div>
@@ -884,14 +899,14 @@
                 Browse Categories
               </div>
               <div class="cat-grid">
-                <a href="find-taskers.html?category=electrician" class="cat-grid-item"><span class="cat-grid-item-icon">⚡</span>Electrical</a>
-                <a href="find-taskers.html?category=plumber" class="cat-grid-item"><span class="cat-grid-item-icon">🔧</span>Plumbing</a>
-                <a href="find-taskers.html?category=cleaning" class="cat-grid-item"><span class="cat-grid-item-icon">🧹</span>Cleaning</a>
-                <a href="find-taskers.html?category=barber" class="cat-grid-item"><span class="cat-grid-item-icon">✂️</span>Barber</a>
-                <a href="find-taskers.html?category=beauty" class="cat-grid-item"><span class="cat-grid-item-icon">💄</span>Beauty</a>
-                <a href="find-taskers.html?category=mechanic" class="cat-grid-item"><span class="cat-grid-item-icon">🚗</span>Mechanic</a>
-                <a href="find-taskers.html?category=photographer" class="cat-grid-item"><span class="cat-grid-item-icon">📸</span>Photo</a>
-                <a href="find-taskers.html?category=tutor" class="cat-grid-item"><span class="cat-grid-item-icon">📚</span>Tutor</a>
+                <a href="find-taskers.html?category=electrician" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Electrical</a>
+                <a href="find-taskers.html?category=plumber" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>Plumbing</a>
+                <a href="find-taskers.html?category=cleaning" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>Cleaning</a>
+                <a href="find-taskers.html?category=barber" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg>Barber</a>
+                <a href="find-taskers.html?category=beauty" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Beauty</a>
+                <a href="find-taskers.html?category=mechanic" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mechanic</a>
+                <a href="find-taskers.html?category=photography" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Photo</a>
+                <a href="find-taskers.html?category=tutoring" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Tutor</a>
               </div>
             </div>
 
@@ -922,15 +937,34 @@
 
     const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
 
-    const CAT_EMOJI = {
-      electrician:'⚡', plumber:'🔧', cleaning:'🧹', cleaner:'🧹', barber:'✂️',
-      mechanic:'🚗', beauty:'💄', photographer:'📸', chef:'👨‍🍳', tutor:'📚',
-      carpenter:'🪚', painter:'🎨', laundry:'👕', security:'🛡️',
-      appliances:'🔌', ac:'❄️', pest:'🪲', default:'📋',
+    /* SVG icons matching the find-taskers page style */
+    const CAT_ICONS = {
+      electrician: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      plumber:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>',
+      cleaning:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>',
+      cleaner:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>',
+      barber:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg>',
+      mechanic:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+      beauty:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      photographer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+      photography: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+      chef:        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>',
+      cooking:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>',
+      tutor:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      tutoring:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      carpenter:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/></svg>',
+      carpentry:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/></svg>',
+      painter:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+      painting:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+      laundry:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      security:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      appliances:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+      ac:          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 24V6m0 0L4 10m4-4 4 4M16 0v18m0 0 4-4m-4 4-4-4"/></svg>',
+      moving:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
     };
     function catEmoji(cat) {
       const k = (cat||'').toLowerCase().replace(/[^a-z]/g,'');
-      return CAT_EMOJI[k] || CAT_EMOJI.default;
+      return CAT_ICONS[k] || '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
     }
 
     /* ── Dummy fallback data ─────────────────────────────────── */
@@ -1021,7 +1055,7 @@
         || user.email?.split('@')[0]
         || '';
       const el = document.getElementById('welcomeGreeting');
-      if (el) el.textContent = name ? greet + ', ' + name + ' 👋' : greet + ' 👋';
+      if (el) el.textContent = name ? greet + ', ' + name + '!' : greet + '!';
 
       const sub = document.getElementById('welcomeSub');
       if (sub) {
@@ -1108,7 +1142,7 @@
 
         const imgSection = s.photo_url || s.photo
           ? '<div class="feat-card-img"><img src="' + escapeHtml(s.photo_url || s.photo) + '" alt="' + safeName + '" onerror="this.style.display=\'none\'"/><div class="feat-card-img-overlay"></div></div>'
-          : '<div class="feat-card-img" style="background:linear-gradient(135deg, var(--blue-light) 0%, var(--bg-subtle) 100%);"><span style="font-size:2rem;">' + catEmoji(safeSvc) + '</span></div>';
+          : '<div class="feat-card-img" style="background:linear-gradient(135deg, var(--blue-light) 0%, var(--bg-subtle) 100%);display:flex;align-items:center;justify-content:center;"><div style="opacity:0.4;">' + catEmoji(safeSvc) + '</div></div>';
 
         return '<a href="' + profileUrl + '" class="feat-card fade-up" style="animation-delay:' + (i*0.06) + 's;">'
           + imgSection
@@ -1163,7 +1197,7 @@
           + '<div class="urgent-meta">'
           + '<span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
           + '<span>' + timeAgo + '</span>'
-          + '<span class="urgent-badge">🔥 Urgent</span>'
+          + '<span class="urgent-badge">Urgent</span>'
           + '</div></div>'
           + '<div class="urgent-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div>'
           + '</a>';
