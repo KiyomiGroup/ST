@@ -393,7 +393,14 @@
     let allServices = [];
 
     async function initPage() {
-      /* Wire hero location autocomplete + GPS */
+      /* ── Auth gate: redirect logged-in users to the live feed homepage ── */
+      const user = await window.ST.auth.getCurrentUser();
+      if (user) {
+        window.location.replace('home-feed.html');
+        return;
+      }
+
+      /* Wire hero location autocomplete + GPS (logged-out landing page only) */
       initServiceAutocomplete();
       initLocationInput({
         inputId:    'heroLocationInput',
@@ -402,9 +409,8 @@
         mode: 'area',
       });
 
-      /* Auth-aware hero CTAs */
-      const user = await window.ST.auth.getCurrentUser();
-      if (user) {
+      /* Auth-aware hero CTAs — kept for safety but user is logged out here */
+      if (false && user) {
         const role = await window.ST.auth.getUserRole(user);
         const heroCta = document.getElementById('heroCta');
         if (heroCta) {

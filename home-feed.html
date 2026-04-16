@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Street Taskers — Home</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <style>
+    /* ── Feed Layout ──────────────────────────────────────────── */
+    .feed-root { min-height: 100vh; background: var(--bg-subtle); }
+
+    /* ── Top Search Bar ───────────────────────────────────────── */
+    .feed-topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: var(--nav-height);
+      z-index: 90;
+    }
+    .feed-topbar-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .feed-search-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
+      height: 44px;
+      gap: 8px;
+      transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+    }
+    .feed-search-wrap:focus-within {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(10,132,255,0.12);
+    }
+    .feed-search-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      outline: none;
+    }
+    .feed-search-wrap input::placeholder { color: var(--text-muted); }
+    .feed-topbar-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 44px;
+      padding: 0 18px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-pill);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--t) var(--ease);
+    }
+    .feed-topbar-btn:hover { background: var(--blue-hover); }
+
+    /* ── Welcome Banner ───────────────────────────────────────── */
+    .feed-welcome {
+      background: linear-gradient(135deg, #0A84FF 0%, #006AE8 100%);
+      padding: 28px 0 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .feed-welcome::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -60px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+    .feed-welcome::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: 30%;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .welcome-greeting {
+      font-size: clamp(1.25rem, 3vw, 1.6rem);
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .welcome-sub {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 20px;
+    }
+    .welcome-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .welcome-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--t) var(--ease);
+      text-decoration: none;
+      border: none;
+    }
+    .wa-white  { background: var(--white); color: var(--blue); }
+    .wa-white:hover  { background: rgba(255,255,255,0.88); }
+    .wa-ghost  { background: rgba(255,255,255,0.15); color: var(--white); border: 1.5px solid rgba(255,255,255,0.3); }
+    .wa-ghost:hover  { background: rgba(255,255,255,0.22); }
+
+    /* Quick stats strip */
+    .welcome-stats {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .ws-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.8);
+    }
+    .ws-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+      50%      { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+    }
+
+    /* ── Quick Category Scroll ────────────────────────────────── */
+    .cat-scroll-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      overflow: hidden;
+    }
+    .cat-scroll-inner {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cat-scroll-inner::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 18px;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2.5px solid transparent;
+      transition: all var(--t) var(--ease);
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .cat-pill:hover { color: var(--blue); border-bottom-color: var(--blue-border); }
+    .cat-pill.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .cat-pill-icon {
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    /* ── Main Feed Grid ───────────────────────────────────────── */
+    .feed-body { padding: 24px 0 64px; }
+    .feed-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 24px;
+      align-items: start;
+    }
+    .feed-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+    .feed-aside { display: flex; flex-direction: column; gap: 20px; position: sticky; top: calc(var(--nav-height) + 64px); }
+
+    /* ── Section Headings ─────────────────────────────────────── */
+    .feed-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .feed-section-head h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feed-section-head h3 .section-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+    .sb-green  { background: var(--green-light); color: var(--green); }
+    .sb-amber  { background: var(--amber-light); color: var(--amber); }
+    .sb-blue   { background: var(--blue-light); color: var(--blue); }
+    .feed-section-head a {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .feed-section-head a:hover { text-decoration: underline; }
+
+    /* ── Nearby Taskers (horizontal scroll cards) ──────────────── */
+    .tasker-scroll {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    .tasker-scroll::-webkit-scrollbar { display: none; }
+    .tasker-scroll-card {
+      flex-shrink: 0;
+      width: 160px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease), border-color var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .tasker-scroll-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--blue-border);
+    }
+    .tsc-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+      overflow: hidden;
+      position: relative;
+    }
+    .tsc-verified {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      width: 16px; height: 16px;
+      background: var(--blue);
+      border-radius: 50%;
+      border: 2px solid var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tsc-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tsc-service {
+      font-size: 0.7rem;
+      color: var(--blue);
+      background: var(--blue-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      display: inline-block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .tsc-meta {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    .tsc-rate {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 8px;
+    }
+
+    /* ── Featured Services Grid ───────────────────────────────── */
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .feat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .feat-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .feat-card-img {
+      height: 110px;
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .feat-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+    .feat-card-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%);
+    }
+    .feat-card-body { padding: 12px 14px 14px; }
+    .feat-card-name {
+      font-size: 0.86rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .feat-card-loc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+    .feat-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .feat-card-price {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .feat-card-stars {
+      font-size: 0.7rem;
+      color: var(--amber);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    /* ── Urgent Tasks ─────────────────────────────────────────── */
+    .urgent-list { display: flex; flex-direction: column; gap: 10px; }
+    .urgent-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+    }
+    .urgent-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--amber-light);
+    }
+    .urgent-card.hot { border-left: 3px solid var(--amber); }
+    .urgent-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--amber-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .urgent-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .urgent-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .urgent-meta span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .urgent-budget {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--green);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .urgent-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      background: var(--amber-light);
+      color: var(--amber);
+    }
+
+    /* ── Open Tasks (full list) ───────────────────────────────── */
+    .open-task-list { display: flex; flex-direction: column; gap: 10px; }
+    .open-task-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: box-shadow var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+    }
+    .open-task-card:hover { box-shadow: var(--shadow-md); }
+    .otc-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .otc-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 4px; }
+    .otc-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .otc-meta span { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+    .otc-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .otc-budget { font-size: 0.9rem; font-weight: 800; color: var(--green); }
+    .otc-open {
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--green); background: var(--green-light);
+      padding: 2px 7px; border-radius: var(--radius-pill); display: inline-block;
+      margin-top: 3px;
+    }
+
+    /* ── Top Rated (aside widget) ─────────────────────────────── */
+    .aside-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+    }
+    .aside-card-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .top-rated-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+    }
+    .top-rated-row:last-child { border-bottom: none; }
+    .top-rated-row:hover { background: var(--bg-subtle); border-radius: var(--radius-sm); margin: 0 -4px; padding: 9px 4px; }
+    .tr-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.74rem; font-weight: 700; color: var(--white);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tr-name { font-size: 0.82rem; font-weight: 700; }
+    .tr-service { font-size: 0.7rem; color: var(--text-muted); }
+    .tr-stars { margin-left: auto; font-size: 0.72rem; color: var(--amber); font-weight: 700; white-space: nowrap; }
+
+    /* ── Post-a-task aside promo ──────────────────────────────── */
+    .aside-promo {
+      background: linear-gradient(135deg, #0A84FF 0%, #006AE8 100%);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      color: var(--white);
+    }
+    .aside-promo h4 { color: var(--white); font-size: 1rem; margin-bottom: 6px; }
+    .aside-promo p  { color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-bottom: 16px; line-height: 1.5; }
+    .aside-promo-btn {
+      display: block;
+      text-align: center;
+      background: var(--white);
+      color: var(--blue);
+      border-radius: var(--radius-pill);
+      padding: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background var(--t) var(--ease);
+    }
+    .aside-promo-btn:hover { background: rgba(255,255,255,0.88); }
+
+    /* ── Categories shortcut grid ─────────────────────────────── */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .cat-grid-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 6px;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      cursor: pointer;
+      transition: background var(--t) var(--ease), box-shadow var(--t) var(--ease);
+      text-decoration: none;
+      color: inherit;
+      font-size: 0.64rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    .cat-grid-item:hover { background: var(--blue-light); color: var(--blue); box-shadow: var(--shadow-xs); }
+    .cat-grid-item-icon { font-size: 1.3rem; }
+
+    /* ── Skeleton ─────────────────────────────────────────────── */
+    .skel { background: linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: var(--radius-sm); }
+    @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── Load more button ─────────────────────────────────────── */
+    .load-more-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: border-color var(--t) var(--ease), color var(--t) var(--ease);
+      text-align: center;
+      margin-top: 4px;
+    }
+    .load-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media(max-width: 900px) {
+      .feed-layout { grid-template-columns: 1fr; }
+      .feed-aside  { display: none; }
+    }
+    @media(max-width: 600px) {
+      .featured-grid { grid-template-columns: repeat(2, 1fr); }
+      .cat-grid      { grid-template-columns: repeat(4, 1fr); }
+      .feed-topbar-btn span { display: none; }
+    }
+
+    /* ── Avatar color variants ────────────────────────────────── */
+    .av-1 { background: #1E3A5F; }
+    .av-2 { background: #4A1E5F; }
+    .av-3 { background: #1E5F3A; }
+    .av-4 { background: #5F3A1E; }
+    .av-5 { background: #1E4A5F; }
+    .av-6 { background: #5F1E3A; }
+
+    /* Fade-up animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadeUp 0.4s var(--ease) forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: none; } }
+    .d1{animation-delay:0.05s} .d2{animation-delay:0.1s} .d3{animation-delay:0.15s}
+    .d4{animation-delay:0.2s}  .d5{animation-delay:0.25s} .d6{animation-delay:0.3s}
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="feed-root">
+
+    <!-- TOP SEARCH BAR -->
+    <div class="feed-topbar">
+      <div class="container">
+        <div class="feed-topbar-inner">
+          <div class="feed-search-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="feedSearchInput" placeholder="Search services, taskers, or tasks…" autocomplete="off" />
+          </div>
+          <a href="post-task.html" class="feed-topbar-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Post a Task</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- WELCOME BANNER -->
+    <div class="feed-welcome">
+      <div class="container">
+        <div class="welcome-greeting fade-up" id="welcomeGreeting">Good morning 👋</div>
+        <p class="welcome-sub fade-up d1" id="welcomeSub">What do you need done today?</p>
+        <div class="welcome-actions fade-up d2" id="welcomeActions">
+          <a href="post-task.html" class="welcome-action-btn wa-white">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post a Task
+          </a>
+          <a href="find-taskers.html" class="welcome-action-btn wa-ghost">Browse Services</a>
+          <a href="explore-tasks.html" class="welcome-action-btn wa-ghost" id="welcomeTaskerBtn" style="display:none;">Find Work</a>
+        </div>
+        <div class="welcome-stats fade-up d3">
+          <div class="ws-item"><span class="ws-dot"></span> <strong id="liveTaskCount">…</strong>&nbsp;tasks open now</div>
+          <div class="ws-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span id="liveLocation">Lagos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORY SCROLL BAR -->
+    <div class="cat-scroll-bar">
+      <div class="cat-scroll-inner" id="catScrollInner">
+        <a href="find-taskers.html?category=all" class="cat-pill active" data-cat="">
+          <span class="cat-pill-icon">🏠</span>All
+        </a>
+        <a href="find-taskers.html?category=electrician" class="cat-pill" data-cat="electrician">
+          <span class="cat-pill-icon">⚡</span>Electrician
+        </a>
+        <a href="find-taskers.html?category=plumber" class="cat-pill" data-cat="plumber">
+          <span class="cat-pill-icon">🔧</span>Plumber
+        </a>
+        <a href="find-taskers.html?category=cleaner" class="cat-pill" data-cat="cleaning">
+          <span class="cat-pill-icon">🧹</span>Cleaning
+        </a>
+        <a href="find-taskers.html?category=barber" class="cat-pill" data-cat="barber">
+          <span class="cat-pill-icon">✂️</span>Barber
+        </a>
+        <a href="find-taskers.html?category=mechanic" class="cat-pill" data-cat="mechanic">
+          <span class="cat-pill-icon">🚗</span>Mechanic
+        </a>
+        <a href="find-taskers.html?category=beauty" class="cat-pill" data-cat="beauty">
+          <span class="cat-pill-icon">💄</span>Beauty
+        </a>
+        <a href="find-taskers.html?category=photographer" class="cat-pill" data-cat="photographer">
+          <span class="cat-pill-icon">📸</span>Photography
+        </a>
+        <a href="find-taskers.html?category=chef" class="cat-pill" data-cat="chef">
+          <span class="cat-pill-icon">👨‍🍳</span>Chef
+        </a>
+        <a href="find-taskers.html?category=tutor" class="cat-pill" data-cat="tutor">
+          <span class="cat-pill-icon">📚</span>Tutoring
+        </a>
+        <a href="find-taskers.html?category=carpenter" class="cat-pill" data-cat="carpenter">
+          <span class="cat-pill-icon">🪚</span>Carpenter
+        </a>
+        <a href="find-taskers.html?category=painter" class="cat-pill" data-cat="painter">
+          <span class="cat-pill-icon">🎨</span>Painter
+        </a>
+        <a href="find-taskers.html?category=laundry" class="cat-pill" data-cat="laundry">
+          <span class="cat-pill-icon">👕</span>Laundry
+        </a>
+        <a href="find-taskers.html?category=security" class="cat-pill" data-cat="security">
+          <span class="cat-pill-icon">🛡️</span>Security
+        </a>
+      </div>
+    </div>
+
+    <!-- MAIN FEED BODY -->
+    <div class="feed-body">
+      <div class="container">
+        <div class="feed-layout">
+
+          <!-- ── LEFT / MAIN ───────────────────────────────────── -->
+          <div class="feed-main">
+
+            <!-- Nearby Taskers -->
+            <section class="fade-up">
+              <div class="feed-section-head">
+                <h3>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  Nearby Taskers
+                  <span class="section-badge sb-green">Live</span>
+                </h3>
+                <a href="find-taskers.html">See all →</a>
+              </div>
+              <div class="tasker-scroll" id="nearbyTaskersList">
+                <!-- Skeleton placeholders -->
+                <div class="tasker-scroll-card" style="pointer-events:none;">
+                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
+                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
+                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
+                </div>
+                <div class="tasker-scroll-card" style="pointer-events:none;">
+                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
+                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
+                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
+                </div>
+                <div class="tasker-scroll-card" style="pointer-events:none;">
+                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
+                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
+                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Featured Services -->
+            <section class="fade-up d1">
+              <div class="feed-section-head">
+                <h3>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Top-Notch Services
+                  <span class="section-badge sb-blue">Featured</span>
+                </h3>
+                <a href="find-taskers.html">See all →</a>
+              </div>
+              <div class="featured-grid" id="featuredServicesList">
+                <!-- Skeletons -->
+                <div class="feat-card" style="pointer-events:none;">
+                  <div class="feat-card-img"><div class="skel" style="width:100%;height:100%;position:absolute;inset:0;"></div></div>
+                  <div class="feat-card-body"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
+                </div>
+                <div class="feat-card" style="pointer-events:none;">
+                  <div class="feat-card-img"><div class="skel" style="width:100%;height:100%;position:absolute;inset:0;"></div></div>
+                  <div class="feat-card-body"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Urgent Tasks -->
+            <section class="fade-up d2">
+              <div class="feed-section-head">
+                <h3>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Urgent Tasks
+                  <span class="section-badge sb-amber">Needs Help</span>
+                </h3>
+                <a href="explore-tasks.html?filter=urgent">See all →</a>
+              </div>
+              <div class="urgent-list" id="urgentTasksList">
+                <div class="urgent-card" style="pointer-events:none;">
+                  <div class="urgent-icon"><div class="skel" style="width:100%;height:100%;"></div></div>
+                  <div style="flex:1;"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- All Open Tasks (Full Listing) -->
+            <section class="fade-up d3">
+              <div class="feed-section-head">
+                <h3>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Open Tasks
+                  <span id="openTaskCount" class="section-badge sb-green" style="display:none;"></span>
+                </h3>
+                <a href="explore-tasks.html">Browse all →</a>
+              </div>
+              <!-- Filter chips -->
+              <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
+                <button class="cat-chip active" onclick="filterOpenTasks(this, '')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--blue);background:var(--blue);color:var(--white);">All</button>
+                <button class="cat-chip" onclick="filterOpenTasks(this, 'electrician')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Electrician</button>
+                <button class="cat-chip" onclick="filterOpenTasks(this, 'plumber')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Plumber</button>
+                <button class="cat-chip" onclick="filterOpenTasks(this, 'cleaning')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Cleaning</button>
+                <button class="cat-chip" onclick="filterOpenTasks(this, 'beauty')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Beauty</button>
+                <button class="cat-chip" onclick="filterOpenTasks(this, 'mechanic')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:0.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Mechanic</button>
+              </div>
+              <div class="open-task-list" id="openTasksList">
+                <div class="open-task-card" style="pointer-events:none;">
+                  <div class="otc-icon"><div class="skel" style="width:100%;height:100%;"></div></div>
+                  <div style="flex:1;"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
+                </div>
+              </div>
+              <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreTasks()" style="display:none;">Load more tasks</button>
+            </section>
+
+          </div><!-- /feed-main -->
+
+          <!-- ── RIGHT ASIDE ─────────────────────────────────── -->
+          <aside class="feed-aside">
+
+            <!-- Post a task promo -->
+            <div class="aside-promo fade-up">
+              <h4>Got something to fix? 🛠️</h4>
+              <p>Post your task and get matched with top local providers in minutes.</p>
+              <a href="post-task.html" class="aside-promo-btn">Post a Task — It's Free</a>
+            </div>
+
+            <!-- Top Rated Providers -->
+            <div class="aside-card fade-up d1">
+              <div class="aside-card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Top-Rated Providers
+              </div>
+              <div id="topRatedList">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+                  <div class="skel" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>
+                  <div style="flex:1;"><div class="skel" style="height:10px;width:70%;margin-bottom:5px;"></div><div class="skel" style="height:8px;width:50%;"></div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+                  <div class="skel" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>
+                  <div style="flex:1;"><div class="skel" style="height:10px;width:70%;margin-bottom:5px;"></div><div class="skel" style="height:8px;width:50%;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Browse by Category -->
+            <div class="aside-card fade-up d2">
+              <div class="aside-card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Browse Categories
+              </div>
+              <div class="cat-grid">
+                <a href="find-taskers.html?category=electrician" class="cat-grid-item"><span class="cat-grid-item-icon">⚡</span>Electrical</a>
+                <a href="find-taskers.html?category=plumber" class="cat-grid-item"><span class="cat-grid-item-icon">🔧</span>Plumbing</a>
+                <a href="find-taskers.html?category=cleaning" class="cat-grid-item"><span class="cat-grid-item-icon">🧹</span>Cleaning</a>
+                <a href="find-taskers.html?category=barber" class="cat-grid-item"><span class="cat-grid-item-icon">✂️</span>Barber</a>
+                <a href="find-taskers.html?category=beauty" class="cat-grid-item"><span class="cat-grid-item-icon">💄</span>Beauty</a>
+                <a href="find-taskers.html?category=mechanic" class="cat-grid-item"><span class="cat-grid-item-icon">🚗</span>Mechanic</a>
+                <a href="find-taskers.html?category=photographer" class="cat-grid-item"><span class="cat-grid-item-icon">📸</span>Photo</a>
+                <a href="find-taskers.html?category=tutor" class="cat-grid-item"><span class="cat-grid-item-icon">📚</span>Tutor</a>
+              </div>
+            </div>
+
+          </aside>
+
+        </div><!-- /feed-layout -->
+      </div>
+    </div><!-- /feed-body -->
+
+  </div><!-- /feed-root -->
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/location.js"></script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════
+       home-feed.js — Logged-in homepage feed
+    ═══════════════════════════════════════════════════════════ */
+    'use strict';
+
+    const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
+
+    const CAT_EMOJI = {
+      electrician:'⚡', plumber:'🔧', cleaning:'🧹', cleaner:'🧹', barber:'✂️',
+      mechanic:'🚗', beauty:'💄', photographer:'📸', chef:'👨‍🍳', tutor:'📚',
+      carpenter:'🪚', painter:'🎨', laundry:'👕', security:'🛡️',
+      appliances:'🔌', ac:'❄️', pest:'🪲', default:'📋',
+    };
+    function catEmoji(cat) {
+      const k = (cat||'').toLowerCase().replace(/[^a-z]/g,'');
+      return CAT_EMOJI[k] || CAT_EMOJI.default;
+    }
+
+    /* ── Dummy fallback data ─────────────────────────────────── */
+    const DUMMY_TASKERS = [
+      { name:'Adebayo Okafor', service:'Electrician', location:'Lekki', rate:6000, rateUnit:'/hr', av:'av-1', verified:true,  uid:'' },
+      { name:'Chidi Cuts',     service:'Barber',      location:'V/I',   rate:3500, rateUnit:'/cut', av:'av-2', verified:true,  uid:'' },
+      { name:'Fatima Clean',   service:'Cleaner',     location:'Ikeja', rate:8000, rateUnit:'/day', av:'av-3', verified:false, uid:'' },
+      { name:'Kingsley Pipes', service:'Plumber',     location:'Yaba',  rate:5000, rateUnit:'/hr',  av:'av-4', verified:true,  uid:'' },
+      { name:'Sadia Beauty',   service:'Make-up',     location:'Ajah',  rate:15000,rateUnit:'/job', av:'av-5', verified:true,  uid:'' },
+      { name:'Emeka AutoCare', service:'Mechanic',    location:'Surulere',rate:8000,rateUnit:'/hr', av:'av-6', verified:false, uid:'' },
+      { name:'Grace Decor',    service:'Interior',    location:'Lekki', rate:50000,rateUnit:'/job', av:'av-1', verified:true,  uid:'' },
+      { name:'Tunde Lens',     service:'Photographer',location:'Ikeja', rate:30000,rateUnit:'/day', av:'av-2', verified:false, uid:'' },
+    ];
+
+    const DUMMY_TASKS = [
+      { id:'d1', title:'Fix leaking kitchen sink',        category:'plumber',     location:'Lekki, Lagos',          budget:8000,  urgent:true,  created_at: new Date(Date.now()-3600000).toISOString()  },
+      { id:'d2', title:'AC servicing and gas recharge',   category:'appliances',  location:'Victoria Island, Lagos', budget:12000, urgent:true,  created_at: new Date(Date.now()-7200000).toISOString()  },
+      { id:'d3', title:'Makeup for wedding aso-ebi',      category:'beauty',      location:'Surulere, Lagos',        budget:45000, urgent:false, created_at: new Date(Date.now()-10800000).toISOString() },
+      { id:'d4', title:'Electrical fault in bedroom',     category:'electrician', location:'Ikeja, Lagos',           budget:10000, urgent:true,  created_at: new Date(Date.now()-14400000).toISOString() },
+      { id:'d5', title:'House deep cleaning',             category:'cleaning',    location:'Ajah, Lagos',            budget:25000, urgent:false, created_at: new Date(Date.now()-18000000).toISOString() },
+      { id:'d6', title:'Generator servicing',             category:'mechanic',    location:'Lekki, Lagos',           budget:18000, urgent:false, created_at: new Date(Date.now()-21600000).toISOString() },
+      { id:'d7', title:'Painting 3-bedroom apartment',    category:'painter',     location:'Yaba, Lagos',            budget:80000, urgent:false, created_at: new Date(Date.now()-25200000).toISOString() },
+      { id:'d8', title:'Install CCTV cameras (4 units)',  category:'electrician', location:'Victoria Island, Lagos', budget:35000, urgent:false, created_at: new Date(Date.now()-28800000).toISOString() },
+      { id:'d9', title:'Maths & Physics tutoring',        category:'tutor',       location:'Ikeja, Lagos',           budget:15000, urgent:false, created_at: new Date(Date.now()-32400000).toISOString() },
+      { id:'d10',title:'Blocked drain repair urgently',   category:'plumber',     location:'Surulere, Lagos',        budget:6000,  urgent:true,  created_at: new Date(Date.now()-36000000).toISOString() },
+    ];
+
+    const DUMMY_SERVICES = [
+      { user_id:'', name:'Adebayo Okafor', service:'Electrician', location:'Lekki, Lagos',    price:6000,  rateUnit:'/hr',  rating:4.9, photo:'', av:'av-1' },
+      { user_id:'', name:'Chidi Cuts',     service:'Barber',      location:'V/I, Lagos',      price:3500,  rateUnit:'/cut', rating:4.8, photo:'', av:'av-2' },
+      { user_id:'', name:'Sadia Beauty',   service:'Make-up',     location:'Ajah, Lagos',     price:15000, rateUnit:'/job', rating:5.0, photo:'', av:'av-5' },
+      { user_id:'', name:'Kingsley Pipes', service:'Plumber',     location:'Yaba, Lagos',     price:5000,  rateUnit:'/hr',  rating:4.7, photo:'', av:'av-4' },
+    ];
+
+    /* ── State ───────────────────────────────────────────────── */
+    let _allTasks   = [];
+    let _taskOffset = 0;
+    const TASK_PAGE = 8;
+    let _currentCat = '';
+    let _userRole   = 'customer';
+
+    /* ── Init ────────────────────────────────────────────────── */
+    async function initFeed() {
+      /* Auth guard: if not logged in, redirect to landing page */
+      if (window.ST && window.ST.auth) {
+        const user = await window.ST.auth.getCurrentUser();
+        if (!user) {
+          window.location.href = 'index.html';
+          return;
+        }
+        _userRole = await window.ST.auth.getUserRole(user);
+        renderWelcome(user, _userRole);
+      }
+
+      /* Load all sections in parallel */
+      Promise.all([
+        loadNearbyTaskers(),
+        loadFeaturedServices(),
+        loadAllTasks(),
+        loadTopRated(),
+      ]);
+
+      /* Live task count */
+      try {
+        const tasks = await window.ST.db.fetchTasks({ limit: 200 });
+        document.getElementById('liveTaskCount').textContent = tasks.length + '+';
+      } catch(e) {
+        document.getElementById('liveTaskCount').textContent = '50+';
+      }
+
+      /* Search wiring */
+      const inp = document.getElementById('feedSearchInput');
+      if (inp) {
+        inp.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            const q = inp.value.trim();
+            if (q) window.location.href = 'find-taskers.html?service=' + encodeURIComponent(q);
+          }
+        });
+      }
+    }
+
+    /* ── Welcome Banner ──────────────────────────────────────── */
+    function renderWelcome(user, role) {
+      const hour = new Date().getHours();
+      const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+      const name = user.user_metadata?.name?.split(' ')[0]
+        || user.email?.split('@')[0]
+        || '';
+      const el = document.getElementById('welcomeGreeting');
+      if (el) el.textContent = name ? greet + ', ' + name + ' 👋' : greet + ' 👋';
+
+      const sub = document.getElementById('welcomeSub');
+      if (sub) {
+        sub.textContent = role === 'tasker'
+          ? 'Check new tasks in your area and grow your bookings.'
+          : 'What do you need done today?';
+      }
+
+      if (role === 'tasker') {
+        const btn = document.getElementById('welcomeTaskerBtn');
+        if (btn) btn.style.display = 'inline-flex';
+      }
+    }
+
+    /* ── Nearby Taskers ──────────────────────────────────────── */
+    async function loadNearbyTaskers() {
+      const el = document.getElementById('nearbyTaskersList');
+      if (!el) return;
+      try {
+        const data = await window.ST.db.fetchServices({ limit: 10 });
+        const list = (data && data.length) ? data : DUMMY_TASKERS;
+        renderNearbyTaskers(list, el);
+      } catch(e) {
+        renderNearbyTaskers(DUMMY_TASKERS, el);
+      }
+    }
+
+    function renderNearbyTaskers(list, el) {
+      el.innerHTML = list.slice(0, 10).map((t, i) => {
+        const safeName = escapeHtml(t.provider_name || t.business_name || t.name || 'Provider');
+        const safeSvc  = escapeHtml(t.service_name || t.service || '');
+        const safeLoc  = escapeHtml(t.location || 'Lagos');
+        const safeId   = escapeHtml(t.user_id || t.uid || '');
+        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
+        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+        const av   = t.av || AV[i % AV.length];
+        const rate = t.rate_value ? '₦' + Number(t.rate_value).toLocaleString() : (t.rate ? '₦' + Number(t.rate).toLocaleString() : '');
+        const rateUnit = t.rate_unit || t.rateUnit || '/hr';
+        const photoHtml = t.photo_url
+          ? '<img src="' + escapeHtml(t.photo_url) + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
+          : init;
+        const verifiedHtml = t.is_verified
+          ? '<div class="tsc-verified"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
+          : '';
+        return '<a href="' + profileUrl + '" class="tasker-scroll-card fade-up" style="animation-delay:' + (i*0.05) + 's;">'
+          + '<div class="tsc-avatar ' + av + '">'
+          + photoHtml
+          + verifiedHtml
+          + '</div>'
+          + '<div class="tsc-name">' + safeName + '</div>'
+          + (safeSvc ? '<div class="tsc-service">' + safeSvc + '</div>' : '')
+          + '<div class="tsc-meta"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</div>'
+          + (rate ? '<div class="tsc-rate">' + rate + '<span style="font-size:0.64rem;font-weight:500;color:var(--text-muted);">' + rateUnit + '</span></div>' : '')
+          + '</a>';
+      }).join('');
+    }
+
+    /* ── Featured Services ────────────────────────────────────── */
+    async function loadFeaturedServices() {
+      const el = document.getElementById('featuredServicesList');
+      if (!el) return;
+      try {
+        const data = await window.ST.db.fetchServices({ limit: 6 });
+        const list = (data && data.length >= 2) ? data : DUMMY_SERVICES;
+        renderFeaturedServices(list, el);
+      } catch(e) {
+        renderFeaturedServices(DUMMY_SERVICES, el);
+      }
+    }
+
+    function renderFeaturedServices(list, el) {
+      el.innerHTML = list.slice(0, 6).map((s, i) => {
+        const safeName = escapeHtml(s.provider_name || s.business_name || s.name || 'Provider');
+        const safeSvc  = escapeHtml(s.service_name || s.service || '');
+        const safeLoc  = escapeHtml(s.location || 'Lagos');
+        const safeId   = escapeHtml(s.user_id || '');
+        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
+        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+        const av   = s.av || AV[i % AV.length];
+        const price = s.price || s.rate_value || 0;
+        const rateUnit = s.rate_unit || s.rateUnit || '/job';
+        const rating = s.rating || (4.5 + Math.random() * 0.5).toFixed(1);
+        const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+
+        const imgSection = s.photo_url || s.photo
+          ? '<div class="feat-card-img"><img src="' + escapeHtml(s.photo_url || s.photo) + '" alt="' + safeName + '" onerror="this.style.display=\'none\'"/><div class="feat-card-img-overlay"></div></div>'
+          : '<div class="feat-card-img" style="background:linear-gradient(135deg, var(--blue-light) 0%, var(--bg-subtle) 100%);"><span style="font-size:2rem;">' + catEmoji(safeSvc) + '</span></div>';
+
+        return '<a href="' + profileUrl + '" class="feat-card fade-up" style="animation-delay:' + (i*0.06) + 's;">'
+          + imgSection
+          + '<div class="feat-card-body">'
+          + '<div class="feat-card-name">' + safeName + '</div>'
+          + '<div class="feat-card-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</div>'
+          + '<div class="feat-card-bottom">'
+          + '<div class="feat-card-price">₦' + Number(price).toLocaleString() + '<span style="font-size:0.68rem;font-weight:500;color:var(--text-muted);">' + rateUnit + '</span></div>'
+          + '<div class="feat-card-stars">' + stars + ' ' + rating + '</div>'
+          + '</div></div></a>';
+      }).join('');
+    }
+
+    /* ── All Tasks ───────────────────────────────────────────── */
+    async function loadAllTasks() {
+      try {
+        const data = await window.ST.db.fetchTasks({ limit: 50 });
+        _allTasks = (data && data.length) ? data : DUMMY_TASKS;
+      } catch(e) {
+        _allTasks = DUMMY_TASKS;
+      }
+
+      /* Update count badge */
+      const badge = document.getElementById('openTaskCount');
+      if (badge && _allTasks.length) {
+        badge.textContent = _allTasks.length + (typeof _allTasks.length === 'number' && _allTasks.length >= 50 ? '+' : '');
+        badge.style.display = '';
+      }
+
+      renderUrgentTasks();
+      renderOpenTasks(_currentCat, true);
+    }
+
+    function renderUrgentTasks() {
+      const el = document.getElementById('urgentTasksList');
+      if (!el) return;
+      const urgent = _allTasks.filter(t => t.urgent).slice(0, 4);
+      const list = urgent.length ? urgent : _allTasks.filter(t => Number(t.budget) > 15000).slice(0, 3);
+      if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:0.84rem;text-align:center;padding:20px 0;">No urgent tasks right now.</p>'; return; }
+
+      el.innerHTML = list.map((t, i) => {
+        const safeTitle = escapeHtml(t.title || 'Task');
+        const safeLoc   = escapeHtml(t.location || 'Lagos');
+        const safeCat   = escapeHtml(t.category || '');
+        const emoji     = catEmoji(safeCat);
+        const timeAgo   = _timeAgo(t.created_at);
+        const taskUrl   = t.id && !String(t.id).startsWith('d') ? 'task-detail.html?id=' + t.id : 'explore-tasks.html';
+        return '<a href="' + taskUrl + '" class="urgent-card hot fade-up" style="animation-delay:' + (i*0.06) + 's;">'
+          + '<div class="urgent-icon">' + emoji + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div class="urgent-title">' + safeTitle + '</div>'
+          + '<div class="urgent-meta">'
+          + '<span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
+          + '<span>' + timeAgo + '</span>'
+          + '<span class="urgent-badge">🔥 Urgent</span>'
+          + '</div></div>'
+          + '<div class="urgent-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div>'
+          + '</a>';
+      }).join('');
+    }
+
+    function renderOpenTasks(cat, reset) {
+      const el = document.getElementById('openTasksList');
+      if (!el) return;
+      if (reset) { _taskOffset = 0; el.innerHTML = ''; }
+
+      const filtered = cat ? _allTasks.filter(t => (t.category||'').toLowerCase() === cat.toLowerCase()) : _allTasks;
+      const page = filtered.slice(_taskOffset, _taskOffset + TASK_PAGE);
+      _taskOffset += page.length;
+
+      if (!filtered.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:0.84rem;text-align:center;padding:30px 0;">No open tasks in this category.</p>';
+        document.getElementById('loadMoreBtn').style.display = 'none';
+        return;
+      }
+
+      page.forEach((t, i) => {
+        const safeTitle = escapeHtml(t.title || 'Task');
+        const safeLoc   = escapeHtml(t.location || 'Lagos');
+        const safeCat   = escapeHtml(t.category || '');
+        const emoji     = catEmoji(safeCat);
+        const timeAgo   = _timeAgo(t.created_at);
+        const taskUrl   = t.id && !String(t.id).startsWith('d') ? 'task-detail.html?id=' + t.id : 'explore-tasks.html';
+        const card = document.createElement('a');
+        card.href = taskUrl;
+        card.className = 'open-task-card fade-up';
+        card.style.animationDelay = (i * 0.04) + 's';
+        card.innerHTML = '<div class="otc-icon">' + emoji + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div class="otc-title">' + safeTitle + '</div>'
+          + '<div class="otc-meta">'
+          + '<span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
+          + '<span>' + timeAgo + '</span>'
+          + (safeCat ? '<span style="text-transform:capitalize;">' + safeCat + '</span>' : '')
+          + (t.urgent ? '<span class="urgent-badge">Urgent</span>' : '')
+          + '</div></div>'
+          + '<div class="otc-right"><div class="otc-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div><div class="otc-open">Open</div></div>';
+        el.appendChild(card);
+      });
+
+      const loadBtn = document.getElementById('loadMoreBtn');
+      if (loadBtn) loadBtn.style.display = _taskOffset < filtered.length ? 'block' : 'none';
+    }
+
+    function filterOpenTasks(btn, cat) {
+      document.querySelectorAll('.cat-chip').forEach(b => {
+        b.style.background = 'var(--white)';
+        b.style.color = 'var(--text-secondary)';
+        b.style.borderColor = 'var(--border)';
+      });
+      btn.style.background = 'var(--blue)';
+      btn.style.color = 'var(--white)';
+      btn.style.borderColor = 'var(--blue)';
+      _currentCat = cat;
+      renderOpenTasks(cat, true);
+    }
+    window.filterOpenTasks = filterOpenTasks;
+
+    function loadMoreTasks() {
+      renderOpenTasks(_currentCat, false);
+    }
+    window.loadMoreTasks = loadMoreTasks;
+
+    /* ── Top Rated ───────────────────────────────────────────── */
+    async function loadTopRated() {
+      const el = document.getElementById('topRatedList');
+      if (!el) return;
+      try {
+        const data = await window.ST.db.fetchServices({ limit: 8 });
+        const list = (data && data.length) ? data : DUMMY_SERVICES;
+        renderTopRated(list, el);
+      } catch(e) {
+        renderTopRated(DUMMY_SERVICES, el);
+      }
+    }
+
+    function renderTopRated(list, el) {
+      const sorted = [...list].sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5)).slice(0, 5);
+      el.innerHTML = sorted.map((s, i) => {
+        const safeName = escapeHtml(s.provider_name || s.business_name || s.name || 'Provider');
+        const safeSvc  = escapeHtml(s.service_name || s.service || '');
+        const safeId   = escapeHtml(s.user_id || '');
+        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
+        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
+        const av = s.av || AV[i % AV.length];
+        const rating = (s.rating || (4.5 + Math.random() * 0.5)).toFixed(1);
+        const photoHtml = s.photo_url
+          ? '<img src="' + escapeHtml(s.photo_url) + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'"/>'
+          : init;
+        return '<a href="' + profileUrl + '" class="top-rated-row">'
+          + '<div class="tr-avatar ' + av + '">' + photoHtml + '</div>'
+          + '<div><div class="tr-name">' + safeName + '</div><div class="tr-service">' + safeSvc + '</div></div>'
+          + '<div class="tr-stars">★ ' + rating + '</div>'
+          + '</a>';
+      }).join('');
+    }
+
+    /* ── Utilities ───────────────────────────────────────────── */
+    function _timeAgo(iso) {
+      if (!iso) return 'Just now';
+      const diff = Date.now() - new Date(iso).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Just now';
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    /* ── Boot ────────────────────────────────────────────────── */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFeed);
+    } else {
+      initFeed();
+    }
+  </script>
+</body>
+</html>
