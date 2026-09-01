@@ -20,14 +20,16 @@
   --gray-100:       #F5F5F5;
   --gray-50:        #FAFAFA;
 
-  /* v3: primary brand color repointed from blue to StreetTasker forest green.
+  /* v3: primary brand color repointed from blue to StreetTasker green.
      Variable names kept as --blue* for backward compatibility across every
      page that already references them — this single change re-themes the
-     whole site to the new homepage design system. */
-  --blue:           #14532D;
-  --blue-hover:     #103F22;
-  --blue-light:     rgba(20, 83, 45, 0.08);
-  --blue-border:    rgba(20, 83, 45, 0.22);
+     whole site to the new homepage design system.
+     NOTE: this must be the bright button/price green from the reference
+     image (not the dark hero-green below) — that was the bug last round. */
+  --blue:           #16A34A;
+  --blue-hover:     #128244;
+  --blue-light:     rgba(22, 163, 74, 0.08);
+  --blue-border:    rgba(22, 163, 74, 0.22);
 
   --forest-deep:    #0B2E1C;
   --forest:         #0F3D26;
@@ -253,6 +255,12 @@ p  { color: var(--text-secondary); font-weight: 400; }
 
 .nav-links { display: flex; align-items: center; gap: 4px; flex: 1; }
 .nav-post-btn { margin-right: 10px; }
+.nav-link.nav-cta {
+  padding: 9px 18px; background: var(--blue); color: var(--white) !important;
+  border-radius: var(--radius-pill); font-weight: 700;
+}
+.nav-link.nav-cta:hover { background: var(--blue-hover); }
+.nav-link.logged-in-only { display: none; }
 .nav-link {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 12px; border-radius: var(--radius-sm);
@@ -322,12 +330,13 @@ p  { color: var(--text-secondary); font-weight: 400; }
   text-transform: uppercase; color: rgba(255,255,255,0.55);
   margin-bottom: 18px;
 }
-.hero-title {
-  font-family: var(--font); font-weight: 900;
-  font-size: clamp(3rem, 9vw, 6.4rem);
-  line-height: 0.92; letter-spacing: -0.03em;
-  color: var(--white); text-transform: uppercase;
-  margin: 0; position: relative; z-index: 2;
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.hero-banner-img {
+  width: 100%; max-width: 900px; height: auto;
+  display: block; margin: 0 auto; position: relative; z-index: 2;
 }
 .hero-sub {
   color: rgba(255,255,255,0.6); font-size: 0.98rem;
@@ -480,7 +489,18 @@ p  { color: var(--text-secondary); font-weight: 400; }
   padding: 74px 40px; text-align: center;
 }
 .final-cta h2 { font-size: clamp(1.8rem,4vw,2.7rem); margin-bottom: 10px; }
-.final-cta p  { font-size: 0.98rem; margin-bottom: 30px; }
+.final-cta p  { font-size: 0.98rem; margin-bottom: 30px; color: var(--text-secondary); }
+
+/* Tablet/mobile use the dark-green final CTA treatment */
+@media (max-width: 900px) {
+  .final-cta {
+    background: radial-gradient(ellipse 120% 100% at 15% 0%, var(--forest-mid) 0%, var(--forest) 45%, var(--forest-deep) 100%);
+  }
+  .final-cta h2 { color: var(--white); }
+  .final-cta p  { color: rgba(255,255,255,0.65); }
+  .final-cta .btn-dark { background: var(--white); color: var(--forest-deep); }
+  .final-cta .btn-dark:hover { background: var(--gray-100); }
+}
 
 @media (max-width: 900px) {
   .popular-grid, .task-showcase-grid { grid-template-columns: repeat(2, 1fr); }

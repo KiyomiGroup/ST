@@ -69,6 +69,9 @@ function _applyNavState(loggedIn, role, name) {
     const si = id('nav-signup');   if (si) si.style.display = 'none';
     const mli = id('nav-mobile-login');  if (mli) mli.style.display = 'none';
     const msi = id('nav-mobile-signup'); if (msi) msi.style.display = 'none';
+    /* Dashboard link only appears in the nav once a user is logged in */
+    if (dashLink) dashLink.style.display = '';
+    if (mDash)    mDash.style.display    = '';
   } else {
     /* Logged out — show login/signup, hide user info */
     const li = id('nav-login');    if (li) li.style.display = '';
@@ -81,6 +84,9 @@ function _applyNavState(loggedIn, role, name) {
     /* Reset action links to default */
     const actionLabel = id('nav-action-label');
     if (actionLabel) actionLabel.textContent = 'Post a Task';
+    /* Dashboard link is only for logged-in users */
+    const dl = id('nav-dashboard');        if (dl) dl.style.display = 'none';
+    const mdl = id('nav-mobile-dashboard'); if (mdl) mdl.style.display = 'none';
   }
 }
 
