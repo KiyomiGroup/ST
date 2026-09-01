@@ -1,45 +1,55 @@
 <!-- ============================================================
-     STREET TASKERS — Footer Component v2
-     ============================================================
-     Future Sprint: Newsletter form connects to Supabase / email.
-     Future Sprint: Social links added when brand accounts live.
+     STREET TASKERS — Footer Component v3
+     Light 5-column footer matching the homepage reference design.
      ============================================================ -->
 
 <footer id="footer">
   <div class="container">
     <div class="footer-top">
 
-      <!-- Brand -->
-      <div class="footer-brand">
-        <a href="index.html" class="footer-logo" aria-label="Street Taskers home">
-          <img src="images/logo-nav.png" alt="Street Taskers" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-          <span class="footer-logo-text" style="display:none;">Street Taskers</span>
+      <!-- Brand column -->
+      <div class="footer-col footer-brand">
+        <a href="index.html" class="footer-logo" aria-label="StreetTasker home">
+          <span class="footer-logo-text">StreetTasker</span>
         </a>
-        <p>The local services marketplace connecting skilled workers with customers who need things done nearby.</p>
-      </div>
-
-      <!-- Platform -->
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="find-taskers.html">Find Taskers</a></li>
-          <li><a href="post-task.html">Post a Task</a></li>
-          <!-- Sprint 2: Pricing/Subscription page is now live -->
-          <li><a href="subscription.html">Tasker Plans</a></li>
-          <!-- Future Sprint 3: Map discovery page -->
-          <li><a href="#" onclick="showToast('Map view coming in Sprint 3'); return false;">Near Me</a></li>
+        <ul style="margin-top:16px;">
+          <li><a href="#">About us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Blog</a></li>
         </ul>
       </div>
 
-      <!-- Company -->
+      <!-- Discover -->
       <div class="footer-col">
-        <h4>Company</h4>
+        <h4>Discover</h4>
         <ul>
-          <!-- Future Sprint: Real static pages -->
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Careers</a></li>
+          <li><a href="explore-tasks.html">Explore tasks</a></li>
+          <li><a href="find-taskers.html">Popular categories</a></li>
+          <li><a href="index.html#how-it-works">How it works</a></li>
+          <li><a href="subscription.html">Pricing</a></li>
+        </ul>
+      </div>
+
+      <!-- Taskers -->
+      <div class="footer-col">
+        <h4>Taskers</h4>
+        <ul>
+          <li><a href="onboarding-tasker.html">Become a Tasker</a></li>
+          <li><a href="#">Tasker resources</a></li>
+          <li><a href="#">Community</a></li>
+          <li><a href="#">Success stories</a></li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help center</a></li>
+          <li><a href="#">Contact us</a></li>
+          <li><a href="#">Safety</a></li>
+          <li><a href="terms.html#safety">Trust &amp; safety</a></li>
         </ul>
       </div>
 
@@ -47,19 +57,17 @@
       <div class="footer-col">
         <h4>Legal</h4>
         <ul>
-          <!-- Future Sprint: Real legal pages -->
-          <li><a href="terms.html">Terms of Service</a></li>
-          <li><a href="privacy.html">Privacy Policy</a></li>
-          <li><a href="privacy.html#cookies">Cookie Policy</a></li>
-          <li><a href="terms.html#safety">Trust &amp; Safety</a></li>
+          <li><a href="terms.html">Terms of service</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+          <li><a href="privacy.html#cookies">Cookie policy</a></li>
+          <li><a href="#">Accessibility</a></li>
         </ul>
       </div>
 
     </div>
 
     <div class="footer-bottom">
-      <p>&copy; 2025 Street Taskers. All rights reserved.</p>
-      <span class="footer-sprint">Sprint 2 Complete</span>
+      <p>&copy; 2025 StreetTasker. All rights reserved.</p>
     </div>
   </div>
 </footer>

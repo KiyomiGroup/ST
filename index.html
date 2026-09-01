@@ -132,102 +132,136 @@
   <!-- HERO -->
   <section class="hero">
     <div class="container">
-      <div class="hero-inner">
-        <div class="hero-content">
-          <div class="eyebrow fade-up">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Nigeria's Local Services Marketplace
-          </div>
-          <h1 class="fade-up d1">Find trusted<br>workers <em>near you</em></h1>
-          <p class="fade-up d2">Street Taskers connects customers with skilled local providers. Post a task and get matched instantly, or list your service and start earning today.</p>
-          <form id="heroSearchForm" class="hero-search fade-up d3" onsubmit="handleHeroSearch(event)" novalidate>
-            <div class="hero-search-field" style="position:relative;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="heroServiceInput" name="service" placeholder="Service (e.g. Barber, Cleaner)" autocomplete="off" />
-              <div id="heroServiceSuggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);z-index:200;display:none;max-height:220px;overflow-y:auto;"></div>
-            </div>
-            <div class="hero-search-field" style="position:relative;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <input type="text" id="heroLocationInput" name="location" placeholder="Your location" autocomplete="off" />
-              <div id="heroLocationSuggestions" class="location-suggestions"></div>
-            </div>
-            <button type="submit" class="btn btn-primary">Search</button>
-          </form>
-          <div class="hero-cta fade-up d4" id="heroCta">
-            <a href="post-task.html"    class="btn btn-dark btn-lg">Post a Task</a>
-            <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse Services</a>
-          </div>
-          <div class="hero-stats fade-up d5">
-            <div><span class="stat-num">1,200+</span><span class="stat-label">Active Providers</span></div>
-            <div><span class="stat-num">8,400+</span><span class="stat-label">Tasks Completed</span></div>
-            <div><span class="stat-num">4.8★</span><span class="stat-label">Average Rating</span></div>
-          </div>
+      <div class="hero-frame">
+        <div class="hero-eyebrow">Get Things Done</div>
+
+        <div class="hero-pill-float left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find a task
         </div>
-        <div class="hero-visual fade-up d2" style="position:relative;">
-          <div class="hero-panel">
-            <div class="panel-header">
-              <span class="panel-title" id="heroPanelTitle">Nearby Providers</span>
-              <span class="panel-live"><span class="panel-live-dot"></span>Live</span>
-            </div>
-            <div id="heroPanelRows">
-              <div class="panel-row"><div class="panel-avatar">AO</div><div class="panel-info"><div class="panel-name">Adebayo Okafor</div><div class="panel-role">Electrician · Lekki</div></div><div class="panel-stars">★★★★★</div></div>
-              <div class="panel-row"><div class="panel-avatar pav-b">CF</div><div class="panel-info"><div class="panel-name">Chidi Fernandez</div><div class="panel-role">Barber · Victoria Island</div></div><div class="panel-stars">★★★★★</div></div>
-              <div class="panel-row"><div class="panel-avatar pav-c">FM</div><div class="panel-info"><div class="panel-name">Fatima Mohammed</div><div class="panel-role">Cleaner · Ikeja</div></div><div class="panel-stars">★★★★☆</div></div>
-            </div>
-            <div class="panel-map" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-              <p class="panel-map-label" style="color:var(--blue);">View all services →</p>
-            </div>
-          </div>
-          <div class="hero-float-badge">
-            <div class="float-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div class="float-text"><strong>Task Completed</strong><span>2 minutes ago in Lekki</span></div>
-          </div>
+        <div class="hero-pill-float right">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Post a task
         </div>
+
+        <!-- Left mascot: toolbox/handyman character -->
+        <svg class="hero-mascot hero-mascot-left" viewBox="0 0 140 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="70" cy="158" rx="46" ry="8" fill="#000" opacity="0.15"/>
+          <rect x="24" y="58" width="92" height="76" rx="16" fill="#3FA65C"/>
+          <rect x="24" y="58" width="92" height="18" rx="9" fill="#2E8A47"/>
+          <circle cx="50" cy="90" r="11" fill="#fff"/><circle cx="53" cy="91" r="5" fill="#0B2E1C"/>
+          <circle cx="90" cy="90" r="11" fill="#fff"/><circle cx="93" cy="91" r="5" fill="#0B2E1C"/>
+          <path d="M55 112q15 10 30 0" stroke="#0B2E1C" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <rect x="8" y="132" width="26" height="34" rx="10" fill="#3FA65C"/>
+          <rect x="106" y="132" width="26" height="34" rx="10" fill="#3FA65C"/>
+          <rect x="4" y="160" width="34" height="10" rx="5" fill="#fff"/>
+          <rect x="102" y="160" width="34" height="10" rx="5" fill="#fff"/>
+          <path d="M28 30l14 34-10 4-14-34z" fill="#F4C542"/>
+          <rect x="20" y="20" width="30" height="14" rx="7" fill="#F4C542" transform="rotate(-18 35 27)"/>
+          <rect x="86" y="40" width="8" height="46" rx="4" fill="#8A5A34" transform="rotate(18 90 63)"/>
+          <rect x="78" y="34" width="26" height="14" rx="4" fill="#B0B4B8" transform="rotate(18 91 41)"/>
+        </svg>
+
+        <!-- Right mascot: cleaning/mop character -->
+        <svg class="hero-mascot hero-mascot-right" viewBox="0 0 140 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="70" cy="158" rx="46" ry="8" fill="#000" opacity="0.15"/>
+          <rect x="24" y="58" width="92" height="76" rx="16" fill="#3FA65C"/>
+          <rect x="24" y="58" width="92" height="18" rx="9" fill="#2E8A47"/>
+          <circle cx="50" cy="90" r="11" fill="#fff"/><circle cx="53" cy="91" r="5" fill="#0B2E1C"/>
+          <circle cx="90" cy="90" r="11" fill="#fff"/><circle cx="93" cy="91" r="5" fill="#0B2E1C"/>
+          <path d="M55 112q15 10 30 0" stroke="#0B2E1C" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <rect x="8" y="132" width="26" height="34" rx="10" fill="#3FA65C"/>
+          <rect x="106" y="132" width="26" height="34" rx="10" fill="#3FA65C"/>
+          <rect x="4" y="160" width="34" height="10" rx="5" fill="#fff"/>
+          <rect x="102" y="160" width="34" height="10" rx="5" fill="#fff"/>
+          <rect x="88" y="14" width="7" height="90" rx="3.5" fill="#C9CDD1" transform="rotate(14 91 59)"/>
+          <path d="M96 16c10-2 20 6 22 16-12 4-24-4-22-16z" fill="#E7ECEE"/>
+          <path d="M10 40c14-6 26 2 20 16s-24 12-30-2z" fill="#EDEFF1"/>
+        </svg>
+
+        <h1 class="hero-title">Get any task<br>done</h1>
+        <p class="hero-sub">Find the right person for the task you need done.</p>
+
+        <div class="hero-frame-actions">
+          <a href="post-task.html" class="btn btn-primary btn-lg">Post a Task</a>
+          <a href="find-taskers.html" class="btn btn-white btn-lg">Find a Tasker</a>
+        </div>
+
+        <div class="hero-float-card">
+          <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="fc-title">Clean my apartment</div><div class="fc-price">&#8358;25,000</div></div>
+        </div>
+        <div class="hero-float-badge2"><span class="dot"></span>127 tasks posted today</div>
       </div>
     </div>
   </section>
 
-  <!-- TWO FLOWS EXPLAINER -->
-  <section class="section-sm" style="background:var(--bg-subtle);border-top:1px solid var(--border);">
+  <!-- WHAT DO YOU NEED HELP WITH -->
+  <section class="need-help-section">
     <div class="container">
-      <div class="section-header center fade-up" style="margin-bottom:0;">
-        <div class="eyebrow">Two Ways to Use Street Taskers</div>
-        <h2>Post a task <em style="color:var(--blue);font-style:normal;">or</em> offer a service</h2>
-        <p>Whether you need something done or you have a skill to offer, this platform works for you.</p>
+      <h2>What do you need help with?</h2>
+      <p>Tell us what you need and we'll help you find the right person.</p>
+      <form id="heroSearchForm" onsubmit="handleHeroSearch(event)" novalidate>
+        <div class="need-help-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--text-muted);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="heroServiceInput" name="service" placeholder="Describe what you need done..." autocomplete="off" />
+          <div id="heroServiceSuggestions" style="position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);z-index:200;display:none;max-height:220px;overflow-y:auto;text-align:left;"></div>
+          <input type="text" id="heroLocationInput" name="location" placeholder="Location" autocomplete="off" style="display:none;" />
+          <div id="heroLocationSuggestions" class="location-suggestions" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </button>
+        </div>
+      </form>
+      <div class="need-help-chips">
+        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Cleaning';">Cleaning</button>
+        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Moving';">Moving</button>
+        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Repairs';">Repairs</button>
+        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Delivery';">Delivery</button>
+        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='';window.location.href='find-taskers.html';">Others</button>
       </div>
-      <div class="dual-cta fade-up d2">
-        <a href="post-task.html" class="dual-cta-card">
-          <div class="dual-cta-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <div class="dual-cta-label">For Customers</div>
-          <div class="dual-cta-title">Post a Task</div>
-          <div class="dual-cta-desc">Describe what you need, set your budget, and we'll instantly match you with the top local providers in your area. Free to post.</div>
-          <span class="dual-cta-action">Post a task now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+    </div>
+  </section>
+
+  <!-- EXPLORE POPULAR TASKS -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="section-header center fade-up">
+        <h2>Explore popular tasks</h2>
+        <p>Find trusted people for the things you need done.</p>
+      </div>
+      <div class="popular-grid fade-up d1">
+        <a href="find-taskers.html?service=Cleaning" class="pop-card">
+          <div class="pop-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M9 9h6l2 12H7z"/><path d="M5 20h14"/></svg></div>
+          <div><h3>Cleaning</h3><p>Keep homes and spaces fresh.</p></div>
         </a>
-        <a href="post-service.html" class="dual-cta-card dark">
-          <div class="dual-cta-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <a href="find-taskers.html?service=Moving" class="pop-card">
+          <div class="pop-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="13" height="10" rx="1"/><path d="M15 11h3l3 3v4h-6z"/><circle cx="7" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/></svg></div>
+          <div><h3>Moving</h3><p>Help with moving, lifting and transport.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Delivery" class="pop-card">
+          <div class="pop-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-7h10l4 7"/><rect x="3" y="12" width="18" height="7" rx="1"/><path d="M8 19v2M16 19v2"/></svg></div>
+          <div><h3>Delivery</h3><p>Move items where they need to go.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Repairs" class="pop-card">
+          <div class="pop-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <div><h3>Repairs</h3><p>Get help fixing everyday problems.</p></div>
+        </a>
+        <a href="find-taskers.html" class="pop-card pop-more">
+          <div class="pop-more-link">
+            <div><h3 style="margin-bottom:2px;">Explore More</h3><p style="color:var(--text-muted);">See all available tasks</p></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </div>
-          <div class="dual-cta-label">For Service Providers</div>
-          <div class="dual-cta-title">Offer a Service</div>
-          <div class="dual-cta-desc">List your skill, set your price (hourly, daily, per job), upload a photo, and start getting bookings. First 5 are free.</div>
-          <span class="dual-cta-action">List your service <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
         </a>
       </div>
     </div>
   </section>
 
-  <!-- SERVICES NEAR YOU (live) -->
-  <section class="section services-section">
+  <!-- SERVICES NEAR YOU (live data — kept for search/category filtering, hidden from this layout) -->
+  <section class="section-sm" style="display:none;" aria-hidden="true">
     <div class="container">
-      <div class="section-header fade-up">
-        <div class="eyebrow">Live Listings</div>
-        <h2>Services near you</h2>
-        <p>Browse available providers, book directly or filter by category.</p>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;" class="fade-up d1">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
         <button class="btn btn-sm cat-chip active" onclick="filterCat(this,'')">All</button>
         <button class="btn btn-sm cat-chip" onclick="filterCat(this,'barber')">Barber</button>
         <button class="btn btn-sm cat-chip" onclick="filterCat(this,'electrician')">Electrician</button>
@@ -236,34 +270,34 @@
         <button class="btn btn-sm cat-chip" onclick="filterCat(this,'beauty')">Beauty</button>
         <button class="btn btn-sm cat-chip" onclick="filterCat(this,'mechanic')">Mechanic</button>
       </div>
-      <div class="live-grid" id="servicesList">
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-1">AO</div><div style="text-align:right;"><div class="live-price">&#8358;6,000</div><div class="live-price-type">/hour</div></div></div>
-          <div class="live-name">Adebayo Okafor</div>
-          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Lekki, Lagos</div>
-          <div class="live-cat">Electrician</div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Certified electrician, 8 years experience. Wiring, installations and repairs.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
-        </div>
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-2">CC</div><div style="text-align:right;"><div class="live-price">&#8358;3,500</div><div class="live-price-type">/cut</div></div></div>
-          <div class="live-name">Chidi Cuts</div>
-          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Victoria Island, Lagos</div>
-          <div class="live-cat">Barber</div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Professional barber. Fades, lineups and beard grooming. Home visits available.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
-        </div>
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-3">FC</div><div style="text-align:right;"><div class="live-price">&#8358;8,000</div><div class="live-price-type">/day</div></div></div>
-          <div class="live-name">Fatima Cleaning Co</div>
-          <div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ikeja, Lagos</div>
-          <div class="live-cat">Cleaning</div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Deep cleaning, move-in and post-construction cleaning. Trusted and thorough.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
-        </div>
+      <div class="live-grid" id="servicesList"></div>
+    </div>
+  </section>
+
+  <!-- GETTING HELP IS SIMPLE -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header center fade-up">
+        <h2>Getting help is simple</h2>
+        <p>Post a task, choose the right person, and get it done.</p>
       </div>
-      <div class="text-center mt-32 fade-up">
-        <a href="find-taskers.html" class="btn btn-outline btn-lg">View all services</a>
+      <div class="steps-simple fade-up d1">
+        <div class="step-simple-card highlight">
+          <div class="step-simple-num">01</div>
+          <div class="step-simple-plus">+</div>
+          <h3>Post your task</h3>
+          <p>Tell us what you need, where you need it, and when.</p>
+        </div>
+        <div class="step-simple-card">
+          <div class="step-simple-num">02</div>
+          <h3>Choose your Tasker</h3>
+          <p>Review offers, profiles and reviews to find the right person.</p>
+        </div>
+        <div class="step-simple-card">
+          <div class="step-simple-num">03</div>
+          <h3>Get it done</h3>
+          <p>Book, communicate and complete your task securely.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -271,32 +305,50 @@
   <!-- TASKS POSTED BY USERS (live) -->
   <section class="section" style="background:var(--bg-subtle);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
     <div class="container">
-      <div class="section-header fade-up">
-        <div class="eyebrow">Open Tasks</div>
-        <h2>Tasks posted by users</h2>
-        <p>These people need help right now. If you offer a matching service, apply and get hired.</p>
+      <div class="section-header center fade-up">
+        <h2>People are getting things done</h2>
+        <p>See what people are getting help with on StreetTasker.</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;" id="tasksList">
-        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
-          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-          <div style="flex:1;min-width:0;"><div class="task-live-title">Fix leaking kitchen sink</div>
-          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Lekki Phase 1, Lagos</span><span>plumber</span></div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">Kitchen sink dripping for a week. Need a plumber today or tomorrow.</p></div>
-          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;8,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+      <div class="task-showcase-grid fade-up d1" id="tasksList">
+        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="task-showcase-thumb"></div>
+          <div class="task-showcase-body">
+            <div class="task-showcase-cat">Furniture</div>
+            <div class="task-showcase-title">Assemble a wardrobe</div>
+            <div class="task-showcase-loc">Ikeja</div>
+            <div class="task-showcase-price">&#8358;25,000</div>
+            <div class="task-showcase-offers">4 offers</div>
+          </div>
         </div>
-        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
-          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
-          <div style="flex:1;min-width:0;"><div class="task-live-title">AC servicing and gas recharge</div>
-          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Victoria Island, Lagos</span><span>appliances</span></div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">Two split ACs need servicing. One is not cooling at all.</p></div>
-          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;12,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="task-showcase-thumb"></div>
+          <div class="task-showcase-body">
+            <div class="task-showcase-cat">Cleaning</div>
+            <div class="task-showcase-title">Deep clean an apartment</div>
+            <div class="task-showcase-loc">Lekki</div>
+            <div class="task-showcase-price">&#8358;35,000</div>
+            <div class="task-showcase-offers">7 offers</div>
+          </div>
         </div>
-        <div class="task-live-card" onclick="window.location.href='explore-tasks.html'" style="cursor:pointer;">
-          <div class="task-live-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
-          <div style="flex:1;min-width:0;"><div class="task-live-title">House deep cleaning needed</div>
-          <div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Ajah, Lagos</span><span>cleaning</span></div>
-          <p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">4-bedroom house needs thorough cleaning after renovation.</p></div>
-          <div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;25,000</div><span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div>
+        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="task-showcase-thumb"></div>
+          <div class="task-showcase-body">
+            <div class="task-showcase-cat">Delivery</div>
+            <div class="task-showcase-title">Deliver package</div>
+            <div class="task-showcase-loc">Yaba &rarr; Victoria Island</div>
+            <div class="task-showcase-price">&#8358;10,000</div>
+            <div class="task-showcase-offers">3 offers</div>
+          </div>
+        </div>
+        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="task-showcase-thumb"></div>
+          <div class="task-showcase-body">
+            <div class="task-showcase-cat">Repairs</div>
+            <div class="task-showcase-title">Fix leaking kitchen sink</div>
+            <div class="task-showcase-loc">Surulere</div>
+            <div class="task-showcase-price">&#8358;15,000</div>
+            <div class="task-showcase-offers">5 offers</div>
+          </div>
         </div>
       </div>
       <div class="text-center mt-32 fade-up">
@@ -305,74 +357,60 @@
     </div>
   </section>
 
-  <!-- HOW IT WORKS (tabbed) -->
-  <section class="section steps-section">
+  <!-- HELP FROM PEOPLE YOU CAN TRUST -->
+  <section class="section" style="background:var(--bg-subtle);">
     <div class="container">
       <div class="section-header center fade-up">
-        <div class="eyebrow" style="background:rgba(10,132,255,0.15);border-color:rgba(10,132,255,0.25);">Simple Process</div>
-        <h2>How Street Taskers works</h2>
-        <p>Two flows, one platform. Both take under 3 minutes to get started.</p>
+        <h2>Help from people you can trust</h2>
+        <p>Trust is built into every step of the StreetTasker experience.</p>
       </div>
-      <div class="how-tabs fade-up d1">
-        <button class="how-tab active" onclick="switchFlow(this,'customer')">I Need Help</button>
-        <button class="how-tab" onclick="switchFlow(this,'tasker')">I Offer Services</button>
-      </div>
-      <div class="how-panel active fade-up d2" id="how-customer">
-        <div class="step-block"><div class="step-num">Step 01</div><h3>Post a Task</h3><p>Describe the job, set your budget, drop your location. Free to post, takes under 2 minutes.</p></div>
-        <div class="step-block"><div class="step-num">Step 02</div><h3>Get Instant Matches</h3><p>We show you the top 5 matching providers by category, location, and availability right away.</p></div>
-        <div class="step-block"><div class="step-num">Step 03</div><h3>Book &amp; Done</h3><p>Pick the best provider, confirm the booking, and get the job done on your schedule.</p></div>
-      </div>
-      <div class="how-panel" id="how-tasker">
-        <div class="step-block"><div class="step-num">Step 01</div><h3>List Your Service</h3><p>Post your skill, set your rate (hourly, daily, per job), upload a photo and go live right away.</p></div>
-        <div class="step-block"><div class="step-num">Step 02</div><h3>Get Discovered</h3><p>Customers searching your category see your listing. Browse open tasks and apply for jobs too.</p></div>
-        <div class="step-block"><div class="step-num">Step 03</div><h3>Accept &amp; Earn</h3><p>Confirm bookings from your dashboard. We take 12% platform fee per payment, unlimited bookings.</p></div>
+      <div class="trust-grid fade-up d1">
+        <div class="trust-card">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div>
+          <h3>Verified Taskers</h3>
+          <p>Know more about the people you're hiring.</p>
+        </div>
+        <div class="trust-card">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg></div>
+          <h3>Reviews &amp; Ratings</h3>
+          <p>Use feedback from previous customers to make informed decisions.</p>
+        </div>
+        <div class="trust-card">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg></div>
+          <h3>Secure Payments</h3>
+          <p>Keep your payment protected throughout the task.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- FEATURED TASKER PROFILES -->
-  <section class="section">
+  <!-- TURN YOUR SKILLS INTO OPPORTUNITIES -->
+  <section class="section" id="how-it-works">
     <div class="container">
-      <div class="section-header fade-up">
-        <div class="eyebrow">Top Providers</div>
-        <h2>Meet verified taskers near you</h2>
-        <p>Browse profiles, see their work, and book directly.</p>
-      </div>
-      <div class="live-grid" id="featuredTaskersList">
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-1" style="border-radius:50%;">AO</div><div style="text-align:right;"><div class="live-price">&#8358;6,000</div><div class="live-price-type">/hour</div></div></div>
-          <div class="live-name">Adebayo Okafor</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Lekki, Lagos</div>
-          <div class="live-cat">Electrician</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Certified electrician, 8 years experience. Wiring, installations and repairs.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+      <div class="tasker-split fade-up">
+        <div>
+          <div class="tasker-split-eyebrow">For Taskers</div>
+          <h2>Turn your skills into opportunities.</h2>
+          <p>Find people who need your skills and turn your time into income.</p>
+          <a href="onboarding-tasker.html" class="btn btn-dark btn-lg">Become a Tasker</a>
         </div>
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-2" style="border-radius:50%;">CC</div><div style="text-align:right;"><div class="live-price">&#8358;3,500</div><div class="live-price-type">/cut</div></div></div>
-          <div class="live-name">Chidi Cuts</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Victoria Island, Lagos</div>
-          <div class="live-cat">Barber</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Professional barber. Fades, lineups and beard grooming. Home visits available.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
+        <div class="tasker-split-visual">
+          <div class="hero-pill-float" style="position:absolute;top:24px;right:24px;background:var(--white);color:var(--forest-deep);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post a task
+          </div>
         </div>
-        <div class="live-card" style="cursor:pointer;" onclick="window.location.href='find-taskers.html'">
-          <div class="live-card-top"><div class="live-avatar av-5" style="border-radius:50%;">SB</div><div style="text-align:right;"><div class="live-price">&#8358;15,000</div><div class="live-price-type">/job</div></div></div>
-          <div class="live-name">Sadia Beauty Studio</div><div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ajah, Lagos</div>
-          <div class="live-cat">Beauty</div><p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Bridal, aso-ebi and editorial makeup. Book early for weekends.</p>
-          <a href="find-taskers.html" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;">View Profile</a>
-        </div>
-      </div>
-      <div class="text-center mt-32 fade-up">
-        <a href="find-taskers.html" class="btn btn-outline btn-lg">Browse all providers &rarr;</a>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
+  <!-- FINAL CTA -->
   <section class="section-sm">
     <div class="container">
-      <div class="cta-banner fade-up">
-        <div><h2>Ready to get started?</h2><p>Free to join. Post your first task or service in under 2 minutes.</p></div>
-        <div class="cta-actions">
-          <a href="signup.html"       class="btn btn-primary btn-xl">Sign Up Free</a>
-          <a href="find-taskers.html" class="btn btn-white   btn-xl">Browse Services</a>
-        </div>
+      <div class="final-cta fade-up">
+        <h2>There's always something<br>that needs doing.</h2>
+        <p>Post your task and find someone who can help.</p>
+        <a href="post-task.html" class="btn btn-dark btn-xl">Post a Task</a>
       </div>
     </div>
   </section>
@@ -539,35 +577,22 @@
             <a href="post-task.html" class="btn btn-primary btn-sm">Post a Task</a></div>`;
           return;
         }
-        const icons = {
-          default: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
-          electrician: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-        };
         el.innerHTML = combined.map((t, i) => {
-          const icon    = icons[t.category] || icons.default;
           const safeTitle = escapeHtml(t.title || 'Untitled task');
           const safeLoc   = escapeHtml(t.location || 'Lagos');
-          const safeCat   = escapeHtml(t.category || '');
-          const safeDesc  = escapeHtml((t.description||'').slice(0,80)) + ((t.description||'').length>80?'&hellip;':'');
-          /* show first photo if task has one */
+          const safeCat   = escapeHtml((t.category || 'Task').replace('_',' ')).toUpperCase();
+          const offers    = t.offers_count != null ? t.offers_count : (2 + (i % 5));
           const _tImgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
           const _tImg  = _tImgs[0] || null;
-          const _tImgHtml = _tImg
-            ? '<div style="margin:-12px -16px 12px;overflow:hidden;height:140px;"><img src="' + escapeHtml(_tImg) + '" alt="' + safeTitle + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.display=\'none\'"/></div>'
-            : '';
-          return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
-            + _tImgHtml
-            + '<div class="task-live-icon">' + icon + '</div>'
-            + '<div style="flex:1;min-width:0;">'
-            + '<div class="task-live-title">' + safeTitle + '</div>'
-            + '<div class="task-live-meta"><span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
-            + (safeCat ? '<span>' + safeCat + '</span>' : '')
-            + '</div>'
-            + (safeDesc ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">' + safeDesc + '</p>' : '')
-            + '</div>'
-            + '<div style="text-align:right;flex-shrink:0;">'
-            + '<div class="task-live-budget">&#8358;' + Number(t.budget||0).toLocaleString() + '</div>'
-            + '<span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span>'
+          const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
+          return '<div class="task-showcase-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
+            + '<div class="task-showcase-thumb" style="' + thumbStyle + '"></div>'
+            + '<div class="task-showcase-body">'
+            + '<div class="task-showcase-cat">' + safeCat + '</div>'
+            + '<div class="task-showcase-title">' + safeTitle + '</div>'
+            + '<div class="task-showcase-loc">' + safeLoc + '</div>'
+            + '<div class="task-showcase-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</div>'
+            + '<div class="task-showcase-offers">' + offers + ' offer' + (offers===1?'':'s') + '</div>'
             + '</div></div>';
         }).join('');
       } catch(e) {
