@@ -2,241 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up — Street Taskers</title>
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Join StreetTasker free. Post tasks, offer services, and connect with trusted people near you across Nigeria." />
-  <meta name="keywords" content="sign up StreetTasker, join local marketplace Nigeria, create account tasker" />
-  <meta name="robots" content="index, follow" />
-  <meta name="author" content="StreetTasker" />
-  <link rel="canonical" href="https://streettasker.com/signup.html" />
-
-  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Sign Up — StreetTasker Nigeria" />
-  <meta property="og:description" content="Join StreetTasker free. Post tasks, offer services, and connect with trusted people near you across Nigeria." />
-  <meta property="og:url" content="https://streettasker.com/signup.html" />
-  <meta property="og:image" content="https://streettasker.com/images/og-image.png" />
-  <meta property="og:site_name" content="StreetTasker" />
-  <meta property="og:locale" content="en_NG" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Sign Up — StreetTasker Nigeria" />
-  <meta name="twitter:description" content="Join StreetTasker free. Post tasks, offer services, and connect with trusted people near you across Nigeria." />
-  <meta name="twitter:image" content="https://streettasker.com/images/og-image.png" />
-  <meta name="twitter:site" content="@streettasker" />
-
-  <!-- Structured Data (Google Rich Results) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "StreetTasker",
-    "url": "https://streettasker.com",
-    "description": "Join StreetTasker free. Post tasks, offer services, and connect with trusted people near you across Nigeria.",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://streettasker.com/find-taskers.html?service={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "StreetTasker",
-    "description": "Nigeria's marketplace for local service providers",
-    "url": "https://streettasker.com",
-    "areaServed": {
-      "@type": "Country",
-      "name": "Nigeria"
-    },
-    "serviceType": ["Electrician", "Barber", "Cleaning", "Plumber", "Mechanic", "Beauty", "Tutoring", "Photography"]
-  }
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Join StreetTasker — Sign Up</title>
+  <meta name="description" content="Join StreetTasker to hire trusted local taskers or start earning as a tasker." />
+  <meta name="robots" content="noindex, follow" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
-  <link rel="icon" type="image/png" sizes="64x64" href="images/favicon.png" />
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
 </head>
 <body>
-
   <div id="navbar-placeholder"></div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       SIGNUP PAGE
-       ══════════════════════════════════════════════════════════ -->
+  <!-- STEP 1 — role chooser -->
+  <section class="av2-page" id="stepChoose">
+    <div class="av2-shell">
+      <div class="av2-chooser-badge">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12l2.5 2.5L16 9"/><path d="M4 8.5C4 6 6 4 8.5 4c1.3 0 2.5.6 3.5 1.6C13 4.6 14.2 4 15.5 4 18 4 20 6 20 8.5c0 3.5-4 6-8 9-4-3-8-5.5-8-9z"/></svg>
+      </div>
+      <div class="av2-chooser-heading">
+        <h1>Join StreetTasker</h1>
+        <p>First, tell us what you want to do</p>
+      </div>
 
-  <div class="auth-page" style="align-items:flex-start; padding: 24px 0;">
-    <div class="container">
-      <div class="auth-container" style="max-width:520px; padding: 40px 0 60px;">
-                <!-- ── Step 1: Role picker (shown first) ── -->
-        <div id="stepRolePicker" class="auth-card fade-up">
-          <div class="auth-heading" style="text-align:center;margin-bottom:32px;">
-            <div style="margin-bottom:16px;">
-              <a href="index.html">
-                <img src="images/logo-nav.png" alt="Street Taskers" style="height:36px;" onerror="this.style.display='none'" />
-              </a>
-            </div>
-            <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:8px;">Join Street Taskers</h1>
-            <p style="color:var(--text-muted);font-size:0.95rem;">First, tell us what you want to do</p>
+      <div class="av2-role-grid">
+        <div class="av2-role-card">
+          <div class="av2-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3"/><path d="M4 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="14.5" r="3.5"/><line x1="20" y1="17" x2="22" y2="19"/></svg>
           </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
-            <!-- Hire Taskers -->
-            <button onclick="chooseRole('customer')" style="
-              padding:28px 16px;border:2px solid var(--border);border-radius:var(--radius-lg);
-              background:var(--white);cursor:pointer;text-align:center;transition:all 0.15s;
-              display:flex;flex-direction:column;align-items:center;gap:12px;
-            "
-            onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-light)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
-              <div style="width:56px;height:56px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </div>
-              <div>
-                <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">Hire Taskers</div>
-                <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;">Post tasks and book skilled workers near you</div>
-              </div>
-              <div style="padding:5px 14px;background:var(--blue);color:#fff;border-radius:var(--radius-pill);font-size:0.78rem;font-weight:700;">I need help</div>
-            </button>
-
-            <!-- Work as Tasker -->
-            <button onclick="chooseRole('tasker')" style="
-              padding:28px 16px;border:2px solid var(--border);border-radius:var(--radius-lg);
-              background:var(--white);cursor:pointer;text-align:center;transition:all 0.15s;
-              display:flex;flex-direction:column;align-items:center;gap:12px;
-            "
-            onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-light)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
-              <div style="width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-              </div>
-              <div>
-                <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">Work as Tasker</div>
-                <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;">Offer your skills and earn money locally</div>
-              </div>
-              <div style="padding:5px 14px;background:var(--green);color:#fff;border-radius:var(--radius-pill);font-size:0.78rem;font-weight:700;">I want to work</div>
-            </button>
-          </div>
-
-          <p style="text-align:center;font-size:0.84rem;color:var(--text-muted);">
-            Already have an account? <a href="login.html" style="color:var(--blue);font-weight:600;">Log in</a>
-          </p>
+          <h3>Hire Taskers</h3>
+          <p>Post tasks and book skilled workers near you to get things done efficiently.</p>
+          <button type="button" class="btn btn-primary btn-lg" onclick="showStep('customer')">
+            I need help
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
         </div>
 
-        <!-- ── Step 2: Signup form (hidden until role chosen) ── -->
-        <div id="stepSignupForm" style="display:none;">
-        <div class="auth-card fade-up">
+        <div class="av2-role-card">
+          <div class="av2-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <h3>Work as Tasker</h3>
+          <p>Offer your skills, set your own schedule, and earn money locally on your terms.</p>
+          <a href="onboarding-tasker.html" class="btn btn-outline btn-lg">
+            I want to work
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
 
-          <div class="auth-heading">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-              <button onclick="backToRolePicker()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted);display:flex;align-items:center;gap:6px;font-size:0.84rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                Back
-              </button>
-              <div id="roleLabel" style="padding:4px 12px;border-radius:var(--radius-pill);font-size:0.8rem;font-weight:700;"></div>
-            </div>
-            <a href="index.html" style="display:block;margin-bottom:12px;">
-              <img src="images/logo-nav.png" alt="Street Taskers" style="height:32px;" onerror="this.style.display='none'" />
-            </a>
-            <h1>Create your account</h1>
-            <p>Join thousands of customers and taskers</p>
+      <div class="av2-login-pill">Already have an account? <a href="login.html">Log in</a></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 — customer signup form -->
+  <section class="av2-page" id="stepCustomer" style="display:none;">
+    <div class="av2-shell">
+      <div class="av2-split">
+        <div class="av2-form-logo-top">
+          <img src="images/logo-nav.png" alt="StreetTasker" />
+        </div>
+
+        <div class="av2-form-panel">
+          <div class="av2-form-heading">
+            <h1>Join the Community</h1>
+            <p>Sign up to find the perfect tasker for your needs.</p>
           </div>
 
-          <button type="button" class="btn btn-oauth" onclick="handleGoogleSignUp()">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Sign up with Google
-          </button>
+          <div class="av2-oauth-row">
+            <button type="button" class="av2-oauth-btn" onclick="oauthSignup('google')">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.7 35 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.6 5.6C41.4 36.5 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+              Continue with Google
+            </button>
+            <button type="button" class="av2-oauth-btn" onclick="oauthSignup('facebook')">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+              Continue with Facebook
+            </button>
+          </div>
 
-          <div class="form-divider">or sign up with email</div>
+          <div class="av2-divider">or register with email</div>
 
-          <form id="signupForm" novalidate>
-            <input type="hidden" id="selectedRole" value="customer" />
-
-            <!-- Full name -->
-            <div class="form-group">
-              <label class="form-label" for="signupName">Full Name *</label>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <input type="text" id="signupName" name="name" class="form-input" placeholder="Your full name" autocomplete="name" required />
+          <form id="customerSignupForm" onsubmit="handleCustomerSignup(event)" novalidate>
+            <div class="av2-field">
+              <label for="cFullName">Full Name</label>
+              <div class="av2-field-wrap">
+                <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="cFullName" name="name" placeholder="Jane Doe" autocomplete="name" required />
               </div>
             </div>
-
-            <!-- Email -->
-            <div class="form-group">
-              <label class="form-label" for="signupEmail">Email Address *</label>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                <input type="email" id="signupEmail" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" required />
+            <div class="av2-field">
+              <label for="cEmail">Email Address</label>
+              <div class="av2-field-wrap">
+                <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+                <input type="email" id="cEmail" name="email" placeholder="jane@example.com" autocomplete="email" required />
               </div>
             </div>
-
-            <!-- Password -->
-            <div class="form-group">
-              <label class="form-label" for="signupPwd">Password *</label>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input type="password" id="signupPwd" name="password" class="form-input" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8" />
-                <button type="button" class="pwd-toggle" id="signupPwdToggle" aria-label="Show password">
-                  <svg id="signupEye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div class="av2-field">
+              <label for="cPassword">Password</label>
+              <div class="av2-field-wrap">
+                <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="cPassword" name="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required />
+                <button type="button" class="av2-pwd-toggle" onclick="togglePwd('cPassword', this)" aria-label="Show password">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
-              <div class="pwd-strength" id="pwdStrength" style="display:none;">
-                <div class="pwd-bar-track"><div class="pwd-bar-fill" id="pwdBar"></div></div>
-                <p class="pwd-label" id="pwdLabel"></p>
-              </div>
             </div>
 
-            <!-- Phone -->
-            <div class="form-group">
-              <label class="form-label" for="signupPhone">Phone <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <input type="tel" id="signupPhone" name="phone" class="form-input" placeholder="+234 800 000 0000" autocomplete="tel" />
-              </div>
+            <div class="av2-check-row">
+              <input type="checkbox" id="cTerms" required />
+              <label for="cTerms">I agree to the <a href="terms.html">Terms of Service</a> &amp; <a href="privacy.html">Privacy Policy</a>.</label>
             </div>
 
-            <!-- Terms -->
-            <div class="check-row">
-              <input type="checkbox" id="agreeTerms" name="terms" required />
-              <label for="agreeTerms">
-                I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>
-              </label>
-            </div>
+            <div class="form-error" id="customerSignupError"></div>
 
-            <div id="signupErr" class="auth-error" style="display:none;"></div>
-
-            <button type="submit" class="btn btn-primary btn-full" id="signupBtn">Create Account</button>
-
-            <p class="auth-footer-note">Already have an account? <a href="login.html">Log in</a></p>
+            <button type="submit" class="btn btn-primary btn-lg av2-submit-btn" id="customerSignupBtn">
+              <span>Create Account</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
           </form>
 
-          <!-- Email confirmation screen -->
-          <div id="confirmScreen" style="display:none; text-align:center; padding:20px 0;">
-            <div style="width:60px;height:60px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:8px;">Check your email</h2>
-            <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:6px;">We sent a confirmation link to</p>
-            <p id="confirmEmail" style="font-weight:700;font-size:0.95rem;margin-bottom:20px;color:var(--text-primary);"></p>
-            <p style="font-size:0.83rem;color:var(--text-muted);">Click the link in the email to activate your account. Check your spam folder if you don't see it.</p>
-            <a href="login.html" class="btn btn-ghost btn-sm" style="margin-top:20px;">Go to Login</a>
-          </div>
+          <div class="av2-form-footer">Already have an account? <a href="login.html">Log In</a></div>
+        </div>
 
-        </div><!-- end auth-card -->
-        </div><!-- end stepSignupForm -->
+        <div class="av2-visual">
+          <img src="images/illustration-community.png" alt="StreetTasker community illustration" />
+          <div class="av2-testimonial">
+            <div class="av2-stars">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+            </div>
+            <p class="av2-quote">Found a reliable plumber in under 10 minutes. The interface is stunning and the taskers are genuinely professional.</p>
+            <div class="av2-author">
+              <div class="av2-avatar">M</div>
+              <div>
+                <div class="av2-author-name">Marcus L.</div>
+                <div class="av2-author-role">Homeowner</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
-  </div>
+  </section>
 
   <div id="footer-placeholder"></div>
 
@@ -245,140 +154,63 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
   <script>
-    var _selectedRole = 'customer';
-
-    function chooseRole(role) {
-      _selectedRole = role;
-      document.getElementById('selectedRole').value = role;
-      try { sessionStorage.setItem('st_signup_role', role); } catch(e) {}
-
-      /* Update role label badge */
-      var label = document.getElementById('roleLabel');
-      if (label) {
-        label.textContent = role === 'tasker' ? 'Signing up as Tasker' : 'Signing up as Customer';
-        label.style.background = role === 'tasker' ? 'var(--green-light)' : 'var(--blue-light)';
-        label.style.color      = role === 'tasker' ? 'var(--green)'       : 'var(--blue)';
-      }
-
-      /* Show signup form, hide role picker */
-      document.getElementById('stepRolePicker').style.display = 'none';
-      document.getElementById('stepSignupForm').style.display = 'block';
+    /* Deep-link support: signup.html?step=customer jumps straight to the form */
+    function showStep(step) {
+      document.getElementById('stepChoose').style.display = step === 'choose' ? '' : 'none';
+      document.getElementById('stepCustomer').style.display = step === 'customer' ? '' : 'none';
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
-
-    function backToRolePicker() {
-      document.getElementById('stepSignupForm').style.display = 'none';
-      document.getElementById('stepRolePicker').style.display = 'block';
-    }
-
-    /* If arriving from Google OAuth on a new account that needs role selection */
-    (function() {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('google') === '1') {
-        /* Show role picker with a notice */
-        var heading = document.querySelector('#stepRolePicker .auth-heading h1');
-        var sub     = document.querySelector('#stepRolePicker .auth-heading p');
-        if (heading) heading.textContent = 'One more step';
-        if (sub) sub.textContent = 'Choose your account type to complete setup';
-      }
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('step') === 'customer' || params.get('role') === 'customer') showStep('customer');
     })();
 
-    async function handleGoogleSignUp() {
-      var role = _selectedRole || 'customer';
-      try { localStorage.setItem('st_pending_role', role); } catch(e) {}
-      try { sessionStorage.setItem('st_signup_role', role); } catch(e) {}
-      try {
-        var { error } = await window.supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin + '/login.html?oauth=1&role=' + role,
-          },
-        });
-        if (error) throw error;
-      } catch(e) {
-        showToast('Google sign-up failed: ' + e.message);
-      }
+    function togglePwd(fieldId, btn) {
+      const input = document.getElementById(fieldId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     }
 
-    /* Email signup */
-    document.addEventListener('DOMContentLoaded', function() {
-      var form = document.getElementById('signupForm');
-      if (!form) return;
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        var errEl  = document.getElementById('signupErr');
-        var btn    = document.getElementById('signupBtn');
-        errEl.style.display = 'none';
-
-        var name  = document.getElementById('signupName').value.trim();
-        var email = document.getElementById('signupEmail').value.trim();
-        var pwd   = document.getElementById('signupPwd').value;
-        var phone = document.getElementById('signupPhone').value.trim();
-        var role  = _selectedRole || 'customer';
-        var terms = document.getElementById('agreeTerms').checked;
-
-        if (!name)  { errEl.textContent = 'Please enter your full name.'; errEl.style.display='block'; return; }
-        if (!email) { errEl.textContent = 'Please enter your email address.'; errEl.style.display='block'; return; }
-        if (!pwd || pwd.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display='block'; return; }
-        if (!terms) { errEl.textContent = 'Please agree to the Terms of Service.'; errEl.style.display='block'; return; }
-
-        btn.disabled = true; btn.textContent = 'Creating account...';
-        try {
-          await window.ST.auth.signUpUser({ name, email, password: pwd, role, phone });
-          form.style.display = 'none';
-          document.getElementById('confirmScreen').style.display = 'block';
-          document.getElementById('confirmEmail').textContent = email;
-        } catch(err) {
-          var msg = err.message || '';
-          if (msg.includes('already') || msg.includes('exists')) {
-            errEl.textContent = 'An account with this email already exists. Try logging in.';
-          } else {
-            errEl.textContent = msg || 'Could not create account. Please try again.';
-          }
-          errEl.style.display = 'block';
-        } finally {
-          btn.disabled = false; btn.textContent = 'Create Account';
-        }
+    function oauthSignup(provider) {
+      window.supabase?.auth?.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + '/dashboard-customer.html' },
       });
+    }
 
-      /* Password strength */
-      var pwdInput = document.getElementById('signupPwd');
-      if (pwdInput) {
-        pwdInput.addEventListener('input', function() {
-          var v = pwdInput.value;
-          var strength = document.getElementById('pwdStrength');
-          var bar      = document.getElementById('pwdBar');
-          var label    = document.getElementById('pwdLabel');
-          if (!v) { strength.style.display='none'; return; }
-          strength.style.display = 'block';
-          var score = 0;
-          if (v.length >= 8)  score++;
-          if (v.length >= 12) score++;
-          if (/[A-Z]/.test(v)) score++;
-          if (/[0-9]/.test(v)) score++;
-          if (/[^a-zA-Z0-9]/.test(v)) score++;
-          var levels = ['','Weak','Fair','Good','Strong','Very strong'];
-          var colors = ['','#dc2626','#f59e0b','#3b82f6','#16a34a','#16a34a'];
-          bar.style.width  = (score * 20) + '%';
-          bar.style.background = colors[score] || '#dc2626';
-          label.textContent = levels[score] || 'Weak';
-          label.style.color = colors[score] || '#dc2626';
-        });
+    async function handleCustomerSignup(e) {
+      e.preventDefault();
+      const errorEl = document.getElementById('customerSignupError');
+      const btn = document.getElementById('customerSignupBtn');
+      errorEl.style.display = 'none';
+
+      const name = document.getElementById('cFullName').value.trim();
+      const email = document.getElementById('cEmail').value.trim();
+      const password = document.getElementById('cPassword').value;
+      const agreed = document.getElementById('cTerms').checked;
+
+      if (!agreed) {
+        errorEl.textContent = 'Please agree to the Terms of Service & Privacy Policy to continue.';
+        errorEl.style.display = 'block';
+        return;
       }
 
-      /* Show/hide password */
-      var toggle = document.getElementById('signupPwdToggle');
-      var eye    = document.getElementById('signupEye');
-      var pwdFld = document.getElementById('signupPwd');
-      if (toggle && pwdFld) {
-        toggle.addEventListener('click', function() {
-          var show = pwdFld.type === 'password';
-          pwdFld.type = show ? 'text' : 'password';
-          eye.style.opacity = show ? '0.5' : '1';
-        });
+      btn.disabled = true;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span>Creating account…</span>';
+
+      try {
+        await window.ST.auth.signUpUser({ name, email, password, role: 'customer' });
+        window.location.href = 'dashboard-customer.html';
+      } catch (err) {
+        errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
       }
-    });
+    }
   </script>
 </body>
 </html>

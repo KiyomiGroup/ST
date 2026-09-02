@@ -2139,3 +2139,159 @@ img { max-width: 100%; height: auto; }
   /* Dashboard body fills screen from header bar downward */
   .has-mobile-header .dashboard-body { margin-top: 0 !important; }
 }
+
+/* ================================================================
+   AUTH V2 — Onboarding chooser + Signup/Tasker forms
+   Matches: "Join StreetTasker" role chooser, "Join the Community"
+   customer form, "Join as a Tasker" form (mobile + desktop split).
+   ================================================================ */
+.av2-page {
+  min-height: 100vh; padding-top: var(--nav-height);
+  background: linear-gradient(180deg, #EEF6F0 0%, #F7FAF7 45%, #FFFFFF 100%);
+  display: flex; align-items: center;
+}
+.av2-shell { max-width: 1180px; margin: 0 auto; padding: 56px 20px; width: 100%; }
+
+/* ── Step 1: role chooser ───────────────────────────────────── */
+.av2-chooser-badge {
+  width: 56px; height: 56px; border-radius: var(--radius-lg);
+  background: var(--white); box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--forest); margin: 0 auto 20px;
+}
+.av2-chooser-heading { text-align: center; margin-bottom: 40px; }
+.av2-chooser-heading h1 { font-size: clamp(1.7rem, 3.2vw, 2.5rem); margin-bottom: 10px; }
+.av2-chooser-heading p { color: var(--text-secondary); font-size: 1rem; }
+
+.av2-role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 980px; margin: 0 auto; }
+.av2-role-card {
+  position: relative; overflow: hidden;
+  background: var(--white); border-radius: var(--radius-xl);
+  padding: 32px 28px; box-shadow: var(--shadow-md);
+  display: flex; flex-direction: column;
+}
+.av2-role-card::after {
+  content: ''; position: absolute; top: -30px; right: -30px;
+  width: 130px; height: 130px; border-radius: 50%;
+  background: var(--mint); opacity: .7; z-index: 0;
+}
+.av2-role-card > * { position: relative; z-index: 1; }
+.av2-role-icon {
+  width: 56px; height: 56px; border-radius: var(--radius-md);
+  background: var(--mint); color: var(--forest);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 22px;
+}
+.av2-role-card h3 { font-size: 1.35rem; margin-bottom: 10px; }
+.av2-role-card p { color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 24px; flex-grow: 1; }
+.av2-role-card .btn { width: 100%; }
+
+.av2-login-pill {
+  display: block; text-align: center; max-width: 360px; margin: 32px auto 0;
+  background: var(--white); border-radius: var(--radius-pill);
+  padding: 14px 24px; box-shadow: var(--shadow-sm); font-size: 0.9rem; color: var(--text-secondary);
+}
+.av2-login-pill a { color: var(--blue); font-weight: 600; }
+
+@media (max-width: 780px) {
+  .av2-shell { padding: 32px 20px 56px; }
+  .av2-role-grid { grid-template-columns: 1fr; gap: 16px; }
+  .av2-role-card { text-align: center; align-items: center; padding: 28px 24px; }
+  .av2-role-card::after { display: none; }
+  .av2-chooser-heading { margin-bottom: 28px; }
+}
+
+/* ── Step 2: signup / tasker forms ──────────────────────────── */
+.av2-split {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+  max-width: 1180px; margin: 0 auto; align-items: center;
+}
+.av2-form-logo-top { display: none; }
+.av2-form-panel {
+  position: relative; overflow: hidden;
+  background: var(--white); border-radius: var(--radius-xl);
+  padding: 44px 44px; box-shadow: var(--shadow-lg);
+}
+.av2-form-panel::before {
+  content: ''; position: absolute; top: -40px; left: -50px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: var(--mint); opacity: .6; z-index: 0;
+}
+.av2-form-panel > * { position: relative; z-index: 1; }
+.av2-form-heading h1 { font-size: 1.65rem; margin-bottom: 8px; }
+.av2-form-heading p { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin-bottom: 26px; }
+
+.av2-oauth-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.av2-oauth-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill); background: var(--white);
+  font-size: 0.88rem; font-weight: 600; color: var(--text-primary);
+  cursor: pointer; transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
+}
+.av2-oauth-btn:hover { border-color: var(--border-strong); background: var(--gray-50); }
+
+.av2-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 0.72rem; font-weight: 600; letter-spacing: .04em; color: var(--text-muted); text-transform: uppercase; }
+.av2-divider::before, .av2-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.av2-field { margin-bottom: 18px; }
+.av2-field label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 7px; }
+.av2-field-wrap { position: relative; }
+.av2-field-wrap svg.av2-field-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.av2-field-wrap input {
+  width: 100%; padding: 13px 16px 13px 42px;
+  border: 1.5px solid transparent; border-radius: var(--radius-pill);
+  background: var(--gray-100); font-size: 0.9rem; color: var(--text-primary);
+  outline: none; transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
+}
+.av2-field-wrap input::placeholder { color: var(--text-muted); }
+.av2-field-wrap input:focus { border-color: var(--blue); background: var(--white); }
+.av2-field-wrap .av2-pwd-toggle {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex;
+}
+.av2-field-wrap .av2-pwd-toggle:hover { color: var(--text-primary); }
+
+.av2-check-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 22px; }
+.av2-check-row input { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+.av2-check-row label { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.5; cursor: pointer; }
+.av2-check-row a { color: var(--blue); font-weight: 600; }
+
+.av2-submit-btn { width: 100%; justify-content: center; }
+.av2-form-footer { text-align: center; margin-top: 18px; font-size: 0.87rem; color: var(--text-secondary); }
+.av2-form-footer a { color: var(--blue); font-weight: 600; }
+
+.av2-visual { position: relative; }
+.av2-visual img { width: 100%; height: auto; display: block; border-radius: var(--radius-xl); }
+.av2-testimonial {
+  position: absolute; right: 24px; bottom: -34px; max-width: 330px;
+  background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);
+  padding: 20px 22px;
+}
+.av2-testimonial .av2-stars { color: var(--amber); display: flex; gap: 2px; margin-bottom: 10px; }
+.av2-testimonial p.av2-quote { font-size: 0.88rem; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px; }
+.av2-testimonial .av2-author { display: flex; align-items: center; gap: 10px; }
+.av2-testimonial .av2-avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--gray-200);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; color: var(--text-secondary); flex-shrink: 0;
+}
+.av2-testimonial .av2-author-name { font-size: 0.83rem; font-weight: 700; }
+.av2-testimonial .av2-author-role { font-size: 0.76rem; color: var(--text-muted); }
+.av2-testimonial.av2-quote-style { padding: 22px 24px; }
+.av2-testimonial.av2-quote-style .av2-quote-mark { color: var(--mint-border); font-size: 2rem; line-height: 1; font-weight: 800; margin-bottom: 2px; }
+.av2-testimonial.av2-quote-style p.av2-quote { font-style: normal; margin-bottom: 10px; }
+.av2-testimonial.av2-quote-style .av2-author-name { color: var(--blue); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .av2-split { grid-template-columns: 1fr; gap: 0; max-width: 460px; }
+  .av2-form-logo-top { display: block; order: -2; text-align: center; margin-bottom: 20px; }
+  .av2-form-logo-top img { height: 26px; margin: 0 auto; }
+  .av2-visual { order: -1; margin-bottom: 24px; }
+  .av2-testimonial { display: none; }
+  .av2-form-panel { box-shadow: none; border: none; padding: 0; background: transparent; }
+  .av2-form-panel::before { display: none; }
+  .av2-form-heading { text-align: center; }
+  .av2-form-logo { display: none; }
+  .av2-visual img { max-width: 220px; margin: 0 auto; }
+  .av2-shell { padding: 40px 24px 56px; }
+}
