@@ -121,6 +121,8 @@ async function loadServices() {
       user_id: s.user_id,
       provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider',
       available: s.available, fromServices: true,
+      rating: s.rating, reviews_count: s.reviews_count,
+      specialties: s.specialties, availability_status: s.availability_status, verified: s.verified,
     }));
     if (services && services.length > 0) {
       /* Live services first, then dummy data to fill out the page */
@@ -135,27 +137,43 @@ async function loadServices() {
         price:         parseFloat(s.price || s.rate_value || 5000),
         rate:          s.rate || `₦${Number(s.price || 5000).toLocaleString()}/session`,
         rating:        parseFloat(s.rating || 4.5),
-        reviews:       parseInt(s.reviews || 0),
+        reviews:       parseInt(s.reviews || s.reviews_count || 0),
         description:   s.description || s.bio || '',
         photo:         s.photo || s.photo_url || null,
+        specialties:   s.specialties, availability_status: s.availability_status, verified: s.verified,
         is_live:       true,
       }));
       /* Append dummies — mark them so Book button is hidden */
-      ALL = [...liveMapped, ...DUMMY_SERVICES];
+      ALL = [...liveMapped.map(normalizeServiceCard), ...DUMMY_SERVICES.map(normalizeServiceCard)];
       console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);
     } else {
-      ALL = DUMMY_SERVICES;
+      ALL = DUMMY_SERVICES.map(normalizeServiceCard);
     }
   } catch (e) {
     console.warn('[Taskers] Load failed, using demo data:', e.message);
-    ALL = DUMMY_SERVICES;
+    ALL = DUMMY_SERVICES.map(normalizeServiceCard);
   }
 }
 
 let ALL = [];
-let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'recent' };
+let FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'recent', availability:'', specialty:'', verifiedOnly:false };
 let PAGE = 1;
 const PAGE_SIZE = 8;
+
+/* Fill in specialties/availability/verified for any row that predates
+   the migration (or demo rows) so the new filters have something to
+   work with, without overwriting real values that ARE present. */
+function normalizeServiceCard(s) {
+  const seed = String(s.id || s.provider_name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const availabilityOptions = ['available_now', 'available_today', 'available_this_week'];
+  return {
+    ...s,
+    specialties: (s.specialties && s.specialties.length) ? s.specialties : (s.service_name ? [s.service_name] : []),
+    availability_status: s.availability_status || availabilityOptions[seed % availabilityOptions.length],
+    verified: typeof s.verified === 'boolean' ? s.verified : (s.rating || 0) >= 4.8,
+    reviews: s.reviews ?? s.reviews_count ?? 0,
+  };
+}
 
 /* ── Init ───────────────────────────────────────────────────── */
 function initTaskersPage() {
@@ -173,18 +191,19 @@ function initTaskersPage() {
     if (locInp) locInp.value = urlLocation;
   }
   /* Show dummy data immediately so page never looks empty while Supabase loads */
-  ALL = DUMMY_SERVICES;
+  ALL = DUMMY_SERVICES.map(normalizeServiceCard);
+  updateTaskerFilterCounts();
   render();
   wireAll();
   initBookingModal();
   /* Then replace with live data in background */
-  loadServices().then(() => { render(); });
+  loadServices().then(() => { updateTaskerFilterCounts(); render(); });
 }
 
 /* ── Filter + sort ───────────────────────────────────────────── */
 function filtered() {
   let list = [...ALL];
-  const { search, category, maxPrice, minRating, sortBy } = FILTERS;
+  const { search, category, maxPrice, minRating, sortBy, availability, specialty, verifiedOnly } = FILTERS;
   if (search) {
     const q = search.toLowerCase();
     list = list.filter(s =>
@@ -198,11 +217,21 @@ function filtered() {
   if (FILTERS.location)  list = list.filter(s => (s.location || '').toLowerCase().includes(FILTERS.location.toLowerCase()));
   if (maxPrice < 999999) list = list.filter(s => s.price <= maxPrice);
   if (minRating)         list = list.filter(s => s.rating >= minRating);
+  if (availability && availability.length) list = list.filter(s => availability.includes(s.availability_status));
+  if (specialty)          list = list.filter(s => (s.specialties || []).some(sp => sp.toLowerCase() === specialty.toLowerCase()));
+  if (verifiedOnly)       list = list.filter(s => s.verified === true);
   if (sortBy === 'recent')     list.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
   if (sortBy === 'rating')     list.sort((a,b) => b.rating - a.rating);
   if (sortBy === 'price_asc')  list.sort((a,b) => a.price - b.price);
   if (sortBy === 'price_desc') list.sort((a,b) => b.price - a.price);
+  if (sortBy === 'reviews')    list.sort((a,b) => (b.reviews||0) - (a.reviews||0));
   return list;
+}
+
+function updateTaskerFilterCounts() {
+  document.querySelectorAll('[data-count-avail]').forEach(el => {
+    el.textContent = ALL.filter(s => s.availability_status === el.dataset.countAvail).length || '';
+  });
 }
 
 /* ── Render ──────────────────────────────────────────────────── */
@@ -229,61 +258,50 @@ function render(page = 1) {
   if (loadMore) loadMore.style.display = slice.length < all.length ? 'block' : 'none';
 }
 
+const SPECIALTY_TAG_LIMIT = 2;
+const AVAILABILITY_LABEL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
+
 function buildCard(s) {
   const safeName    = escapeHtml(s.provider_name || 'Provider');
   const safeService = escapeHtml(s.service_name || '');
-  const safeLoc     = escapeHtml(s.location || 'Lagos');
-  const safeDesc    = escapeHtml((s.description || '').slice(0, 90)) + ((s.description||'').length > 90 ? '&hellip;' : '');
-  const safePhoto   = escapeHtml(s.photo || '');
-  const safeId      = escapeHtml(s.id || '');
-  const safeUserId  = escapeHtml(s.user_id || '');
+  const safeLoc      = escapeHtml(s.location || 'Lagos');
+  const safeDesc     = escapeHtml((s.description || '').slice(0, 90)) + ((s.description||'').length > 90 ? '&hellip;' : '');
+  const safePhoto    = escapeHtml(s.photo || '');
+  const safeId        = escapeHtml(s.id || '');
+  const safeUserId    = escapeHtml(s.user_id || '');
   const initials    = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-  const avIdx       = (['s1','s2','s3','s4','s5','s6'].indexOf(s.id) + 1) || ((s.id.charCodeAt(0) % 6) + 1);
-  const avClass     = `av-${avIdx}`;
-  const stars       = Array.from({length:5}, (_,i) =>
-    `<span style="color:${i < Math.round(s.rating) ? '#F59E0B' : '#D1D5DB'}">★</span>`).join('');
-
-  const avatar = safePhoto
-    ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none'" />`
-    : initials;
+  const stars = Array.from({length:5}, (_,i) =>
+    `<span style="color:${i < Math.round(s.rating) ? 'var(--amber)' : 'var(--border-strong)'}">★</span>`).join('');
 
   const profileUrl = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
 
-  /* full-width image at top of card when photo available */
-  const cardImgHtml = safePhoto
-    ? `<div style="margin:-16px -16px 14px;overflow:hidden;height:160px;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;">
-        <img src="${safePhoto}" alt="${safeName}"
-          style="width:100%;height:100%;object-fit:cover;display:block;"
-          onerror="this.parentNode.style.display='none'" />
-      </div>` : '';
+  const mediaHtml = safePhoto
+    ? `<img src="${safePhoto}" alt="${safeName}" onerror="this.parentElement.innerHTML='<div class=&quot;spg-card-badge&quot; style=&quot;position:static;margin:55px auto 0;border-radius:50%;width:56px;height:56px;font-weight:700;color:var(--text-secondary);&quot;>${initials}</div>'" />`
+    : `<div class="spg-card-badge" style="position:static;margin:55px auto 0;border-radius:50%;width:56px;height:56px;font-weight:700;color:var(--text-secondary);">${initials}</div>`;
 
-  return `<div class="card tasker-card fade-up" id="svc-${safeId}">
-    ${cardImgHtml}
-    <div class="tc-header">
-      <div class="tc-avatar ${avClass}" style="overflow:hidden;">${avatar}</div>
-      <div class="tc-meta">
-        <div class="tc-name">${safeName}</div>
-        <div class="tc-service">${safeService}</div>
-        <div class="tc-location">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${safeLoc}
-        </div>
-      </div>
+  const specialtyTags = (s.specialties || []).slice(0, SPECIALTY_TAG_LIMIT)
+    .map(sp => `<span class="spg-tag spg-tag-specialty">${escapeHtml(sp)}</span>`).join('');
+
+  return `<div class="spg-card fade-up" id="svc-${safeId}">
+    <div class="spg-card-media">
+      ${mediaHtml}
+      ${s.verified ? `<div class="spg-card-verified" title="Verified"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : `<div class="spg-card-badge">${initials}</div>`}
     </div>
-    ${safeDesc ? `<p class="tc-bio">${safeDesc}</p>` : ''}
-    <div class="tc-stats">
-      <div class="tc-stat">
-        <div class="tc-stat-value">${stars}</div>
-        <div class="tc-stat-label">${s.rating.toFixed(1)}${s.reviews ? ` · ${s.reviews} reviews` : ''}</div>
+    <div class="spg-card-body">
+      <div class="spg-card-title">${safeName}</div>
+      <div class="spg-card-sub">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${safeLoc} &middot; ${safeService}
       </div>
-      <div class="tc-stat">
-        <div class="tc-stat-value" style="font-size:1rem;font-weight:700;">₦${Number(s.price).toLocaleString()}</div>
-        <div class="tc-stat-label">per session</div>
+      <div class="spg-card-stars">${stars} <span style="color:var(--text-muted);">${s.rating.toFixed(1)}${s.reviews ? ` (${s.reviews})` : ''}</span></div>
+      ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
+      <div class="spg-card-tags">
+        ${s.verified ? '<span class="spg-tag spg-tag-verified">Verified Pro</span>' : ''}
+        <span class="spg-tag spg-tag-flexible">${AVAILABILITY_LABEL[s.availability_status] || 'Available this week'}</span>
+        ${specialtyTags}
       </div>
-    </div>
-    <div class="tc-footer">
-      <span class="tc-badge tc-badge-green">Available</span>
-      <div style="display:flex;gap:6px;">
+      <div class="spg-card-footer">
+        <div class="spg-card-price">₦${Number(s.price).toLocaleString()}<span> ${s.rate_unit || '/session'}</span></div>
         <a href="${profileUrl}" class="btn btn-primary btn-sm" style="text-decoration:none;">View Profile</a>
       </div>
     </div>
@@ -332,6 +350,25 @@ function wireAll() {
     });
   }
 
+  /* Availability checkboxes */
+  document.querySelectorAll('[name="tavail"]').forEach(cb => cb.addEventListener('change', () => {
+    FILTERS.availability = [...document.querySelectorAll('[name="tavail"]:checked')].map(c => c.value);
+    render(1);
+  }));
+
+  /* Verified only */
+  const verifiedCb = document.getElementById('verifiedFilter');
+  if (verifiedCb) verifiedCb.addEventListener('change', () => { FILTERS.verifiedOnly = verifiedCb.checked; render(1); });
+
+  /* Specialty chips (single-select toggle) */
+  document.querySelectorAll('#specialtyChips [data-specialty]').forEach(chip => chip.addEventListener('click', () => {
+    const alreadyActive = chip.classList.contains('active');
+    document.querySelectorAll('#specialtyChips .filter-chip').forEach(c => c.classList.remove('active'));
+    if (alreadyActive) { FILTERS.specialty = ''; }
+    else { chip.classList.add('active'); FILTERS.specialty = chip.dataset.specialty; }
+    render(1);
+  }));
+
   /* Apply Filters button */
   const applyBtn = document.getElementById('applyFiltersBtn');
   if (applyBtn) applyBtn.addEventListener('click', () => {
@@ -346,13 +383,16 @@ function wireAll() {
   /* Reset */
   const reset = document.getElementById('filterReset');
   if (reset) reset.addEventListener('click', () => {
-    FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating' };
+    FILTERS = { search:'', category:'', location:'', maxPrice:999999, minRating:0, sortBy:'rating', availability:[], specialty:'', verifiedOnly:false };
     const locInp = document.getElementById('taskerLocationInput');
     if (locInp) { locInp.value = ''; delete locInp.dataset.lat; delete locInp.dataset.lon; }
     if (inp) inp.value = '';
     if (pr)  { pr.value = 30000; if (pv) pv.textContent = 'Any'; }
     document.querySelectorAll('[data-rating-filter]').forEach(c => c.checked = false);
     document.querySelectorAll('[data-category]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[name="tavail"]').forEach(c => c.checked = false);
+    document.querySelectorAll('#specialtyChips .filter-chip').forEach(c => c.classList.remove('active'));
+    if (verifiedCb) verifiedCb.checked = false;
     render(1);
   });
 

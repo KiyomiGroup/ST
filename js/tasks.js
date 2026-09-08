@@ -125,12 +125,22 @@ function wireBudgetSuggestions() {
 function wireUrgentToggle() {
   const toggle = document.getElementById('urgentToggle');
   const badge  = document.getElementById('urgentBadge');
+  const urgencySelect = document.getElementById('taskUrgency');
   if (!toggle) return;
 
   toggle.addEventListener('change', () => {
     taskDraft.urgent = toggle.checked;
     if (badge) badge.style.display = toggle.checked ? 'inline-flex' : 'none';
+    if (urgencySelect && toggle.checked) urgencySelect.value = 'immediate';
   });
+  if (urgencySelect) {
+    urgencySelect.addEventListener('change', () => {
+      if (urgencySelect.value === 'immediate' && !toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change'));
+      }
+    });
+  }
 }
 
 /* ── Auto-save draft to sessionStorage ──────────────────────── */
@@ -284,6 +294,8 @@ async function handleTaskSubmit(e) {
     deadline:    dlInput.value,
     category:    form.taskCategory?.value || 'other',
     urgent:      document.getElementById('urgentToggle')?.checked || false,
+    taskType:    document.getElementById('taskType')?.value || 'one_off',
+    urgency:     document.getElementById('taskUrgency')?.value || 'flexible',
   };
 
   /* Show loading state */
@@ -316,6 +328,9 @@ async function handleTaskSubmit(e) {
         location:    taskPayload.location,
         deadline:    taskPayload.deadline,
         category:    taskPayload.category,
+        urgent:      taskPayload.urgent,
+        taskType:    taskPayload.taskType,
+        urgency:     taskPayload.urgency,
         photoUrls,
       });
     } else {

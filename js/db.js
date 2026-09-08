@@ -41,7 +41,7 @@ function _parseRate(raw) {
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [] }) {
+async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -55,6 +55,8 @@ async function postTask({ title, description, category, budget, location, deadli
     location:    location.trim(),
     deadline:    deadline || null,
     urgent:      urgent,
+    task_type:   taskType || 'one_off',
+    urgency:     urgency || (urgent ? 'immediate' : 'flexible'),
     status:      'open',
   };
   if (photoUrls && photoUrls.length) payload.photo_urls = photoUrls;
@@ -260,7 +262,7 @@ async function fetchUnreadNotificationCount() {
 
 /* ────────────────────────── SERVICES ───────────────────────── */
 
-async function postService({ serviceName, category, pricingType = 'per_job', price, rateUnit = '/hour', location, description, photoUrl = null }) {
+async function postService({ serviceName, category, pricingType = 'per_job', price, rateUnit = '/hour', location, description, photoUrl = null, specialties = [], availabilityStatus = 'available_this_week' }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a service.');
 
@@ -277,6 +279,8 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
     description:  description.trim(),
     photo:        photoUrl || null,
     available:    true,                   /* services uses 'available', not 'status' */
+    specialties:  specialties && specialties.length ? specialties : [],
+    availability_status: availabilityStatus || 'available_this_week',
   };
 
   /* Try with rate_unit column */
@@ -284,9 +288,12 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
   let { data: svc, error: svcErr } = await window.supabase
     .from('services').insert(payload).select().single();
 
-  /* Column doesn't exist yet → retry without it */
-  if (svcErr && (svcErr.code === '42703' || svcErr.message?.includes('rate_unit'))) {
-    payload = basePayload;
+  /* Column doesn't exist yet (rate_unit, specialties, or availability_status
+     — i.e. the migration in supabase/migration_search_filters.sql hasn't
+     been run yet) → retry with just the base columns that predate it */
+  if (svcErr && (svcErr.code === '42703')) {
+    const { specialties: _s, availability_status: _a, ...legacyPayload } = basePayload;
+    payload = legacyPayload;
     const r2 = await window.supabase.from('services').insert(payload).select().single();
     svc = r2.data; svcErr = r2.error;
   }

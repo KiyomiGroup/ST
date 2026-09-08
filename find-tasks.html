@@ -12,53 +12,73 @@
 <body>
   <div id="navbar-placeholder"></div>
 
-  <div class="page-hero">
-    <div class="container">
-      <div class="eyebrow fade-up">Open Tasks</div>
+  <div class="container" style="padding-top:24px;">
+    <div class="spg-hero">
+      <div class="spg-hero-eyebrow fade-up">Open Tasks</div>
       <h1 class="fade-up d1">Find tasks to complete</h1>
       <p class="fade-up d2">Browse work posted by customers. Apply to ones that match your skills and earn.</p>
-      <form id="taskSearchForm" class="search-bar fade-up d3" novalidate>
-        <div class="sf">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
-        </div>
-        <div class="sf" style="position:relative;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
-          <div id="taskLocationSuggestions" class="location-suggestions"></div>
-        </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-      </form>
     </div>
+    <form id="taskSearchForm" class="spg-searchbar fade-up d3" novalidate>
+      <div class="spg-searchbar-field">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
+      </div>
+      <div class="spg-searchbar-divider"></div>
+      <div class="spg-searchbar-field" style="position:relative;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
+        <div id="taskLocationSuggestions" class="location-suggestions"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Search</button>
+    </form>
   </div>
 
-  <div style="padding:32px 0 64px; background:var(--bg-subtle);">
+  <div style="padding:0 0 64px; background:var(--bg-subtle); margin-top:32px;">
     <div class="container">
-      <div style="display:grid; grid-template-columns:220px 1fr; gap:28px; align-items:start;">
+      <div class="spg-layout">
 
         <!-- Filters -->
         <aside class="filter-sidebar">
-          <div class="filter-card">
-            <div class="filter-card-header">
-              <span class="filter-card-title">Filters</span>
+          <div class="filter-panel">
+            <div class="filter-panel-head">
+              <span>Filters</span>
               <button class="filter-reset" id="taskFilterReset">Reset</button>
             </div>
+
             <div class="filter-group">
-              <div class="filter-group-label">Category</div>
-              <label class="filter-opt"><input type="radio" name="tcat" value="" checked /> All</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="barber" /> Barber</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="electrician" /> Electrician</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="cleaning" /> Cleaning</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="mechanic" /> Mechanic</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="plumber" /> Plumber</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="beauty" /> Make-up</label>
-              <label class="filter-opt"><input type="radio" name="tcat" value="other" /> Other</label>
+              <div class="filter-group-label">Task Type</div>
+              <label class="filter-opt"><input type="checkbox" name="ttype" value="full_time" /> Full time <span class="filter-opt-count" data-count-type="full_time"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="ttype" value="part_time" /> Part time <span class="filter-opt-count" data-count-type="part_time"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="ttype" value="one_off" /> One-off <span class="filter-opt-count" data-count-type="one_off"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="ttype" value="remote" /> Remote <span class="filter-opt-count" data-count-type="remote"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="ttype" value="in_person" /> In person <span class="filter-opt-count" data-count-type="in_person"></span></label>
             </div>
+
             <div class="filter-group">
-              <div class="filter-group-label">Min Budget</div>
+              <div class="filter-group-label">Budget Range</div>
               <div class="range-wrap">
                 <input type="range" class="filter-range" id="budgetRange" min="0" max="100000" value="0" step="500" />
                 <div class="range-labels"><span>₦0</span><span id="budgetVal">Any</span><span>₦100k</span></div>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Task Urgency</div>
+              <label class="filter-opt"><input type="checkbox" name="turg" value="immediate" /> Immediate <span class="filter-opt-count" data-count-urgency="immediate"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="turg" value="flexible" /> Flexible <span class="filter-opt-count" data-count-urgency="flexible"></span></label>
+              <label class="filter-opt"><input type="checkbox" name="turg" value="scheduled" /> Scheduled <span class="filter-opt-count" data-count-urgency="scheduled"></span></label>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Task Categories</div>
+              <div class="filter-chip-cloud" id="taskCategoryChips">
+                <button type="button" class="filter-chip" data-tcat="barber">Barber</button>
+                <button type="button" class="filter-chip" data-tcat="electrician">Electrician</button>
+                <button type="button" class="filter-chip" data-tcat="cleaning">Cleaning</button>
+                <button type="button" class="filter-chip" data-tcat="mechanic">Mechanic</button>
+                <button type="button" class="filter-chip" data-tcat="plumber">Plumber</button>
+                <button type="button" class="filter-chip" data-tcat="beauty">Make-up</button>
+                <button type="button" class="filter-chip" data-tcat="other">Other</button>
               </div>
             </div>
           </div>
@@ -66,15 +86,15 @@
 
         <!-- Tasks -->
         <main>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-            <div style="font-size:0.88rem; color:var(--text-muted);"><strong id="taskCount" style="color:var(--text-primary);">—</strong> open tasks</div>
+          <div class="results-bar">
+            <div class="results-count"><strong id="taskCount">—</strong> open tasks</div>
           </div>
 
           <div id="tasksLoading" style="text-align:center; padding:40px; color:var(--text-muted);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             Loading tasks...
           </div>
-          <div id="tasksGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
+          <div id="tasksGrid" class="spg-grid"></div>
           <div id="tasksEmpty" class="empty-state" style="display:none;">
             <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
             <h3>No tasks found</h3>
@@ -126,7 +146,7 @@
   <script>
     let ALL_TASKS = [];
     let ACTIVE_TASK_ID = null;
-    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0 };
+    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0, types: [], urgencies: [] };
 
     async function initPage() {
       try {
@@ -136,6 +156,7 @@
         return;
       }
       document.getElementById('tasksLoading').style.display = 'none';
+      updateFilterCounts();
       renderTasks();
 
       /* Search */
@@ -154,8 +175,25 @@
         mode: 'area',
       });
 
-      /* Category radio */
-      document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));
+      /* Task Type checkboxes */
+      document.querySelectorAll('[name="ttype"]').forEach(cb => cb.addEventListener('change', () => {
+        TASK_FILTERS.types = [...document.querySelectorAll('[name="ttype"]:checked')].map(c => c.value);
+        renderTasks();
+      }));
+
+      /* Task Urgency checkboxes */
+      document.querySelectorAll('[name="turg"]').forEach(cb => cb.addEventListener('change', () => {
+        TASK_FILTERS.urgencies = [...document.querySelectorAll('[name="turg"]:checked')].map(c => c.value);
+        renderTasks();
+      }));
+
+      /* Category chips (multi-select) */
+      document.querySelectorAll('#taskCategoryChips [data-tcat]').forEach(chip => chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
+        const active = [...document.querySelectorAll('#taskCategoryChips .filter-chip.active')].map(c => c.dataset.tcat);
+        TASK_FILTERS.category = active; // array now, filtered() handles both shapes
+        renderTasks();
+      }));
 
       /* Budget */
       const br = document.getElementById('budgetRange');
@@ -168,11 +206,22 @@
 
       /* Reset */
       document.getElementById('taskFilterReset')?.addEventListener('click', () => {
-        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0 };
-        if (si) si.value = ''; if (li) li.value = '';
+        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0, types:[], urgencies:[] };
+        if (si) si.value = '';
+        const li = document.getElementById('taskLocationInput'); if (li) li.value = '';
         if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
-        document.querySelectorAll('[name="tcat"]')[0].checked = true;
+        document.querySelectorAll('[name="ttype"],[name="turg"]').forEach(c => c.checked = false);
+        document.querySelectorAll('#taskCategoryChips .filter-chip').forEach(c => c.classList.remove('active'));
         renderTasks();
+      });
+    }
+
+    function updateFilterCounts() {
+      document.querySelectorAll('[data-count-type]').forEach(el => {
+        el.textContent = ALL_TASKS.filter(t => t.task_type === el.dataset.countType).length || '';
+      });
+      document.querySelectorAll('[data-count-urgency]').forEach(el => {
+        el.textContent = ALL_TASKS.filter(t => t.urgency === el.dataset.countUrgency).length || '';
       });
     }
 
@@ -185,39 +234,70 @@
         const q = TASK_FILTERS.search.toLowerCase();
         f = f.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
       }
-      if (TASK_FILTERS.category) f = f.filter(t => t.category === TASK_FILTERS.category);
+      if (TASK_FILTERS.category && TASK_FILTERS.category.length) f = f.filter(t => TASK_FILTERS.category.includes(t.category));
       if (TASK_FILTERS.location) {
         const loc = TASK_FILTERS.location.toLowerCase();
         f = f.filter(t => (t.location||'').toLowerCase().includes(loc));
       }
       if (TASK_FILTERS.minBudget > 0) f = f.filter(t => (t.budget||0) >= TASK_FILTERS.minBudget);
+      if (TASK_FILTERS.types.length) f = f.filter(t => TASK_FILTERS.types.includes(t.task_type || 'one_off'));
+      if (TASK_FILTERS.urgencies.length) f = f.filter(t => TASK_FILTERS.urgencies.includes(t.urgency || 'flexible'));
 
       if (cnt) cnt.textContent = f.length;
       if (f.length === 0) { grid.innerHTML = ''; emp.style.display = 'block'; return; }
       emp.style.display = 'none';
-      grid.innerHTML = f.map(buildTaskRow).join('');
+      grid.innerHTML = f.map(buildTaskCard).join('');
     }
 
-    function buildTaskRow(t) {
-      const dead = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}) : 'Open-ended';
-      const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
-      const desc = t.description || '';
+    const CATEGORY_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechanic:'🔧', plumber:'🚰', beauty:'💄', other:'🛠️' };
+    const URGENCY_TAG = {
+      immediate: '<span class="spg-tag spg-tag-urgent">Urgent</span>',
+      flexible:  '<span class="spg-tag spg-tag-flexible">Flexible</span>',
+      scheduled: '<span class="spg-tag spg-tag-scheduled">Scheduled</span>',
+    };
+    const TYPE_LABEL = { full_time:'Full time', part_time:'Part time', one_off:'One-off', remote:'Remote', in_person:'In person' };
+
+    function buildTaskCard(t) {
+      const dead  = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short'}) : 'Open-ended';
+      const cat   = t.category || 'other';
+      const emoji = CATEGORY_EMOJI[cat] || '🛠️';
+      const desc  = t.description || '';
       const since = tAgo(t.created_at);
-      return `<div class="task-row">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;">
-          <div style="font-size:1rem;font-weight:700;color:var(--text-primary);">${t.title||'Untitled Task'}</div>
-          <div style="font-size:1.05rem;font-weight:800;color:var(--blue);flex-shrink:0;">₦${Number(t.budget||0).toLocaleString()}</div>
+      const photo = (t.photo_urls && t.photo_urls[0]) || null;
+      const type  = t.task_type || 'one_off';
+      const urg   = t.urgency || 'flexible';
+      const safeTitle = escapeHtml(t.title || 'Untitled Task');
+      const safeDesc  = escapeHtml(desc.slice(0,90)) + (desc.length > 90 ? '&hellip;' : '');
+
+      const mediaHtml = photo
+        ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;spg-card-badge&quot; style=&quot;position:static;margin:55px auto 0;&quot;>${emoji}</div>'" />`
+        : `<div class="spg-card-badge" style="position:static;margin:55px auto 0;">${emoji}</div>`;
+
+      return `<div class="spg-card fade-up">
+        <div class="spg-card-media">
+          ${mediaHtml}
+          <button class="spg-card-fav" aria-label="Save task" onclick="this.classList.toggle('active');this.style.color=this.classList.contains('active')?'var(--red)':''">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          </button>
+          ${photo ? `<div class="spg-card-badge">${emoji}</div>` : ''}
         </div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.55;">${desc.slice(0,200)}${desc.length>200?'…':''}</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">
-          <span>📍 ${t.location||'Location TBD'}</span>
-          <span>🏷 ${cat}</span>
-          <span>📅 Due: ${dead}</span>
-          <span class="task-row-badge status-open">Open</span>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">
-          <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
-          <button class="btn btn-primary btn-sm" onclick="openApply('${t.id}','${(t.title||'').replace(/'/g,"\\'")}','${desc.slice(0,80).replace(/'/g,"\\'")}')">Apply to Task</button>
+        <div class="spg-card-body">
+          <div class="spg-card-title">${safeTitle}</div>
+          <div class="spg-card-sub">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${escapeHtml(t.location || 'Location TBD')}
+          </div>
+          ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
+          <div class="spg-card-tags">
+            <span class="spg-tag spg-tag-type">${TYPE_LABEL[type] || 'One-off'}</span>
+            ${URGENCY_TAG[urg] || ''}
+            <span class="spg-tag spg-tag-specialty">Due ${dead}</span>
+          </div>
+          <div class="spg-card-footer">
+            <div class="spg-card-price">₦${Number(t.budget||0).toLocaleString()}<span> budget</span></div>
+            <div class="spg-card-posted">Posted ${since}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%;" onclick="openApply('${t.id}','${safeTitle.replace(/'/g,"\\'")}','${safeDesc.replace(/'/g,"\\'")}')">Apply to Task</button>
         </div>
       </div>`;
     }

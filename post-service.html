@@ -182,6 +182,23 @@
           </div>
 
           <div class="service-form-group">
+            <label class="service-form-label" for="svcAvailability">Availability</label>
+            <select id="svcAvailability" class="service-form-select">
+              <option value="available_now">Available now</option>
+              <option value="available_today">Available today</option>
+              <option value="available_this_week" selected>Available this week</option>
+            </select>
+          </div>
+
+          <div class="service-form-group">
+            <label class="service-form-label" for="svcSpecialties">Specialties
+              <span style="font-weight:400; color:var(--text-muted);">(comma-separated, optional)</span>
+            </label>
+            <input type="text" id="svcSpecialties" class="service-form-input"
+              placeholder="e.g. Wiring, Inverter installation, Solar panels" />
+          </div>
+
+          <div class="service-form-group">
             <label class="service-form-label">Profile / Work Photo
               <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
             </label>
@@ -490,6 +507,10 @@
           available = true  → already verified, listing goes live now
           available = false → draft, will publish automatically after verification
         */
+        var specialtiesRaw = document.getElementById('svcSpecialties')?.value || '';
+        var specialties = specialtiesRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var availabilityStatus = document.getElementById('svcAvailability')?.value || 'available_this_week';
+
         var payload = {
           user_id:      postUser.id,
           service_name: serviceName,
@@ -500,6 +521,8 @@
           description:  description,
           photo:        photoUrl || null,
           available:    isVerified,
+          specialties:  specialties,
+          availability_status: availabilityStatus,
         };
 
 
@@ -511,6 +534,17 @@
         } else {
           svcRes = await window.supabase.from('services')
             .insert(payload).select('id').single();
+        }
+        /* specialties/availability_status column doesn't exist yet
+           (migration_search_filters.sql not run) — retry without them */
+        if (svcRes.error && svcRes.error.code === '42703') {
+          var legacyPayload = { user_id: payload.user_id, service_name: payload.service_name,
+            category: payload.category, price: payload.price, rate_unit: payload.rate_unit,
+            location: payload.location, description: payload.description, photo: payload.photo,
+            available: payload.available };
+          svcRes = savedServiceId
+            ? await window.supabase.from('services').update(legacyPayload).eq('id', savedServiceId).select('id').single()
+            : await window.supabase.from('services').insert(legacyPayload).select('id').single();
         }
         if (svcRes.error) throw svcRes.error;
         savedServiceId = svcRes.data && svcRes.data.id;
