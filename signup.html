@@ -12,6 +12,18 @@
 <body>
   <div id="navbar-placeholder"></div>
 
+  <!-- Minimal header for the signup FORM step (Figma: just the wordmark, no full nav) -->
+  <div id="av2MiniHeader" class="av2-mini-header" style="display:none;">
+    <div class="av2-mini-header-inner">
+      <button type="button" class="av2-back-btn" onclick="showStep('choose')" aria-label="Back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back
+      </button>
+      <a href="index.html" class="av2-mini-logo">StreetTasker</a>
+      <span style="width:64px;"></span>
+    </div>
+  </div>
+
   <!-- STEP 1 — role chooser (Figma: "Mobile/Desktop Sign up Option") -->
   <section class="av2-page" id="stepChoose">
     <div class="av2-shell">
@@ -185,6 +197,9 @@
     function showStep(step) {
       document.getElementById('stepChoose').style.display = step === 'choose' ? '' : 'none';
       document.getElementById('stepCustomer').style.display = step === 'customer' ? '' : 'none';
+      /* Role-chooser frame has the full site nav; the form frame has only the small wordmark */
+      document.getElementById('navbar-placeholder').style.display = step === 'choose' ? '' : 'none';
+      document.getElementById('av2MiniHeader').style.display = step === 'customer' ? '' : 'none';
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
     (function () {

@@ -679,7 +679,9 @@ p  { color: var(--text-secondary); font-weight: 400; }
   padding: 14px 18px; border-bottom: 1px solid var(--border);
 }
 .filter-panel-head span { font-size: 0.875rem; font-weight: 700; }
-.filter-reset { font-size: 0.78rem; font-weight: 500; color: var(--blue); cursor: pointer; background: none; border: none; padding: 0; }
+.filter-reset { font-size: 0.78rem; font-weight: 500; color: var(--red); cursor: pointer; background: none; border: none; padding: 0; }
+.filter-reset:hover { text-decoration: underline; }
+.filter-group-label-row { display: flex; align-items: center; justify-content: space-between; }
 
 .filter-group { padding: 16px 18px; border-bottom: 1px solid var(--border); }
 .filter-group:last-child { border-bottom: none; }
@@ -2240,7 +2242,7 @@ img { max-width: 100%; height: auto; }
 
 /* ---- >=900px: literally the Desktop role-chooser frame (139:1086) ---- */
 @media (min-width: 900px) {
-  .av2-chooser-heading { margin-bottom: 32px; }
+  .av2-chooser-heading { margin-bottom: 80px; } /* extra clearance: work card shifts up 48px via transform, which doesn't affect layout flow — this prevents it visually overlapping the heading */
   .av2-chooser-heading h1 { font-weight: 800; font-size: 4.5rem; letter-spacing: -0.025em; line-height: 1; margin-bottom: 10px; }
   .av2-chooser-heading p { font-size: 1.5rem; color: #5E6561; }
 
@@ -2414,11 +2416,12 @@ img { max-width: 100%; height: auto; }
    Reuses existing .filter-panel/.filter-group/.filter-opt system
    and .hero-frame's dark gradient — only adds what's new.
    ================================================================ */
+.spg-hero-wrap { width: 100%; }
 .spg-hero {
-  position: relative; overflow: hidden;
+  position: relative; overflow: hidden; width: 100%;
   background: radial-gradient(ellipse 120% 100% at 15% 0%, var(--forest-mid) 0%, var(--forest) 45%, var(--forest-deep) 100%);
-  border-radius: var(--radius-xl);
-  padding: 56px 40px 88px;
+  border-radius: 0 0 40px 40px; /* full-bleed banner: square top (flush with nav), rounded bottom only */
+  padding: calc(var(--nav-height) + 56px) 40px 88px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
   min-height: 320px;
 }
@@ -2447,6 +2450,14 @@ img { max-width: 100%; height: auto; }
 
 /* filter counts + chip cloud — new additions to the existing filter system */
 .filter-opt-count { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+/* Figma search pages show the filter sidebar borderless, blended into
+   the page background — no white card, no dividers between groups. */
+.spg-layout .filter-panel { background: transparent; border: none; border-radius: 0; overflow: visible; }
+.spg-layout .filter-panel-head { padding: 0 0 4px; }
+.spg-layout .filter-group { padding: 20px 0; border-bottom: none; }
+.spg-layout .filter-group:first-child { padding-top: 0; }
+.spg-layout .filter-group-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text-primary); }
 .filter-chip-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
 .filter-chip {
   padding: 6px 14px; border-radius: 9999px; border: 1.5px solid var(--border);
@@ -2486,6 +2497,7 @@ img { max-width: 100%; height: auto; }
 .spg-card-body { padding: 22px 16px 16px; display: flex; flex-direction: column; flex-grow: 1; }
 .spg-card-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; line-height: 1.35; }
 .spg-card-sub { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+.spg-card-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: var(--mint); font-size: 0.7rem; flex-shrink: 0; }
 .spg-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; flex-grow: 1; }
 .spg-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .spg-tag { font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; }
@@ -2506,6 +2518,34 @@ img { max-width: 100%; height: auto; }
   .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 16px 0; }
   .spg-searchbar-divider { display: none; }
   .spg-searchbar button { margin-top: 4px; padding: 12px; }
-  .spg-hero { padding: 40px 20px 64px; }
+  .spg-hero { padding: calc(var(--nav-height) + 40px) 20px 64px; border-radius: 0 0 28px 28px; }
   .filter-sidebar { position: static; }
 }
+
+/* Minimal header for the signup FORM step — Figma shows only the
+   wordmark here (no full nav); fixed at the same height as #navbar
+   so .av2-page's existing padding-top works for both states. */
+.av2-mini-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: var(--nav-height); background: var(--white); border-bottom: 1px solid var(--border);
+}
+.av2-mini-header-inner {
+  height: 100%; max-width: 1160px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.av2-back-btn {
+  display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer;
+  font-family: var(--font-heading); font-size: 0.9rem; font-weight: 600; color: var(--auth-body, var(--text-secondary));
+  padding: 8px 10px; border-radius: 8px; transition: background var(--t) var(--ease);
+}
+.av2-back-btn:hover { background: var(--gray-100); color: var(--text-primary); }
+.av2-mini-logo { font-family: var(--font-heading); font-weight: 800; font-size: 1.15rem; color: var(--auth-green, #006A43); text-decoration: none; }
+
+/* Tasks/Taskers segmented toggle next to the results count (Figma) */
+.spg-tab-toggle { display: inline-flex; background: var(--gray-100); border-radius: 9999px; padding: 3px; gap: 2px; }
+.spg-tab {
+  padding: 6px 16px; border-radius: 9999px; font-size: 0.82rem; font-weight: 600;
+  color: var(--text-secondary); text-decoration: none; transition: all var(--t) var(--ease);
+}
+.spg-tab:hover { color: var(--text-primary); }
+.spg-tab.active { background: var(--white); color: var(--text-primary); box-shadow: var(--shadow-sm); }

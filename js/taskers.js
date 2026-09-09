@@ -265,45 +265,49 @@ function buildCard(s) {
   const safeName    = escapeHtml(s.provider_name || 'Provider');
   const safeService = escapeHtml(s.service_name || '');
   const safeLoc      = escapeHtml(s.location || 'Lagos');
-  const safeDesc     = escapeHtml((s.description || '').slice(0, 90)) + ((s.description||'').length > 90 ? '&hellip;' : '');
+  const safeDesc     = escapeHtml((s.description || '').slice(0, 100)) + ((s.description||'').length > 100 ? '&hellip;' : '');
   const safePhoto    = escapeHtml(s.photo || '');
   const safeId        = escapeHtml(s.id || '');
   const safeUserId    = escapeHtml(s.user_id || '');
   const initials    = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-  const stars = Array.from({length:5}, (_,i) =>
-    `<span style="color:${i < Math.round(s.rating) ? 'var(--amber)' : 'var(--border-strong)'}">★</span>`).join('');
+  const avIdx       = (['s1','s2','s3','s4','s5','s6'].indexOf(s.id) + 1) || ((s.id.charCodeAt(0) % 6) + 1);
+  const avClass     = `av-${avIdx}`;
 
   const profileUrl = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
 
-  const mediaHtml = safePhoto
-    ? `<img src="${safePhoto}" alt="${safeName}" onerror="this.parentElement.innerHTML='<div class=&quot;spg-card-badge&quot; style=&quot;position:static;margin:55px auto 0;border-radius:50%;width:56px;height:56px;font-weight:700;color:var(--text-secondary);&quot;>${initials}</div>'" />`
-    : `<div class="spg-card-badge" style="position:static;margin:55px auto 0;border-radius:50%;width:56px;height:56px;font-weight:700;color:var(--text-secondary);">${initials}</div>`;
+  const avatar = safePhoto
+    ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.textContent='${initials}'" />`
+    : initials;
 
   const specialtyTags = (s.specialties || []).slice(0, SPECIALTY_TAG_LIMIT)
     .map(sp => `<span class="spg-tag spg-tag-specialty">${escapeHtml(sp)}</span>`).join('');
 
-  return `<div class="spg-card fade-up" id="svc-${safeId}">
-    <div class="spg-card-media">
-      ${mediaHtml}
-      ${s.verified ? `<div class="spg-card-verified" title="Verified"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : `<div class="spg-card-badge">${initials}</div>`}
+  /* Rating/verification badge row (like Figma's "Verified Pro"/"Top Rated"/"Elite Tasker") */
+  const ratingBadge = s.verified
+    ? '<span class="spg-tag spg-tag-verified">Verified Pro</span>'
+    : (s.rating >= 4.8 ? '<span class="spg-tag" style="background:#FEF3C7;color:#92400E;">Top Rated</span>' : '');
+
+  return `<div class="spg-card fade-up" id="svc-${safeId}" style="padding:20px;">
+    <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:10px;">
+      <div class="tasker-avatar ${avClass}" style="overflow:hidden; flex-shrink:0;">${avatar}</div>
+      <div style="min-width:0; flex-grow:1;">
+        <div class="spg-card-title">${safeName}</div>
+        <div class="spg-card-sub" style="margin-bottom:0;">${safeService} &middot; ${safeLoc}</div>
+      </div>
+      <button class="spg-card-fav" style="position:static;" aria-label="Save tasker" onclick="this.classList.toggle('active');this.style.color=this.classList.contains('active')?'var(--red)':''">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </button>
     </div>
-    <div class="spg-card-body">
-      <div class="spg-card-title">${safeName}</div>
-      <div class="spg-card-sub">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${safeLoc} &middot; ${safeService}
-      </div>
-      <div class="spg-card-stars">${stars} <span style="color:var(--text-muted);">${s.rating.toFixed(1)}${s.reviews ? ` (${s.reviews})` : ''}</span></div>
-      ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
-      <div class="spg-card-tags">
-        ${s.verified ? '<span class="spg-tag spg-tag-verified">Verified Pro</span>' : ''}
-        <span class="spg-tag spg-tag-flexible">${AVAILABILITY_LABEL[s.availability_status] || 'Available this week'}</span>
-        ${specialtyTags}
-      </div>
-      <div class="spg-card-footer">
-        <div class="spg-card-price">₦${Number(s.price).toLocaleString()}<span> ${s.rate_unit || '/session'}</span></div>
-        <a href="${profileUrl}" class="btn btn-primary btn-sm" style="text-decoration:none;">View Profile</a>
-      </div>
+    <div class="spg-card-stars" style="margin-bottom:8px;">★ <span>${s.rating.toFixed(1)}</span> <span style="color:var(--text-muted);">(${s.reviews||0} reviews)</span></div>
+    <div class="spg-card-tags">
+      ${ratingBadge}
+      <span class="spg-tag spg-tag-flexible">${AVAILABILITY_LABEL[s.availability_status] || 'Available this week'}</span>
+      ${specialtyTags}
+    </div>
+    ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
+    <div class="spg-card-footer">
+      <div class="spg-card-price">₦${Number(s.price).toLocaleString()}<span> ${s.rate_unit || '/hour'}</span></div>
+      <a href="${profileUrl}" class="btn btn-primary btn-sm" style="text-decoration:none;">Book Tasker</a>
     </div>
   </div>`;
 }

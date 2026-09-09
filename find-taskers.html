@@ -66,15 +66,15 @@
   <div id="navbar-placeholder"></div>
 
 
-  <div class="container" style="padding-top:24px;">
-    <div class="spg-hero">
-      <div class="spg-hero-eyebrow fade-up">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-1px;margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        12 Taskers Near You
-      </div>
-      <h1 class="fade-up d1">Find your perfect tasker</h1>
-      <p class="fade-up d2">Browse skilled local workers, compare ratings, and get things done.</p>
+  <div class="spg-hero">
+    <div class="spg-hero-eyebrow fade-up">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-1px;margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      12 Taskers Near You
     </div>
+    <h1 class="fade-up d1">Find your perfect tasker</h1>
+    <p class="fade-up d2">Browse skilled local workers, compare ratings, and get things done.</p>
+  </div>
+  <div class="container">
     <form id="taskerSearchForm" class="spg-searchbar fade-up d3" novalidate>
       <div class="spg-searchbar-field">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -137,16 +137,14 @@
       <!-- Filter sidebar -->
       <aside class="filter-sidebar fade-up">
         <div class="filter-panel">
-          <div class="filter-panel-head">
-            <span>Filters</span>
-            <button class="filter-reset" id="filterReset">Reset all</button>
-          </div>
-
           <!-- Availability -->
           <div class="filter-group">
-            <div class="filter-group-label">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Availability
+            <div class="filter-group-label filter-group-label-row">
+              <span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-1px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Availability
+              </span>
+              <button class="filter-reset" id="filterReset">Clear all</button>
             </div>
             <label class="filter-opt"><input type="checkbox" name="tavail" value="available_now" /> Available now <span class="filter-opt-count" data-count-avail="available_now"></span></label>
             <label class="filter-opt"><input type="checkbox" name="tavail" value="available_today" /> Available today <span class="filter-opt-count" data-count-avail="available_today"></span></label>
@@ -202,8 +200,12 @@
       <!-- Results grid -->
       <main>
         <div class="results-bar fade-up">
-          <div>
+          <div style="display:flex; align-items:center; gap:16px;">
             <div class="results-count"><strong id="resultsCount">—</strong> taskers found</div>
+            <div class="spg-tab-toggle">
+              <a href="find-tasks.html" class="spg-tab">Tasks</a>
+              <a href="find-taskers.html" class="spg-tab active">Taskers</a>
+            </div>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
             <button class="btn btn-ghost btn-sm" onclick="showToast('Map view is in development')">

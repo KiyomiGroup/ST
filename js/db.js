@@ -71,7 +71,7 @@ async function postTask({ title, description, category, budget, location, deadli
 }
 
 async function fetchTasks({ limit = 50, category = '' } = {}) {
-  let q = window.supabase.from('tasks').select('*')
+  let q = window.supabase.from('tasks').select('*, users:user_id(name, business_name)')
     .eq('status', 'open').order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
   const { data, error } = await q;
