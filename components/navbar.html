@@ -1,4 +1,4 @@
-<!-- StreetTasker Navbar v3 — inline, no async fetch, instant render -->
+<!-- StreetTasker Navbar v4 — matches Figma homepage nav -->
 <nav id="navbar">
   <div class="nav-inner">
 
@@ -14,14 +14,14 @@
     <ul class="nav-links" role="navigation">
       <li>
         <!-- href/label set instantly by initNavbarAuth() from localStorage -->
-        <a href="post-task.html" class="nav-link nav-cta" id="nav-action">
+        <a href="post-task.html" class="btn btn-primary btn-sm nav-post-btn" id="nav-action">
           <span id="nav-action-label">Post a Task</span>
         </a>
       </li>
-      <li><a href="index.html#categories" class="nav-link">Categories</a></li>
-      <li><a href="find-tasks.html" class="nav-link" id="nav-explore">Browse Task</a></li>
-      <li><a href="index.html#how-it-works" class="nav-link">How it Works</a></li>
-      <li><a href="find-taskers.html" class="nav-link" id="nav-find">Local Taskers</a></li>
+      <li><a href="find-tasks.html" class="nav-link">Find Tasks</a></li>
+      <li><a href="find-taskers.html" class="nav-link">Find Taskers</a></li>
+      <li><span class="nav-link nav-link-disabled" aria-disabled="true" title="Coming soon">Gift Cards</span></li>
+      <li><span class="nav-link nav-link-disabled" aria-disabled="true" title="Coming soon">Local Taskers</span></li>
       <li>
         <a href="dashboard-customer.html" class="nav-link logged-in-only" id="nav-dashboard">Dashboard</a>
       </li>
@@ -31,7 +31,7 @@
       <!-- Logged-out state — hidden once auth resolves -->
       <a href="signup.html" class="btn btn-text btn-sm" id="nav-signup">Sign Up</a>
       <a href="login.html"  class="btn btn-text btn-sm" id="nav-login">Log in</a>
-      <a href="onboarding-tasker.html" class="btn btn-mint btn-sm">Become a Tasker</a>
+      <span class="btn btn-mint btn-sm nav-become-btn nav-link-disabled" aria-disabled="true" title="Coming soon">Become a Tasker</span>
       <!-- Logged-in state — hidden until auth resolves -->
       <span id="navUserName" class="nav-user-chip"></span>
       <button id="navLogout" class="btn btn-ghost btn-sm" onclick="window.ST?.auth?.logoutUser()">
@@ -50,15 +50,15 @@
 <!-- Mobile menu -->
 <div class="nav-mobile" id="navMobile">
   <a href="post-task.html" class="nav-link" id="nav-mobile-action">Post a Task</a>
-  <a href="index.html#categories" class="nav-link">Categories</a>
-  <a href="find-tasks.html" class="nav-link">Browse Task</a>
-  <a href="index.html#how-it-works" class="nav-link">How it Works</a>
-  <a href="find-taskers.html" class="nav-link">Local Taskers</a>
+  <a href="find-tasks.html" class="nav-link">Find Tasks</a>
+  <a href="find-taskers.html" class="nav-link">Find Taskers</a>
+  <span class="nav-link nav-link-disabled" aria-disabled="true">Gift Cards</span>
+  <span class="nav-link nav-link-disabled" aria-disabled="true">Local Taskers</span>
   <a href="dashboard-customer.html" class="nav-link logged-in-only" id="nav-mobile-dashboard">Dashboard</a>
   <div class="nav-mobile-actions">
     <a href="signup.html" class="btn btn-ghost   btn-full" id="nav-mobile-signup">Sign Up</a>
     <a href="login.html"  class="btn btn-ghost   btn-full" id="nav-mobile-login">Log in</a>
-    <a href="onboarding-tasker.html" class="btn btn-mint btn-full">Become a Tasker</a>
+    <span class="btn btn-mint btn-full nav-link-disabled" aria-disabled="true">Become a Tasker</span>
     <button id="navMobileLogout" class="btn btn-ghost btn-full" style="display:none;" onclick="window.ST?.auth?.logoutUser()">Logout</button>
   </div>
 </div>
