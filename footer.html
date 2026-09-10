@@ -1,0 +1,108 @@
+<!-- ============================================================
+     STREET TASKERS — Footer Component v3
+     Light 5-column footer matching the homepage reference design.
+     ============================================================ -->
+
+<footer id="footer">
+  <div class="container">
+    <div class="footer-top">
+
+      <!-- Brand column -->
+      <div class="footer-col footer-brand">
+        <a href="index.html" class="footer-logo" aria-label="StreetTasker home">
+          <img src="images/logo-nav.svg" alt="StreetTasker" />
+        </a>
+        <p>Your local service marketplace.</p>
+      </div>
+
+      <!-- For Customers -->
+      <details class="footer-col footer-accordion">
+        <summary>
+          <h4>For Customers</h4>
+          <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <ul>
+          <li><a href="find-tasks.html">Explore tasks</a></li>
+          <li><a href="find-taskers.html">Popular categories</a></li>
+          <li><a href="index.html#how-it-works">How it works</a></li>
+          <li><a href="subscription.html">Pricing</a></li>
+          <li><a href="#">Help center</a></li>
+          <li><a href="#">Contact us</a></li>
+        </ul>
+      </details>
+
+      <!-- For Taskers -->
+      <details class="footer-col footer-accordion">
+        <summary>
+          <h4>For Taskers</h4>
+          <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <ul>
+          <li><a href="onboarding-tasker.html">Become a Tasker</a></li>
+          <li><a href="#">Tasker resources</a></li>
+          <li><a href="#">Community</a></li>
+          <li><a href="#">Success stories</a></li>
+        </ul>
+      </details>
+
+      <!-- Company -->
+      <details class="footer-col footer-accordion">
+        <summary>
+          <h4>Company</h4>
+          <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <ul>
+          <li><a href="#">About us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Safety</a></li>
+          <li><a href="terms.html#safety">Trust &amp; safety</a></li>
+        </ul>
+      </details>
+
+      <!-- Legal -->
+      <details class="footer-col footer-accordion">
+        <summary>
+          <h4>Legal</h4>
+          <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <ul>
+          <li><a href="terms.html">Terms of service</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+          <li><a href="privacy.html#cookies">Cookie policy</a></li>
+          <li><a href="#">Accessibility</a></li>
+        </ul>
+      </details>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 StreetTasker. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* Footer accordion: collapsed by default on mobile, always expanded on desktop.
+     <details> hides its content natively in a way plain CSS can't override, so we
+     sync the `open` attribute with viewport width instead. */
+  (function () {
+    var groups = document.querySelectorAll('.footer-accordion');
+    function sync() {
+      var isDesktop = window.matchMedia('(min-width: 641px)').matches;
+      groups.forEach(function (d) {
+        if (isDesktop) { d.setAttribute('open', ''); }
+        else if (!d.dataset.userToggled) { d.removeAttribute('open'); }
+      });
+    }
+    groups.forEach(function (d) {
+      d.addEventListener('toggle', function () { d.dataset.userToggled = '1'; });
+    });
+    sync();
+    window.addEventListener('resize', sync);
+  })();
+</script>
+
+<!-- Toast element (shared) -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>

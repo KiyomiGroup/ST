@@ -262,13 +262,17 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .nav-logo-text { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.04em; color: var(--charcoal); text-transform: uppercase; }
 
 .nav-links { display: flex; align-items: center; gap: 4px; flex: 1; }
-.nav-post-btn { margin-right: 10px; }
-.nav-link.nav-cta {
-  padding: 9px 18px; background: var(--blue); color: var(--white) !important;
-  border-radius: var(--radius-pill); font-weight: 700;
-}
-.nav-link.nav-cta:hover { background: var(--blue-hover); }
 .nav-link.logged-in-only { display: none; }
+
+/* Post a Task / Become a Tasker — pinned to a shared 40px height per Figma */
+.nav-post-btn, .nav-become-btn {
+  height: 40px; padding: 0 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-right: 10px;
+}
+
+/* Nav items with no destination page yet (Gift Cards, Local Taskers, Become a Tasker) */
+.nav-link-disabled { cursor: default; opacity: 0.5; pointer-events: none; }
 .nav-link {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 12px; border-radius: var(--radius-sm);
@@ -679,7 +683,9 @@ p  { color: var(--text-secondary); font-weight: 400; }
   padding: 14px 18px; border-bottom: 1px solid var(--border);
 }
 .filter-panel-head span { font-size: 0.875rem; font-weight: 700; }
-.filter-reset { font-size: 0.78rem; font-weight: 500; color: var(--blue); cursor: pointer; background: none; border: none; padding: 0; }
+.filter-reset { font-size: 0.78rem; font-weight: 500; color: var(--red); cursor: pointer; background: none; border: none; padding: 0; }
+.filter-reset:hover { text-decoration: underline; }
+.filter-group-label-row { display: flex; align-items: center; justify-content: space-between; }
 
 .filter-group { padding: 16px 18px; border-bottom: 1px solid var(--border); }
 .filter-group:last-child { border-bottom: none; }
@@ -2195,22 +2201,23 @@ img { max-width: 100%; height: auto; }
   display: flex; align-items: center; justify-content: center;
   color: var(--auth-green); margin: 0 auto 16px; transform: rotate(3deg);
 }
-.av2-chooser-heading { text-align: center; margin-bottom: 32px; }
+.av2-chooser-heading { text-align: center; margin-bottom: 24px; }
 .av2-chooser-heading h1 {
-  font-family: var(--font-heading); font-weight: 800;
-  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 4.5rem);
-  color: var(--auth-ink); letter-spacing: -0.02em; margin-bottom: 10px; line-height: 1.15;
+  font-family: var(--font-heading); font-weight: 700;
+  font-size: 1.75rem; color: var(--auth-ink); letter-spacing: -0.02em;
+  margin-bottom: 8px; line-height: 1.25;
 }
-.av2-chooser-heading p { font-family: var(--font-heading); color: var(--auth-body); font-size: clamp(1.05rem, .9rem + .4vw, 1.5rem); }
+.av2-chooser-heading p { font-family: var(--font-heading); color: var(--auth-body); font-size: 1.125rem; }
 
-.av2-role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 980px; margin: 0 auto; }
+.av2-role-grid { display: flex; flex-direction: column; gap: 16px; max-width: 460px; margin: 0 auto; }
+.av2-role-card-wrap { min-width: 0; }
 .av2-role-card {
   position: relative; overflow: hidden; min-width: 0;
   background: rgba(255,255,255,0.7);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.4);
   border-radius: 22px;
-  padding: 30px; box-shadow: 0 7px 29px rgba(0,106,67,0.08);
+  padding: 30px; box-shadow: 0 7px 29px rgba(0,106,67,0.05);
   display: flex; flex-direction: column; align-items: center; text-align: center;
 }
 .av2-role-icon {
@@ -2218,13 +2225,13 @@ img { max-width: 100%; height: auto; }
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 14px; color: var(--auth-green);
   background: linear-gradient(135deg, #90F7BF 0%, #A1F4C5 100%);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
-.av2-role-card--hire .av2-role-icon { transform: rotate(3deg); }
-.av2-role-card--work .av2-role-icon { transform: rotate(-3deg); }
-.av2-role-card h3 { font-family: var(--font-heading); font-weight: 800; font-size: 1.35rem; color: var(--auth-ink); margin-bottom: 8px; }
-.av2-role-card p { color: var(--auth-body); font-size: 0.92rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+.av2-role-card h3 { font-family: var(--font-heading); font-weight: 800; font-size: 1.375rem; color: var(--auth-ink); margin-bottom: 8px; }
+.av2-role-card p { color: var(--auth-body); font-size: 1rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
 .av2-role-card .btn { width: 100%; border-radius: 9999px; }
+/* mobile: "I need help" solid dark green; "I want to work" neutral gray outline */
+.av2-role-card .btn-primary { background: var(--auth-green); }
+.av2-role-card .btn-primary:hover { background: #005938; }
 .av2-role-card .btn-outline { background: #F9F9F7; border: 1.5px solid #E2E3E0; color: var(--auth-ink); }
 .av2-role-card .btn-outline:hover { background: #F0F0EE; border-color: #C9CBC7; }
 
@@ -2237,10 +2244,43 @@ img { max-width: 100%; height: auto; }
 }
 .av2-login-pill a { color: var(--auth-green); font-weight: 700; }
 
-@media (max-width: 780px) {
-  .av2-shell { padding: 24px 16px 40px; }
-  .av2-role-grid { grid-template-columns: 1fr; gap: 16px; }
-  .av2-chooser-heading { margin-bottom: 24px; }
+/* ---- >=900px: literally the Desktop role-chooser frame (139:1086) ---- */
+@media (min-width: 900px) {
+  .av2-chooser-heading { margin-bottom: 80px; } /* extra clearance: work card shifts up 48px via transform, which doesn't affect layout flow — this prevents it visually overlapping the heading */
+  .av2-chooser-heading h1 { font-weight: 800; font-size: 4.5rem; letter-spacing: -0.025em; line-height: 1; margin-bottom: 10px; }
+  .av2-chooser-heading p { font-size: 1.5rem; color: #5E6561; }
+
+  .av2-role-grid { flex-direction: row; align-items: flex-start; gap: 64px; max-width: 1152px; }
+  .av2-role-card-wrap { flex: 1; min-width: 0; }
+  .av2-role-card-wrap--hire { padding-top: 48px; }
+  .av2-role-card-wrap--work { padding-top: 0; }
+  .av2-role-card-wrap--work .av2-role-card { transform: translateY(-48px); }
+
+  .av2-role-card { padding: 49px; border-radius: 24px; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
+  .av2-role-icon { width: 80px; height: 80px; border-radius: 16px; margin-bottom: 22px; }
+  .av2-role-card--hire .av2-role-icon { background: linear-gradient(135deg, rgba(22,138,91,0.2) 0%, rgba(22,138,91,0.05) 100%); transform: rotate(3deg); }
+  .av2-role-card--work .av2-role-icon { background: linear-gradient(135deg, rgba(17,108,71,0.2) 0%, rgba(17,108,71,0.05) 100%); transform: rotate(-3deg); }
+  .av2-role-card h3 { font-size: 1.875rem; line-height: 1.2; }
+  .av2-role-card p { font-size: 1.125rem; margin-bottom: 28px; }
+
+  /* corner blobs — hire: top-right quarter circle; work: larger bottom-left quarter circle */
+  .av2-role-card--hire::before {
+    content: ''; position: absolute; top: -16px; right: -16px; width: 128px; height: 128px;
+    background: rgba(22,138,91,0.1); border-radius: 0 0 0 9999px; z-index: 0;
+  }
+  .av2-role-card--work::before {
+    content: ''; position: absolute; bottom: -16px; left: -16px; width: 160px; height: 160px;
+    background: rgba(17,108,71,0.1); border-radius: 0 9999px 0 0; z-index: 0;
+  }
+  .av2-role-card > * { position: relative; z-index: 1; }
+
+  /* desktop button colors differ from mobile */
+  .av2-role-card .btn-primary { background: var(--auth-green-mid); }
+  .av2-role-card .btn-primary:hover { background: var(--auth-green); }
+  .av2-role-card .btn-outline { background: #F9F9F7; border: 2px solid var(--auth-green-mid); color: var(--auth-green-mid); }
+  .av2-role-card .btn-outline:hover { background: #F0FBF5; }
+
+  .av2-login-pill { max-width: none; display: inline-flex; margin: 32px auto 0; padding: 17px 33px; font-size: 1.125rem; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
 }
 
 /* ── Step 2: signup / tasker forms ──────────────────────────── */
@@ -2372,3 +2412,144 @@ img { max-width: 100%; height: auto; }
   .av2-form-panel::before { display: none; }
   .av2-shell { padding: 24px 16px 48px; }
 }
+
+/* ================================================================
+   SEARCH PAGES — Find Tasks (189:3933) / Find Taskers (190:4616)
+   Figma-exact: dark rounded hero shell + floating capsule search,
+   sidebar filters with counts, and photo-forward result cards.
+   Reuses existing .filter-panel/.filter-group/.filter-opt system
+   and .hero-frame's dark gradient — only adds what's new.
+   ================================================================ */
+.spg-hero-wrap { width: 100%; }
+.spg-hero {
+  position: relative; overflow: hidden; width: 100%;
+  background: radial-gradient(ellipse 120% 100% at 15% 0%, var(--forest-mid) 0%, var(--forest) 45%, var(--forest-deep) 100%);
+  border-radius: 0 0 40px 40px; /* full-bleed banner: square top (flush with nav), rounded bottom only */
+  padding: calc(var(--nav-height) + 56px) 40px 88px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  min-height: 320px;
+}
+.spg-hero-eyebrow {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(255,255,255,0.6); margin-bottom: 14px;
+}
+.spg-hero h1 {
+  font-family: var(--font-heading); font-weight: 800; color: var(--white);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem); letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.15;
+}
+.spg-hero p { color: rgba(255,255,255,0.75); font-size: 1.05rem; max-width: 480px; }
+
+.spg-searchbar {
+  position: relative; z-index: 2; margin: -48px auto 0; max-width: 880px;
+  background: var(--white); border-radius: 9999px; box-shadow: var(--shadow-xl);
+  display: flex; align-items: stretch; padding: 8px; gap: 4px;
+}
+.spg-searchbar-field { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 18px; min-width: 0; }
+.spg-searchbar-field svg { color: var(--text-muted); flex-shrink: 0; }
+.spg-searchbar-field input { border: none; outline: none; font-size: 0.92rem; width: 100%; background: none; font-family: var(--font); color: var(--text-primary); }
+.spg-searchbar-divider { width: 1px; background: var(--border); margin: 8px 0; flex-shrink: 0; }
+.spg-searchbar button { border-radius: 9999px; flex-shrink: 0; padding: 0 28px; }
+
+.spg-layout { display: grid; grid-template-columns: 280px 1fr; gap: 32px; margin-top: 40px; align-items: start; }
+
+/* filter counts + chip cloud — new additions to the existing filter system */
+.filter-opt-count { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+/* Figma search pages show the filter sidebar borderless, blended into
+   the page background — no white card, no dividers between groups. */
+.spg-layout .filter-panel { background: transparent; border: none; border-radius: 0; overflow: visible; }
+.spg-layout .filter-panel-head { padding: 0 0 4px; }
+.spg-layout .filter-group { padding: 20px 0; border-bottom: none; }
+.spg-layout .filter-group:first-child { padding-top: 0; }
+.spg-layout .filter-group-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text-primary); }
+.filter-chip-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip {
+  padding: 6px 14px; border-radius: 9999px; border: 1.5px solid var(--border);
+  background: var(--white); font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;
+  transition: all var(--t) var(--ease);
+}
+.filter-chip:hover { border-color: var(--border-strong); }
+.filter-chip.active { background: var(--blue); border-color: var(--blue); color: var(--white); }
+.range-dual { display: flex; align-items: center; gap: 10px; }
+.range-dual .filter-range { flex: 1; }
+
+/* result cards — shared skeleton for both task cards and tasker cards */
+.spg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
+.spg-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; display: flex; flex-direction: column; transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.spg-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.spg-card-media { position: relative; height: 150px; background: var(--gray-100); flex-shrink: 0; }
+.spg-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.spg-card-fav {
+  position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.9); border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary); backdrop-filter: blur(4px);
+}
+.spg-card-fav:hover { color: var(--red); }
+.spg-card-badge {
+  position: absolute; bottom: -14px; left: 14px; width: 40px; height: 40px; border-radius: 12px;
+  background: var(--white); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; border: 1px solid var(--border);
+}
+.spg-card-verified {
+  position: absolute; bottom: -14px; left: 14px; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--blue); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center;
+  color: var(--white); border: 2px solid var(--white);
+}
+.spg-card-body { padding: 22px 16px 16px; display: flex; flex-direction: column; flex-grow: 1; }
+.spg-card-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; line-height: 1.35; }
+.spg-card-sub { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+.spg-card-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: var(--mint); font-size: 0.7rem; flex-shrink: 0; }
+.spg-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; flex-grow: 1; }
+.spg-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.spg-tag { font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; }
+.spg-tag-type { background: var(--blue-light); color: var(--blue); }
+.spg-tag-urgent { background: #FEE2E2; color: #B91C1C; }
+.spg-tag-flexible { background: var(--mint); color: var(--forest); }
+.spg-tag-scheduled { background: #E0E7FF; color: #3730A3; }
+.spg-tag-specialty { background: var(--gray-100); color: var(--text-secondary); }
+.spg-tag-verified { background: var(--mint); color: var(--forest); }
+.spg-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto; }
+.spg-card-price { font-weight: 800; font-size: 1rem; color: var(--text-primary); }
+.spg-card-price span { font-weight: 500; font-size: 0.72rem; color: var(--text-muted); }
+.spg-card-posted { font-size: 0.72rem; color: var(--text-muted); }
+.spg-card-stars { color: var(--amber); font-size: 0.78rem; display: flex; align-items: center; gap: 4px; }
+
+@media (max-width: 900px) {
+  .spg-layout { grid-template-columns: 1fr; }
+  .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 16px 0; }
+  .spg-searchbar-divider { display: none; }
+  .spg-searchbar button { margin-top: 4px; padding: 12px; }
+  .spg-hero { padding: calc(var(--nav-height) + 40px) 20px 64px; border-radius: 0 0 28px 28px; }
+  .filter-sidebar { position: static; }
+}
+
+/* Minimal header for the signup FORM step — Figma shows only the
+   wordmark here (no full nav); fixed at the same height as #navbar
+   so .av2-page's existing padding-top works for both states. */
+.av2-mini-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: var(--nav-height); background: var(--white); border-bottom: 1px solid var(--border);
+}
+.av2-mini-header-inner {
+  height: 100%; max-width: 1160px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.av2-back-btn {
+  display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer;
+  font-family: var(--font-heading); font-size: 0.9rem; font-weight: 600; color: var(--auth-body, var(--text-secondary));
+  padding: 8px 10px; border-radius: 8px; transition: background var(--t) var(--ease);
+}
+.av2-back-btn:hover { background: var(--gray-100); color: var(--text-primary); }
+.av2-mini-logo { font-family: var(--font-heading); font-weight: 800; font-size: 1.15rem; color: var(--auth-green, #006A43); text-decoration: none; }
+
+/* Tasks/Taskers segmented toggle next to the results count (Figma) */
+.spg-tab-toggle { display: inline-flex; background: var(--gray-100); border-radius: 9999px; padding: 3px; gap: 2px; }
+.spg-tab {
+  padding: 6px 16px; border-radius: 9999px; font-size: 0.82rem; font-weight: 600;
+  color: var(--text-secondary); text-decoration: none; transition: all var(--t) var(--ease);
+}
+.spg-tab:hover { color: var(--text-primary); }
+.spg-tab.active { background: var(--white); color: var(--text-primary); box-shadow: var(--shadow-sm); }
