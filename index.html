@@ -131,15 +131,15 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="container">
-      <div class="hero-frame">
+    <div class="container-home">
+      <div class="hero-frame" id="heroFrame">
         <div class="hero-eyebrow">Get Things Done</div>
 
-        <div class="hero-pill-float left">
+        <div class="hero-pill-float left hero-floater">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Find a task
         </div>
-        <div class="hero-pill-float right">
+        <div class="hero-pill-float right hero-floater">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Post a task
         </div>
@@ -152,28 +152,28 @@
         <p class="hero-sub">Find the right person for the task you need done.</p>
 
         <div class="hero-frame-actions">
-          <a href="post-task.html" class="btn btn-primary btn-lg">Post a Task</a>
-          <a href="find-taskers.html" class="btn btn-white btn-lg">Find a Tasker</a>
+          <a href="post-task.html" class="btn btn-primary btn-lg">Post your task for free</a>
+          <a href="onboarding-tasker.html" class="btn btn-white btn-lg">Earn money as a Tasker</a>
         </div>
 
-        <div class="hero-float-card">
+        <div class="hero-float-card hero-floater">
           <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <div><div class="fc-title">Clean my apartment</div><div class="fc-price">&#8358;25,000</div></div>
         </div>
-        <div class="hero-float-badge2"><span class="dot"></span>127 tasks posted today</div>
+        <div class="hero-float-badge2 hero-floater"><span class="dot"></span>127 tasks posted today</div>
       </div>
     </div>
   </section>
 
   <!-- WHAT DO YOU NEED HELP WITH -->
   <section class="need-help-section">
-    <div class="container">
+    <div class="container-home">
       <h2>What do you need help with?</h2>
-      <p>Tell us what you need...</p>
+      <p>Tell us what you need and we'll help you find the right person.</p>
       <form id="heroSearchForm" onsubmit="handleHeroSearch(event)" novalidate>
         <div class="need-help-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--text-muted);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="heroServiceInput" name="service" placeholder="e.g. Help moving boxes" autocomplete="off" />
+          <input type="text" id="heroServiceInput" name="service" placeholder="Describe what you need done..." autocomplete="off" />
           <div id="heroServiceSuggestions" style="position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);z-index:200;display:none;max-height:220px;overflow-y:auto;text-align:left;"></div>
           <input type="text" id="heroLocationInput" name="location" placeholder="Location" autocomplete="off" style="display:none;" />
           <div id="heroLocationSuggestions" class="location-suggestions" style="display:none;"></div>
@@ -183,20 +183,47 @@
           </button>
         </div>
       </form>
-      <div class="need-help-chips">
-        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Cleaning';">Cleaning</button>
-        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Moving';">Moving</button>
-        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Repairs';">Repair</button>
-        <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Delivery';">Delivery</button>
+      <div class="need-help-chips" id="chipsMarquee">
+        <div class="need-help-chips-track">
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Cleaning';">Cleaning</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Moving';">Moving</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Repairs';">Repairs</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Delivery';">Delivery</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Gardening';">Gardening</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Handyman';">Handyman</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Painting';">Painting</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Tutoring';">Tutoring</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Photography';">Photography</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Pest Control';">Pest Control</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Electrical';">Electrical</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Plumbing';">Plumbing</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Errands';">Errands</button>
+        </div>
+        <div class="need-help-chips-track" aria-hidden="true">
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Cleaning';">Cleaning</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Moving';">Moving</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Repairs';">Repairs</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Delivery';">Delivery</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Gardening';">Gardening</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Handyman';">Handyman</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Painting';">Painting</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Tutoring';">Tutoring</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Photography';">Photography</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Pest Control';">Pest Control</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Electrical';">Electrical</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Plumbing';">Plumbing</button>
+          <button class="nh-chip" onclick="document.getElementById('heroServiceInput').value='Errands';">Errands</button>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- EXPLORE POPULAR TASKS -->
   <section class="section" id="categories" style="padding-top:0;">
-    <div class="container">
+    <div class="container-home">
       <div class="section-header center fade-up">
-        <h2>Popular Categories</h2>
+        <h2>Explore popular tasks</h2>
+        <p>Find trusted people for the things you need done.</p>
       </div>
       <div class="popular-grid fade-up d1">
         <a href="find-taskers.html?service=Cleaning" class="pop-card">
@@ -214,6 +241,22 @@
         <a href="find-taskers.html?service=Delivery" class="pop-card">
           <div class="pop-icon"><img src="images/icons/delivery.svg" alt="" width="26" height="26" /></div>
           <div><h3>Delivery</h3><p>Move items where they need to go.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Gardening" class="pop-card">
+          <div class="pop-icon"><img src="images/icons/gardening.svg" alt="" width="26" height="26" /></div>
+          <div><h3>Gardening</h3><p>Lawn care, hedges and outdoor tidy-ups.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Handyman" class="pop-card">
+          <div class="pop-icon"><img src="images/icons/assembly.svg" alt="" width="26" height="26" /></div>
+          <div><h3>Assembly</h3><p>Furniture assembly, mounting and small fixes.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Tutoring" class="pop-card">
+          <div class="pop-icon"><img src="images/icons/tutoring.svg" alt="" width="26" height="26" /></div>
+          <div><h3>Tutoring</h3><p>Lessons, homework help and exam prep.</p></div>
+        </a>
+        <a href="find-taskers.html?service=Photography" class="pop-card">
+          <div class="pop-icon"><img src="images/icons/photography.svg" alt="" width="26" height="26" /></div>
+          <div><h3>Photography</h3><p>Photographers for events and portraits.</p></div>
         </a>
         <a href="find-taskers.html" class="pop-card pop-more">
           <div class="pop-more-link">
@@ -243,9 +286,10 @@
 
   <!-- HOW IT WORKS -->
   <section class="section" id="how-it-works">
-    <div class="container">
+    <div class="container-home">
       <div class="section-header center fade-up">
-        <h2>How it works</h2>
+        <h2>Getting help is simple</h2>
+        <p>Post a task, choose the right person, and get it done.</p>
       </div>
       <div class="how-it-works-grid fade-up d1">
         <div class="how-it-works-card">
@@ -260,16 +304,6 @@
         </div>
         <div class="how-it-works-card">
           <div class="how-it-works-top">
-            <span class="how-it-works-num">03</span>
-            <span class="how-it-works-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
-            </span>
-          </div>
-          <h3>Get it done</h3>
-          <p>Book, communicate and complete your task securely.</p>
-        </div>
-        <div class="how-it-works-card">
-          <div class="how-it-works-top">
             <span class="how-it-works-num">02</span>
             <span class="how-it-works-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12l2.5 2.5L16 9"/><path d="M4 8.5C4 6 6 4 8.5 4c1.3 0 2.5.6 3.5 1.6C13 4.6 14.2 4 15.5 4 18 4 20 6 20 8.5c0 3.5-4 6-8 9-4-3-8-5.5-8-9z"/></svg>
@@ -278,56 +312,110 @@
           <h3>Choose your Tasker</h3>
           <p>Review profiles and ratings to find the right person.</p>
         </div>
+        <div class="how-it-works-card">
+          <div class="how-it-works-top">
+            <span class="how-it-works-num">03</span>
+            <span class="how-it-works-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </span>
+          </div>
+          <h3>Get it done</h3>
+          <p>Book, communicate and complete your task securely.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- TASKS POSTED BY USERS (live) -->
   <section class="section">
-    <div class="container">
+    <div class="container-home">
       <div class="section-header center fade-up">
         <h2>People are getting things done</h2>
         <p>See what people are getting help with on StreetTasker.</p>
       </div>
-      <div class="task-showcase-grid fade-up d1" id="tasksList">
-        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="task-showcase-thumb"></div>
-          <div class="task-showcase-body">
-            <div class="task-showcase-cat">Furniture</div>
-            <div class="task-showcase-title">Assemble a wardrobe</div>
-            <div class="task-showcase-loc">Ikeja</div>
-            <div class="task-showcase-price">&#8358;25,000</div>
-            <div class="task-showcase-offers">4 offers</div>
+      <div class="pgtd-grid fade-up d1" id="tasksList">
+        <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="pgtd-thumb pgtd-thumb-1">
+            <button class="pgtd-fav" aria-label="Save task" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="pgtd-body">
+            <div class="pgtd-top">
+              <div class="pgtd-avatar">&#129520;</div>
+              <div class="pgtd-titlewrap"><div class="pgtd-title">Assemble a wardrobe</div><div class="pgtd-provider">Tunde A. &bull; Ikeja</div></div>
+            </div>
+            <div class="pgtd-tags">
+              <span class="pgtd-tag tag-blue">In-person</span>
+              <span class="pgtd-tag tag-green">Furniture</span>
+              <span class="pgtd-tag tag-gray">One-off</span>
+            </div>
+            <p class="pgtd-desc">Need a 3-door wardrobe assembled and mounted securely against the bedroom wall.</p>
+          </div>
+          <div class="pgtd-footer">
+            <div class="pgtd-price">&#8358;25,000</div>
+            <div class="pgtd-posted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Posted 2 days ago</div>
           </div>
         </div>
-        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="task-showcase-thumb"></div>
-          <div class="task-showcase-body">
-            <div class="task-showcase-cat">Cleaning</div>
-            <div class="task-showcase-title">Deep clean an apartment</div>
-            <div class="task-showcase-loc">Lekki</div>
-            <div class="task-showcase-price">&#8358;35,000</div>
-            <div class="task-showcase-offers">7 offers</div>
+        <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="pgtd-thumb pgtd-thumb-2">
+            <button class="pgtd-fav" aria-label="Save task" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="pgtd-body">
+            <div class="pgtd-top">
+              <div class="pgtd-avatar">&#129535;</div>
+              <div class="pgtd-titlewrap"><div class="pgtd-title">Deep clean an apartment</div><div class="pgtd-provider">Fatima D. &bull; Lekki</div></div>
+            </div>
+            <div class="pgtd-tags">
+              <span class="pgtd-tag tag-blue">In-person</span>
+              <span class="pgtd-tag tag-green">Cleaning</span>
+              <span class="pgtd-tag tag-gray">One-off</span>
+            </div>
+            <p class="pgtd-desc">2-bedroom apartment needs a thorough deep clean before move-in this weekend.</p>
+          </div>
+          <div class="pgtd-footer">
+            <div class="pgtd-price">&#8358;35,000</div>
+            <div class="pgtd-posted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Posted 1 day ago</div>
           </div>
         </div>
-        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="task-showcase-thumb"></div>
-          <div class="task-showcase-body">
-            <div class="task-showcase-cat">Delivery</div>
-            <div class="task-showcase-title">Deliver package</div>
-            <div class="task-showcase-loc">Yaba &rarr; Victoria Island</div>
-            <div class="task-showcase-price">&#8358;10,000</div>
-            <div class="task-showcase-offers">3 offers</div>
+        <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="pgtd-thumb pgtd-thumb-3">
+            <button class="pgtd-fav" aria-label="Save task" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="pgtd-body">
+            <div class="pgtd-top">
+              <div class="pgtd-avatar">&#128230;</div>
+              <div class="pgtd-titlewrap"><div class="pgtd-title">Deliver a package</div><div class="pgtd-provider">Chidi O. &bull; Yaba &rarr; VI</div></div>
+            </div>
+            <div class="pgtd-tags">
+              <span class="pgtd-tag tag-blue">In-person</span>
+              <span class="pgtd-tag tag-green">Delivery</span>
+              <span class="pgtd-tag tag-gray">One-off</span>
+            </div>
+            <p class="pgtd-desc">Small parcel pickup from Yaba, drop-off in Victoria Island before 5pm today.</p>
+          </div>
+          <div class="pgtd-footer">
+            <div class="pgtd-price">&#8358;10,000</div>
+            <div class="pgtd-posted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Posted 5 hours ago</div>
           </div>
         </div>
-        <div class="task-showcase-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="task-showcase-thumb"></div>
-          <div class="task-showcase-body">
-            <div class="task-showcase-cat">Repairs</div>
-            <div class="task-showcase-title">Fix leaking kitchen sink</div>
-            <div class="task-showcase-loc">Surulere</div>
-            <div class="task-showcase-price">&#8358;15,000</div>
-            <div class="task-showcase-offers">5 offers</div>
+        <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
+          <div class="pgtd-thumb pgtd-thumb-4">
+            <button class="pgtd-fav" aria-label="Save task" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="pgtd-body">
+            <div class="pgtd-top">
+              <div class="pgtd-avatar">&#128295;</div>
+              <div class="pgtd-titlewrap"><div class="pgtd-title">Fix leaking kitchen sink</div><div class="pgtd-provider">Kingsley P. &bull; Surulere</div></div>
+            </div>
+            <div class="pgtd-tags">
+              <span class="pgtd-tag tag-blue">In-person</span>
+              <span class="pgtd-tag tag-green">Repairs</span>
+              <span class="pgtd-tag tag-gray">One-off</span>
+            </div>
+            <p class="pgtd-desc">Kitchen sink has been dripping for a week — need a plumber to fix it asap.</p>
+          </div>
+          <div class="pgtd-footer">
+            <div class="pgtd-price">&#8358;15,000</div>
+            <div class="pgtd-posted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Posted 3 days ago</div>
           </div>
         </div>
       </div>
@@ -337,11 +425,12 @@
     </div>
   </section>
 
-  <!-- WHY STREETTASKER -->
+  <!-- HELP FROM PEOPLE YOU CAN TRUST -->
   <section class="section">
-    <div class="container">
+    <div class="container-home">
       <div class="section-header center fade-up">
-        <h2>Why StreetTasker?</h2>
+        <h2>Help from people you can trust</h2>
+        <p>Trust is built into every step of the StreetTasker experience.</p>
       </div>
       <div class="trust-grid fade-up d1">
         <div class="trust-card">
@@ -363,15 +452,17 @@
     </div>
   </section>
 
-  <!-- BECOME A TASKER -->
+  <!-- TURN YOUR SKILLS INTO OPPORTUNITIES -->
   <section class="section" id="become-tasker">
-    <div class="container">
-      <div class="become-tasker fade-up">
-        <div class="tasker-split-eyebrow">Earn money</div>
-        <h2>Become a Tasker</h2>
-        <p class="become-tasker-sub">Earn money your way. Set your own schedule and rates.</p>
-        <a href="onboarding-tasker.html" class="btn btn-primary btn-lg btn-full become-tasker-btn">Sign up to earn</a>
-        <div class="become-tasker-photo">
+    <div class="container-home">
+      <div class="tasker-split fade-up">
+        <div>
+          <div class="tasker-split-eyebrow">For Taskers</div>
+          <h2>Turn your skills into opportunities.</h2>
+          <p>Find people who need your skills and turn your time into income.</p>
+          <a href="onboarding-tasker.html" class="btn btn-primary btn-lg">Post a Task</a>
+        </div>
+        <div class="tasker-split-visual">
           <img src="images/become-tasker.png" alt="A friendly StreetTasker professional fixing a kitchen sink" loading="lazy" />
         </div>
       </div>
@@ -380,11 +471,14 @@
 
   <!-- FINAL CTA -->
   <section class="section-sm">
-    <div class="container">
+    <div class="container-home">
       <div class="final-cta fade-up">
-        <h2>Ready to get started?</h2>
-        <p>Post a task for free and get offers today.</p>
-        <a href="post-task.html" class="btn btn-dark btn-xl">Post a Task</a>
+        <h2>There's always something that needs doing.</h2>
+        <p>Post your task and find someone who can help, or turn your skills into income.</p>
+        <div class="final-cta-actions">
+          <a href="post-task.html" class="btn btn-dark btn-xl">Post a Task</a>
+          <a href="onboarding-tasker.html" class="btn btn-white btn-xl">Become a Tasker</a>
+        </div>
       </div>
     </div>
   </section>
@@ -414,6 +508,7 @@
 
       /* Wire hero location autocomplete + GPS (logged-out landing page only) */
       initServiceAutocomplete();
+      initHeroFloatProximity();
       initLocationInput({
         inputId:    'heroLocationInput',
         dropdownId: 'heroLocationSuggestions',
@@ -538,12 +633,42 @@
       { title:'House deep cleaning', category:'cleaning', location:'Ajah, Lagos', budget:25000, description:'4-bedroom house needs thorough cleaning after renovation.' },
     ];
 
+    const PGTD_EMOJI = { plumber:'&#128295;', electrician:'&#9889;', cleaning:'&#129535;', beauty:'&#128131;', appliances:'&#10024;', furniture:'&#129520;', delivery:'&#128230;', default:'&#128736;' };
+    const PGTD_AGO = ['5 hours ago','1 day ago','2 days ago','3 days ago','5 days ago'];
+    const PGTD_THUMBS = ['pgtd-thumb-1','pgtd-thumb-2','pgtd-thumb-3','pgtd-thumb-4'];
+
+    function renderPgtdCard(t, i) {
+      const safeTitle = escapeHtml(t.title || 'Untitled task');
+      const safeLoc   = escapeHtml(t.location || 'Lagos');
+      const safeCat   = escapeHtml((t.category || 'Task').replace('_',' '));
+      const catLabel  = safeCat.charAt(0).toUpperCase() + safeCat.slice(1);
+      const emoji     = PGTD_EMOJI[(t.category||'').toLowerCase()] || PGTD_EMOJI.default;
+      const safeDesc  = escapeHtml(t.description || '');
+      const _tImgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
+      const _tImg  = _tImgs[0] || null;
+      const thumbClass = _tImg ? '' : PGTD_THUMBS[i % PGTD_THUMBS.length];
+      const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
+      const posted = t.created_at ? escapeHtml(t.created_at) : PGTD_AGO[i % PGTD_AGO.length];
+      return '<div class="pgtd-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
+        + '<div class="pgtd-thumb ' + thumbClass + '" style="' + thumbStyle + '">'
+        + '<button class="pgtd-fav" aria-label="Save task" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>'
+        + '</div>'
+        + '<div class="pgtd-body">'
+        + '<div class="pgtd-top"><div class="pgtd-avatar">' + emoji + '</div>'
+        + '<div class="pgtd-titlewrap"><div class="pgtd-title">' + safeTitle + '</div><div class="pgtd-provider">' + safeLoc + '</div></div></div>'
+        + '<div class="pgtd-tags"><span class="pgtd-tag tag-blue">In-person</span><span class="pgtd-tag tag-green">' + catLabel + '</span><span class="pgtd-tag tag-gray">One-off</span></div>'
+        + (safeDesc ? '<p class="pgtd-desc">' + safeDesc + '</p>' : '')
+        + '</div>'
+        + '<div class="pgtd-footer"><div class="pgtd-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</div>'
+        + '<div class="pgtd-posted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Posted ' + posted + '</div></div>'
+        + '</div>';
+    }
+
     async function loadTasksSection() {
       try {
         const tasks = await window.ST.db.fetchTasks({ limit: 5 });
         const el    = document.getElementById('tasksList');
         /* Merge live tasks with dummy fallback — always show something */
-        const liveIds = new Set((tasks||[]).map(t => String(t.id)));
         const combined = [...(tasks||[]), ...DUMMY_TASKS_HOME].slice(0, 5);
         if (!combined.length) {
           el.innerHTML = `<div style="text-align:center;padding:40px 24px;">
@@ -551,43 +676,12 @@
             <a href="post-task.html" class="btn btn-primary btn-sm">Post a Task</a></div>`;
           return;
         }
-        el.innerHTML = combined.map((t, i) => {
-          const safeTitle = escapeHtml(t.title || 'Untitled task');
-          const safeLoc   = escapeHtml(t.location || 'Lagos');
-          const safeCat   = escapeHtml((t.category || 'Task').replace('_',' ')).toUpperCase();
-          const offers    = t.offers_count != null ? t.offers_count : (2 + (i % 5));
-          const _tImgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
-          const _tImg  = _tImgs[0] || null;
-          const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
-          return '<div class="task-showcase-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
-            + '<div class="task-showcase-thumb" style="' + thumbStyle + '"></div>'
-            + '<div class="task-showcase-body">'
-            + '<div class="task-showcase-cat">' + safeCat + '</div>'
-            + '<div class="task-showcase-title">' + safeTitle + '</div>'
-            + '<div class="task-showcase-loc">' + safeLoc + '</div>'
-            + '<div class="task-showcase-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</div>'
-            + '<div class="task-showcase-offers">' + offers + ' offer' + (offers===1?'':'s') + '</div>'
-            + '</div></div>';
-        }).join('');
+        el.innerHTML = combined.map(renderPgtdCard).join('');
       } catch(e) {
         console.warn('[ST] loadTasksSection error:', e);
         /* Even on error — show dummy tasks so page never stays skeleton */
         const el = document.getElementById('tasksList');
-        if (el) {
-          const icons = { default: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>` };
-          el.innerHTML = DUMMY_TASKS_HOME.map((t, i) => {
-            const safeTitle = escapeHtml(t.title);
-            const safeLoc   = escapeHtml(t.location);
-            const safeDesc  = escapeHtml(t.description);
-            return '<div class="task-live-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
-              + '<div class="task-live-icon">' + icons.default + '</div>'
-              + '<div style="flex:1;min-width:0;"><div class="task-live-title">' + safeTitle + '</div>'
-              + '<div class="task-live-meta"><span>' + safeLoc + '</span></div>'
-              + '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:5px;">' + safeDesc + '</p></div>'
-              + '<div style="text-align:right;flex-shrink:0;"><div class="task-live-budget">&#8358;' + Number(t.budget).toLocaleString() + '</div>'
-              + '<span class="task-open-badge" style="margin-top:4px;display:inline-flex;">Open</span></div></div>';
-          }).join('');
-        }
+        if (el) el.innerHTML = DUMMY_TASKS_HOME.map(renderPgtdCard).join('');
       }
     }
 
@@ -730,6 +824,23 @@
         if (e.key === 'Escape') drop.style.display = 'none';
         if (e.key === 'Enter') drop.style.display = 'none';
       });
+    }
+
+    /* Floating hero pills/badges fade out when the cursor gets close to them */
+    function initHeroFloatProximity() {
+      const hero = document.getElementById('heroFrame');
+      if (!hero) return;
+      const floaters = hero.querySelectorAll('.hero-floater');
+      const THRESHOLD = 130;
+      hero.addEventListener('mousemove', (e) => {
+        floaters.forEach(el => {
+          const r = el.getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          el.style.opacity = dist < THRESHOLD ? '0' : '1';
+        });
+      });
+      hero.addEventListener('mouseleave', () => floaters.forEach(el => { el.style.opacity = '1'; }));
     }
 
     function handleHeroSearch(e) {
