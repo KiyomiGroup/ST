@@ -1,10 +1,12 @@
 <!-- ============================================================
-     STREET TASKERS — Footer Component v3
-     Light 5-column footer matching the homepage reference design.
+     STREET TASKERS — Footer Component v4
+     5-column footer matching the Figma homepage reference design.
+     Links with no page yet are rendered as non-clickable spans —
+     swap to a real <a href> the moment each page is built.
      ============================================================ -->
 
 <footer id="footer">
-  <div class="container">
+  <div class="container-home">
     <div class="footer-top">
 
       <!-- Brand column -->
@@ -13,12 +15,18 @@
           <img src="images/logo-nav.svg" alt="StreetTasker" />
         </a>
         <p>Your local service marketplace.</p>
+        <ul class="footer-brand-links">
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">About us</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Careers</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Press</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Blog</span></li>
+        </ul>
       </div>
 
-      <!-- For Customers -->
+      <!-- Discover -->
       <details class="footer-col footer-accordion">
         <summary>
-          <h4>For Customers</h4>
+          <h4>Discover</h4>
           <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
         <ul>
@@ -26,37 +34,33 @@
           <li><a href="find-taskers.html">Popular categories</a></li>
           <li><a href="index.html#how-it-works">How it works</a></li>
           <li><a href="subscription.html">Pricing</a></li>
-          <li><a href="#">Help center</a></li>
-          <li><a href="#">Contact us</a></li>
         </ul>
       </details>
 
-      <!-- For Taskers -->
+      <!-- Taskers -->
       <details class="footer-col footer-accordion">
         <summary>
-          <h4>For Taskers</h4>
+          <h4>Taskers</h4>
           <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
         <ul>
           <li><a href="onboarding-tasker.html">Become a Tasker</a></li>
-          <li><a href="#">Tasker resources</a></li>
-          <li><a href="#">Community</a></li>
-          <li><a href="#">Success stories</a></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Tasker resources</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Community</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Success stories</span></li>
         </ul>
       </details>
 
-      <!-- Company -->
+      <!-- Support -->
       <details class="footer-col footer-accordion">
         <summary>
-          <h4>Company</h4>
+          <h4>Support</h4>
           <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
         <ul>
-          <li><a href="#">About us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Press</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Safety</a></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Help center</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Contact us</span></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Safety</span></li>
           <li><a href="terms.html#safety">Trust &amp; safety</a></li>
         </ul>
       </details>
@@ -71,7 +75,7 @@
           <li><a href="terms.html">Terms of service</a></li>
           <li><a href="privacy.html">Privacy policy</a></li>
           <li><a href="privacy.html#cookies">Cookie policy</a></li>
-          <li><a href="#">Accessibility</a></li>
+          <li><span class="footer-disabled" aria-disabled="true" title="Coming soon">Accessibility</span></li>
         </ul>
       </details>
 
