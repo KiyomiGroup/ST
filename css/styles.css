@@ -2642,3 +2642,29 @@ img { max-width: 100%; height: auto; }
 .final-cta .btn-white { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.4); }
 .final-cta .btn-white:hover { background: rgba(255,255,255,0.1); }
 @media (max-width: 900px) { .final-cta-actions { flex-direction: column; width: 100%; } .final-cta-actions .btn { width: 100%; } }
+
+/* ══════════════════════════════════════════════════════════════════
+   HOMEPAGE v5 — mobile nav order + stacked hero CTAs (per mobile Figma)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Mobile nav: hamburger — logo — (+) post-a-task, in that order */
+.nav-mobile-plus { display: none; }
+@media (max-width: 768px) {
+  .nav-inner { justify-content: flex-start; gap: 14px; }
+  .nav-toggle { order: 1; }
+  .nav-logo { order: 2; }
+  .nav-mobile-plus {
+    order: 3; margin-left: auto; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--blue); color: var(--white);
+    transition: background var(--t) var(--ease);
+  }
+  .nav-mobile-plus:hover { background: var(--blue-hover); }
+}
+
+/* Hero CTAs stack vertically on mobile instead of sitting side by side */
+@media (max-width: 640px) {
+  .hero-frame-actions { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hero-frame-actions .btn { width: 100%; text-align: center; }
+}
