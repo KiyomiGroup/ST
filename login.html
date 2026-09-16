@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Log in to your Street Taskers account." />
-  <title>Log In — Street Taskers</title>
+  <meta name="description" content="Log in to your StreetTasker account." />
+  <title>Log In — StreetTasker</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="icon" type="image/png" sizes="64x64" href="images/favicon.png" />
@@ -15,95 +15,110 @@
   <div id="navbar-placeholder"></div>
 
   <!-- ══════════════════════════════════════════════════════════
-       LOGIN PAGE
+       LOGIN PAGE (v2 — Figma: "Log in" desktop / "Mobile Log in")
        ══════════════════════════════════════════════════════════ -->
 
-  <div class="auth-page">
-    <div class="container">
-      <div class="auth-container">
-        <div class="auth-card fade-up">
+  <section class="av2-page lg2-page">
+    <div class="av2-shell lg2-shell">
 
-          <!-- Logo -->
-          <div class="auth-logo-wrap">
-            <a href="index.html">
-              <img src="images/logo-nav.svg" alt="Street Taskers" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-              <span class="auth-logo-text" style="display:none;">Street Taskers</span>
-            </a>
-          </div>
+      <!-- Mobile-only: wordmark + banner illustration behind the card -->
+      <div class="lg2-mobile-top">
+        <div class="lg2-mobile-logo">StreetTasker</div>
+        <div class="lg2-mobile-banner">
+          <img src="images/illustration-community.png" alt="" />
+        </div>
+      </div>
 
-          <div class="auth-heading">
+      <div class="lg2-card fade-up">
+
+        <!-- Desktop-only illustration column -->
+        <div class="lg2-illustration">
+          <img src="images/illustration-community.png" alt="StreetTasker community illustration" />
+        </div>
+
+        <div class="lg2-form-side">
+
+          <!-- desktop copy -->
+          <div class="lg2-heading lg2-heading--desktop">
+            <div class="lg2-brand">StreetTasker</div>
             <h1>Welcome back</h1>
-            <p>Log in to your account to continue</p>
+            <p>Please enter your details to sign in.</p>
           </div>
-
-                  <button type="button" class="btn btn-oauth" onclick="handleGoogleSignIn()">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-            
-          </button>
-
-          <div class="form-divider">or continue with email</div>
+          <!-- mobile copy -->
+          <div class="lg2-heading lg2-heading--mobile">
+            <h1>Welcome Back</h1>
+            <p>Log in to continue building community.</p>
+          </div>
 
           <form id="loginForm" novalidate>
 
-            <!-- Email -->
-            <div class="form-group">
-              <label class="form-label" for="loginEmail">Email Address</label>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <input type="email" id="loginEmail" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" required />
+            <div class="av2-field">
+              <label for="loginEmail" class="lg2-label-desktop">Email address</label>
+              <div class="av2-field-wrap">
+                <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+                <input type="email" id="loginEmail" name="email" class="lg2-input" placeholder="Email Address" autocomplete="email" required />
               </div>
             </div>
 
-            <!-- Password -->
-            <div class="form-group">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <label class="form-label" style="margin:0;" for="loginPwd">Password</label>
-                <a href="#" style="font-size:0.78rem; color:var(--blue);" onclick="handleForgotPassword(); return false;">Forgot password?</a>
-              </div>
-              <div class="input-wrap">
-                <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <input type="password" id="loginPwd" name="password" class="form-input" placeholder="Your password" autocomplete="current-password" required />
-                <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Show password">
-                  <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                  </svg>
+            <div class="av2-field">
+              <label for="loginPwd" class="lg2-label-desktop">Password</label>
+              <div class="av2-field-wrap">
+                <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="loginPwd" name="password" class="lg2-input" placeholder="Password" autocomplete="current-password" required />
+                <button type="button" class="av2-pwd-toggle" id="pwdToggle" aria-label="Show password">
+                  <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
             </div>
 
-            <!-- Remember me -->
-            <div class="check-row" style="margin-bottom:20px;">
-              <input type="checkbox" id="rememberMe" />
-              <label for="rememberMe">Remember me for 30 days</label>
+            <div class="lg2-row">
+              <label class="lg2-remember">
+                <input type="checkbox" id="rememberMe" />
+                <span>Remember me</span>
+              </label>
+              <a href="#" class="lg2-forgot" onclick="handleForgotPassword(); return false;">Forgot password?</a>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-full" id="loginBtn" style="padding:13px;">Log In</button>
             <div class="form-error" id="loginErr"></div>
 
+            <button type="submit" class="btn btn-lg av2-submit-btn" id="loginBtn">
+              <span>Log In</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
           </form>
 
-          <div class="auth-footer">
-            Don't have an account? <a href="signup.html">Sign up free</a>
+          <div class="av2-divider">or continue with</div>
+
+          <!-- desktop: labelled pill buttons -->
+          <div class="av2-oauth-row av2-oauth-row--full lg2-oauth-desktop">
+            <button type="button" class="av2-oauth-btn" onclick="handleGoogleSignIn()">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.7 35 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.6 5.6C41.4 36.5 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+              <span>Google</span>
+            </button>
+            <button type="button" class="av2-oauth-btn" onclick="handleAppleSignIn()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.462 2.075-1.09 2.79-.68.78-1.79 1.375-2.73 1.375-.13 0-.23-.03-.29-.05-.02-.09-.05-.24-.05-.4 0-1.1.51-2.13 1.14-2.83.68-.78 1.87-1.36 2.83-1.4.02.13.03.28.03.43-.01.03.13.06.15.08zM20.6 17.28c-.34.79-.5 1.14-.94 1.84-.6.98-1.45 2.2-2.5 2.21-.94.01-1.18-.61-2.45-.6-1.27.01-1.53.62-2.48.6-1.05-.02-1.86-1.12-2.46-2.1-1.68-2.75-1.86-5.98-.82-7.7.74-1.22 1.9-1.94 2.99-1.94 1.11 0 1.8.61 2.72.61.89 0 1.43-.61 2.72-.61.97 0 2 .53 2.73 1.44-2.4 1.31-2.01 4.74.49 5.75z"/></svg>
+              <span>Apple</span>
+            </button>
           </div>
 
+          <!-- mobile: icon-only, circular -->
+          <div class="av2-oauth-row av2-oauth-row--icons lg2-oauth-mobile">
+            <button type="button" class="av2-oauth-btn" onclick="handleGoogleSignIn()" aria-label="Continue with Google">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.7 35 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.6 5.6C41.4 36.5 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+              <span>Google</span>
+            </button>
+            <button type="button" class="av2-oauth-btn" onclick="handleAppleSignIn()" aria-label="Continue with Apple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.462 2.075-1.09 2.79-.68.78-1.79 1.375-2.73 1.375-.13 0-.23-.03-.29-.05-.02-.09-.05-.24-.05-.4 0-1.1.51-2.13 1.14-2.83.68-.78 1.87-1.36 2.83-1.4.02.13.03.28.03.43-.01.03.13.06.15.08zM20.6 17.28c-.34.79-.5 1.14-.94 1.84-.6.98-1.45 2.2-2.5 2.21-.94.01-1.18-.61-2.45-.6-1.27.01-1.53.62-2.48.6-1.05-.02-1.86-1.12-2.46-2.1-1.68-2.75-1.86-5.98-.82-7.7.74-1.22 1.9-1.94 2.99-1.94 1.11 0 1.8.61 2.72.61.89 0 1.43-.61 2.72-.61.97 0 2 .53 2.73 1.44-2.4 1.31-2.01 4.74.49 5.75z"/></svg>
+              <span>Apple</span>
+            </button>
+          </div>
+
+          <div class="av2-form-footer">Don't have an account? <a href="signup.html">Sign up for free</a></div>
         </div>
 
-        <p class="text-center mt-16" style="font-size:0.75rem; color:var(--text-muted);">
-          Secured by Supabase Auth &middot; 256-bit encryption
-        </p>
       </div>
     </div>
-  </div>
+  </section>
 
   <div id="footer-placeholder"></div>
 
@@ -116,15 +131,15 @@
   <script>
     function initPage() {
       /* ── Google OAuth callback ─────────────────────────────────
-         After Google redirects back, Supabase fires onAuthStateChange.
-         We read the role from the URL param (set by signup.html) and
-         save it to the user's profile.
+         After the OAuth provider redirects back, Supabase fires
+         onAuthStateChange. We read the role from the URL param
+         (set by signup.html) and save it to the user's profile.
       ─────────────────────────────────────────────────────────── */
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('oauth') === '1') {
         const banner = document.getElementById('loginErr');
         if (banner) {
-          banner.textContent = 'Signing you in with Google…';
+          banner.textContent = 'Signing you in…';
           banner.style.background = 'var(--blue-light)';
           banner.style.color      = 'var(--blue)';
           banner.style.display    = 'block';
@@ -144,12 +159,11 @@
 
           if (!existingUser) {
             /* Brand new account — need role selection before proceeding */
-            /* Sign them out first so they don't get auto-logged in */
             if (!oauthRole) {
               /* Came from login page, not signup — block access */
               await window.supabase.auth.signOut();
               if (banner) {
-                banner.textContent = 'No account found with this Google account. Please sign up first.';
+                banner.textContent = 'No account found. Please sign up first.';
                 banner.style.background = 'var(--red-light)';
                 banner.style.color      = 'var(--red)';
                 banner.style.display    = 'block';
@@ -167,7 +181,6 @@
             }).catch(() => {});
             localStorage.setItem('st_role', oauthRole);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
-            /* New account — send to onboarding */
             window.location.replace(oauthRole === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html');
           } else {
             /* Existing account — log them in to their correct dashboard */
@@ -192,16 +205,9 @@
         return;
       }
 
-      /* ── Email confirmation redirect ──────────────────────────
-         Supabase appends #access_token=...&type=signup to the URL
-         when a user clicks the confirmation link. Detect this and
-         exchange the token so the user is automatically logged in,
-         then redirect them to their dashboard.
-      ─────────────────────────────────────────────────────────── */
+      /* ── Email confirmation redirect ── */
       const hash = window.location.hash;
       if (hash && hash.includes('access_token') && hash.includes('type=signup')) {
-        /* Supabase JS v2 automatically processes the hash on load.
-           Wait for onAuthStateChange to fire with SIGNED_IN. */
         const banner = document.getElementById('loginErr');
         if (banner) {
           banner.textContent = 'Confirming your email…';
@@ -212,7 +218,6 @@
         window.supabase.auth.onAuthStateChange(async (event, session) => {
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
             const role = await window.ST.auth.getUserRole(session.user);
-            /* Check if first login (no users row yet) */
             const { data: existingRow } = await window.supabase.from('users').select('id').eq('id', session.user.id).maybeSingle();
             let dest;
             if (!existingRow) {
@@ -223,7 +228,6 @@
             window.location.replace(dest);
           }
         });
-        /* Fallback: if already has session after hash processed */
         setTimeout(async () => {
           const session = await window.ST.auth.getSession();
           if (session) {
@@ -231,7 +235,7 @@
             window.location.replace(window.ST.auth.getDashboardUrl(role));
           }
         }, 1500);
-        return; // don't run normal initPage logic while processing confirmation
+        return;
       }
 
       /* ── Password toggle ── */
@@ -270,49 +274,43 @@
         if (!email || !pwd) { showErr('Please enter your email and password.'); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
 
-        btn.textContent = 'Logging in...';
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span>Logging in…</span>';
         btn.disabled = true;
 
         try {
           const { user } = await window.ST.auth.loginUser(email, pwd);
 
-          /* Honour an explicit ?redirect= param first */
           const redirect = new URLSearchParams(window.location.search).get('redirect');
           if (redirect) {
             showToast('Welcome back! Redirecting...');
             setTimeout(() => { window.location.href = redirect; }, 800);
           } else {
-            /* Role-based dashboard redirect */
             const role = await window.ST.auth.getUserRole(user);
 
             if (role === 'tasker') {
-              /* Check if this tasker has ever filled in their profile (service field set) */
               try {
                 const { data: tRow } = await window.supabase.from('taskers')
                   .select('service, service_name, location')
                   .eq('user_id', user.id).maybeSingle();
                 const hasProfile = tRow && (tRow.service || tRow.service_name) && tRow.location;
                 if (!hasProfile) {
-                  /* New tasker — go straight to Edit Page to fill profile */
                   showToast('Welcome! Let\'s set up your profile first.');
-                  setTimeout(() => {
-                    window.location.href = 'dashboard-tasker.html?setup=1';
-                  }, 800);
+                  setTimeout(() => { window.location.href = 'dashboard-tasker.html?setup=1'; }, 800);
                   return;
                 }
               } catch(e) {}
               showToast('Welcome back! Taking you to your dashboard...');
               setTimeout(() => { window.location.href = 'dashboard-tasker.html'; }, 800);
             } else {
-              /* Customer */
               showToast('Welcome back! Taking you to your dashboard...');
               setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 800);
             }
           }
 
         } catch (authErr) {
-          btn.textContent = 'Log In';
           btn.disabled = false;
+          btn.innerHTML = originalHTML;
           showErr(friendlyAuthError(authErr.message));
         }
       });
@@ -343,7 +341,6 @@
 
     async function handleGoogleSignIn() {
       try {
-        /* Pass oauth=1 but NO role — callback will block if account doesn't exist */
         const { error } = await window.supabase.auth.signInWithOAuth({
           provider: 'google',
           options: { redirectTo: window.location.origin + '/login.html?oauth=1' }
@@ -352,6 +349,17 @@
       } catch(e) { showToast('Google sign-in failed: ' + e.message); }
     }
     window.handleGoogleSignIn = handleGoogleSignIn;
+
+    async function handleAppleSignIn() {
+      try {
+        const { error } = await window.supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: { redirectTo: window.location.origin + '/login.html?oauth=1' }
+        });
+        if (error) throw error;
+      } catch(e) { showToast('Apple sign-in failed: ' + e.message); }
+    }
+    window.handleAppleSignIn = handleAppleSignIn;
   </script>
 </body>
 </html>

@@ -2671,3 +2671,70 @@ img { max-width: 100%; height: auto; }
     text-align: center;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN v2 — fused two-column card (desktop) / banner+overlap card
+   (mobile). Reuses av2-field / av2-oauth-btn / av2-divider /
+   av2-submit-btn / av2-form-footer from the signup redesign.
+   ══════════════════════════════════════════════════════════════════ */
+
+.lg2-shell { max-width: 1040px; }
+
+/* ---- Desktop: one fused card, illustration | form ---- */
+.lg2-card {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--white); border-radius: 32px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(22,138,91,0.12); min-height: 600px;
+}
+.lg2-illustration { position: relative; background: #EAF3EC; }
+.lg2-illustration img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lg2-form-side { position: relative; padding: 56px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.lg2-form-side::before {
+  content: ''; position: absolute; top: -16px; right: -16px; width: 150px; height: 150px;
+  background: rgba(22,138,91,0.08); border-radius: 0 0 0 9999px; z-index: 0;
+}
+.lg2-form-side > * { position: relative; z-index: 1; }
+
+.lg2-heading { margin-bottom: 24px; }
+.lg2-brand { font-family: var(--font-heading); font-weight: 800; color: var(--auth-green); font-size: 1.1rem; margin-bottom: 14px; }
+.lg2-heading h1 { font-family: var(--font-heading); font-weight: 800; color: var(--auth-ink); font-size: 1.9rem; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.2; }
+.lg2-heading p { color: var(--auth-body); font-size: 1rem; line-height: 1.5; }
+.lg2-label-desktop { display: block; font-size: 0.875rem; font-weight: 600; color: var(--auth-ink); margin-bottom: 6px; }
+
+.lg2-row { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 18px; }
+.lg2-remember { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--auth-body); cursor: pointer; }
+.lg2-remember input { width: 17px; height: 17px; accent-color: var(--auth-green); cursor: pointer; }
+.lg2-forgot { font-size: 0.85rem; font-weight: 600; color: var(--auth-green); }
+
+.lg2-oauth-mobile { display: none; }
+
+/* ---- Mobile: wordmark + banner behind an overlapping card ---- */
+.lg2-mobile-top { display: none; }
+.lg2-mobile-logo { text-align: center; font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; color: var(--auth-green); padding: 8px 0 14px; }
+.lg2-mobile-banner { height: 190px; overflow: hidden; }
+.lg2-mobile-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lg2-heading--mobile { display: none; }
+
+@media (max-width: 899.98px) {
+  .lg2-page .av2-shell { padding: 0 16px 48px; }
+  .lg2-mobile-top { display: block; }
+  .lg2-illustration { display: none; }
+  .lg2-card {
+    display: block; grid-template-columns: none;
+    border-radius: 32px; box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    margin-top: -56px; position: relative; z-index: 2; min-height: 0;
+  }
+  .lg2-form-side { padding: 32px 24px 28px; }
+  .lg2-heading--desktop { display: none; }
+  .lg2-heading--mobile { display: block; text-align: center; }
+  .lg2-label-desktop { display: none; }
+  .lg2-row { margin-top: 4px; justify-content: flex-end; }
+  .lg2-remember { display: none; }
+  .lg2-oauth-desktop { display: none; }
+  .lg2-oauth-mobile { display: flex; justify-content: center; gap: 16px; }
+  .lg2-oauth-mobile .av2-oauth-btn {
+    flex: none; width: 52px; height: 52px; border-radius: 50%; padding: 0;
+  }
+}
