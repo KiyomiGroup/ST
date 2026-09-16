@@ -2234,9 +2234,10 @@ img { max-width: 100%; height: auto; }
 
 /* ---- >=900px: literally the Desktop role-chooser frame (139:1086) ---- */
 @media (min-width: 900px) {
-  .av2-chooser-heading { margin-bottom: 36px; }
-  .av2-chooser-heading h1 { font-weight: 800; font-size: 3.75rem; letter-spacing: -0.025em; line-height: 1; margin-bottom: 10px; }
-  .av2-chooser-heading p { font-size: 1.25rem; color: #5E6561; }
+  .av2-chooser-heading { margin-bottom: 22px; }
+  .av2-chooser-heading h1 { font-weight: 800; font-size: 2.75rem; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 8px; }
+  .av2-chooser-heading p { font-size: 1.1rem; color: #5E6561; }
+  .av2-shell { padding: 24px 20px; }
 
   .av2-role-grid { flex-direction: row; align-items: stretch; gap: 48px; max-width: 1152px; }
   .av2-role-card-wrap { flex: 1; min-width: 0; display: flex; }
@@ -2265,7 +2266,7 @@ img { max-width: 100%; height: auto; }
   .av2-role-card .btn-outline { background: #F9F9F7; border: 2px solid var(--auth-green-mid); color: var(--auth-green-mid); }
   .av2-role-card .btn-outline:hover { background: #F0FBF5; }
 
-  .av2-login-pill { max-width: none; display: inline-flex; margin: 24px auto 0; padding: 14px 28px; font-size: 1.05rem; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
+  .av2-login-pill { max-width: none; width: max-content; display: flex; margin: 22px auto 0; padding: 14px 28px; font-size: 1.05rem; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
 }
 
 /* ── Step 2: signup / tasker forms ──────────────────────────── */
