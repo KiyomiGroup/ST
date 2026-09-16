@@ -22,12 +22,23 @@ async function loadComponent(selector, url) {
     const html = await res.text();
     el.innerHTML = html;
 
+    /* Scripts inserted via innerHTML never execute — re-create them so
+       any inline <script> shipped inside a component (e.g. the footer's
+       accordion sync) actually runs. */
+    el.querySelectorAll('script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.textContent = oldScript.textContent;
+      oldScript.replaceWith(newScript);
+    });
+
     /* After loading navbar, wire up its interactive behavior */
     if (url.includes('navbar')) {
       initNavbar();
     }
 
-    /* After loading footer, nothing to wire — static markup */
+    /* After loading footer, nothing else to wire — the accordion script
+       above (re-executed) handles its own setup. */
   } catch (err) {
     console.warn(`[StreetTasker] Could not load component: ${url}`, err);
   }
