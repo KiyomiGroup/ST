@@ -2179,16 +2179,15 @@ img { max-width: 100%; height: auto; }
     radial-gradient(ellipse 60% 40% at 0% 100%, rgba(22,138,91,0.05) 0%, rgba(22,138,91,0) 50%),
     #F9F9F7;
   display: flex; align-items: center;
-  overflow: hidden; /* clips decorative blobs only — page itself never grows past the viewport */
 }
-.av2-shell { max-width: 1180px; margin: 0 auto; padding: 56px 20px; width: 100%; box-sizing: border-box; }
+.av2-shell { max-width: 1180px; margin: 0 auto; padding: 32px 20px; width: 100%; box-sizing: border-box; }
 
 /* ── Step 1: role chooser ("Join StreetTasker") ─────────────── */
 .av2-chooser-badge {
   width: 64px; height: 64px; border-radius: 16px;
   background: var(--white); box-shadow: 0 8px 15px rgba(0,0,0,0.05);
   display: flex; align-items: center; justify-content: center;
-  color: var(--auth-green); margin: 0 auto 16px; transform: rotate(3deg);
+  color: var(--auth-green); margin: 0 auto 16px;
 }
 .av2-chooser-heading { text-align: center; margin-bottom: 24px; }
 .av2-chooser-heading h1 {
@@ -2235,22 +2234,19 @@ img { max-width: 100%; height: auto; }
 
 /* ---- >=900px: literally the Desktop role-chooser frame (139:1086) ---- */
 @media (min-width: 900px) {
-  .av2-chooser-heading { margin-bottom: 80px; } /* extra clearance: work card shifts up 48px via transform, which doesn't affect layout flow — this prevents it visually overlapping the heading */
-  .av2-chooser-heading h1 { font-weight: 800; font-size: 4.5rem; letter-spacing: -0.025em; line-height: 1; margin-bottom: 10px; }
-  .av2-chooser-heading p { font-size: 1.5rem; color: #5E6561; }
+  .av2-chooser-heading { margin-bottom: 36px; }
+  .av2-chooser-heading h1 { font-weight: 800; font-size: 3.75rem; letter-spacing: -0.025em; line-height: 1; margin-bottom: 10px; }
+  .av2-chooser-heading p { font-size: 1.25rem; color: #5E6561; }
 
-  .av2-role-grid { flex-direction: row; align-items: flex-start; gap: 64px; max-width: 1152px; }
-  .av2-role-card-wrap { flex: 1; min-width: 0; }
-  .av2-role-card-wrap--hire { padding-top: 48px; }
-  .av2-role-card-wrap--work { padding-top: 0; }
-  .av2-role-card-wrap--work .av2-role-card { transform: translateY(-48px); }
+  .av2-role-grid { flex-direction: row; align-items: stretch; gap: 48px; max-width: 1152px; }
+  .av2-role-card-wrap { flex: 1; min-width: 0; display: flex; }
 
-  .av2-role-card { padding: 49px; border-radius: 24px; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
-  .av2-role-icon { width: 80px; height: 80px; border-radius: 16px; margin-bottom: 22px; }
-  .av2-role-card--hire .av2-role-icon { background: linear-gradient(135deg, rgba(22,138,91,0.2) 0%, rgba(22,138,91,0.05) 100%); transform: rotate(3deg); }
-  .av2-role-card--work .av2-role-icon { background: linear-gradient(135deg, rgba(17,108,71,0.2) 0%, rgba(17,108,71,0.05) 100%); transform: rotate(-3deg); }
-  .av2-role-card h3 { font-size: 1.875rem; line-height: 1.2; }
-  .av2-role-card p { font-size: 1.125rem; margin-bottom: 28px; }
+  .av2-role-card { padding: 40px; border-radius: 24px; box-shadow: 0 8px 32px rgba(22,138,91,0.15); width: 100%; }
+  .av2-role-icon { width: 72px; height: 72px; border-radius: 16px; margin-bottom: 20px; }
+  .av2-role-card--hire .av2-role-icon { background: linear-gradient(135deg, rgba(22,138,91,0.2) 0%, rgba(22,138,91,0.05) 100%); }
+  .av2-role-card--work .av2-role-icon { background: linear-gradient(135deg, rgba(17,108,71,0.2) 0%, rgba(17,108,71,0.05) 100%); }
+  .av2-role-card h3 { font-size: 1.75rem; line-height: 1.2; }
+  .av2-role-card p { font-size: 1.05rem; margin-bottom: 24px; }
 
   /* corner blobs — hire: top-right quarter circle; work: larger bottom-left quarter circle */
   .av2-role-card--hire::before {
@@ -2269,7 +2265,7 @@ img { max-width: 100%; height: auto; }
   .av2-role-card .btn-outline { background: #F9F9F7; border: 2px solid var(--auth-green-mid); color: var(--auth-green-mid); }
   .av2-role-card .btn-outline:hover { background: #F0FBF5; }
 
-  .av2-login-pill { max-width: none; display: inline-flex; margin: 32px auto 0; padding: 17px 33px; font-size: 1.125rem; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
+  .av2-login-pill { max-width: none; display: inline-flex; margin: 24px auto 0; padding: 14px 28px; font-size: 1.05rem; box-shadow: 0 8px 32px rgba(22,138,91,0.15); }
 }
 
 /* ── Step 2: signup / tasker forms ──────────────────────────── */
