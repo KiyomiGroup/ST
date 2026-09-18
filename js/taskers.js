@@ -279,8 +279,9 @@ function buildCard(s) {
     ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.textContent='${initials}'" />`
     : initials;
 
+  const TAG_COLORS = ['spg-tag-c1', 'spg-tag-c2', 'spg-tag-c3', 'spg-tag-c4'];
   const specialtyTags = (s.specialties || []).slice(0, SPECIALTY_TAG_LIMIT)
-    .map(sp => `<span class="spg-tag spg-tag-specialty">${escapeHtml(sp)}</span>`).join('');
+    .map((sp, i) => `<span class="spg-tag ${TAG_COLORS[i % TAG_COLORS.length]}">${escapeHtml(sp)}</span>`).join('');
 
   /* Rating/verification badge row (like Figma's "Verified Pro"/"Top Rated"/"Elite Tasker") */
   const ratingBadge = s.verified

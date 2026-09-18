@@ -2408,26 +2408,35 @@ img { max-width: 100%; height: auto; }
    and .hero-frame's dark gradient — only adds what's new.
    ================================================================ */
 .spg-hero-wrap { width: 100%; }
+
+/* Nav (fixed) + hero + search bar. padding-top clears the fixed nav in both
+   the normal desktop flow and the mobile position:fixed case (top:0 there). */
+.spg-sticky-top { padding-top: calc(var(--nav-height) + 24px); }
+
 .spg-hero {
-  position: relative; overflow: hidden; width: 100%;
+  position: relative; overflow: hidden;
   background: radial-gradient(ellipse 120% 100% at 15% 0%, var(--forest-mid) 0%, var(--forest) 45%, var(--forest-deep) 100%);
-  border-radius: 0 0 40px 40px; /* full-bleed banner: square top (flush with nav), rounded bottom only */
-  padding: calc(var(--nav-height) + 56px) 40px 88px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  min-height: 320px;
+  border-radius: 32px;
+  padding: 44px 48px 84px;
+  display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  min-height: 220px;
 }
+.spg-hero-text { max-width: 560px; }
+.spg-hero-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; margin-right: 6px; }
 .spg-hero-eyebrow {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(255,255,255,0.6); margin-bottom: 14px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(255,255,255,0.7); margin-bottom: 14px; display: flex; align-items: center;
 }
 .spg-hero h1 {
   font-family: var(--font-heading); font-weight: 800; color: var(--white);
-  font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem); letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.15;
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.6rem); letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.15;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
-.spg-hero p { color: rgba(255,255,255,0.75); font-size: 1.05rem; max-width: 480px; }
+.spg-hero-spark { color: var(--white); flex-shrink: 0; }
+.spg-hero p { color: rgba(255,255,255,0.7); font-size: 1rem; max-width: 460px; }
 
 .spg-searchbar {
-  position: relative; z-index: 2; margin: -48px auto 0; max-width: 880px;
+  position: relative; z-index: 2; margin: -40px auto 0; max-width: 880px;
   background: var(--white); border-radius: 9999px; box-shadow: var(--shadow-xl);
   display: flex; align-items: stretch; padding: 8px; gap: 4px;
 }
@@ -2463,10 +2472,13 @@ img { max-width: 100%; height: auto; }
 /* result cards — shared skeleton for both task cards and tasker cards */
 .spg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
 .spg-card {
-  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--white); border: 1px solid var(--border); border-radius: 20px;
   overflow: hidden; display: flex; flex-direction: column; transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
 }
 .spg-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+/* Card action buttons (Book Tasker / View Task) use a smaller rounded-rect
+   radius, distinct from the pill-shaped buttons used in the hero/nav. */
+.spg-card-footer .btn, .spg-card .btn { border-radius: 10px; }
 .spg-card-media { position: relative; height: 150px; background: var(--gray-100); flex-shrink: 0; }
 .spg-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .spg-card-fav {
@@ -2498,6 +2510,11 @@ img { max-width: 100%; height: auto; }
 .spg-tag-scheduled { background: #E0E7FF; color: #3730A3; }
 .spg-tag-specialty { background: var(--gray-100); color: var(--text-secondary); }
 .spg-tag-verified { background: var(--mint); color: var(--forest); }
+/* Extra colorway rotation for specialty/context tags (Home Service, Emergency, Roadside, Studio & Mobile, etc.) */
+.spg-tag-c1 { background: #FEF3C7; color: #92400E; }
+.spg-tag-c2 { background: #FEE2E2; color: #B91C1C; }
+.spg-tag-c3 { background: #EDE9FE; color: #5B21B6; }
+.spg-tag-c4 { background: #CFFAFE; color: #155E75; }
 .spg-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto; }
 .spg-card-price { font-weight: 800; font-size: 1rem; color: var(--text-primary); }
 .spg-card-price span { font-weight: 500; font-size: 0.72rem; color: var(--text-muted); }
@@ -2506,7 +2523,7 @@ img { max-width: 100%; height: auto; }
 
 @media (max-width: 900px) {
   .spg-layout { grid-template-columns: 1fr; }
-  .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 16px 0; }
+  .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 4px 0; }
   .spg-searchbar-divider { display: none; }
   .spg-searchbar button { margin-top: 4px; padding: 12px; }
   .filter-sidebar { position: static; }
@@ -2514,11 +2531,19 @@ img { max-width: 100%; height: auto; }
   /* Nav + hero + search bar stay fixed together and never scroll away;
      only the results below them scroll. Height is measured in JS
      (see the inline script at the bottom of find-tasks.html /
-     find-taskers.html) and applied as padding-top on .spg-content-below. */
+     find-taskers.html) and applied as padding-top on .spg-content-below.
+     top:0 (rather than var(--nav-height)) because .spg-sticky-top's own
+     padding-top already clears the fixed nav — see the base rule above. */
   .spg-sticky-top {
-    position: fixed; top: var(--nav-height); left: 0; right: 0; z-index: 900;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+    padding-top: calc(var(--nav-height) + 16px);
+    background: var(--forest-deep);
   }
-  .spg-hero { padding: 32px 20px 64px; border-radius: 0 0 28px 28px; }
+  .spg-hero {
+    flex-direction: column; align-items: flex-start; text-align: left;
+    padding: 4px 24px 56px; border-radius: 24px; min-height: 0;
+  }
+  .spg-hero h1 { font-size: 1.7rem; }
 }
 
 /* Small "Back" bar shown on the form steps, directly under the always-visible
