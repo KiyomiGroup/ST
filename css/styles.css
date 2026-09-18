@@ -715,6 +715,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
 
 .results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
 .results-count { font-weight: 600; font-size: 0.875rem; }
+.spg-results-heading { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text-primary); }
 .sort-select {
   padding: 8px 12px; border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); font-family: var(--font);
@@ -2508,8 +2509,16 @@ img { max-width: 100%; height: auto; }
   .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 16px 0; }
   .spg-searchbar-divider { display: none; }
   .spg-searchbar button { margin-top: 4px; padding: 12px; }
-  .spg-hero { padding: calc(var(--nav-height) + 40px) 20px 64px; border-radius: 0 0 28px 28px; }
   .filter-sidebar { position: static; }
+
+  /* Nav + hero + search bar stay fixed together and never scroll away;
+     only the results below them scroll. Height is measured in JS
+     (see the inline script at the bottom of find-tasks.html /
+     find-taskers.html) and applied as padding-top on .spg-content-below. */
+  .spg-sticky-top {
+    position: fixed; top: var(--nav-height); left: 0; right: 0; z-index: 900;
+  }
+  .spg-hero { padding: 32px 20px 64px; border-radius: 0 0 28px 28px; }
 }
 
 /* Small "Back" bar shown on the form steps, directly under the always-visible

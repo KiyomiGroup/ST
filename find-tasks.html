@@ -12,28 +12,30 @@
 <body>
   <div id="navbar-placeholder"></div>
 
-  <div class="spg-hero">
-    <div class="spg-hero-eyebrow fade-up">Open Tasks</div>
-    <h1 class="fade-up d1">Find tasks to complete</h1>
-    <p class="fade-up d2">Browse work posted by customers. Apply to ones that match your skills and earn.</p>
-  </div>
-  <div class="container">
-    <form id="taskSearchForm" class="spg-searchbar fade-up d3" novalidate>
-      <div class="spg-searchbar-field">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
-      </div>
-      <div class="spg-searchbar-divider"></div>
-      <div class="spg-searchbar-field" style="position:relative;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
-        <div id="taskLocationSuggestions" class="location-suggestions"></div>
-      </div>
-      <button type="submit" class="btn btn-primary">Search</button>
-    </form>
+  <div class="spg-sticky-top">
+    <div class="spg-hero">
+      <div class="spg-hero-eyebrow fade-up">Open Tasks</div>
+      <h1 class="fade-up d1">Find tasks to complete</h1>
+      <p class="fade-up d2">Browse work posted by customers. Apply to ones that match your skills and earn.</p>
+    </div>
+    <div class="container">
+      <form id="taskSearchForm" class="spg-searchbar fade-up d3" novalidate>
+        <div class="spg-searchbar-field">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
+        </div>
+        <div class="spg-searchbar-divider"></div>
+        <div class="spg-searchbar-field" style="position:relative;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
+          <div id="taskLocationSuggestions" class="location-suggestions"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
   </div>
 
-  <div style="padding:0 0 64px; background:var(--bg-subtle); margin-top:32px;">
+  <div class="spg-content-below" style="padding:0 0 64px; background:var(--bg-subtle); margin-top:32px;">
     <div class="container">
       <div class="spg-layout">
 
@@ -86,7 +88,7 @@
         <main>
           <div class="results-bar">
             <div style="display:flex; align-items:center; gap:16px;">
-              <div class="results-count"><strong id="taskCount">—</strong> open tasks</div>
+              <h2 class="spg-results-heading">Recommended Tasks</h2>
               <div class="spg-tab-toggle">
                 <a href="find-tasks.html" class="spg-tab active">Tasks</a>
                 <a href="find-taskers.html" class="spg-tab">Taskers</a>
@@ -361,6 +363,25 @@
       }
     }
     window.submitApply = submitApply;
+  </script>
+  <script>
+    /* Keep the fixed nav+hero+search block (mobile only) from overlapping
+       the results below it — measure its real height and pad the content. */
+    (function () {
+      function sync() {
+        var sticky = document.querySelector('.spg-sticky-top');
+        var below  = document.querySelector('.spg-content-below');
+        if (!sticky || !below) return;
+        if (window.matchMedia('(max-width: 900px)').matches) {
+          below.style.paddingTop = sticky.getBoundingClientRect().height + 'px';
+        } else {
+          below.style.paddingTop = '';
+        }
+      }
+      window.addEventListener('load', sync);
+      window.addEventListener('resize', sync);
+      setTimeout(sync, 300); /* fonts can reflow text height shortly after load */
+    })();
   </script>
 </body>
 </html>
