@@ -717,8 +717,8 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .results-count { font-weight: 600; font-size: 0.875rem; }
 .spg-results-heading { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text-primary); }
 .sort-select {
-  padding: 8px 12px; border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); font-family: var(--font);
+  padding: 8px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill); font-family: var(--font);
   font-size: 0.84rem; color: var(--text-primary);
   background: var(--white); cursor: pointer; outline: none;
 }
@@ -2524,7 +2524,7 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 900px) {
   .spg-layout { grid-template-columns: 1fr; }
   .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 4px 0; }
-  .spg-searchbar-divider { display: none; }
+  .spg-searchbar-divider { display: block; width: auto; height: 1px; margin: 0 18px; }
   .spg-searchbar button { margin-top: 4px; padding: 12px; }
   .filter-sidebar { position: static; }
 
@@ -2541,10 +2541,23 @@ img { max-width: 100%; height: auto; }
   }
   .spg-hero {
     flex-direction: column; align-items: flex-start; text-align: left;
-    padding: 4px 24px 56px; border-radius: 24px; min-height: 0;
+    padding: 4px 24px 56px; border-radius: 32px; min-height: 0;
   }
   .spg-hero h1 { font-size: 1.7rem; }
+  .spg-hero p { display: none; } /* subheading omitted on mobile — keeps the hero compact */
+
+  /* The Tasks/Taskers toggle moves up to sit right under the search bar
+     (and stays fixed with it); the results-bar copy is hidden here. */
+  .spg-tab-toggle-desktop { display: none; }
+  .spg-tab-toggle-mobile { display: flex; margin: 14px 4px 0; }
+  .spg-tab-toggle-mobile .spg-tab { flex: 1; text-align: center; padding: 9px 16px; }
+
+  /* Search-page nav: tinted green instead of the site-wide white nav,
+     scoped to this page only via body.spg-page. */
+  body.spg-page #navbar { background: rgba(232, 246, 237, 0.92); }
+  body.spg-page .nav-toggle span { background: var(--blue); }
 }
+.spg-tab-toggle-mobile { display: none; }
 
 /* Small "Back" bar shown on the form steps, directly under the always-visible
    site nav (not instead of it). */
@@ -2573,7 +2586,7 @@ img { max-width: 100%; height: auto; }
   color: var(--text-secondary); text-decoration: none; transition: all var(--t) var(--ease);
 }
 .spg-tab:hover { color: var(--text-primary); }
-.spg-tab.active { background: var(--white); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.spg-tab.active { background: var(--blue); color: var(--white); box-shadow: var(--shadow-sm); }
 
 /* ══════════════════════════════════════════════════════════════════
    HOMEPAGE v4 — Figma parity pass (page margin, hero, chips, cards,

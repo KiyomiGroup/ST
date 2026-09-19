@@ -71,12 +71,33 @@ async function postTask({ title, description, category, budget, location, deadli
 }
 
 async function fetchTasks({ limit = 50, category = '' } = {}) {
-  let q = window.supabase.from('tasks').select('*, users:user_id(name, business_name)')
+  /* NOTE: we deliberately do NOT use Supabase's embedded-relationship
+     syntax (e.g. .select('*, users:user_id(...)')) here. PostgREST needs
+     a real foreign-key constraint in the schema cache to resolve that,
+     and this project's `tasks` table doesn't have one set up from either
+     `user_id` or `customer_id` to `users.id` — trying it throws
+     "Could not find a relationship between 'tasks' and 'user_id'".
+     Fetching the poster's name as a separate query sidesteps that
+     entirely and works regardless of the FK setup. If you'd rather fix
+     this at the database level: in Supabase → Table Editor → tasks →
+     add a foreign key on customer_id (or user_id) referencing users.id,
+     then this function can go back to the single embedded query. */
+  let q = window.supabase.from('tasks').select('*')
     .eq('status', 'open').order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
   const { data, error } = await q;
   if (error) throw error;
-  return data || [];
+  const tasks = data || [];
+  if (!tasks.length) return tasks;
+
+  const posterIds = [...new Set(tasks.map(t => t.customer_id || t.user_id).filter(Boolean))];
+  if (posterIds.length) {
+    const { data: users } = await window.supabase.from('users')
+      .select('id, name, business_name').in('id', posterIds);
+    const byId = Object.fromEntries((users || []).map(u => [String(u.id), u]));
+    tasks.forEach(t => { t.users = byId[String(t.customer_id || t.user_id)] || null; });
+  }
+  return tasks;
 }
 
 async function fetchMyTasks() {

@@ -61,7 +61,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/tasks.css" />
 </head>
-<body>
+<body class="spg-page">
 
   <div id="navbar-placeholder"></div>
 
@@ -90,51 +90,15 @@
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
-    </div>
-  </div>
-
-  <!-- Category tabs -->
-  <div class="spg-content-below" style="background:var(--white); border-bottom:1px solid var(--border); margin-top:32px;">
-    <div class="container">
-      <div class="category-tabs-wrap" style="padding:16px 0 0; border:none; margin:0;">
-        <button class="category-tab active" data-category="">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          All
-        </button>
-        <button class="category-tab" data-category="barber">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/></svg>
-          Barber
-        </button>
-        <button class="category-tab" data-category="electrician">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Electrician
-        </button>
-        <button class="category-tab" data-category="cleaning">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg>
-          Cleaning
-        </button>
-        <button class="category-tab" data-category="mechanic">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          Mechanic
-        </button>
-        <button class="category-tab" data-category="beauty">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Beauty
-        </button>
-        <button class="category-tab" data-category="plumber">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
-          Plumber
-        </button>
-        <button class="category-tab" data-category="carpentry">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/></svg>
-          Carpentry
-        </button>
+      <div class="spg-tab-toggle spg-tab-toggle-mobile">
+        <a href="find-tasks.html" class="spg-tab">Tasks</a>
+        <a href="find-taskers.html" class="spg-tab active">Taskers</a>
       </div>
     </div>
   </div>
 
   <!-- Main layout -->
-  <div class="container">
+  <div class="spg-content-below container" style="margin-top:32px;">
     <div class="spg-layout">
 
       <!-- Filter sidebar -->
@@ -203,9 +167,9 @@
       <!-- Results grid -->
       <main>
         <div class="results-bar fade-up">
-          <div style="display:flex; align-items:center; gap:16px;">
+          <div class="spg-results-head" style="display:flex; align-items:center; gap:16px;">
             <h2 class="spg-results-heading">Recommended Taskers</h2>
-            <div class="spg-tab-toggle">
+            <div class="spg-tab-toggle spg-tab-toggle-desktop">
               <a href="find-tasks.html" class="spg-tab">Tasks</a>
               <a href="find-taskers.html" class="spg-tab active">Taskers</a>
             </div>

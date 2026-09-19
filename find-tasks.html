@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/tasks.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 </head>
-<body>
+<body class="spg-page">
   <div id="navbar-placeholder"></div>
 
   <div class="spg-sticky-top">
@@ -36,6 +36,10 @@
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
+      <div class="spg-tab-toggle spg-tab-toggle-mobile">
+        <a href="find-tasks.html" class="spg-tab active">Tasks</a>
+        <a href="find-taskers.html" class="spg-tab">Taskers</a>
+      </div>
     </div>
   </div>
 
@@ -91,9 +95,9 @@
         <!-- Tasks -->
         <main>
           <div class="results-bar">
-            <div style="display:flex; align-items:center; gap:16px;">
+            <div class="spg-results-head" style="display:flex; align-items:center; gap:16px;">
               <h2 class="spg-results-heading">Recommended Tasks</h2>
-              <div class="spg-tab-toggle">
+              <div class="spg-tab-toggle spg-tab-toggle-desktop">
                 <a href="find-tasks.html" class="spg-tab active">Tasks</a>
                 <a href="find-taskers.html" class="spg-tab">Taskers</a>
               </div>
