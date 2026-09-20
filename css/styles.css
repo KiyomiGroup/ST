@@ -2558,6 +2558,12 @@ img { max-width: 100%; height: auto; }
     background: #013109; /* flat, matching the nav exactly above it — no seam */
     flex-direction: column; align-items: flex-start; text-align: left;
     padding: 20px 24px 56px; border-radius: 0 0 32px 32px; min-height: 0;
+    /* Full-bleed edge-to-edge, cancelling out .container's own side
+       padding (it lives inside .container so desktop keeps its inset
+       margins) — only the bottom corners are rounded, right at the
+       screen edges, matching the reference. */
+    margin-left: calc(-1 * var(--gutter)); margin-right: calc(-1 * var(--gutter));
+    width: auto;
   }
   .spg-hero h1 { font-size: 1.7rem; }
   .spg-hero p { display: none; } /* subheading omitted on mobile — keeps the hero compact */
