@@ -2548,7 +2548,7 @@ img { max-width: 100%; height: auto; }
      padding-top already clears the fixed nav — see the base rule above. */
   .spg-sticky-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-    padding-top: var(--nav-height);
+    padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
     /* No background here — .spg-hero below carries the only visible
        green fill. If this wrapper were also solid green, the hero's
        rounded corners would have nothing to show up against (green on
@@ -2740,7 +2740,13 @@ img { max-width: 100%; height: auto; }
      usual "+" post-task button (recolored so it doesn't disappear
      against the dark background). Logged in: the "+" button is
      replaced by a notification bell + the user's own avatar. */
-  body.spg-page #navbar { background: #013109; }
+  body.spg-page #navbar {
+    background: #013109;
+    /* Extend the same green up behind the iPhone notch/status bar
+       instead of leaving it white there. */
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+  }
   body.spg-page .nav-toggle span { background: var(--white); }
   body.spg-page .nav-logo img { filter: brightness(0) invert(1); }
   body.spg-page .nav-mobile-plus { background: var(--white); color: var(--blue); }
