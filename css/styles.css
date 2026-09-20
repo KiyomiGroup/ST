@@ -2549,12 +2549,15 @@ img { max-width: 100%; height: auto; }
   .spg-sticky-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 900;
     padding-top: var(--nav-height);
-    background: #013109;
+    /* No background here — .spg-hero below carries the only visible
+       green fill. If this wrapper were also solid green, the hero's
+       rounded corners would have nothing to show up against (green on
+       green), which is exactly why the bottom corners looked square. */
   }
   .spg-hero {
     background: #013109; /* flat, matching the nav exactly above it — no seam */
     flex-direction: column; align-items: flex-start; text-align: left;
-    padding: 20px 24px 56px; border-radius: 32px; min-height: 0;
+    padding: 20px 24px 56px; border-radius: 0 0 32px 32px; min-height: 0;
   }
   .spg-hero h1 { font-size: 1.7rem; }
   .spg-hero p { display: none; } /* subheading omitted on mobile — keeps the hero compact */
