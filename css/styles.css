@@ -2548,12 +2548,13 @@ img { max-width: 100%; height: auto; }
      padding-top already clears the fixed nav — see the base rule above. */
   .spg-sticky-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-    padding-top: calc(var(--nav-height) + 16px);
-    background: var(--forest-deep);
+    padding-top: var(--nav-height);
+    background: #013109;
   }
   .spg-hero {
+    background: #013109; /* flat, matching the nav exactly above it — no seam */
     flex-direction: column; align-items: flex-start; text-align: left;
-    padding: 4px 24px 56px; border-radius: 32px; min-height: 0;
+    padding: 20px 24px 56px; border-radius: 32px; min-height: 0;
   }
   .spg-hero h1 { font-size: 1.7rem; }
   .spg-hero p { display: none; } /* subheading omitted on mobile — keeps the hero compact */
@@ -2561,7 +2562,7 @@ img { max-width: 100%; height: auto; }
 
   /* The Tasks/Taskers toggle sits right under the search bar and stays
      fixed with it (see the always-on .spg-tab-toggle rules above). */
-  .spg-tab-toggle { margin: 14px 4px 0; }
+  /* .spg-tab-toggle-top spacing is universal — see the base rule below. */
 }
 
 /* Small "Back" bar shown on the form steps, directly under the always-visible
@@ -2586,6 +2587,7 @@ img { max-width: 100%; height: auto; }
 
 /* Tasks/Taskers segmented toggle next to the results count (Figma) */
 .spg-tab-toggle { display: flex; max-width: 420px; background: var(--gray-100); border-radius: 9999px; padding: 4px; gap: 2px; }
+.spg-tab-toggle-top { margin: 0 0 24px; }
 .spg-tab {
   padding: 10px 20px; border-radius: 9999px; font-size: 0.92rem; font-weight: 700;
   color: var(--text-secondary); text-decoration: none; text-align: center; flex: 1;
