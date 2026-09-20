@@ -34,6 +34,7 @@ function initNavbarInstant() {
 
 function _applyNavState(loggedIn, role, name) {
   const id = (i) => document.getElementById(i);
+  document.body.classList.toggle('st-logged-in', !!loggedIn);
 
   /* The 4 nav links are always visible — just update their href and label */
   if (loggedIn) {
@@ -213,8 +214,64 @@ async function requireRole(role) {
   return user;
 }
 
+/* ── Search page as logged-in "home" — welcome heading + avatar ──
+   Runs on find-tasks.html / find-taskers.html only (no-ops elsewhere,
+   since the target elements won't exist on other pages). Paints
+   instantly from cached localStorage, then refreshes from the DB in
+   case the avatar changed since the last cache. */
+async function initDashboardWelcome() {
+  const headline = document.getElementById('spgHeroHeadline');
+  if (!headline) return;
+
+  const cachedName   = localStorage.getItem('st_name')   || '';
+  const cachedAvatar = localStorage.getItem('st_avatar') || '';
+  const isLoggedIn   = !!localStorage.getItem('st_session');
+  if (!isLoggedIn) return;
+
+  const sub            = document.getElementById('spgHeroSub');
+  const eyebrowText     = document.getElementById('spgHeroEyebrowText');
+  const heroAvatar      = document.getElementById('spgHeroAvatar');
+  const heroAvatarImg   = document.getElementById('spgHeroAvatarImg');
+  const heroAvatarInit  = document.getElementById('spgHeroAvatarInitial');
+  const navAvatarImg    = document.getElementById('navMobileAvatarImg');
+  const navAvatarInit   = document.getElementById('navMobileAvatarInitial');
+
+  function applyAvatar(name, avatarUrl) {
+    const initial = (name || 'U').trim().charAt(0).toUpperCase() || 'U';
+    [[heroAvatarImg, heroAvatarInit], [navAvatarImg, navAvatarInit]].forEach(([img, initEl]) => {
+      if (!img || !initEl) return;
+      if (avatarUrl) {
+        img.src = avatarUrl; img.style.display = 'block'; initEl.style.display = 'none';
+      } else {
+        img.style.display = 'none'; initEl.style.display = 'block'; initEl.textContent = initial;
+      }
+    });
+  }
+
+  const firstName = (cachedName || 'there').split(' ')[0];
+  headline.textContent = `Welcome back, ${firstName}!`;
+  if (eyebrowText) eyebrowText.textContent = 'Your Dashboard';
+  if (sub) sub.textContent = "Here's what's happening in your neighborhood today.";
+  if (heroAvatar) heroAvatar.style.display = 'flex';
+  applyAvatar(cachedName, cachedAvatar);
+
+  const bnProfile = document.getElementById('spgBnProfile');
+  if (bnProfile) bnProfile.href = getDashboardUrl(localStorage.getItem('st_role') || 'customer');
+
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+    const { data } = await window.supabase.from('users').select('name, avatar_url').eq('id', user.id).maybeSingle();
+    if (data) {
+      if (data.avatar_url) localStorage.setItem('st_avatar', data.avatar_url);
+      applyAvatar(data.name || cachedName, data.avatar_url || cachedAvatar);
+    }
+  } catch (e) { /* cached version above already applied — fail silently */ }
+}
+
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl,
   signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
+  initDashboardWelcome,
 };

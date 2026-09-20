@@ -114,6 +114,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.ST.auth.initNavbarInstant();
   }
 
+  /* Step 2b: On find-tasks.html / find-taskers.html, swap the hero into a
+     "Welcome back" dashboard greeting for logged-in users. No-ops on
+     every other page (the target elements simply don't exist there). */
+  if (window.ST?.auth?.initDashboardWelcome) {
+    window.ST.auth.initDashboardWelcome();
+  }
+
   /* Step 3: Load footer (non-blocking, doesn't affect visible UI) */
   loadComponent('#footer-placeholder', 'components/footer.html');
 

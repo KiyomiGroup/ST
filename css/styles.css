@@ -2435,6 +2435,14 @@ img { max-width: 100%; height: auto; }
 .spg-hero-spark { color: var(--white); flex-shrink: 0; }
 .spg-hero p { color: rgba(255,255,255,0.7); font-size: 1rem; max-width: 460px; }
 
+.spg-hero-avatar {
+  flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,0.5); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--blue); color: var(--white); font-weight: 800; font-size: 1.4rem;
+}
+.spg-hero-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .spg-searchbar {
   position: relative; z-index: 2; margin: -40px auto 0; max-width: 880px;
   background: var(--white); border-radius: 9999px; box-shadow: var(--shadow-xl);
@@ -2523,9 +2531,13 @@ img { max-width: 100%; height: auto; }
 
 @media (max-width: 900px) {
   .spg-layout { grid-template-columns: 1fr; }
-  .spg-searchbar { flex-direction: column; border-radius: var(--radius-lg); margin: -32px 4px 0; }
-  .spg-searchbar-divider { display: block; width: auto; height: 1px; margin: 0 18px; }
-  .spg-searchbar button { margin-top: 4px; padding: 12px; }
+  .spg-searchbar { border-radius: 9999px; margin: -32px 4px 0; padding: 6px 6px 6px 22px; flex-direction: row; align-items: center; }
+  .spg-searchbar-location-wrap { display: none; }
+  .spg-searchbar button {
+    margin-top: 0; padding: 0; width: 44px; height: 44px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  }
+  .spg-searchbar button span { display: none; }
   .filter-sidebar { position: static; }
 
   /* Nav + hero + search bar stay fixed together and never scroll away;
@@ -2545,19 +2557,12 @@ img { max-width: 100%; height: auto; }
   }
   .spg-hero h1 { font-size: 1.7rem; }
   .spg-hero p { display: none; } /* subheading omitted on mobile — keeps the hero compact */
+  .spg-hero-avatar { position: absolute; top: 4px; right: 24px; width: 52px; height: 52px; font-size: 1.15rem; }
 
-  /* The Tasks/Taskers toggle moves up to sit right under the search bar
-     (and stays fixed with it); the results-bar copy is hidden here. */
-  .spg-tab-toggle-desktop { display: none; }
-  .spg-tab-toggle-mobile { display: flex; margin: 14px 4px 0; }
-  .spg-tab-toggle-mobile .spg-tab { flex: 1; text-align: center; padding: 9px 16px; }
-
-  /* Search-page nav: tinted green instead of the site-wide white nav,
-     scoped to this page only via body.spg-page. */
-  body.spg-page #navbar { background: rgba(232, 246, 237, 0.92); }
-  body.spg-page .nav-toggle span { background: var(--blue); }
+  /* The Tasks/Taskers toggle sits right under the search bar and stays
+     fixed with it (see the always-on .spg-tab-toggle rules above). */
+  .spg-tab-toggle { margin: 14px 4px 0; }
 }
-.spg-tab-toggle-mobile { display: none; }
 
 /* Small "Back" bar shown on the form steps, directly under the always-visible
    site nav (not instead of it). */
@@ -2580,10 +2585,11 @@ img { max-width: 100%; height: auto; }
 .av2-page--form { padding-top: calc(var(--nav-height) + 48px); }
 
 /* Tasks/Taskers segmented toggle next to the results count (Figma) */
-.spg-tab-toggle { display: inline-flex; background: var(--gray-100); border-radius: 9999px; padding: 3px; gap: 2px; }
+.spg-tab-toggle { display: flex; max-width: 420px; background: var(--gray-100); border-radius: 9999px; padding: 4px; gap: 2px; }
 .spg-tab {
-  padding: 6px 16px; border-radius: 9999px; font-size: 0.82rem; font-weight: 600;
-  color: var(--text-secondary); text-decoration: none; transition: all var(--t) var(--ease);
+  padding: 10px 20px; border-radius: 9999px; font-size: 0.92rem; font-weight: 700;
+  color: var(--text-secondary); text-decoration: none; text-align: center; flex: 1;
+  transition: all var(--t) var(--ease);
 }
 .spg-tab:hover { color: var(--text-primary); }
 .spg-tab.active { background: var(--blue); color: var(--white); box-shadow: var(--shadow-sm); }
@@ -2694,6 +2700,7 @@ img { max-width: 100%; height: auto; }
 
 /* Mobile nav: hamburger — logo — (+) post-a-task, in that order */
 .nav-mobile-plus { display: none; }
+#navMobileAccount { display: none; }
 @media (max-width: 768px) {
   .nav-inner { justify-content: flex-start; gap: 14px; }
   .nav-toggle { order: 1; }
@@ -2706,6 +2713,53 @@ img { max-width: 100%; height: auto; }
     transition: background var(--t) var(--ease);
   }
   .nav-mobile-plus:hover { background: var(--blue-hover); }
+
+  /* Bell + avatar — only ever shown via body.spg-page.st-logged-in (see
+     the search-page-specific rules further down this file). */
+  #navMobileAccount { order: 3; margin-left: auto; align-items: center; gap: 10px; }
+  .nav-mobile-bell {
+    position: relative; width: 34px; height: 34px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.15); color: var(--white); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-mobile-avatar {
+    width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--blue); color: var(--white); font-weight: 700; font-size: 0.85rem;
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+  .nav-mobile-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* Search-page nav (mobile): dark green background matching the hero.
+     Logged out: hamburger + logo, both white for contrast, plus the
+     usual "+" post-task button (recolored so it doesn't disappear
+     against the dark background). Logged in: the "+" button is
+     replaced by a notification bell + the user's own avatar. */
+  body.spg-page #navbar { background: #013109; }
+  body.spg-page .nav-toggle span { background: var(--white); }
+  body.spg-page .nav-logo img { filter: brightness(0) invert(1); }
+  body.spg-page .nav-mobile-plus { background: var(--white); color: var(--blue); }
+  body.spg-page.st-logged-in .nav-mobile-plus { display: none; }
+  body.spg-page.st-logged-in #navMobileAccount { display: flex; }
+}
+
+/* ── Mobile bottom tab bar (Home / Search / Saved / Messages / Profile) ── */
+.spg-bottom-nav { display: none; }
+@media (max-width: 900px) {
+  .spg-content-below { padding-bottom: 88px; }
+  .spg-bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 950;
+    background: var(--white); border-top: 1px solid var(--border);
+    border-radius: 32px 32px 0 0;
+    padding: 10px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.06);
+  }
+  .spg-bn-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; cursor: pointer; text-decoration: none;
+    color: var(--text-muted); font-size: 0.66rem; font-weight: 600; font-family: var(--font);
+  }
+  .spg-bn-item.active { color: var(--blue); }
 }
 
 /* Hero CTAs stack vertically on mobile instead of sitting side by side —
