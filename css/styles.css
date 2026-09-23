@@ -2531,7 +2531,7 @@ img { max-width: 100%; height: auto; }
 
 @media (max-width: 900px) {
   .spg-layout { grid-template-columns: 1fr; }
-  .spg-searchbar { border-radius: 9999px; margin: -76px 4px 0; padding: 6px 6px 6px 22px; flex-direction: row; align-items: center; }
+  .spg-searchbar { border-radius: 9999px; margin: -32px 4px 0; padding: 6px 6px 6px 22px; flex-direction: row; align-items: center; }
   .spg-searchbar-location-wrap { display: none; }
   .spg-searchbar button {
     margin-top: 0; padding: 0; width: 44px; height: 44px; flex-shrink: 0;
@@ -2557,7 +2557,7 @@ img { max-width: 100%; height: auto; }
   .spg-hero {
     background: #013109; /* flat, matching the nav exactly above it — no seam */
     flex-direction: column; align-items: flex-start; text-align: left;
-    padding: 20px 24px 100px; border-radius: 0 0 32px 32px; min-height: 0;
+    padding: 20px 24px 56px; border-radius: 0 0 32px 32px; min-height: 0;
     /* Full-bleed edge-to-edge, cancelling out .container's own side
        padding (it lives inside .container so desktop keeps its inset
        margins) — only the bottom corners are rounded, right at the
