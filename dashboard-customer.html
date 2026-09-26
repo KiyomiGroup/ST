@@ -336,7 +336,6 @@
   </style>
 </head>
 <body class="has-mobile-header">
-  <div id="navbar-placeholder"></div>
 
   <div class="mobile-dash-header">
     <span class="mobile-dash-title" id="mobileDashTitle">📋 Overview</span>
@@ -729,7 +728,15 @@
       document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
       var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
-      if (btn) btn.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+        /* If this is a pill in the black nav and it's off-screen (nav
+           content overflowing its width), slide it into view so the
+           newly-selected item scrolls in and the old one scrolls out. */
+        if (btn.classList.contains('ds-pill-item') && typeof btn.scrollIntoView === 'function') {
+          btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }
     }
 
     function fmtDate(iso) {
