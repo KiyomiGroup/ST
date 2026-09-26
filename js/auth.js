@@ -33,61 +33,110 @@ function initNavbarInstant() {
 }
 
 function _applyNavState(loggedIn, role, name) {
-  const id = (i) => document.getElementById(i);
-  document.body.classList.toggle('st-logged-in', !!loggedIn);
+  const $ = (i) => document.getElementById(i);
+  const body = document.body;
 
-  /* The 4 nav links are always visible — just update their href and label */
+  /* Body classes drive CSS show/hide rules */
+  body.classList.toggle('st-logged-in',   !!loggedIn);
+  body.classList.toggle('role-tasker',    !!loggedIn && role === 'tasker');
+  body.classList.toggle('role-customer',  !!loggedIn && role !== 'tasker');
+
   if (loggedIn) {
-    /* Logged in — update action link and show user info */
-    const actionLink  = id('nav-action');
-    const actionLabel = id('nav-action-label');
-    const dashLink    = id('nav-dashboard');
-    const mAction     = id('nav-mobile-action');
-    const mDash       = id('nav-mobile-dashboard');
+    const isTasker = role === 'tasker';
+    const dashUrl  = isTasker ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 
-    if (role === 'tasker') {
-      if (actionLink)  actionLink.href  = 'post-service.html';
-      if (actionLabel) actionLabel.textContent = 'Post Service';
-      if (dashLink)    dashLink.href    = 'dashboard-tasker.html';
-      if (mAction)     mAction.href     = 'post-service.html';
-      if (mAction)     mAction.textContent = 'Post Service';
-      if (mDash)       mDash.href       = 'dashboard-tasker.html';
-    } else {
-      if (actionLink)  actionLink.href  = 'post-task.html';
-      if (actionLabel) actionLabel.textContent = 'Post a Task';
-      if (dashLink)    dashLink.href    = 'dashboard-customer.html';
-      if (mAction)     mAction.href     = 'post-task.html';
-      if (mAction)     mAction.textContent = 'Post a Task';
-      if (mDash)       mDash.href       = 'dashboard-customer.html';
-    }
+    /* Show the correct pill nav */
+    const pillT = $('navPillTasker');
+    const pillC = $('navPillCustomer');
+    if (pillT) pillT.style.display = isTasker  ? 'flex' : 'none';
+    if (pillC) pillC.style.display = !isTasker ? 'flex' : 'none';
 
-    /* Show name chip + logout, hide login/signup */
-    const chip = id('navUserName');
-    if (chip && name) { chip.textContent = name; chip.style.display = 'inline-flex'; }
-    const lo = id('navLogout'); if (lo) lo.style.display = 'inline-flex';
-    const ml = id('navMobileLogout'); if (ml) ml.style.display = 'flex';
-    const li = id('nav-login');    if (li) li.style.display = 'none';
-    const si = id('nav-signup');   if (si) si.style.display = 'none';
-    const mli = id('nav-mobile-login');  if (mli) mli.style.display = 'none';
-    const msi = id('nav-mobile-signup'); if (msi) msi.style.display = 'none';
-    /* Dashboard link only appears in the nav once a user is logged in */
-    if (dashLink) dashLink.style.display = '';
-    if (mDash)    mDash.style.display    = '';
+    /* Role badge */
+    const badgeT = $('navRoleBadge');
+    const badgeC = $('navRoleBadgeCustomer');
+    if (badgeT) badgeT.style.display = isTasker  ? 'flex' : 'none';
+    if (badgeC) badgeC.style.display = !isTasker ? 'flex' : 'none';
+
+    /* Icon bar */
+    const iconBar = $('navIconBar');
+    if (iconBar) iconBar.style.display = 'flex';
+
+    /* Update icon bar links for role */
+    const iconBookings = $('navIconBookings');
+    const iconMessages = $('navIconMessages');
+    const iconSettings = $('navIconSettings');
+    if (iconBookings) iconBookings.href = dashUrl + '?panel=bookings';
+    if (iconMessages) iconMessages.href = dashUrl + '?panel=messages';
+    if (iconSettings) iconSettings.href = dashUrl + '?panel=profile';
+
+    /* Avatar initials */
+    const initials = name
+      ? name.trim().replace(/[^a-zA-Z ]/g,'').split(' ').filter(Boolean)
+             .map(w => w[0]).join('').slice(0,2).toUpperCase()
+      : (isTasker ? 'T' : 'U');
+    const av = $('navAvatar');
+    const avInit = $('navAvatarInitial');
+    if (avInit) avInit.textContent = initials;
+    if (av)     av.href = dashUrl;
+
+    /* Mobile: hide + / show account icons */
+    const mPlus = $('nav-mobile-plus-btn');
+    const mAcct = $('navMobileAccount');
+    if (mPlus) mPlus.style.display = 'none';
+    if (mAcct) mAcct.style.display = 'flex';
+    const mAvInit = $('navMobileAvatarInitial');
+    if (mAvInit) mAvInit.textContent = initials;
+    const mDash = $('nav-mobile-dashboard');
+    if (mDash) { mDash.href = dashUrl; mDash.style.display = ''; }
+
+    /* Hide logged-out elements */
+    [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
+      .forEach(el => el && (el.style.display = 'none'));
+    const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'flex';
+
+    /* Highlight active pill item based on current page */
+    _highlightActivePillItem();
+
   } else {
-    /* Logged out — show login/signup, hide user info */
-    const li = id('nav-login');    if (li) li.style.display = '';
-    const si = id('nav-signup');   if (si) si.style.display = '';
-    const mli = id('nav-mobile-login');  if (mli) mli.style.display = '';
-    const msi = id('nav-mobile-signup'); if (msi) msi.style.display = '';
-    const lo = id('navLogout');    if (lo) lo.style.display = 'none';
-    const ml = id('navMobileLogout'); if (ml) ml.style.display = 'none';
-    const chip = id('navUserName'); if (chip) chip.style.display = 'none';
-    /* Reset action links to default */
-    const actionLabel = id('nav-action-label');
-    if (actionLabel) actionLabel.textContent = 'Post a Task';
-    /* Dashboard link is only for logged-in users */
-    const dl = id('nav-dashboard');        if (dl) dl.style.display = 'none';
-    const mdl = id('nav-mobile-dashboard'); if (mdl) mdl.style.display = 'none';
+    /* Logged out */
+    const pillT = $('navPillTasker');
+    const pillC = $('navPillCustomer');
+    if (pillT) pillT.style.display = 'none';
+    if (pillC) pillC.style.display = 'none';
+    const iconBar = $('navIconBar');
+    if (iconBar) iconBar.style.display = 'none';
+    [$('navRoleBadge'),$('navRoleBadgeCustomer')]
+      .forEach(el => el && (el.style.display = 'none'));
+    [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
+      .forEach(el => el && (el.style.display = ''));
+    const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'none';
+    const mPlus = $('nav-mobile-plus-btn');
+    const mAcct = $('navMobileAccount');
+    if (mPlus) mPlus.style.display = '';
+    if (mAcct) mAcct.style.display = 'none';
+  }
+}
+
+function _highlightActivePillItem() {
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+  const search = window.location.search;
+  const panel  = new URLSearchParams(search).get('panel') || '';
+  /* Remove all active states */
+  document.querySelectorAll('.nav-pill-item').forEach(el => el.classList.remove('active'));
+  /* Match by page + panel */
+  const map = {
+    'dashboard-tasker.html':   { '': 'np-overview',      'applications': 'np-applications', 'bookings': 'np-bookings', 'messages': 'np-messages', 'wallet': 'np-wallet' },
+    'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
+    'find-tasks.html':         { '': 'np-find-tasks' },
+    'find-taskers.html':       { '': 'npc-find-taskers' },
+  };
+  const pageMap = map[page];
+  if (pageMap) {
+    const targetId = pageMap[panel] || pageMap[''];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) el.classList.add('active');
+    }
   }
 }
 
@@ -118,6 +167,22 @@ async function syncNavbarAuthState() {
     } catch(e) {}
 
     _applyNavState(true, role, name);
+    /* Try to load profile photo */
+    try {
+      const photoUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      const uRes = !photoUrl && await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
+      const finalPhoto = photoUrl || (uRes?.data?.avatar_url);
+      if (finalPhoto) {
+        const avImg = document.getElementById('navAvatarImg');
+        const avInit = document.getElementById('navAvatarInitial');
+        if (avImg) {
+          avImg.src = finalPhoto;
+          avImg.style.display = 'block';
+          if (avInit) avInit.style.display = 'none';
+          avImg.onerror = () => { avImg.style.display = 'none'; if (avInit) avInit.style.display = ''; };
+        }
+      }
+    } catch(_e) {}
   } else {
     /* Clear cache */
     try {

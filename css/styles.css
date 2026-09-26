@@ -3022,3 +3022,184 @@ img { max-width: 100%; height: auto; }
   .ds-icon-cluster > .ds-icon-btn:nth-child(-n+4) { display: none; } /* keep bell/gear/avatar visible on mobile, hide the 4 shortcut icons */
   .ds-main-head { margin: 20px 0 16px; }
 }
+
+
+/* ================================================================
+   NAV v5 — Role-aware logged-in nav (Tasker / Customer pill nav)
+   ================================================================ */
+
+/* Left cluster: logo + role badge + tagline */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.nav-logo-tagline {
+  display: none; /* shown only when logged in */
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 2px;
+}
+.st-logged-in .nav-logo-tagline { display: block; }
+
+/* Role badge pill */
+.nav-role-badge {
+  display: none;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border: 1.5px solid currentColor;
+  white-space: nowrap;
+}
+.nav-role-badge.nav-tasker  { color: var(--blue); border-color: var(--blue-border); background: var(--blue-light); }
+.nav-role-badge.nav-role-customer { color: var(--text-secondary); border-color: var(--border); background: var(--gray-100); }
+
+/* ── Logged-out centre links ── */
+.nav-links-loggedout { display: flex; align-items: center; gap: 4px; flex: 1; }
+.st-logged-in .nav-links-loggedout { display: none !important; }
+.st-logged-in #navActionsLoggedOut { display: none !important; }
+
+/* ── Pill nav (centre, logged-in) ── */
+.nav-pill-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--charcoal);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  gap: 0;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.nav-pill::-webkit-scrollbar { display: none; }
+
+.nav-pill-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  position: relative;
+}
+.nav-pill-item:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+.nav-pill-item.active {
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+}
+.nav-pill-item svg { flex-shrink: 0; opacity: 0.7; }
+.nav-pill-item.active svg { opacity: 1; }
+
+/* Application count badge inside pill */
+.nav-pill-count {
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 1px 5px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.4;
+}
+.nav-pill-item.active .nav-pill-count {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ── Right icon bar (logged-in) ── */
+.nav-icon-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.nav-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--t), background var(--t);
+  position: relative;
+}
+.nav-icon-btn:hover { color: var(--text-primary); background: var(--gray-100); }
+
+.nav-icon-btn-rel { position: relative; }
+
+/* Notification dot on bell */
+.nav-notif-dot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid #fff;
+}
+
+/* Avatar */
+.nav-avatar-wrap {
+  position: relative;
+  margin-left: 4px;
+}
+.nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--charcoal);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.nav-avatar-dot {
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid #fff;
+}
+
+/* ── Show/hide per role ── */
+.st-logged-in.role-tasker  .nav-tasker  { display: flex; }
+.st-logged-in.role-customer .nav-customer { display: flex; }
+
+/* The icon bar settings/bookings links also update per role */
