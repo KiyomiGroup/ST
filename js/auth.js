@@ -62,12 +62,19 @@ function _applyNavState(loggedIn, role, name) {
     if (iconBar) iconBar.style.display = 'flex';
 
     /* Update icon bar links for role */
-    const iconBookings = $('navIconBookings');
-    const iconMessages = $('navIconMessages');
     const iconSettings = $('navIconSettings');
-    if (iconBookings) iconBookings.href = dashUrl + '?panel=bookings';
-    if (iconMessages) iconMessages.href = dashUrl + '?panel=messages';
     if (iconSettings) iconSettings.href = dashUrl + '?panel=profile';
+
+    /* Icon bar shortcut slots — point to pages not already reachable
+       from the pill nav, swapped per role */
+    const slot1T = $('navIconSlot1Tasker');
+    const slot1C = $('navIconSlot1Customer');
+    const slot2T = $('navIconSlot2Tasker');
+    const slot2C = $('navIconSlot2Customer');
+    if (slot1T) slot1T.style.display = isTasker  ? 'flex' : 'none';
+    if (slot1C) slot1C.style.display = !isTasker ? 'flex' : 'none';
+    if (slot2T) slot2T.style.display = isTasker  ? 'flex' : 'none';
+    if (slot2C) slot2C.style.display = !isTasker ? 'flex' : 'none';
 
     /* Avatar initials */
     const initials = name

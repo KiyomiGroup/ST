@@ -2951,6 +2951,10 @@ img { max-width: 100%; height: auto; }
    .dashboard-nav-item base rules — dashboard-tasker.html still uses
    the old sidebar layout untouched.
    ================================================================ */
+/* This dashboard builds its own in-page nav (.ds-topnav) instead of the
+   fixed global #navbar, so it doesn't need the space .dashboard-page
+   normally reserves for that fixed nav. */
+.ds-dashboard-page { padding-top: 0; }
 .ds-topnav { background: var(--white); border-bottom: 1px solid var(--border); }
 .ds-topnav-inner {
   max-width: 1400px; margin: 0 auto; padding: 16px 24px;
@@ -2969,7 +2973,7 @@ img { max-width: 100%; height: auto; }
 
 .ds-pill-nav {
   flex: 1; display: flex; align-items: center; gap: 2px; justify-content: center;
-  background: var(--charcoal, #1a1a1a); border-radius: 9999px; padding: 5px;
+  background: var(--charcoal, #1a1a1a); border-radius: 9999px; padding: 5px 5px 5px 12px;
   min-width: 0; overflow-x: auto; scrollbar-width: none;
 }
 .ds-pill-nav::-webkit-scrollbar { display: none; }
