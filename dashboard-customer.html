@@ -440,61 +440,78 @@
   </div>
 
   <div class="dashboard-page">
-    <div class="dashboard-header">
-      <div class="container">
-        <h1 id="dashGreeting">My Dashboard</h1>
-        <p>Track your tasks, applications and bookings</p>
+    <div class="ds-topnav">
+      <div class="ds-topnav-inner">
+        <div class="ds-nav-brand">
+          <div class="ds-brand-row">
+            <a href="index.html" class="ds-logo">StreetTasker</a>
+            <span class="ds-role-badge">CUSTOMER</span>
+          </div>
+          <div class="ds-brand-sub">Smart Services, Done Right</div>
+        </div>
+
+        <div class="ds-task-count-pill" id="dsTaskCountPill">— Tasks</div>
+
+        <nav class="ds-pill-nav">
+          <button class="dashboard-nav-item ds-pill-item active" data-panel="overview" onclick="switchPanel('overview',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Overview
+          </button>
+          <button class="dashboard-nav-item ds-pill-item" data-panel="my-tasks" onclick="switchPanel('my-tasks',this);loadMyTasks()">My Tasks</button>
+          <button class="dashboard-nav-item ds-pill-item" data-panel="applications" onclick="switchPanel('applications',this);loadApplications()">
+            Applications
+            <span id="custAppBadge" class="ds-pill-badge" style="display:none;"></span>
+          </button>
+          <button class="dashboard-nav-item ds-pill-item" data-panel="bookings" onclick="switchPanel('bookings',this);loadBookings()">Bookings</button>
+          <button class="dashboard-nav-item ds-pill-item" data-panel="messages" onclick="switchPanel('messages',this);initMessagesPanel()">
+            Messages
+            <span id="msgNavBadge" class="ds-pill-badge" style="display:none;"></span>
+          </button>
+          <button class="dashboard-nav-item ds-pill-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadWalletPanel()">
+            Wallet
+            <span id="custWalletBadge" class="ds-pill-badge" style="display:none;"></span>
+          </button>
+        </nav>
+
+        <div class="ds-icon-cluster">
+          <button class="ds-icon-btn" title="My Tasks" onclick="var b=document.querySelector('.ds-pill-item[data-panel=my-tasks]');switchPanel('my-tasks',b);loadMyTasks()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          </button>
+          <button class="ds-icon-btn" title="Messages" onclick="var b=document.querySelector('.ds-pill-item[data-panel=messages]');switchPanel('messages',b);initMessagesPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="ds-icon-btn" title="Bookings" onclick="var b=document.querySelector('.ds-pill-item[data-panel=bookings]');switchPanel('bookings',b);loadBookings()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button class="ds-icon-btn" title="Wallet" onclick="var b=document.querySelector('.ds-pill-item[data-panel=wallet]');switchPanel('wallet',b);loadWalletPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </button>
+          <button class="ds-icon-btn dashboard-nav-item" data-panel="notifications" title="Notifications" onclick="switchPanel('notifications',this);loadCustNotifications()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span id="custNotifBadge" class="ds-icon-dot" style="display:none;"></span>
+          </button>
+          <button class="ds-icon-btn dashboard-nav-item" data-panel="profile" title="Settings" onclick="switchPanel('profile',this);loadProfilePanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button class="ds-avatar-btn" title="Profile" onclick="var b=document.querySelector('[data-panel=profile]');switchPanel('profile',b);loadProfilePanel()">
+            <span id="dsAvatarInitials">ST</span>
+            <span class="ds-avatar-dot"></span>
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="dashboard-body">
       <div class="container">
-        <div class="dashboard-grid">
+        <div class="ds-main-head">
+          <div>
+            <h1 id="dashGreeting" class="ds-main-greeting">My Dashboard</h1>
+            <p class="ds-main-sub">Track your tasks, applications and bookings</p>
+          </div>
+          <a href="post-task.html" class="btn btn-primary">+ Post New Task</a>
+        </div>
 
-          <!-- Sidebar -->
-          <aside class="dashboard-sidebar">
-            <nav class="dashboard-nav">
-              <button class="dashboard-nav-item active" data-panel="overview" onclick="switchPanel('overview',this)">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                Overview
-              </button>
-              <button class="dashboard-nav-item" data-panel="my-tasks" onclick="switchPanel('my-tasks',this);loadMyTasks()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-                My Tasks
-              </button>
-              <button class="dashboard-nav-item" data-panel="applications" onclick="switchPanel('applications',this);loadApplications()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Applications
-                <span id="custAppBadge" style="display:none;background:#2563eb;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
-              </button>
-              <button class="dashboard-nav-item" data-panel="notifications" onclick="switchPanel('notifications',this);loadCustNotifications()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Notifications
-                <span id="custNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
-              </button>
-              <button class="dashboard-nav-item" data-panel="messages" onclick="switchPanel('messages',this);initMessagesPanel()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Messages
-                <span id="msgNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
-              </button>
-              <button class="dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this);loadBookings()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Bookings
-              </button>
-              <button class="dashboard-nav-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadWalletPanel()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                My Wallet
-                <span id="custWalletBadge" style="display:none;background:#16a34a;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;"></span>
-              </button>
-              <button class="dashboard-nav-item" data-panel="profile" onclick="switchPanel('profile',this);loadProfilePanel()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Edit Profile
-              </button>
-            </nav>
-            <div class="sidebar-cta-wrap" style="margin-top:16px;">
-              <a href="post-task.html" class="btn btn-primary btn-full" style="justify-content:center;">+ Post New Task</a>
-            </div>
-          </aside>
+        <div class="ds-main-full">
 
           <main>
             <div id="dashLoading" style="display:none;text-align:center;padding:48px;color:var(--text-muted);">
@@ -1257,6 +1274,11 @@
         || 'there';
       var greetEl = document.getElementById('dashGreeting');
       if (greetEl) greetEl.textContent = 'Welcome back, ' + name;
+      var avatarEl = document.getElementById('dsAvatarInitials');
+      if (avatarEl) {
+        var initials = name.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+        avatarEl.textContent = initials || 'ST';
+      }
 
       /* Check for ?panel= URL param — used by post-task redirect to land on My Tasks */
       var urlParams  = new URLSearchParams(window.location.search);
@@ -1272,7 +1294,7 @@
       window.supabase.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('is_read',false).then(function(r){var count=r.count||0;
         if (count > 0) {
           var nb = document.getElementById('custNotifBadge');
-          if (nb) { nb.textContent = count > 9 ? '9+' : String(count); nb.style.display = 'inline'; }
+          if (nb) { nb.textContent = count > 9 ? '9+' : String(count); nb.style.display = 'flex'; }
         }
       }).catch(function(){});
 
@@ -1297,6 +1319,8 @@
       document.getElementById('statTotal').textContent  = tasks.length;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statDone').textContent   = done;
+      var countPill = document.getElementById('dsTaskCountPill');
+      if (countPill) countPill.textContent = tasks.length + (tasks.length === 1 ? ' Task' : ' Tasks');
 
 
 

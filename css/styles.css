@@ -2943,3 +2943,82 @@ img { max-width: 100%; height: auto; }
 
 .lt-note-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: var(--text-muted); max-width: 480px; }
 .lt-note-row svg { flex-shrink: 0; margin-top: 2px; color: var(--blue); }
+
+/* ================================================================
+   CUSTOMER DASHBOARD — new top nav (Figma: dark pill nav + icon
+   cluster). Scoped to .ds-* classes only, used by dashboard-customer.html.
+   Deliberately does NOT touch .dashboard-grid/.dashboard-sidebar/
+   .dashboard-nav-item base rules — dashboard-tasker.html still uses
+   the old sidebar layout untouched.
+   ================================================================ */
+.ds-topnav { background: var(--white); border-bottom: 1px solid var(--border); }
+.ds-topnav-inner {
+  max-width: 1400px; margin: 0 auto; padding: 16px 24px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.ds-nav-brand { flex-shrink: 0; }
+.ds-brand-row { display: flex; align-items: center; gap: 8px; }
+.ds-logo { font-family: var(--font-heading, var(--font)); font-weight: 800; font-size: 1.35rem; color: var(--forest, #16A34A); text-decoration: none; letter-spacing: -0.02em; }
+.ds-role-badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--forest, #16A34A); background: var(--mint); padding: 3px 9px; border-radius: 9999px; }
+.ds-brand-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 1px; }
+
+.ds-task-count-pill {
+  flex-shrink: 0; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+  background: var(--gray-100); border-radius: 9999px; padding: 8px 16px; white-space: nowrap;
+}
+
+.ds-pill-nav {
+  flex: 1; display: flex; align-items: center; gap: 2px; justify-content: center;
+  background: var(--charcoal, #1a1a1a); border-radius: 9999px; padding: 5px;
+  min-width: 0; overflow-x: auto; scrollbar-width: none;
+}
+.ds-pill-nav::-webkit-scrollbar { display: none; }
+.ds-pill-item {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 9px 16px; border-radius: 9999px; border: none; background: none;
+  color: rgba(255,255,255,0.75); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: all var(--t) var(--ease); font-family: var(--font);
+}
+.ds-pill-item svg { opacity: 1; flex-shrink: 0; }
+.ds-pill-item:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.ds-pill-item.active { background: var(--forest, #16A34A); color: var(--white); }
+.ds-pill-badge { background: var(--red); color: var(--white); border-radius: 999px; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; line-height: 1.4; }
+
+.ds-icon-cluster { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ds-icon-btn {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--gray-100); border: 1px solid transparent; color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: all var(--t) var(--ease);
+}
+.ds-icon-btn:hover { background: var(--gray-200); color: var(--text-primary); }
+.ds-icon-btn.active { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
+.ds-icon-dot {
+  position: absolute; top: 6px; right: 6px; min-width: 8px; height: 8px; border-radius: 999px;
+  background: var(--red); border: 1.5px solid var(--white);
+}
+.ds-icon-dot:not(:empty) { min-width: 15px; height: 15px; font-size: 0.6rem; font-weight: 700; color: var(--white); display: flex; align-items: center; justify-content: center; top: 2px; right: 2px; padding: 0 3px; }
+
+.ds-avatar-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--charcoal, #1a1a1a); color: var(--white); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+}
+.ds-avatar-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--forest, #16A34A); border: 2px solid var(--white); }
+
+.ds-main-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 28px 0 20px; flex-wrap: wrap; }
+.ds-main-greeting { font-size: 1.4rem; margin-bottom: 2px; }
+.ds-main-sub { color: var(--text-muted); font-size: 0.88rem; }
+.ds-main-full { width: 100%; }
+
+@media (max-width: 1100px) {
+  .ds-pill-nav { order: 3; width: 100%; justify-content: flex-start; }
+  .ds-topnav-inner { padding: 14px 16px; }
+}
+@media (max-width: 640px) {
+  .ds-brand-sub { display: none; }
+  .ds-task-count-pill { display: none; }
+  .ds-icon-cluster > .ds-icon-btn:nth-child(-n+4) { display: none; } /* keep bell/gear/avatar visible on mobile, hide the 4 shortcut icons */
+  .ds-main-head { margin: 20px 0 16px; }
+}
