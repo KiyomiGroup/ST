@@ -44,6 +44,32 @@ async function loadComponent(selector, url) {
   }
 }
 
+/* ── Global bottom nav loader ───────────────────────────────────
+ * Unlike the navbar/footer, the bottom nav has no placeholder <div>
+ * on every page — it's appended straight to <body> so every page that
+ * loads app.js gets it automatically. It stays invisible (see
+ * body.st-logged-in gate in css/styles.css) unless the visitor is
+ * logged in, so guests never see it. */
+async function loadBottomNav() {
+  try {
+    const res  = await fetch('components/bottom-nav.html');
+    const html = await res.text();
+    const wrapper = document.createElement('div');
+    wrapper.id = 'bottom-nav-root';
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper);
+
+    wrapper.querySelectorAll('script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.textContent = oldScript.textContent;
+      oldScript.replaceWith(newScript);
+    });
+  } catch (err) {
+    console.warn('[StreetTasker] Could not load bottom nav', err);
+  }
+}
+
 /* ── Navbar Logic ────────────────────────────────────────────── */
 /**
  * Initializes scroll-based navbar styling and mobile menu toggle.
@@ -123,6 +149,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* Step 3: Load footer (non-blocking, doesn't affect visible UI) */
   loadComponent('#footer-placeholder', 'components/footer.html');
+
+  /* Step 3b: Load the global mobile bottom nav (non-blocking). CSS keeps
+     it hidden until body.st-logged-in is set, so guests never see it. */
+  loadBottomNav();
 
   /* Step 4: Run page-specific init */
   if (typeof initPage === 'function') {

@@ -264,81 +264,9 @@
       text-transform: uppercase;
     }
 
-    /* ── Bottom bar: 5 items, ensure even spacing ── */
-    .mobile-bottom-bar {
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--white);
-      border-top: 1px solid var(--border);
-      padding: 6px 0 env(safe-area-inset-bottom, 0px);
-      z-index: 100;
-      justify-content: space-around;
-      align-items: flex-end;
-    }
-    .mobile-bottom-bar button,
-    .mobile-bottom-bar a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      flex: 1;
-      background: none;
-      border: none;
-      font-size: 0.6rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 4px 2px 6px;
-      border-radius: 0;
-      font-family: var(--font);
-      text-decoration: none;
-    }
-    .mobile-bottom-bar button.active { color: var(--blue); }
-    .mobile-bottom-bar button svg,
-    .mobile-bottom-bar a svg { flex-shrink: 0; }
-
-    /* Post Service center button */
-    .mobile-create-btn {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 3px !important;
-      flex: 1 !important;
-      padding: 0 2px 6px !important;
-      text-decoration: none !important;
-      color: var(--text-muted) !important;
-    }
-    .mobile-create-icon {
-      width: 46px !important;
-      height: 46px !important;
-      border-radius: 50% !important;
-      background: var(--blue) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 0 4px 12px rgba(10,132,255,0.35) !important;
-      margin-top: -18px !important;
-      border: 3px solid #fff !important;
-      transition: transform 0.15s, box-shadow 0.15s !important;
-    }
-    .mobile-create-icon svg { stroke: #fff !important; }
-    .mobile-create-btn span {
-      font-size: 0.6rem !important;
-      font-weight: 500 !important;
-      color: var(--text-muted) !important;
-      margin-top: 2px !important;
-    }
-    .mobile-create-btn:active .mobile-create-icon {
-      transform: scale(0.92) !important;
-      box-shadow: 0 2px 6px rgba(10,132,255,0.25) !important;
-    }
-
-    @media (max-width: 768px) {
-      .mobile-bottom-bar { display: flex !important; }
-    }
+    /* Page-specific bottom tab bar removed — this page now gets the
+       shared, global floating pill nav from components/bottom-nav.html
+       (loaded by js/app.js), matching every other mobile page. */
   </style>
 </head>
 <body class="has-mobile-header">
@@ -437,31 +365,8 @@ function openMessagesPanel() {
   </div>
   <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
-  <!-- Mobile bottom tab bar — Overview / Tasks / + / Messages / Profile -->
-  <div class="mobile-bottom-bar">
-    <button onclick="mobileSwitchPanel('mypage','My Page');loadMyPage()" id="tab-mypage" class="active">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>
-      Overview
-    </button>
-    <button onclick="mobileSwitchPanel('find-tasks','Find Tasks');loadFindTasks()" id="tab-find-tasks">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M7 10.5l2 2 4-4.5"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-      Tasks
-    </button>
-    <a href="post-service.html" class="mobile-create-btn" id="tab-create">
-      <div class="mobile-create-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </div>
-      <span>Post Service</span>
-    </a>
-    <button onclick="mobileSwitchPanel('messages','Messages');openMessagesPanel()" id="tab-messages">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Messages
-    </button>
-    <button onclick="mobileSwitchPanel('profile','Profile');loadProfilePanel()" id="tab-profile">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
-      Profile
-    </button>
-  </div>
+  <!-- Mobile bottom tab bar now comes from the shared, global
+       components/bottom-nav.html (loaded by js/app.js). -->
 
   <div class="dashboard-page">
     <div class="dashboard-header">
@@ -2498,10 +2403,6 @@ function openMessagesPanel() {
       switchPanel(panel, document.querySelector('[data-panel="'+panel+'"]'));
       // Update mobile title
       document.getElementById('mobileDashTitle').textContent = title;
-      // Update bottom tab active state
-      document.querySelectorAll('.mobile-bottom-bar button').forEach(function(b) { b.classList.remove('active'); });
-      var tab = document.getElementById('tab-'+panel);
-      if (tab) tab.classList.add('active');
       // Update dropdown active state
       document.querySelectorAll('.mobile-nav-dropdown button').forEach(function(b) { b.classList.remove('active'); });
       var mob = document.getElementById('mob-'+panel);
