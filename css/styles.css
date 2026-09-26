@@ -3023,7 +3023,7 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 640px) {
   .ds-brand-sub { display: none; }
   .ds-task-count-pill { display: none; }
-  .ds-icon-cluster > .ds-icon-btn:nth-child(-n+4) { display: none; } /* keep bell/gear/avatar visible on mobile, hide the 4 shortcut icons */
+  .ds-icon-cluster > .ds-icon-btn:nth-child(-n+2) { display: none; } /* keep bell/gear/avatar visible on mobile, hide the 2 shortcut icons (mirrors the shared navbar, which hides its icon bar the same way on mobile) */
   .ds-main-head { margin: 20px 0 16px; }
 }
 
