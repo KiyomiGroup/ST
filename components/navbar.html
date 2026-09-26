@@ -2,16 +2,18 @@
 <nav id="navbar">
   <div class="nav-inner">
 
-    <!-- LEFT: Logo + role badge -->
+    <!-- LEFT: Logo + role badge + tagline (stacked, matches dashboard nav) -->
     <div class="nav-left">
-      <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
-        <img src="images/logo-nav.svg" alt="StreetTasker"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-        <span class="nav-logo-text" style="display:none;">StreetTasker</span>
-      </a>
-      <!-- Role badge + tagline — logged-out: hidden -->
-      <span class="nav-role-badge nav-tasker" id="navRoleBadge">TASKER</span>
-      <span class="nav-role-badge nav-role-customer nav-customer" id="navRoleBadgeCustomer">CUSTOMER</span>
+      <div class="nav-left-top">
+        <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
+          <img src="images/logo-nav.svg" alt="StreetTasker"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+          <span class="nav-logo-text" style="display:none;">StreetTasker</span>
+        </a>
+        <!-- Role badge — logged-out: hidden -->
+        <span class="nav-role-badge nav-tasker" id="navRoleBadge">TASKER</span>
+        <span class="nav-role-badge nav-role-customer nav-customer" id="navRoleBadgeCustomer">CUSTOMER</span>
+      </div>
       <span class="nav-logo-tagline">Smart Services, Done Right</span>
     </div>
 
