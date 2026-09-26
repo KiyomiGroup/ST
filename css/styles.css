@@ -2769,18 +2769,24 @@ img { max-width: 100%; height: auto; }
   .spg-content-below { padding-bottom: 88px; }
   .spg-bottom-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 950;
-    background: var(--white); border-top: 1px solid var(--border);
-    border-radius: 32px 32px 0 0;
-    padding: 10px 8px calc(8px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -6px 24px rgba(0,0,0,0.06);
+    background: rgba(255, 255, 255, 0.78);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 26px 26px 0 0;
+    padding: 10px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -10px 30px rgba(11, 46, 28, 0.14);
   }
   .spg-bn-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
     background: none; border: none; cursor: pointer; text-decoration: none;
-    color: var(--text-muted); font-size: 0.66rem; font-weight: 600; font-family: var(--font);
+    color: #7EA99B; font-size: 0.64rem; font-weight: 500; font-family: var(--font);
+    padding: 4px 6px; border-radius: 10px;
+    transition: color 0.15s ease;
   }
-  .spg-bn-item.active { color: var(--blue); }
+  .spg-bn-item.active { color: #0F6B46; font-weight: 700; }
 }
+
 
 /* Hero CTAs stack vertically on mobile instead of sitting side by side —
    fixed 300x40 per the mobile design spec */
