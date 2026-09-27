@@ -2718,7 +2718,11 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 768px) {
   .nav-inner { justify-content: flex-start; gap: 14px; }
   .nav-toggle { order: 1; }
-  .nav-logo { order: 2; }
+  /* Scoped to logged-out only — when logged in, .nav-logo lives nested
+     inside .nav-left-top (alongside the role badge) and this order would
+     wrongly push it after the badge there. See body.st-logged-in override
+     below. */
+  body:not(.st-logged-in) .nav-logo { order: 2; }
   .nav-mobile-plus {
     order: 3; margin-left: auto; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -2757,7 +2761,7 @@ img { max-width: 100%; height: auto; }
     height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
   }
   body.spg-page .nav-toggle span { background: var(--white); }
-  body.spg-page .nav-logo img { filter: brightness(0) invert(1); }
+  body.spg-page:not(.st-logged-in) .nav-logo img { filter: brightness(0) invert(1); }
   body.spg-page .nav-mobile-plus { background: var(--white); color: var(--blue); }
   body.spg-page.st-logged-in .nav-mobile-plus { display: none; }
   body.spg-page.st-logged-in #navMobileAccount { display: flex; }
@@ -2776,14 +2780,12 @@ img { max-width: 100%; height: auto; }
   body.st-logged-in .nav-left {
     order: 2; flex: 1 1 auto; min-width: 0;
   }
-  /* Hide the small icon mark, show the full wordmark instead */
-  body.st-logged-in .nav-logo img { display: none; }
-  body.st-logged-in .nav-logo-text {
-    display: block !important;
-    font-size: 1.05rem; font-weight: 800;
-    letter-spacing: -0.02em; text-transform: none;
-    color: #168A45;
-  }
+  /* Logo sits first, badge right after it — order matches source order
+     (see body:not(.st-logged-in) .nav-logo rule above, which this
+     deliberately overrides back to the default/first position). */
+  body.st-logged-in .nav-left-top .nav-logo { order: 0; }
+  body.st-logged-in .nav-role-badge { order: 1; }
+  body.st-logged-in .nav-logo img { height: 20px; }
   body.st-logged-in .nav-logo-tagline { display: none; } /* replaced by the subtitle below on mobile */
   body.st-logged-in .nav-role-badge {
     font-size: 0.58rem; padding: 3px 9px; border: none;
