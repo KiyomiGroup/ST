@@ -264,14 +264,12 @@
        (loaded by js/app.js), matching every other mobile page. */
   </style>
 </head>
-<body class="has-mobile-header">
+<body class="ds-page">
 
-  <div class="mobile-dash-header">
-    <span class="mobile-dash-title" id="mobileDashTitle">📋 Overview</span>
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
+  <!-- Shared global top nav — visible on mobile only for this page (its
+       own .ds-topnav below covers desktop, unchanged). The hamburger is
+       rebound in initPage() to open this page's own panel drawer. -->
+  <div id="navbar-placeholder"></div>
 
   <div class="mobile-nav-dropdown" id="mobileNavDropdown">
 
@@ -620,6 +618,15 @@
     var appLoaded = false;
     var custNotifLoaded = false;
 
+    /* Labels shown under the StreetTasker wordmark in the global mobile
+       top nav (#navMobileSubtitle) — kept in sync with whichever panel
+       is active, regardless of how the switch was triggered. */
+    var PANEL_LABELS = {
+      'overview': 'Overview', 'my-tasks': 'My Tasks', 'applications': 'Applications',
+      'bookings': 'Bookings', 'messages': 'Messages', 'wallet': 'Wallet',
+      'profile': 'Profile', 'notifications': 'Notifications'
+    };
+
     function switchPanel(id, btn) {
       document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
       document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
@@ -634,6 +641,8 @@
           btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
       }
+      var subtitleEl = document.getElementById('navMobileSubtitle');
+      if (subtitleEl && PANEL_LABELS[id]) subtitleEl.textContent = PANEL_LABELS[id];
     }
 
     function fmtDate(iso) {
@@ -1155,6 +1164,17 @@
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initPage() {
+      /* The global top nav's hamburger normally opens the generic marketing
+         menu — on this page it should open this dashboard's own panel
+         drawer instead. Clone-and-replace strips the default listener
+         app.js's initNavbar() already attached. */
+      var navToggleBtn = document.getElementById('navToggle');
+      if (navToggleBtn) {
+        var freshToggle = navToggleBtn.cloneNode(true);
+        navToggleBtn.parentNode.replaceChild(freshToggle, navToggleBtn);
+        freshToggle.addEventListener('click', function() { toggleMobileMenu(); });
+      }
+
       /* Hide spinner immediately — never let it block the UI */
       var loadEl = document.getElementById('dashLoading');
       if (loadEl) loadEl.style.display = 'none';
@@ -1461,7 +1481,6 @@
     function mobileSwitchPanel(panel, title) {
       closeMobileMenu();
       switchPanel(panel, document.querySelector('[data-panel="'+panel+'"]'));
-      document.getElementById('mobileDashTitle').textContent = title;
       document.querySelectorAll('.mobile-nav-dropdown button').forEach(function(b) { b.classList.remove('active'); });
       var mob = document.getElementById('mob-'+panel);
       if (mob) mob.classList.add('active');
@@ -1485,12 +1504,9 @@
           customerId:  String(cu.id),
         };
 
-        /* Switch to messages panel first */
+        /* Switch to messages panel first (also updates the global top-nav subtitle) */
         var msgNavBtn = document.querySelector('[data-panel="messages"]');
         switchPanel('messages', msgNavBtn);
-        /* Also update mobile title if applicable */
-        var titleEl = document.getElementById('mobileDashTitle');
-        if (titleEl) titleEl.textContent = 'Messages';
 
         if (window._msgPanelInited) {
           /* Panel already set up — open the thread directly without sessionStorage */

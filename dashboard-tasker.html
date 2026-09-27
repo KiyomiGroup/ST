@@ -269,7 +269,7 @@
        (loaded by js/app.js), matching every other mobile page. */
   </style>
 </head>
-<body class="has-mobile-header">
+<body>
 <script>
 /* ── Safe messages panel opener ── defined at body start so onclick always works ── */
 function openMessagesPanel() {
@@ -288,13 +288,10 @@ function openMessagesPanel() {
 </script>
   <div id="navbar-placeholder"></div>
 
-  <!-- Mobile header -->
-  <div class="mobile-dash-header">
-    <span class="mobile-dash-title" id="mobileDashTitle">👤 My Page</span>
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
-      <svg id="menuIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
+  <!-- Mobile header now comes from the shared, global navbar
+       (components/navbar.html). The hamburger there is rebound below
+       to open this page's own panel drawer instead of the generic
+       marketing menu. -->
 
   <!-- Mobile dropdown nav -->
   <div class="mobile-nav-dropdown" id="mobileNavDropdown">
@@ -932,12 +929,24 @@ function openMessagesPanel() {
     var findTasksLoaded = false;
     var notifLoaded = false;
 
+    /* Labels shown under the StreetTasker wordmark in the global mobile
+       top nav (#navMobileSubtitle) — kept in sync with whichever panel
+       is active, regardless of how the switch was triggered. */
+    var PANEL_LABELS = {
+      'mypage': 'Overview', 'services': 'My Services', 'bookings': 'Bookings',
+      'find-tasks': 'Find Tasks', 'notifications': 'Notifications',
+      'messages': 'Messages', 'wallet': 'Wallet', 'profile': 'Profile',
+      'verification': 'Verification'
+    };
+
     function switchPanel(id, btn) {
       document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
       document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
       var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
       if (btn) btn.classList.add('active');
+      var subtitleEl = document.getElementById('navMobileSubtitle');
+      if (subtitleEl && PANEL_LABELS[id]) subtitleEl.textContent = PANEL_LABELS[id];
     }
     window.switchPanel = switchPanel;
 
@@ -1296,6 +1305,17 @@ function openMessagesPanel() {
     window.checkProfileCompletion = checkProfileCompletion;
 
     async function initPage() {
+      /* The global top nav's hamburger normally opens the generic marketing
+         menu — on this page it should open this dashboard's own panel
+         drawer instead. Clone-and-replace strips the default listener
+         app.js's initNavbar() already attached. */
+      var navToggleBtn = document.getElementById('navToggle');
+      if (navToggleBtn) {
+        var freshToggle = navToggleBtn.cloneNode(true);
+        navToggleBtn.parentNode.replaceChild(freshToggle, navToggleBtn);
+        freshToggle.addEventListener('click', function() { toggleMobileMenu(); });
+      }
+
       /* If arriving from first-time login, go straight to Edit Page */
       var params = new URLSearchParams(window.location.search);
       if (params.get('setup') === '1') {
@@ -2399,10 +2419,8 @@ function openMessagesPanel() {
     }
     function mobileSwitchPanel(panel, title) {
       closeMobileMenu();
-      // Switch the actual panel
+      // Switch the actual panel (also updates the global top-nav subtitle)
       switchPanel(panel, document.querySelector('[data-panel="'+panel+'"]'));
-      // Update mobile title
-      document.getElementById('mobileDashTitle').textContent = title;
       // Update dropdown active state
       document.querySelectorAll('.mobile-nav-dropdown button').forEach(function(b) { b.classList.remove('active'); });
       var mob = document.getElementById('mob-'+panel);

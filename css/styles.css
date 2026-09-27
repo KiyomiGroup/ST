@@ -2761,6 +2761,58 @@ img { max-width: 100%; height: auto; }
   body.spg-page .nav-mobile-plus { background: var(--white); color: var(--blue); }
   body.spg-page.st-logged-in .nav-mobile-plus { display: none; }
   body.spg-page.st-logged-in #navMobileAccount { display: flex; }
+  /* Logged in on a search page: use the same light top nav as everywhere
+     else instead of the dark green guest treatment above. */
+  body.spg-page.st-logged-in #navbar { background: rgba(255,255,255,0.92); }
+  body.spg-page.st-logged-in .nav-toggle span { background: var(--text-primary); }
+
+  /* ── Top nav (logged-in, mobile): wordmark + role badge + dynamic
+     subtitle on the left, bell + avatar on the right. Scoped to
+     body.st-logged-in so logged-out mobile is completely untouched,
+     and nested in this max-width:768px query so desktop is untouched. ── */
+  .nav-mobile-subtitle { display: none; }
+  body.st-logged-in .nav-inner { flex-wrap: nowrap; }
+  body.st-logged-in .nav-toggle { order: 1; }
+  body.st-logged-in .nav-left {
+    order: 2; flex: 1 1 auto; min-width: 0;
+  }
+  /* Hide the small icon mark, show the full wordmark instead */
+  body.st-logged-in .nav-logo img { display: none; }
+  body.st-logged-in .nav-logo-text {
+    display: block !important;
+    font-size: 1.05rem; font-weight: 800;
+    letter-spacing: -0.02em; text-transform: none;
+    color: #168A45;
+  }
+  body.st-logged-in .nav-logo-tagline { display: none; } /* replaced by the subtitle below on mobile */
+  body.st-logged-in .nav-role-badge {
+    font-size: 0.58rem; padding: 3px 9px; border: none;
+  }
+  body.st-logged-in .nav-role-badge.nav-tasker,
+  body.st-logged-in .nav-role-badge.nav-role-customer {
+    color: #0B4D30; background: #9EF0C4;
+  }
+  body.st-logged-in .nav-mobile-subtitle {
+    display: block; font-size: 0.72rem; font-weight: 500;
+    color: var(--text-muted); margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  /* Desktop pill-nav / icon-bar were never meant for this width —
+     hide them so they can't collide with the new left/right clusters. */
+  .nav-pill-wrap, .nav-icon-bar { display: none !important; }
+
+  #navMobileAccount { order: 3; margin-left: auto; }
+  .nav-mobile-bell {
+    background: none; color: var(--charcoal);
+  }
+  .nav-mobile-bell-dot {
+    position: absolute; top: 4px; right: 4px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); border: 1.5px solid var(--white);
+  }
+  .nav-mobile-avatar {
+    background: #0B4D30; border: none;
+  }
 }
 
 /* ── Global mobile bottom tab bar (Overview / Tasks / + / Messages / Profile) ──
@@ -2987,6 +3039,13 @@ img { max-width: 100%; height: auto; }
    fixed global #navbar, so it doesn't need the space .dashboard-page
    normally reserves for that fixed nav. */
 .ds-dashboard-page { padding-top: 0; }
+/* ...on desktop. The shared global navbar is loaded on this page too
+   (for its mobile treatment, below) so it must stay hidden at desktop
+   widths to avoid showing both navs at once. */
+body.ds-page #navbar { display: none; }
+@media (max-width: 768px) {
+  body.ds-page #navbar { display: block; }
+}
 .ds-topnav { background: var(--white); border-bottom: 1px solid var(--border); }
 .ds-topnav-inner {
   max-width: 1400px; margin: 0 auto; padding: 16px 24px;
@@ -3057,6 +3116,15 @@ img { max-width: 100%; height: auto; }
   .ds-task-count-pill { display: none; }
   .ds-icon-cluster > .ds-icon-btn:nth-child(-n+2) { display: none; } /* keep bell/gear/avatar visible on mobile, hide the 2 shortcut icons (mirrors the shared navbar, which hides its icon bar the same way on mobile) */
   .ds-main-head { margin: 20px 0 16px; }
+}
+
+/* This page normally hides the shared global #navbar and uses its own
+   .ds-topnav instead (see comment above) — but on mobile it now shows
+   the shared navbar (matching every other page site-wide) and hides
+   its own .ds-topnav instead, so there's exactly one nav at each width. */
+@media (max-width: 768px) {
+  body.ds-page .ds-topnav { display: none; }
+  body.ds-page.st-logged-in .ds-dashboard-page { padding-top: var(--nav-height); }
 }
 
 
