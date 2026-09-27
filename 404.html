@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found — StreetTasker</title>
+
+  <!-- Tell Google this is a 404, don't index it -->
+  <meta name="robots" content="noindex, follow" />
+  <meta name="description" content="Page not found. Find local service providers across Nigeria on StreetTasker." />
+
+  <!-- Canonical points to homepage so link equity flows there -->
+  <link rel="canonical" href="https://streettasker.com/" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+
+  <style>
+    .not-found-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+      background: var(--bg-subtle);
+    }
+
+    .not-found-code {
+      font-size: clamp(5rem, 18vw, 9rem);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--blue);
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+      opacity: 0.15;
+      user-select: none;
+    }
+
+    .not-found-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--blue-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: var(--blue);
+    }
+
+    .not-found-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .not-found-sub {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      max-width: 420px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+
+    .not-found-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+
+    .not-found-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .not-found-link-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .not-found-link-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      color: var(--blue);
+    }
+
+    .not-found-link-card svg { color: var(--blue); }
+    .not-found-link-label { font-size: 0.85rem; font-weight: 600; }
+    .not-found-link-desc  { font-size: 0.75rem; color: var(--text-muted); text-align: center; }
+
+    .not-found-url {
+      margin-top: 32px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 6px 14px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <div class="not-found-page">
+
+    <div class="not-found-code" aria-hidden="true">404</div>
+
+    <div class="not-found-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <line x1="11" y1="8" x2="11" y2="12"/>
+        <line x1="11" y1="16" x2="11.01" y2="16"/>
+      </svg>
+    </div>
+
+    <h1 class="not-found-title">Page Not Found</h1>
+    <p class="not-found-sub">
+      This page doesn't exist or may have been moved.
+      Here's where you can go instead:
+    </p>
+
+    <div class="not-found-actions">
+      <a href="index.html" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Go to Homepage
+      </a>
+      <a href="find-taskers.html" class="btn btn-outline">
+        Find Services
+      </a>
+    </div>
+
+    <!-- Helpful links for users AND Google crawlers -->
+    <div class="not-found-links">
+
+      <a href="find-taskers.html" class="not-found-link-card">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <div class="not-found-link-label">Find Services</div>
+        <div class="not-found-link-desc">Browse local service providers</div>
+      </a>
+
+      <a href="explore-tasks.html" class="not-found-link-card">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div class="not-found-link-label">Explore Tasks</div>
+        <div class="not-found-link-desc">See open jobs near you</div>
+      </a>
+
+      <a href="signup.html" class="not-found-link-card">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <div class="not-found-link-label">Sign Up Free</div>
+        <div class="not-found-link-desc">Post tasks or offer services</div>
+      </a>
+
+      <a href="login.html" class="not-found-link-card">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        <div class="not-found-link-label">Log In</div>
+        <div class="not-found-link-desc">Access your account</div>
+      </a>
+
+    </div>
+
+    <div class="not-found-url" id="badUrl"></div>
+
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    /* Show the URL that 404'd so user knows what went wrong */
+    var urlEl = document.getElementById('badUrl');
+    if (urlEl) {
+      urlEl.textContent = 'Requested: ' + window.location.pathname;
+    }
+
+    /* Auto-redirect after 10 seconds if user does nothing */
+    var countdown = 10;
+    var timer = setInterval(function() {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(timer);
+        window.location.href = 'index.html';
+      }
+    }, 1000);
+
+    /* Cancel redirect if user clicks anything */
+    document.addEventListener('click', function() { clearInterval(timer); });
+  </script>
+</body>
+</html>

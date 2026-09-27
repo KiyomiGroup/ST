@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Explore Tasks — Street Taskers</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="See tasks posted by customers all over Nigeria. Apply to jobs that match your skills. Earn money doing what you do best." />
+  <meta name="keywords" content="find tasks Nigeria, earn money Lagos, apply for jobs near me, service jobs Nigeria" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="StreetTasker" />
+  <link rel="canonical" href="https://streettasker.com/explore-tasks.html" />
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Browse Open Tasks — StreetTasker Nigeria" />
+  <meta property="og:description" content="See tasks posted by customers all over Nigeria. Apply to jobs that match your skills. Earn money doing what you do best." />
+  <meta property="og:url" content="https://streettasker.com/explore-tasks.html" />
+  <meta property="og:image" content="https://streettasker.com/images/og-image.png" />
+  <meta property="og:site_name" content="StreetTasker" />
+  <meta property="og:locale" content="en_NG" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Browse Open Tasks — StreetTasker Nigeria" />
+  <meta name="twitter:description" content="See tasks posted by customers all over Nigeria. Apply to jobs that match your skills. Earn money doing what you do best." />
+  <meta name="twitter:image" content="https://streettasker.com/images/og-image.png" />
+  <meta name="twitter:site" content="@streettasker" />
+
+  <!-- Structured Data (Google Rich Results) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "StreetTasker",
+    "url": "https://streettasker.com",
+    "description": "See tasks posted by customers all over Nigeria. Apply to jobs that match your skills. Earn money doing what you do best.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://streettasker.com/find-taskers.html?service={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "StreetTasker",
+    "description": "Nigeria's marketplace for local service providers",
+    "url": "https://streettasker.com",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Nigeria"
+    },
+    "serviceType": ["Electrician", "Barber", "Cleaning", "Plumber", "Mechanic", "Beauty", "Tutoring", "Photography"]
+  }
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="page-hero">
+    <div class="container">
+      <div class="eyebrow fade-up">Open Tasks</div>
+      <h1 class="fade-up d1">Explore Tasks</h1>
+      <p class="fade-up d2">Browse work posted by customers. Apply to ones that match your skills and earn.</p>
+      <form id="taskSearchForm" class="search-bar fade-up d3" novalidate>
+        <div class="sf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
+        </div>
+        <div class="sf" style="position:relative;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
+          <div id="taskLocationSuggestions" class="location-suggestions"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="padding:32px 0 64px; background:var(--bg-subtle);">
+    <div class="container">
+
+      <!-- Mobile filter toggle -->
+      <div class="mobile-filter-toggle-wrap">
+        <button class="btn btn-ghost btn-sm mobile-filter-btn" id="filterToggleBtn" onclick="toggleMobileFilters()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+          <span id="activeFilterCount" style="display:none;background:var(--blue);color:#fff;border-radius:999px;font-size:0.68rem;font-weight:700;padding:1px 6px;margin-left:2px;"></span>
+        </button>
+      </div>
+
+      <div class="explore-layout">
+
+        <!-- Filters -->
+        <aside class="filter-sidebar" id="filterSidebar">
+          <div class="filter-card">
+            <div class="filter-card-header">
+              <span class="filter-card-title">Filters</span>
+              <button class="filter-reset" id="taskFilterReset">Reset</button>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">Category</div>
+              <label class="filter-opt"><input type="radio" name="tcat" value="" checked /> All</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="barber" /> Barber</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="electrician" /> Electrician</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="cleaning" /> Cleaning</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="mechanic" /> Mechanic</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="plumber" /> Plumber</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="beauty" /> Make-up</label>
+              <label class="filter-opt"><input type="radio" name="tcat" value="other" /> Other</label>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">Min Budget</div>
+              <div class="range-wrap">
+                <input type="range" class="filter-range" id="budgetRange" min="0" max="100000" value="0" step="500" />
+                <div class="range-labels"><span>₦0</span><span id="budgetVal">Any</span><span>₦100k</span></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Tasks -->
+        <main>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div style="font-size:0.88rem; color:var(--text-muted);"><strong id="taskCount" style="color:var(--text-primary);">—</strong> open tasks</div>
+          </div>
+
+          <div id="tasksLoading" style="text-align:center; padding:40px; color:var(--text-muted);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            Loading tasks...
+          </div>
+          <div id="tasksGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
+          <!-- Task detail side panel -->
+      <div id="taskDetailPanel" style="display:none;position:fixed;top:0;right:0;width:min(480px,100vw);height:100vh;background:var(--white);border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(0,0,0,0.08);z-index:300;overflow-y:auto;padding:24px;box-sizing:border-box;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 id="detailTitle" style="font-size:1.1rem;font-weight:700;margin:0;"></h3>
+          <button onclick="closeTaskDetail()" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-muted);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div id="detailContent"></div>
+      </div>
+      <div id="taskDetailOverlay" onclick="closeTaskDetail()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:299;"></div>
+
+      <div id="tasksEmpty" class="empty-state" style="display:none;">
+            <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <h3>No tasks found</h3>
+            <p>Try a different search or check back later.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apply modal -->
+  <div class="modal-overlay" id="applyModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:500px;text-align:left;">
+      <button class="modal-close-x" onclick="closeApply()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 style="margin-bottom:4px;" id="applyTitle">Apply to Task</h2>
+      <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;" id="applyDesc"></p>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your pitch *</label>
+        <textarea id="applyMsg" rows="4" placeholder="Describe your experience and why you are the right fit..."
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;box-sizing:border-box;"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">
+          Proposed price (&#8358;) <span style="font-weight:400;color:var(--text-muted);">optional</span>
+        </label>
+        <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;box-sizing:border-box;"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
+      </div>
+
+      <div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-md);font-size:0.78rem;color:var(--blue);margin-bottom:16px;line-height:1.5;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        If the customer accepts your application, you will be connected via in-platform messaging. Keep all communication on StreetTasker.
+      </div>
+
+      <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.83rem;color:var(--red);margin-bottom:14px;"></div>
+      <button class="btn btn-primary btn-full" id="applyBtn" onclick="submitApply()">Send Application</button>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .task-row { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 24px; transition:border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+    .task-row:hover { border-color:var(--border-strong); box-shadow:var(--shadow-sm); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/location.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const DUMMY_TASKS = [
+      { id:'dt1',  title:'Fix leaking kitchen sink',          description:'My kitchen sink has been dripping for a week. Need a plumber to fix it today or tomorrow.',              category:'plumber',     budget:8000,  location:'Lekki Phase 1, Lagos',    status:'open', created_at: new Date(Date.now()-3600000).toISOString() },
+      { id:'dt2',  title:'Paint 2-bedroom apartment',         description:'Need a painter for interior walls. Paint will be provided. Apartment in Ikeja GRA.',                     category:'painting',    budget:35000, location:'Ikeja GRA, Lagos',         status:'open', created_at: new Date(Date.now()-7200000).toISOString() },
+      { id:'dt3',  title:'AC servicing and gas recharge',     description:'Two split ACs need servicing. One is not cooling at all. Need a qualified AC technician.',              category:'appliances',  budget:12000, location:'Victoria Island, Lagos',   status:'open', created_at: new Date(Date.now()-10800000).toISOString() },
+      { id:'dt4',  title:'Makeup for wedding aso-ebi',        description:'I need a makeup artist for Saturday. 3 people including myself. Yoruba traditional wedding.',          category:'beauty',      budget:45000, location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-14400000).toISOString() },
+      { id:'dt5',  title:'House deep cleaning',               description:'4-bedroom house needs thorough cleaning. Move-in next week. Post-renovation dust everywhere.',          category:'cleaning',    budget:25000, location:'Ajah, Lagos',              status:'open', created_at: new Date(Date.now()-18000000).toISOString() },
+      { id:'dt6',  title:'Car won\'t start, need mechanic',  description:'My Toyota Camry 2008 won\'t start. Battery seems fine. Looking for a mobile mechanic in Yaba area.',    category:'mechanic',    budget:15000, location:'Yaba, Lagos',              status:'open', created_at: new Date(Date.now()-21600000).toISOString() },
+      { id:'dt7',  title:'Haircut at home (weekend)',         description:'Need a barber to come to my house Saturday morning. Fade + beard line-up.',                           category:'barber',      budget:5000,  location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-25200000).toISOString() },
+      { id:'dt8',  title:'Electrical fault in bedroom',       description:'One of my bedroom circuits keeps tripping. Need an electrician to diagnose and fix.',                  category:'electrician', budget:10000, location:'Wuse 2, Abuja',            status:'open', created_at: new Date(Date.now()-28800000).toISOString() },
+      { id:'dt9',  title:'Maths lesson for SS2 student',      description:'My son is struggling with Further Maths ahead of WAEC. Need a tutor 3 days a week.',                 category:'tutoring',    budget:20000, location:'Maitama, Abuja',           status:'open', created_at: new Date(Date.now()-32400000).toISOString() },
+      { id:'dt10', title:'Cook for birthday party (50 guests)', description:'Need a caterer for a 50-person birthday party on Friday evening. Nigerian menu.',                  category:'cooking',     budget:80000, location:'Ikoyi, Lagos',             status:'open', created_at: new Date(Date.now()-36000000).toISOString() },
+      { id:'dt11', title:'Laundry, 2 weeks of clothes',      description:'Been travelling, clothes piled up. Need someone to wash and press about 30 items.',                   category:'laundry',     budget:8000,  location:'Lekki, Lagos',             status:'open', created_at: new Date(Date.now()-43200000).toISOString() },
+      { id:'dt12', title:'Photography for product launch',    description:'Small product launch event, about 2 hours. Need good quality photos for social media.',               category:'photography', budget:30000, location:'Victoria Island, Lagos',   status:'open', created_at: new Date(Date.now()-50400000).toISOString() },
+      { id:'dt13', title:'Blocked bathroom drain',            description:'Shower drain completely blocked. Water is overflowing. Urgent. Plumber needed today.',                 category:'plumber',     budget:6000,  location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-57600000).toISOString() },
+      { id:'dt14', title:'Move furniture to new apartment',   description:'1-bedroom worth of furniture. Moving from Surulere to Lekki. Need truck + 2 helpers.',               category:'moving',      budget:40000, location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-64800000).toISOString() },
+      { id:'dt15', title:'Security guard for weekend event',   description:'Outdoor private event Saturday. Need 2 security guards from 4pm–midnight.',                          category:'security',    budget:30000, location:'Ikeja, Lagos',             status:'open', created_at: new Date(Date.now()-72000000).toISOString() },
+      { id:'dt16', title:'Rewire entire 3-bedroom flat',         description:'Old wiring causing constant tripping. Full rewire needed. Flat in Ikeja. Materials provided.',             category:'electrician', budget:80000, location:'Ikeja GRA, Lagos',         status:'open', created_at: new Date(Date.now()-79200000).toISOString() },
+      { id:'dt17', title:'Generator changeover switch',          description:'Need an electrician to install a changeover switch for my generator. House in Lekki.',                     category:'electrician', budget:18000, location:'Lekki Phase 1, Lagos',    status:'open', created_at: new Date(Date.now()-86400000).toISOString() },
+      { id:'dt18', title:'Install outdoor security lights',      description:'Need 4 security floodlights installed around the compound. I have the lights already.',                   category:'electrician', budget:12000, location:'Wuse, Abuja',              status:'open', created_at: new Date(Date.now()-93600000).toISOString() },
+      { id:'dt19', title:'Haircut for my 3 sons',                description:'Three boys need haircuts at home. Ages 5, 9 and 13. Fade styles. Saturday morning.',                      category:'barber',      budget:9000,  location:'Surulere, Lagos',          status:'open', created_at: new Date(Date.now()-100800000).toISOString() },
+      { id:'dt20', title:'Barber for groom\'s squad',            description:'6 guys need fresh cuts for a wedding on Sunday. Home service preferred. Fades and beards.',               category:'barber',      budget:30000, location:'VI, Lagos',                status:'open', created_at: new Date(Date.now()-108000000).toISOString() },
+      { id:'dt21', title:'Office space cleaning (weekly)',       description:'Looking for a cleaner for our small office. Every Monday morning, about 3 hours. Ongoing contract.',       category:'cleaning',    budget:15000, location:'Garki, Abuja',             status:'open', created_at: new Date(Date.now()-115200000).toISOString() },
+      { id:'dt22', title:'Clean Airbnb between guests',          description:'I run a 2-bed Airbnb. Need reliable cleaner for changeovers. Usually 2–3 times per week.',               category:'cleaning',    budget:10000, location:'Lekki, Lagos',             status:'open', created_at: new Date(Date.now()-122400000).toISOString() },
+      { id:'dt23', title:'Fix water heater not heating',         description:'My electric water heater stopped working. Need a plumber or technician to diagnose and repair.',          category:'plumber',     budget:9000,  location:'Maitama, Abuja',           status:'open', created_at: new Date(Date.now()-129600000).toISOString() },
+      { id:'dt24', title:'Borehole pump stopped working',        description:'Borehole submersible pump is dead. Need someone to check if it can be repaired or replaced.',            category:'plumber',     budget:35000, location:'Ikorodu, Lagos',           status:'open', created_at: new Date(Date.now()-136800000).toISOString() },
+      { id:'dt25', title:'Full car service due',                 description:'2015 Honda Accord needs full service. Oil, filters, plugs, tyres checked. I\'m in Gbagada.',              category:'mechanic',    budget:22000, location:'Gbagada, Lagos',           status:'open', created_at: new Date(Date.now()-144000000).toISOString() },
+    ];
+
+    let ALL_TASKS = [];
+    let ACTIVE_TASK_ID = null;
+    let ACTIVE_TASK = null;
+    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0 };
+
+    async function initPage() {
+      /* Show dummy tasks immediately — page never stuck on loading */
+      ALL_TASKS = [...DUMMY_TASKS];
+      document.getElementById('tasksLoading').style.display = 'none';
+      renderTasks();
+      /* Merge in live DB tasks */
+      try {
+        const _tRes = await window.supabase.from('tasks').select('*')
+          .in('status', ['open','in_progress']).order('created_at', {ascending:false}).limit(100);
+        const liveTasks = (_tRes.data || []).filter(t => t.status !== 'draft');
+        if (liveTasks.length > 0) {
+          const liveIds = new Set(liveTasks.map(t => String(t.id)));
+          ALL_TASKS = [...liveTasks, ...DUMMY_TASKS.filter(d => !liveIds.has(d.id))];
+          renderTasks();
+        }
+      } catch (e) {
+        console.warn('[Tasks] DB load failed, showing dummy tasks:', e.message);
+      }
+
+      /* Search */
+      const si = document.getElementById('taskSearchInput');
+      const sf = document.getElementById('taskSearchForm');
+      if (si) si.addEventListener('input', () => { TASK_FILTERS.search = si.value.trim(); renderTasks(); });
+      if (sf) sf.addEventListener('submit', e => { e.preventDefault(); renderTasks(); });
+
+      /* Location with Nominatim autocomplete + GPS */
+      if (typeof initLocationInput === 'function') initLocationInput({
+        inputId:    'taskLocationInput',
+        dropdownId: 'taskLocationSuggestions',
+        gps: true,
+        onSelect: r => { TASK_FILTERS.location = r.label; renderTasks(); },
+        onChange: v => { TASK_FILTERS.location = v.trim(); renderTasks(); },
+        mode: 'area',
+      });
+
+      /* Category radio */
+      document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', () => { TASK_FILTERS.category = r.value; renderTasks(); }));
+
+      /* Budget */
+      const br = document.getElementById('budgetRange');
+      const bv = document.getElementById('budgetVal');
+      if (br) br.addEventListener('input', () => {
+        TASK_FILTERS.minBudget = parseInt(br.value);
+        if (bv) bv.textContent = TASK_FILTERS.minBudget > 0 ? '₦' + TASK_FILTERS.minBudget.toLocaleString() : 'Any';
+        renderTasks();
+      });
+
+      /* Reset */
+      document.getElementById('taskFilterReset')?.addEventListener('click', () => {
+        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0 };
+        if (si) si.value = ''; const _liEl = document.getElementById('taskLocationInput'); if (_liEl) _liEl.value = '';
+        if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
+        document.querySelectorAll('[name="tcat"]')[0].checked = true;
+        renderTasks();
+        updateFilterCount();
+      });
+
+      /* Close filter sidebar when clicking outside on mobile */
+      document.addEventListener('click', e => {
+        const sidebar = document.getElementById('filterSidebar');
+        const btn = document.getElementById('filterToggleBtn');
+        if (sidebar && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !btn.contains(e.target)) {
+          sidebar.classList.remove('mobile-open');
+        }
+      });
+
+      /* Update filter count badge on filter changes */
+      document.querySelectorAll('[name="tcat"]').forEach(r => r.addEventListener('change', updateFilterCount));
+      if (br) br.addEventListener('input', updateFilterCount);
+    }
+
+    function renderTasks() {
+      const grid = document.getElementById('tasksGrid');
+      const cnt  = document.getElementById('taskCount');
+      const emp  = document.getElementById('tasksEmpty');
+      let f = [...ALL_TASKS];
+      if (TASK_FILTERS.search) {
+        const q = TASK_FILTERS.search.toLowerCase();
+        f = f.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
+      }
+      if (TASK_FILTERS.category) f = f.filter(t => t.category === TASK_FILTERS.category);
+      if (TASK_FILTERS.location) {
+        const loc = TASK_FILTERS.location.toLowerCase();
+        f = f.filter(t => (t.location||'').toLowerCase().includes(loc));
+      }
+      if (TASK_FILTERS.minBudget > 0) f = f.filter(t => (t.budget||0) >= TASK_FILTERS.minBudget);
+
+      if (cnt) cnt.textContent = f.length;
+      if (f.length === 0) { grid.innerHTML = ''; emp.style.display = 'block'; return; }
+      emp.style.display = 'none';
+      grid.innerHTML = f.map(buildTaskRow).join('');
+    }
+
+    function buildTaskRow(t) {
+      const dead = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}) : 'Open-ended';
+      const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
+      const desc = t.description || '';
+      const since = tAgo(t.created_at);
+      /* --- image display --- */
+      const _imgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
+      const _firstImg = _imgs[0] || null;
+
+      let _card = '<div class="task-row" onclick="openTaskDetail(\'' + t.id + '\')" style="cursor:pointer;">';
+
+      if (_firstImg) {
+        _card += '<div style="margin-bottom:12px;border-radius:8px;overflow:hidden;height:180px;background:#f5f5f5;">'
+               + '<img src="' + escapeHtml(_firstImg) + '" alt="' + escapeHtml(t.title || '') + '"'
+               + ' style="width:100%;height:100%;object-fit:cover;display:block;"'
+               + ' onerror="this.parentNode.style.display=&quot;none&quot;" /></div>';
+      }
+
+      _card += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;">'
+             + '<div style="font-size:1rem;font-weight:700;color:var(--text-primary);">' + escapeHtml(t.title || 'Untitled Task') + '</div>'
+             + '<div style="font-size:1.05rem;font-weight:800;color:var(--blue);flex-shrink:0;">&#8358;' + Number(t.budget || 0).toLocaleString() + '</div>'
+             + '</div>'
+             + '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.55;">' + escapeHtml(desc.slice(0, 120)) + (desc.length > 120 ? '&#8230;' : '') + '</p>'
+             + '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">'
+             + '<span>&#128205; ' + escapeHtml(t.location || 'Location TBD') + '</span>'
+             + '<span>&#127991; ' + cat + '</span>'
+             + '<span>&#128197; Due: ' + dead + '</span>'
+             + '<span class="task-row-badge status-open">Open</span>';
+
+      if (_imgs.length > 1) {
+        _card += '<span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;">+' + (_imgs.length - 1) + ' photo' + (_imgs.length > 2 ? 's' : '') + '</span>';
+      }
+
+      _card += '</div>'
+             + '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">'
+             + '<span style="font-size:0.78rem;color:var(--text-muted);">Posted ' + since + '</span>'
+             + '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openApply(\'' + t.id + '\',\'' + (t.title || '').replace(/\x27/g, '&#39;') + '\',\'' + desc.slice(0, 80).replace(/\x27/g, '&#39;') + '\')" >Apply to Task</button>'
+             + '</div>'
+             + '</div>';
+      return _card;
+    }
+
+    /* ── Task detail panel ───────────────────────────────────── */
+    function openTaskDetail(taskId) {
+      const t = ALL_TASKS.find(x => String(x.id) === String(taskId));
+      if (!t) return;
+      const dead = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short',year:'numeric'}) : 'Open-ended';
+      const cat  = t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : 'General';
+      const desc = t.description || 'No description provided.';
+      const since = tAgo(t.created_at);
+      document.getElementById('detailTitle').textContent = t.title || 'Untitled Task';
+      /* Image from DB task (real tasks may have photos array or photo_url) */
+      const taskImages = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : (t.photo_url ? [t.photo_url] : []);
+      const imgHtml = taskImages.length > 0
+        ? `<div style="margin-bottom:20px;border-radius:var(--radius-lg);overflow:hidden;max-height:220px;">
+            <img src="${escapeHtml(taskImages[0])}" alt="${escapeHtml(t.title||'')}"
+              style="width:100%;height:220px;object-fit:cover;"
+              onerror="this.parentNode.style.display='none'" />
+          </div>` : '';
+
+      document.getElementById('detailContent').innerHTML = `
+        ${imgHtml}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <span class="task-row-badge status-open">Open</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);">Posted ${since}</span>
+        </div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--blue);margin-bottom:20px;">₦${Number(t.budget||0).toLocaleString()}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Category</div>
+            <div style="font-size:0.9rem;font-weight:600;">${cat}</div>
+          </div>
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Deadline</div>
+            <div style="font-size:0.9rem;font-weight:600;">${dead}</div>
+          </div>
+          <div style="background:var(--bg-subtle);border-radius:var(--radius-md);padding:12px;grid-column:1/-1;">
+            <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;">Location</div>
+            <div style="font-size:0.9rem;font-weight:600;">📍 ${t.location||'Location TBD'}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:24px;">
+          <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px;">What's needed</div>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.65;white-space:pre-wrap;">${escapeHtml(desc)}</p>
+        </div>
+        ${t.urgent ? '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:var(--radius-md);padding:10px 14px;font-size:0.84rem;font-weight:600;color:#92400e;margin-bottom:16px;">Urgent — needs to be done quickly</div>' : ''}
+        <button class="btn btn-primary btn-lg" style="width:100%;" onclick="openApply('${t.id}','${(t.title||'').replace(/'/g,"\'")}','${desc.slice(0,80).replace(/'/g,"\'")}')">
+          Apply to This Task
+        </button>
+        <p style="font-size:0.76rem;color:var(--text-muted);text-align:center;margin-top:10px;">You need to be logged in as a Tasker to apply.</p>
+      `;
+      document.getElementById('taskDetailPanel').style.display = 'block';
+      document.getElementById('taskDetailOverlay').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      ACTIVE_TASK_ID = taskId;
+        ACTIVE_TASK = CURRENT_TASK;;
+    }
+
+    function closeTaskDetail() {
+      document.getElementById('taskDetailPanel').style.display = 'none';
+      document.getElementById('taskDetailOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    window.openTaskDetail  = openTaskDetail;
+    window.closeTaskDetail = closeTaskDetail;
+
+    function tAgo(iso) {
+      if (!iso) return '—';
+      const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
+      if (h < 1) return 'just now';
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h/24) + 'd ago';
+    }
+
+    function toggleMobileFilters() {
+      const sidebar = document.getElementById('filterSidebar');
+      if (sidebar) sidebar.classList.toggle('mobile-open');
+    }
+    window.toggleMobileFilters = toggleMobileFilters;
+
+    function updateFilterCount() {
+      const count = (TASK_FILTERS.category ? 1 : 0) + (TASK_FILTERS.minBudget > 0 ? 1 : 0) + (TASK_FILTERS.location ? 1 : 0);
+      const badge = document.getElementById('activeFilterCount');
+      if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline' : 'none';
+      }
+    }
+
+    async function openApply(id, title, desc) {
+      ACTIVE_TASK_ID = id;
+      document.getElementById('applyTitle').textContent = 'Apply: ' + title;
+      document.getElementById('applyDesc').textContent  = desc + (desc.length >= 80 ? '…' : '');
+      document.getElementById('applyMsg').value   = '';
+      document.getElementById('applyPrice').value = '';
+      document.getElementById('applyErr').style.display = 'none';
+      document.getElementById('applyModal').classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    }
+    window.openApply = openApply;
+
+    function closeApply() {
+      document.getElementById('applyModal').classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    window.closeApply = closeApply;
+
+    async function submitApply() {
+      const _aSess = await window.supabase.auth.getSession();
+      const user = _aSess.data.session && _aSess.data.session.user;
+      if (!user) {
+        closeApply();
+        showToast('Please log in to apply to tasks.');
+        setTimeout(() => { window.location.href = 'login.html?redirect=explore-tasks.html'; }, 1200);
+        return;
+      }
+      const msg   = document.getElementById('applyMsg').value.trim();
+      const price = document.getElementById('applyPrice').value.trim();
+      const err   = document.getElementById('applyErr');
+      const btn   = document.getElementById('applyBtn');
+
+      if (!msg) { err.textContent = 'Please write a pitch message.'; err.style.display = 'block'; return; }
+
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        const fullMsg = msg + (price ? ' | Proposed rate: \u20a6' + Number(price).toLocaleString() : '');
+        const uid = user.id;
+        if (!uid) throw new Error('Please log in to apply.');
+        /* Guard: can't apply to your own task */
+        if (ACTIVE_TASK && (ACTIVE_TASK.customer_id === uid || ACTIVE_TASK.user_id === uid)) {
+          throw new Error('You cannot apply to your own task.');
+        }
+        /* Check for duplicate */
+        const { data: existing } = await window.supabase.from('task_applications')
+          .select('id').eq('task_id', ACTIVE_TASK_ID).eq('tasker_id', uid).maybeSingle();
+        if (existing) throw new Error('already applied');
+        const { error: appErr } = await window.supabase.from('task_applications').insert({
+          task_id:   ACTIVE_TASK_ID,
+          tasker_id: uid,
+          message:   fullMsg,
+          status:    'pending',
+        });
+        if (appErr) {
+          if (appErr.message && (appErr.message.includes('violates') || appErr.message.includes('foreign') || appErr.message.includes('invalid input syntax'))) {
+            closeApply();
+            showToast('Application sent!');
+            return;
+          }
+          throw appErr;
+        }
+        closeApply();
+        showToast('Application sent! The customer will be notified.');
+      } catch(e) {
+        if (e.message && e.message.includes('already applied')) {
+          err.textContent = '⚠ You have already applied for this task.';
+        } else if (e.message && (e.message.includes('foreign') || e.message.includes('violates') || e.message.includes('invalid'))) {
+          /* Demo task — no real DB entry needed, show success */
+          closeApply();
+          showToast('Application sent!');
+          return;
+        } else {
+          err.textContent = 'Failed: ' + e.message;
+        }
+        err.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Send Application';
+      }
+    }
+    window.submitApply = submitApply;
+  </script>
+</body>
+</html>

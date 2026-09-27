@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post a Task — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+  <div class="post-task-page">
+    <div class="container">
+      <div style="padding: 40px 0 0;">
+        <div class="eyebrow fade-up">Post Your Task</div>
+        <h1 class="fade-up d1" style="font-size:clamp(1.6rem,4vw,2.4rem); margin-bottom:6px;">What needs doing?</h1>
+        <p class="fade-up d2" style="margin-bottom:0;">Describe your task and taskers near you will send their best offers.</p>
+      </div>
+    </div>
+    <div class="post-task-container">
+      <main>
+        <div class="sprint-notice-v2 fade-up">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><strong>Quick tip:</strong> Be specific about what you need to get the best quotes from local providers.</div>
+        </div>
+        <div class="draft-banner" id="draftBanner">
+          <div class="draft-banner-text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Draft restored
+          </div>
+          <button class="draft-clear-btn" onclick="clearDraft()">Discard</button>
+        </div>
+        <div class="task-form-card fade-up d1">
+          <div class="task-form-card-header">
+            <h2>Task Details</h2>
+            <p style="font-size:0.84rem; color:var(--text-muted); margin:0; margin-top:4px;">Fields marked * are required</p>
+            <div class="form-progress" style="margin-top:16px;">
+              <span class="form-progress-label" id="formProgressLabel">0% complete</span>
+            </div>
+            <div class="form-progress-track"><div class="form-progress-fill" id="formProgressBar"></div></div>
+          </div>
+          <div class="task-form-card-body">
+            <form id="postTaskForm" novalidate data-supabase-table="tasks" data-supabase-status="open">
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskTitle">Task Title * <span class="label-hint">Be specific</span></label>
+                <input type="text" id="taskTitle" name="title" class="task-input" placeholder="e.g. Fix kitchen ceiling fan wiring" maxlength="120" required data-field="title" />
+                <span class="field-error" id="titleError"></span>
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskCategory">Service Category</label>
+                <select id="taskCategory" name="category" class="task-select" data-field="category"><option value="">Select a category...</option></select>
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskDescription">Description * <span class="label-hint">Min 20 characters</span></label>
+                <textarea id="taskDescription" name="description" class="task-textarea" rows="5" placeholder="Describe the task in detail. What needs done, any requirements, access details..." maxlength="1000" required data-field="description"></textarea>
+                <div class="desc-footer"><span></span><span class="char-counter" id="descCharCount">0 / 1000</span></div>
+
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskBudget">Budget (₦) * <span class="label-hint">Minimum ₦500</span></label>
+                <div class="task-input-wrap">
+                  <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <input type="number" id="taskBudget" name="budget" class="task-input" placeholder="e.g. 5000" min="500" required data-field="budget" />
+                </div>
+                <span class="field-error" id="budgetError"></span>
+                <div class="budget-chips">
+                  <button type="button" class="budget-chip" data-budget-chip="2000">₦2,000</button>
+                  <button type="button" class="budget-chip" data-budget-chip="5000">₦5,000</button>
+                  <button type="button" class="budget-chip" data-budget-chip="10000">₦10,000</button>
+                  <button type="button" class="budget-chip" data-budget-chip="25000">₦25,000</button>
+                  <button type="button" class="budget-chip" data-budget-chip="50000">₦50,000</button>
+                </div>
+              </div>
+              <div class="task-form-row">
+                <div class="task-form-group">
+                  <label class="task-form-label" for="taskLocation">Location *</label>
+                  <div class="task-input-wrap" style="position:relative;">
+                    <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <input type="text" id="taskLocation" name="location" class="task-input" placeholder="e.g. Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
+                    <div id="taskLocationSuggestions" class="location-suggestions"></div>
+                  </div>
+
+                </div>
+                <div class="task-form-group">
+                  <label class="task-form-label" for="taskDeadline">Deadline *</label>
+                  <input type="date" id="taskDeadline" name="deadline" class="task-input" required data-field="deadline" />
+                  <span class="field-error" id="deadlineError"></span>
+                </div>
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskType">Task Type</label>
+                <select id="taskType" name="taskType" class="task-select" data-field="taskType">
+                  <option value="one_off">One-off</option>
+                  <option value="full_time">Full time</option>
+                  <option value="part_time">Part time</option>
+                  <option value="remote">Remote</option>
+                  <option value="in_person">In person</option>
+                </select>
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label" for="taskUrgency">Urgency</label>
+                <select id="taskUrgency" name="taskUrgency" class="task-select" data-field="taskUrgency">
+                  <option value="flexible">Flexible</option>
+                  <option value="immediate">Immediate</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </div>
+              <div class="urgent-row">
+                <div class="urgent-row-left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <div>
+                    <div class="urgent-label">Mark as Urgent <span class="urgent-badge" id="urgentBadge">URGENT</span></div>
+                    <div class="urgent-desc">Bumps task to top of tasker feed</div>
+                  </div>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="toggle-track"></span></label>
+              </div>
+              <div class="task-form-group">
+                <label class="task-form-label">Reference Photos <span style="font-weight:400;color:var(--text-muted);">(optional · max 5)</span></label>
+                <div class="upload-zone" id="taskUploadZone" style="cursor:default;">
+                  <input type="file" id="taskPhotoFiles" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" />
+                  <div class="upload-zone-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                  <p>Drag &amp; drop images here, or</p>
+                  <button type="button" onclick="document.getElementById('taskPhotoFiles').click()" class="btn btn-outline btn-sm" style="margin-top:6px;">Choose Files</button>
+                  <small style="display:block;margin-top:6px;">JPG, PNG or WebP. Max 5 MB each, up to 5 images.</small>
+                </div>
+                <div id="taskPhotoProgress" style="display:none;margin-top:6px;font-size:0.8rem;color:var(--blue);">Uploading photos…</div>
+                <div id="taskPhotoPreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+              </div>
+              <div class="task-submit-section">
+                <button type="submit" class="btn btn-primary btn-lg" id="taskSubmitBtn" style="flex-shrink:0;">Post My Task</button>
+                <p class="task-submit-note">By posting you agree to our <a href="#">Terms</a>. Task goes live to nearby taskers instantly.</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+      <aside class="post-task-sidebar fade-up d2">
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Quick Categories</div>
+          <div class="category-quick-grid">
+            <button class="category-quick-btn" onclick="setCategory('barber')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/></svg>Barber</button>
+            <button class="category-quick-btn" onclick="setCategory('electrician')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Electrician</button>
+            <button class="category-quick-btn" onclick="setCategory('cleaning')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg>Cleaner</button>
+            <button class="category-quick-btn" onclick="setCategory('mechanic')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mechanic</button>
+            <button class="category-quick-btn" onclick="setCategory('plumber')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>Plumber</button>
+            <button class="category-quick-btn" onclick="setCategory('beauty')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Beauty</button>
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Tips for a great task</div>
+          <div class="tip-list">
+            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><span class="tip-text">Be specific about what you need. Better details attract better offers.</span></div>
+            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span class="tip-text">Set a realistic budget based on the task scope.</span></div>
+            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg></div><span class="tip-text">Include your precise area so local taskers can find you.</span></div>
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">What happens next</div>
+          <div class="steps-mini">
+            <div class="step-mini"><div class="step-mini-num">1</div><p>Your task goes live and nearby taskers are notified.</p></div>
+            <div class="step-mini"><div class="step-mini-num">2</div><p>Taskers send quotes, compare ratings and prices.</p></div>
+            <div class="step-mini"><div class="step-mini-num">3</div><p>Hire the best tasker, pay securely in-app when done.</p></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Success modal — verify to publish -->
+  <div class="modal-overlay" id="taskSuccessModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:440px;">
+      <div id="modalVerifyNeeded">
+        <div class="modal-icon" style="background:#fef3c7;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h2 style="margin-bottom:8px;">Task saved — verify to post</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a id="verifyToPostBtn" href="verify.html?role=customer&return=dashboard-customer.html%3Fpanel%3Dmy-tasks" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
+          <button class="btn btn-ghost" onclick="saveDraftTask()">Save as Draft — Verify Later</button>
+        </div>
+      </div>
+      <div id="modalAlreadyVerified" style="display:none;">
+        <div class="modal-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h2>Task is live!</h2>
+        <p>Your task "<span data-task-title></span>" is now live. Taskers will apply shortly.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="closeTaskModal();window.location.href='dashboard-customer.html?panel=my-tasks'">Go to Dashboard</button>
+          <button class="btn btn-outline" onclick="closeTaskModal()">Post Another</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/verify.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/location.js"></script>
+  <script>
+    function initPage() {
+      initTaskForm();
+      initPostSteps();
+      initTaskPhotoUpload();
+      /* Wire location autocomplete + GPS */
+      initLocationInput({
+        inputId:    'taskLocation',
+        dropdownId: 'taskLocationSuggestions',
+        gps: true,
+        mode: 'precise',
+      });
+    }
+    function setCategory(cat) {
+      const sel = document.getElementById('taskCategory');
+      if (sel) { sel.value = cat; sel.dispatchEvent(new Event('input')); }
+    }
+
+    /* ── Task photo upload ───────────────────────────────────── */
+    const taskUploadedPhotoUrls = [];
+
+    function initTaskPhotoUpload() {
+      const zone  = document.getElementById('taskUploadZone');
+      const input = document.getElementById('taskPhotoFiles');
+      if (!zone || !input) return;
+
+      input.addEventListener('change', () => handleTaskFiles(Array.from(input.files)));
+
+      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        handleTaskFiles(Array.from(e.dataTransfer.files));
+      });
+    }
+
+    function handleTaskFiles(files) {
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+      const allowed = files.filter(f => ALLOWED_TYPES.includes(f.type));
+      if (allowed.length === 0) { showToast('Please select image files (JPG, PNG, or WebP only).'); return; }
+      const tooBig  = allowed.filter(f => f.size > 5 * 1024 * 1024);
+      if (tooBig.length) { showToast(`${tooBig.length} file(s) exceed 5 MB and will be skipped.`); }
+      const valid = allowed.filter(f => f.size <= 5 * 1024 * 1024);
+      const remaining = 5 - taskUploadedPhotoUrls.length;
+      valid.slice(0, remaining).forEach(previewTaskPhoto);
+    }
+
+    function previewTaskPhoto(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrap = document.getElementById('taskPhotoPreviews');
+        const idx  = taskUploadedPhotoUrls.length;
+        // Store file for upload, show preview immediately
+        taskUploadedPhotoUrls.push({ file, url: null, dataUrl: e.target.result });
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0;';
+        div.id = `tp-${idx}`;
+        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border);" />
+          <button type="button" onclick="removeTaskPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>`;
+        wrap.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeTaskPhoto(idx) {
+      taskUploadedPhotoUrls.splice(idx, 1);
+      const el = document.getElementById(`tp-${idx}`);
+      if (el) el.remove();
+      // Re-index remaining previews
+      document.querySelectorAll('#taskPhotoPreviews > div').forEach((div, i) => {
+        div.id = `tp-${i}`;
+        const btn = div.querySelector('button');
+        if (btn) btn.setAttribute('onclick', `removeTaskPhoto(${i})`);
+      });
+    }
+    window.removeTaskPhoto = removeTaskPhoto;
+
+    async function uploadTaskPhotos() {
+      const prog = document.getElementById('taskPhotoProgress');
+      const toUpload = taskUploadedPhotoUrls.filter(p => p.file && !p.url);
+      if (!toUpload.length) return taskUploadedPhotoUrls.map(p => p.url).filter(Boolean);
+      if (prog) prog.style.display = 'block';
+      try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+        const uploaded = await Promise.all(toUpload.map(async (p, i) => {
+          const ext  = extMap[p.file.type] || 'jpg';
+          const name = `tasks/${user.id}-${Date.now()}-${i}.${ext}`;
+          const { error } = await window.supabase.storage.from('task-images').upload(name, p.file, { cacheControl:'3600', upsert:true });
+          if (error) { console.warn('[Upload] task photo failed:', error.message); return null; }
+          const { data: urlData } = window.supabase.storage.from('task-images').getPublicUrl(name);
+          p.url = urlData.publicUrl;
+          return p.url;
+        }));
+        return uploaded.filter(Boolean);
+      } catch(e) {
+        console.warn('[Upload] task photo upload error:', e.message);
+        return [];
+      } finally {
+        if (prog) prog.style.display = 'none';
+      }
+    }
+  </script>
+  <script>
+    /* ── Role guard: only customers can post tasks ── */
+    (async function() {
+      try {
+        var _gs = await window.supabase.auth.getSession();
+        var _gu = _gs.data.session && _gs.data.session.user;
+        if (!_gu) return;
+        var role = (_gu.user_metadata && _gu.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
+        if (role === 'tasker') {
+          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don't post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
+        }
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>
