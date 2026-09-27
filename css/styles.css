@@ -3045,42 +3045,55 @@ img { max-width: 100%; height: auto; }
 
 /* Local Taskers — hero banner variant (local-taskers.html hero only; scoped via
    ".hero .lt-banner" so the small homepage "Local Taskers" teaser card, which
-   reuses the base .lt-banner class, is left exactly as it was). */
-.hero .lt-banner { aspect-ratio: 1983 / 793; padding: 0; }
+   reuses the base .lt-banner class, is left exactly as it was). Structurally
+   this mirrors .hero-frame on the homepage exactly — same badge classes, same
+   positions — the illustration, eyebrow copy and caption content are the only
+   things that differ. */
+.hero .lt-banner {
+  min-height: 640px; padding: 0; overflow: hidden;
+  background-size: cover; background-position: center;
+}
 .hero .lt-banner::before { content: none; }
-.hero .lt-banner .hero-pill-float { position: absolute; top: 20%; }
-.hero .lt-banner .hero-pill-float.left { left: 6%; right: auto; }
-.hero .lt-banner .hero-pill-float.right { right: 8%; left: auto; }
-.hero .lt-banner .hero-float-card { position: absolute; bottom: 14%; left: 4%; }
 
-.hero .lt-banner .lt-hero-eyebrow {
-  position: absolute; top: 6%; left: 50%; transform: translateX(-50%);
+/* ".lt-banner > *" (further up this file) forces position:relative on every
+   direct child, which would otherwise silently cancel these badges' own
+   position:absolute — restate it here with enough specificity to win. */
+.hero .lt-banner .hero-pill-float,
+.hero .lt-banner .hero-float-card,
+.hero .lt-banner .hero-float-badge2 { position: absolute; }
+
+/* Eyebrow: a normal (non-floating) centered pill, like .hero-eyebrow on the
+   homepage but styled as a pill to match the reference art. */
+.hero .lt-banner .hero-eyebrow.lt-hero-eyebrow {
+  position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 7px;
   background: rgba(255,255,255,0.15); color: var(--white);
   font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 7px 16px; border-radius: var(--radius-pill); z-index: 4;
-  border: 1px solid rgba(255,255,255,0.22); white-space: nowrap;
+  border: 1px solid rgba(255,255,255,0.22); white-space: nowrap; margin: 0;
 }
 .lt-hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; flex-shrink: 0; }
 
-.hero .lt-banner .lt-hero-rating {
-  position: absolute; bottom: 14%; right: 5%;
-  background: rgba(11,46,28,0.55); border: 1px solid rgba(255,255,255,0.16);
-  border-radius: var(--radius-lg); padding: 10px 16px; z-index: 4;
-  display: flex; align-items: center; gap: 8px; color: var(--white);
-}
-.lt-hero-rating svg { color: #FFC94D; flex-shrink: 0; }
-.lt-hero-rating-num { font-size: 0.92rem; font-weight: 800; line-height: 1.15; }
-.lt-hero-rating-sub { font-size: 0.7rem; color: rgba(255,255,255,0.72); font-weight: 600; }
+/* Rating badge — same badge class/position as the homepage's "127 tasks
+   posted today" badge (.hero-float-badge2), just different copy + icon. */
+.hero .lt-banner .hero-float-badge2.lt-hero-rating svg { color: #FFC94D; flex-shrink: 0; }
 
-.lt-hero-sub {
-  color: var(--text-secondary); font-size: 1.02rem; text-align: center;
-  max-width: 480px; margin: 28px auto 0;
+/* Caption (subhead + buttons) pinned to the bottom of the rectangle, on the
+   image itself — matches the homepage's hero-sub / hero-frame-actions sitting
+   inside .hero-frame. A scrim keeps the light text readable over the art. */
+.hero .lt-banner .lt-hero-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 110px 40px 40px;
+  background: linear-gradient(to top, rgba(6,26,15,0.92) 0%, rgba(6,26,15,0.72) 45%, rgba(6,26,15,0) 100%);
 }
+.hero .lt-banner .lt-hero-caption .hero-sub { margin-top: 0; }
 
 @media (max-width: 900px) {
-  .hero .lt-banner { aspect-ratio: 858 / 1834; background-image: url('../images/lt-banner-mobile.jpg'); }
-  .hero .lt-banner .lt-hero-eyebrow, .hero .lt-banner .lt-hero-rating { display: none; }
+  .hero .lt-banner { min-height: 0; aspect-ratio: 858 / 1834; background-image: url('../images/lt-banner-mobile.jpg'); }
+  .hero .lt-banner .hero-eyebrow.lt-hero-eyebrow,
+  .hero .lt-banner .hero-float-badge2.lt-hero-rating { display: none; }
+  .hero .lt-banner .lt-hero-caption { padding: 70px 24px 28px; }
 }
 
 .lt-note-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: var(--text-muted); max-width: 480px; }
