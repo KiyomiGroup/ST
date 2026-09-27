@@ -2,20 +2,19 @@
 <nav id="navbar">
   <div class="nav-inner">
 
-    <!-- LEFT: Logo + role badge + tagline (stacked, matches dashboard nav) -->
+    <!-- LEFT: Logo + role badge + tagline — all inline on one row -->
     <div class="nav-left">
-      <div class="nav-left-top">
-        <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
-          <img src="images/logo-nav.svg" alt="StreetTasker"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-          <span class="nav-logo-text" style="display:none;">StreetTasker</span>
-        </a>
-        <!-- Role badge — logged-out: hidden -->
-        <span class="nav-role-badge nav-tasker" id="navRoleBadge">TASKER</span>
-        <span class="nav-role-badge nav-role-customer nav-customer" id="navRoleBadgeCustomer">CUSTOMER</span>
-      </div>
+      <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
+        <img src="images/logo-nav.svg" alt="StreetTasker"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+        <span class="nav-logo-text" style="display:none;">StreetTasker</span>
+      </a>
+      <!-- Role badge — hidden logged-out, shown by auth.js when logged in -->
+      <span class="nav-role-badge nav-tasker" id="navRoleBadge">TASKER</span>
+      <span class="nav-role-badge nav-role-customer nav-customer" id="navRoleBadgeCustomer">CUSTOMER</span>
+      <!-- Tagline — hidden logged-out, tiny + inline when logged in on desktop -->
       <span class="nav-logo-tagline">Smart Services, Done Right</span>
-      <!-- Mobile-only, logged-in-only dynamic page subtitle (e.g. "Task Details") -->
+      <!-- Mobile-only, logged-in-only dynamic subtitle -->
       <span class="nav-mobile-subtitle" id="navMobileSubtitle"></span>
     </div>
 

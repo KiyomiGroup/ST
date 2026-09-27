@@ -2783,15 +2783,15 @@ img { max-width: 100%; height: auto; }
   body.st-logged-in .nav-inner { flex-wrap: nowrap; }
   body.st-logged-in .nav-toggle { order: 1; }
   body.st-logged-in .nav-left {
-    order: 2; flex: 1 1 auto; min-width: 0;
+    order: 2; flex: 0 0 auto;
   }
   /* Logo sits first, badge right after it — order matches source order
      (see body:not(.st-logged-in) .nav-logo rule above, which this
      deliberately overrides back to the default/first position). */
-  body.st-logged-in .nav-left-top .nav-logo { order: 0; }
+  body.st-logged-in .nav-left .nav-logo { order: 0; }
   body.st-logged-in .nav-role-badge { order: 1; }
   body.st-logged-in .nav-logo img { height: 20px; }
-  body.st-logged-in .nav-logo-tagline { display: none; } /* replaced by the subtitle below on mobile */
+  body.st-logged-in .nav-logo-tagline { display: none; } /* hidden on mobile — shown desktop-only via base CSS */
   body.st-logged-in .nav-role-badge {
     font-size: 0.58rem; padding: 3px 9px; border: none;
   }
@@ -3207,10 +3207,9 @@ body.ds-page #navbar { display: none; }
    matches the dashboard nav's ds-nav-brand layout) */
 .nav-left {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1px;
+  flex-direction: row;   /* always a single row */
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 .nav-left-top {
@@ -3219,14 +3218,20 @@ body.ds-page #navbar { display: none; }
   gap: 8px;
 }
 
+/* Tagline: hidden logged-out, tiny + muted when logged in, sits inline */
 .nav-logo-tagline {
-  display: none; /* shown only when logged in */
-  font-size: 0.68rem;
+  display: none;
+  font-size: 0.67rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
+  letter-spacing: 0;
+  line-height: 1;
 }
-.st-logged-in .nav-logo-tagline { display: block; }
+/* Only show when logged in, and only on desktop (mobile stays clean) */
+@media (min-width: 769px) {
+  .st-logged-in .nav-logo-tagline { display: block; }
+}
 
 /* Role badge pill */
 .nav-role-badge {
