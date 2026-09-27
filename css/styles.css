@@ -2664,10 +2664,10 @@ img { max-width: 100%; height: auto; }
   position: relative; height: 176px; background: var(--gray-100);
   background-size: cover; background-position: center;
 }
-.pgtd-thumb-1 { background-image: linear-gradient(135deg,#DCEEE1,#B7DCC2); }
-.pgtd-thumb-2 { background-image: linear-gradient(135deg,#DCE7F5,#B9D3F0); }
-.pgtd-thumb-3 { background-image: linear-gradient(135deg,#F5E9DC,#F0D8B9); }
-.pgtd-thumb-4 { background-image: linear-gradient(135deg,#EADCF5,#D8B9F0); }
+.pgtd-thumb-1 { background-image: url('../images/lt-tasker-grace.png'); background-size: cover; background-position: center top; }
+.pgtd-thumb-2 { background-image: url('../images/lt-tasker-rasheed.png'); background-size: cover; background-position: center top; }
+.pgtd-thumb-3 { background-image: url('../images/lt-tasker-baba.png'); background-size: cover; background-position: center top; }
+.pgtd-thumb-4 { background-image: url('../images/lt-tasker-emmanuel.png'); background-size: cover; background-position: center top; }
 .pgtd-fav {
   position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
   border-radius: 50%; border: none; background: rgba(255,255,255,0.92);
@@ -2965,9 +2965,20 @@ img { max-width: 100%; height: auto; }
 }
 
 .lt-banner {
-  background: radial-gradient(ellipse 120% 100% at 15% 0%, var(--forest-mid) 0%, var(--forest) 45%, var(--forest-deep) 100%);
-  border-radius: 32px; padding: 72px 40px; text-align: center; overflow: hidden;
+  border-radius: 32px; text-align: center; overflow: hidden;
+  position: relative;
+  background-image: url('../images/lt-banner-desktop.png');
+  background-size: cover;
+  background-position: center center;
+  padding: 72px 40px;
 }
+.lt-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,40,10,0.45);
+  z-index: 0;
+}
+.lt-banner > * { position: relative; z-index: 1; }
 .lt-banner h2 {
   font-family: var(--font-heading); font-weight: 900; color: var(--white);
   font-size: clamp(2.5rem, 2rem + 3vw, 4.75rem); letter-spacing: -0.02em; text-transform: uppercase; line-height: 1;
