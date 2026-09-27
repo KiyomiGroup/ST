@@ -1,0 +1,110 @@
+<!-- ============================================================
+     STREET TASKERS — Task Card Component
+     Sprint 2: Reusable tasker / service card markup template
+     ============================================================
+     Usage: This template shows the structure of a tasker card.
+     In production, cards are built dynamically by taskers.js
+     via buildTaskerCardV2(tasker).
+
+     Future Sprint 3: Replace placeholder avatar initials with
+     real profile photo <img> from Supabase Storage.
+     Future Sprint 3: "Book Now" opens full booking modal with
+     date picker, availability calendar, and Paystack payment.
+     Future Sprint 3: "View Profile" navigates to
+     /tasker-profile.html?id=<tasker_id>
+     ============================================================ -->
+
+<!--
+  TASK CARD — Static reference markup
+  ─────────────────────────────────────
+  CSS classes: .card .tasker-card-v2
+  JS: buildTaskerCardV2() in taskers.js renders this structure.
+
+  Data attributes for Sprint 3 Supabase binding:
+    data-tasker-id   → tasker_profiles.id
+    data-category    → tasker_profiles.category
+    data-rating      → computed avg from reviews table
+    data-rate-value  → tasker_profiles.hourly_rate (kobo integer)
+    data-available   → tasker_profiles.available_now (boolean)
+-->
+<div class="card tasker-card-v2" data-tasker-id="t1" data-category="electrician" data-rating="4.9" data-available="true">
+
+  <!-- Header: avatar + name/service/location -->
+  <div class="tc-header">
+
+    <!-- Avatar: initials placeholder
+         Future Sprint 3: Replace with <img> from Supabase Storage
+         src="{{ supabase.storage.from('avatars').getPublicUrl(tasker.avatar_path) }}"
+    -->
+    <div class="tc-avatar av-1">AO</div>
+
+    <div class="tc-meta">
+      <!-- Name row with availability indicator -->
+      <div class="tc-name-row">
+        <span class="tc-name">Adebayo Okafor</span>
+        <span class="avail-indicator avail-dot-green">Available</span>
+      </div>
+
+      <!-- Service type with icon -->
+      <div class="tc-service">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Electrician
+      </div>
+
+      <!-- Location -->
+      <div class="tc-location">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        Lekki, Lagos
+      </div>
+    </div>
+  </div>
+
+  <!-- Short bio -->
+  <p class="tc-bio">10+ years wiring experience, certified. Specialises in smart home installations.</p>
+
+  <!-- Badges: verified, top rated -->
+  <div class="tc-badges">
+    <span class="badge badge-green">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Verified
+    </span>
+    <span class="badge badge-amber">Top Rated</span>
+  </div>
+
+  <!-- Stats: rating + rate -->
+  <div class="tc-stats">
+    <div class="tc-rating">
+      <span class="tc-stars">★★★★★</span>
+      <span class="tc-rating-val">4.9</span>
+      <span class="tc-reviews">(48 reviews)</span>
+    </div>
+    <div class="tc-rate">₦5,000/hr</div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="tc-actions">
+    <button
+      class="btn btn-outline btn-sm"
+      onclick="openTaskerProfile('t1')"
+      data-action="view-profile"
+      data-tasker-id="t1"
+    >
+      View Profile
+    </button>
+    <button
+      class="btn btn-primary btn-sm"
+      onclick="openBookingModal('t1')"
+      data-action="book"
+      data-tasker-id="t1"
+    >
+      <!-- Future Sprint 3: triggers booking modal + Paystack payment -->
+      Book Now
+    </button>
+  </div>
+
+</div>
+<!-- END task-card component -->
