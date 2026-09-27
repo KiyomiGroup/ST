@@ -961,7 +961,11 @@ p  { color: var(--text-secondary); font-weight: 400; }
   .filter-sidebar { position:static; }
 }
 @media (max-width:768px) {
-  .nav-links,.nav-actions { display:none; }
+  /* Higher specificity than .nav-links-loggedout / .nav-actions' own
+     unconditional "display:flex" rules further down the file, which
+     otherwise win the cascade on source order and make the guest
+     mobile nav overflow with the full desktop link/button row. */
+  body .nav-links, body .nav-actions { display:none; }
   .nav-toggle { display:flex; }
   .grid-2,.grid-3,.grid-4 { grid-template-columns:repeat(2,1fr); }
   .step-grid { grid-template-columns:1fr; }
@@ -2718,11 +2722,12 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 768px) {
   .nav-inner { justify-content: flex-start; gap: 14px; }
   .nav-toggle { order: 1; }
-  /* Scoped to logged-out only — when logged in, .nav-logo lives nested
-     inside .nav-left-top (alongside the role badge) and this order would
-     wrongly push it after the badge there. See body.st-logged-in override
-     below. */
-  body:not(.st-logged-in) .nav-logo { order: 2; }
+  /* .nav-logo is nested inside .nav-left (itself the actual flex child
+     of .nav-inner), so ordering has to be set on .nav-left to move the
+     whole left cluster after the hamburger — setting it on .nav-logo
+     alone has no effect on top-level position. Scoped to logged-out
+     only: the logged-in layout sets its own order on .nav-left below. */
+  body:not(.st-logged-in) .nav-left { order: 2; }
   .nav-mobile-plus {
     order: 3; margin-left: auto; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
