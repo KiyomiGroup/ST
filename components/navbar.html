@@ -27,8 +27,8 @@
       </li>
       <li><a href="find-tasks.html" class="nav-link">Find Tasks</a></li>
       <li><a href="find-taskers.html" class="nav-link">Find Taskers</a></li>
-      <li><span class="nav-link nav-link-disabled" title="Coming soon">Gift Cards</span></li>
       <li><a href="local-taskers.html" class="nav-link">Local Taskers</a></li>
+      <li><span class="nav-link nav-link-disabled" title="Coming soon">Gift Cards</span></li>
     </ul>
 
     <!-- CENTRE: Logged-in pill nav — TASKER -->
@@ -62,7 +62,7 @@
     <div class="nav-actions" id="navActionsLoggedOut">
       <a href="signup.html" class="btn btn-text btn-sm" id="nav-signup">Sign Up</a>
       <a href="login.html"  class="btn btn-text btn-sm" id="nav-login">Log in</a>
-      <span class="btn btn-mint btn-sm nav-become-btn nav-link-disabled" title="Coming soon">Become a Tasker</span>
+      <a href="signup.html?step=tasker" class="btn btn-mint btn-sm nav-become-btn">Become a Tasker</a>
     </div>
 
     <!-- RIGHT: Logged-in icon bar + avatar -->
@@ -127,13 +127,13 @@
   <a href="post-task.html" class="nav-link" id="nav-mobile-action">Post a Task</a>
   <a href="find-tasks.html" class="nav-link">Find Tasks</a>
   <a href="find-taskers.html" class="nav-link">Find Taskers</a>
-  <span class="nav-link nav-link-disabled">Gift Cards</span>
   <a href="local-taskers.html" class="nav-link">Local Taskers</a>
+  <span class="nav-link nav-link-disabled">Gift Cards</span>
   <a href="dashboard-customer.html" class="nav-link" id="nav-mobile-dashboard" style="display:none;">Dashboard</a>
   <div class="nav-mobile-actions">
     <a href="signup.html" class="btn btn-ghost btn-full" id="nav-mobile-signup">Sign Up</a>
     <a href="login.html"  class="btn btn-ghost btn-full" id="nav-mobile-login">Log in</a>
-    <span class="btn btn-mint btn-full nav-link-disabled">Become a Tasker</span>
+    <a href="signup.html?step=tasker" class="btn btn-mint btn-full">Become a Tasker</a>
     <button id="navMobileLogout" class="btn btn-ghost btn-full" style="display:none;" onclick="window.ST?.auth?.logoutUser()">Logout</button>
   </div>
 </div>

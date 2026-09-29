@@ -3228,6 +3228,8 @@ body.ds-page #navbar { display: none; }
   letter-spacing: 0;
   line-height: 1;
 }
+/* Never show the tagline in the logged-out nav */
+body:not(.st-logged-in) .nav-logo-tagline { display: none !important; }
 /* Only show when logged in, and only on desktop (mobile stays clean) */
 @media (min-width: 769px) {
   .st-logged-in .nav-logo-tagline { display: block; }
