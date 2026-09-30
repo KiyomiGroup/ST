@@ -3387,3 +3387,21 @@ body.ds-page #navbar { display: none; }
 .st-logged-in.role-customer .nav-customer { display: flex; }
 
 /* The icon bar settings/bookings links also update per role */
+
+
+/* ================================================================
+   NAV — logo only. No text under/next to the logo on any page.
+   Hides every known subtitle/tagline/page-title element plus any
+   other stray child of the left cluster or logo link (except the
+   logo image, fallback wordmark and role badges).
+   ================================================================ */
+#navbar .nav-logo-tagline,
+#navbar .nav-mobile-subtitle,
+#navbar .nav-subtitle,
+#navbar .nav-page-title,
+#navbar .nav-page-label,
+#navbar #navMobileSubtitle,
+#navbar .nav-left > :not(.nav-logo):not(.nav-role-badge):not(.nav-left-top),
+#navbar .nav-logo > :not(img):not(.nav-logo-text) {
+  display: none !important;
+}
