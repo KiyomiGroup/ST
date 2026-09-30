@@ -2799,11 +2799,8 @@ img { max-width: 100%; height: auto; }
   body.st-logged-in .nav-role-badge.nav-role-customer {
     color: #0B4D30; background: #9EF0C4;
   }
-  body.st-logged-in .nav-mobile-subtitle {
-    display: block; font-size: 0.72rem; font-weight: 500;
-    color: var(--text-muted); margin-top: 1px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-  }
+  /* Page-title subtitle under the logo is intentionally removed — logo only. */
+  body.st-logged-in .nav-mobile-subtitle { display: none !important; }
   /* Desktop pill-nav / icon-bar were never meant for this width —
      hide them so they can't collide with the new left/right clusters. */
   .nav-pill-wrap, .nav-icon-bar { display: none !important; }
