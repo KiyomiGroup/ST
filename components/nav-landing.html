@@ -1,0 +1,77 @@
+<!-- StreetTasker — Landing & onboarding nav (logged-out). Styles: css/nav-landing.css
+     Loaded when the page's #navbar-placeholder has data-nav-src="components/nav-landing.html".
+     Desktop spec: 1312px wide, 10px padding on all sides, logo -16- links (16 apart), 146 gap, actions. -->
+<header class="lnav" id="lnav">
+  <div class="lnav-inner">
+
+    <!-- Mobile only: hamburger (hidden on desktop) -->
+    <button class="lnav-toggle" id="lnavToggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="lnavMobile">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Logo (no text under it, by design) -->
+    <a href="index.html" class="lnav-logo" aria-label="StreetTasker home">
+      <img src="images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+    </a>
+
+    <!-- Links: Post a Task button + 4 links, 16px apart -->
+    <ul class="lnav-links">
+      <li><a href="post-task.html" class="lnav-btn lnav-btn-primary">Post a Task</a></li>
+      <li><a href="find-tasks.html" class="lnav-link">Find Tasks</a></li>
+      <li><a href="find-taskers.html" class="lnav-link">Find Taskers</a></li>
+      <li><a href="local-taskers.html" class="lnav-link">Local Taskers</a></li>
+      <li><span class="lnav-link lnav-link-soon" title="Coming soon">Gift Cards</span></li>
+    </ul>
+
+    <!-- Actions: 146px after the links -->
+    <div class="lnav-actions">
+      <a href="signup.html" class="lnav-link" id="nav-signup">Sign Up</a>
+      <a href="login.html" class="lnav-link" id="nav-login">Log in</a>
+      <a href="signup.html?step=tasker" class="lnav-btn lnav-btn-mint">Become a Tasker</a>
+    </div>
+
+    <!-- Mobile only: quick "Post a task" plus button -->
+    <a href="post-task.html" class="lnav-plus" aria-label="Post a task">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </a>
+  </div>
+
+  <!-- Mobile menu (placeholder until the mobile nav is designed) -->
+  <div class="lnav-mobile" id="lnavMobile">
+    <a href="post-task.html" class="lnav-mobile-link">Post a Task</a>
+    <a href="find-tasks.html" class="lnav-mobile-link">Find Tasks</a>
+    <a href="find-taskers.html" class="lnav-mobile-link">Find Taskers</a>
+    <a href="local-taskers.html" class="lnav-mobile-link">Local Taskers</a>
+    <span class="lnav-mobile-link lnav-link-soon">Gift Cards</span>
+    <div class="lnav-mobile-actions">
+      <a href="signup.html" class="lnav-mobile-btn" id="nav-mobile-signup">Sign Up</a>
+      <a href="login.html" class="lnav-mobile-btn" id="nav-mobile-login">Log in</a>
+      <a href="signup.html?step=tasker" class="lnav-mobile-btn lnav-mobile-btn-mint">Become a Tasker</a>
+    </div>
+  </div>
+</header>
+
+<script>
+(function () {
+  var nav = document.getElementById('lnav');
+  var toggle = document.getElementById('lnavToggle');
+  var menu = document.getElementById('lnavMobile');
+  if (!nav) return;
+
+  function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 20); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  if (!toggle || !menu) return;
+  function setOpen(open) {
+    menu.classList.toggle('open', open);
+    toggle.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  toggle.addEventListener('click', function () { setOpen(!menu.classList.contains('open')); });
+  document.addEventListener('click', function (e) {
+    if (!nav.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+})();
+</script>

@@ -130,8 +130,11 @@ function setActiveNavLink() {
  */
 document.addEventListener('DOMContentLoaded', async () => {
 
-  /* Step 1: Load navbar HTML */
-  await loadComponent('#navbar-placeholder', 'components/navbar.html');
+  /* Step 1: Load navbar HTML. A page can opt into a different nav component
+     with data-nav-src on the placeholder (landing/onboarding use nav-landing.html);
+     every other page keeps components/navbar.html. */
+  const navHost = document.getElementById('navbar-placeholder');
+  await loadComponent('#navbar-placeholder', (navHost && navHost.dataset.navSrc) || 'components/navbar.html');
 
   /* Step 2: Apply auth state INSTANTLY from localStorage — zero network delay.
      This runs synchronously so the navbar never flickers. */
