@@ -124,27 +124,6 @@ function setActiveNavLink() {
   });
 }
 
-/* ── Mobile top-nav subtitle (logged-in only) ───────────────────
- * Populates #navMobileSubtitle with a short label for the current
- * page — e.g. "Find Tasks", "Messages" — under the StreetTasker
- * wordmark on mobile. A page can set window.ST_PAGE_TITLE before
- * app.js runs to control this directly; otherwise it's derived from
- * <title>. Dashboard pages override this per-panel themselves
- * (see mobileSwitchPanel in dashboard-tasker.html / dashboard-customer.html). */
-function initMobileNavSubtitle() {
-  const el = document.getElementById('navMobileSubtitle');
-  if (!el) return;
-
-  let label = window.ST_PAGE_TITLE || '';
-  if (!label) {
-    const raw = document.title || '';
-    const parts = raw.split(/[—-]/).map(s => s.trim()).filter(Boolean);
-    const brandRe = /street\s*tasker/i;
-    const nonBrand = parts.filter(p => !brandRe.test(p));
-    label = (nonBrand[0] || parts[0] || '').trim();
-  }
-  el.textContent = label;
-}
 /**
  * Entry point — runs after DOM is ready.
  * Loads shared components and then calls page-specific init.
@@ -159,9 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (window.ST?.auth?.initNavbarInstant) {
     window.ST.auth.initNavbarInstant();
   }
-
-  /* Step 2a: Set the mobile top-nav subtitle (e.g. "Find Tasks") */
-  initMobileNavSubtitle();
 
   /* Step 2b: On find-tasks.html / find-taskers.html, swap the hero into a
      "Welcome back" dashboard greeting for logged-in users. No-ops on
