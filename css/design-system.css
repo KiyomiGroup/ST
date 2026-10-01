@@ -1,0 +1,54 @@
+/* Layout for design-system.html only. Uses tokens and shared components; no raw values. */
+.ds-wrap { max-width: 1000px; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-9); }
+.ds-wrap h1 { font-size: var(--text-2xl); margin-bottom: var(--space-2); }
+.ds-intro { margin-bottom: var(--space-7); }
+.ds-section { margin-bottom: var(--space-8); }
+.ds-section > h2 { font-size: var(--text-xl); padding-bottom: var(--space-3); margin-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
+.ds-section h3 { font-size: var(--text-base); margin: var(--space-5) 0 var(--space-3); }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-4); }
+.ds-note { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-2); }
+
+/* Swatches: background comes from the token itself; the label is filled in by JS */
+.ds-swatch { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg); }
+.ds-swatch-color { height: 56px; }
+.ds-swatch-meta { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); line-height: 1.4; }
+.ds-swatch-meta b { display: block; font-size: var(--text-xs); color: var(--color-text); }
+.ds-swatch-meta span { color: var(--color-text-muted); }
+.sw-primary       { background: var(--color-primary); }
+.sw-primary-hover { background: var(--color-primary-hover); }
+.sw-primary-soft  { background: var(--color-primary-soft); }
+.sw-primary-soft-hover { background: var(--color-primary-soft-hover); }
+.sw-text          { background: var(--color-text); }
+.sw-text-nav      { background: var(--color-text-nav); }
+.sw-text-secondary{ background: var(--color-text-secondary); }
+.sw-text-muted    { background: var(--color-text-muted); }
+.sw-bg            { background: var(--color-bg); }
+.sw-bg-subtle     { background: var(--color-bg-subtle); }
+.sw-bg-muted      { background: var(--color-bg-muted); }
+.sw-border        { background: var(--color-border); }
+.sw-border-strong { background: var(--color-border-strong); }
+.sw-warning       { background: var(--color-warning); }
+.sw-danger        { background: var(--color-danger); }
+.sw-accent        { background: var(--color-accent); }
+.sw-mint          { background: var(--color-mint); }
+
+/* Type scale */
+.ds-type { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
+.ds-type code, .ds-space code { width: 140px; flex: 0 0 140px; font-size: var(--text-xs); color: var(--color-text-muted); }
+.t-2xs { font-size: var(--text-2xs); } .t-xs { font-size: var(--text-xs); } .t-sm { font-size: var(--text-sm); }
+.t-base-sm { font-size: var(--text-base-sm); } .t-base { font-size: var(--text-base); } .t-lg { font-size: var(--text-lg); }
+.t-xl { font-size: var(--text-xl); } .t-2xl { font-size: var(--text-2xl); }
+
+/* Spacing + radius */
+.ds-space { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-1) 0; }
+.ds-space-bar { height: var(--space-3); background: var(--color-primary); border-radius: var(--radius-xs); }
+.sp-1 { width: var(--space-1); } .sp-2 { width: var(--space-2); } .sp-3 { width: var(--space-3); } .sp-4 { width: var(--space-4); }
+.sp-5 { width: var(--space-5); } .sp-6 { width: var(--space-6); } .sp-7 { width: var(--space-7); } .sp-8 { width: var(--space-8); } .sp-9 { width: var(--space-9); }
+.ds-radius { width: 88px; height: 56px; background: var(--color-bg-muted); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); }
+.r-xs { border-radius: var(--radius-xs); } .r-sm { border-radius: var(--radius-sm); } .r-md { border-radius: var(--radius-md); }
+.r-lg { border-radius: var(--radius-lg); } .r-xl { border-radius: var(--radius-xl); } .r-pill { border-radius: var(--radius-pill); }
+
+/* Component demos */
+.ds-card-body { padding: var(--space-5); }
+.ds-form { max-width: 360px; }

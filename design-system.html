@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StreetTasker Design System</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body>
+<main class="ds-wrap">
+  <header class="ds-intro">
+    <span class="eyebrow">Design system</span>
+    <h1>StreetTasker components</h1>
+    <p>Every colour, size and component below is rendered from the real tokens and classes in <code>css/tokens.css</code> and <code>css/styles.css</code>. If something here looks wrong, the site has the same problem. Spec: <code>DESIGN-SYSTEM.md</code>.</p>
+  </header>
+
+  <section class="ds-section" id="colour">
+    <h2>Colour</h2>
+    <div class="ds-grid" id="swatches">
+      <div class="ds-swatch" data-token="--color-primary"><div class="ds-swatch-color sw-primary"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-primary-hover"><div class="ds-swatch-color sw-primary-hover"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-primary-soft"><div class="ds-swatch-color sw-primary-soft"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-primary-soft-hover"><div class="ds-swatch-color sw-primary-soft-hover"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-accent"><div class="ds-swatch-color sw-accent"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-mint"><div class="ds-swatch-color sw-mint"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-text"><div class="ds-swatch-color sw-text"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-text-nav"><div class="ds-swatch-color sw-text-nav"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-text-secondary"><div class="ds-swatch-color sw-text-secondary"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-text-muted"><div class="ds-swatch-color sw-text-muted"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-bg"><div class="ds-swatch-color sw-bg"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-bg-subtle"><div class="ds-swatch-color sw-bg-subtle"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-bg-muted"><div class="ds-swatch-color sw-bg-muted"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-border"><div class="ds-swatch-color sw-border"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-border-strong"><div class="ds-swatch-color sw-border-strong"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-warning"><div class="ds-swatch-color sw-warning"></div><div class="ds-swatch-meta"></div></div>
+      <div class="ds-swatch" data-token="--color-danger"><div class="ds-swatch-color sw-danger"></div><div class="ds-swatch-meta"></div></div>
+    </div>
+    <p class="ds-note">Values are read live from the tokens, so this list cannot drift from the code.</p>
+  </section>
+
+  <section class="ds-section" id="type">
+    <h2>Typography</h2>
+    <div class="ds-type"><code>--text-2xl</code><span class="t-2xl">Get any task done</span></div>
+    <div class="ds-type"><code>--text-xl</code><span class="t-xl">Get any task done</span></div>
+    <div class="ds-type"><code>--text-lg</code><span class="t-lg">Get any task done</span></div>
+    <div class="ds-type"><code>--text-base</code><span class="t-base">Get any task done</span></div>
+    <div class="ds-type"><code>--text-base-sm</code><span class="t-base-sm">Get any task done</span></div>
+    <div class="ds-type"><code>--text-sm</code><span class="t-sm">Get any task done</span></div>
+    <div class="ds-type"><code>--text-xs</code><span class="t-xs">Get any task done</span></div>
+    <div class="ds-type"><code>--text-2xs</code><span class="t-2xs">Get any task done</span></div>
+  </section>
+
+  <section class="ds-section" id="spacing">
+    <h2>Spacing and radius</h2>
+    <div class="ds-space"><code>--space-1</code><div class="ds-space-bar sp-1"></div></div>
+    <div class="ds-space"><code>--space-2</code><div class="ds-space-bar sp-2"></div></div>
+    <div class="ds-space"><code>--space-3</code><div class="ds-space-bar sp-3"></div></div>
+    <div class="ds-space"><code>--space-4</code><div class="ds-space-bar sp-4"></div></div>
+    <div class="ds-space"><code>--space-5</code><div class="ds-space-bar sp-5"></div></div>
+    <div class="ds-space"><code>--space-6</code><div class="ds-space-bar sp-6"></div></div>
+    <div class="ds-space"><code>--space-7</code><div class="ds-space-bar sp-7"></div></div>
+    <div class="ds-space"><code>--space-8</code><div class="ds-space-bar sp-8"></div></div>
+    <div class="ds-space"><code>--space-9</code><div class="ds-space-bar sp-9"></div></div>
+    <h3>Radius</h3>
+    <div class="ds-row">
+      <div class="ds-radius r-xs">xs</div><div class="ds-radius r-sm">sm</div><div class="ds-radius r-md">md</div>
+      <div class="ds-radius r-lg">lg</div><div class="ds-radius r-xl">xl</div><div class="ds-radius r-pill">pill</div>
+    </div>
+  </section>
+
+  <section class="ds-section" id="buttons">
+    <h2>Buttons</h2>
+    <h3>Variants</h3>
+    <div class="ds-row">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-mint">Mint</button>
+      <button class="btn btn-outline">Outline</button>
+      <button class="btn btn-ghost">Ghost</button>
+      <button class="btn btn-dark">Dark</button>
+      <button class="btn btn-text">Text</button>
+    </div>
+    <h3>Sizes</h3>
+    <div class="ds-row">
+      <button class="btn btn-primary btn-sm">Small</button>
+      <button class="btn btn-primary">Default</button>
+      <button class="btn btn-primary btn-lg">Large</button>
+      <button class="btn btn-primary btn-xl">Extra large</button>
+    </div>
+    <h3>Full width and OAuth</h3>
+    <div class="ds-form">
+      <button class="btn btn-primary btn-full">Full width</button>
+    </div>
+  </section>
+
+  <section class="ds-section" id="badges">
+    <h2>Badges and eyebrow</h2>
+    <div class="ds-row">
+      <span class="badge badge-blue">Primary</span>
+      <span class="badge badge-green">Green</span>
+      <span class="badge badge-amber">Amber</span>
+      <span class="badge badge-gray">Gray</span>
+      <span class="eyebrow">Eyebrow label</span>
+    </div>
+  </section>
+
+  <section class="ds-section" id="cards">
+    <h2>Cards</h2>
+    <div class="ds-grid">
+      <div class="card"><div class="ds-card-body"><span class="badge badge-green">Open</span><h3>Clean my apartment</h3><p>Lekki Phase 1. Budget shown on the card.</p></div></div>
+      <div class="card"><div class="ds-card-body"><span class="badge badge-amber">Pending</span><h3>Fix a leaking tap</h3><p>Ikeja. Hover the card to see the lift.</p></div></div>
+    </div>
+  </section>
+
+  <section class="ds-section" id="forms">
+    <h2>Forms</h2>
+    <div class="ds-form">
+      <div class="form-group"><label class="form-label" for="ds-name">Full name</label><input class="form-input" id="ds-name" placeholder="Adunola Babadiya" /></div>
+      <div class="form-group"><label class="form-label" for="ds-sel">Category</label><select class="form-select" id="ds-sel"><option>Cleaning</option><option>Repairs</option></select><p class="form-helper">Helper text sits under the field.</p></div>
+      <div class="form-group"><label class="form-label" for="ds-ta">Details</label><textarea class="form-textarea" id="ds-ta" placeholder="Describe the task"></textarea></div>
+    </div>
+  </section>
+</main>
+<script>
+  document.querySelectorAll('.ds-swatch').forEach(function (el) {
+    var token = el.getAttribute('data-token');
+    var value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+    var meta = el.querySelector('.ds-swatch-meta');
+    meta.innerHTML = '<b></b><span></span>';
+    meta.querySelector('b').textContent = token;
+    meta.querySelector('span').textContent = value || 'not defined';
+  });
+</script>
+</body>
+</html>

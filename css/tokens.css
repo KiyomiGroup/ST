@@ -1,0 +1,82 @@
+/* ============================================================
+   STREETTASKER — DESIGN TOKENS  (single source of truth)
+   Spec: DESIGN-SYSTEM.md (project root). Imported at the top of
+   css/styles.css, so every page gets it.
+
+   Rules: new CSS uses these tokens. No raw hex, font sizes or
+   spacing values in pages or components.
+   Legacy tokens (--blue, --mint, --text-primary, ...) still live in
+   styles.css :root and are being migrated to these names page by page.
+   ============================================================ */
+:root {
+  /* ── Colour ── */
+  --color-primary:            #0F6B46;   /* primary buttons */
+  --color-primary-hover:      #0B5638;   /* derived: darker step of primary */
+  --color-primary-soft:       #EEFFF1;   /* mint fill (Become a Tasker) */
+  --color-primary-soft-hover: #DFF7E4;
+
+  --color-text:           #121212;
+  --color-text-nav:       #171A19;
+  --color-text-secondary: #4A4A4A;
+  --color-text-muted:     #7A7A7A;
+  --color-text-on-primary:#FFFFFF;
+
+  --color-bg:        #FFFFFF;
+  --color-bg-subtle: #F7F7F7;
+  --color-bg-muted:  #F5F5F5;
+  --color-border:        #E5E5E5;
+  --color-border-strong: #D0D0D0;
+
+  --color-warning:      #D97706;
+  --color-warning-soft: rgba(217, 119, 6, 0.1);
+  --color-danger:       #DC2626;
+  --color-danger-soft:  rgba(220, 38, 38, 0.08);
+
+  /* ── Typography ── */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* --font-heading ('Manrope', ...) is defined in styles.css :root */
+
+  --text-2xs:      0.6875rem;  /* 11px */
+  --text-xs:       0.75rem;    /* 12px */
+  --text-sm:       0.8125rem;  /* 13px */
+  --text-base-sm:  0.875rem;   /* 14px */
+  --text-base:     1rem;       /* 16px */
+  --text-lg:       1.125rem;   /* 18px */
+  --text-xl:       1.5rem;     /* 24px */
+  --text-2xl:      2rem;       /* 32px */
+  --text-hero:     clamp(2rem, 5vw, 3.5rem);
+
+  /* ── Spacing (4px base) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 88px;
+  --space-nav: 10px;   /* nav container padding only */
+}
+
+/* ── Accent / legacy-green tokens ──
+   Hold the CURRENT values of the older green set (--blue, --mint, ...) so
+   the "accent green" decision can be made in one place later.
+   Not for primary buttons: those use --color-primary. */
+:root {
+  --color-accent:         #16A34A;
+  --color-accent-hover:   #128244;
+  --color-accent-soft:    rgba(22, 163, 74, 0.08);
+  --color-accent-border:  rgba(22, 163, 74, 0.22);
+  --color-mint:           #E8F5EC;
+  --color-mint-border:    #BFE3CB;
+  --color-mint-hover:     #DAEFDF;
+  --color-forest-950:     #081F13;
+  --color-forest-900:     #0B2E1C;
+  --color-forest-800:     #0F3D26;
+  --color-forest-700:     #16512F;
+  --color-warning-border: rgba(217, 119, 6, 0.2);
+  --shadow-primary-sm:    0 1px 3px rgba(15, 107, 70, 0.25);
+  --shadow-primary-md:    0 4px 12px rgba(15, 107, 70, 0.35);
+  --shadow-focus:         0 0 0 3px rgba(15, 107, 70, 0.15);
+}
