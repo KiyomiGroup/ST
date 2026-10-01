@@ -3454,15 +3454,16 @@ body.ds-page #navbar { display: none; }
     background: transparent; border: 0; box-shadow: none;
     font-family: var(--font-heading);
     font-size: var(--text-base); font-weight: 600; line-height: 1; letter-spacing: 0;
-    color: var(--color-text-nav-link); white-space: nowrap;
+    color: var(--color-text-nav-link); white-space: nowrap; position: relative;
   }
   body:not(.st-logged-in) .nav-links-loggedout a.nav-link:hover,
   body:not(.st-logged-in) #navActionsLoggedOut .btn-text:hover {
     background: transparent; color: var(--color-primary);
   }
-  /* Hover bar above the four centre links (Airtasker-style): a bar the width of
-     the link text sits above the link and grows in from the centre. */
-  body:not(.st-logged-in) .nav-links-loggedout a.nav-link::before {
+  /* Hover bar above the centre links and Sign Up / Log in (Airtasker-style): a bar
+     the width of the link text sits above the link and grows in from the centre. */
+  body:not(.st-logged-in) .nav-links-loggedout a.nav-link::before,
+  body:not(.st-logged-in) #navActionsLoggedOut .btn-text::before {
     content: ''; position: absolute; left: 0; right: 0;
     top: calc(-1 * var(--space-2)); height: var(--nav-hover-bar);
     background: var(--color-primary);
@@ -3471,7 +3472,9 @@ body.ds-page #navbar { display: none; }
     pointer-events: none;
   }
   body:not(.st-logged-in) .nav-links-loggedout a.nav-link:hover::before,
-  body:not(.st-logged-in) .nav-links-loggedout a.nav-link:focus-visible::before {
+  body:not(.st-logged-in) .nav-links-loggedout a.nav-link:focus-visible::before,
+  body:not(.st-logged-in) #navActionsLoggedOut .btn-text:hover::before,
+  body:not(.st-logged-in) #navActionsLoggedOut .btn-text:focus-visible::before {
     transform: scaleX(1);
   }
   /* Gift Cards: not clickable yet, but shown at full strength like the design */
