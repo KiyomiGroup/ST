@@ -17,6 +17,7 @@
 
   --color-text:           #121212;
   --color-text-nav:       #171A19;
+  --color-text-nav-link:  #384179;   /* logged-out nav link text at rest (Airtasker-style navy) */
   --color-text-secondary: #4A4A4A;
   --color-text-muted:     #7A7A7A;
   --color-text-on-primary:#FFFFFF;
@@ -62,6 +63,7 @@
   --page-margin:    60px;     /* side margin on every page: a no-content area */
   --nav-max-width:  1312px;   /* logged-out desktop nav, centred */
   --nav-min-width:  1044px;   /* narrowest the full nav row fits */
+  --nav-hover-bar:  4px;      /* thickness of the bar above a hovered nav link */
 }
 
 /* ── Accent / legacy-green tokens ──

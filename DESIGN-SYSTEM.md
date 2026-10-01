@@ -53,7 +53,8 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 | `--color-forest-800` | `#0F3D26` | `--forest` |
 | `--color-forest-700` | `#16512F` | `--forest-mid` |
 | `--color-text` | `#121212` | `--text-primary`, `--charcoal` |
-| `--color-text-nav` | `#171A19` | Nav link text. Candidate to merge into `--color-text`. |
+| `--color-text-nav` | `#171A19` | Nav button text (Become a Tasker). Candidate to merge into `--color-text`. |
+| `--color-text-nav-link` | `#384179` | Logged-out desktop nav link text at rest (Find Tasks, Find Taskers, Local Taskers, Gift Cards, Sign Up, Log in). Hover turns it `--color-primary`. |
 | `--color-text-secondary` | `#4A4A4A` | `--text-secondary`, `--gray-600` |
 | `--color-text-muted` | `#7A7A7A` | `--text-muted`, `--gray-400` |
 | `--color-bg` | `#FFFFFF` | `--bg`, `--white` |
@@ -198,7 +199,7 @@ Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block 
 | Links | Post a Task, Find Tasks, Find Taskers, Local Taskers, Gift Cards. 16px apart |
 | Right group | Sign Up, Log in, Become a Tasker. 16px apart, pinned to the right edge |
 | Space | Whatever is left sits between Gift Cards and Sign Up |
-| Link text | Manrope 16px, weight 600, `--color-text-nav`, no padding |
+| Link text | Manrope 16px, weight 600, `--color-text-nav-link`, no padding. Hover: text turns `--color-primary` and a `--nav-hover-bar` (4px) bar of `--color-primary` appears above the link, the width of the link, 8px above its box (centre links only) |
 | Post a Task | 133 x 40, padding 8 / 24, `--color-primary` fill, white text, weight 600 |
 | Become a Tasker | 174 x 40, padding 14 / 24, `--color-primary-soft` fill, dark text, weight 500 |
 
