@@ -3415,7 +3415,8 @@ body.ds-page #navbar { display: none; }
    to the logged-out elements, so the logged-in nav and the mobile nav
    (768px and below) are untouched.
 
-   - Container: 1312px wide, centered, 10px padding on all sides
+   - Container: 1312px wide, centered, 10px padding on all sides;
+     60px page margin (no-content area) each side on screens under 1432px wide
    - Logo -16- [Post a Task] -16- Find Tasks -16- Find Taskers -16-
      Local Taskers -16- Gift Cards ... flexible space ...
      Sign Up -16- Log in -16- [Become a Tasker]  (pinned right)
@@ -3428,7 +3429,10 @@ body.ds-page #navbar { display: none; }
 
   body:not(.st-logged-in) .nav-inner {
     box-sizing: border-box;
-    width: 1312px; max-width: 100%;
+    /* 1312 centred; on narrower screens keep a 60px no-content margin each side,
+       and only shrink that margin once the row would no longer fit */
+    width: min(var(--nav-max-width), max(var(--nav-min-width), calc(100% - 2 * var(--page-margin))));
+    max-width: none;   /* cancels the 1160px cap on the shared .nav-inner */
     height: 60px; margin: 0 auto; padding: var(--space-nav);
     justify-content: flex-start; gap: 0;
   }

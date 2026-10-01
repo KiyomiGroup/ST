@@ -9,12 +9,14 @@ Tick a box only when the item is done **and** verified. Update the counts with `
 - [ ] Baseline lowered with `--update` (counts only go down)
 - [ ] Only the agreed area changed (logged-in views, mobile nav and other pages untouched unless listed)
 - [ ] `design-system.html` still renders correctly
+- [ ] Checked at 1920, 1440, 1280 (also at 150% browser scaling), 1164, 1100, 1044 and 390 (mobile), not just one width
 
 ## Foundation
 - [x] `DESIGN-SYSTEM.md` written and decisions settled (primary `#0F6B46`, fonts, breakpoints)
 - [x] `css/tokens.css` created and imported by `css/styles.css`
 - [x] Logged-out desktop nav built to spec in `components/navbar.html` and unified across the site (`nav-landing` retired)
 - [x] Primary buttons use `--color-primary`
+- [x] Logged-out nav keeps the 60px page margin on screens under 1432px (fixed after the 1280px report; verified at 1920, 1440, 1280, 1164, 1100, 1044)
 - [x] Old tokens that match new ones now alias them (text, border, background, amber, red, font)
 - [x] Older green set (`--blue`, `--mint`, `--forest`) now alias `--color-accent*`, `--color-mint*`, `--color-forest-*`
 - [x] `AGENTS.md` and `CLAUDE.md` in the project root

@@ -57,6 +57,11 @@
   --space-8: 64px;
   --space-9: 88px;
   --space-nav: 10px;   /* nav container padding only */
+
+  /* ── Layout ── */
+  --page-margin:    60px;     /* side margin on every page: a no-content area */
+  --nav-max-width:  1312px;   /* logged-out desktop nav, centred */
+  --nav-min-width:  1044px;   /* narrowest the full nav row fits */
 }
 
 /* ── Accent / legacy-green tokens ──

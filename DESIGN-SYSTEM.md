@@ -137,6 +137,8 @@ Keep the existing `--shadow-xs` through `--shadow-xl`, `--ease` and `--t` (0.18s
 | `.container-home` | max 1440px | 60px | Homepage sections only |
 | Nav inner | 1312px | 10px | Logged-out desktop nav only (section 5) |
 
+**Page margin:** every page keeps a 60px no-content margin on each side (`--page-margin`). The logged-out nav is 1312px wide and centred, but on screens narrower than 1432px it becomes `100% - 120px` wide so the 60px margin stays. The margin only shrinks below 60px when the screen is under 1164px wide, because the nav row needs at least 1044px (`--nav-min-width`).
+
 - Section vertical padding: `.section` 88px, `.section-sm` 56px.
 - Grids: `.grid-2`, `.grid-3`, `.grid-4` with the existing gaps (24 / 24 / 20 to be normalised to 24).
 - Page content below the fixed nav uses `padding-top: var(--nav-height)`. `--nav-height` is 64px logged in and 60px logged-out on desktop.
@@ -191,7 +193,7 @@ Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block 
 
 | Item | Spec |
 |---|---|
-| Container | 1312px wide, centred, 10px padding on all sides, 60px tall |
+| Container | 1312px wide, centred, 10px padding on all sides, 60px tall. On screens under 1432px: 60px margin each side instead of full width |
 | Logo | 133 x 22, then 16px to the first item |
 | Links | Post a Task, Find Tasks, Find Taskers, Local Taskers, Gift Cards. 16px apart |
 | Right group | Sign Up, Log in, Become a Tasker. 16px apart, pinned to the right edge |
