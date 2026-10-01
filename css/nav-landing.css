@@ -6,17 +6,18 @@
    SPEC
    - Nav container: 1312px wide, padding 10px on all four sides
    - Logo -> 16px -> [Post a Task btn] 16 [Find Tasks] 16 [Find Taskers] 16
-     [Local Taskers] 16 [Gift Cards]  -> 146px -> Sign Up, Log in, Become a Tasker
+     [Local Taskers] 16 [Gift Cards]  -> flexible space -> Sign Up 16 Log in 16
+     [Become a Tasker] (pinned to the right edge of the 1292 content box)
    - No text under the logo.
-   Measured from the design PNG: Manrope 16px (links + Post a Task 600,
-   Become a Tasker 500), buttons 40px tall, text links 8px side padding,
-   button side padding 24px.
+   - Manrope 16px for links and buttons.
+   - Post a Task: 133x40, padding 8/24, #168A5B
+   - Become a Tasker: 174x40, padding 14/24, #EEFFF1
    ============================================================ */
 
 :root {
   --lnav-green:      #168a5b;   /* Post a Task button (from design) */
   --lnav-green-dark: #117049;
-  --lnav-mint:       #f6fff7;   /* Become a Tasker pill (from design) */
+  --lnav-mint:       #eefff1;   /* Become a Tasker pill */
   --lnav-text:       #171a19;   /* link + pill text (from design) */
   --lnav-h:          60px;      /* 10 + 40 + 10 */
   /* pages size their top padding from --nav-height; keep it in step with this nav */
@@ -49,14 +50,12 @@
 .lnav-links { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 16px; }
 .lnav-links li { display: flex; }
 
-/* 146px between the last link and the actions */
-.lnav-actions { display: flex; align-items: center; gap: 16px; margin-left: 146px; }
-/* Log in -> Become a Tasker sits tighter in the design (~17px text-to-pill) */
-.lnav-actions .lnav-link + .lnav-btn { margin-left: -6px; }
+/* Actions are pinned right; whatever space is left sits between Gift Cards and Sign Up */
+.lnav-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 
 /* Text links */
 .lnav-link {
-  display: inline-flex; align-items: center; height: 40px; padding: 0 8px;
+  display: inline-flex; align-items: center; height: 40px; padding: 0;
   font-size: 16px; font-weight: 600; line-height: 1; letter-spacing: 0;
   color: var(--lnav-text); text-decoration: none; white-space: nowrap;
   transition: color .15s ease;
@@ -67,16 +66,17 @@ a.lnav-link:hover { color: var(--lnav-green); }
 /* Buttons */
 .lnav-btn {
   display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; flex: 0 0 auto;
   height: 40px; padding: 0 24px; border-radius: 999px;
   font-size: 16px; font-weight: 500; line-height: 1; white-space: nowrap;
   text-decoration: none; border: 0;
   transition: background-color .15s ease, transform .1s ease;
 }
 .lnav-btn:active { transform: scale(.98); }
-.lnav-btn-primary { background: var(--lnav-green); color: #fff; font-weight: 600; }
+.lnav-btn-primary { width: 133px; padding: 8px 24px; background: var(--lnav-green); color: #fff; font-weight: 600; }
 .lnav-btn-primary:hover { background: var(--lnav-green-dark); }
-.lnav-btn-mint { background: var(--lnav-mint); color: var(--lnav-text); }
-.lnav-btn-mint:hover { background: #e8f5ec; }
+.lnav-btn-mint { width: 174px; padding: 14px 24px; background: var(--lnav-mint); color: var(--lnav-text); }
+.lnav-btn-mint:hover { background: #dff7e4; }
 
 .lnav a:focus-visible, .lnav button:focus-visible {
   outline: 2px solid var(--lnav-green); outline-offset: 2px; border-radius: 8px;
