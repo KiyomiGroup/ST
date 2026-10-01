@@ -3405,3 +3405,82 @@ body.ds-page #navbar { display: none; }
 #navbar .nav-logo > :not(img):not(.nav-logo-text) {
   display: none !important;
 }
+
+
+/* ================================================================
+   LOGGED-OUT DESKTOP NAV — unified spec (replaces nav-landing)
+   Desktop only (1044px and up, the narrowest width where the full row fits).
+   Scoped to body:not(.st-logged-in) and
+   to the logged-out elements, so the logged-in nav and the mobile nav
+   (768px and below) are untouched.
+
+   - Container: 1312px wide, centered, 10px padding on all sides
+   - Logo -16- [Post a Task] -16- Find Tasks -16- Find Taskers -16-
+     Local Taskers -16- Gift Cards ... flexible space ...
+     Sign Up -16- Log in -16- [Become a Tasker]  (pinned right)
+   - Manrope 16px for links and buttons
+   - Post a Task: 133x40, padding 8/24, #168A5B
+   - Become a Tasker: 174x40, padding 14/24, #EEFFF1
+   ================================================================ */
+@media (min-width: 1044px) {
+  body:not(.st-logged-in) { --nav-height: 60px; }
+
+  body:not(.st-logged-in) .nav-inner {
+    box-sizing: border-box;
+    width: 1312px; max-width: 100%;
+    height: 60px; margin: 0 auto; padding: 10px;
+    justify-content: flex-start; gap: 0;
+  }
+
+  body:not(.st-logged-in) .nav-left { margin-right: 16px; flex: 0 0 auto; }
+  body:not(.st-logged-in) .nav-logo img { width: 133px; height: 22px; }
+
+  /* Links row */
+  body:not(.st-logged-in) .nav-links-loggedout {
+    flex: 0 0 auto; gap: 16px; margin: 0; padding: 0;
+  }
+  body:not(.st-logged-in) .nav-links-loggedout li { display: flex; }
+
+  /* Text links (shared by the centre links and Sign Up / Log in) */
+  body:not(.st-logged-in) .nav-links-loggedout .nav-link,
+  body:not(.st-logged-in) #navActionsLoggedOut .btn-text {
+    display: inline-flex; align-items: center;
+    height: 40px; padding: 0; margin: 0; border-radius: 0;
+    background: transparent; border: 0; box-shadow: none;
+    font-family: 'Manrope', var(--font, sans-serif);
+    font-size: 16px; font-weight: 600; line-height: 1; letter-spacing: 0;
+    color: #171a19; white-space: nowrap;
+  }
+  body:not(.st-logged-in) .nav-links-loggedout a.nav-link:hover,
+  body:not(.st-logged-in) #navActionsLoggedOut .btn-text:hover {
+    background: transparent; color: #168A5B;
+  }
+  /* Gift Cards: not clickable yet, but shown at full strength like the design */
+  body:not(.st-logged-in) .nav-links-loggedout .nav-link-disabled { opacity: 1; cursor: default; }
+
+  /* Right-hand group: pinned right, 16px between items.
+     Whatever space is left sits between Gift Cards and Sign Up. */
+  body:not(.st-logged-in) #navActionsLoggedOut {
+    flex: 0 0 auto; margin-left: auto; gap: 16px;
+  }
+
+  /* Buttons */
+  body:not(.st-logged-in) .nav-links-loggedout .nav-post-btn,
+  body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn {
+    box-sizing: border-box; flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 40px; margin: 0; border: 0; border-radius: 999px; box-shadow: none;
+    font-family: 'Manrope', var(--font, sans-serif);
+    font-size: 16px; line-height: 1; letter-spacing: 0; white-space: nowrap;
+  }
+  body:not(.st-logged-in) .nav-links-loggedout .nav-post-btn {
+    width: 133px; padding: 8px 24px;
+    background: #168A5B; color: #fff; font-weight: 600;
+  }
+  body:not(.st-logged-in) .nav-links-loggedout .nav-post-btn:hover { background: #117049; box-shadow: none; }
+  body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn {
+    width: 174px; padding: 14px 24px;
+    background: #EEFFF1; color: #171a19; font-weight: 500;
+  }
+  body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn:hover { background: #DFF7E4; border: 0; }
+}
