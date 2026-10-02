@@ -87,3 +87,29 @@
   --shadow-primary-md:    0 4px 12px rgba(15, 107, 70, 0.35);
   --shadow-focus:         0 0 0 3px rgba(15, 107, 70, 0.15);
 }
+
+/* ── Task card tokens ("People are getting things done" homepage cards) ──
+   Taken from the Figma card (ServiceCardWrapper / Article - HousePaintingCard).
+   Card-specific: do not reuse for other components without a design decision. */
+:root {
+  --color-card-border:      #F5F5F5;
+  --color-card-title:       #171717;
+  --color-card-desc:        #737373;
+  --color-card-meta:        #404040;   /* location text */
+  --color-card-meta-time:   #525252;   /* date / time text */
+  --color-card-icon:        #A3A3A3;   /* pin and clock strokes */
+  --color-card-posted:      #94A3B8;   /* "Posted 5 days ago" */
+  --color-card-action-bg:   #F3F4F6;   /* View Task button */
+  --color-card-action-text: #262626;
+  --color-card-primary:     #18704B;   /* Apply button */
+
+  --shadow-card-btn:    0 1px 2px rgba(0, 0, 0, 0.05);
+  --radius-card:        28px;
+  --radius-card-media:  16px;
+  --radius-card-btn:    16px;
+
+  --card-padding:       20px;
+  --card-icon-col:      20px;          /* fixed icon column so pin and clock align */
+  --card-icon-gap:      6px;
+  --text-card-title:    1.25rem;       /* 20px */
+}
