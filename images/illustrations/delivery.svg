@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" fill="none">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#E9EFF2"/><stop offset="1" stop-color="#9FB0B9"/></linearGradient>
+    <linearGradient id="rod" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#DDE5E9"/><stop offset="1" stop-color="#8FA1AB"/></linearGradient>
+    <linearGradient id="side" x1="0" x2="1"><stop offset="0" stop-color="#C9D5DA"/><stop offset="1" stop-color="#8396A0"/></linearGradient>
+    <linearGradient id="top" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E1E9EC"/></linearGradient>
+    <linearGradient id="band" x1="0" x2="1"><stop offset="0" stop-color="#8CF2B4"/><stop offset=".5" stop-color="#34D26F"/><stop offset="1" stop-color="#138848"/></linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1FA75A"/><stop offset="1" stop-color="#0B5A30"/></linearGradient>
+    <radialGradient id="hl" cx="30%" cy="20%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="sd" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="-4" dy="8" stdDeviation="7" flood-color="#04210F" flood-opacity=".32"/></filter>
+  </defs>
+<path d="M96 178C96 120 120 96 150 92" stroke="#fff" stroke-opacity=".7" stroke-width="3.500" stroke-linecap="round" stroke-dasharray="2 9"/>
+<g filter="url(#sd)"><rect x="138" y="150" width="90" height="86" rx="5" fill="url(#body)"/><path d="M228 150L258 132.0V218.0L228 236z" fill="url(#side)"/><path d="M138 150L168 132.0H258L228 150z" fill="url(#top)"/><rect x="174.0" y="150" width="18" height="86" fill="url(#band)"/><path d="M174.0 150L204.0 132.0H222.0L192.0 150z" fill="#5EE190"/>
+<g transform="translate(176 88)"><path d="M0 -42a30 30 0 0 1 30 30c0 22-30 54-30 54s-30-32-30-54a30 30 0 0 1 30-30z" fill="url(#band)"/><circle cx="0" cy="-12" r="11" fill="#fff"/></g></g><path d="M238 69l2.6999999999999997 6.3 6.3 2.6999999999999997-6.3 2.6999999999999997-2.6999999999999997 6.3-2.6999999999999997-6.3-6.3-2.6999999999999997 6.3-2.6999999999999997z" fill="#fff" opacity="0.9"/><path d="M110 215l2.1 4.8999999999999995 4.8999999999999995 2.1-4.8999999999999995 2.1-2.1 4.8999999999999995-2.1-4.8999999999999995-4.8999999999999995-2.1 4.8999999999999995-2.1z" fill="#fff" opacity="0.7"/>
+</svg>

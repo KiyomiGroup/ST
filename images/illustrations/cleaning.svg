@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" fill="none">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#E9EFF2"/><stop offset="1" stop-color="#9FB0B9"/></linearGradient>
+    <linearGradient id="rod" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#DDE5E9"/><stop offset="1" stop-color="#8FA1AB"/></linearGradient>
+    <linearGradient id="bris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F5F8F9"/><stop offset="1" stop-color="#A4B4BC"/></linearGradient>
+    <linearGradient id="band" x1="0" x2="1"><stop offset="0" stop-color="#8CF2B4"/><stop offset=".5" stop-color="#34D26F"/><stop offset="1" stop-color="#138848"/></linearGradient>
+    <radialGradient id="hl" cx="30%" cy="20%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="sd" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="-4" dy="8" stdDeviation="7" flood-color="#04210F" flood-opacity=".32"/></filter>
+  </defs>
+
+  <!-- broom -->
+  <g transform="translate(196 -26) rotate(28)" filter="url(#sd)">
+    <rect x="-6.500" y="0" width="13" height="196" rx="6.500" fill="url(#rod)"/>
+    <rect x="-3.500" y="0" width="3" height="190" rx="1.500" fill="#fff" opacity=".7"/>
+    <path d="M-17 190h34l6 14h-46z" fill="url(#band)"/>
+    <path d="M-23 204h46l17 66c1 5-2 8-7 8h-66c-5 0-8-3-7-8z" fill="url(#bris)"/>
+    <path d="M-23 204h46l2 8h-50z" fill="#fff" opacity=".35"/>
+    <path d="M-14 218l-5 52M-5 218l-2 54M4 218v56M13 218l3 54M22 218l7 50" stroke="#8798A1" stroke-width="2.200" stroke-linecap="round" opacity=".8"/>
+    <path d="M-26 244h56" stroke="#fff" stroke-opacity=".5" stroke-width="2.500" stroke-linecap="round"/>
+  </g>
+
+  <!-- spray bottle -->
+  <g transform="translate(170 92) scale(.9) rotate(8)" filter="url(#sd)">
+    <!-- nozzle + head -->
+    <rect x="-24" y="14" width="42" height="16" rx="8" fill="url(#body)"/>
+    <rect x="-27" y="17" width="9" height="10" rx="4.500" fill="url(#band)"/>
+    <path d="M10 6h54c8 0 12 5 12 12v14c0 4-3 7-7 7H14c-4 0-7-3-7-7V18c0-6 1-12 3-12z" fill="url(#body)"/>
+    <!-- trigger -->
+    <path d="M62 44c14 2 22 14 18 34l-5 5c-4-12-10-20-18-22z" fill="url(#body)"/>
+    <!-- collar + neck -->
+    <rect x="14" y="40" width="46" height="12" rx="6" fill="url(#band)"/>
+    <rect x="20" y="50" width="34" height="14" rx="5" fill="url(#body)"/>
+    <!-- bottle body -->
+    <path d="M6 82c0-16 14-26 31-26s31 10 31 26v76c0 10-8 16-17 16H23c-9 0-17-6-17-16z" fill="url(#body)"/>
+    <path d="M6 82c0-16 14-26 31-26s31 10 31 26v76c0 10-8 16-17 16H23c-9 0-17-6-17-16z" fill="url(#hl)"/>
+    <!-- label band -->
+    <path d="M6 108h62v40H6z" fill="url(#band)"/>
+    <path d="M37 117c-7 9-10 14-10 19a10 10 0 0 0 20 0c0-5-3-10-10-19z" fill="#fff" opacity=".95"/>
+  </g>
+
+  <!-- sparkles -->
+  <path d="M118 52l3.500 10 10 3.500-10 3.500-3.500 10-3.500-10-10-3.500 10-3.500z" fill="#fff" opacity=".95"/>
+  <path d="M70 120l2.500 7 7 2.500-7 2.500-2.500 7-2.500-7-7-2.500 7-2.500z" fill="#fff" opacity=".75"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" fill="none">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#E9EFF2"/><stop offset="1" stop-color="#9FB0B9"/></linearGradient>
+    <linearGradient id="rod" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#DDE5E9"/><stop offset="1" stop-color="#8FA1AB"/></linearGradient>
+    <linearGradient id="side" x1="0" x2="1"><stop offset="0" stop-color="#C9D5DA"/><stop offset="1" stop-color="#8396A0"/></linearGradient>
+    <linearGradient id="top" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E1E9EC"/></linearGradient>
+    <linearGradient id="band" x1="0" x2="1"><stop offset="0" stop-color="#8CF2B4"/><stop offset=".5" stop-color="#34D26F"/><stop offset="1" stop-color="#138848"/></linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1FA75A"/><stop offset="1" stop-color="#0B5A30"/></linearGradient>
+    <radialGradient id="hl" cx="30%" cy="20%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="sd" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="-4" dy="8" stdDeviation="7" flood-color="#04210F" flood-opacity=".32"/></filter>
+  </defs>
+<g transform="translate(196 26) rotate(26)" filter="url(#sd)">
+ <rect x="-8" y="30" width="16" height="190" rx="8" fill="url(#rod)"/>
+ <rect x="-9" y="150" width="18" height="70" rx="9" fill="url(#band)"/>
+ <path d="M-9 168h18M-9 180h18M-9 192h18M-9 204h18" stroke="#0B5A30" stroke-opacity=".35" stroke-width="2.500"/>
+ <path d="M-38 6C-62 8-70 28-72 44-60 34-48 32-38 34z" fill="url(#side)"/>
+ <rect x="-40" y="0" width="84" height="40" rx="9" fill="url(#body)"/>
+ <rect x="30" y="0" width="14" height="40" rx="6" fill="url(#side)"/>
+ <rect x="-34" y="5" width="50" height="6" rx="3" fill="#fff" opacity=".7"/></g>
+<g transform="translate(136 160) rotate(-18)" filter="url(#sd)">
+ <rect x="-12" y="20" width="24" height="90" rx="6" fill="url(#rod)"/>
+ <path d="M-12 36l24-8M-12 52l24-8M-12 68l24-8M-12 84l24-8M-12 100l24-8" stroke="#7F919B" stroke-width="2.500" stroke-linecap="round"/>
+ <rect x="-28" y="0" width="56" height="24" rx="8" fill="url(#body)"/><rect x="-22" y="4" width="26" height="5" rx="2.500" fill="#fff" opacity=".75"/></g>
+<g filter="url(#sd)"><polygon points="238.2,234.0 214.0,248.0 189.8,234.0 189.8,206.0 214.0,192.0 238.2,206.0" fill="url(#body)"/><polygon points="238.2,234.0 214.0,248.0 189.8,234.0 189.8,206.0 214.0,192.0 238.2,206.0" fill="url(#hl)"/><circle cx="214" cy="220" r="12" fill="url(#deep)"/><circle cx="214" cy="220" r="12" stroke="#fff" stroke-opacity=".5" stroke-width="2"/></g>
+<path d="M112 110l3.0 7.0 7.0 3.0-7.0 3.0-3.0 7.0-3.0-7.0-7.0-3.0 7.0-3.0z" fill="#fff" opacity="0.9"/><path d="M244 143l2.1 4.8999999999999995 4.8999999999999995 2.1-4.8999999999999995 2.1-2.1 4.8999999999999995-2.1-4.8999999999999995-4.8999999999999995-2.1 4.8999999999999995-2.1z" fill="#fff" opacity="0.7"/>
+</svg>
