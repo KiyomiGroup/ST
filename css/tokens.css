@@ -176,3 +176,26 @@
   --text-gc-hero-mobile:  1.75rem;   /* 28px hero heading on mobile */
   --shadow-gc-card:       0 24px 48px -16px rgba(0, 0, 0, 0.35);
 }
+
+/* ── Gift Cards page: category cards section ──
+   Sampled from the desktop design screenshot. Several equal the --pt-* values
+   (same designer palette) but are kept separate so the pages can diverge.
+   Marked "guess" = not readable in the screenshot. */
+:root {
+  --gc-ink:            #1A1C1B;   /* headings, card titles */
+  --gc-ink-muted:      #3F4942;   /* body text, labels */
+  --gc-green:          #004F31;   /* deep green: price, featured buttons, ribbon */
+  --gc-green-mid:      #116C47;   /* standard card button */
+  --gc-green-mid-hover:#0D5A3A;   /* derived: darker step of --gc-green-mid */
+  --gc-green-text:     #18704B;   /* text on mint chips */
+  --gc-field:          #EEEEEC;   /* idle chips and icon circles */
+  --gc-field-hover:    #E4E4E1;   /* derived: darker step of --gc-field */
+  --gc-pill:           #A1F4C5;   /* "100% Flexible" pill */
+  --gc-pill-text:      #002112;
+  --gc-tile-border:    #F2F2F0;   /* guess: card edge is almost invisible in the design */
+  --gc-tile-rule:      #EEEEEC;   /* guess: rule above the card footer */
+  --shadow-gc-tile:    0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);  /* guess: same as --shadow-pt-card */
+  --shadow-gc-tile-hover: 0 2px 4px rgba(26, 28, 27, 0.06), 0 16px 32px -14px rgba(26, 28, 27, 0.16);  /* derived */
+  --text-gc-body:      0.9375rem; /* 15px card body */
+  --radius-gc-tile:    28px;
+}
