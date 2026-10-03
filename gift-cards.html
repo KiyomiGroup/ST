@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Give the gift of free time. StreetTasker gift cards pay for trusted local help across Nigeria: cleaning, repairs, moving, furniture assembly and more." />
+  <title>Gift Cards — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/gift-cards.css" />
+</head>
+<body class="page-gift-cards">
+  <div id="navbar-placeholder"></div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="gc-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="gc-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="gc-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+      <symbol id="gc-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></symbol>
+      <symbol id="gc-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+      <symbol id="gc-infinity" viewBox="0 0 24 24"><path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8"/></symbol>
+      <symbol id="gc-hammer" viewBox="0 0 24 24"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></symbol>
+      <symbol id="gc-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+      <symbol id="gc-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="gc-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="gc-handshake" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol>
+      <symbol id="gc-brush" viewBox="0 0 24 24"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="gc-page" role="main">
+
+    <!-- ── Hero ───────────────────────────────────────────────── -->
+    <section class="gc-hero" aria-labelledby="gc-hero-title">
+      <div class="gc-hero-inner">
+
+        <div class="gc-hero-copy">
+          <p class="gc-eyebrow">
+            <svg class="gc-icon gc-eyebrow-icon gc-desktop-only" aria-hidden="true"><use href="#gc-badge-check"/></svg>
+            <svg class="gc-icon gc-eyebrow-icon gc-mobile-only" aria-hidden="true"><use href="#gc-sparkles"/></svg>
+            <span class="gc-desktop-only">Nigeria's Most Trusted Local Help Voucher</span>
+            <span class="gc-mobile-only">The Gift of Help</span>
+          </p>
+
+          <h1 id="gc-hero-title" class="gc-hero-title">Give the Gift of <span class="gc-accent">Free Time</span><span class="gc-desktop-only"> &amp; Handled To-Dos</span></h1>
+
+          <p class="gc-hero-text gc-desktop-only">Gift your loved ones, clients, or colleagues trusted local help across Nigeria. Perfect for house cleaning, repairs, furniture assembly, moves, and more.</p>
+          <p class="gc-hero-text gc-mobile-only">Trusted local help for sparkling homes, quick fixes, apartment moving, and 500+ tasks across Lagos.</p>
+
+          <div class="gc-hero-actions gc-desktop-only">
+            <a href="#gift-cards" class="btn gc-btn gc-btn-mint">
+              <svg class="gc-icon" aria-hidden="true"><use href="#gc-gift"/></svg>
+              Choose a Gift Card
+            </a>
+            <a href="#check-balance" class="btn gc-btn gc-btn-dark">
+              <svg class="gc-icon" aria-hidden="true"><use href="#gc-wallet"/></svg>
+              Check Gift Card Balance
+            </a>
+          </div>
+
+          <ul class="gc-trust gc-desktop-only">
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-infinity"/></svg><span>Never Expires</span></li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-hammer"/></svg><span>500+ Local Services</span></li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-zap"/></svg><span>Instant Digital Delivery</span></li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-shield-check"/></svg><span>Escrow Protected</span></li>
+          </ul>
+
+          <ul class="gc-chips gc-mobile-only">
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-check-circle"/></svg>No Expiry</li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-zap"/></svg>Instant Delivery</li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-check-circle"/></svg>500+ Services</li>
+          </ul>
+        </div>
+
+        <!-- Sample voucher: decorative preview, hidden on phones -->
+        <div class="gc-voucher" role="img" aria-label="Sample StreetTasker voucher worth 30,000 naira for Home Cleaning and Deep Sanitation">
+          <div class="gc-voucher-top">
+            <span class="gc-voucher-brand"><svg class="gc-icon" aria-hidden="true"><use href="#gc-handshake"/></svg>StreetTasker</span>
+            <span class="gc-voucher-pill">Universal Voucher</span>
+          </div>
+          <p class="gc-voucher-label">Preloaded Value</p>
+          <p class="gc-voucher-value">₦30,000</p>
+          <p class="gc-voucher-valid">Valid across Lagos, Abuja, PH &amp; nationwide</p>
+          <div class="gc-voucher-bottom">
+            <div>
+              <p class="gc-voucher-cat-label">Task Category</p>
+              <p class="gc-voucher-cat">Home Cleaning &amp; Deep Sanitation</p>
+            </div>
+            <span class="gc-voucher-icon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-brush"/></svg></span>
+          </div>
+        </div>
+
+        <svg class="gc-icon gc-hero-deco gc-mobile-only" aria-hidden="true"><use href="#gc-gift"/></svg>
+      </div>
+    </section>
+
+    <!-- Next sections go here (#gift-cards, #check-balance) -->
+
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

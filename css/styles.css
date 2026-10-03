@@ -3527,6 +3527,14 @@ body.ds-page #navbar { display: none; }
   }
   /* Gift Cards: not clickable yet, but shown at full strength like the design */
   body:not(.st-logged-in) .nav-links-loggedout .nav-link-disabled { opacity: 1; cursor: default; }
+  /* Current page (Gift Cards): green text and the bar stays visible, like the hover state.
+     Scoped by a body class so no other page is affected. */
+  body.page-gift-cards:not(.st-logged-in) .nav-links-loggedout a.nav-link[href="gift-cards.html"] {
+    color: var(--color-primary);
+  }
+  body.page-gift-cards:not(.st-logged-in) .nav-links-loggedout a.nav-link[href="gift-cards.html"]::before {
+    transform: scaleX(1);
+  }
 
   /* Right-hand group: pinned right, 16px between items.
      Whatever space is left sits between Gift Cards and Sign Up. */
