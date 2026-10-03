@@ -51,30 +51,36 @@ function _applyNavState(loggedIn, role, name) {
     if (pillT) pillT.style.display = isTasker  ? 'flex' : 'none';
     if (pillC) pillC.style.display = !isTasker ? 'flex' : 'none';
 
-    /* Role badge */
+    /* Role badge — taskers on the Pro plan read "TASKER PRO" (plan cached
+       in localStorage by syncNavbarAuthState, so it renders instantly) */
     const badgeT = $('navRoleBadge');
     const badgeC = $('navRoleBadgeCustomer');
-    if (badgeT) badgeT.style.display = isTasker  ? 'flex' : 'none';
+    const isPro  = isTasker && _getCachedPlan() === 'pro';
+    if (badgeT) {
+      badgeT.textContent = isPro ? 'TASKER PRO' : 'TASKER';
+      badgeT.classList.toggle('is-pro', isPro);
+      badgeT.style.display = isTasker ? 'flex' : 'none';
+    }
     if (badgeC) badgeC.style.display = !isTasker ? 'flex' : 'none';
 
     /* Icon bar */
     const iconBar = $('navIconBar');
     if (iconBar) iconBar.style.display = 'flex';
 
-    /* Update icon bar links for role */
-    const iconSettings = $('navIconSettings');
-    if (iconSettings) iconSettings.href = dashUrl + '?panel=profile';
-
-    /* Icon bar shortcut slots — point to pages not already reachable
-       from the pill nav, swapped per role */
-    const slot1T = $('navIconSlot1Tasker');
-    const slot1C = $('navIconSlot1Customer');
-    const slot2T = $('navIconSlot2Tasker');
-    const slot2C = $('navIconSlot2Customer');
-    if (slot1T) slot1T.style.display = isTasker  ? 'flex' : 'none';
-    if (slot1C) slot1C.style.display = !isTasker ? 'flex' : 'none';
-    if (slot2T) slot2T.style.display = isTasker  ? 'flex' : 'none';
-    if (slot2C) slot2C.style.display = !isTasker ? 'flex' : 'none';
+    /* Icon bar links, per role:
+       Pending Tasks -> customer: My Tasks, tasker: Bookings
+       Messages / Notifications -> that panel on the user's dashboard
+       Settings icon -> dropdown (Settings + Log out)
+       Avatar -> profile edit */
+    const panelUrl = (panel) => dashUrl + '?panel=' + panel;
+    const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
+    setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
+    setHref('navIconMessages', panelUrl('messages'));
+    setHref('navBellBtn',      panelUrl('notifications'));
+    setHref('navMenuSettings', panelUrl('profile'));
+    document.querySelectorAll('.nav-menu-item[data-nav-role]').forEach(el => {
+      el.hidden = el.dataset.navRole !== (isTasker ? 'tasker' : 'customer');
+    });
 
     /* Avatar initials */
     const initials = name
@@ -84,13 +90,13 @@ function _applyNavState(loggedIn, role, name) {
     const av = $('navAvatar');
     const avInit = $('navAvatarInitial');
     if (avInit) avInit.textContent = initials;
-    if (av)     av.href = dashUrl;
+    if (av)     av.href = panelUrl('profile');
 
     /* Mobile: hide + / show account icons */
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
     if (mPlus) mPlus.style.display = 'none';
-    if (mAcct) mAcct.style.display = 'flex';
+    if (mAcct) mAcct.style.display = ''; /* shown on mobile by CSS (body.st-logged-in) */
     const mAvInit = $('navMobileAvatarInitial');
     if (mAvInit) mAvInit.textContent = initials;
     const mDash = $('nav-mobile-dashboard');
@@ -120,14 +126,15 @@ function _applyNavState(loggedIn, role, name) {
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
     if (mPlus) mPlus.style.display = '';
-    if (mAcct) mAcct.style.display = 'none';
+    if (mAcct) mAcct.style.display = '';
   }
 }
 
 function _highlightActivePillItem() {
   const page = window.location.pathname.split('/').pop() || 'index.html';
   const search = window.location.search;
-  const panel  = new URLSearchParams(search).get('panel') || '';
+  let panel  = new URLSearchParams(search).get('panel') || '';
+  if (panel === 'overview') panel = '';
   /* Remove all active states */
   document.querySelectorAll('.nav-pill-item').forEach(el => el.classList.remove('active'));
   /* Match by page + panel */
@@ -139,13 +146,141 @@ function _highlightActivePillItem() {
   };
   const pageMap = map[page];
   if (pageMap) {
-    const targetId = pageMap[panel] || pageMap[''];
+    /* A panel with no pill (notifications, profile) leaves every pill off */
+    const targetId = pageMap[panel];
     if (targetId) {
       const el = document.getElementById(targetId);
       if (el) el.classList.add('active');
     }
   }
 }
+
+/* ── Logged-in nav: plan, counts and indicator dots ───────────── */
+function _getCachedPlan() {
+  try { return localStorage.getItem('st_plan') || 'free'; } catch(e) { return 'free'; }
+}
+
+function _setNavDot(id, on) {
+  const el = document.getElementById(id);
+  if (el) el.hidden = !on;
+}
+
+function _setNavCount(id, n) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = n > 0 ? String(n > 9 ? '9+' : n) : '';
+  el.hidden = !(n > 0);
+}
+
+/* Reads the Pro plan, the pending-applications count and the unread
+   dots for the nav. Every query is optional: a failure just leaves that
+   indicator off. */
+async function _loadNavIndicators(user, role) {
+  const sb = window.supabase;
+  if (!sb || !user) return;
+  const isTasker = role === 'tasker';
+
+  if (isTasker) {
+    try {
+      const { data: sub } = await sb.from('subscriptions')
+        .select('tier, status, end_date').eq('tasker_id', user.id).eq('status', 'active').maybeSingle();
+      const live = !!sub && (!sub.end_date || new Date(sub.end_date) > new Date());
+      const plan = live ? (sub.tier || 'starter') : 'free';
+      try { localStorage.setItem('st_plan', plan); } catch(e) {}
+      const badge = document.getElementById('navRoleBadge');
+      if (badge) {
+        badge.textContent = plan === 'pro' ? 'TASKER PRO' : 'TASKER';
+        badge.classList.toggle('is-pro', plan === 'pro');
+      }
+    } catch(e) {}
+  }
+
+  /* Pending Tasks dot */
+  try {
+    if (isTasker) {
+      const { count } = await sb.from('bookings').select('id', { count: 'exact', head: true })
+        .eq('tasker_id', user.id).eq('status', 'pending');
+      _setNavDot('navPendingDot', (count || 0) > 0);
+    } else {
+      const { count } = await sb.from('tasks').select('id', { count: 'exact', head: true })
+        .or('customer_id.eq.' + user.id + ',user_id.eq.' + user.id).in('status', ['open', 'pending']);
+      _setNavDot('navPendingDot', (count || 0) > 0);
+    }
+  } catch(e) {}
+
+  /* Messages dot (unread threads for this user's side of the chat) */
+  try {
+    const col = isTasker ? 'tasker_unread' : 'customer_unread';
+    const { data } = await sb.from('message_threads').select(col)
+      .or('customer_id.eq.' + user.id + ',tasker_id.eq.' + user.id);
+    _setNavDot('navMsgDot', (data || []).some(t => (t[col] || 0) > 0));
+  } catch(e) {}
+
+  /* Notifications dot */
+  try {
+    const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).eq('is_read', false);
+    _setNavDot('navNotifDot', (count || 0) > 0);
+  } catch(e) {}
+
+  /* Applications (n) in the pill: pending applications */
+  try {
+    let n = 0;
+    if (isTasker) {
+      const { count } = await sb.from('task_applications').select('id', { count: 'exact', head: true })
+        .eq('tasker_id', user.id).eq('status', 'pending');
+      n = count || 0;
+      _setNavCount('npAppCount', n);
+    } else {
+      const { data: myTasks } = await sb.from('tasks').select('id')
+        .or('customer_id.eq.' + user.id + ',user_id.eq.' + user.id);
+      const ids = (myTasks || []).map(t => t.id);
+      if (ids.length) {
+        const { count } = await sb.from('task_applications').select('id', { count: 'exact', head: true })
+          .in('task_id', ids).eq('status', 'pending');
+        n = count || 0;
+      }
+      _setNavCount('npcAppCount', n);
+    }
+  } catch(e) {}
+}
+
+/* ── Nav dropdown + logout (one delegated listener for every nav) ── */
+function _closeNavMenus(except) {
+  document.querySelectorAll('.nav-menu').forEach(menu => {
+    if (menu === except || menu.hidden) return;
+    menu.hidden = true;
+    const t = menu.parentElement && menu.parentElement.querySelector('[data-nav-menu-toggle]');
+    if (t) t.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function _initNavMenus() {
+  if (window.__stNavMenusReady) return;
+  window.__stNavMenusReady = true;
+
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-nav-menu-toggle]');
+    const menu   = toggle && toggle.parentElement.querySelector('.nav-menu');
+    _closeNavMenus(menu);
+    if (toggle && menu) {
+      menu.hidden = !menu.hidden;
+      toggle.setAttribute('aria-expanded', String(!menu.hidden));
+      return;
+    }
+    if (e.target.closest('[data-nav-logout]')) { logoutUser(); }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const open = document.querySelector('.nav-menu:not([hidden])');
+    if (!open) return;
+    const t = open.parentElement.querySelector('[data-nav-menu-toggle]');
+    _closeNavMenus();
+    if (t) t.focus();
+  });
+}
+_initNavMenus();
 
 async function syncNavbarAuthState() {
   const user = await getCurrentUser();
@@ -174,6 +309,7 @@ async function syncNavbarAuthState() {
     } catch(e) {}
 
     _applyNavState(true, role, name);
+    _loadNavIndicators(user, role); /* plan badge, counts, dots — non-blocking */
     /* Try to load profile photo */
     try {
       const photoUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
@@ -196,6 +332,7 @@ async function syncNavbarAuthState() {
       localStorage.removeItem('st_role');
       localStorage.removeItem('st_name');
       localStorage.removeItem('st_session');
+      localStorage.removeItem('st_plan');
     } catch(e) {}
     _applyNavState(false, 'customer', '');
   }
@@ -249,6 +386,7 @@ async function logoutUser() {
     localStorage.removeItem('st_role');
     localStorage.removeItem('st_name');
     localStorage.removeItem('st_session');
+    localStorage.removeItem('st_plan');
     /* Also clear any Supabase persisted session keys */
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('sb-') || k.startsWith('supabase')) localStorage.removeItem(k);

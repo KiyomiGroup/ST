@@ -1359,13 +1359,25 @@ function openMessagesPanel() {
       /* Check for URL hash — used by external links to jump to a panel
          e.g. dashboard-tasker.html#profile opens Edit Page directly */
       var startHash = window.location.hash.replace('#','');
-      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification',];
+      /* The top nav links here as ?panel=<name> (overview, applications, bookings,
+         messages, wallet, notifications, profile). Map those to this page's panel ids. */
+      if (!startHash) {
+        var navPanel = new URLSearchParams(window.location.search).get('panel') || '';
+        var panelAliases = { overview: 'mypage', applications: 'my-applications' };
+        startHash = panelAliases[navPanel] || navPanel;
+      }
+      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','wallet','messages'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
         if (startHash === 'messages') setTimeout(function(){ openMessagesPanel(); }, 100);
         if (startHash === 'profile')       loadProfilePanel();
         else if (startHash === 'mypage')   loadMyPage();
         else if (startHash === 'verification') loadVerification();
+        else if (startHash === 'my-applications') loadMyApplications();
+        else if (startHash === 'bookings') loadBookings();
+        else if (startHash === 'find-tasks') loadFindTasks();
+        else if (startHash === 'notifications') loadNotifications();
+        else if (startHash === 'wallet')   loadTaskerWallet();
       } else {
         switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
         loadMyPage();

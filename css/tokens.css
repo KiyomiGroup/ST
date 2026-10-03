@@ -207,3 +207,23 @@
   --gc-cz-bg:       #F4F4F1;   /* section band behind the form and preview */
   --gc-cz-card-bg:  #0F5A3C;   /* live preview card base */
 }
+
+/* ── Logged-in nav (customer + tasker) ──
+   Sampled from the logged-in navigation design image (no Figma values supplied).
+   Used by the shared #navbar and the customer dashboard's .ds-topnav. */
+:root {
+  --color-nav-pill:         #0D1712;   /* dark pill behind the nav links */
+  --color-nav-pill-text:    #E6EDE9;   /* link text on the dark pill */
+  --color-nav-pill-hover:   rgba(255, 255, 255, 0.1);
+  --color-nav-pill-active:  #006A43;   /* active link fill */
+  --color-nav-badge-bg:     #E6F4EE;   /* CUSTOMER / TASKER badge */
+  --color-nav-badge-pro-bg: #D3F5E1;   /* TASKER PRO badge */
+  --color-nav-badge-text:   #0B5638;
+  --color-nav-avatar:       #111E17;   /* avatar circle */
+  --color-nav-dot:          #10B981;   /* indicator dots + online dot */
+
+  --nav-icon-size:    36px;   /* round icon buttons */
+  --nav-avatar-size:  40px;
+  --nav-dot-size:     8px;
+  --nav-menu-width:   176px;  /* settings dropdown */
+}
