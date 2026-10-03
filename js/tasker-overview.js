@@ -30,8 +30,12 @@
     selectedId: null,
     defaults: { from: '', to: '' },
     loaded: false,
-    channel: null
+    channel: null,
+    name: '',
+    location: '',
+    openTasks: null
   };
+  var mstate = { tab: 'progress', cat: '', q: '', selectedId: null };
 
   /* ── tiny helpers ─────────────────────────────────────────── */
   function $(id) { return document.getElementById(id); }
@@ -139,7 +143,9 @@
       custIds.length ? safe(sb.from('users').select('id,name,first_name,last_name,location').in('id', custIds)) : null,
       (window.ST && window.ST.payments && window.ST.payments.getWallet)
         ? window.ST.payments.getWallet(user.id).catch(function () { return null; }) : null,
-      safe(sb.from('taskers').select('*').eq('user_id', String(user.id)).maybeSingle())
+      safe(sb.from('taskers').select('*').eq('user_id', String(user.id)).maybeSingle()),
+      safe(sb.from('users').select('name,first_name').eq('id', user.id).maybeSingle()),
+      safe(sb.from('tasks').select('id,budget').eq('status', 'open').limit(100))
     ]);
 
     var tasks = {}, svcs = {}, custs = {};
@@ -148,6 +154,11 @@
     (results[2] || []).forEach(function (u) { custs[u.id] = u; });
     state.wallet = results[3];
     var tasker = results[4];
+    var me = results[5] || {};
+    state.name = me.first_name || (me.name ? String(me.name).split(' ')[0] : '') ||
+      ((user.user_metadata && user.user_metadata.name) ? String(user.user_metadata.name).split(' ')[0] : '');
+    state.location = (tasker && tasker.location) || '';
+    state.openTasks = results[6] || [];
     if (tasker) {
       var r = parseFloat(tasker.rating);
       state.rating = isFinite(r) && r > 0 ? r : null;
@@ -261,7 +272,7 @@
         ? '<span class="tov-muted">' + completed.length + ' of ' + closed + ' jobs completed</span>'
         : '<span class="tov-muted">Complete a job to build your score</span>';
     }
-    renderSpark(months, all);
+    renderSpark(months, all, $('tovSpark'));
 
     /* escrow */
     var heldNet = 0, heldGross = 0;
@@ -271,6 +282,13 @@
     var pendingBal = w.pending_balance != null && Number(w.pending_balance) > 0 ? Number(w.pending_balance) : heldNet;
     $('tovEscrowValue').textContent = naira(pendingBal);
     $('tovEscrowGross').textContent = naira(heldGross);
+
+    renderMobileStats({
+      total: total, thisM: thisM, lastM: lastM, avail: w.balance || 0,
+      inProg: inProg.length, sched: sched, pending: pending, months: months, all: all,
+      rate: closed > 0 ? (completed.length / closed) * 100 : null, closed: closed, done: completed.length,
+      pendingBal: pendingBal
+    });
   }
 
   function trendIcon(up) {
@@ -280,8 +298,7 @@
   }
 
   /* running success rate by month for the sparkline (needs 2+ months of closed jobs) */
-  function renderSpark(months, all) {
-    var svg = $('tovSpark');
+  function renderSpark(months, all, svg) {
     var pts = [];
     var done = 0;
     months.forEach(function (m) {
@@ -581,21 +598,216 @@
     $('tovDetail').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-act]');
       if (!btn || btn.disabled) return;
-      var b = selected();
-      if (!b) return;
-      switch (btn.dataset.act) {
-        case 'copy':
-          var ref = shortId(b.id);
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(ref).then(function () { toast('Reference ' + ref + ' copied'); }, function () { toast(ref); });
-          } else { toast(ref); }
-          break;
-        case 'ics':   icsFor(b); break;
-        case 'chat':  if (typeof window.openTaskerChat === 'function') window.openTaskerChat('booking', b.id, b.customer_id || ''); break;
-        case 'confirm': if (typeof window.doBooking === 'function') window.doBooking(b.id, 'confirmed'); break;
-        case 'done':  if (typeof window.doMarkJobDone === 'function') window.doMarkJobDone(b.id); break;
-        case 'code':  if (typeof window.openCodeEntry === 'function') window.openCodeEntry(b.id); break;
+      runAction(btn.dataset.act, selected());
+    });
+  }
+
+  function runAction(kind, b) {
+    if (!b) return;
+    switch (kind) {
+      case 'copy':
+        var ref = shortId(b.id);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ref).then(function () { toast('Reference ' + ref + ' copied'); }, function () { toast(ref); });
+        } else { toast(ref); }
+        break;
+      case 'ics':     icsFor(b); break;
+      case 'chat':    if (typeof window.openTaskerChat === 'function') window.openTaskerChat('booking', b.id, b.customer_id || ''); break;
+      case 'confirm': if (typeof window.doBooking === 'function') window.doBooking(b.id, 'confirmed'); break;
+      case 'done':    if (typeof window.doMarkJobDone === 'function') window.doMarkJobDone(b.id); break;
+      case 'code':    if (typeof window.openCodeEntry === 'function') window.openCodeEntry(b.id); break;
+    }
+  }
+
+  /* ══════════════ Mobile layout (#tom) ══════════════ */
+  function compact(n) {
+    n = Math.round(Number(n) || 0);
+    if (n >= 1000000) return '₦' + (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return '₦' + (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+    return '₦' + n;
+  }
+
+  function renderMobileStats(c) {
+    if (!$('tom')) return;
+    $('tomEarn').textContent = naira(c.total);
+    $('tomAvail').textContent = naira(c.avail);
+    var t = $('tomEarnTrend');
+    if (c.lastM > 0) {
+      var pct = ((c.thisM - c.lastM) / c.lastM) * 100, up = pct >= 0;
+      t.innerHTML = '<span class="tom-' + (up ? 'up' : 'down') + '">' + trendIcon(up) + (up ? '+' : '') + pct.toFixed(1) + '% this mo</span>';
+    } else if (c.thisM > 0) {
+      t.innerHTML = '<span class="tom-up">' + trendIcon(true) + naira(c.thisM) + ' this mo</span>';
+    } else { t.innerHTML = '<span class="tom-muted">After 12% fee</span>'; }
+
+    $('tomActive').textContent = c.inProg + ' In Progress';
+    $('tomActiveSub').innerHTML = c.sched > 0
+      ? '+' + c.sched + ' scheduled tomorrow'
+      : c.pending > 0 ? c.pending + ' awaiting you' : 'Nothing due tomorrow';
+
+    /* jobs per weekday, Monday to Friday of this week */
+    var now = new Date(), dow = (now.getDay() + 6) % 7;
+    var monday = startOfDay(new Date(now.getTime() - dow * DAY));
+    var counts = [0, 0, 0, 0, 0];
+    c.all.forEach(function (b) {
+      var d = startOfDay(bookingDate(b)), i = Math.round((d - monday) / DAY);
+      if (i >= 0 && i < 5) counts[i]++;
+    });
+    var max = Math.max.apply(null, counts.concat([1])), letters = ['M', 'T', 'W', 'T', 'F'];
+    $('tomDays').innerHTML = counts.map(function (n, i) {
+      return '<span class="tom-day"><span class="tom-day-bar' + (i === dow ? ' is-today' : '') + '" data-h="' +
+        (n ? Math.max(16, Math.round((n / max) * 100)) : 8) + '" title="' + n + (n === 1 ? ' job' : ' jobs') + '"></span><span class="tom-day-label">' + letters[i] + '</span></span>';
+    }).join('');
+    $('tomDays').querySelectorAll('.tom-day-bar').forEach(function (b) { b.style.height = b.dataset.h + '%'; });
+
+    $('tomSuccess').textContent = c.rate != null ? c.rate.toFixed(1).replace(/\.0$/, '') + '%' : '—';
+    $('tomSuccessSub').innerHTML = state.rating
+      ? '★ ' + state.rating.toFixed(2).replace(/0$/, '') + (state.reviews != null ? ' • ' + state.reviews + ' reviews' : ' rating')
+      : (c.closed > 0 ? c.done + ' of ' + c.closed + ' completed' : 'No jobs closed yet');
+    renderSpark(c.months, c.all, $('tomSpark'));
+
+    $('tomEscrow').textContent = naira(c.pendingBal);
+    var ready = 0;
+    state.bookings.forEach(function (b) {
+      if (['provider_done', 'awaiting_code', 'awaiting_confirmation'].indexOf(b.status) !== -1 && payState(b) === 'held') ready += net(b._amount);
+    });
+    $('tomEscrowSub').textContent = ready > 0 ? compact(ready) + ' ready to release' : 'Released after client sign-off';
+
+    /* header chips + welcome */
+    var plan = 'free';
+    try { plan = localStorage.getItem('st_plan') || 'free'; } catch (e) {}
+    $('tomPlan').textContent = plan === 'pro' ? 'TASKER PRO' : 'TASKER';
+    $('tomPlan').classList.toggle('is-pro', plan === 'pro');
+    var jobs = $('tomJobs');
+    jobs.hidden = false;
+    jobs.innerHTML = '<span class="tom-dot" aria-hidden="true"></span>' + c.done + (c.done === 1 ? ' Job' : ' Jobs') +
+      (state.rating ? ' / ★ ' + state.rating.toFixed(1) : '');
+    var live = $('tomLive');
+    if (state.location) { live.hidden = false; $('tomLiveText').textContent = 'Live ' + String(state.location).split(',')[0].trim().slice(0, 14); } else { live.hidden = true; }
+    $('tomTitle').textContent = 'Welcome back' + (state.name ? ', ' + state.name : '');
+    $('tomAvatar').textContent = initials(state.name || 'ST');
+
+    /* open-task banner: real count and average budget from open tasks */
+    var open = state.openTasks || [];
+    var promo = $('tomPromo');
+    if (open.length) {
+      var budgets = open.map(function (t) { return Number(t.budget) || 0; }).filter(Boolean);
+      var avg = budgets.length ? budgets.reduce(function (a, b) { return a + b; }, 0) / budgets.length : 0;
+      $('tomPromoTitle').textContent = open.length + (open.length === 1 ? ' Open Task' : ' Open Tasks') + ' Available';
+      $('tomPromoSub').textContent = avg ? 'Average payout: ' + naira(avg) + '/task' : 'Find your next job';
+      promo.hidden = false;
+    } else { promo.hidden = true; }
+  }
+
+  function mList() {
+    var q = mstate.q.trim().toLowerCase().replace(/^#/, '');
+    return state.bookings.filter(function (b) {
+      if (mstate.cat && b._category !== mstate.cat) return false;
+      if (q) {
+        var hay = (b._title + ' ' + b._client + ' ' + shortId(b.id) + ' ' + (b._location || '')).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
       }
+      return true;
+    });
+  }
+
+  function renderMobile() {
+    if (!$('tom')) return;
+    var base = mList();
+
+    /* category chips: counts over open work (not completed) */
+    var live = state.bookings.filter(function (b) { return group(b) !== 'completed'; });
+    var cats = {};
+    live.forEach(function (b) { if (b._category) cats[b._category] = (cats[b._category] || 0) + 1; });
+    var chips = '<button type="button" class="tom-cat' + (mstate.cat ? '' : ' is-active') + '" data-cat="">All Tasks (' + live.length + ')</button>';
+    Object.keys(cats).sort().forEach(function (c) {
+      chips += '<button type="button" class="tom-cat' + (mstate.cat === c ? ' is-active' : '') + '" data-cat="' + esc(c) + '">' +
+        esc(String(c).replace(/_/g, ' ')) + ' (' + cats[c] + ')</button>';
+    });
+    $('tomCats').innerHTML = chips;
+
+    $('tomCountProgress').textContent  = byTab(base, 'progress').length;
+    $('tomCountPending').textContent   = byTab(base, 'pending').length;
+    $('tomCountCompleted').textContent = byTab(base, 'completed').length;
+
+    var rows = byTab(base, mstate.tab);
+    var feat = $('tomFeature'), qw = $('tomQueueWrap');
+    if (!rows.length) {
+      feat.innerHTML = '<p class="tom-empty">' + (state.bookings.length ? 'Nothing here right now.' : 'No assignments yet. Tap Find Tasks to get started.') + '</p>';
+      qw.hidden = true;
+      mstate.selectedId = null;
+      return;
+    }
+    if (!rows.some(function (b) { return b.id === mstate.selectedId; })) mstate.selectedId = rows[0].id;
+    var b = rows.filter(function (r) { return r.id === mstate.selectedId; })[0];
+    var act = actionFor(b), ps = payState(b), chatOk = b.status !== 'pending' && !!b.customer_id;
+    var addons = b._addons.map(function (a) {
+      var label = a && (a.name || a.label || a.title) || 'Add-on', price = a && (a.price != null ? a.price : a.amount);
+      return '<span class="tom-chip-sm">' + esc(label) + ': ' + esc(naira(price)) + '</span>';
+    }).join('');
+    var note = ps === 'held'
+      ? '<strong>' + esc(naira(net(b._amount))) + ' secured in Escrow.</strong> Payout transfers once the client signs off.'
+      : ps === 'released' ? '<strong>Payment released</strong> to your wallet.'
+      : '<strong>Awaiting client payment.</strong> You’ll be notified when it’s secured in escrow.';
+
+    feat.innerHTML =
+      '<div class="tom-feature-top">' +
+        '<div class="tom-feature-ids"><span class="tom-id">' + esc(shortId(b.id)) + '</span><span class="tom-state">' + esc(statusLabel(b)) + '</span></div>' +
+        '<div class="tom-escrow-amt"><small>' + (ps === 'held' ? 'Total escrow' : 'Job value') + '</small><strong>' + esc(naira(b._amount)) + '</strong></div>' +
+      '</div>' +
+      '<h3 class="tom-feature-title">' + esc(b._title) + '</h3>' +
+      '<p class="tom-due">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+        esc(dueText(b)) + '</p>' +
+      '<div class="tom-client"><span class="tom-client-av">' + esc(initials(b._client)) + '</span>' +
+        '<span class="tom-client-text"><strong>' + esc(b._client) + '</strong><small>' +
+        esc([b._location, b.scheduled_time ? scheduleText(b).replace('Scheduled for ', '') : ''].filter(Boolean).join(' • ') || 'Details to be confirmed') + '</small></span></div>' +
+      (addons ? '<div class="tom-addons"><span class="tom-addons-label">Add-ons</span>' + addons + '</div>' : '') +
+      '<div class="tom-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p>' + note + '</p></div>' +
+      '<div class="tom-feature-actions">' +
+        '<button type="button" class="tom-act-ghost" data-act="chat"' + (chatOk ? '' : ' disabled') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message</button>' +
+        '<button type="button" class="tom-act-main" data-act="' + (act.act || '') + '"' + (act.disabled ? ' disabled' : '') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>' + esc(act.label) + '</button>' +
+      '</div>';
+
+    var others = rows.filter(function (r) { return r.id !== b.id; });
+    qw.hidden = !others.length;
+    $('tomQueueTitle').textContent = mstate.tab === 'completed' ? 'Recently completed' : mstate.tab === 'pending' ? 'Also waiting on you' : 'Upcoming jobs queued';
+    $('tomQueue').innerHTML = others.map(function (r) {
+      return '<button type="button" class="tom-q" data-id="' + esc(r.id) + '">' +
+        '<span class="tom-q-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>' +
+        '<span class="tom-q-main"><small>' + esc(shortId(r.id)) + ' • ' + esc(dueText(r)) + '</small><strong>' + esc(r._title) + '</strong></span>' +
+        '<span class="tom-q-side"><strong>' + esc(naira(r._amount)) + '</strong><small>' + esc(statusLabel(r)) + '</small></span></button>';
+    }).join('');
+  }
+
+  function bindMobile() {
+    if (!$('tom')) return;
+    $('tomWithdraw').addEventListener('click', function () { if (typeof window.openTaskerWithdrawModal === 'function') window.openTaskerWithdrawModal(); });
+    $('tomPayout').addEventListener('click', function () { if (typeof window.openTaskerWithdrawModal === 'function') window.openTaskerWithdrawModal(); });
+    $('tomSearch').addEventListener('input', function () { mstate.q = this.value; renderMobile(); });
+    $('tomCats').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cat]'); if (!b) return;
+      mstate.cat = b.dataset.cat; renderMobile();
+    });
+    document.querySelectorAll('.tom-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        mstate.tab = tab.dataset.mtab;
+        document.querySelectorAll('.tom-tab').forEach(function (t) {
+          var on = t === tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on));
+        });
+        renderMobile();
+      });
+    });
+    $('tomQueue').addEventListener('click', function (e) {
+      var q = e.target.closest('.tom-q'); if (!q) return;
+      mstate.selectedId = q.dataset.id; renderMobile();
+      $('tomFeature').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    $('tomFeature').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-act]');
+      if (!btn || btn.disabled) return;
+      runAction(btn.dataset.act, state.bookings.filter(function (x) { return x.id === mstate.selectedId; })[0]);
     });
   }
 
@@ -613,6 +825,10 @@
         var counts = { progress: 0, pending: 0, completed: 0 };
         state.bookings.forEach(function (b) { var g = group(b); if (counts[g] != null) counts[g]++; });
         if (!counts.progress) state.tab = counts.pending ? 'pending' : counts.completed ? 'completed' : 'all';
+        mstate.tab = state.tab === 'all' ? 'progress' : state.tab;
+        document.querySelectorAll('.tom-tab').forEach(function (t) {
+          var on = t.dataset.mtab === mstate.tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on));
+        });
         document.querySelectorAll('.tov-tab').forEach(function (t) {
           var on = t.dataset.tab === state.tab;
           t.classList.toggle('is-active', on);
@@ -622,6 +838,7 @@
       state.loaded = true;
       renderStats();
       renderAssignments();
+      renderMobile();
       if (manual) toast('Assignments refreshed');
     } catch (e) {
       console.warn('[Overview] load failed:', e && e.message);
@@ -643,23 +860,26 @@
   }
 
   function subscribe() {
-    var live = $('tovLive');
+    var live = $('tovLive'), mlive = $('tomRealtime');
+    function setLive(off) { live.classList.toggle('is-off', off); if (mlive) mlive.classList.toggle('is-off', off); }
+    function hideLive() { live.hidden = true; if (mlive) mlive.hidden = true; }
     try {
-      if (!window.supabase.channel || !state.uid) { live.hidden = true; return; }
+      if (!window.supabase.channel || !state.uid) { hideLive(); return; }
       state.channel = window.supabase.channel('tov-bookings-' + state.uid)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: 'tasker_id=eq.' + state.uid }, function () {
           clearTimeout(reloadTimer);
           reloadTimer = setTimeout(function () { reload(false); }, 600);
         })
         .subscribe(function (status) {
-          live.classList.toggle('is-off', status !== 'SUBSCRIBED');
+          setLive(status !== 'SUBSCRIBED');
         });
-    } catch (e) { live.hidden = true; }
+    } catch (e) { hideLive(); }
   }
 
   async function init() {
     if (!$('tov') || !window.supabase) return;
     bind();
+    bindMobile();
     await reload(false);
     subscribe();
   }

@@ -265,3 +265,17 @@
   --to-content-width:   1144px;
   --to-notch-gap:       var(--radius-to-notch);
 }
+
+/* ── Tasker dashboard: Overview, mobile layout ──
+   Sampled from the mobile design screenshot. Page-specific. */
+:root {
+  --tm-panel:        #0F4A34;   /* Active Assignments panel */
+  --tm-panel-deep:   #0B3A28;   /* tab track, cards inside the panel */
+  --tm-card:         #0D4430;   /* featured job card */
+  --tm-border:       #1D6247;
+  --tm-chip:         #1B5E44;   /* chips inside the panel */
+  --tm-mint:         #A8F2CE;   /* primary action, pills, promo bar */
+  --tm-mint-ink:     #064E34;   /* text on mint */
+  --tm-mint-soft:    #D9F8E8;   /* header pills */
+  --tm-text-soft:    #A9CDBB;   /* muted text on the green panel */
+}
