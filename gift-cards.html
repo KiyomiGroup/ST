@@ -44,6 +44,7 @@
       <symbol id="gc-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
       <symbol id="gc-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
       <symbol id="gc-mail-check" viewBox="0 0 24 24"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="m16 19 2 2 4-4"/></symbol>
+      <symbol id="gc-credit-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></symbol>
     </defs>
   </svg>
 
@@ -505,7 +506,56 @@
       </div>
     </section>
 
-    <!-- Next section goes here (#check-balance) -->
+    <!-- ── Check a gift card balance (#check-balance) ─────────── -->
+    <section class="gc-bal" id="check-balance" aria-labelledby="gc-bal-title">
+      <div class="gc-bal-inner">
+        <div class="gc-bal-head">
+          <span class="gc-bal-icon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-wallet"/></svg></span>
+          <h2 id="gc-bal-title" class="gc-bal-title"><span class="gc-desktop-only">Already Have a StreetTasker Gift Card?</span><span class="gc-mobile-only">Already Have a Card?</span></h2>
+        </div>
+        <p class="gc-bal-text"><span class="gc-desktop-only">Enter your 16-character voucher code to instantly verify your available balance and transaction history.</span><span class="gc-mobile-only">Enter your 16-digit voucher code to see remaining naira balance.</span></p>
+
+        <form class="gc-bal-form" id="gc-bal-form" novalidate>
+          <label class="gc-bal-label" for="gc-bal-code">Gift card voucher code</label>
+          <div class="gc-bal-field">
+            <svg class="gc-icon gc-bal-field-icon" aria-hidden="true"><use href="#gc-credit-card"/></svg>
+            <input id="gc-bal-code" class="gc-bal-input" type="text" name="voucher_code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ST-7892-4410-9921" aria-describedby="gc-bal-result" />
+          </div>
+          <button type="submit" class="btn gc-bal-btn"><span class="gc-desktop-only">Check Balance</span><span class="gc-mobile-only">Check</span></button>
+        </form>
+        <p class="gc-bal-result" id="gc-bal-result" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+
+    <!-- ── Frequently asked questions ──────────────────────── -->
+    <section class="gc-faq" id="faq" aria-labelledby="gc-faq-title">
+      <div class="gc-faq-inner">
+        <header class="gc-faq-head">
+          <p class="gc-faq-eyebrow">Help &amp; Clarity</p>
+          <h2 id="gc-faq-title" class="gc-section-title">Frequently Asked Questions</h2>
+        </header>
+        <div class="gc-faq-list">
+          <details class="gc-faq-item">
+            <summary class="gc-faq-q"><span>Do StreetTasker gift cards expire?</span><svg class="gc-icon gc-faq-chevron" aria-hidden="true"><use href="#gc-chevron-down"/></svg></summary>
+            <p class="gc-faq-a">No. StreetTasker gift cards never expire, and there are no inactivity fees or hidden deductions. The full balance stays on the card until it is used.</p>
+          </details>
+          <details class="gc-faq-item">
+            <summary class="gc-faq-q"><span>Can a Cleaning Gift Card be used for other services if budget remains?</span><svg class="gc-icon gc-faq-chevron" aria-hidden="true"><use href="#gc-chevron-down"/></svg></summary>
+            <p class="gc-faq-a">Yes. Category cards are priced around average task costs for that kind of work, but they are a guide, not a limit. Any balance left after a booking stays on the card and can be used on any other task on StreetTasker.</p>
+          </details>
+          <details class="gc-faq-item">
+            <summary class="gc-faq-q"><span>How does escrow protection apply when paying with a gift card?</span><svg class="gc-icon gc-faq-chevron" aria-hidden="true"><use href="#gc-chevron-down"/></svg></summary>
+            <p class="gc-faq-a">A task paid with a gift card is protected the same way as any other StreetTasker booking. The payment is held in escrow and only released to the Tasker once the work is done. Any unused balance stays on the card.</p>
+          </details>
+          <details class="gc-faq-item">
+            <summary class="gc-faq-q"><span>How do I check my card balance or top up?</span><svg class="gc-icon gc-faq-chevron" aria-hidden="true"><use href="#gc-chevron-down"/></svg></summary>
+            <p class="gc-faq-a">Enter your voucher code in the <a href="#check-balance">balance checker</a> above to see what is left on your card. To add more value, you can buy another gift card from the cards above.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Next section goes here (corporate gifting) -->
 
   </div>
 
