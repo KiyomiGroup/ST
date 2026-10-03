@@ -228,3 +228,54 @@
   --nav-dot-size:     8px;
   --nav-menu-width:   176px;  /* settings dropdown */
 }
+
+/* ── Tasker dashboard: Overview page tokens (dashboard-tasker.html) ──
+   Sampled from the Overview design screenshot (no Figma values supplied).
+   Page-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --to-page-bg:         #F4F7F5;   /* page band behind the overview (flat so the tab notch blends in) */
+  --to-card-border:     #E6ECE8;
+  --to-card-shadow:     0 1px 2px rgba(15, 26, 22, 0.04), 0 10px 28px -16px rgba(15, 26, 22, 0.14);
+  --to-muted:           #6B7670;   /* small caps labels, helper text */
+  --to-green:           #0A7A4F;   /* trend text, icons, sparkline */
+  --to-green-soft:      #E3F6EC;   /* icon bubbles, SECURED pill */
+  --to-bar-1:           #D5F7E6;   /* bar chart, oldest to newest month */
+  --to-bar-2:           #A9EFCC;
+  --to-bar-3:           #7BE5B3;
+  --to-bar-4:           #3FD392;
+  --to-bar-5:           #0E9F67;
+  --to-bar-6:           #066B44;
+  --to-ink-dark:        #0D1712;   /* Payout button */
+
+  --to-dark:            #0E1814;   /* Active Assignments panel */
+  --to-dark-raised:     #14211B;   /* list cards and detail card */
+  --to-dark-border:     #22362C;
+  --to-dark-selected:   #139062;   /* selected list card outline */
+  --to-dark-text:       #FFFFFF;
+  --to-dark-muted:      #93A89D;
+  --to-dark-chip:       #1F3328;   /* category tags, avatar circles */
+  --to-dark-accent:     #34D399;   /* Real-time dot, tag text */
+  --to-dark-warn:       #F2B45A;   /* Review / Pending text on dark */
+  --to-dark-warn-soft:  rgba(242, 180, 90, 0.16);
+  --to-dark-action:     #0F7A52;   /* Mark Complete button */
+  --to-dark-action-hover: #0B6643; /* derived: darker step */
+
+  --radius-to-panel:    40px;      /* Active Assignments outer corners */
+  --radius-to-notch:    28px;      /* tab notch bottom corners and shoulders */
+  --to-content-width:   1144px;
+  --to-notch-gap:       var(--radius-to-notch);
+}
+
+/* ── Tasker dashboard: Overview, mobile layout ──
+   Sampled from the mobile design screenshot. Page-specific. */
+:root {
+  --tm-panel:        #0F4A34;   /* Active Assignments panel */
+  --tm-panel-deep:   #0B3A28;   /* tab track, cards inside the panel */
+  --tm-card:         #0D4430;   /* featured job card */
+  --tm-border:       #1D6247;
+  --tm-chip:         #1B5E44;   /* chips inside the panel */
+  --tm-mint:         #A8F2CE;   /* primary action, pills, promo bar */
+  --tm-mint-ink:     #064E34;   /* text on mint */
+  --tm-mint-soft:    #D9F8E8;   /* header pills */
+  --tm-text-soft:    #A9CDBB;   /* muted text on the green panel */
+}

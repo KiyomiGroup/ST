@@ -269,7 +269,7 @@
        (loaded by js/app.js), matching every other mobile page. */
   </style>
 </head>
-<body>
+<body class="tdash-page tdash-overview">
 <script>
 /* ── Safe messages panel opener ── defined at body start so onclick always works ── */
 function openMessagesPanel() {
@@ -451,95 +451,255 @@ function openMessagesPanel() {
               </div>
             </div>
             <div id="panel-mypage" class="dashboard-panel active">
-              <!-- Header -->
-              <div class="panel-header" style="flex-wrap:wrap;gap:10px;margin-bottom:0;">
-                <h2>My Page</h2>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button class="btn btn-outline btn-sm" onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel()">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit Page
-                  </button>
-                  <button class="btn btn-primary btn-sm" onclick="openPostWorkModal()">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Post Work
-                  </button>
+              <!-- ═══ OVERVIEW — mobile layout (shown at 768px and below; js/tasker-overview.js fills it) ═══ -->
+              <div class="tom" id="tom">
+                <div class="tom-chips" id="tomChips">
+                  <span class="tom-pill tom-pill-plan" id="tomPlan">Tasker</span>
+                  <span class="tom-pill" id="tomJobs" hidden></span>
+                  <span class="tom-pill" id="tomLive" hidden><i aria-hidden="true"></i><span id="tomLiveText"></span></span>
                 </div>
-              </div>
 
-              <!-- Verification prompt -->
-              <div id="verificationPrompt" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-md);padding:14px 18px;margin-top:16px;margin-bottom:0;align-items:center;gap:12px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <div style="flex:1;">
-                  <div style="font-weight:600;font-size:0.85rem;color:var(--amber);">Get Verified</div>
-                  <div style="font-size:0.78rem;color:var(--text-secondary);">Add your ID and business details to show a verified badge on your profile.</div>
+                <div class="tom-welcome">
+                  <h1 class="tom-title" id="tomTitle">Welcome back</h1>
+                  <span class="tom-avatar" id="tomAvatar" aria-hidden="true">ST</span>
                 </div>
-                <button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none;flex-shrink:0;" onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification()">Verify Now</button>
+                <p class="tom-sub">Track incoming jobs, escrow &amp; daily earnings.</p>
+
+                <div class="tom-cta">
+                  <a href="find-tasks.html" class="tom-find">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Find Tasks
+                  </a>
+                  <a href="find-tasks.html" class="tom-round-btn" aria-label="Tasks near me">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
+                  </a>
+                </div>
+
+                <div class="tom-stats">
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Total Earned</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+                    <div class="tom-value" id="tomEarn">&#8358;0</div>
+                    <div class="tom-trend" id="tomEarnTrend"></div>
+                    <div class="tom-card-foot">
+                      <div><span class="tom-foot-label">Available</span><strong id="tomAvail">&#8358;0</strong></div>
+                      <button type="button" class="tom-btn-dark" id="tomWithdraw">Withdraw</button>
+                    </div>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Active Tasks</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+                    <div class="tom-value" id="tomActive">0 In Progress</div>
+                    <div class="tom-trend" id="tomActiveSub"></div>
+                    <div class="tom-days" id="tomDays" aria-hidden="true"></div>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Success Rate</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg></div>
+                    <div class="tom-value" id="tomSuccess">&mdash;</div>
+                    <div class="tom-trend" id="tomSuccessSub"></div>
+                    <svg class="tom-spark" id="tomSpark" viewBox="0 0 230 56" aria-hidden="true"></svg>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Locked Escrow</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+                    <div class="tom-value" id="tomEscrow">&#8358;0</div>
+                    <div class="tom-trend" id="tomEscrowSub"></div>
+                    <div class="tom-card-foot tom-card-foot-end">
+                      <button type="button" class="tom-btn-soft" id="tomPayout">Payout</button>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="tom-search">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <label class="sr-only" for="tomSearch">Search tasks</label>
+                  <input type="search" id="tomSearch" placeholder="Search tasks by ID, client or street..." autocomplete="off" />
+                </div>
+                <div class="tom-cats" id="tomCats" role="group" aria-label="Filter by category"></div>
+
+                <section class="tom-panel" aria-labelledby="tomPanelTitle">
+                  <div class="tom-panel-head">
+                    <h2 id="tomPanelTitle">Active Assignments</h2>
+                    <span class="tom-live" id="tomRealtime"><i aria-hidden="true"></i>Real-time</span>
+                    <a href="dashboard-tasker.html?panel=bookings" class="tom-history">History
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+                  </div>
+                  <div class="tom-tabs" role="tablist" aria-label="Assignment status">
+                    <button type="button" class="tom-tab is-active" role="tab" data-mtab="progress" aria-selected="true">In Progress <span id="tomCountProgress">0</span></button>
+                    <button type="button" class="tom-tab" role="tab" data-mtab="pending" aria-selected="false">Pending <span id="tomCountPending">0</span></button>
+                    <button type="button" class="tom-tab" role="tab" data-mtab="completed" aria-selected="false">Completed <span id="tomCountCompleted">0</span></button>
+                  </div>
+                  <div class="tom-feature" id="tomFeature" aria-live="polite"></div>
+                  <div class="tom-queue-wrap" id="tomQueueWrap" hidden>
+                    <h3 class="tom-queue-title" id="tomQueueTitle">Upcoming jobs queued</h3>
+                    <div class="tom-queue" id="tomQueue"></div>
+                  </div>
+                </section>
+
+                <aside class="tom-promo" id="tomPromo" hidden>
+                  <span class="tom-promo-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </span>
+                  <div class="tom-promo-text"><strong id="tomPromoTitle"></strong><span id="tomPromoSub"></span></div>
+                  <a href="find-tasks.html" class="tom-promo-btn">Explore</a>
+                </aside>
               </div>
+              <!-- ═══ END OVERVIEW mobile layout ═══ -->
 
-              <!-- Stats row -->
-              <div class="dashboard-stats" style="margin-top:16px;margin-bottom:20px;">
-                <div class="stat-card"><div class="stat-card-label">Total Bookings</div><div class="stat-card-value" id="statTotal">—</div></div>
-                <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" id="statPending">—</div></div>
-                <div class="stat-card"><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statDone">—</div></div>
-                <div class="stat-card"><div class="stat-card-label">Work Posts</div><div class="stat-card-value" id="statPosts">—</div></div>
-              </div>
+              <!-- ═══ OVERVIEW — upper section (js/tasker-overview.js fills the data) ═══ -->
+              <div class="tov" id="tov">
 
-              <!-- ═══ EMBEDDED PROFILE PREVIEW ═══ -->
-              <div id="profilePreviewWrap" style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--white);">
+                <header class="tov-head">
+                  <button type="button" class="tov-back" id="tovBack" aria-label="Go back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                  </button>
+                  <div class="tov-head-text">
+                    <h1 class="tov-title">Overview</h1>
+                    <p class="tov-sub">Track your incoming job offers, active assignments, client escrow, and daily earnings.</p>
+                  </div>
+                  <div class="tov-head-actions">
+                    <button type="button" class="tov-icon-btn" id="tovFilterToggle" aria-label="Show or hide filters" aria-expanded="true" aria-controls="tovFilters">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    </button>
+                    <a href="find-tasks.html" class="btn btn-primary btn-lg tov-browse">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Browse Open Tasks
+                    </a>
+                  </div>
+                </header>
 
-                <!-- Profile hero banner -->
-                <div id="previewHero" style="background:var(--charcoal);padding:32px 24px 44px;position:relative;">
-                  <div style="display:flex;align-items:flex-end;gap:16px;">
-                    <div id="previewAvatar" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--white);background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:var(--blue);overflow:hidden;flex-shrink:0;transform:translateY(20px);"></div>
-                    <div style="padding-bottom:24px;">
-                      <div id="previewName" style="font-size:1.2rem;font-weight:800;color:var(--white);margin-bottom:2px;"></div>
-                      <div id="previewService" style="font-size:0.83rem;color:rgba(255,255,255,0.6);"></div>
-                      <div id="previewBadges" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"></div>
+                <!-- Stat cards -->
+                <section class="tov-stats" aria-label="Summary">
+                  <article class="tov-card tov-card-earn">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Total earnings</span>
+                      <span class="tov-bubble" aria-hidden="true">&#8358;</span>
+                    </div>
+                    <div class="tov-value" id="tovEarnTotal">&#8358;0</div>
+                    <div class="tov-trend" id="tovEarnTrend"><span class="tov-muted">Earnings after 12% platform fee</span></div>
+                    <div class="tov-card-foot">
+                      <span class="tov-foot-text">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Available: <span id="tovEarnAvail">&#8358;0</span>
+                      </span>
+                      <button type="button" class="tov-link-btn" id="tovWithdraw">Withdraw</button>
+                    </div>
+                  </article>
+
+                  <article class="tov-card tov-card-active">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Active tasks</span>
+                      <span class="tov-bubble" aria-hidden="true">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      </span>
+                    </div>
+                    <div class="tov-value" id="tovActiveValue">0 <span class="tov-value-unit">In Progress</span></div>
+                    <div class="tov-trend" id="tovActiveSub"><span class="tov-muted">Nothing scheduled yet</span></div>
+                    <div class="tov-bars" id="tovBars" aria-hidden="true"></div>
+                  </article>
+
+                  <article class="tov-card tov-card-success">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Success rate</span>
+                      <span class="tov-bubble" aria-hidden="true">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                    </div>
+                    <div class="tov-value" id="tovSuccessValue">&mdash; <span class="tov-value-unit">Score</span></div>
+                    <div class="tov-trend" id="tovSuccessSub"><span class="tov-muted">Complete a job to build your score</span></div>
+                    <svg class="tov-spark" id="tovSpark" viewBox="0 0 230 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+                  </article>
+
+                  <article class="tov-card tov-card-escrow">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Escrow / Pending <span class="tov-secured">Secured</span></span>
+                      <a href="dashboard-tasker.html?panel=wallet" class="tov-arrow" aria-label="Open wallet">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                      </a>
+                    </div>
+                    <div class="tov-value" id="tovEscrowValue">&#8358;0</div>
+                    <div class="tov-sub-line">In Client Escrow: <strong id="tovEscrowGross">&#8358;0</strong></div>
+                    <div class="tov-card-foot tov-card-foot-end">
+                      <button type="button" class="tov-payout" id="tovPayout">Payout</button>
+                    </div>
+                  </article>
+                </section>
+
+                <!-- Filters -->
+                <section class="tov-filters" id="tovFilters" aria-label="Filter assignments">
+                  <button type="button" class="tov-chip" id="tovActiveFilters" title="Clear all filters">
+                    Active filters <span class="tov-chip-count" id="tovFilterCount" hidden>0</span>
+                  </button>
+                  <label class="tov-select">
+                    <span class="sr-only">Trade category</span>
+                    <select id="tovCategory"><option value="">All trade categories</option></select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </label>
+                  <label class="tov-select">
+                    <span class="sr-only">Payment status</span>
+                    <select id="tovPayment">
+                      <option value="">Payment status</option>
+                      <option value="unpaid">Awaiting payment</option>
+                      <option value="held">In escrow</option>
+                      <option value="released">Released</option>
+                    </select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </label>
+                  <span class="tov-filter-gap"></span>
+                  <label class="tov-month"><span class="sr-only">From month</span><input type="month" id="tovFrom" /></label>
+                  <label class="tov-month"><span class="sr-only">To month</span><input type="month" id="tovTo" /></label>
+                  <label class="tov-search">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span class="sr-only">Search assignments</span>
+                    <input type="search" id="tovSearch" placeholder="Search task, client, or #ID..." autocomplete="off" />
+                  </label>
+                </section>
+
+                <!-- Active Assignments -->
+                <section class="tov-assign" id="tovAssign" aria-labelledby="tovAssignTitle">
+                  <div class="tov-assign-head">
+                    <div class="tov-assign-title">
+                      <h2 id="tovAssignTitle">Active Assignments</h2>
+                      <span class="tov-live" id="tovLive"><i aria-hidden="true"></i>Real-time</span>
+                    </div>
+                    <div class="tov-notch">
+                      <div class="tov-tabs" role="tablist" aria-label="Assignment status">
+                        <button type="button" class="tov-tab" role="tab" data-tab="all" aria-selected="false">All Jobs</button>
+                        <button type="button" class="tov-tab" role="tab" data-tab="pending" aria-selected="false">Pending <span class="tov-tab-count" id="tovCountPending">0</span></button>
+                        <button type="button" class="tov-tab is-active" role="tab" data-tab="progress" aria-selected="true">In Progress <span class="tov-tab-count" id="tovCountProgress">0</span></button>
+                        <button type="button" class="tov-tab" role="tab" data-tab="completed" aria-selected="false">Completed <span class="tov-tab-count" id="tovCountCompleted">0</span></button>
+                      </div>
+                    </div>
+                    <div class="tov-assign-tools">
+                      <button type="button" class="tov-dark-icon" id="tovExpand" aria-label="Expand list" aria-pressed="false">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                      </button>
+                      <div class="tov-more">
+                        <button type="button" class="tov-dark-icon" id="tovMore" aria-label="More options" aria-haspopup="menu" aria-expanded="false">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                        </button>
+                        <div class="tov-more-menu" id="tovMoreMenu" role="menu" hidden>
+                          <button type="button" role="menuitem" id="tovRefresh">Refresh now</button>
+                          <a href="dashboard-tasker.html?panel=bookings" role="menuitem">Open all bookings</a>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Profile body -->
-                <div style="padding:28px 24px 24px;">
-                  <div style="display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:start;">
-
-                    <!-- Left -->
-                    <div>
-                      <!-- Bio -->
-                      <div id="previewBioSection" style="display:none;margin-bottom:20px;">
-                        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">About</div>
-                        <p id="previewBio" style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;"></p>
-                      </div>
-
-                      <!-- Work portfolio -->
-                      <div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Work Portfolio</div>
-                          <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;" onclick="openPostWorkModal()">+ Post Work</button>
-                        </div>
-                        <div id="myWorkGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">
-                          <div style="text-align:center;padding:24px 12px;color:var(--text-muted);font-size:0.82rem;grid-column:1/-1;">No work posts yet. Hit <strong>Post Work</strong> to add your first.</div>
-                        </div>
-                      </div>
+                  <div class="tov-assign-body">
+                    <div class="tov-list" id="tovList" role="list" aria-live="polite">
+                      <p class="tov-empty">Loading assignments&hellip;</p>
                     </div>
-
-                    <!-- Right sidebar -->
-                    <div>
-                      <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
-                        <div id="previewRate" style="font-size:1.3rem;font-weight:800;margin-bottom:2px;"></div>
-                        <div id="previewRateUnit" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;"></div>
-                        <div id="previewContactList" style="font-size:0.82rem;"></div>
-                        <div style="margin-top:14px;padding:10px 12px;background:var(--blue-light);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--blue);text-align:center;">
-                          This is how customers see your page
-                        </div>
-                      </div>
-                    </div>
-
+                    <div class="tov-detail" id="tovDetail" aria-live="polite"></div>
                   </div>
-                </div>
-
+                </section>
               </div>
-              <!-- ═══ END PROFILE PREVIEW ═══ -->
+              <!-- ═══ END OVERVIEW upper section ═══ -->
+
 
             </div>
 
@@ -911,6 +1071,8 @@ function openMessagesPanel() {
     </div>
   </div>
 
+  <div id="footer-placeholder"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
@@ -922,6 +1084,7 @@ function openMessagesPanel() {
   <script src="js/app.js"></script>
   <script src="js/location.js"></script>
   <script src="js/verify.js"></script>
+  <script src="js/tasker-overview.js"></script>
   <script>
     'use strict';
     var PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
@@ -945,6 +1108,7 @@ function openMessagesPanel() {
       var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
       if (btn) btn.classList.add('active');
+      document.body.classList.toggle('tdash-overview', id === 'mypage');
       var subtitleEl = document.getElementById('navMobileSubtitle');
       if (subtitleEl && PANEL_LABELS[id]) subtitleEl.textContent = PANEL_LABELS[id];
     }
@@ -2028,148 +2192,10 @@ function openMessagesPanel() {
 
     /* ── My Page panel ───────────────────────────────────────── */
     var _myPageLoaded = false;
-    async function loadMyPage() {
-      if (_myPageLoaded) return;
-      _myPageLoaded = true;
-
-      var _sess = await window.supabase.auth.getSession();
-      var user = _sess.data.session && _sess.data.session.user;
-      if (!user) return;
-
-      /* Check verification — first fetch data then check */
-      try {
-        var { data: taskerCheckData } = await window.supabase
-          .from('taskers')
-          .select('is_verified')
-          .eq('user_id', String(user.id))
-          .maybeSingle();
-        
-        var isAlreadyVerified = taskerCheckData && taskerCheckData.is_verified === true;
-        
-        if (!isAlreadyVerified) {
-          var vp = document.getElementById('verificationPrompt');
-          if (vp) vp.style.display = 'flex';
-          var nb = document.getElementById('navVerifBadge');
-          if (nb) nb.style.display = 'inline-block';
-        } else {
-          /* Hide verification prompt if already verified */
-          var vp = document.getElementById('verificationPrompt');
-          if (vp) vp.style.display = 'none';
-          var nb = document.getElementById('navVerifBadge');
-          if (nb) nb.style.display = 'none';
-        }
-      } catch(e) {
-        console.warn('[loadMyPage] verification check error:', e);
-      }
-
-      /* Load stats */
-      try {
-        var bSess = await window.supabase.auth.getSession();
-        var bUid = bSess.data.session && bSess.data.session.user.id;
-        if (!bUid) throw new Error('Not logged in');
-        var bkRes = await window.supabase.from('bookings')
-          .select('id,customer_id,tasker_id,task_id,status,payment_status,amount,created_at')
-          .eq('tasker_id', bUid).order('created_at', { ascending: false });
-        var bookings  = bkRes.data || [];
-        var active    = bookings.filter(function(b){
-          return ['pending','confirmed','in_progress','provider_done',
-                  'awaiting_code','awaiting_confirmation'].indexOf(b.status) !== -1;
-        });
-        var completed = bookings.filter(function(b){ return b.status==='completed'; });
-        var sT = document.getElementById('statTotal');
-        var sP = document.getElementById('statPending');
-        var sD = document.getElementById('statDone');
-        if (sT) sT.textContent = bookings.length;
-        if (sP) sP.textContent = active.length;
-        if (sD) sD.textContent = completed.length;
-      } catch(e) {}
-
-      /* Load profile data to populate the embedded preview */
-      try {
-        var { data: userData } = await window.supabase
-          .from('users').select('name, bio, location, avatar_url, business_name')
-          .eq('id', user.id).maybeSingle();
-        var { data: taskerData } = await window.supabase
-          .from('taskers')
-          .select('service, service_name, category, rate_value, rate_unit, location, is_verified, business_name, banner_color, banner_img')
-          .eq('user_id', String(user.id)).maybeSingle();
-
-        var displayName = (userData && userData.business_name) || (taskerData && taskerData.business_name) || (userData && userData.name) || (user.user_metadata && user.user_metadata.name) || 'Your Name';
-        var service     = (taskerData && (taskerData.service || taskerData.service_name)) || 'Service Provider';
-        var location    = (taskerData && taskerData.location) || (userData && userData.location) || '';
-        var bio         = (userData && userData.bio) || '';
-        var photo       = (userData && userData.avatar_url) || null;
-        var rate        = (taskerData && taskerData.rate_value) ? '₦' + Number(taskerData.rate_value).toLocaleString() : '';
-        var rateUnit    = (taskerData && taskerData.rate_unit) || '/hour';
-        var isVerified  = taskerData && taskerData.is_verified === true;
-        var bannerColor = (taskerData && taskerData.banner_color) || '#121212';
-        var bannerImg   = taskerData && taskerData.banner_img;
-
-        /* Hero banner — image takes priority over colour */
-        var hero = document.getElementById('previewHero');
-        if (hero) {
-          if (bannerImg) {
-            hero.style.backgroundImage    = 'url("' + bannerImg + '")';
-            hero.style.backgroundSize     = 'cover';
-            hero.style.backgroundPosition = 'center';
-          } else {
-            hero.style.backgroundImage = '';
-            hero.style.background = bannerColor;
-          }
-        }
-
-        /* Avatar */
-        var avatarEl = document.getElementById('previewAvatar');
-        if (avatarEl) {
-          var initials = displayName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || 'ST';
-          avatarEl.innerHTML = photo
-            ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
-            : initials;
-        }
-
-        /* Name + service */
-        var nameEl = document.getElementById('previewName');
-        if (nameEl) nameEl.textContent = displayName;
-        var svcEl = document.getElementById('previewService');
-        if (svcEl) svcEl.textContent = service + (location ? '  ·  ' + location : '');
-
-        /* Verified badge */
-        var badgesEl = document.getElementById('previewBadges');
-        if (badgesEl) {
-          badgesEl.innerHTML = isVerified
-            ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.68rem;font-weight:700;background:rgba(22,163,74,0.2);color:#4ade80;border:1px solid rgba(22,163,74,0.3);">'
-              + '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
-            : '<span style="padding:2px 8px;border-radius:999px;font-size:0.68rem;font-weight:700;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid rgba(217,119,6,0.3);">Not Verified</span>';
-        }
-
-        /* Bio */
-        var bioSection = document.getElementById('previewBioSection');
-        var bioEl2     = document.getElementById('previewBio');
-        if (bio && bioSection && bioEl2) {
-          bioEl2.textContent = bio;
-          bioSection.style.display = 'block';
-        }
-
-        /* Rate sidebar */
-        var rateEl     = document.getElementById('previewRate');
-        var rateUnitEl = document.getElementById('previewRateUnit');
-        if (rateEl)     rateEl.textContent    = rate || 'Contact for price';
-        if (rateUnitEl) rateUnitEl.textContent = rate ? rateUnit : '';
-
-        /* Contact items */
-        var contactEl = document.getElementById('previewContactList');
-        if (contactEl) {
-          var items = [];
-          if (location) items.push('<div style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);">📍 ' + escapeHtml(location) + '</div>');
-          if (service)  items.push('<div style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);">🔧 ' + escapeHtml(service) + '</div>');
-          items.push('<div style="padding:6px 0;color:var(--green);font-weight:600;">✓ Available</div>');
-          contactEl.innerHTML = items.join('');
-        }
-      } catch(e) { console.warn('[MyPage preview]', e.message); }
-
-      /* Work posts */
-      await loadMyWorkPosts(user.id);
-    }
+    /* The old My Page block (stats, profile preview, work portfolio) was removed:
+       the Overview section (js/tasker-overview.js) replaces it. Kept as a no-op
+       because other code still calls loadMyPage(). */
+    async function loadMyPage() { _myPageLoaded = true; }
     window.loadMyPage = loadMyPage;
 
     async function loadMyWorkPosts(userId) {
