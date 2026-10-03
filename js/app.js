@@ -85,6 +85,9 @@ function initNavbar() {
   /* Scroll: add .scrolled class to trigger glass effect */
   const onScroll = () => {
     navbar.classList.toggle('scrolled', window.scrollY > 20);
+    /* Customer dashboard has its own fixed bar (.ds-topnav); keep it in step */
+    const dsNav = document.querySelector('.ds-topnav');
+    if (dsNav) dsNav.classList.toggle('scrolled', window.scrollY > 20);
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll(); /* run once on load */

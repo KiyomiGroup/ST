@@ -3517,12 +3517,25 @@ body.ds-page #navbar { display: none; }
 }
 
 @media (min-width: 769px) {
-  /* Bar for the customer dashboard (the shared #navbar is already a fixed white bar) */
-  .ds-topnav { background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+  /* Bar for the customer dashboard: fixed to the top with the same glass
+     background and scroll border as the shared #navbar. */
+  .ds-topnav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    height: var(--nav-height);
+    background: var(--color-nav-bg);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  }
+  .ds-topnav.scrolled { border-bottom-color: var(--color-border); box-shadow: var(--shadow-sm); }
   .ds-topnav-inner {
     display: flex; align-items: center; justify-content: space-between;
     height: var(--nav-height); margin: 0 auto;
   }
+  /* The bar is out of the page flow, so push the page content below it */
+  body.ds-page .ds-dashboard-page { padding-top: var(--nav-height); }
 
   :is(body.st-logged-in #navbar .nav-inner, .ds-topnav-inner) {
     max-width: var(--nav-max-width);

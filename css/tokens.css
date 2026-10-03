@@ -219,6 +219,7 @@
   --color-nav-badge-bg:     #E6F4EE;   /* CUSTOMER / TASKER badge */
   --color-nav-badge-pro-bg: #D3F5E1;   /* TASKER PRO badge */
   --color-nav-badge-text:   #0B5638;
+  --color-nav-bg:           rgba(255, 255, 255, 0.92);   /* fixed bar glass background */
   --color-nav-avatar:       #111E17;   /* avatar circle */
   --color-nav-dot:          #10B981;   /* indicator dots + online dot */
 
