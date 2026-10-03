@@ -113,3 +113,33 @@
   --card-icon-gap:      6px;
   --text-card-title:    1.25rem;       /* 20px */
 }
+
+/* ── Post-a-task page tokens (post-task.html) ──
+   Taken from the Figma desktop + mobile frames for the Post a Task form.
+   Page-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --pt-page:          #F9F9F7;   /* page background */
+  --pt-field:         #F4F4F1;   /* inputs, chips, idle options */
+  --pt-field-strong:  #EEEEEC;   /* progress track, secondary buttons */
+  --pt-field-icon:    #E8E8E6;   /* idle icon circles */
+  --pt-toggle-off:    #E2E3E0;
+  --pt-mint:          #9EF1C2;   /* selected chips, eyebrow, step numbers */
+  --pt-mint-soft:     #D8F9E7;   /* selected In Person card */
+  --pt-green:         #004F31;   /* deep green: progress, headings accents, Post button (desktop) */
+  --pt-ink:           #1A1C1B;
+  --pt-ink-muted:     #3F4942;
+  --pt-danger:        #BA1A1A;
+  --pt-danger-soft:   #FFDAD6;
+  --pt-escrow-icon:   #196146;
+  --pt-escrow-deco:   #035F3C;
+  --pt-escrow-text:   #C8D9D3;
+  --pt-photo-label:   rgba(26, 28, 27, 0.62);
+  --pt-glow:          rgba(158, 241, 194, 0.28);
+
+  --radius-2xl:       24px;
+  --text-pt-title:    clamp(1.625rem, 4vw, 3rem);
+
+  --shadow-pt-card:   0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);
+  --shadow-pt-bar:    0 -10px 28px rgba(26, 28, 27, 0.08);
+  --shadow-pt-pill:   0 2px 10px rgba(26, 28, 27, 0.06);
+}

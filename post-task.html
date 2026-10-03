@@ -8,164 +8,384 @@
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/tasks.css" />
+  <link rel="stylesheet" href="css/post-task.css" />
 </head>
 <body>
   <div id="navbar-placeholder"></div>
-  <div class="post-task-page">
-    <div class="container">
-      <div style="padding: 40px 0 0;">
-        <div class="eyebrow fade-up">Post Your Task</div>
-        <h1 class="fade-up d1" style="font-size:clamp(1.6rem,4vw,2.4rem); margin-bottom:6px;">What needs doing?</h1>
-        <p class="fade-up d2" style="margin-bottom:0;">Describe your task and taskers near you will send their best offers.</p>
-      </div>
-    </div>
-    <div class="post-task-container">
-      <main>
-        <div class="sprint-notice-v2 fade-up">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <div><strong>Quick tip:</strong> Be specific about what you need to get the best quotes from local providers.</div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="pt-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+    <symbol id="i-plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></symbol>
+    <symbol id="i-faucet" viewBox="0 0 24 24"><path d="M5 8h9a3 3 0 0 1 3 3v1"/><path d="M3 8h2"/><path d="M10 8V5"/><path d="M8 5h4"/><path d="M17 15c0 1-1 2-1 3a1 1 0 0 0 2 0c0-1-1-2-1-3z"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-hammer" viewBox="0 0 24 24"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></symbol>
+    <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></symbol>
+    <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-calendar-days" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+    <symbol id="i-calendar-check" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></symbol>
+    <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></symbol>
+    <symbol id="i-camera-plus" viewBox="0 0 24 24"><path d="M19 2v4"/><path d="M17 4h4"/><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-id-card" viewBox="0 0 24 24"><path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+    <symbol id="i-fork" viewBox="0 0 24 24"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></symbol>
+    <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 6v8"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-asterisk" viewBox="0 0 24 24"><path d="M12 6v12"/><path d="M17.196 9 6.804 15"/><path d="m6.804 9 10.392 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="pt-page">
+    <div class="pt-container">
+
+      <!-- ── Header ─────────────────────────────────────────────── -->
+      <header class="pt-header">
+        <div class="pt-draft" id="draftBanner" hidden>
+          <span class="pt-draft-dot pt-desk" aria-hidden="true"></span>
+          <svg class="pt-i pt-draft-icon pt-mob" aria-hidden="true"><use href="#i-history"/></svg>
+          <span class="pt-draft-text">
+            <span class="pt-desk">Draft restored • Auto-saved <span id="draftSavedAgo">just now</span></span>
+            <span class="pt-mob">Draft restored from your last visit</span>
+          </span>
+          <span class="pt-draft-sep pt-desk" aria-hidden="true"></span>
+          <button type="button" class="pt-draft-discard" id="discardDraftBtn"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-trash"/></svg>Discard</button>
         </div>
-        <div class="draft-banner" id="draftBanner">
-          <div class="draft-banner-text">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Draft restored
-          </div>
-          <button class="draft-clear-btn" onclick="clearDraft()">Discard</button>
+        <div class="pt-header-copy">
+          <span class="pt-eyebrow"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-plus-circle"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-zap"/></svg>Post Your Task</span>
+          <h1 class="pt-title">What needs doing?</h1>
+          <p class="pt-lede">Describe your task and verified taskers near you will send their best offers <span class="pt-desk">within minutes.</span><span class="pt-mob">shortly.</span></p>
         </div>
-        <div class="task-form-card fade-up d1">
-          <div class="task-form-card-header">
-            <h2>Task Details</h2>
-            <p style="font-size:0.84rem; color:var(--text-muted); margin:0; margin-top:4px;">Fields marked * are required</p>
-            <div class="form-progress" style="margin-top:16px;">
-              <span class="form-progress-label" id="formProgressLabel">0% complete</span>
+      </header>
+
+      <div class="pt-layout">
+        <div class="pt-main" role="main">
+
+          <!-- ── Progress ─────────────────────────────────────────── -->
+          <section class="pt-progress" aria-label="Form progress">
+            <div class="pt-progress-top">
+              <div class="pt-progress-left">
+                <h2 class="pt-progress-title pt-desk">Task Details</h2>
+                <span class="pt-required-chip pt-desk">Fields marked * are required</span>
+                <span class="pt-progress-step pt-mob"><span class="pt-progress-dot" aria-hidden="true"></span><span id="progressStepMobile">Step 1 of 4 • Task Details</span></span>
+              </div>
+              <span class="pt-progress-step pt-desk" id="progressStepDesktop">Step 1 of 4 • 0% complete</span>
+              <span class="pt-progress-pct pt-mob" id="progressPctMobile">0% complete</span>
             </div>
-            <div class="form-progress-track"><div class="form-progress-fill" id="formProgressBar"></div></div>
-          </div>
-          <div class="task-form-card-body">
-            <form id="postTaskForm" novalidate data-supabase-table="tasks" data-supabase-status="open">
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskTitle">Task Title * <span class="label-hint">Be specific</span></label>
-                <input type="text" id="taskTitle" name="title" class="task-input" placeholder="e.g. Fix kitchen ceiling fan wiring" maxlength="120" required data-field="title" />
-                <span class="field-error" id="titleError"></span>
-              </div>
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskCategory">Service Category</label>
-                <select id="taskCategory" name="category" class="task-select" data-field="category"><option value="">Select a category...</option></select>
-              </div>
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskDescription">Description * <span class="label-hint">Min 20 characters</span></label>
-                <textarea id="taskDescription" name="description" class="task-textarea" rows="5" placeholder="Describe the task in detail. What needs done, any requirements, access details..." maxlength="1000" required data-field="description"></textarea>
-                <div class="desc-footer"><span></span><span class="char-counter" id="descCharCount">0 / 1000</span></div>
+            <div class="pt-progress-track"><div class="pt-progress-fill" id="formProgressBar"></div></div>
+          </section>
 
-              </div>
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskBudget">Budget (₦) * <span class="label-hint">Minimum ₦500</span></label>
-                <div class="task-input-wrap">
-                  <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                  <input type="number" id="taskBudget" name="budget" class="task-input" placeholder="e.g. 5000" min="500" required data-field="budget" />
-                </div>
-                <span class="field-error" id="budgetError"></span>
-                <div class="budget-chips">
-                  <button type="button" class="budget-chip" data-budget-chip="2000">₦2,000</button>
-                  <button type="button" class="budget-chip" data-budget-chip="5000">₦5,000</button>
-                  <button type="button" class="budget-chip" data-budget-chip="10000">₦10,000</button>
-                  <button type="button" class="budget-chip" data-budget-chip="25000">₦25,000</button>
-                  <button type="button" class="budget-chip" data-budget-chip="50000">₦50,000</button>
+          <form id="postTaskForm" class="pt-form" novalidate data-supabase-table="tasks" data-supabase-status="open" data-mode="in_person" data-urgency="flexible">
+
+            <!-- ── 1 · Task Overview ─────────────────────────────── -->
+            <section class="pt-section" aria-labelledby="secOverview">
+              <div class="pt-section-head">
+                <span class="pt-section-num" aria-hidden="true">1</span>
+                <div>
+                  <h2 class="pt-section-title" id="secOverview">Task Overview</h2>
+                  <p class="pt-section-sub">Choose a service category and give your job a crisp, descriptive title.</p>
                 </div>
               </div>
-              <div class="task-form-row">
-                <div class="task-form-group">
-                  <label class="task-form-label" for="taskLocation">Location *</label>
-                  <div class="task-input-wrap" style="position:relative;">
-                    <svg class="task-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <input type="text" id="taskLocation" name="location" class="task-input" placeholder="e.g. Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
-                    <div id="taskLocationSuggestions" class="location-suggestions"></div>
+
+              <div class="pt-group pt-group-chips">
+                <div class="pt-chips-head">
+                  <span class="pt-label"><span class="pt-desk">Popular Categories <span class="pt-label-aside">(Click to pre-fill)</span></span><span class="pt-mob pt-eyebrow-label">Quick Categories</span></span>
+                  <span class="pt-scroll-hint pt-mob" aria-hidden="true">Scroll<svg class="pt-i" aria-hidden="true"><use href="#i-chevron-right"/></svg></span>
+                </div>
+                <div class="pt-chips" role="group" aria-label="Popular categories">
+              <button type="button" class="pt-chip" data-category="cleaning" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-brush"/></svg><span>Cleaner</span></button>
+              <button type="button" class="pt-chip" data-category="electrician" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-zap"/></svg><span>Electrician</span></button>
+              <button type="button" class="pt-chip" data-category="plumber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-faucet"/></svg><span>Plumber</span></button>
+              <button type="button" class="pt-chip" data-category="mechanic" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-wrench"/></svg><span>Mechanic</span></button>
+              <button type="button" class="pt-chip" data-category="carpentry" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-hammer"/></svg><span>Carpentry</span></button>
+              <button type="button" class="pt-chip" data-category="barber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-scissors"/></svg><span>Barber</span></button>
+              <button type="button" class="pt-chip" data-category="beauty" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-sprout"/></svg><span>Beauty</span></button>
+              <button type="button" class="pt-chip" data-category="delivery" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-truck"/></svg><span>Delivery</span></button>
+                </div>
+              </div>
+
+              <div class="pt-row">
+                <div class="pt-group pt-group-category">
+                  <label class="pt-label" for="taskCategory">Service Category <span class="pt-req" aria-hidden="true">*</span></label>
+                  <div class="pt-field pt-select-wrap">
+                    <svg class="pt-i pt-field-icon pt-select-icon" id="categoryIcon" aria-hidden="true"><use href="#i-brush"/></svg>
+                    <select id="taskCategory" name="category" class="pt-input pt-select" required data-field="category"><option value="">Select a category...</option></select>
+                    <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
                   </div>
-
+                  <span class="pt-error" id="categoryError" role="alert"></span>
                 </div>
-                <div class="task-form-group">
-                  <label class="task-form-label" for="taskDeadline">Deadline *</label>
-                  <input type="date" id="taskDeadline" name="deadline" class="task-input" required data-field="deadline" />
-                  <span class="field-error" id="deadlineError"></span>
-                </div>
-              </div>
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskType">Task Type</label>
-                <select id="taskType" name="taskType" class="task-select" data-field="taskType">
-                  <option value="one_off">One-off</option>
-                  <option value="full_time">Full time</option>
-                  <option value="part_time">Part time</option>
-                  <option value="remote">Remote</option>
-                  <option value="in_person">In person</option>
-                </select>
-              </div>
-              <div class="task-form-group">
-                <label class="task-form-label" for="taskUrgency">Urgency</label>
-                <select id="taskUrgency" name="taskUrgency" class="task-select" data-field="taskUrgency">
-                  <option value="flexible">Flexible</option>
-                  <option value="immediate">Immediate</option>
-                  <option value="scheduled">Scheduled</option>
-                </select>
-              </div>
-              <div class="urgent-row">
-                <div class="urgent-row-left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                  <div>
-                    <div class="urgent-label">Mark as Urgent <span class="urgent-badge" id="urgentBadge">URGENT</span></div>
-                    <div class="urgent-desc">Bumps task to top of tasker feed</div>
+                <div class="pt-group pt-group-frequency">
+                  <span class="pt-label" id="frequencyLabel">Engagement Frequency</span>
+                  <div class="pt-segment" role="radiogroup" aria-labelledby="frequencyLabel">
+                    <label class="pt-segment-opt"><input type="radio" name="frequency" value="one_off" checked /><span>One-off task</span></label>
+                    <label class="pt-segment-opt"><input type="radio" name="frequency" value="recurring" /><span>Recurring schedule</span></label>
                   </div>
                 </div>
-                <label class="toggle-switch"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="toggle-track"></span></label>
               </div>
-              <div class="task-form-group">
-                <label class="task-form-label">Reference Photos <span style="font-weight:400;color:var(--text-muted);">(optional · max 5)</span></label>
-                <div class="upload-zone" id="taskUploadZone" style="cursor:default;">
-                  <input type="file" id="taskPhotoFiles" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" />
-                  <div class="upload-zone-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                  <p>Drag &amp; drop images here, or</p>
-                  <button type="button" onclick="document.getElementById('taskPhotoFiles').click()" class="btn btn-outline btn-sm" style="margin-top:6px;">Choose Files</button>
-                  <small style="display:block;margin-top:6px;">JPG, PNG or WebP. Max 5 MB each, up to 5 images.</small>
+
+              <div class="pt-group pt-group-title">
+                <div class="pt-label-row">
+                  <label class="pt-label" for="taskTitle">Task Title <span class="pt-req" aria-hidden="true">*</span></label>
+                  <span class="pt-hint"><span class="pt-desk">Be specific to get accurate quotes</span><span class="pt-mob">Be specific</span></span>
                 </div>
-                <div id="taskPhotoProgress" style="display:none;margin-top:6px;font-size:0.8rem;color:var(--blue);">Uploading photos…</div>
-                <div id="taskPhotoPreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+                <div class="pt-field">
+                  <input type="text" id="taskTitle" name="title" class="pt-input" placeholder="e.g. Deep clean 3-bedroom apartment with balcony in Lekki" maxlength="120" required data-field="title" autocomplete="off" />
+                  <svg class="pt-i pt-field-check" id="titleCheck" aria-hidden="true"><use href="#i-check-circle"/></svg>
+                </div>
+                <span class="pt-error" id="titleError" role="alert"></span>
+                <p class="pt-help pt-mob pt-help-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg><span>Good titles get 3x more bids within the first 15 minutes.</span></p>
               </div>
-              <div class="task-submit-section">
-                <button type="submit" class="btn btn-primary btn-lg" id="taskSubmitBtn" style="flex-shrink:0;">Post My Task</button>
-                <p class="task-submit-note">By posting you agree to our <a href="#">Terms</a>. Task goes live to nearby taskers instantly.</p>
+
+              <div class="pt-group pt-group-desc">
+                <div class="pt-label-row">
+                  <label class="pt-label" for="taskDescription"><span class="pt-desk">Task Description</span><span class="pt-mob">Description</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                  <span class="pt-counter" id="descCharCount">0 / 1000</span>
+                </div>
+                <textarea id="taskDescription" name="description" class="pt-input pt-textarea" rows="4" placeholder="Describe the task in detail: what needs doing, any requirements, access details..." maxlength="1000" required data-field="description"></textarea>
+                <span class="pt-error" id="descriptionError" role="alert"></span>
+                <p class="pt-help pt-desk pt-help-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg><span>Pro-tip: Mention whether materials/tools are provided or if the tasker must bring them.</span></p>
+                <p class="pt-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>Min 20 characters. Do not share phone numbers or banking info here.</span></p>
               </div>
-            </form>
-          </div>
+            </section>
+
+            <!-- ── 2 · Execution & Location ──────────────────────── -->
+            <section class="pt-section" aria-labelledby="secExecution">
+              <div class="pt-section-head">
+                <span class="pt-section-num" aria-hidden="true">2</span>
+                <div>
+                  <h2 class="pt-section-title" id="secExecution">Execution &amp; Location</h2>
+                  <p class="pt-section-sub">Tell taskers where and when the work will be performed.</p>
+                </div>
+              </div>
+
+              <div class="pt-group pt-group-mode">
+                <span class="pt-label" id="modeLabel"><span class="pt-desk">Where will this happen? <span class="pt-req" aria-hidden="true">*</span></span><span class="pt-mob">Task Execution Mode</span></span>
+                <div class="pt-modes" role="radiogroup" aria-labelledby="modeLabel">
+                  <label class="pt-mode">
+                    <input type="radio" name="workMode" value="in_person" checked />
+                    <span class="pt-mode-radio" aria-hidden="true"></span>
+                    <span class="pt-mode-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-pin"/></svg></span>
+                    <span class="pt-mode-copy"><span class="pt-mode-title">In Person</span><span class="pt-mode-desc">Tasker arrives at your physical location</span></span>
+                  </label>
+                  <label class="pt-mode">
+                    <input type="radio" name="workMode" value="remote" />
+                    <span class="pt-mode-radio" aria-hidden="true"></span>
+                    <span class="pt-mode-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-laptop"/></svg></span>
+                    <span class="pt-mode-copy"><span class="pt-mode-title">Remote / Online</span><span class="pt-mode-desc">Completed virtually via digital delivery</span></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pt-group pt-group-location" id="locationGroup">
+                <div class="pt-label-row">
+                  <label class="pt-label" for="taskLocation"><span class="pt-desk">Location Address</span><span class="pt-mob">Task Location</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                  <button type="button" class="pt-link" id="useLocationBtn"><svg class="pt-i" aria-hidden="true"><use href="#i-locate"/></svg><span class="pt-desk">Use current location</span><span class="pt-mob">Use Current</span></button>
+                </div>
+                <div class="pt-field pt-loc-wrap">
+                  <svg class="pt-i pt-field-icon" aria-hidden="true"><use href="#i-pin"/></svg>
+                  <input type="text" id="taskLocation" name="location" class="pt-input" placeholder="e.g. Admiralty Way, Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
+                  <div id="taskLocationSuggestions" class="location-suggestions"></div>
+                </div>
+                <div id="locationPrivacyNote" class="pt-help pt-loc-hint">Your exact address is only shared with the confirmed tasker you choose to hire.</div>
+              </div>
+
+              <div class="pt-group pt-group-when">
+                <div class="pt-label-row">
+                  <span class="pt-label" id="whenLabel"><span class="pt-desk">When do you need this completed? <span class="pt-req" aria-hidden="true">*</span></span><span class="pt-mob">When do you need it?</span></span>
+                  <span class="pt-hint pt-mob">Deadline</span>
+                </div>
+                <div class="pt-whens" role="radiogroup" aria-labelledby="whenLabel">
+                  <label class="pt-when"><input type="radio" name="urgency" value="flexible" checked /><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-hourglass"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-calendar-days"/></svg><span>Flexible</span></label>
+                  <label class="pt-when"><input type="radio" name="urgency" value="immediate" /><svg class="pt-i" aria-hidden="true"><use href="#i-zap"/></svg><span><span class="pt-desk">Immediate (Today)</span><span class="pt-mob">Immediate</span></span></label>
+                  <label class="pt-when"><input type="radio" name="urgency" value="scheduled" /><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-calendar"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-calendar-check"/></svg><span>Scheduled</span></label>
+                </div>
+                <div class="pt-schedule" id="schedulePanel">
+                  <div class="pt-schedule-col">
+                    <label class="pt-label pt-label-sm" for="taskDeadline">Target Completion Date</label>
+                    <div class="pt-date">
+                      <span class="pt-date-text" id="deadlineText">Select a date</span>
+                      <svg class="pt-i pt-date-icon" aria-hidden="true"><use href="#i-calendar"/></svg>
+                      <input type="date" id="taskDeadline" name="deadline" class="pt-date-native" required data-field="deadline" />
+                    </div>
+                    <span class="pt-error" id="deadlineError" role="alert"></span>
+                  </div>
+                  <div class="pt-schedule-col">
+                    <span class="pt-label pt-label-sm" id="todLabel">Time of Day Preference</span>
+                    <div class="pt-tod" role="radiogroup" aria-labelledby="todLabel">
+                      <label class="pt-tod-opt"><input type="radio" name="timeOfDay" value="morning" /><span>Morning</span></label>
+                      <label class="pt-tod-opt"><input type="radio" name="timeOfDay" value="afternoon" /><span>Afternoon</span></label>
+                      <label class="pt-tod-opt"><input type="radio" name="timeOfDay" value="evening" /><span>Evening</span></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── 3 · Budget & Pricing ──────────────────────────── -->
+            <section class="pt-section" aria-labelledby="secBudget">
+              <div class="pt-section-head">
+                <span class="pt-section-num" aria-hidden="true">3</span>
+                <div>
+                  <h2 class="pt-section-title" id="secBudget">Budget &amp; Pricing</h2>
+                  <p class="pt-section-sub">Set an estimated budget for this task. You can negotiate when offers arrive.</p>
+                </div>
+              </div>
+
+              <div class="pt-group pt-group-budget">
+                <div class="pt-label-row">
+                  <label class="pt-label" for="taskBudget">Estimated Budget (₦) <span class="pt-req" aria-hidden="true">*</span></label>
+                  <span class="pt-hint"><span class="pt-desk">Minimum ₦500</span><span class="pt-mob">Min ₦500</span></span>
+                </div>
+                <div class="pt-field pt-budget-field">
+                  <span class="pt-naira" aria-hidden="true">₦</span>
+                  <input type="text" inputmode="numeric" id="taskBudget" name="budget" class="pt-input pt-budget" placeholder="25,000" required data-field="budget" autocomplete="off" />
+                </div>
+                <span class="pt-error" id="budgetError" role="alert"></span>
+                <div class="pt-presets">
+                  <span class="pt-presets-label pt-desk">Suggested presets:</span>
+                <button type="button" class="pt-preset" data-budget-chip="2000">₦2,000</button>
+                <button type="button" class="pt-preset" data-budget-chip="5000">₦5,000</button>
+                <button type="button" class="pt-preset" data-budget-chip="10000">₦10,000</button>
+                <button type="button" class="pt-preset" data-budget-chip="25000">₦25,000</button>
+                <button type="button" class="pt-preset" data-budget-chip="35000">₦35,000</button>
+                <button type="button" class="pt-preset" data-budget-chip="50000">₦50,000</button>
+                </div>
+              </div>
+
+              <div class="pt-group pt-group-urgent">
+                <div class="pt-urgent">
+                  <span class="pt-urgent-icon" aria-hidden="true"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-asterisk"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-alert"/></svg></span>
+                  <div class="pt-urgent-copy">
+                    <div class="pt-urgent-title"><span class="pt-desk">Mark as Urgent</span><span class="pt-mob">Urgent Priority</span> <span class="pt-urgent-badge"><span class="pt-desk">URGENT</span><span class="pt-mob">TOP BUMP</span></span></div>
+                    <p class="pt-urgent-desc" id="urgentDesc">
+                      <span class="pt-desk">Pay a one-time <strong>₦1,500</strong> fee to StreetTasker to bump your task to the very top of the tasker feed with push notifications.</span>
+                      <span class="pt-mob">Pay a one-time <strong>₦1,500</strong> fee to prioritize your listing on nearby tasker feeds.</span>
+                    </p>
+                    <p class="pt-urgent-note" id="urgentNote">Switching this on takes you to Paystack to pay. If you close it without paying, nothing is charged and urgent stays off.</p>
+                  </div>
+                  <label class="pt-toggle" aria-label="Mark task as urgent for ₦1,500"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="pt-toggle-track"></span></label>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── 4 · Reference Photos & Media ──────────────────── -->
+            <section class="pt-section" aria-labelledby="secPhotos">
+              <div class="pt-section-head">
+                <span class="pt-section-num" aria-hidden="true">4</span>
+                <div>
+                  <h2 class="pt-section-title" id="secPhotos">Reference Photos &amp; Media</h2>
+                  <p class="pt-section-sub">Add photos so taskers can accurately assess scope and tools needed (Optional · Max 5).</p>
+                </div>
+              </div>
+
+              <div class="pt-group pt-group-photos" id="photosGroup">
+                <div class="pt-label-row pt-mob">
+                  <span class="pt-label">Reference Photos (optional)</span>
+                  <span class="pt-hint">Max 5 photos</span>
+                </div>
+                <div class="pt-dropzone" id="taskUploadZone">
+                  <input type="file" id="taskPhotoFiles" class="pt-file" accept="image/jpeg,image/png,image/webp" multiple />
+                  <span class="pt-dropzone-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-cloud-upload"/></svg></span>
+                  <p class="pt-dropzone-title">Drag &amp; drop photos here, or <button type="button" class="pt-link-inline" id="choosePhotosBtn">Choose Files</button></p>
+                  <p class="pt-dropzone-sub">JPG, PNG or WebP • Max 5 MB each • Up to 5 photos</p>
+                </div>
+                <p class="pt-uploaded-label pt-desk" id="photoCountLabel" hidden>Uploaded reference items (0 of 5):</p>
+                <div class="pt-thumbs" id="taskPhotoPreviews"></div>
+                <p class="pt-help pt-mob">JPG, PNG or WebP up to 5MB each. Clear photos get faster, more accurate bids.</p>
+                <p class="pt-progress-note" id="taskPhotoProgress" hidden>Uploading photos…</p>
+              </div>
+            </section>
+
+            <!-- ── Submit ────────────────────────────────────────── -->
+            <div class="pt-submit">
+              <div class="pt-submit-row">
+                <button type="submit" class="pt-post-btn" id="taskSubmitBtn"><span class="pt-post-label">Post My Task</span><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                <button type="button" class="pt-draft-btn pt-desk" id="saveDraftBtn">Save as Draft</button>
+              </div>
+              <p class="pt-submit-note pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>By posting you agree to our <a href="terms.html">Terms</a>. Task goes live to nearby taskers instantly. 100% Escrow Protected.</span></p>
+              <p class="pt-submit-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><span>Free to post</span><span class="pt-dot" aria-hidden="true"></span><span>Instant local offers</span><span class="pt-dot" aria-hidden="true"></span><span>No hidden fees</span></p>
+            </div>
+          </form>
         </div>
-      </main>
-      <aside class="post-task-sidebar fade-up d2">
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">Quick Categories</div>
-          <div class="category-quick-grid">
-            <button class="category-quick-btn" onclick="setCategory('barber')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/></svg>Barber</button>
-            <button class="category-quick-btn" onclick="setCategory('electrician')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Electrician</button>
-            <button class="category-quick-btn" onclick="setCategory('cleaning')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg>Cleaner</button>
-            <button class="category-quick-btn" onclick="setCategory('mechanic')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mechanic</button>
-            <button class="category-quick-btn" onclick="setCategory('plumber')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>Plumber</button>
-            <button class="category-quick-btn" onclick="setCategory('beauty')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Beauty</button>
+
+        <!-- ── Desktop sidebar ─────────────────────────────────────── -->
+        <aside class="pt-aside pt-desk" aria-label="Posting help">
+          <section class="pt-card pt-tips">
+            <div class="pt-card-head">
+              <span class="pt-card-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg></span>
+              <div><h2 class="pt-card-title">Tips for a great task</h2><p class="pt-card-sub">Attract top-rated taskers faster</p></div>
+            </div>
+            <ul class="pt-tip-list">
+              <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Be specific:</strong> Detail the task clearly. Better instructions consistently attract higher-quality offers.</p></li>
+              <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Set a realistic budget:</strong> Fair pricing ensures enthusiastic, prompt bids from experienced pros.</p></li>
+              <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Include your precise area:</strong> Local taskers can calculate travel time and confirm same-day dispatch.</p></li>
+            </ul>
+          </section>
+
+          <section class="pt-card pt-next">
+            <h2 class="pt-card-title pt-next-title"><svg class="pt-i" aria-hidden="true"><use href="#i-fork"/></svg>What happens next</h2>
+            <ol class="pt-steps">
+              <li><span class="pt-step-num">1</span><div><h3>Your task goes live</h3><p>Nearby vetted taskers in your neighborhood are instantly notified on their phones.</p></div></li>
+              <li><span class="pt-step-num">2</span><div><h3>Receive custom quotes</h3><p>Taskers submit price quotes. Compare their client ratings, completed jobs, and reviews.</p></div></li>
+              <li><span class="pt-step-num">3</span><div><h3>Hire &amp; Pay in Escrow</h3><p>Pick your favorite tasker. Funds stay safely held in escrow until you inspect the completed job.</p></div></li>
+            </ol>
+          </section>
+
+          <section class="pt-escrow">
+            <div class="pt-card-head">
+              <span class="pt-card-icon pt-card-icon-dark"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
+              <div><h2 class="pt-card-title">Escrow Shield</h2><p class="pt-escrow-sub">100% Protected Payments</p></div>
+            </div>
+            <p class="pt-escrow-copy">Zero upfront risk. Your payment stays securely locked in our regulated escrow vault until you physically inspect and approve the completed job.</p>
+            <p class="pt-escrow-foot"><svg class="pt-i" aria-hidden="true"><use href="#i-lock"/></svg>Regulated Partner Bank Integration</p>
+          </section>
+
+          <section class="pt-verified">
+            <span class="pt-verified-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-id-card"/></svg></span>
+            <p>All taskers are ID-verified with BVN/NIN verification checks before submitting offers.</p>
+          </section>
+        </aside>
+      </div>
+
+      <!-- ── Mobile: what happens next + tips ───────────────────────── -->
+      <div class="pt-after pt-mob">
+        <section class="pt-next-m">
+          <h2 class="pt-next-m-title"><svg class="pt-i" aria-hidden="true"><use href="#i-badge-check"/></svg>What happens next?</h2>
+          <ol class="pt-steps-m">
+            <li><span class="pt-step-num">1</span><p>Your task goes live immediately and vetted taskers within 10km get notified.</p></li>
+            <li><span class="pt-step-num">2</span><p>Taskers review details and submit quotes. You compare profiles, ratings, and past job photos.</p></li>
+            <li><span class="pt-step-num">3</span><p>Assign the best tasker. Payment stays safely locked in StreetTasker Escrow until work is 100% completed.</p></li>
+          </ol>
+          <div class="pt-escrow-m">
+            <span class="pt-escrow-m-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <div><h3>100% Escrow Protected</h3><p>Funds are only released when you are satisfied with the result.</p></div>
           </div>
-        </div>
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">Tips for a great task</div>
-          <div class="tip-list">
-            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><span class="tip-text">Be specific about what you need. Better details attract better offers.</span></div>
-            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span class="tip-text">Set a realistic budget based on the task scope.</span></div>
-            <div class="tip-item"><div class="tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg></div><span class="tip-text">Include your precise area so local taskers can find you.</span></div>
-          </div>
-        </div>
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">What happens next</div>
-          <div class="steps-mini">
-            <div class="step-mini"><div class="step-mini-num">1</div><p>Your task goes live and nearby taskers are notified.</p></div>
-            <div class="step-mini"><div class="step-mini-num">2</div><p>Taskers send quotes, compare ratings and prices.</p></div>
-            <div class="step-mini"><div class="step-mini-num">3</div><p>Hire the best tasker, pay securely in-app when done.</p></div>
-          </div>
-        </div>
-      </aside>
+        </section>
+        <section class="pt-tips-m">
+          <h2 class="pt-tips-m-title"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg>Tips for a great task</h2>
+          <p>Set a realistic budget based on the scope to attract top-tier professionals.</p>
+          <p>Include parking, gated estate clearance, or stair climb notes if relevant.</p>
+        </section>
+      </div>
+
     </div>
   </div>
 
@@ -196,8 +416,9 @@
   </div>
 
   <div id="footer-placeholder"></div>
-  <!-- Supabase -->
+  <!-- Supabase + Paystack -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
@@ -205,13 +426,12 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/verify.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/location.js"></script>
   <script>
     function initPage() {
       initTaskForm();
-      initPostSteps();
-      initTaskPhotoUpload();
       /* Wire location autocomplete + GPS */
       initLocationInput({
         inputId:    'taskLocation',
@@ -219,96 +439,6 @@
         gps: true,
         mode: 'precise',
       });
-    }
-    function setCategory(cat) {
-      const sel = document.getElementById('taskCategory');
-      if (sel) { sel.value = cat; sel.dispatchEvent(new Event('input')); }
-    }
-
-    /* ── Task photo upload ───────────────────────────────────── */
-    const taskUploadedPhotoUrls = [];
-
-    function initTaskPhotoUpload() {
-      const zone  = document.getElementById('taskUploadZone');
-      const input = document.getElementById('taskPhotoFiles');
-      if (!zone || !input) return;
-
-      input.addEventListener('change', () => handleTaskFiles(Array.from(input.files)));
-
-      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        handleTaskFiles(Array.from(e.dataTransfer.files));
-      });
-    }
-
-    function handleTaskFiles(files) {
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-      const allowed = files.filter(f => ALLOWED_TYPES.includes(f.type));
-      if (allowed.length === 0) { showToast('Please select image files (JPG, PNG, or WebP only).'); return; }
-      const tooBig  = allowed.filter(f => f.size > 5 * 1024 * 1024);
-      if (tooBig.length) { showToast(`${tooBig.length} file(s) exceed 5 MB and will be skipped.`); }
-      const valid = allowed.filter(f => f.size <= 5 * 1024 * 1024);
-      const remaining = 5 - taskUploadedPhotoUrls.length;
-      valid.slice(0, remaining).forEach(previewTaskPhoto);
-    }
-
-    function previewTaskPhoto(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const wrap = document.getElementById('taskPhotoPreviews');
-        const idx  = taskUploadedPhotoUrls.length;
-        // Store file for upload, show preview immediately
-        taskUploadedPhotoUrls.push({ file, url: null, dataUrl: e.target.result });
-        const div = document.createElement('div');
-        div.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0;';
-        div.id = `tp-${idx}`;
-        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border);" />
-          <button type="button" onclick="removeTaskPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>`;
-        wrap.appendChild(div);
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeTaskPhoto(idx) {
-      taskUploadedPhotoUrls.splice(idx, 1);
-      const el = document.getElementById(`tp-${idx}`);
-      if (el) el.remove();
-      // Re-index remaining previews
-      document.querySelectorAll('#taskPhotoPreviews > div').forEach((div, i) => {
-        div.id = `tp-${i}`;
-        const btn = div.querySelector('button');
-        if (btn) btn.setAttribute('onclick', `removeTaskPhoto(${i})`);
-      });
-    }
-    window.removeTaskPhoto = removeTaskPhoto;
-
-    async function uploadTaskPhotos() {
-      const prog = document.getElementById('taskPhotoProgress');
-      const toUpload = taskUploadedPhotoUrls.filter(p => p.file && !p.url);
-      if (!toUpload.length) return taskUploadedPhotoUrls.map(p => p.url).filter(Boolean);
-      if (prog) prog.style.display = 'block';
-      try {
-        const { data: { user } } = await window.supabase.auth.getUser();
-        const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-        const uploaded = await Promise.all(toUpload.map(async (p, i) => {
-          const ext  = extMap[p.file.type] || 'jpg';
-          const name = `tasks/${user.id}-${Date.now()}-${i}.${ext}`;
-          const { error } = await window.supabase.storage.from('task-images').upload(name, p.file, { cacheControl:'3600', upsert:true });
-          if (error) { console.warn('[Upload] task photo failed:', error.message); return null; }
-          const { data: urlData } = window.supabase.storage.from('task-images').getPublicUrl(name);
-          p.url = urlData.publicUrl;
-          return p.url;
-        }));
-        return uploaded.filter(Boolean);
-      } catch(e) {
-        console.warn('[Upload] task photo upload error:', e.message);
-        return [];
-      } finally {
-        if (prog) prog.style.display = 'none';
-      }
     }
   </script>
   <script>
@@ -320,7 +450,7 @@
         if (!_gu) return;
         var role = (_gu.user_metadata && _gu.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
         if (role === 'tasker') {
-          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don't post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
+          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don\'t post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
         }
       } catch(e) {}
     })();

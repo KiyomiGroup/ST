@@ -41,7 +41,7 @@ function _parseRate(raw) {
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null }) {
+async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null, frequency = 'one_off', workMode = 'in_person', timeOfDay = null, urgentPaid = false, urgentFee = 0, urgentPaymentRef = null, photoLabels = [] }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -61,7 +61,25 @@ async function postTask({ title, description, category, budget, location, deadli
   };
   if (photoUrls && photoUrls.length) payload.photo_urls = photoUrls;
 
-  const { data, error } = await window.supabase.from('tasks').insert(payload).select().single();
+  /* Columns added by sql/post-task-redesign.sql */
+  const extended = Object.assign({}, payload, {
+    frequency:          frequency || 'one_off',
+    work_mode:          workMode || 'in_person',
+    time_of_day:        timeOfDay || null,
+    urgent_paid:        !!urgentPaid,
+    urgent_fee:         urgentPaid ? (parseFloat(urgentFee) || 0) : 0,
+    urgent_payment_ref: urgentPaid ? (urgentPaymentRef || null) : null,
+    photo_labels:       photoLabels && photoLabels.length ? photoLabels : [],
+  });
+
+  let { data, error } = await window.supabase.from('tasks').insert(extended).select().single();
+
+  /* If the migration has not been run yet (unknown column), post with the
+     original columns so posting never breaks. */
+  if (error && /column|schema cache/i.test(error.message || '')) {
+    console.warn('[postTask] new columns missing, run sql/post-task-redesign.sql:', error.message);
+    ({ data, error } = await window.supabase.from('tasks').insert(payload).select().single());
+  }
   if (error) throw error;
 
   /* Notify nearby taskers (non-blocking) */
