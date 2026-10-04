@@ -127,6 +127,44 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script>
+    /* ── Where to go after login ──────────────────────────────────
+       Pages send people here with ?redirect=<page>. Only a page on this
+       site is accepted, so the link cannot send anyone to another site.
+       Google/Apple leave the site and come back without that parameter,
+       so the destination is parked in this tab's sessionStorage first. */
+    const POST_LOGIN_KEY = 'st_post_login';
+    const POST_LOGIN_MAX_AGE = 30 * 60 * 1000;
+
+    function safeRedirect(raw) {
+      if (!raw) return null;
+      try {
+        const u = new URL(raw, window.location.origin + '/');
+        if (u.origin !== window.location.origin) return null;
+        if (u.pathname === '/login.html' || u.pathname === '/signup.html') return null;
+        return u.pathname + u.search + u.hash;
+      } catch (e) { return null; }
+    }
+    function requestedRedirect() {
+      return safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
+    }
+    function rememberRedirect() {
+      try {
+        const to = requestedRedirect();
+        if (to) sessionStorage.setItem(POST_LOGIN_KEY, JSON.stringify({ to: to, at: Date.now() }));
+        else sessionStorage.removeItem(POST_LOGIN_KEY);
+      } catch (e) { /* storage blocked: they land on their dashboard instead */ }
+    }
+    function takeRememberedRedirect() {
+      try {
+        const raw = sessionStorage.getItem(POST_LOGIN_KEY);
+        sessionStorage.removeItem(POST_LOGIN_KEY);
+        if (!raw) return null;
+        const d = JSON.parse(raw);
+        if (!d || !d.at || Date.now() - d.at > POST_LOGIN_MAX_AGE) return null;
+        return safeRedirect(d.to);
+      } catch (e) { return null; }
+    }
+
     function initPage() {
       /* ── Google OAuth callback ─────────────────────────────────
          After the OAuth provider redirects back, Supabase fires
@@ -186,7 +224,7 @@
             const role = existingUser.role || oauthRole || 'customer';
             localStorage.setItem('st_role', role);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
-            window.location.replace(role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+            window.location.replace(takeRememberedRedirect() || (role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html'));
           }
         }
 
@@ -253,8 +291,7 @@
       /* ── If already logged in, redirect away ── */
       window.ST.auth.getSession().then(session => {
         if (session) {
-          const redirect = new URLSearchParams(window.location.search).get('redirect');
-          window.location.href = redirect || 'index.html';
+          window.location.href = requestedRedirect() || 'index.html';
         }
       });
 
@@ -279,7 +316,7 @@
         try {
           const { user } = await window.ST.auth.loginUser(email, pwd);
 
-          const redirect = new URLSearchParams(window.location.search).get('redirect');
+          const redirect = requestedRedirect();
           if (redirect) {
             showToast('Welcome back! Redirecting...');
             setTimeout(() => { window.location.href = redirect; }, 800);
@@ -338,6 +375,7 @@
     window.handleForgotPassword = handleForgotPassword;
 
     async function handleGoogleSignIn() {
+      rememberRedirect();
       try {
         const { error } = await window.supabase.auth.signInWithOAuth({
           provider: 'google',
@@ -349,6 +387,7 @@
     window.handleGoogleSignIn = handleGoogleSignIn;
 
     async function handleAppleSignIn() {
+      rememberRedirect();
       try {
         const { error } = await window.supabase.auth.signInWithOAuth({
           provider: 'apple',
