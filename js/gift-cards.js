@@ -54,8 +54,9 @@
 /* Gift Cards page: "Personalize" section (#customize).
    Keeps the form, the live preview card and the order summary in sync, reads
    ?card= and ?amount= from the category cards, and validates on submit.
-   When the form is valid it fires a "gc:checkout" event on document with the
-   order details; hook the payment step to that event. */
+   When the form is valid it asks the create-gift-card-checkout Edge Function
+   to start a Paystack payment and sends the buyer to Paystack's hosted page.
+   The price is worked out on the server; nothing sent from here sets it. */
 (function () {
   'use strict';
 
@@ -89,6 +90,10 @@
   var noteEl = document.getElementById('gc-cz-note');
   var timingEl = document.getElementById('gc-cz-timing');
   var dateEl = document.getElementById('gc-cz-date');
+  var buyerWrap = form.querySelector('.gc-cz-field--buyer');
+  var buyerEl = document.getElementById('gc-cz-buyer');
+  var payButtons = form.querySelectorAll('.gc-cz-checkout, .gc-buybar-btn');
+  var checkoutErrors = form.querySelectorAll('[data-checkout-error]');
 
   function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
   function pv(key) { return form.querySelector('[data-pv="' + key + '"]'); }
@@ -120,7 +125,7 @@
     var amountText = state.amount > 0 ? naira(state.amount) : '\u20A60';
     pv('amount').textContent = amountText;
     sum('amount').textContent = amountText;
-    sum('total').textContent = amountText;
+    form.querySelectorAll('[data-sum="total"]').forEach(function (el) { el.textContent = amountText; });
 
     pv('theme').textContent = theme.label;
     form.querySelector('[data-pv-icon]').setAttribute('href', theme.icon);
@@ -207,6 +212,13 @@
     if (!val(senderEl)) fail('sender', senderEl, 'Enter your name so they know who it\u2019s from.');
     else clearError('sender', senderEl);
 
+    if (!buyerWrap.hidden) {
+      var buyer = val(buyerEl);
+      if (!buyer) fail('buyer', buyerEl, 'Enter your email so we can send your receipt.');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer)) fail('buyer', buyerEl, 'Enter a valid email address.');
+      else clearError('buyer', buyerEl);
+    }
+
     if (timingEl.value === 'later' && (!dateEl.value || dateEl.value < today())) {
       fail('date', dateEl, 'Pick a delivery date from today onwards.');
     } else { clearError('date', dateEl); }
@@ -244,27 +256,107 @@
     else if (t === dateEl) { clearError('date', dateEl); }
   });
 
-  [[nameEl, 'name'], [contactEl, 'contact'], [senderEl, 'sender']].forEach(function (p) {
+  [[nameEl, 'name'], [contactEl, 'contact'], [senderEl, 'sender'], [buyerEl, 'buyer']].forEach(function (p) {
     p[0].addEventListener('input', function () { clearError(p[1], p[0]); render(); });
   });
   noteEl.addEventListener('input', render);
+
+  // ── Checkout: server creates the order, Paystack takes the payment ──
+  var busy = false;
+  var FUNCTIONS_URL = (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '') + '/functions/v1/';
+  var ANON_KEY = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '';
+
+  // Guests give an email for the receipt; logged-in buyers use their account email
+  function syncBuyerField() {
+    var auth = window.supabase && window.supabase.auth;
+    if (!auth) { buyerWrap.hidden = false; return; }
+    auth.getSession().then(function (r) {
+      buyerWrap.hidden = !!(r && r.data && r.data.session);
+    }).catch(function () { buyerWrap.hidden = false; });
+    if (auth.onAuthStateChange) auth.onAuthStateChange(function (_event, session) { buyerWrap.hidden = !!session; });
+  }
+
+  function showCheckoutError(text) {
+    checkoutErrors.forEach(function (el) { el.textContent = text || ''; el.hidden = !text; });
+  }
+
+  function setBusy(on) {
+    busy = on;
+    form.setAttribute('aria-busy', on ? 'true' : 'false');
+    payButtons.forEach(function (b) {
+      var label = b.querySelector('.gc-cz-btn-label');
+      if (on && label && !b.dataset.label) b.dataset.label = label.textContent;
+      if (label) label.textContent = on ? 'Taking you to Paystack\u2026' : (b.dataset.label || label.textContent);
+      b.disabled = on;
+    });
+  }
+
+  // Map the server's field names onto the form's error slots
+  var SERVER_FIELDS = {
+    amount: ['amount', customInput], recipientName: ['name', nameEl], recipientContact: ['contact', contactEl],
+    senderName: ['sender', senderEl], sendOn: ['date', dateEl], buyerEmail: ['buyer', buyerEl]
+  };
+
+  function startCheckout(order) {
+    if (busy) return;
+    showCheckoutError('');
+    setBusy(true);
+
+    var auth = window.supabase && window.supabase.auth;
+    var sessionP = auth ? auth.getSession().catch(function () { return null; }) : Promise.resolve(null);
+
+    sessionP.then(function (r) {
+      var token = r && r.data && r.data.session ? r.data.session.access_token : '';
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, 25000);
+      return fetch(FUNCTIONS_URL + 'create-gift-card-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: 'Bearer ' + (token || ANON_KEY) },
+        body: JSON.stringify(order),
+        signal: ctrl.signal
+      }).then(function (res) {
+        clearTimeout(timer);
+        return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, data: data }; });
+      }, function (err) { clearTimeout(timer); throw err; });
+    }).then(function (out) {
+      var url = out.data && out.data.authorization_url;
+      if (out.ok && typeof url === 'string' && url.indexOf('https://checkout.paystack.com/') === 0) {
+        window.location.assign(url);       // stay "busy" while the browser leaves
+        return;
+      }
+      setBusy(false);
+      var slot = out.data && SERVER_FIELDS[out.data.field];
+      if (slot) {
+        if (slot[0] === 'buyer') buyerWrap.hidden = false;   // logged-in account without an email
+        setError(slot[0], slot[1], out.data.error);
+        slot[1].focus();
+      } else {
+        showCheckoutError((out.data && out.data.error) || 'We couldn\u2019t start the payment. Please try again.');
+      }
+    }).catch(function () {
+      setBusy(false);
+      showCheckoutError('We couldn\u2019t reach the payment service. Check your connection and try again.');
+    });
+  }
+
+  // Coming back with the browser's Back button from Paystack
+  window.addEventListener('pageshow', function (e) { if (e.persisted) setBusy(false); });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var bad = validate();
     if (bad) { bad.focus(); return; }
-    document.dispatchEvent(new CustomEvent('gc:checkout', {
-      detail: {
-        theme: state.theme,
-        amount: state.amount,
-        delivery: checked('delivery'),
-        recipientName: val(nameEl),
-        recipientContact: val(contactEl),
-        senderName: val(senderEl),
-        message: val(noteEl),
-        sendOn: timingEl.value === 'later' ? dateEl.value : 'now'
-      }
-    }));
+    startCheckout({
+      theme: state.theme,
+      amount: state.amount,
+      delivery: checked('delivery'),
+      recipientName: val(nameEl),
+      recipientContact: val(contactEl),
+      senderName: val(senderEl),
+      message: val(noteEl) || THEMES[state.theme].msg,   // what the preview shows is what gets sent
+      sendOn: timingEl.value === 'later' ? dateEl.value : 'now',
+      buyerEmail: buyerWrap.hidden ? '' : val(buyerEl)
+    });
   });
 
   // The category cards fire this before they navigate
@@ -272,8 +364,82 @@
     if (e.detail) applySelection(e.detail.card, e.detail.amount);
   });
 
+  syncBuyerField();
+
   // Initial state from the URL, otherwise the defaults in the markup
   var params = new URLSearchParams(window.location.search);
   if (params.get('card') || params.get('amount')) applySelection(params.get('card'), params.get('amount'));
   else render();
+})();
+
+/* Gift Cards page: "Already have a card?" balance check (#check-balance).
+   There is no balance lookup in the project yet, so this only validates the
+   code and hands it off. To connect it, listen for "gc:check-balance" on
+   document, call event.preventDefault() to say you are handling it, look the
+   code up (for example with a Supabase rpc), then call detail.done():
+     done({ ok: true, balance: 30000 })
+     done({ ok: false, message: 'We could not find that code.' })
+   If nothing handles the event, the page shows a "not available yet" message. */
+(function () {
+  'use strict';
+
+  var form = document.getElementById('gc-bal-form');
+  if (!form) return;
+  var input = document.getElementById('gc-bal-code');
+  var button = form.querySelector('.gc-bal-btn');
+  var out = document.getElementById('gc-bal-result');
+
+  function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
+
+  // The two designs show different example codes
+  var phones = window.matchMedia('(max-width: 768px)');
+  function placeholder() { input.setAttribute('placeholder', phones.matches ? 'STK-XXXX-XXXX-XXXX' : 'e.g. ST-7892-4410-9921'); }
+  placeholder();
+  if (phones.addEventListener) phones.addEventListener('change', placeholder);
+
+  function show(kind, text) {
+    out.hidden = !text;
+    out.textContent = text || '';
+    out.classList.toggle('is-success', kind === 'success');
+    out.classList.toggle('is-error', kind === 'error');
+    if (kind === 'error') input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+  }
+
+  function busy(on) {
+    button.disabled = on;
+    form.setAttribute('aria-busy', on ? 'true' : 'false');
+  }
+
+  input.addEventListener('input', function () { if (input.getAttribute('aria-invalid')) show('', ''); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = input.value.toUpperCase().replace(/\s+/g, '');
+    var chars = code.replace(/-/g, '');
+
+    if (!chars) { show('error', 'Enter your voucher code.'); input.focus(); return; }
+    if (!/^[A-Z0-9-]+$/.test(code) || chars.length < 12 || chars.length > 16) {
+      show('error', 'That code doesn\u2019t look right. Check it and try again.');
+      input.focus();
+      return;
+    }
+
+    busy(true);
+    show('', 'Checking your balance\u2026');
+    var finished = false;
+    function done(result) {
+      if (finished) return;
+      finished = true;
+      busy(false);
+      if (result && result.ok) show('success', 'Available balance: ' + naira(result.balance));
+      else show('error', (result && result.message) || 'We could not find that code. Check it and try again.');
+    }
+
+    var handled = !document.dispatchEvent(new CustomEvent('gc:check-balance', {
+      cancelable: true,
+      detail: { code: code, done: done }
+    }));
+    if (!handled) done({ ok: false, message: 'Balance checks are not available yet. Please try again soon.' });
+  });
 })();

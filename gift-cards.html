@@ -420,11 +420,17 @@
                   <input id="gc-cz-date" class="gc-cz-input gc-cz-date" type="date" name="delivery_date" aria-label="Delivery date" aria-describedby="gc-cz-err-date" hidden />
                   <p class="gc-cz-error" id="gc-cz-err-date" role="alert" hidden></p>
                 </div>
+                <div class="gc-cz-field gc-cz-field--buyer" hidden>
+                  <label class="gc-cz-label" for="gc-cz-buyer">Your Email (for your receipt)</label>
+                  <input id="gc-cz-buyer" class="gc-cz-input" type="email" name="buyer_email" maxlength="254" autocomplete="email" inputmode="email" placeholder="e.g. amaka@example.com" aria-describedby="gc-cz-err-buyer" />
+                  <p class="gc-cz-error" id="gc-cz-err-buyer" role="alert" hidden></p>
+                </div>
                 <div class="gc-cz-field gc-cz-field--note">
                   <label class="gc-cz-label" for="gc-cz-note"><span class="gc-desktop-only">Personal Gift Note</span><span class="gc-mobile-only">Personal Message (Optional)</span></label>
                   <textarea id="gc-cz-note" class="gc-cz-input gc-cz-textarea" name="message" rows="3" maxlength="200" placeholder="Enjoy a spotless home on me! Kick back and let StreetTasker handle the chores."></textarea>
                 </div>
               </div>
+              <p class="gc-cz-error gc-cz-checkout-error gc-cz-checkout-error--panel" data-checkout-error role="alert" hidden></p>
             </div>
           </div>
 
@@ -458,10 +464,20 @@
                 <div class="gc-cz-row"><dt data-sum="delivery-label">Instant Delivery:</dt><dd class="gc-cz-free">Free</dd></div>
               </dl>
               <div class="gc-cz-total"><span>Total Payable:</span><strong data-sum="total">₦30,000</strong></div>
-              <button type="submit" class="btn gc-cz-checkout">Proceed to Secure Checkout<svg class="gc-icon" aria-hidden="true"><use href="#gc-arrow-right"/></svg></button>
+              <p class="gc-cz-error gc-cz-checkout-error" data-checkout-error role="alert" hidden></p>
+              <button type="submit" class="btn gc-cz-checkout"><span class="gc-cz-btn-label">Proceed to Secure Checkout</span><svg class="gc-icon" aria-hidden="true"><use href="#gc-arrow-right"/></svg></button>
               <p class="gc-cz-secure"><svg class="gc-icon" aria-hidden="true"><use href="#gc-lock"/></svg>256-Bit Escrow Secured • Paystack • Flutterwave • Bank Card</p>
             </div>
           </aside>
+
+          <!-- Phones: sticky total + buy button (the summary card above is desktop only) -->
+          <div class="gc-buybar">
+            <p class="gc-buybar-total">
+              <span class="gc-buybar-label">Total Voucher Value</span>
+              <strong class="gc-buybar-amount" data-sum="total">₦30,000</strong>
+            </p>
+            <button type="submit" class="btn gc-buybar-btn"><span class="gc-cz-btn-label">Buy Gift Card Now</span><svg class="gc-icon" aria-hidden="true"><use href="#gc-arrow-right"/></svg></button>
+          </div>
         </form>
       </div>
     </section>

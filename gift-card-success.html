@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Your Gift Card — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/gift-cards.css" />
+</head>
+<body class="page-gift-card-success">
+  <div id="navbar-placeholder"></div>
+
+  <svg class="gc-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="gc-handshake" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol>
+      <symbol id="gc-brush" viewBox="0 0 24 24"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></symbol>
+      <symbol id="gc-cake" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></symbol>
+      <symbol id="gc-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+      <symbol id="gc-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+      <symbol id="gc-party" viewBox="0 0 24 24"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></symbol>
+      <symbol id="gc-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></symbol>
+      <symbol id="gc-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="gc-printer" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></symbol>
+      <symbol id="gc-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="gc-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+      <symbol id="gc-message-circle" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="gc-page" role="main">
+    <section class="gcs" aria-live="polite">
+
+      <!-- Waiting for Paystack to confirm -->
+      <div class="gcs-state" id="gcs-loading">
+        <span class="gcs-spinner" aria-hidden="true"></span>
+        <h1 class="gcs-title" tabindex="-1">Confirming your payment…</h1>
+        <p class="gcs-lead">This only takes a moment. Please don't close this page.</p>
+      </div>
+
+      <!-- Paid: the card and its code -->
+      <div class="gcs-state" id="gcs-paid" hidden>
+        <span class="gcs-badge"><svg class="gc-icon" aria-hidden="true"><use href="#gc-check-circle"/></svg></span>
+        <h1 class="gcs-title" tabindex="-1">Payment confirmed</h1>
+        <p class="gcs-lead">Your gift card for <strong data-f="recipient"></strong> is ready.</p>
+
+        <div class="gc-cz-card gcs-card" role="group" aria-label="Your gift card">
+          <div class="gc-cz-card-top">
+            <span class="gc-cz-card-brand"><svg class="gc-icon" aria-hidden="true"><use href="#gc-handshake"/></svg>StreetTasker</span>
+            <span class="gc-cz-card-pill"><svg class="gc-icon" aria-hidden="true"><use href="#gc-gift" data-f-icon/></svg><span data-f="theme"></span></span>
+          </div>
+          <p class="gc-cz-card-label">Gift Voucher For</p>
+          <p class="gc-cz-card-name" data-f="recipient"></p>
+          <p class="gc-cz-card-msg" data-f="message"></p>
+          <div class="gc-cz-card-bottom">
+            <div>
+              <p class="gc-cz-card-label">Value</p>
+              <p class="gc-cz-card-value" data-f="amount"></p>
+            </div>
+            <div class="gc-cz-card-from">
+              <p class="gc-cz-card-label">From</p>
+              <p class="gc-cz-card-sender" data-f="sender"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="gcs-code">
+          <div class="gcs-code-text">
+            <span class="gcs-code-label">Voucher code</span>
+            <strong class="gcs-code-value" data-f="code"></strong>
+          </div>
+          <button type="button" class="btn gcs-btn gcs-btn--ghost" id="gcs-copy"><svg class="gc-icon" aria-hidden="true"><use href="#gc-copy"/></svg><span>Copy</span></button>
+        </div>
+        <p class="gcs-note">Keep this code safe. Whoever has it can redeem the card.</p>
+
+        <div class="gcs-actions">
+          <button type="button" class="btn gcs-btn gcs-btn--primary" id="gcs-print"><svg class="gc-icon" aria-hidden="true"><use href="#gc-printer"/></svg>Save as PDF / Print</button>
+          <a class="btn gcs-btn gcs-btn--ghost" id="gcs-share" href="#" target="_blank" rel="noopener"><svg class="gc-icon" aria-hidden="true"><use href="#gc-message-circle"/></svg>Share on WhatsApp</a>
+        </div>
+        <a class="gcs-link" href="gift-cards.html">Buy another gift card<svg class="gc-icon" aria-hidden="true"><use href="#gc-arrow-right"/></svg></a>
+      </div>
+
+      <!-- Anything that is not a confirmed payment -->
+      <div class="gcs-state" id="gcs-problem" hidden>
+        <h1 class="gcs-title" tabindex="-1" data-f="problem-title"></h1>
+        <p class="gcs-lead" data-f="problem-text"></p>
+        <p class="gcs-note" id="gcs-problem-ref" hidden>Payment reference: <strong data-f="reference"></strong></p>
+        <div class="gcs-actions">
+          <button type="button" class="btn gcs-btn gcs-btn--primary" id="gcs-retry" hidden>Check again</button>
+          <a class="btn gcs-btn gcs-btn--ghost" href="gift-cards.html#customize">Back to gift cards</a>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/gift-card-success.js"></script>
+</body>
+</html>
