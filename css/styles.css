@@ -3405,9 +3405,9 @@ body.ds-page #navbar { display: none; }
    - Logo -16- [Post a Task] -16- Find Tasks -16- Find Taskers -16-
      Local Taskers -16- Gift Cards ... flexible space ...
      Sign Up -16- Log in -16- [Become a Tasker]  (pinned right)
-   - Manrope 16px for links and buttons
-   - Post a Task: 133x40, padding 8/24, --color-primary
-   - Become a Tasker: 174x40, padding 14/24, --color-primary-soft
+   - Manrope 14px for links and buttons (Airtasker-scale: compact, professional)
+   - Post a Task: 36px tall, width from content, 24px side padding, --color-primary
+   - Become a Tasker: 36px tall, width from content, 24px side padding, --color-primary-soft
    ================================================================ */
 @media (min-width: 1044px) {
   body:not(.st-logged-in) { --nav-height: 60px; }
@@ -3423,7 +3423,7 @@ body.ds-page #navbar { display: none; }
   }
 
   body:not(.st-logged-in) .nav-left { margin-right: var(--space-4); flex: 0 0 auto; }
-  body:not(.st-logged-in) .nav-logo img { width: 133px; height: 22px; }
+  body:not(.st-logged-in) .nav-logo img { width: 120px; height: 20px; }
 
   /* Links row */
   body:not(.st-logged-in) .nav-links-loggedout {
@@ -3438,7 +3438,7 @@ body.ds-page #navbar { display: none; }
     height: 40px; padding: 0; margin: 0; border-radius: 0;
     background: transparent; border: 0; box-shadow: none;
     font-family: var(--font-heading);
-    font-size: var(--text-base); font-weight: 600; line-height: 1; letter-spacing: 0;
+    font-size: var(--text-base-sm); font-weight: 500; line-height: 1; letter-spacing: 0;
     color: var(--color-text-nav-link); white-space: nowrap; position: relative;
   }
   body:not(.st-logged-in) .nav-links-loggedout a.nav-link:hover,
@@ -3484,17 +3484,17 @@ body.ds-page #navbar { display: none; }
   body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn {
     box-sizing: border-box; flex: 0 0 auto;
     display: inline-flex; align-items: center; justify-content: center;
-    height: 40px; margin: 0; border: 0; border-radius: var(--radius-pill); box-shadow: none;
+    height: 36px; margin: 0; border: 0; border-radius: var(--radius-pill); box-shadow: none;
     font-family: var(--font-heading);
-    font-size: var(--text-base); line-height: 1; letter-spacing: 0; white-space: nowrap;
+    font-size: var(--text-base-sm); line-height: 1; letter-spacing: 0; white-space: nowrap;
   }
   body:not(.st-logged-in) .nav-links-loggedout .nav-post-btn {
-    width: 133px; padding: var(--space-2) var(--space-5);
+    padding: 0 var(--space-5);
     background: var(--color-primary); color: var(--color-text-on-primary); font-weight: 600;
   }
   body:not(.st-logged-in) .nav-links-loggedout .nav-post-btn:hover { background: var(--color-primary-hover); box-shadow: none; }
   body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn {
-    width: 174px; padding: 14px var(--space-5);
+    padding: 0 var(--space-5);
     background: var(--color-primary-soft); color: var(--color-text-nav); font-weight: 500;
   }
   body:not(.st-logged-in) #navActionsLoggedOut .nav-become-btn:hover { background: var(--color-primary-soft-hover); border: 0; }

@@ -84,7 +84,7 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 | `--text-xs` | 0.75rem (12px) | Captions, meta rows, badges | 0.72, 0.73, 0.74, 0.75, 0.76rem |
 | `--text-sm` | 0.8125rem (13px) | Secondary text, small buttons, form labels | 0.78, 0.8, 0.82, 0.83rem |
 | `--text-base-sm` | 0.875rem (14px) | Dense UI body, table text | 0.84, 0.85, 0.875, 0.88rem |
-| `--text-base` | 1rem (16px) | Default body, nav links, nav buttons | 0.9 to 1rem, 16px |
+| `--text-base` | 1rem (16px) | Default body text | 0.9 to 1rem, 16px |
 | `--text-lg` | 1.125rem (18px) | Lead paragraphs, card titles | 1.05 to 1.2rem |
 | `--text-xl` | 1.5rem (24px) | Section sub-headings | 1.4, 1.5rem |
 | `--text-2xl` | 2rem (32px) | Page headings | 2rem |
@@ -195,15 +195,15 @@ Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block 
 | Item | Spec |
 |---|---|
 | Container | 1312px wide, centred, 10px padding on all sides, 60px tall. On screens under 1432px: 60px margin each side instead of full width |
-| Logo | 133 x 22, then 16px to the first item |
+| Logo | 120 x 20, then 16px to the first item |
 | Links | Post a Task, Find Tasks, Find Taskers, Local Taskers, Gift Cards. 16px apart |
 | Right group | Sign Up, Log in, Become a Tasker. 16px apart, pinned to the right edge |
 | Space | Whatever is left sits between Gift Cards and Sign Up |
-| Link text | Manrope 16px, weight 600, `--color-text-nav-link`, no padding. Hover: text turns `--color-primary` and a `--nav-hover-bar` (4px) bar of `--color-primary` appears above the link, the width of the link, 8px above its box (centre links and Sign Up / Log in) |
-| Post a Task | 133 x 40, padding 8 / 24, `--color-primary` fill, white text, weight 600 |
-| Become a Tasker | 174 x 40, padding 14 / 24, `--color-primary-soft` fill, dark text, weight 500 |
+| Link text | Manrope 14px (`--text-base-sm`), weight 500, `--color-text-nav-link`, no padding. Hover: text turns `--color-primary` and a `--nav-hover-bar` (4px) bar of `--color-primary` appears above the link, the width of the link, 8px above its box (centre links and Sign Up / Log in) |
+| Post a Task | 36px tall, width from content, padding 0 / 24, `--color-primary` fill, white text, weight 600 |
+| Become a Tasker | 36px tall, width from content, padding 0 / 24, `--color-primary-soft` fill, dark text, weight 500 |
 
-The nav block uses tokens for colours, font family and size, and most spacing. The fixed widths and heights (133, 174, 40, 1312) are part of the spec and stay literal.
+The nav block uses tokens for colours, font family and size, and most spacing. The fixed sizes (logo 120 x 20, button height 36, link row height 40, nav width 1312) are part of the spec and stay literal.
 
 ---
 
