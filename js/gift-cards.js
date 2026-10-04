@@ -358,7 +358,9 @@
       } else {
         showCheckoutError((out.data && out.data.error) || 'We couldn\u2019t start the payment. Please try again.');
       }
-    }).catch(function () {
+    }).catch(function (err) {
+      // The console line is for whoever is debugging: it says whether the call timed out or was refused
+      if (window.console) console.error('[gift-cards] checkout request failed:', (err && err.name) || '', (err && err.message) || err, '→', FUNCTIONS_URL + 'create-gift-card-checkout');
       setBusy(false);
       showCheckoutError('We couldn\u2019t reach the payment service. Check your connection and try again.');
     });
@@ -464,5 +466,36 @@
       detail: { code: code, done: done }
     }));
     if (!handled) done({ ok: false, message: 'Balance checks are not available yet. Please try again soon.' });
+  });
+})();
+
+/* Gift Cards page: connects the "Already have a card?" box to the gift-card-redeem
+   Edge Function. The server decides everything; this only asks and shows the answer. */
+(function () {
+  'use strict';
+  var URL_ = (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '') + '/functions/v1/gift-card-redeem';
+  var KEY = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '';
+
+  document.addEventListener('gc:check-balance', function (e) {
+    e.preventDefault();
+    var done = e.detail.done;
+    fetch(URL_, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + KEY },
+      body: JSON.stringify({ action: 'check', code: e.detail.code })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (d) { return { status: res.status, d: d }; });
+    }).then(function (out) {
+      var d = out.d || {};
+      if (out.status === 200) {
+        if (d.status === 'redeemed') done({ ok: false, message: 'This card has already been redeemed.' });
+        else if (d.status === 'void') done({ ok: false, message: 'This card is no longer valid.' });
+        else done({ ok: true, balance: d.balance });
+        return;
+      }
+      done({ ok: false, message: d.error || 'We could not check that code. Please try again.' });
+    }).catch(function () {
+      done({ ok: false, message: 'We could not reach the server. Check your connection and try again.' });
+    });
   });
 })();
