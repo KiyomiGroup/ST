@@ -764,7 +764,6 @@
    Checkout: guest email field, error slots, busy state, and the
    sticky "Buy Gift Card Now" bar for phones.
    ============================================================ */
-.gc-cz-field--buyer { grid-column: 1 / -1; }
 .gc-cz-checkout-error { margin: 0 0 var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-danger-soft); font-size: var(--text-sm); }
 .gc-cz-checkout-error--panel { display: none; margin: var(--space-4) 0 0; }
 .gc-cz-checkout:disabled, .gc-buybar-btn:disabled { opacity: 0.65; cursor: progress; }
@@ -772,7 +771,6 @@
 .gc-buybar { display: none; }
 
 @media (max-width: 768px) {
-  .gc-cz-field--buyer { order: 5; }
   .gc-cz-input, .gc-cz-custom-input { scroll-margin-bottom: 120px; }   /* keep a focused field clear of the buy bar */
   .gc-cz-checkout-error--panel:not([hidden]) { display: block; }
 
@@ -840,6 +838,7 @@
   letter-spacing: 0.06em; color: var(--gc-ink); overflow-wrap: anywhere;
 }
 .gcs-note { margin: var(--space-3) 0 0; font-size: var(--text-sm); color: var(--gc-ink-muted); }
+.gcs-note a { color: var(--gc-green-mid); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 
 .gcs-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-6); }
 .gcs-btn { height: 48px; padding: 0 var(--space-5); font-family: var(--font-heading); text-decoration: none; }

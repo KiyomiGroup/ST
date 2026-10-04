@@ -90,8 +90,6 @@
   var noteEl = document.getElementById('gc-cz-note');
   var timingEl = document.getElementById('gc-cz-timing');
   var dateEl = document.getElementById('gc-cz-date');
-  var buyerWrap = form.querySelector('.gc-cz-field--buyer');
-  var buyerEl = document.getElementById('gc-cz-buyer');
   var payButtons = form.querySelectorAll('.gc-cz-checkout, .gc-buybar-btn');
   var checkoutErrors = form.querySelectorAll('[data-checkout-error]');
 
@@ -212,13 +210,6 @@
     if (!val(senderEl)) fail('sender', senderEl, 'Enter your name so they know who it\u2019s from.');
     else clearError('sender', senderEl);
 
-    if (!buyerWrap.hidden) {
-      var buyer = val(buyerEl);
-      if (!buyer) fail('buyer', buyerEl, 'Enter your email so we can send your receipt.');
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer)) fail('buyer', buyerEl, 'Enter a valid email address.');
-      else clearError('buyer', buyerEl);
-    }
-
     if (timingEl.value === 'later' && (!dateEl.value || dateEl.value < today())) {
       fail('date', dateEl, 'Pick a delivery date from today onwards.');
     } else { clearError('date', dateEl); }
@@ -256,7 +247,7 @@
     else if (t === dateEl) { clearError('date', dateEl); }
   });
 
-  [[nameEl, 'name'], [contactEl, 'contact'], [senderEl, 'sender'], [buyerEl, 'buyer']].forEach(function (p) {
+  [[nameEl, 'name'], [contactEl, 'contact'], [senderEl, 'sender']].forEach(function (p) {
     p[0].addEventListener('input', function () { clearError(p[1], p[0]); render(); });
   });
   noteEl.addEventListener('input', render);
@@ -265,16 +256,6 @@
   var busy = false;
   var FUNCTIONS_URL = (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '') + '/functions/v1/';
   var ANON_KEY = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '';
-
-  // Guests give an email for the receipt; logged-in buyers use their account email
-  function syncBuyerField() {
-    var auth = window.supabase && window.supabase.auth;
-    if (!auth) { buyerWrap.hidden = false; return; }
-    auth.getSession().then(function (r) {
-      buyerWrap.hidden = !!(r && r.data && r.data.session);
-    }).catch(function () { buyerWrap.hidden = false; });
-    if (auth.onAuthStateChange) auth.onAuthStateChange(function (_event, session) { buyerWrap.hidden = !!session; });
-  }
 
   function showCheckoutError(text) {
     checkoutErrors.forEach(function (el) { el.textContent = text || ''; el.hidden = !text; });
@@ -294,8 +275,50 @@
   // Map the server's field names onto the form's error slots
   var SERVER_FIELDS = {
     amount: ['amount', customInput], recipientName: ['name', nameEl], recipientContact: ['contact', contactEl],
-    senderName: ['sender', senderEl], sendOn: ['date', dateEl], buyerEmail: ['buyer', buyerEl]
+    senderName: ['sender', senderEl], sendOn: ['date', dateEl]
   };
+
+  // ── Buying needs an account. The form is kept for the trip to the login page. ──
+  var DRAFT_KEY = 'st_giftcard_draft';
+  var DRAFT_MAX_AGE = 30 * 60 * 1000;   // half an hour
+
+  function saveDraft() {
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        at: Date.now(), theme: state.theme, amount: state.amount, custom: state.custom,
+        delivery: checked('delivery'), name: val(nameEl), contact: val(contactEl), sender: val(senderEl),
+        note: val(noteEl), timing: timingEl.value, date: dateEl.value
+      }));
+    } catch (err) { /* storage blocked: the buyer just fills the form again */ }
+  }
+
+  function goToLogin() {
+    saveDraft();
+    window.location.assign('login.html?redirect=' + encodeURIComponent('gift-cards.html#customize'));
+  }
+
+  // Put the saved form back after login. Returns true if there was one.
+  function restoreDraft() {
+    var raw = null;
+    try { raw = sessionStorage.getItem(DRAFT_KEY); sessionStorage.removeItem(DRAFT_KEY); } catch (err) { return false; }
+    if (!raw) return false;
+    var d;
+    try { d = JSON.parse(raw); } catch (err) { return false; }
+    if (!d || typeof d !== 'object' || !d.at || Date.now() - d.at > DRAFT_MAX_AGE) return false;
+
+    if (THEMES[d.theme]) setTheme(d.theme);
+    if (d.custom) setCustom(Number(d.amount) || 0); else if (Number(d.amount) > 0) setPreset(Number(d.amount));
+    var delivery = form.querySelector('input[name="delivery"][value="' + (d.delivery === 'pdf' ? 'pdf' : 'digital') + '"]');
+    if (delivery) delivery.checked = true;
+    nameEl.value = String(d.name || '').slice(0, 60);
+    contactEl.value = String(d.contact || '').slice(0, 80);
+    senderEl.value = String(d.sender || '').slice(0, 60);
+    noteEl.value = String(d.note || '').slice(0, 200);
+    timingEl.value = d.timing === 'later' ? 'later' : 'now';
+    dateEl.value = /^\d{4}-\d{2}-\d{2}$/.test(d.date || '') ? d.date : '';
+    render();
+    return true;
+  }
 
   function startCheckout(order) {
     if (busy) return;
@@ -307,6 +330,7 @@
 
     sessionP.then(function (r) {
       var token = r && r.data && r.data.session ? r.data.session.access_token : '';
+      if (!token) { goToLogin(); return null; }      // logged out: save the form, sign in, come back
       var ctrl = new AbortController();
       var timer = setTimeout(function () { ctrl.abort(); }, 25000);
       return fetch(FUNCTIONS_URL + 'create-gift-card-checkout', {
@@ -319,6 +343,8 @@
         return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, data: data }; });
       }, function (err) { clearTimeout(timer); throw err; });
     }).then(function (out) {
+      if (!out) return;                                // heading to the login page
+      if (out.data && out.data.code === 'login_required') { goToLogin(); return; }
       var url = out.data && out.data.authorization_url;
       if (out.ok && typeof url === 'string' && url.indexOf('https://checkout.paystack.com/') === 0) {
         window.location.assign(url);       // stay "busy" while the browser leaves
@@ -327,7 +353,6 @@
       setBusy(false);
       var slot = out.data && SERVER_FIELDS[out.data.field];
       if (slot) {
-        if (slot[0] === 'buyer') buyerWrap.hidden = false;   // logged-in account without an email
         setError(slot[0], slot[1], out.data.error);
         slot[1].focus();
       } else {
@@ -354,8 +379,7 @@
       recipientContact: val(contactEl),
       senderName: val(senderEl),
       message: val(noteEl) || THEMES[state.theme].msg,   // what the preview shows is what gets sent
-      sendOn: timingEl.value === 'later' ? dateEl.value : 'now',
-      buyerEmail: buyerWrap.hidden ? '' : val(buyerEl)
+      sendOn: timingEl.value === 'later' ? dateEl.value : 'now'
     });
   });
 
@@ -364,11 +388,10 @@
     if (e.detail) applySelection(e.detail.card, e.detail.amount);
   });
 
-  syncBuyerField();
-
-  // Initial state from the URL, otherwise the defaults in the markup
+  // Initial state: a form saved before login, else the URL, else the defaults in the markup
   var params = new URLSearchParams(window.location.search);
-  if (params.get('card') || params.get('amount')) applySelection(params.get('card'), params.get('amount'));
+  if (restoreDraft()) { /* back from the login page with the form as it was */ }
+  else if (params.get('card') || params.get('amount')) applySelection(params.get('card'), params.get('amount'));
   else render();
 })();
 
@@ -393,7 +416,7 @@
 
   // The two designs show different example codes
   var phones = window.matchMedia('(max-width: 768px)');
-  function placeholder() { input.setAttribute('placeholder', phones.matches ? 'STK-XXXX-XXXX-XXXX' : 'e.g. ST-7892-4410-9921'); }
+  function placeholder() { input.setAttribute('placeholder', phones.matches ? 'ST-XXXX-XXXX-XXXX' : 'e.g. ST-7892-4410-9921'); }
   placeholder();
   if (phones.addEventListener) phones.addEventListener('change', placeholder);
 
