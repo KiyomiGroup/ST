@@ -2,7 +2,8 @@
    StreetTasker — post-service-ui.js
    Post a Service page: header progress (desktop pill + mobile bar)
    the Service Basics section (category chips, valid check)
-   Pricing & Rate (charging unit) and Location (Use Current).
+   Pricing & Rate (charging unit) and Location (Use Current)
+   and About (availability, specialty tags).
    Step 1 of 2 fills 0 to 50% as the five required fields are completed.
    Step 2 (the verify prompt) shows 75%.
    ============================================================ */
@@ -57,6 +58,8 @@
     var unit = el('svcRateUnit');
     var radios = document.querySelectorAll('#rateUnits input[type="radio"]');
     for (var r = 0; r < radios.length; r++) radios[r].checked = !!unit && radios[r].value === unit.value;
+    syncAvailability();
+    if (specInput && document.activeElement !== specInput) renderTags(false);
     var nameField = el('svcNameField');
     if (nameField) nameField.classList.toggle('is-valid', val('svcName').trim().length > 0);
   }
@@ -126,6 +129,78 @@
     }, { timeout: 15000, maximumAge: 0, enableHighAccuracy: true });
   }
   for (var lb = 0; lb < locBtns.length; lb++) locBtns[lb].addEventListener('click', useCurrentLocation);
+
+
+  /* ── About: availability radios follow/write the hidden #svcAvailability ── */
+  var availWrap = el('availOptions');
+  var availInput = el('svcAvailability');
+  if (availWrap && availInput) {
+    availWrap.addEventListener('change', function (e) {
+      if (!e.target || e.target.name !== 'availability') return;
+      availInput.value = e.target.value;
+      availInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+  function syncAvailability() {
+    if (!availInput) return;
+    var radios = document.querySelectorAll('#availOptions input[type="radio"]');
+    for (var a = 0; a < radios.length; a++) radios[a].checked = radios[a].value === availInput.value;
+  }
+
+  /* ── Specialties: #svcSpecialties stays the comma-separated source the save code reads;
+        tags are drawn from it. The part still being typed is not tagged until you
+        type a comma, press Enter or leave the field. ── */
+  var specInput = el('svcSpecialties');
+  var specTags = el('specTags');
+  function specItems(skipLast) {
+    var parts = String(specInput.value || '').split(',');
+    if (skipLast) parts.pop();
+    var seen = {}, out = [];
+    for (var s = 0; s < parts.length; s++) {
+      var t = parts[s].trim(), k = t.toLowerCase();
+      if (t && !seen[k]) { seen[k] = true; out.push(t); }
+    }
+    return out;
+  }
+  function renderTags(skipLast) {
+    if (!specInput || !specTags) return;
+    specTags.textContent = '';
+    var items = specItems(skipLast);
+    for (var i = 0; i < items.length; i++) {
+      var tag = document.createElement('span');
+      tag.className = 'ps-tag';
+      tag.appendChild(document.createTextNode(items[i]));
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'ps-tag-x'; x.setAttribute('aria-label', 'Remove ' + items[i]);
+      x.setAttribute('data-spec', items[i]);
+      x.innerHTML = '<svg class="pt-i" aria-hidden="true"><use href="#i-x"/></svg>';
+      tag.appendChild(x);
+      specTags.appendChild(tag);
+    }
+  }
+  if (specInput && specTags) {
+    specInput.addEventListener('input', function () { renderTags(true); });
+    specInput.addEventListener('blur', function () {
+      var items = specItems(false);
+      specInput.value = items.join(', ');
+      renderTags(false);
+    });
+    specInput.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      var items = specItems(false);
+      specInput.value = items.length ? items.join(', ') + ', ' : '';
+      renderTags(false);
+    });
+    specTags.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.ps-tag-x') : null;
+      if (!btn) return;
+      var drop = btn.getAttribute('data-spec').toLowerCase();
+      specInput.value = specItems(false).filter(function (t) { return t.toLowerCase() !== drop; }).join(', ');
+      renderTags(false);
+      specInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
 
   var form = el('serviceForm');
   if (form) {

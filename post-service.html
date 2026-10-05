@@ -105,6 +105,9 @@
     <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
     <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
     </defs>
   </svg>
 
@@ -280,37 +283,47 @@
             </div>
           </section>
 
-          <!-- Old fields (Sections 5-7) stay here until each is rebuilt -->
-          <div class="service-form-card">
-
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcDescription">
-              About Your Service *
-              <span style="font-weight:400; color:var(--text-muted);">(min 20 chars)</span>
-            </label>
-            <textarea id="svcDescription" class="service-form-textarea" rows="4" maxlength="800"
-              placeholder="Describe your experience, what's included, typical timeline..."></textarea>
-            <div style="text-align:right; margin-top:4px;">
-              <span id="descCount" style="font-size:0.72rem; color:var(--text-muted);">0 / 800</span>
+          <!-- ── Section 5 · About Your Service & Specialties ───── -->
+          <section class="pt-section" aria-labelledby="secAbout">
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">4</span>
+              <div>
+                <h2 class="pt-section-title" id="secAbout">About Your Service &amp; Specialties</h2>
+                <p class="pt-section-sub">Describe your craft, reliability, and past experience.</p>
+              </div>
+              <span class="ps-section-chip">Step 1.4</span>
             </div>
-          </div>
 
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcAvailability">Availability</label>
-            <select id="svcAvailability" class="service-form-select">
-              <option value="available_now">Available now</option>
-              <option value="available_today">Available today</option>
-              <option value="available_this_week" selected>Available this week</option>
-            </select>
-          </div>
+            <div class="pt-group ps-group-about">
+              <div class="pt-label-row">
+                <label class="pt-label" for="svcDescription">About Your Service <span class="pt-req" aria-hidden="true">*</span> <span class="pt-label-aside pt-desk">(min 20 chars)</span></label>
+                <span class="pt-counter" id="descCount">0 / 800</span>
+              </div>
+              <textarea id="svcDescription" class="pt-input pt-textarea" rows="4" maxlength="800" placeholder="Describe what makes your service exceptional. Include what's covered, your process, and any requirements..."></textarea>
+              <p class="pt-help pt-mob">Minimum 20 characters for trust &amp; verification quality</p>
+            </div>
 
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcSpecialties">Specialties
-              <span style="font-weight:400; color:var(--text-muted);">(comma-separated, optional)</span>
-            </label>
-            <input type="text" id="svcSpecialties" class="service-form-input"
-              placeholder="e.g. Wiring, Inverter installation, Solar panels" />
-          </div>
+            <div class="pt-group ps-group-avail">
+              <span class="pt-label" id="availLabel">Availability</span>
+              <input type="hidden" id="svcAvailability" value="available_this_week" />
+              <div class="ps-avail" id="availOptions" role="radiogroup" aria-labelledby="availLabel">
+                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_now" /><span><span class="ps-avail-dot pt-desk" aria-hidden="true"></span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-check-circle"/></svg>Available now</span></label>
+                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_today" /><span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-clock"/></svg>Available today</span></label>
+                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_this_week" checked /><span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-calendar"/></svg>Available this week</span></label>
+              </div>
+            </div>
+
+            <div class="pt-group ps-group-spec">
+              <label class="pt-label" for="svcSpecialties">Specialties <span class="pt-label-aside">(comma-separated<span class="pt-desk">, optional</span>)</span></label>
+              <div class="pt-field">
+                <input type="text" id="svcSpecialties" class="pt-input" placeholder="e.g. Wiring, Inverter installation, Solar panels" autocomplete="off" />
+              </div>
+              <div class="ps-tags" id="specTags" aria-live="polite"></div>
+            </div>
+          </section>
+
+          <!-- Old fields (Sections 6-7) stay here until each is rebuilt -->
+          <div class="service-form-card">
 
           <div class="service-form-group">
             <label class="service-form-label">Profile / Work Photo
@@ -499,6 +512,8 @@
           }
           if (draft.location)     document.getElementById('svcLocation').value    = draft.location;
           if (draft.description)  document.getElementById('svcDescription').value = draft.description;
+          if (draft.availability_status) document.getElementById('svcAvailability').value = draft.availability_status;
+          if (Array.isArray(draft.specialties) && draft.specialties.length) document.getElementById('svcSpecialties').value = draft.specialties.join(', ');
           if (draft.photo)        { uploadedPhotoUrl = draft.photo; showPhotoPreview(draft.photo); }
           if (draft.price) {
             document.getElementById('svcPrice').value = Number(draft.price);
