@@ -94,6 +94,33 @@
 .ps-tag-x { display: grid; place-items: center; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
 .ps-tag-x .pt-i { width: 12px; height: 12px; stroke-width: 2.5; }
 
+/* ── Section 6 · Profile / Work Photos ───────────────────── */
+.ps-section-chip-mint { background: var(--pt-mint); color: var(--pt-green); }
+.ps-photo { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+.ps-photo.has-photo { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+.ps-photo-preview { position: relative; display: none; min-height: 220px; border-radius: var(--radius-2xl); overflow: hidden; background: var(--pt-field); }
+.ps-photo.has-photo .ps-photo-preview { display: block; }
+.ps-photo-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ps-photo-badge, .ps-photo-change {
+  position: absolute; bottom: var(--space-3); display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600;
+}
+.ps-photo-badge { left: var(--space-3); background: var(--color-bg); color: var(--pt-ink); }
+.ps-photo-badge .pt-i { width: 14px; height: 14px; color: var(--pt-green); }
+.ps-photo-change { right: var(--space-3); background: var(--pt-photo-label); color: var(--color-text-on-primary); cursor: pointer; }
+.ps-photo-change .pt-i { width: 14px; height: 14px; }
+.ps-dropzone { min-height: 220px; cursor: pointer; }
+.ps-dropzone:hover { background: var(--pt-field); }
+.ps-browse {
+  margin-top: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); color: var(--pt-ink);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+}
+.ps-browse:hover { background: var(--pt-field-icon); }
+.ps-file { display: none; }
+.ps-group-photo .pt-progress-note { margin-top: var(--space-3); }
+
 /* ── Between desktop and mobile ──────────────────────────── */
 
 /* ── Mobile (max-width: 768px) ───────────────────────────── */
@@ -114,6 +141,25 @@
   .ps-avail-opt > span { height: 40px; padding: 0 var(--space-3); font-size: var(--text-sm); }
   .ps-avail-opt input:checked + span { background: var(--pt-mint); color: var(--pt-green); }
   .ps-tag { background: var(--pt-field-strong); color: var(--pt-ink); font-size: var(--text-sm); }
+  /* Photo: grey drop card, then a file row once a photo is chosen */
+  .ps-photo.has-photo { grid-template-columns: minmax(0, 1fr); }
+  .ps-dropzone { min-height: 0; padding: var(--space-5); border: 0; background: var(--pt-field); }
+  .ps-dropzone .pt-dropzone-title { font-size: var(--text-base-sm); }
+  .ps-dropzone .pt-dropzone-sub { font-size: var(--text-xs); }
+  .ps-photo.has-photo .ps-file {
+    display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2); border-radius: var(--radius-2xl); background: var(--pt-field);
+  }
+  .ps-file-thumb { width: 56px; height: 56px; flex-shrink: 0; border-radius: var(--radius-lg); object-fit: cover; background: var(--pt-field-strong); }
+  .ps-file-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .ps-file-name { overflow-wrap: anywhere; font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 700; line-height: 1.25; color: var(--pt-ink); }
+  .ps-file-ready { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--pt-green); }
+  .ps-file-ready .pt-i { width: 12px; height: 12px; stroke-width: 2.5; }
+  .ps-file-change {
+    display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill);
+    background: var(--pt-field-strong); color: var(--pt-ink-muted);
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+  }
+  .ps-file-change .pt-i { width: 14px; height: 14px; }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }
