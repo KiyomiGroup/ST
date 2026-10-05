@@ -54,7 +54,7 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 | `--color-forest-700` | `#16512F` | `--forest-mid` |
 | `--color-text` | `#121212` | `--text-primary`, `--charcoal` |
 | `--color-text-nav` | `#171A19` | Nav button text (Become a Tasker). Candidate to merge into `--color-text`. |
-| `--color-text-nav-link` | `#384179` | Logged-out desktop nav link text at rest (Find Tasks, Find Taskers, Local Taskers, Gift Cards, Sign Up, Log in). Hover turns it `--color-primary`. |
+| `--color-text-nav-link` | `#384179` | Logged-out desktop nav link text at rest (Find Tasks, Services, Local Taskers, Gift Cards, Sign Up, Log in). Hover turns it `--color-primary`. |
 | `--color-text-secondary` | `#4A4A4A` | `--text-secondary`, `--gray-600` |
 | `--color-text-muted` | `#7A7A7A` | `--text-muted`, `--gray-400` |
 | `--color-bg` | `#FFFFFF` | `--bg`, `--white` |
@@ -196,7 +196,7 @@ Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block 
 |---|---|
 | Container | 1312px wide, centred, 10px padding on all sides, 60px tall. On screens under 1432px: 60px margin each side instead of full width |
 | Logo | 120 x 20, then 16px to the first item |
-| Links | Post a Task, Find Tasks, Find Taskers, Local Taskers, Gift Cards. 16px apart |
+| Links | Post a Task, Find Tasks, Services, Local Taskers, Gift Cards. 16px apart |
 | Right group | Sign Up, Log in, Become a Tasker. 16px apart, pinned to the right edge |
 | Space | Whatever is left sits between Gift Cards and Sign Up |
 | Link text | Manrope 14px (`--text-base-sm`), weight 500, `--color-text-nav-link`, no padding. Hover: text turns `--color-primary` and a `--nav-hover-bar` (4px) bar of `--color-primary` appears above the link, the width of the link, 8px above its box (centre links and Sign Up / Log in) |
