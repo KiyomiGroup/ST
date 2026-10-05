@@ -37,7 +37,7 @@
 .ds-type { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
 .ds-type code, .ds-space code { width: 140px; flex: 0 0 140px; font-size: var(--text-xs); color: var(--color-text-muted); }
 .t-2xs { font-size: var(--text-2xs); } .t-xs { font-size: var(--text-xs); } .t-sm { font-size: var(--text-sm); }
-.t-base-sm { font-size: var(--text-base-sm); } .t-base { font-size: var(--text-base); } .t-lg { font-size: var(--text-lg); }
+.t-base-sm { font-size: var(--text-base-sm); } .t-base { font-size: var(--text-base); } .t-md { font-size: var(--text-md); } .t-lg { font-size: var(--text-lg); }
 .t-xl { font-size: var(--text-xl); } .t-2xl { font-size: var(--text-2xl); }
 
 /* Spacing + radius */

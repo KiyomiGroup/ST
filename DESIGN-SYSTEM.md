@@ -76,19 +76,24 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 - `--font-heading`: `'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`. Used for headings, nav, buttons.
 - `--font-body`: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`. Used for body text, forms, tables.
 
-**Size scale.** The audit found 75 different `font-size` values. They collapse onto these 9:
+**Size scale.** The audit found 75 different `font-size` values, many of them below 12px. They now collapse onto the standard scale that professional sites use (Airtasker, Stripe, Airbnb, Tailwind, Material): 12 / 14 / 16 / 18 / 20 / 24 / 32px. Body text is 16px, dense UI is 14px, and **nothing is smaller than 12px**.
 
-| Token | Size | Typical use | Old values that map here |
-|---|---|---|---|
-| `--text-2xs` | 0.6875rem (11px) | Tiny badges, legal | 0.63 to 0.7rem |
-| `--text-xs` | 0.75rem (12px) | Captions, meta rows, badges | 0.72, 0.73, 0.74, 0.75, 0.76rem |
-| `--text-sm` | 0.8125rem (13px) | Secondary text, small buttons, form labels | 0.78, 0.8, 0.82, 0.83rem |
-| `--text-base-sm` | 0.875rem (14px) | Dense UI body, table text | 0.84, 0.85, 0.875, 0.88rem |
-| `--text-base` | 1rem (16px) | Default body text | 0.9 to 1rem, 16px |
-| `--text-lg` | 1.125rem (18px) | Lead paragraphs, card titles | 1.05 to 1.2rem |
-| `--text-xl` | 1.5rem (24px) | Section sub-headings | 1.4, 1.5rem |
-| `--text-2xl` | 2rem (32px) | Page headings | 2rem |
-| `--text-hero` | `clamp(2rem, 5vw, 3.5rem)` | Hero h1 only | current `h1` |
+| Token | Size | Typical use |
+|---|---|---|
+| `--text-xs` | 0.75rem (12px) | Captions, meta rows, badges. The smallest size allowed. |
+| `--text-sm` | 0.875rem (14px) | Secondary text, buttons, form labels, table and dense UI text |
+| `--text-base` | 1rem (16px) | Default body text |
+| `--text-lg` | 1.125rem (18px) | Lead paragraphs |
+| `--text-md` | 1.25rem (20px) | Card titles, small headings |
+| `--text-xl` | 1.5rem (24px) | Section sub-headings |
+| `--text-2xl` | 2rem (32px) | Page headings |
+| `--text-hero` | `clamp(2rem, 5vw, 3.5rem)` | Hero h1 only |
+
+Responsive headings: `--text-h3` (18 to 20px), `--text-h2-sm` (20 to 24px), `--text-h2` (24 to 36px), `--text-h1-sm` (24 to 32px, mobile h1), `--text-display` and `--text-display-xl` (decorative large type).
+
+`--text-2xs` and `--text-base-sm` still exist as aliases of `--text-xs` and `--text-sm` so old code keeps working. Do not use them in new code.
+
+**Mapping for old values:** up to 0.8rem becomes `--text-xs`; 0.82 to 0.9rem becomes `--text-sm`; 0.92 to 1.05rem becomes `--text-base`; 1.1 to 1.15rem becomes `--text-lg`; 1.2 to 1.3rem becomes `--text-md`; 1.4 to 1.6rem becomes `--text-xl`; 1.9 to 2rem becomes `--text-2xl`.
 
 Heading defaults already in `styles.css` stay: weight 700 (h1 800), line-height 1.15, letter-spacing -0.025em. Body line-height is 1.6.
 
@@ -166,7 +171,7 @@ Base class `.btn`. Pill shaped (`--radius-pill`), inline-flex, centred.
 
 | Size | Class | Padding | Font size |
 |---|---|---|---|
-| Small | `.btn-sm` | 8 / 16 | `--text-sm` |
+| Small | `.btn-sm` | 8 / 16 | `--text-sm` (14px) |
 | Default | none | 11 / 22 | `--text-base-sm` |
 | Large | `.btn-lg` | 13 / 28 | `--text-base` |
 | Extra large | `.btn-xl` | 15 / 36 | `--text-base` |

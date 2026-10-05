@@ -37,14 +37,27 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   /* --font-heading ('Manrope', ...) is defined in styles.css :root */
 
-  --text-2xs:      0.6875rem;  /* 11px */
-  --text-xs:       0.75rem;    /* 12px */
-  --text-sm:       0.8125rem;  /* 13px */
-  --text-base-sm:  0.875rem;   /* 14px */
-  --text-base:     1rem;       /* 16px */
-  --text-lg:       1.125rem;   /* 18px */
-  --text-xl:       1.5rem;     /* 24px */
-  --text-2xl:      2rem;       /* 32px */
+  /* Type scale: the standard used by Airtasker, Stripe, Airbnb, Tailwind and
+     Material (12 / 14 / 16 / 18 / 20 / 24 / 32). Body is 16px, dense UI is 14px,
+     and nothing is smaller than 12px. */
+  --text-xs:       0.75rem;    /* 12px  captions, badges, meta (smallest allowed) */
+  --text-sm:       0.875rem;   /* 14px  secondary text, buttons, form labels, dense UI */
+  --text-base:     1rem;       /* 16px  default body text */
+  --text-lg:       1.125rem;   /* 18px  lead paragraphs */
+  --text-md:       1.25rem;    /* 20px  card titles, small headings */
+  --text-xl:       1.5rem;     /* 24px  section sub-headings */
+  --text-2xl:      2rem;       /* 32px  page headings */
+  /* Aliases kept so older code keeps working. Do not use in new code. */
+  --text-2xs:      var(--text-xs);
+  --text-base-sm:  var(--text-sm);
+
+  /* Responsive headings (match the global h1 / h2 / h3 rules in styles.css) */
+  --text-h3:       clamp(1.125rem, 2vw, 1.25rem);
+  --text-h2-sm:    clamp(1.25rem, 3vw, 1.5rem);
+  --text-h2:       clamp(1.5rem, 3vw, 2.25rem);
+  --text-h1-sm:    clamp(1.5rem, 5vw, 2rem);
+  --text-display:  clamp(2.5rem, 2rem + 3vw, 4.75rem);   /* big uppercase statements */
+  --text-display-xl: clamp(5rem, 18vw, 9rem);            /* 404 number */
   --text-hero:     clamp(2rem, 5vw, 3.5rem);
 
   /* ── Spacing (4px base) ── */
@@ -111,7 +124,7 @@
   --card-padding:       20px;
   --card-icon-col:      20px;          /* fixed icon column so pin and clock align */
   --card-icon-gap:      6px;
-  --text-card-title:    1.25rem;       /* 20px */
+  --text-card-title:    var(--text-md);   /* 20px */
 }
 
 /* ── Post-a-task page tokens (post-task.html) ──
@@ -196,7 +209,7 @@
   --gc-tile-rule:      #EEEEEC;   /* guess: rule above the card footer */
   --shadow-gc-tile:    0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);  /* guess: same as --shadow-pt-card */
   --shadow-gc-tile-hover: 0 2px 4px rgba(26, 28, 27, 0.06), 0 16px 32px -14px rgba(26, 28, 27, 0.16);  /* derived */
-  --text-gc-body:      0.9375rem; /* 15px card body */
+  --text-gc-body:      var(--text-base);   /* 16px card body */
   --radius-gc-tile:    28px;
 }
 

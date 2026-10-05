@@ -248,7 +248,7 @@ function _hint(input, mode) {
   if (!el) {
     el = document.createElement('div');
     el.id = id; el.className = 'location-hint';
-    el.style.cssText = 'font-size:0.75rem;margin-top:5px;min-height:16px;transition:color 0.15s;';
+    el.style.cssText = 'font-size:var(--text-xs);margin-top:5px;min-height:16px;transition:color 0.15s;';
     input.closest('.input-wrap,.form-group,div')?.insertAdjacentElement('afterend', el);
   }
   const val = input.value.trim();
@@ -280,7 +280,7 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
     row.innerHTML =
       '<span class="loc-row-icon loc-row-icon-gps">' + _GPS + '</span>' +
       '<span class="loc-row-text"><span class="loc-row-primary">Use my current location' +
-      (mode === 'precise' ? ' <span style="font-size:0.68rem;opacity:0.7">(street-level)</span>' : '') +
+      (mode === 'precise' ? ' <span style="font-size:var(--text-xs);opacity:0.7">(street-level)</span>' : '') +
       '</span></span>';
     row.addEventListener('mousedown', e => {
       e.preventDefault();
@@ -301,10 +301,10 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
     const row = document.createElement('div');
     row.className = 'loc-row';
     const badge = (r.precise && mode === 'precise')
-      ? ' <span style="font-size:0.62rem;font-weight:700;background:var(--green-light,#dcfce7);color:var(--green,#16a34a);border-radius:4px;padding:1px 5px;">street</span>'
+      ? ' <span style="font-size:var(--text-xs);font-weight:700;background:var(--green-light,#dcfce7);color:var(--green,#16a34a);border-radius:4px;padding:1px 5px;">street</span>'
       : '';
     const sub = r.instant && !r.precise && mode === 'precise'
-      ? '<span class="loc-row-sub" style="font-size:0.72rem;color:var(--text-muted);">Type more for exact street</span>'
+      ? '<span class="loc-row-sub" style="font-size:var(--text-xs);color:var(--text-muted);">Type more for exact street</span>'
       : '';
     row.innerHTML =
       '<span class="loc-row-icon">' + _PIN + '</span>' +

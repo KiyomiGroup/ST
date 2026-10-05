@@ -404,7 +404,7 @@
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <h2 style="margin-bottom:8px;">Task saved — verify to post</h2>
-        <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
+        <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <a id="verifyToPostBtn" href="verify.html?role=customer&return=dashboard-customer.html%3Fpanel%3Dmy-tasks" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
           <button class="btn btn-ghost" onclick="saveDraftTask()">Save as Draft — Verify Later</button>
@@ -457,7 +457,7 @@
         if (!_gu) return;
         var role = (_gu.user_metadata && _gu.user_metadata.role) || localStorage.getItem('st_role') || 'customer';
         if (role === 'tasker') {
-          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don\'t post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:0.84rem;color:#0A84FF;">Back to Dashboard</a></div>';
+          document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:32px;"><h2 style="margin-bottom:12px;">Not available</h2><p style="color:#4A4A4A;margin-bottom:24px;">Taskers don\'t post tasks — they apply for them. Browse open tasks near you instead.</p><a href="explore-tasks.html" class="btn btn-primary" style="text-decoration:none;">Browse Open Tasks</a><a href="dashboard-tasker.html" style="margin-top:12px;font-size:var(--text-sm);color:#0A84FF;">Back to Dashboard</a></div>';
         }
       } catch(e) {}
     })();

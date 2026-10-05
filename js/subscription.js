@@ -198,10 +198,10 @@ function showUpgradeBanner() {
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
     </svg>
     <div style="flex:1;">
-      <strong style="font-size:1rem;">You've reached your 5 free bookings</strong>
-      <p style="margin:4px 0 0; opacity:0.9; font-size:0.875rem;">Upgrade your plan to keep receiving new customers and stay visible on Street Tasker.</p>
+      <strong style="font-size:var(--text-base);">You've reached your 5 free bookings</strong>
+      <p style="margin:4px 0 0; opacity:0.9; font-size:var(--text-sm);">Upgrade your plan to keep receiving new customers and stay visible on Street Tasker.</p>
     </div>
-    <a href="#plan-cards" style="background:white;color:#0A84FF;padding:10px 18px;border-radius:8px;font-weight:600;font-size:0.875rem;text-decoration:none;white-space:nowrap;">Upgrade Now</a>
+    <a href="#plan-cards" style="background:white;color:#0A84FF;padding:10px 18px;border-radius:8px;font-weight:600;font-size:var(--text-sm);text-decoration:none;white-space:nowrap;">Upgrade Now</a>
   `;
 
   /* Insert before the first main content block */

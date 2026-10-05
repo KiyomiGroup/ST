@@ -566,7 +566,7 @@
 
   /* Budget */
   .pt-budget-field { max-width: none; min-height: 60px; }
-  .pt-naira, .pt-budget { font-size: 1.75rem; }
+  .pt-naira, .pt-budget { font-size: var(--text-2xl); }
   .pt-presets { gap: var(--space-3) var(--space-2); }
   .pt-preset { height: 36px; padding: 0 var(--space-4); font-size: var(--text-base-sm); }
 

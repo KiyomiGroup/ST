@@ -76,12 +76,12 @@
     .dual-cta-card.dark:hover { border-color:rgba(255,255,255,0.15); }
     .dual-cta-icon { width:48px; height:48px; background:var(--blue-light); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:var(--blue); margin-bottom:18px; }
     .dual-cta-card.dark .dual-cta-icon { background:rgba(10,132,255,0.18); }
-    .dual-cta-label { font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--blue); margin-bottom:8px; }
-    .dual-cta-title { font-size:1.2rem; font-weight:800; margin-bottom:8px; }
+    .dual-cta-label { font-size:var(--text-xs); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--blue); margin-bottom:8px; }
+    .dual-cta-title { font-size:var(--text-md); font-weight:800; margin-bottom:8px; }
     .dual-cta-card.dark .dual-cta-title { color:var(--white); }
-    .dual-cta-desc  { font-size:0.84rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px; }
+    .dual-cta-desc  { font-size:var(--text-sm); color:var(--text-secondary); line-height:1.6; margin-bottom:20px; }
     .dual-cta-card.dark .dual-cta-desc { color:rgba(255,255,255,0.5); }
-    .dual-cta-action { display:inline-flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:700; color:var(--blue); }
+    .dual-cta-action { display:inline-flex; align-items:center; gap:6px; font-size:var(--text-sm); font-weight:700; color:var(--blue); }
     .dual-cta-card.dark .dual-cta-action { color:rgba(255,255,255,0.7); }
 
     /* Live service cards */
@@ -89,22 +89,22 @@
     .live-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; transition:box-shadow var(--t) var(--ease),transform var(--t) var(--ease); }
     .live-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
     .live-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
-    .live-avatar { width:40px; height:40px; border-radius:var(--radius-sm); background:var(--charcoal); color:var(--white); font-size:0.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
-    .live-price { font-size:0.95rem; font-weight:800; color:var(--text-primary); white-space:nowrap; }
-    .live-price-type { font-size:0.68rem; color:var(--text-muted); margin-top:1px; text-align:right; }
-    .live-name { font-size:0.9rem; font-weight:700; margin-bottom:2px; }
-    .live-sub  { font-size:0.76rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
-    .live-cat  { display:inline-flex; font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--blue); background:var(--blue-light); padding:2px 8px; border-radius:var(--radius-pill); margin-top:8px; }
+    .live-avatar { width:40px; height:40px; border-radius:var(--radius-sm); background:var(--charcoal); color:var(--white); font-size:var(--text-xs); font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+    .live-price { font-size:var(--text-base); font-weight:800; color:var(--text-primary); white-space:nowrap; }
+    .live-price-type { font-size:var(--text-xs); color:var(--text-muted); margin-top:1px; text-align:right; }
+    .live-name { font-size:var(--text-sm); font-weight:700; margin-bottom:2px; }
+    .live-sub  { font-size:var(--text-xs); color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+    .live-cat  { display:inline-flex; font-size:var(--text-xs); font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--blue); background:var(--blue-light); padding:2px 8px; border-radius:var(--radius-pill); margin-top:8px; }
 
     /* Live task cards */
     .task-live-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 20px; display:flex; gap:14px; align-items:flex-start; transition:box-shadow var(--t) var(--ease); cursor:pointer; }
     .task-live-card:hover { box-shadow:var(--shadow-md); }
     .task-live-icon { width:40px; height:40px; border-radius:var(--radius-sm); background:var(--bg-subtle); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex-shrink:0; }
-    .task-live-title { font-size:0.9rem; font-weight:700; margin-bottom:4px; }
+    .task-live-title { font-size:var(--text-sm); font-weight:700; margin-bottom:4px; }
     .task-live-meta  { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .task-live-meta span { font-size:0.74rem; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
-    .task-live-budget { font-size:0.88rem; font-weight:700; color:var(--green); }
-    .task-open-badge { font-size:0.65rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--green); background:var(--green-light); padding:2px 7px; border-radius:var(--radius-pill); }
+    .task-live-meta span { font-size:var(--text-xs); color:var(--text-muted); display:flex; align-items:center; gap:3px; }
+    .task-live-budget { font-size:var(--text-sm); font-weight:700; color:var(--green); }
+    .task-open-badge { font-size:var(--text-xs); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--green); background:var(--green-light); padding:2px 7px; border-radius:var(--radius-pill); }
 
     /* Category chips */
     .cat-chip { background:var(--white); color:var(--text-secondary); border:1.5px solid var(--border); }
@@ -113,7 +113,7 @@
 
     /* How it works tabs */
     .how-tabs { display:flex; gap:4px; background:var(--gray-100); border-radius:var(--radius-md); padding:4px; max-width:360px; margin:0 auto 40px; }
-    .how-tab { flex:1; padding:9px 16px; border:none; background:transparent; font-family:var(--font); font-size:0.84rem; font-weight:600; color:var(--text-muted); border-radius:var(--radius-sm); cursor:pointer; transition:all var(--t) var(--ease); }
+    .how-tab { flex:1; padding:9px 16px; border:none; background:transparent; font-family:var(--font); font-size:var(--text-sm); font-weight:600; color:var(--text-muted); border-radius:var(--radius-sm); cursor:pointer; transition:all var(--t) var(--ease); }
     .how-tab.active { background:var(--white); color:var(--text-primary); box-shadow:var(--shadow-xs); }
     .how-panel { display:none; }
     .how-panel.active { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -458,7 +458,7 @@
       </div>
 
       <div class="section-header center fade-up" style="margin-top:56px;">
-        <h2 style="font-size:1.6rem;">Meet Local Taskers</h2>
+        <h2 style="font-size:var(--text-xl);">Meet Local Taskers</h2>
         <p>Discover skilled people doing great work in communities around you.</p>
       </div>
 
@@ -636,10 +636,10 @@
           const safeLoc   = escapeHtml(t.location || 'Lagos');
           const safeCat   = escapeHtml((t.category||'?').slice(0,3).toUpperCase());
           return '<div class="panel-row">'
-            + '<div class="panel-avatar" style="font-size:0.6rem;text-align:center;">' + safeCat + '</div>'
+            + '<div class="panel-avatar" style="font-size:var(--text-xs);text-align:center;">' + safeCat + '</div>'
             + '<div class="panel-info"><div class="panel-name">' + safeTitle + '</div>'
             + '<div class="panel-role">&#8358;' + Number(t.budget||0).toLocaleString() + ' &middot; ' + safeLoc + '</div></div>'
-            + '<span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;color:var(--green);background:var(--green-light);padding:2px 6px;border-radius:var(--radius-pill);">Open</span>'
+            + '<span style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:var(--green);background:var(--green-light);padding:2px 6px;border-radius:var(--radius-pill);">Open</span>'
             + '</div>';
         }).join('');
       } catch(e) {}
@@ -674,7 +674,7 @@
       const el = document.getElementById('servicesList');
       if (!list.length) {
         el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 24px;">
-          <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px;">No services in this category yet.</p>
+          <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:16px;">No services in this category yet.</p>
           <a href="post-service.html" class="btn btn-primary btn-sm">Be the first to list</a></div>`;
         return;
       }
@@ -705,7 +705,7 @@
           + '<div class="live-name">' + safeName + '</div>'
           + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + safeLoc + '</div>'
           + '<div class="live-cat">' + safeCat + '</div>'
-          + (safeDesc ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + safeDesc + '</p>' : '')
+          + (safeDesc ? '<p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + safeDesc + '</p>' : '')
           + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
           + '</div>';
       }).join('');
@@ -787,7 +787,7 @@
         const combined = [...(tasks||[]), ...DUMMY_TASKS_HOME].slice(0, 5);
         if (!combined.length) {
           el.innerHTML = `<div style="text-align:center;padding:40px 24px;">
-            <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px;">No open tasks yet. Post the first one!</p>
+            <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:16px;">No open tasks yet. Post the first one!</p>
             <a href="post-task.html" class="btn btn-primary btn-sm">Post a Task</a></div>`;
           return;
         }
@@ -893,12 +893,12 @@
           + '<div class="live-avatar ' + c.av + '" style="border-radius:50%;' + (c.photo?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
           + '<div style="text-align:right;">'
           + (c.rate ? '<div class="live-price">' + c.rate + '</div><div class="live-price-type">' + c.rateUnit + '</div>' : '')
-          + (c.verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
+          + (c.verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:var(--text-xs);font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
           + '</div></div>'
           + '<div class="live-name">' + c.name + '</div>'
           + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + c.loc + '</div>'
           + (c.service ? '<div class="live-cat">' + c.service + '</div>' : '')
-          + (c.bio ? '<p style="font-size:0.76rem;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + c.bio + '</p>' : '')
+          + (c.bio ? '<p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + c.bio + '</p>' : '')
           + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
           + '</div>';
       }).join('');
@@ -927,7 +927,7 @@
         if (!matches.length) { drop.style.display = 'none'; return; }
         drop.innerHTML = matches.map(s => {
           const hi = s.slice(0, s.toLowerCase().indexOf(q.charAt(0).toLowerCase()) + q.length);
-          return `<div style="padding:10px 14px;cursor:pointer;font-size:0.88rem;border-bottom:1px solid var(--border-light);"
+          return `<div style="padding:10px 14px;cursor:pointer;font-size:var(--text-sm);border-bottom:1px solid var(--border-light);"
             onmousedown="document.getElementById('heroServiceInput').value='${s}';document.getElementById('heroServiceSuggestions').style.display='none';"
             onmouseover="this.style.background='var(--bg-subtle)'" onmouseout="this.style.background=''">${s}</div>`;
         }).join('');

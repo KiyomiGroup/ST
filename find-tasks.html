@@ -131,20 +131,20 @@
     <div class="modal-box" style="max-width:480px;text-align:left;">
       <button class="modal-close-x" onclick="closeApply()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       <h2 style="margin-bottom:6px;" id="applyTitle">Apply to Task</h2>
-      <p style="font-size:0.84rem;margin-bottom:20px;" id="applyDesc"></p>
+      <p style="font-size:var(--text-sm);margin-bottom:20px;" id="applyDesc"></p>
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your message *</label>
+        <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;">Your message *</label>
         <textarea id="applyMsg" rows="4" placeholder="Describe your experience and why you're the right fit..."
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);resize:vertical;outline:none;"
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:var(--font);resize:vertical;outline:none;"
           onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
       </div>
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:0.83rem;font-weight:600;margin-bottom:6px;">Your proposed price (₦) <span style="font-weight:400;color:var(--text-muted);">optional</span></label>
+        <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;">Your proposed price (₦) <span style="font-weight:400;color:var(--text-muted);">optional</span></label>
         <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:0.9rem;font-family:var(--font);outline:none;"
+          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:var(--font);outline:none;"
           onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
       </div>
-      <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:0.83rem;color:var(--red);margin-bottom:14px;"></div>
+      <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--red);margin-bottom:14px;"></div>
       <button class="btn btn-primary btn-full" id="applyBtn" onclick="submitApply()">Send Application</button>
     </div>
   </div>
