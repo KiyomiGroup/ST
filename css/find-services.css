@@ -1,0 +1,56 @@
+/* ============================================================
+   find-services.html — page-only layout helpers.
+   Uses tokens and the shared .spg-* search-page classes from
+   styles.css; nothing here restyles a shared component.
+   ============================================================ */
+
+/* Space between the hero/search block and the tabs + results */
+.spg-content-below.spg-content-gap { margin-top: var(--space-6); }
+
+/* Hero avatar and load-more use the [hidden] attribute instead of inline
+   styles. initDashboardWelcome() sets style.display on the avatar, which
+   still wins over this rule once a logged-in user is detected. */
+.spg-hero-avatar[hidden] { display: none; }
+.svc-load-more { display: flex; justify-content: center; margin-top: var(--space-5); }
+.svc-load-more[hidden] { display: none; }
+
+/* Location suggestions are positioned against this field */
+.svc-searchbar-location { position: relative; }
+
+/* Results header */
+.svc-results-head { display: flex; align-items: center; gap: var(--space-4); }
+.svc-results-tools { display: flex; align-items: center; gap: var(--space-3); }
+.svc-count { font-size: 0.84rem; color: var(--color-text-muted); }
+
+/* Loading placeholders */
+.spg-grid .svc-skeleton { min-height: 280px; border-radius: 20px; }
+
+/* Cards: category emoji badge when a service has no photo */
+.spg-card-badge.spg-card-badge--static { position: static; margin: 55px auto 0; }
+.svc-card { cursor: pointer; }
+.svc-card .spg-card-media .svc-card-cat {
+  position: absolute; top: var(--space-3); left: var(--space-3);
+  background: var(--white); color: var(--text-primary);
+  font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;
+  box-shadow: var(--shadow-sm);
+}
+.svc-card-price-note { font-weight: 600; font-size: 0.84rem; color: var(--text-muted); }
+
+/* Filter helpers */
+.svc-filter-actions { padding: 16px 18px; }
+.svc-filter-icon { display: inline; vertical-align: -1px; margin-right: var(--space-1); }
+.svc-filter-empty { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Empty / error state */
+.svc-empty-actions { display: flex; justify-content: center; gap: var(--space-3); flex-wrap: wrap; }
+
+/* Mobile: the filter panel opens as a bottom sheet over a dimmed backdrop
+   (the backdrop rules live on .filter-sidebar in styles.css) */
+@media (max-width: 768px) {
+  .filter-sidebar.mobile-open .filter-panel {
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+}
