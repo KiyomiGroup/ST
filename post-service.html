@@ -94,6 +94,15 @@
   <svg class="pt-sprite" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
     <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-faucet" viewBox="0 0 24 24"><path d="M5 8h9a3 3 0 0 1 3 3v1"/><path d="M3 8h2"/><path d="M10 8V5"/><path d="M8 5h4"/><path d="M17 15c0 1-1 2-1 3a1 1 0 0 0 2 0c0-1-1-2-1-3z"/></symbol>
+    <symbol id="i-hammer" viewBox="0 0 24 24"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></symbol>
+    <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></symbol>
+    <symbol id="i-paint-roller" viewBox="0 0 24 24"><rect width="16" height="6" x="2" y="2" rx="2"/><path d="M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/><rect width="4" height="6" x="8" y="16" rx="1"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
     </defs>
   </svg>
@@ -103,9 +112,9 @@
 
       <!-- ── Section 1 · Page header ───────────────────────────── -->
       <!-- Desktop: top bar with back link, studio label and step pill -->
-      <div class="ps-topbar pt-desk">
+      <div class="pt-topbar pt-desk">
         <div class="ps-topbar-left">
-          <a class="ps-back" href="dashboard-tasker.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
+          <a class="pt-back" href="dashboard-tasker.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
           <span class="ps-topbar-sep" aria-hidden="true"></span>
           <span class="ps-studio"><span class="ps-studio-dot" aria-hidden="true"></span>Creator Studio</span>
         </div>
@@ -132,43 +141,83 @@
         <p class="pt-lede" id="formSubtitle">Fill in your details below. Your listing will be saved, then you'll verify your identity before it goes live.</p>
       </header>
 
-      <!-- Sections 2-9 are rebuilt one at a time; until then the existing form sits here -->
-      <div class="ps-legacy">
+      <!-- Sections 3-9 are rebuilt one at a time; until then the old fields sit in a card below Service Basics -->
+      <div class="pt-layout">
+        <div class="pt-main" role="main">
 
       <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
 
       <!-- STEP 1: Form — always shown first, no verification gate -->
-      <div class="service-form-card" id="formCard">
-        <form id="serviceForm" novalidate autocomplete="off">
+      <div id="formCard">
+        <form id="serviceForm" class="pt-form" novalidate autocomplete="off">
 
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcName">Service Name *</label>
-            <input type="text" id="svcName" class="service-form-input"
-              placeholder="e.g. Professional House Cleaning" maxlength="100" required />
-          </div>
-
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcCategory">Category *</label>
-            <select id="svcCategory" class="service-form-select" required onchange="onCategoryChange(this.value)">
-              <option value="">Select a category...</option>
-              <option value="barber">Barber / Hair</option>
-              <option value="electrician">Electrician</option>
-              <option value="cleaning">House Cleaning</option>
-              <option value="mechanic">Mechanic / Auto</option>
-              <option value="plumber">Plumber</option>
-              <option value="beauty">Make-up / Beauty</option>
-              <option value="carpentry">Carpentry</option>
-              <option value="painting">Painting</option>
-              <option value="moving">Moving / Delivery</option>
-              <option value="other">Other</option>
-            </select>
-            <div id="otherCategoryWrap" style="display:none;margin-top:10px;">
-              <input type="text" id="svcCategoryOther" class="service-form-input"
-                placeholder="Describe your category (e.g. Pet Care, Event Planning)..."
-                maxlength="60" />
-              <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px;">Optional — helps customers find you.</div>
+          <!-- ── Section 2 · Service Basics ─────────────────────── -->
+          <section class="pt-section" aria-labelledby="secBasics">
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">1</span>
+              <div>
+                <h2 class="pt-section-title" id="secBasics">Service Basics</h2>
+                <p class="pt-section-sub">The primary title and field category for client matching.</p>
+              </div>
+              <span class="ps-section-chip">Step 1.1</span>
             </div>
-          </div>
+
+            <div class="pt-group ps-group-name">
+              <div class="pt-label-row">
+                <label class="pt-label" for="svcName">Service Name <span class="pt-req" aria-hidden="true">*</span></label>
+                <span class="pt-hint"><span class="pt-desk">Clear, specific titles convert best</span><span class="pt-mob">Be specific</span></span>
+              </div>
+              <div class="pt-field" id="svcNameField">
+                <input type="text" id="svcName" class="pt-input" placeholder="e.g. Professional Home &amp; Deep Cleaning" maxlength="100" required autocomplete="off" />
+                <svg class="pt-i pt-field-check" aria-hidden="true"><use href="#i-check-circle"/></svg>
+              </div>
+            </div>
+
+            <div class="pt-group ps-group-category">
+              <div class="pt-label-row">
+                <label class="pt-label" for="svcCategory">Category <span class="pt-req" aria-hidden="true">*</span></label>
+                <span class="pt-hint pt-mob">Helps customers find you</span>
+              </div>
+              <div class="pt-field pt-select-wrap">
+                <select id="svcCategory" class="pt-input pt-select" required>
+                  <option value="">Select a category...</option>
+                  <option value="barber">Barber / Hair</option>
+                  <option value="electrician">Electrician</option>
+                  <option value="cleaning">House Cleaning</option>
+                  <option value="mechanic">Mechanic / Auto</option>
+                  <option value="plumber">Plumber</option>
+                  <option value="beauty">Make-up / Beauty</option>
+                  <option value="carpentry">Carpentry &amp; Tailoring Crafts</option>
+                  <option value="painting">Painting</option>
+                  <option value="moving">Moving / Delivery</option>
+                  <option value="other">Other</option>
+                </select>
+                <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+              </div>
+
+              <div class="ps-other" id="otherCategoryWrap" hidden>
+                <div class="pt-field">
+                  <input type="text" id="svcCategoryOther" class="pt-input" placeholder="Describe your category (e.g. Pet Care, Event Planning)..." maxlength="60" autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="ps-quick">
+                <span class="pt-label pt-label-sm pt-desk">Quick Select Popular:</span>
+                <div class="pt-chips" id="svcChips" role="group" aria-label="Popular categories">
+                  <button type="button" class="pt-chip" data-category="cleaning" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-brush"/></svg><span><span class="pt-desk">House Cleaning</span><span class="pt-mob">Cleaning</span></span></button>
+                  <button type="button" class="pt-chip" data-category="electrician" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-zap"/></svg><span>Electrician</span></button>
+                  <button type="button" class="pt-chip" data-category="plumber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-faucet"/></svg><span>Plumber</span></button>
+                  <button type="button" class="pt-chip" data-category="barber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-scissors"/></svg><span>Barber / Hair</span></button>
+                  <button type="button" class="pt-chip" data-category="carpentry" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-hammer"/></svg><span><span class="pt-desk">Carpentry &amp; Craft</span><span class="pt-mob">Carpentry</span></span></button>
+                  <button type="button" class="pt-chip" data-category="painting" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-paint-roller"/></svg><span>Painting</span></button>
+                </div>
+              </div>
+              <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-info"/></svg><span>Optional &mdash; helps customers find you in localized neighborhood search.</span></p>
+            </div>
+          </section>
+
+          <!-- Old fields (Sections 3-7) stay here until each is rebuilt -->
+          <div class="service-form-card">
 
           <div class="service-form-group">
             <label class="service-form-label">Rate *</label>
@@ -262,6 +311,7 @@
               Your listing is saved first. You'll verify your identity in the next step.
             </p>
           </div>
+          </div><!-- /.service-form-card -->
         </form>
       </div>
 
@@ -324,7 +374,8 @@
 
       </div>
 
-      </div><!-- /.ps-legacy -->
+        </div><!-- /.pt-main -->
+      </div><!-- /.pt-layout -->
 
     </div>
   </div>
@@ -369,7 +420,7 @@
 
     function onCategoryChange(val) {
       var wrap = document.getElementById('otherCategoryWrap');
-      if (wrap) wrap.style.display = val === 'other' ? 'block' : 'none';
+      if (wrap) wrap.hidden = val !== 'other';
     }
     window.onCategoryChange = onCategoryChange;
 

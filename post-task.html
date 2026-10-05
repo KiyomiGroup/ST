@@ -16,6 +16,7 @@
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->
   <svg class="pt-sprite" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
     <symbol id="i-plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></symbol>
     <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
     <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
@@ -56,6 +57,11 @@
 
   <div class="pt-page">
     <div class="pt-container">
+
+      <!-- ── Top bar (desktop) ──────────────────────────────────── -->
+      <div class="pt-topbar pt-desk">
+        <a class="pt-back" href="dashboard-customer.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
+      </div>
 
       <!-- ── Header ─────────────────────────────────────────────── -->
       <header class="pt-header">

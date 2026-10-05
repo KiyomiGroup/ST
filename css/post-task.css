@@ -31,6 +31,22 @@
 }
 .pt-container { position: relative; width: min(1120px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 
+/* ── Top bar: back link (shared with post-service) ───────── */
+.pt-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4); margin-bottom: var(--space-6);
+}
+.pt-back {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); color: var(--pt-ink); text-decoration: none; white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600;
+  transition: background var(--t) var(--ease);
+}
+.pt-back .pt-i { width: 16px; height: 16px; }
+.pt-back:hover { background: var(--pt-field-icon); }
+.pt-back:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
 /* ── Header ──────────────────────────────────────────────── */
 .pt-header {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "copy draft";
