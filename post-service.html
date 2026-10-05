@@ -103,6 +103,8 @@
     <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></symbol>
     </defs>
   </svg>
 
@@ -253,17 +255,33 @@
             </div>
           </section>
 
-          <!-- Old fields (Sections 4-7) stay here until each is rebuilt -->
-          <div class="service-form-card">
-
-          <div class="service-form-group">
-            <label class="service-form-label" for="svcLocation">Location *</label>
-            <div style="position:relative;">
-              <input type="text" id="svcLocation" class="service-form-input"
-                placeholder="e.g. Lekki Phase 1, Lagos" required autocomplete="off" />
-              <div id="svcLocationSuggestions" class="location-suggestions"></div>
+          <!-- ── Section 4 · Location ───────────────────────────── -->
+          <section class="pt-section" aria-labelledby="secLocation">
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">3</span>
+              <div>
+                <h2 class="pt-section-title" id="secLocation">Location</h2>
+                <p class="pt-section-sub">Where you are based, so nearby customers can find you.</p>
+              </div>
+              <span class="ps-section-chip">Step 1.3</span>
             </div>
-          </div>
+
+            <div class="pt-group ps-group-location">
+              <div class="pt-label-row">
+                <label class="pt-label" for="svcLocation"><span class="pt-desk">Primary Hub Location</span><span class="pt-mob">Location</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                <button type="button" class="pt-link ps-use-loc pt-mob" data-use-location><svg class="pt-i" aria-hidden="true"><use href="#i-locate"/></svg>Use Current</button>
+              </div>
+              <div class="pt-field pt-loc-wrap">
+                <svg class="pt-i pt-field-icon" aria-hidden="true"><use href="#i-pin"/></svg>
+                <input type="text" id="svcLocation" class="pt-input" placeholder="e.g. Lekki Phase 1, Lagos" required autocomplete="off" />
+                <button type="button" class="ps-use-pill pt-desk" data-use-location><svg class="pt-i" aria-hidden="true"><use href="#i-locate"/></svg>Use Current</button>
+                <div id="svcLocationSuggestions" class="location-suggestions"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Old fields (Sections 5-7) stay here until each is rebuilt -->
+          <div class="service-form-card">
 
           <div class="service-form-group">
             <label class="service-form-label" for="svcDescription">

@@ -2,7 +2,7 @@
    StreetTasker — post-service-ui.js
    Post a Service page: header progress (desktop pill + mobile bar)
    the Service Basics section (category chips, valid check)
-   and Pricing & Rate (charging unit).
+   Pricing & Rate (charging unit) and Location (Use Current).
    Step 1 of 2 fills 0 to 50% as the five required fields are completed.
    Step 2 (the verify prompt) shows 75%.
    ============================================================ */
@@ -93,6 +93,39 @@
       if (typeof window.onCategoryChange === 'function') window.onCategoryChange(catSelect.value);
     });
   }
+
+
+  /* ── Location: "Use Current" fills #svcLocation from GPS (same flow as Post a Task) ── */
+  var locInput = el('svcLocation');
+  var locBtns = document.querySelectorAll('[data-use-location]');
+  function toast(msg) { if (typeof window.showToast === 'function') window.showToast(msg); }
+  function setBtns(disabled) { for (var b = 0; b < locBtns.length; b++) locBtns[b].disabled = disabled; }
+  function useCurrentLocation() {
+    if (!locInput) return;
+    if (!navigator.geolocation) { toast('GPS not available on this device.'); return; }
+    setBtns(true);
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = pos.coords.latitude, lon = pos.coords.longitude;
+      var done = function (label, rLat, rLon, precise) {
+        locInput.value = label;
+        locInput.dataset.lat = rLat; locInput.dataset.lon = rLon; locInput.dataset.precise = precise ? '1' : '0';
+        setBtns(false);
+        locInput.dispatchEvent(new Event('input', { bubbles: true }));
+        locInput.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      var fallback = function () { done(lat.toFixed(5) + ', ' + lon.toFixed(5), lat, lon, true); };
+      if (typeof window._reverse === 'function') {
+        Promise.resolve(window._reverse(lat, lon)).then(function (r) {
+          if (r) done(r.label, r.lat, r.lon, r.precise); else fallback();
+        }, fallback);
+      } else { fallback(); }
+    }, function (err) {
+      setBtns(false);
+      var msgs = { 1: 'Location permission denied. Please type your address.', 2: 'Could not detect your location.', 3: 'Location request timed out.' };
+      toast(msgs[err.code] || 'GPS failed. Please type your address.');
+    }, { timeout: 15000, maximumAge: 0, enableHighAccuracy: true });
+  }
+  for (var lb = 0; lb < locBtns.length; lb++) locBtns[lb].addEventListener('click', useCurrentLocation);
 
   var form = el('serviceForm');
   if (form) {

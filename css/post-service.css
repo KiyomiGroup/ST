@@ -53,6 +53,19 @@
 .ps-rate-grid + .pt-help { margin-top: var(--space-4); }
 .ps-rate-amount .pt-help, .ps-rate-amount .pt-error { margin-top: var(--space-2); }
 
+/* ── Section 4 · Location ────────────────────────────────── */
+/* location.js adds its own status line under the field; the design has none, the toast covers errors */
+.ps-group-location .location-hint { display: none; }
+.ps-use-pill {
+  display: inline-flex; align-items: center; gap: var(--space-2); flex-shrink: 0; height: 32px; margin-left: var(--space-3);
+  padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); color: var(--pt-ink);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+}
+.ps-use-pill .pt-i { width: 14px; height: 14px; color: var(--pt-green); }
+.ps-use-pill:hover { background: var(--pt-field-icon); }
+.ps-use-pill:disabled, .ps-use-loc:disabled { opacity: 0.6; cursor: wait; }
+
 /* ── Between desktop and mobile ──────────────────────────── */
 
 /* ── Mobile (max-width: 768px) ───────────────────────────── */
@@ -65,6 +78,9 @@
     font-size: var(--text-sm);
   }
   .ps-units .pt-segment-opt input:checked + span { background: var(--pt-green); color: var(--color-text-on-primary); box-shadow: none; }
+  /* Use Current becomes a mint pill in the label row */
+  .ps-use-loc { height: 32px; padding: 0 var(--space-3); border-radius: var(--radius-pill); background: var(--pt-mint); font-size: var(--text-sm); }
+  .ps-use-loc:hover { text-decoration: none; }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }
