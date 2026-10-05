@@ -193,7 +193,20 @@
 .ps-quick-note { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-2xl); background: var(--pt-escrow-icon); font-size: var(--text-sm); line-height: 1.4; color: var(--pt-escrow-text); }
 .ps-quick-note .pt-i { width: 20px; height: 20px; flex-shrink: 0; color: var(--pt-mint); }
 
+/* ── Error banner (shown by the save code) ───────────────── */
+.ps-alert {
+  display: none; margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg);
+  background: var(--pt-danger-soft); color: var(--pt-danger);
+  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; line-height: 1.4;
+}
+
 /* ── Between desktop and mobile ──────────────────────────── */
+@media (min-width: 769px) and (max-width: 1043px) {
+  /* Narrow main column: note sits above the buttons */
+  .ps-submit { flex-wrap: wrap; }
+  .ps-submit-note { flex-basis: 100%; }
+  .ps-submit-row { margin-left: auto; }
+}
 
 /* ── Mobile (max-width: 768px) ───────────────────────────── */
 @media (max-width: 768px) {
@@ -237,6 +250,13 @@
   .ps-submit-row { display: block; }
   .ps-post-btn { width: 100%; height: 52px; font-weight: 700; }
   .ps-verify { padding: var(--space-5) var(--space-4); }
+  /* Final pass */
+  /* post-task.css hides .pt-dropzone on mobile (its photos use thumbnails); Post a Service keeps the drop card */
+  .ps-dropzone { display: flex; }
+  /* Focused form: the floating tab bar would cover the sticky action bar, so it is hidden here (and its extra page padding removed) */
+  body.ps-body.st-logged-in { padding-bottom: 0; }
+  body.ps-body.st-logged-in .st-bottom-nav { display: none; }
+  .ps-submit { padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }

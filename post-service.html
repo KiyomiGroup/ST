@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 </head>
-<body>
+<body class="ps-body">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: icons used by the page header -->
@@ -84,7 +84,7 @@
       <div class="pt-layout">
         <div class="pt-main" role="main">
 
-      <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
+      <div class="ps-alert" id="errorMsg" role="alert"></div>
 
       <!-- STEP 1: Form — always shown first, no verification gate -->
       <div id="formCard">
@@ -243,8 +243,8 @@
               <input type="hidden" id="svcAvailability" value="available_this_week" />
               <div class="ps-avail" id="availOptions" role="radiogroup" aria-labelledby="availLabel">
                 <label class="ps-avail-opt"><input type="radio" name="availability" value="available_now" /><span><span class="ps-avail-dot pt-desk" aria-hidden="true"></span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-check-circle"/></svg>Available now</span></label>
-                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_today" /><span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-clock"/></svg>Available today</span></label>
-                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_this_week" checked /><span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-calendar"/></svg>Available this week</span></label>
+                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_today" /><span><span class="ps-avail-dot pt-desk" aria-hidden="true"></span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-clock"/></svg>Available today</span></label>
+                <label class="ps-avail-opt"><input type="radio" name="availability" value="available_this_week" checked /><span><span class="ps-avail-dot pt-desk" aria-hidden="true"></span><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-calendar"/></svg>Available this week</span></label>
               </div>
             </div>
 
