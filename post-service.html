@@ -9,23 +9,6 @@
   <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <style>
-    .service-form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 36px 40px; box-shadow: var(--shadow-sm); }
-    .service-form-heading { margin-bottom: 28px; }
-    .service-form-heading h1 { font-size: 1.5rem; margin-bottom: 6px; }
-    .service-form-heading p  { font-size: 0.88rem; color: var(--text-muted); }
-    .service-form-group { margin-bottom: 20px; }
-    .service-form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 7px; }
-    .service-form-input, .service-form-select, .service-form-textarea {
-      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
-      border-radius: var(--radius-md); font-size: 0.9rem; font-family: var(--font);
-      color: var(--text-primary); background: var(--white); box-sizing: border-box;
-      transition: border-color 0.15s, box-shadow 0.15s; outline: none;
-    }
-    .service-form-input:focus, .service-form-select:focus, .service-form-textarea:focus {
-      border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light);
-    }
-    .service-form-textarea { resize: vertical; min-height: 100px; }
-
     /* Verify prompt card */
     .verify-prompt {
       display: none;
@@ -68,7 +51,7 @@
     .vp-later a { color: var(--blue); }
 
     @media (max-width: 640px) {
-      .service-form-card, .verify-prompt { padding: 24px 20px; }
+      .verify-prompt { padding: 24px 20px; }
     }
   </style>
 </head>
@@ -98,6 +81,8 @@
     <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></symbol>
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
     </defs>
   </svg>
 
@@ -357,18 +342,15 @@
             </div>
           </section>
 
-          <!-- Old fields (Section 7) stay here until rebuilt -->
-          <div class="service-form-card">
-
-          <div style="padding-top:8px; border-top:1px solid var(--border); margin-top:8px;">
-            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-              Save &amp; Continue
-            </button>
-            <p style="font-size:0.76rem; color:var(--text-muted); text-align:center; margin-top:10px;">
-              Your listing is saved first. You'll verify your identity in the next step.
-            </p>
+          <!-- ── Section 7 · Action bar ─────────────────────────── -->
+          <div class="pt-submit ps-submit">
+            <p class="pt-submit-note ps-submit-note pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>Your listing is saved as a draft first. You'll verify your identity in the next step before it goes public.</span></p>
+            <div class="pt-submit-row ps-submit-row">
+              <button type="button" class="pt-draft-btn ps-draft-btn pt-desk" id="saveDraftBtn">Save Draft</button>
+              <button type="submit" class="pt-post-btn ps-post-btn" id="submitBtn"><span class="pt-post-label">Save &amp; Continue</span><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+            </div>
+            <p class="pt-submit-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><span>Saved as a draft first</span><span class="pt-dot" aria-hidden="true"></span><span>Verify to go live</span></p>
           </div>
-          </div><!-- /.service-form-card -->
         </form>
       </div>
 
@@ -453,6 +435,7 @@
   <script>
     'use strict';
     var uploadedPhotoUrl = null;
+    var saveAsDraft = false;
     var savedServiceId   = null;
 
     function getRateValues() {
@@ -543,6 +526,10 @@
       document.getElementById('svcRateUnit').addEventListener('change', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
+      document.getElementById('saveDraftBtn').addEventListener('click', function() {
+        saveAsDraft = true;
+        document.getElementById('serviceForm').requestSubmit();
+      });
       document.getElementById('serviceForm').addEventListener('submit', handleSubmit);
     }
 
@@ -600,6 +587,10 @@
       e.preventDefault();
       var errEl = document.getElementById('errorMsg');
       var btn   = document.getElementById('submitBtn');
+      var btnLabel = btn.querySelector('.pt-post-label');
+      var draftBtn = document.getElementById('saveDraftBtn');
+      /* Save Draft sets this flag then submits the form; Save & Continue leaves it false */
+      var asDraft = saveAsDraft; saveAsDraft = false;
       errEl.style.display = 'none';
 
       var serviceName = document.getElementById('svcName').value.trim();
@@ -619,8 +610,9 @@
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
 
 
-      btn.disabled    = true;
-      btn.textContent = 'Saving...';
+      btn.disabled = true; draftBtn.disabled = true;
+      btnLabel.textContent = asDraft ? 'Save & Continue' : 'Saving...';
+      if (asDraft) draftBtn.textContent = 'Saving...';
 
       try {
         /* Upload photo if selected */
@@ -677,7 +669,7 @@
           location:     location,
           description:  description,
           photo:        photoUrl || null,
-          available:    isVerified,
+          available:    isVerified && !asDraft,
           specialties:  specialties,
           availability_status: availabilityStatus,
         };
@@ -705,6 +697,13 @@
         }
         if (svcRes.error) throw svcRes.error;
         savedServiceId = svcRes.data && svcRes.data.id;
+
+        /* Save Draft: stay on the page. The listing stays unpublished and the public taskers row is untouched */
+        if (asDraft) {
+          showToast('Draft saved. Finish and verify anytime from your dashboard.');
+          btn.disabled = false; draftBtn.disabled = false; draftBtn.textContent = 'Save Draft';
+          return;
+        }
 
         /* Sync taskers table */
         await window.supabase.from('taskers').upsert({
@@ -737,8 +736,8 @@
 
       } catch(err) {
         showErr(err.message || 'Failed to save. Please try again.');
-        btn.disabled    = false;
-        btn.textContent = 'Save & Continue';
+        btn.disabled = false; draftBtn.disabled = false;
+        btnLabel.textContent = 'Save & Continue'; draftBtn.textContent = 'Save Draft';
       }
 
       function showErr(msg) {
