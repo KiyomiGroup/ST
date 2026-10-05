@@ -129,6 +129,70 @@
 .ps-post-btn { flex: 0 0 auto; height: 56px; padding: 0 var(--space-6); font-size: var(--text-base); font-weight: 600; }
 .ps-draft-btn:disabled { opacity: 0.7; cursor: default; }
 
+/* ── Section 8 · Verification sidebar, step-2 prompt, "Why Task" card ── */
+.ps-verify-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.ps-verify-icon { background: var(--pt-field-icon); color: var(--pt-ink-muted); }
+.ps-verify-title { margin-bottom: var(--space-3); font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 600; line-height: 1.15; color: var(--pt-ink); }
+.ps-verify-copy { margin-bottom: var(--space-4); font-size: var(--text-base-sm); line-height: 1.6; color: var(--pt-ink-muted); }
+.ps-draft-note {
+  display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); padding: var(--space-3) var(--space-4);
+  background: var(--color-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-pt-pill);
+}
+.ps-draft-note-icon { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); }
+.ps-draft-note-icon .pt-i { width: 18px; height: 18px; }
+.ps-draft-note p { font-size: var(--text-xs); line-height: 1.4; color: var(--pt-ink-muted); }
+.ps-draft-note strong { display: block; font-weight: 600; color: var(--pt-ink); }
+.ps-step-idle { background: var(--pt-mint); color: var(--pt-ink); }
+.ps-verify-btn { width: 100%; height: 56px; margin-top: var(--space-5); font-size: var(--text-base); font-weight: 600; text-decoration: none; }
+.ps-verify-later {
+  display: block; width: 100%; margin-top: var(--space-4); text-align: center;
+  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 500; color: var(--pt-ink-muted); text-decoration: none;
+}
+.ps-verify-later:hover { text-decoration: underline; }
+.ps-verify-foot { margin-top: var(--space-5); text-align: center; font-size: var(--text-xs); line-height: 1.5; color: var(--pt-ink-muted); }
+.ps-verify-foot a { color: var(--pt-green); font-weight: 600; text-decoration: underline; }
+.pt-layout.is-step-2 .ps-verify-card { display: none; }
+
+/* Step 2: shown after Save & Continue, in place of the form */
+.ps-verify { display: none; padding: var(--space-6); }
+.ps-verify-hero { width: 56px; height: 56px; margin-bottom: var(--space-4); }
+.ps-verify-hero .pt-i { width: 28px; height: 28px; }
+.ps-verify .ps-steps { margin-bottom: 0; }
+.ps-verify-actions { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-5); }
+.ps-verify-actions .ps-verify-btn { margin-top: 0; }
+.ps-verify-actions .pt-draft-btn { width: 100%; height: 52px; }
+
+/* Why Task with StreetTasker? */
+.ps-why-title { margin-bottom: var(--space-4); font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 600; line-height: 1.15; color: var(--pt-ink); }
+.ps-why-list { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5); }
+.ps-why-list li { display: flex; align-items: flex-start; gap: var(--space-3); }
+.ps-why-icon { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); }
+.ps-why-icon .pt-i { width: 18px; height: 18px; }
+.ps-why-list h3 { font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 700; color: var(--pt-ink); }
+.ps-why-list p { margin-top: 2px; font-size: var(--text-xs); line-height: 1.4; color: var(--pt-ink-muted); }
+.ps-why-foot { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-2xl); background: var(--pt-field); font-size: var(--text-xs); font-weight: 500; line-height: 1.4; color: var(--pt-ink); }
+.ps-why-foot-icon { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--pt-field-icon); color: var(--pt-green); }
+.ps-why-foot-icon .pt-i { width: 18px; height: 18px; }
+
+/* Mobile "Quick verification" card (shown only on mobile via .pt-mob) */
+.ps-quick-card { position: relative; overflow: hidden; margin-top: var(--space-4); padding: var(--space-5) var(--space-4); border-radius: var(--radius-2xl); background: var(--pt-green); color: var(--color-text-on-primary); }
+.ps-quick-card::after { content: ''; position: absolute; right: -48px; bottom: -64px; width: 160px; height: 160px; border-radius: 50%; background: var(--pt-escrow-deco); }
+.ps-quick-card > * { position: relative; z-index: 1; }
+.ps-quick-badge {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 var(--space-3); border-radius: var(--radius-pill);
+  background: var(--pt-mint); color: var(--pt-green);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.ps-quick-title { margin: var(--space-4) 0 var(--space-3); font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 700; line-height: 1.15; color: var(--color-text-on-primary); }
+.ps-quick-copy { margin-bottom: var(--space-5); font-size: var(--text-base); line-height: 1.6; color: var(--pt-escrow-text); }
+.ps-quick-steps { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5); }
+.ps-quick-steps li { display: flex; align-items: flex-start; gap: var(--space-3); }
+.ps-quick-num { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 700; }
+.ps-quick-steps h3 { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700; color: var(--color-text-on-primary); }
+.ps-quick-steps p { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.4; color: var(--pt-escrow-text); }
+.ps-quick-note { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-2xl); background: var(--pt-escrow-icon); font-size: var(--text-sm); line-height: 1.4; color: var(--pt-escrow-text); }
+.ps-quick-note .pt-i { width: 20px; height: 20px; flex-shrink: 0; color: var(--pt-mint); }
+
 /* ── Between desktop and mobile ──────────────────────────── */
 
 /* ── Mobile (max-width: 768px) ───────────────────────────── */
@@ -172,6 +236,7 @@
   .ps-submit { display: block; padding: var(--space-4) var(--space-4) var(--space-3); }
   .ps-submit-row { display: block; }
   .ps-post-btn { width: 100%; height: 52px; font-weight: 700; }
+  .ps-verify { padding: var(--space-5) var(--space-4); }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }

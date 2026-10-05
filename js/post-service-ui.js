@@ -66,6 +66,8 @@
 
   function update() {
     syncBasics();
+    var layout = document.querySelector('.pt-layout');
+    if (layout) layout.classList.toggle('is-step-2', currentStep() === 2);
     if (currentStep() === 2) { render(2, STEP2_PCT); return; }
     render(1, Math.round(countFilled() / 5 * STEP1_MAX));
   }
