@@ -17,15 +17,7 @@
 }
 .ps-studio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pt-green); }
 
-.ps-step-pill {
-  display: inline-flex; align-items: center; gap: var(--space-3);
-  height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill);
-  background: var(--pt-field-strong); white-space: nowrap;
-  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink-muted);
-}
-.ps-step-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--color-border-strong); }
-.ps-step-track { width: 64px; height: 6px; border-radius: var(--radius-pill); background: var(--pt-toggle-off); overflow: hidden; }
-.ps-step-fill { display: block; height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
+/* Step pill and mobile progress are shared with Post a Task: see post-task.css */
 
 /* ── Section 1 · Header copy ─────────────────────────────── */
 .ps-header { margin-bottom: var(--space-6); }
@@ -37,18 +29,6 @@
 }
 .ps-badge .pt-i { width: 14px; height: 14px; }
 .ps-header .pt-title { margin: var(--space-4) 0 var(--space-3); }
-
-/* ── Section 1 · Mobile progress ─────────────────────────── */
-.ps-progress-m { margin-bottom: var(--space-5); }
-.ps-progress-m-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
-.ps-progress-m-step {
-  display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0;
-  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink);
-}
-.ps-progress-m-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--pt-green); }
-.ps-progress-m-pct { flex-shrink: 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink); }
-.ps-progress-m-track { height: 6px; border-radius: var(--radius-pill); background: var(--pt-field-strong); overflow: hidden; }
-.ps-progress-m-fill { height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
 
 /* ── Section 2 · Service Basics ──────────────────────────── */
 .ps-section-chip {
@@ -63,11 +43,28 @@
 .ps-quick .pt-chips { gap: var(--space-3); }
 .ps-group-category .pt-help { margin-top: var(--space-4); }
 
+/* ── Section 3 · Pricing & Rate ──────────────────────────── */
+.ps-rate-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-4); align-items: start; }
+.ps-rate-amount .pt-budget-field { max-width: none; }
+.ps-rate-input { -moz-appearance: textfield; appearance: textfield; }
+.ps-rate-input::-webkit-outer-spin-button, .ps-rate-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.ps-units { grid-template-columns: repeat(5, minmax(0, 1fr)); min-height: 56px; padding: var(--space-1); }
+.ps-units .pt-segment-opt > span { padding: var(--space-2); font-size: var(--text-sm); white-space: nowrap; }
+.ps-rate-grid + .pt-help { margin-top: var(--space-4); }
+.ps-rate-amount .pt-help, .ps-rate-amount .pt-error { margin-top: var(--space-2); }
+
 /* ── Between desktop and mobile ──────────────────────────── */
-@media (max-width: 1043px) { .ps-step-track { width: 40px; } }
 
 /* ── Mobile (max-width: 768px) ───────────────────────────── */
 @media (max-width: 768px) {
+  .ps-rate-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  /* Unit options become the same small pills as Post a Task's budget presets */
+  .ps-units { display: flex; flex-wrap: wrap; gap: var(--space-1); min-height: 0; padding: 0; background: none; border-radius: 0; }
+  .ps-units .pt-segment-opt > span {
+    height: 36px; padding: 0 var(--space-3); background: var(--pt-field); color: var(--pt-ink);
+    font-size: var(--text-sm);
+  }
+  .ps-units .pt-segment-opt input:checked + span { background: var(--pt-green); color: var(--color-text-on-primary); box-shadow: none; }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }

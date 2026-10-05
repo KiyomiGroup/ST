@@ -37,8 +37,6 @@
     .upload-zone small { font-size: 0.73rem; color: var(--text-muted); }
     .upload-preview { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); }
     .upload-change-btn { margin-top: 8px; font-size: 0.78rem; color: var(--blue); cursor: pointer; background: none; border: none; padding: 0; }
-    .rate-hint-ok  { color: #16a34a; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
-    .rate-hint-err { color: #dc2626; font-size: 0.76rem; margin-top: 5px; min-height: 16px; }
 
     /* Verify prompt card */
     .verify-prompt {
@@ -102,6 +100,7 @@
     <symbol id="i-paint-roller" viewBox="0 0 24 24"><rect width="16" height="6" x="2" y="2" rx="2"/><path d="M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/><rect width="4" height="6" x="8" y="16" rx="1"/></symbol>
     <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
     </defs>
@@ -118,21 +117,21 @@
           <span class="ps-topbar-sep" aria-hidden="true"></span>
           <span class="ps-studio"><span class="ps-studio-dot" aria-hidden="true"></span>Creator Studio</span>
         </div>
-        <div class="ps-step-pill" role="status" aria-live="polite">
+        <div class="pt-step-pill" role="status" aria-live="polite">
           <span>Listing Step <span id="psStepNumDesktop">1 of 2</span></span>
-          <span class="ps-step-sep" aria-hidden="true"></span>
+          <span class="pt-step-sep" aria-hidden="true"></span>
           <span id="psStepNameDesktop">Create Service Listing</span>
-          <span class="ps-step-track" aria-hidden="true"><span class="ps-step-fill" id="psProgressFillDesktop"></span></span>
+          <span class="pt-step-track" aria-hidden="true"><span class="pt-step-fill" id="psProgressFillDesktop"></span></span>
         </div>
       </div>
 
       <!-- Mobile: progress sits above the title -->
-      <section class="ps-progress-m pt-mob" aria-label="Form progress">
-        <div class="ps-progress-m-top">
-          <span class="ps-progress-m-step"><span class="ps-progress-m-dot" aria-hidden="true"></span><span id="psStepLabelMobile">Step 1 of 2 &bull; Service Details</span></span>
-          <span class="ps-progress-m-pct" id="psProgressPctMobile">0%</span>
+      <section class="pt-progress-m pt-mob" aria-label="Form progress">
+        <div class="pt-progress-m-top">
+          <span class="pt-progress-m-step"><span class="pt-progress-m-dot" aria-hidden="true"></span><span id="psStepLabelMobile">Step 1 of 2 &bull; Service Details</span></span>
+          <span class="pt-progress-m-pct" id="psProgressPctMobile">0%</span>
         </div>
-        <div class="ps-progress-m-track" aria-hidden="true"><div class="ps-progress-m-fill" id="psProgressFillMobile"></div></div>
+        <div class="pt-progress-m-track" aria-hidden="true"><div class="pt-progress-m-fill" id="psProgressFillMobile"></div></div>
       </section>
 
       <header class="ps-header">
@@ -216,30 +215,46 @@
             </div>
           </section>
 
-          <!-- Old fields (Sections 3-7) stay here until each is rebuilt -->
-          <div class="service-form-card">
-
-          <div class="service-form-group">
-            <label class="service-form-label">Rate *</label>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <div style="position:relative;flex:1;">
-                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text-muted);pointer-events:none;">&#8358;</span>
-                <input type="number" id="svcPrice" class="service-form-input" style="padding-left:28px;"
-                  placeholder="e.g. 5000" min="0" step="1" required />
+          <!-- ── Section 3 · Pricing & Rate ─────────────────────── -->
+          <section class="pt-section" aria-labelledby="secPricing">
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">2</span>
+              <div>
+                <h2 class="pt-section-title" id="secPricing">Pricing &amp; Rate</h2>
+                <p class="pt-section-sub">Set transparent pricing for your prospective clients.</p>
               </div>
-              <span style="color:var(--text-muted);font-weight:600;flex-shrink:0;">/</span>
-              <select id="svcRateUnit" class="service-form-select" style="flex:1;max-width:140px;">
-                <option value="hour">hour</option>
-                <option value="job" selected>job</option>
-                <option value="day">day</option>
-                <option value="session">session</option>
-                <option value="visit">visit</option>
-                <option value="week">week</option>
-                <option value="month">month</option>
-              </select>
+              <span class="ps-section-chip">Step 1.2</span>
             </div>
-            <div id="rateParsedHint" class="rate-hint-ok" style="margin-top:5px;font-size:0.76rem;min-height:16px;"></div>
-          </div>
+
+            <div class="pt-group ps-group-rate">
+              <div class="ps-rate-grid">
+                <div class="ps-rate-amount">
+                  <label class="pt-label" for="svcPrice"><span class="pt-desk">Rate Amount</span><span class="pt-mob">Rate</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                  <div class="pt-field pt-budget-field">
+                    <span class="pt-naira" aria-hidden="true">&#8358;</span>
+                    <input type="number" inputmode="numeric" id="svcPrice" class="pt-input pt-budget ps-rate-input" placeholder="12,500" min="0" step="1" required autocomplete="off" />
+                  </div>
+                  <div id="rateParsedHint" class="pt-help" aria-live="polite"></div>
+                </div>
+
+                <div class="ps-rate-unit">
+                  <span class="pt-label pt-desk" id="rateUnitLabel">Charging Unit <span class="pt-req" aria-hidden="true">*</span></span>
+                  <input type="hidden" id="svcRateUnit" value="job" />
+                  <div class="pt-segment ps-units" id="rateUnits" role="radiogroup" aria-labelledby="rateUnitLabel" aria-label="Charging unit">
+                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="hour" /><span><span class="pt-desk">/ hour</span><span class="pt-mob">/ hr</span></span></label>
+                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="job" checked /><span>/ job</span></label>
+                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="day" /><span>/ day</span></label>
+                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="session" /><span>/ session</span></label>
+                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="visit" /><span>/ visit</span></label>
+                  </div>
+                </div>
+              </div>
+              <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg><span><strong>Pro Tip:</strong> Fair local pricing attracts repeat clients and higher ratings. You can modify this per custom quotation later.</span></p>
+            </div>
+          </section>
+
+          <!-- Old fields (Sections 4-7) stay here until each is rebuilt -->
+          <div class="service-form-card">
 
           <div class="service-form-group">
             <label class="service-form-label" for="svcLocation">Location *</label>
@@ -408,13 +423,13 @@
       var hint  = document.getElementById('rateParsedHint');
       var price = parseFloat(document.getElementById('svcPrice').value);
       var unit  = document.getElementById('svcRateUnit').value;
-      if (!document.getElementById('svcPrice').value) { hint.textContent = ''; return; }
+      if (!document.getElementById('svcPrice').value) { hint.className = 'pt-help'; hint.textContent = ''; return; }
       if (isNaN(price) || price <= 0) {
-        hint.className = 'rate-hint-err';
+        hint.className = 'pt-error';
         hint.textContent = 'Enter a valid amount';
         return;
       }
-      hint.className = 'rate-hint-ok';
+      hint.className = 'pt-help';
       hint.textContent = 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
     }
 

@@ -1,7 +1,8 @@
 /* ============================================================
    StreetTasker — post-service-ui.js
    Post a Service page: header progress (desktop pill + mobile bar)
-   and the Service Basics section (category chips, valid check).
+   the Service Basics section (category chips, valid check)
+   and Pricing & Rate (charging unit).
    Step 1 of 2 fills 0 to 50% as the five required fields are completed.
    Step 2 (the verify prompt) shows 75%.
    ============================================================ */
@@ -53,6 +54,9 @@
       chips[i].classList.toggle('is-active', on);
       chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
     }
+    var unit = el('svcRateUnit');
+    var radios = document.querySelectorAll('#rateUnits input[type="radio"]');
+    for (var r = 0; r < radios.length; r++) radios[r].checked = !!unit && radios[r].value === unit.value;
     var nameField = el('svcNameField');
     if (nameField) nameField.classList.toggle('is-valid', val('svcName').trim().length > 0);
   }
@@ -64,6 +68,17 @@
   }
 
   window.psUpdateProgress = update;
+
+  /* Charging unit: radios write into the hidden #svcRateUnit the save code reads */
+  var unitWrap = el('rateUnits');
+  var unitInput = el('svcRateUnit');
+  if (unitWrap && unitInput) {
+    unitWrap.addEventListener('change', function (e) {
+      if (!e.target || e.target.name !== 'rateUnit') return;
+      unitInput.value = e.target.value;
+      unitInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
 
   var chipWrap = el('svcChips');
   var catSelect = el('svcCategory');

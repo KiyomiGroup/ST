@@ -685,16 +685,19 @@ function updateProgress() {
   let step = groups.findIndex(g => g.length && !g.every(Boolean)) + 1;
   if (step === 0) step = 4;
 
-  bar.style.width = pct + '%';   /* runtime value: allowed inline */
-  const desk = $id('progressStepDesktop');
-  if (desk) desk.textContent = 'Step ' + step + ' of 4 • ' + pct + '% complete';
+  const names = ['Task Details', 'Execution & Location', 'Budget & Pricing', 'Reference Photos'];
+  /* runtime values: allowed inline */
+  bar.style.width = pct + '%';
+  const barMobile = $id('formProgressBarMobile');
+  if (barMobile) barMobile.style.width = pct + '%';
+  const numDesk = $id('progressStepNumDesktop');
+  if (numDesk) numDesk.textContent = step + ' of 4';
+  const nameDesk = $id('progressStepNameDesktop');
+  if (nameDesk) nameDesk.textContent = names[step - 1];
   const mobStep = $id('progressStepMobile');
-  if (mobStep) {
-    const names = ['Task Details', 'Execution & Location', 'Budget & Pricing', 'Reference Photos'];
-    mobStep.textContent = 'Step ' + step + ' of 4 • ' + names[step - 1];
-  }
+  if (mobStep) mobStep.textContent = 'Step ' + step + ' of 4 \u2022 ' + names[step - 1];
   const mobPct = $id('progressPctMobile');
-  if (mobPct) mobPct.textContent = pct + '% complete';
+  if (mobPct) mobPct.textContent = pct + '%';
 }
 
 /* Kept for pages that still call it */

@@ -90,21 +90,27 @@
 .pt-main { min-width: 0; }
 .pt-form { display: flex; flex-direction: column; gap: var(--space-5); }
 
-/* ── Progress card ───────────────────────────────────────── */
-.pt-progress {
-  margin-bottom: var(--space-5); padding: var(--space-5);
-  background: var(--color-bg); border-radius: var(--radius-2xl); box-shadow: var(--shadow-pt-card);
+/* ── Progress: step pill (desktop, in the top bar) + bar above the title (mobile) ── */
+.pt-step-pill {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink-muted);
 }
-.pt-progress-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
-.pt-progress-left { display: flex; align-items: center; gap: var(--space-3); min-width: 0; flex: 1; }
-.pt-progress-title { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 600; line-height: 1.2; color: var(--pt-ink); }
-.pt-required-chip {
-  padding: 2px var(--space-3); border-radius: var(--radius-pill);
-  background: var(--pt-field-strong); font-size: var(--text-xs); color: var(--pt-ink-muted); white-space: nowrap;
+.pt-step-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--color-border-strong); }
+.pt-step-track { width: 64px; height: 6px; border-radius: var(--radius-pill); background: var(--pt-toggle-off); overflow: hidden; }
+.pt-step-fill { display: block; height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
+
+.pt-progress-m { margin-bottom: var(--space-5); }
+.pt-progress-m-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.pt-progress-m-step {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0;
+  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink);
 }
-.pt-progress-step { font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 700; color: var(--pt-green); white-space: nowrap; }
-.pt-progress-track { height: 10px; border-radius: var(--radius-pill); background: var(--pt-field-strong); overflow: hidden; }
-.pt-progress-fill { height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
+.pt-progress-m-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--pt-green); }
+.pt-progress-m-pct { flex-shrink: 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink); }
+.pt-progress-m-track { height: 6px; border-radius: var(--radius-pill); background: var(--pt-field-strong); overflow: hidden; }
+.pt-progress-m-fill { height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
 
 /* ── Section cards ───────────────────────────────────────── */
 .pt-section {
@@ -447,6 +453,7 @@
 
 /* ── Between desktop and mobile: sidebar drops under the form ── */
 @media (max-width: 1164px) { .pt-container { width: calc(100% - 2 * var(--space-5)); } }
+@media (max-width: 1043px) { .pt-step-track { width: 40px; } }
 @media (min-width: 769px) and (max-width: 1043px) {
   .pt-layout { grid-template-columns: minmax(0, 1fr); }
   .pt-aside { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
@@ -477,16 +484,6 @@
   .pt-eyebrow { height: 28px; background: var(--pt-field-strong); font-size: var(--text-base-sm); font-weight: 600; letter-spacing: 0; text-transform: none; }
   .pt-title { margin: var(--space-3) 0 var(--space-2); }
   .pt-lede { font-size: var(--text-base); line-height: 24px; }
-
-  /* Progress */
-  .pt-progress { margin-bottom: var(--space-5); padding: var(--space-4); background: var(--pt-field); border-radius: var(--radius-2xl); box-shadow: none; }
-  .pt-progress-top { margin-bottom: var(--space-3); }
-  .pt-progress-step { display: inline-flex; align-items: center; gap: var(--space-2); }
-  .pt-progress-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pt-green); }
-  .pt-progress-pct { flex-shrink: 0; white-space: nowrap; font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600; color: var(--pt-ink-muted); }
-  .pt-progress-left .pt-progress-step { min-width: 0; font-size: var(--text-base-sm); }
-  .pt-progress-left .pt-progress-step > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pt-progress-track { height: 8px; background: var(--pt-field-strong); }
 
   /* Form: sections dissolve, groups become cards */
   .pt-form { gap: var(--space-4); }

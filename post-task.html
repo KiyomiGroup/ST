@@ -61,7 +61,22 @@
       <!-- ── Top bar (desktop) ──────────────────────────────────── -->
       <div class="pt-topbar pt-desk">
         <a class="pt-back" href="dashboard-customer.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
+        <div class="pt-step-pill" role="status" aria-live="polite">
+          <span>Task Step <span id="progressStepNumDesktop">1 of 4</span></span>
+          <span class="pt-step-sep" aria-hidden="true"></span>
+          <span id="progressStepNameDesktop">Task Details</span>
+          <span class="pt-step-track" aria-hidden="true"><span class="pt-step-fill" id="formProgressBar"></span></span>
+        </div>
       </div>
+
+      <!-- Progress (mobile): sits above the title -->
+      <section class="pt-progress-m pt-mob" aria-label="Form progress">
+        <div class="pt-progress-m-top">
+          <span class="pt-progress-m-step"><span class="pt-progress-m-dot" aria-hidden="true"></span><span id="progressStepMobile">Step 1 of 4 &bull; Task Details</span></span>
+          <span class="pt-progress-m-pct" id="progressPctMobile">0%</span>
+        </div>
+        <div class="pt-progress-m-track" aria-hidden="true"><div class="pt-progress-m-fill" id="formProgressBarMobile"></div></div>
+      </section>
 
       <!-- ── Header ─────────────────────────────────────────────── -->
       <header class="pt-header">
@@ -84,20 +99,6 @@
 
       <div class="pt-layout">
         <div class="pt-main" role="main">
-
-          <!-- ── Progress ─────────────────────────────────────────── -->
-          <section class="pt-progress" aria-label="Form progress">
-            <div class="pt-progress-top">
-              <div class="pt-progress-left">
-                <h2 class="pt-progress-title pt-desk">Task Details</h2>
-                <span class="pt-required-chip pt-desk">Fields marked * are required</span>
-                <span class="pt-progress-step pt-mob"><span class="pt-progress-dot" aria-hidden="true"></span><span id="progressStepMobile">Step 1 of 4 • Task Details</span></span>
-              </div>
-              <span class="pt-progress-step pt-desk" id="progressStepDesktop">Step 1 of 4 • 0% complete</span>
-              <span class="pt-progress-pct pt-mob" id="progressPctMobile">0% complete</span>
-            </div>
-            <div class="pt-progress-track"><div class="pt-progress-fill" id="formProgressBar"></div></div>
-          </section>
 
           <form id="postTaskForm" class="pt-form" novalidate data-supabase-table="tasks" data-supabase-status="open" data-mode="in_person" data-urgency="flexible">
 
