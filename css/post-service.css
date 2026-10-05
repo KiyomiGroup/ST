@@ -1,0 +1,77 @@
+/* ============================================================
+   STREETTASKER — post-service.css
+   Post a Service page (post-service.html). Built section by section.
+   Depends on: styles.css (imports tokens.css) and post-task.css, which
+   supplies the page shell (.pt-page, .pt-container), the title (.pt-title),
+   the lede (.pt-lede) and the .pt-desk / .pt-mob helpers.
+   Only tokens are used here. Breakpoint: 768px (mobile), same as post-task.
+   ============================================================ */
+
+/* ── Temporary: sections not yet rebuilt keep their old card ── */
+.ps-legacy { max-width: 620px; margin: 0 auto; }
+
+/* ── Section 1 · Desktop top bar ─────────────────────────── */
+.ps-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4); margin-bottom: var(--space-6);
+}
+.ps-topbar-left { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.ps-back {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); color: var(--pt-ink); text-decoration: none; white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600;
+  transition: background var(--t) var(--ease);
+}
+.ps-back .pt-i { width: 16px; height: 16px; }
+.ps-back:hover { background: var(--pt-field-icon); }
+.ps-back:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.ps-topbar-sep { width: 1px; height: 20px; background: var(--pt-field-icon); }
+.ps-studio {
+  display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--pt-ink-muted);
+}
+.ps-studio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pt-green); }
+
+.ps-step-pill {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill);
+  background: var(--pt-field-strong); white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink-muted);
+}
+.ps-step-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--color-border-strong); }
+.ps-step-track { width: 64px; height: 6px; border-radius: var(--radius-pill); background: var(--pt-toggle-off); overflow: hidden; }
+.ps-step-fill { display: block; height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
+
+/* ── Section 1 · Header copy ─────────────────────────────── */
+.ps-header { margin-bottom: var(--space-6); }
+.ps-badge {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 28px; padding: 0 var(--space-3); border-radius: var(--radius-pill);
+  background: var(--pt-mint); color: var(--pt-green);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600;
+}
+.ps-badge .pt-i { width: 14px; height: 14px; }
+.ps-header .pt-title { margin: var(--space-4) 0 var(--space-3); }
+
+/* ── Section 1 · Mobile progress ─────────────────────────── */
+.ps-progress-m { margin-bottom: var(--space-5); }
+.ps-progress-m-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.ps-progress-m-step {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0;
+  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink);
+}
+.ps-progress-m-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--pt-green); }
+.ps-progress-m-pct { flex-shrink: 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink); }
+.ps-progress-m-track { height: 6px; border-radius: var(--radius-pill); background: var(--pt-field-strong); overflow: hidden; }
+.ps-progress-m-fill { height: 100%; width: 0; border-radius: var(--radius-pill); background: var(--pt-green); transition: width var(--t) var(--ease); }
+
+/* ── Between desktop and mobile ──────────────────────────── */
+@media (max-width: 1043px) { .ps-step-track { width: 40px; } }
+
+/* ── Mobile (max-width: 768px) ───────────────────────────── */
+@media (max-width: 768px) {
+  .ps-header { margin-bottom: var(--space-4); }
+  .ps-header .pt-title { margin-top: 0; }
+}

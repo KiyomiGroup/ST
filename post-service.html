@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Post a Service — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/post-task.css" />
+  <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <style>
-    .service-form-page { padding-top: var(--nav-height); min-height: 100vh; background: var(--bg-subtle); }
-    .service-form-wrap { max-width: 620px; margin: 0 auto; padding: 40px 24px 80px; }
     .service-form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 36px 40px; box-shadow: var(--shadow-sm); }
     .service-form-heading { margin-bottom: 28px; }
     .service-form-heading h1 { font-size: 1.5rem; margin-bottom: 6px; }
@@ -90,23 +90,55 @@
 <body>
   <div id="navbar-placeholder"></div>
 
-  <div class="service-form-page">
-    <div class="service-form-wrap">
+  <!-- Icon sprite: icons used by the page header -->
+  <svg class="pt-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    </defs>
+  </svg>
 
-      <a href="dashboard-tasker.html" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);text-decoration:none;margin-bottom:20px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Dashboard
-      </a>
+  <div class="pt-page">
+    <div class="pt-container">
+
+      <!-- ── Section 1 · Page header ───────────────────────────── -->
+      <!-- Desktop: top bar with back link, studio label and step pill -->
+      <div class="ps-topbar pt-desk">
+        <div class="ps-topbar-left">
+          <a class="ps-back" href="dashboard-tasker.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
+          <span class="ps-topbar-sep" aria-hidden="true"></span>
+          <span class="ps-studio"><span class="ps-studio-dot" aria-hidden="true"></span>Creator Studio</span>
+        </div>
+        <div class="ps-step-pill" role="status" aria-live="polite">
+          <span>Listing Step <span id="psStepNumDesktop">1 of 2</span></span>
+          <span class="ps-step-sep" aria-hidden="true"></span>
+          <span id="psStepNameDesktop">Create Service Listing</span>
+          <span class="ps-step-track" aria-hidden="true"><span class="ps-step-fill" id="psProgressFillDesktop"></span></span>
+        </div>
+      </div>
+
+      <!-- Mobile: progress sits above the title -->
+      <section class="ps-progress-m pt-mob" aria-label="Form progress">
+        <div class="ps-progress-m-top">
+          <span class="ps-progress-m-step"><span class="ps-progress-m-dot" aria-hidden="true"></span><span id="psStepLabelMobile">Step 1 of 2 &bull; Service Details</span></span>
+          <span class="ps-progress-m-pct" id="psProgressPctMobile">0%</span>
+        </div>
+        <div class="ps-progress-m-track" aria-hidden="true"><div class="ps-progress-m-fill" id="psProgressFillMobile"></div></div>
+      </section>
+
+      <header class="ps-header">
+        <span class="ps-badge pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-badge-check"/></svg>Verified Tasker Network &bull; Guaranteed Payouts</span>
+        <h1 class="pt-title">Post Your Service</h1>
+        <p class="pt-lede" id="formSubtitle">Fill in your details below. Your listing will be saved, then you'll verify your identity before it goes live.</p>
+      </header>
+
+      <!-- Sections 2-9 are rebuilt one at a time; until then the existing form sits here -->
+      <div class="ps-legacy">
 
       <div id="errorMsg" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid rgba(220,38,38,0.12); border-radius:8px; font-size:0.84rem; color:#dc2626; margin-bottom:16px;"></div>
 
       <!-- STEP 1: Form — always shown first, no verification gate -->
       <div class="service-form-card" id="formCard">
-        <div class="service-form-heading">
-          <h1>Post Your Service</h1>
-          <p id="formSubtitle">Fill in your details below. Your listing will be saved, then you'll verify your identity before it goes live.</p>
-        </div>
-
         <form id="serviceForm" novalidate autocomplete="off">
 
           <div class="service-form-group">
@@ -292,6 +324,8 @@
 
       </div>
 
+      </div><!-- /.ps-legacy -->
+
     </div>
   </div>
 
@@ -307,6 +341,7 @@
   <script src="js/app.js"></script>
   <script src="js/location.js"></script>
   <script src="js/verify.js"></script>
+  <script src="js/post-service-ui.js"></script>
   <script>
     'use strict';
     var uploadedPhotoUrl = null;
@@ -388,6 +423,7 @@
             onRateInput();
           }
           updateDescCount();
+          if (window.psUpdateProgress) window.psUpdateProgress();
           document.getElementById('formSubtitle').textContent =
             'You have a saved draft. Update the details below, then continue to verify.';
         }
