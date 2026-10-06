@@ -20,6 +20,8 @@
   var code = '';
   var token = '';
 
+  var LOCKS = { cleaning: 'Cleaning', handyman: 'Handyman & Home Repairs', moving: 'Moving & Heavy Lifting', wardrobe: 'Wardrobe & Tailoring', tech: 'Tech & Inverter Servicing' };
+  function usableText(cat) { return LOCKS[cat] ? 'It can be used on ' + LOCKS[cat] + ' bookings.' : 'It can be used on any booking.'; }
   function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
   function setField(name, text) {
     document.querySelectorAll('[data-f="' + name + '"]').forEach(function (el) { el.textContent = text; });
@@ -78,6 +80,7 @@
     setField('sender', d.senderName);
     setField('theme', theme.label);
     setField('amount', naira(d.amount));
+    setField('usable', usableText(d.category));
     setField('message', '\u201C' + (d.message || '') + '\u201D');
     document.querySelector('[data-f-icon]').setAttribute('href', theme.icon);
     document.querySelector('.gcs-card .gc-cz-card-msg').hidden = !d.message;
@@ -98,9 +101,7 @@
       var d = out.data || {};
       if (out.status === 200 && d.redeemed) {
         setField('credited', naira(d.credited));
-        setField('total', naira(d.giftBalance));
-        var role = ''; try { role = localStorage.getItem('st_role'); } catch (e) { /* ignore */ }
-        document.getElementById('rd-dash').setAttribute('href', role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html');
+        setField('usable', usableText(d.category));
         show('done');
         return;
       }

@@ -1618,6 +1618,8 @@
           '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:var(--text-base);"><span>Total</span><span style="color:var(--blue);">&#8358;' + Number(amount).toLocaleString() + '</span></div>' +
           '<div style="font-size:var(--text-xs);color:var(--green);margin-top:4px;">Tasker receives: &#8358;' + amounts.taskerAmount.toLocaleString() + '</div>' +
         '</div>' +
+        /* Gift cards: filled in after the modal opens, only if the customer has usable cards */
+        '<div id="giftPayBox"></div>' +
         /* Wallet option */
         '<div style="margin-bottom:12px;padding:12px 14px;border:2px solid ' + (canUseWallet ? 'var(--green)' : 'var(--border)') + ';border-radius:var(--radius-md);background:' + (canUseWallet ? '#f0fdf4' : '#fafafa') + ';">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:' + (canUseWallet ? '10px' : '0') + ';">' +
@@ -1636,8 +1638,45 @@
         '</div>' +
         '<button onclick="document.getElementById(&quot;paymentModal&quot;).remove()" style="width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-size:var(--text-sm);">Cancel</button>' +
         '</div>';
+      loadGiftBox(bookingId);   // adds the gift card option if this customer has usable cards
     }
     window.openPaymentModal = openPaymentModal;
+
+    /* Offer gift cards only when this customer has some that can pay for this booking */
+    async function loadGiftBox(bookingId) {
+      var box = document.getElementById('giftPayBox');
+      if (!box || !window.ST.payments.getGiftQuote) return;
+      var q = await window.ST.payments.getGiftQuote(bookingId);
+      box = document.getElementById('giftPayBox');
+      if (!q || !q.giftAmount || !box) return;
+      var rest = q.remainder;
+      box.innerHTML =
+        '<div style="margin-bottom:12px;padding:12px 14px;border:2px solid var(--green);border-radius:var(--radius-md);background:#f0fdf4;">' +
+          '<div style="font-size:var(--text-sm);font-weight:700;color:var(--green);margin-bottom:4px;">🎁 Use gift cards</div>' +
+          '<div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;">&#8358;' + Number(q.giftAmount).toLocaleString() + ' of your gift cards can pay for this booking.' +
+            (rest > 0 ? ' You pay the remaining &#8358;' + Number(rest).toLocaleString() + ' with Paystack.' : '') + '</div>' +
+          '<button id="payGiftBtn" data-label="' + (rest > 0 ? 'Use gift cards + pay &#8358;' + Number(rest).toLocaleString() : 'Pay with gift cards') + '" onclick="doPayGift(&quot;' + bookingId + '&quot;)" style="width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:var(--text-sm);cursor:pointer;">' +
+            (rest > 0 ? 'Use gift cards + pay &#8358;' + Number(rest).toLocaleString() : 'Pay with gift cards') + '</button>' +
+        '</div>';
+    }
+
+    async function doPayGift(bookingId) {
+      var btn = document.getElementById('payGiftBtn');
+      var label = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var cu = sess.data.session && sess.data.session.user;
+        await window.ST.payments.payWithGiftCards({ bookingId: bookingId, customerEmail: cu && cu.email });
+        var m = document.getElementById('paymentModal');
+        if (m) m.remove();
+        _showPaymentSuccess(bookingId);
+      } catch(e) {
+        if (btn) { btn.disabled = false; btn.innerHTML = label; }
+        if (e.message !== 'Payment window closed. Click pay again to retry.') showToast('Payment error: ' + e.message);
+      }
+    }
+    window.doPayGift = doPayGift;
 
     async function doPayWallet(bookingId, amount, taskerUserId) {
       var btn = document.getElementById('payWalletBtn');

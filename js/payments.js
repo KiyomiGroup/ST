@@ -617,6 +617,64 @@ async function fetchPayment(bookingId) {
   } catch(e) { return null; }
 }
 
+/* ── Gift cards ──────────────────────────────────────────────────
+   Gift money is taken by the gift-card-pay Edge Function, never by this browser code.
+   The server works out the price and which cards may be used, then confirms the booking itself. */
+function giftCall(action, payload) {
+  return window.supabase.auth.getSession().then(function (r) {
+    var token = r.data && r.data.session && r.data.session.access_token;
+    if (!token) throw new Error('Please log in to continue.');
+    return fetch(SUPABASE_URL + '/functions/v1/gift-card-pay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token },
+      body: JSON.stringify(Object.assign({ action: action }, payload))
+    });
+  }).then(function (res) {
+    return res.json().catch(function () { return {}; }).then(function (d) {
+      if (!res.ok) { var e = new Error(d.error || 'Gift card payment failed.'); e.code = d.code; throw e; }
+      return d;
+    });
+  });
+}
+
+/* How much of this booking the customer's gift cards can cover (null if none or on any error) */
+function getGiftQuote(bookingId) {
+  return giftCall('quote', { bookingId: bookingId }).catch(function () { return null; });
+}
+
+/* Pay a booking with gift cards, and Paystack for whatever the cards cannot cover */
+async function payWithGiftCards(opts) {
+  var d = await giftCall('pay', { bookingId: opts.bookingId });
+  if (d.done) return d;
+
+  if (typeof PaystackPop === 'undefined') {
+    giftCall('cancel', { holdId: d.holdId }).catch(function () {});
+    throw new Error('Paystack not loaded. Check your internet connection.');
+  }
+  var u = await window.supabase.auth.getUser();
+  var email = opts.customerEmail || (u.data.user && u.data.user.email);
+
+  return new Promise(function (resolve, reject) {
+    var paid = false;
+    function finish(triesLeft) {
+      giftCall('finish', { holdId: d.holdId }).then(resolve, function (err) {
+        if (err.code === 'not_paid' && triesLeft > 0) setTimeout(function () { finish(triesLeft - 1); }, 2000);
+        else reject(err);
+      });
+    }
+    PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY, email: email, amount: d.remainder * 100, ref: d.reference, currency: 'NGN',
+      metadata: { booking_id: opts.bookingId, gift_hold_id: d.holdId },
+      callback: function () { paid = true; finish(3); },
+      onClose: function () {
+        if (paid) return;
+        giftCall('cancel', { holdId: d.holdId }).catch(function () {});
+        reject(new Error('Payment window closed. Click pay again to retry.'));
+      }
+    }).openIframe();
+  });
+}
+
 /* ── Expose globally ─────────────────────────────────────────── */
 window.ST = window.ST || {};
 window.ST.payments = {
@@ -627,6 +685,8 @@ window.ST.payments = {
   withdrawFromWallet,
   payFromWallet,
   initiatePayment,
+  getGiftQuote,
+  payWithGiftCards,
   markJobDone,
   confirmJobComplete,
   submitCompletionCode,

@@ -77,7 +77,8 @@
   };
   var SAMPLE = { name: 'Amaka Obi', from: 'Tunde Adebayo' };
 
-  var state = { theme: 'cleaning', amount: 30000, custom: false };
+  var CATEGORY_KEYS = ['cleaning', 'handyman', 'moving', 'wardrobe', 'tech'];   // 'universal' (or none) = any category
+  var state = { theme: 'cleaning', amount: 30000, custom: false, category: null };
 
   function $(sel) { return form.querySelector(sel); }
   var presets = form.querySelectorAll('.gc-cz-amount');
@@ -158,7 +159,10 @@
 
   // Apply a choice made on the category cards (?card=...&amount=...)
   function applySelection(card, amount) {
-    if (card) setTheme(card === 'cleaning' ? 'cleaning' : 'general');
+    if (card) {
+      setTheme(card === 'cleaning' ? 'cleaning' : 'general');
+      state.category = CATEGORY_KEYS.indexOf(card) !== -1 ? card : null;   // the card is locked to what the buyer picked
+    }
     if (amount === 'custom') {
       setCustom(0);
     } else if (amount) {
@@ -285,7 +289,7 @@
   function saveDraft() {
     try {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
-        at: Date.now(), theme: state.theme, amount: state.amount, custom: state.custom,
+        at: Date.now(), theme: state.theme, category: state.category, amount: state.amount, custom: state.custom,
         delivery: checked('delivery'), name: val(nameEl), contact: val(contactEl), sender: val(senderEl),
         note: val(noteEl), timing: timingEl.value, date: dateEl.value
       }));
@@ -307,6 +311,7 @@
     if (!d || typeof d !== 'object' || !d.at || Date.now() - d.at > DRAFT_MAX_AGE) return false;
 
     if (THEMES[d.theme]) setTheme(d.theme);
+    state.category = CATEGORY_KEYS.indexOf(d.category) !== -1 ? d.category : null;
     if (d.custom) setCustom(Number(d.amount) || 0); else if (Number(d.amount) > 0) setPreset(Number(d.amount));
     var delivery = form.querySelector('input[name="delivery"][value="' + (d.delivery === 'pdf' ? 'pdf' : 'digital') + '"]');
     if (delivery) delivery.checked = true;
@@ -375,6 +380,7 @@
     if (bad) { bad.focus(); return; }
     startCheckout({
       theme: state.theme,
+      category: state.category,
       amount: state.amount,
       delivery: checked('delivery'),
       recipientName: val(nameEl),
