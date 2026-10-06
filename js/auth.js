@@ -69,13 +69,14 @@ function _applyNavState(loggedIn, role, name) {
 
     /* Icon bar links, per role:
        Pending Tasks -> customer: My Tasks, tasker: Bookings
-       Messages / Notifications -> that panel on the user's dashboard
+       Messages -> messages.html (its own page, both roles)
+       Notifications -> that panel on the user's dashboard
        Settings icon -> dropdown (Settings + Log out)
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
     setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
-    setHref('navIconMessages', panelUrl('messages'));
+    setHref('navIconMessages', 'messages.html');
     setHref('navBellBtn',      panelUrl('notifications'));
     setHref('navMenuSettings', panelUrl('profile'));
     document.querySelectorAll('.nav-menu-item[data-nav-role]').forEach(el => {
@@ -144,6 +145,7 @@ function _highlightActivePillItem() {
     'find-tasks.html':         { '': 'np-find-tasks' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
+    'messages.html':           { '': ['np-messages', 'npc-messages'] },
   };
   const pageMap = map[page];
   if (pageMap) {

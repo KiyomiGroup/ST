@@ -14,7 +14,7 @@
   <a href="post-task.html" class="st-bn-plus" id="stBnPlus" aria-label="Post">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </a>
-  <a href="dashboard-customer.html?panel=messages" class="st-bn-item" id="stBnMessages">
+  <a href="messages.html" class="st-bn-item" id="stBnMessages">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span>Messages</span>
   </a>
@@ -38,9 +38,8 @@
   if (elOverview) elOverview.href = dashUrl;
   if (elTasks)    elTasks.href    = isTasker ? 'find-tasks.html' : 'find-taskers.html';
   if (elPlus)     elPlus.href     = isTasker ? 'post-service.html' : 'post-task.html';
-  /* dashboard-tasker.html reads the panel from a #hash, dashboard-customer.html
-     reads it from a ?panel= query param — match whichever the target page expects. */
-  if (elMessages) elMessages.href = isTasker ? (dashUrl + '#messages') : (dashUrl + '?panel=messages');
+  /* Messages is its own page (messages.html) for both roles. */
+  if (elMessages) elMessages.href = 'messages.html';
   if (elProfile)  elProfile.href  = isTasker ? (dashUrl + '#profile')  : (dashUrl + '?panel=profile');
 
   /* Active tab based on the current page */
