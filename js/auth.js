@@ -143,14 +143,17 @@ function _highlightActivePillItem() {
     'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
     'find-tasks.html':         { '': 'np-find-tasks' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
+    'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
   };
   const pageMap = map[page];
   if (pageMap) {
     /* A panel with no pill (notifications, profile) leaves every pill off */
     const targetId = pageMap[panel];
     if (targetId) {
-      const el = document.getElementById(targetId);
-      if (el) el.classList.add('active');
+      [].concat(targetId).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('active');
+      });
     }
   }
 }

@@ -328,7 +328,7 @@ function openMessagesPanel() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Messages
     </button>
-    <button onclick="mobileSwitchPanel('wallet','Wallet');loadTaskerWallet();closeMobileMenu()" id="mob-wallet">
+    <button onclick="window.location.href='wallet.html'" id="mob-wallet">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       My Wallet
     </button>
@@ -406,10 +406,9 @@ function openMessagesPanel() {
                 Messages
                 <span id="msgNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:var(--text-xs);font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
-              <button class="dashboard-nav-item" data-panel="wallet" onclick="switchPanel('wallet',this);loadTaskerWallet()">
+              <button class="dashboard-nav-item" onclick="window.location.href='wallet.html'">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 My Wallet
-                <span id="taskerWalletBadge" style="display:none;background:#16a34a;color:#fff;border-radius:999px;font-size:var(--text-xs);font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
               
             </nav>
@@ -617,7 +616,7 @@ function openMessagesPanel() {
                   <article class="tov-card tov-card-escrow">
                     <div class="tov-card-top">
                       <span class="tov-label">Escrow / Pending <span class="tov-secured">Secured</span></span>
-                      <a href="dashboard-tasker.html?panel=wallet" class="tov-arrow" aria-label="Open wallet">
+                      <a href="wallet.html" class="tov-arrow" aria-label="Open wallet">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                       </a>
                     </div>
@@ -727,12 +726,6 @@ function openMessagesPanel() {
             <div id="panel-bookings" class="dashboard-panel">
               <div class="panel-header"><h2>Incoming Bookings</h2></div>
               <div class="task-row-list" id="bookingsList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading your bookings...</p></div>
-            </div>
-
-            <!-- Wallet Panel -->
-            <div id="panel-wallet" class="dashboard-panel">
-              <div class="panel-header"><h2>My Wallet</h2></div>
-              <div id="taskerWalletContent"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading wallet...</p></div>
             </div>
 
             <!-- Notifications -->
@@ -1530,7 +1523,9 @@ function openMessagesPanel() {
         var panelAliases = { overview: 'mypage', applications: 'my-applications' };
         startHash = panelAliases[navPanel] || navPanel;
       }
-      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','wallet','messages'];
+      /* The wallet is its own page now (wallet.html). Old ?panel=wallet links and bookmarks land there. */
+      if (startHash === 'wallet') { window.location.replace('wallet.html'); }
+      var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','messages'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
         if (startHash === 'messages') setTimeout(function(){ openMessagesPanel(); }, 100);
@@ -1541,7 +1536,6 @@ function openMessagesPanel() {
         else if (startHash === 'bookings') loadBookings();
         else if (startHash === 'find-tasks') loadFindTasks();
         else if (startHash === 'notifications') loadNotifications();
-        else if (startHash === 'wallet')   loadTaskerWallet();
       } else {
         switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
         loadMyPage();
@@ -2599,158 +2593,6 @@ function openMessagesPanel() {
     }
     window.doMarkJobDone = doMarkJobDone;
 
-    /* ====== TASKER WALLET PANEL ====== */
-    var _walletLoading = false;
-    async function loadTaskerWallet() {
-      /* Prevent double-load but DON'T lock permanently — use a loading flag instead */
-      if (_walletLoading) return;
-      _walletLoading = true;
-
-      var c = document.getElementById('taskerWalletContent');
-      if (!c) { _walletLoading = false; return; }
-
-      /* Show spinner while loading */
-      c.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:var(--text-sm);">' +
-        '<svg style="animation:spin 1s linear infinite;display:inline-block;margin-bottom:8px;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
-        '<div>Loading wallet…</div></div>';
-
-      try {
-        /* Safety: if payments.js somehow not loaded, wait up to 3s */
-        var waited = 0;
-        while ((!window.ST || !window.ST.payments || !window.ST.payments.getWallet) && waited < 3000) {
-          await new Promise(function(r){ setTimeout(r, 200); });
-          waited += 200;
-        }
-        if (!window.ST || !window.ST.payments || !window.ST.payments.getWallet) {
-          c.innerHTML = '<div style="padding:20px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;">' +
-            '<p style="font-weight:700;color:#92400e;margin:0 0 8px;">⚠ Payment module not loaded</p>' +
-            '<p style="font-size:var(--text-sm);color:#78350f;margin:0 0 12px;">Refresh the page and try again.</p>' +
-            '<button onclick="_walletLoading=false;loadTaskerWallet()" style="padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:var(--text-sm);font-weight:700;">Retry</button>' +
-            '</div>';
-          _walletLoading = false; return;
-        }
-
-        var sess = await window.supabase.auth.getSession();
-        var cu = sess.data.session && sess.data.session.user;
-        if (!cu) {
-          c.innerHTML = '<p style="color:var(--text-muted);padding:16px 0;">Please log in to view your wallet.</p>';
-          _walletLoading = false; return;
-        }
-
-        var wallet = await window.ST.payments.getWallet(cu.id);
-        var txns   = await window.ST.payments.fetchWalletTransactions(cu.id, 15);
-        var tLabel = { topup:'Top-up', earning:'Earnings', withdrawal:'Withdrawal', escrow_hold:'In Escrow', escrow_release:'Escrow Released' };
-        var tColor = { topup:'#16a34a', earning:'#16a34a', withdrawal:'#dc2626', escrow_hold:'#d97706', escrow_release:'#16a34a' };
-
-        /* Update badge */
-        var badge = document.getElementById('taskerWalletBadge');
-        if (badge && wallet.balance > 0) {
-          badge.style.display = 'inline';
-          badge.textContent = '₦' + Number(wallet.balance).toLocaleString();
-        }
-
-        c.innerHTML =
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">' +
-            '<div style="padding:20px;background:linear-gradient(135deg,#15803d,#16a34a);border-radius:var(--radius-lg);color:#fff;">' +
-              '<div style="font-size:var(--text-xs);font-weight:600;opacity:0.8;text-transform:uppercase;margin-bottom:6px;">Available to Withdraw</div>' +
-              '<div style="font-size:var(--text-xl);font-weight:900;">₦' + Number(wallet.balance||0).toLocaleString() + '</div>' +
-              '<div style="font-size:var(--text-xs);opacity:0.7;margin-top:4px;">Your earnings</div>' +
-            '</div>' +
-            '<div style="padding:20px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);">' +
-              '<div style="font-size:var(--text-xs);font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Pending (Escrow)</div>' +
-              '<div style="font-size:var(--text-xl);font-weight:900;color:#d97706;">₦' + Number(wallet.pending_balance||0).toLocaleString() + '</div>' +
-              '<div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">Released after job confirmed</div>' +
-            '</div>' +
-          '</div>' +
-          '<div style="margin-bottom:24px;">' +
-            '<button onclick="openTaskerWithdrawModal()" style="width:100%;padding:12px 16px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:var(--text-sm);cursor:pointer;">Withdraw to Bank Account</button>' +
-          '</div>' +
-          '<div style="padding:12px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);margin-bottom:20px;font-size:var(--text-sm);color:#92400e;">' +
-            '<strong>How earnings work:</strong> When a customer pays for your job, the amount (minus 12% platform fee) appears in Pending. Once the customer confirms the job is done and you enter your completion code, the earnings move to Available and you can withdraw anytime.' +
-          '</div>' +
-          '<div style="font-size:var(--text-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Transaction History</div>' +
-          (wallet._stub
-            ? '<div style="padding:16px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;margin-top:8px;">' +
-              '<p style="font-weight:700;color:#92400e;margin:0 0 6px;">⚠ Wallet tables not set up</p>' +
-              '<p style="font-size:var(--text-sm);color:#78350f;margin:0 0 10px;">Run this SQL in your Supabase SQL Editor to enable the wallet:</p>' +
-              '<pre style="font-size:var(--text-xs);background:#fff;border:1px solid #f59e0b;border-radius:6px;padding:10px;overflow-x:auto;white-space:pre-wrap;color:#374151;">CREATE TABLE IF NOT EXISTS wallets (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid UNIQUE REFERENCES auth.users(id), balance numeric DEFAULT 0, pending_balance numeric DEFAULT 0, updated_at timestamptz DEFAULT now()); CREATE TABLE IF NOT EXISTS wallet_transactions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES auth.users(id), type text, amount numeric, reference text, booking_id uuid, status text DEFAULT \'completed\', note text, created_at timestamptz DEFAULT now()); ALTER TABLE wallets ENABLE ROW LEVEL SECURITY; ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY; CREATE POLICY "own_wallet" ON wallets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id); CREATE POLICY "own_txns_read" ON wallet_transactions FOR SELECT USING (auth.uid() = user_id); CREATE POLICY "own_txns_write" ON wallet_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);</pre>' +
-              '<button onclick="_walletLoading=false;loadTaskerWallet()" style="margin-top:10px;padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:var(--text-sm);font-weight:700;">Check Again</button>' +
-              '</div>'
-            : (!txns.length
-              ? '<p style="font-size:var(--text-sm);color:var(--text-muted);padding:20px 0;text-align:center;">No transactions yet. Complete jobs to start earning!</p>'
-              : txns.map(function(t){
-                  var cr = t.type==='topup'||t.type==='earning'||t.type==='escrow_release';
-                  return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">' +
-                    '<div style="width:34px;height:34px;border-radius:50%;background:'+(cr?'#f0fdf4':'#fef2f2')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:var(--text-sm);">'+(cr?'↓':'↑')+'</div>' +
-                    '<div style="flex:1;min-width:0;"><div style="font-size:var(--text-sm);font-weight:600;">'+(tLabel[t.type]||t.type)+'</div>' +
-                    '<div style="font-size:var(--text-xs);color:var(--text-muted);">'+(t.note?t.note.slice(0,50):'')+'</div></div>' +
-                    '<div style="font-weight:700;font-size:var(--text-sm);color:'+(tColor[t.type]||'#333')+';white-space:nowrap;">'+(cr?'+':'-')+'₦'+Number(t.amount||0).toLocaleString()+'</div></div>';
-                }).join('')
-            )
-          );
-      } catch(e) {
-        console.error('[Wallet] loadTaskerWallet error:', e.message, e);
-        _walletLoading = false; /* always allow retry on error */
-        c.innerHTML =
-          '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);">' +
-          '<p style="color:#dc2626;font-weight:700;margin:0 0 6px;">Could not load wallet</p>' +
-          '<p style="color:#991b1b;font-size:var(--text-sm);margin:0 0 12px;">' + (e.message || String(e)) + '</p>' +
-          '<button onclick="_walletLoading=false;loadTaskerWallet()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:var(--text-sm);font-weight:700;">Retry</button>' +
-          '</div>';
-      } finally {
-        /* Always release the loading lock when done */
-        _walletLoading = false;
-      }
-    }
-    window.loadTaskerWallet = loadTaskerWallet;
-
-    function openTaskerWithdrawModal() {
-      var m = document.createElement('div');
-      m.id = 'twdModalOverlay';
-      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-      m.innerHTML =
-        '<div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);position:relative;">' +
-        '<button onclick="document.getElementById(\'twdModalOverlay\').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:var(--text-lg);line-height:1;" title="Close">&#x2715;</button>' +
-        '<h2 style="font-size:var(--text-lg);font-weight:800;margin-bottom:6px;">Withdraw Earnings</h2>' +
-        '<p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:16px;">Min ₦500. Processed within 24 hours.</p>' +
-        '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">' +
-          '<div><label style="font-size:var(--text-sm);font-weight:600;display:block;margin-bottom:4px;">Amount (₦)</label><input id="twdAmt" type="number" min="500" placeholder="500+" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);box-sizing:border-box;outline:none;" /></div>' +
-          '<div><label style="font-size:var(--text-sm);font-weight:600;display:block;margin-bottom:4px;">Bank Name</label><input id="twdBank" type="text" placeholder="e.g. GTBank" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);box-sizing:border-box;outline:none;" /></div>' +
-          '<div><label style="font-size:var(--text-sm);font-weight:600;display:block;margin-bottom:4px;">Account Number</label><input id="twdAcct" type="text" maxlength="10" placeholder="10-digit number" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);box-sizing:border-box;outline:none;" /></div>' +
-          '<div><label style="font-size:var(--text-sm);font-weight:600;display:block;margin-bottom:4px;">Account Name</label><input id="twdName" type="text" placeholder="Name on account" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);box-sizing:border-box;outline:none;" /></div>' +
-        '</div>' +
-        '<div id="twdErr" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--red);"></div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button id="twdBtn" onclick="doTaskerWithdraw()" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Request Withdrawal</button>' +
-          '<button onclick="document.getElementById(\'twdModalOverlay\').remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;font-weight:600;">Cancel</button>' +
-        '</div></div>';
-      document.body.appendChild(m);
-      m.onclick = function(e){ if(e.target===m) m.remove(); };
-    }
-    window.openTaskerWithdrawModal = openTaskerWithdrawModal;
-
-    async function doTaskerWithdraw() {
-      var amt  = parseFloat(document.getElementById('twdAmt')?.value);
-      var bank = (document.getElementById('twdBank')?.value||'').trim();
-      var acct = (document.getElementById('twdAcct')?.value||'').trim();
-      var name = (document.getElementById('twdName')?.value||'').trim();
-      var btn  = document.getElementById('twdBtn');
-      var err  = document.getElementById('twdErr');
-      if (!amt||amt<500||!bank||!acct||!name) { err.textContent='Fill all fields. Min ₦500.'; err.style.display='block'; return; }
-      if (btn) { btn.disabled=true; btn.textContent='Processing…'; }
-      try {
-        /* bank = bank name text, Edge Function resolves to Paystack bank code */
-        if (acct.replace(/\D/g,'').length !== 10) throw new Error('Account number must be exactly 10 digits.');
-        await window.ST.payments.withdrawFromWallet(amt, bank, acct.replace(/\D/g,''), name);
-        document.querySelector('[style*="backdrop-filter"]')?.remove();
-        showToast('Withdrawal submitted! ₦'+Number(amt).toLocaleString()+' will be processed within 24h.');
-        _walletLoading=false; loadTaskerWallet();
-      } catch(e) {
-        if (err) { err.textContent=e.message; err.style.display='block'; }
-        if (btn) { btn.disabled=false; btn.textContent='Request Withdrawal'; }
-      }
-    }
-    window.doTaskerWithdraw = doTaskerWithdraw;
 </script>
 
   <!-- Paystack — loaded last so it never blocks page render -->

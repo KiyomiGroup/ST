@@ -18,8 +18,7 @@
    3. Service gift cards ............. this file, done
    4. Escrow explainer (tasker) ...... this file, done
    5. Financial ledger ............... this file, done
-   6. Mobile pass .................... this file, done (also adds the payout account strip,
-                                        daily limit note and mobile account row from the design)
+   6. Mobile pass .................... this file, done
    7. Withdrawal popup (tasker) ...... this file, done
    ============================================================ */
 
@@ -32,6 +31,9 @@
 }
 .wl-page :where(h1, h2, h3, p) { margin: 0; }
 .wl-page button { font-family: inherit; }
+
+/* Real numbers load after the page opens: hide the cents until they arrive */
+.wl-loading .wl-amt-dec { visibility: hidden; }
 
 /* ── Role switch ─────────────────────────────────────────── */
 .wl-page[data-role="customer"] .wl-tasker-only   { display: none; }
@@ -85,12 +87,6 @@
 .wl-btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
 .wl-btn:disabled { opacity: 0.7; cursor: default; }
 .wl-btn .wl-i { width: 20px; height: 20px; }
-
-/* Daily limit note beside the withdraw button (desktop, tasker) */
-.wl-header-actions { flex-shrink: 0; display: flex; align-items: center; gap: var(--space-4); }
-.wl-limit { display: flex; flex-direction: column; align-items: flex-end; font-size: var(--text-xs); line-height: 1.4; color: var(--pt-ink-muted); }
-.wl-limit strong { font-weight: 700; color: var(--pt-ink); }
-.wl-limit-sub { font-weight: 600; color: var(--pt-green); }
 
 /* Quiet secondary button (Change Account, Cancel, Back) */
 .wl-btn-grey { background: var(--pt-field-strong); color: var(--pt-ink); font-size: var(--text-sm); font-weight: 600; }
@@ -166,10 +162,8 @@
 
 /* Dark primary card */
 .wl-bal-primary { background: var(--pt-green); color: var(--color-text-on-primary); }
-.wl-bal-primary .wl-bal-label, .wl-bal-primary .wl-bal-note, .wl-bal-primary .wl-amt-dec,
-.wl-bal-primary .wl-bal-hint { color: var(--pt-escrow-text); }
+.wl-bal-primary .wl-bal-label, .wl-bal-primary .wl-bal-note, .wl-bal-primary .wl-amt-dec { color: var(--pt-escrow-text); }
 .wl-bal-primary .wl-bal-icon { background: var(--pt-escrow-icon); color: var(--color-text-on-primary); }
-.wl-bal-hint { min-width: 0; font-size: var(--text-xs); line-height: 1.3; }
 .wl-btn-mint { height: 40px; padding: 0 var(--space-4); background: var(--pt-mint); color: var(--pt-ink); font-size: var(--text-sm); }
 .wl-btn-mint:hover { background: var(--pt-mint-soft); }
 .wl-btn-mint .wl-i { width: 16px; height: 16px; }
@@ -189,32 +183,6 @@
 }
 .wl-pill .wl-i { width: 14px; height: 14px; }
 .wl-btn-block { width: 100%; height: 56px; font-size: var(--text-base); }
-
-/* Payout account strip (desktop, tasker) */
-.wl-bank {
-  display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5);
-  background: var(--pt-field); border-radius: var(--radius-card);
-}
-.wl-bank-icon {
-  width: 56px; height: 56px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: var(--color-bg); color: var(--pt-green); box-shadow: var(--shadow-pt-pill);
-}
-.wl-bank-icon .wl-i { width: 24px; height: 24px; }
-.wl-bank-copy { flex: 1; min-width: 0; }
-.wl-bank-name {
-  display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1) var(--space-3);
-  font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: var(--pt-ink);
-}
-.wl-bank-name .wl-badge { gap: var(--space-1); }
-.wl-bank-name .wl-badge .wl-i { width: 12px; height: 12px; }
-.wl-bank-meta { margin-top: var(--space-1); font-size: var(--text-base-sm); color: var(--pt-ink-muted); }
-.wl-bank-meta strong { font-weight: 600; color: var(--pt-ink); }
-.wl-bank-batch {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
-  background: var(--color-bg); font-size: var(--text-xs); color: var(--pt-ink);
-}
-.wl-bank .wl-btn { height: 44px; }
 
 /* ── Section 3 · Service gift cards ──────────────────────── */
 .wl-sec-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5); margin-bottom: var(--space-4); }
@@ -427,30 +395,6 @@
 .wl-act-amt.is-credit { color: var(--pt-green); }
 .wl-act-amt.is-debit { color: var(--pt-ink-muted); }
 
-/* ── Payout account row (mobile compact card, popup) ─────── */
-.wl-acct {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: var(--space-3);
-  margin-bottom: var(--space-4); padding: var(--space-3); border-radius: var(--radius-pill);
-  background: var(--pt-field-strong);
-}
-.wl-acct-icon {
-  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: var(--color-bg); color: var(--pt-green);
-}
-.wl-acct-icon .wl-i { width: 20px; height: 20px; }
-.wl-acct-name { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.3; color: var(--pt-ink); }
-.wl-acct-num { font-weight: 500; color: var(--pt-ink-muted); }
-.wl-acct-sub { margin-top: 2px; display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); line-height: 1.3; color: var(--pt-green); }
-.wl-acct-sub .wl-i { width: 14px; height: 14px; }
-.wl-acct-edit {
-  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 50%; cursor: pointer; background: var(--pt-field-icon); color: var(--pt-ink);
-  transition: background var(--t) var(--ease);
-}
-.wl-acct-edit:hover { background: var(--pt-toggle-off); }
-.wl-acct-edit:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
-.wl-acct-edit .wl-i { width: 16px; height: 16px; }
-
 /* ── Section 7 · Withdrawal popup (tasker) ───────────────── */
 html.wl-lock { overflow: hidden; }
 .wl-modal {
@@ -517,6 +461,14 @@ html.wl-lock { overflow: hidden; }
 .wl-input::placeholder { color: var(--color-text-muted); opacity: 1; }
 .wl-field-error { display: none; margin-top: var(--space-2); font-size: var(--text-xs); line-height: 1.4; color: var(--pt-danger); }
 .wl-field-error:not(:empty) { display: block; }
+.wl-field-sm { min-height: 48px; }
+.wl-field-sm .wl-input { font-size: var(--text-base); font-weight: 500; }
+.wl-label-gap { margin-top: var(--space-4); }
+.wl-modal-body .wl-field-error + .wl-field-error { margin-top: var(--space-1); }
+.wl-act-empty { padding: var(--space-5) var(--space-4); border-radius: var(--radius-card); background: var(--color-bg); box-shadow: var(--shadow-pt-card); text-align: center; font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.wl-act-empty[hidden] { display: none; }
+.wl-led-retry { margin-left: var(--space-2); padding: 0; border: 0; background: none; cursor: pointer; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-green); text-decoration: underline; }
+.wl-led-retry:focus-visible { outline: 0; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
 .wl-presets { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 var(--space-5); }
 .wl-presets-label { margin-right: var(--space-1); font-size: var(--text-xs); color: var(--pt-ink-muted); }
 .wl-preset {
@@ -526,15 +478,14 @@ html.wl-lock { overflow: hidden; }
 }
 .wl-preset:hover { background: var(--pt-mint-soft); color: var(--pt-green); }
 .wl-preset:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
-.wl-acct-card { margin-bottom: var(--space-4); }
 
-.wl-wd-facts, .wl-wd-rows { display: flex; flex-direction: column; margin: 0; }
-.wl-wd-facts > div, .wl-wd-rows > div {
+.wl-wd-rows { display: flex; flex-direction: column; margin: 0; }
+.wl-wd-rows > div {
   display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); padding: var(--space-2) 0;
   font-size: var(--text-sm); line-height: 1.4;
 }
-.wl-wd-facts dt, .wl-wd-rows dt { color: var(--pt-ink-muted); }
-.wl-wd-facts dd, .wl-wd-rows dd { text-align: right; font-weight: 600; color: var(--pt-ink); }
+.wl-wd-rows dt { color: var(--pt-ink-muted); }
+.wl-wd-rows dd { text-align: right; font-weight: 600; color: var(--pt-ink); }
 .wl-wd-rows > div { border-top: 1px solid var(--pt-field-strong); padding: var(--space-3) 0; }
 .wl-wd-rows { margin-bottom: var(--space-4); }
 .wl-wd-total { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin-bottom: var(--space-5); padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); background: var(--pt-mint-soft); text-align: center; }

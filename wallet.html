@@ -44,7 +44,7 @@
   </svg>
 
   <!-- data-role is "tasker" or "customer". wallet-ui.js sets it (see that file). -->
-  <div class="wl-page" id="walletPage" data-role="customer">
+  <div class="wl-page wl-loading" id="walletPage" data-role="customer">
     <div class="wl-container">
 
       <!-- ── SECTION 1 · Header ─────────────────────────────────── -->
@@ -62,16 +62,10 @@
           <p class="wl-lede wl-customer-only">Manage your service gift cards and keep track of what you top up and spend.</p>
         </div>
 
-        <!-- Tasker, desktop. Both buttons open the withdrawal popup (section 7). -->
-        <div class="wl-header-actions wl-tasker-only wl-desk">
-          <p class="wl-limit">
-            <span>Daily Instant Limit: <strong>&#8358;500,000</strong></span>
-            <span class="wl-limit-sub">Auto-processed in ~15 mins</span>
-          </p>
-          <button type="button" class="wl-btn" id="initiateWithdrawalBtn" data-action="withdraw">
-            <svg class="wl-i" aria-hidden="true"><use href="#i-wallet"/></svg>Initiate Withdrawal
-          </button>
-        </div>
+        <!-- Tasker, desktop. All withdraw buttons open the withdrawal popup (section 7). -->
+        <button type="button" class="wl-btn wl-tasker-only wl-desk" id="initiateWithdrawalBtn" data-action="withdraw">
+          <svg class="wl-i" aria-hidden="true"><use href="#i-wallet"/></svg>Initiate Withdrawal
+        </button>
       </header>
 
       <!-- Tasker, mobile only: replaces the title block (matches the mobile design) -->
@@ -79,7 +73,7 @@
         <span class="wl-safepay-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-shield-check"/></svg></span>
         <div>
           <p class="wl-safepay-title">StreetTasker SafePay &bull; Escrow Protected</p>
-          <p class="wl-safepay-text">Task funds are held securely until client sign-off. Instant bank disbursements.</p>
+          <p class="wl-safepay-text">Task funds are held securely until client sign-off.</p>
         </div>
       </div>
 
@@ -96,11 +90,10 @@
               <h2 class="wl-bal-label">Available balance</h2>
               <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-banknote"/></svg></span>
             </header>
-            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">145,000</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
             <p class="wl-bal-note">Ready for immediate transfer</p>
             <footer class="wl-bal-foot wl-bal-foot-line">
               <button type="button" class="wl-btn wl-btn-mint" data-action="withdraw">Withdraw Funds<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
-              <span class="wl-bal-hint">No fee to GTB</span>
             </footer>
           </article>
 
@@ -110,8 +103,8 @@
               <h2 class="wl-bal-label">Locked in escrow</h2>
               <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-lock"/></svg></span>
             </header>
-            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="escrow">62,000</span><span class="wl-amt-dec">.00</span></p>
-            <p class="wl-bal-meta"><span class="wl-chip wl-chip-mint" data-wl-value="escrow-tasks">2 Active Tasks</span><span class="wl-bal-note">Client sign-off pending</span></p>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="escrow">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-meta"><span class="wl-chip wl-chip-mint" data-wl-value="escrow-tasks">&mdash;</span><span class="wl-bal-note">Client sign-off pending</span></p>
             <footer class="wl-bal-foot">
               <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Safeguarded until final job inspection</p>
             </footer>
@@ -137,25 +130,13 @@
               <h2 class="wl-bal-label">Lifetime disbursed</h2>
               <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-badge-check"/></svg></span>
             </header>
-            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="lifetime">890,000</span><span class="wl-amt-dec">.00</span></p>
-            <p class="wl-bal-note" data-wl-value="lifetime-tasks">44 tasks successfully delivered</p>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="lifetime">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-note" data-wl-value="lifetime-tasks">&mdash;</p>
             <footer class="wl-bal-foot wl-bal-foot-row">
-              <span class="wl-trend"><svg class="wl-i" aria-hidden="true"><use href="#i-trending-up"/></svg><span data-wl-value="lifetime-growth">+28%</span></span>
+              <span class="wl-trend"><svg class="wl-i" aria-hidden="true"><use href="#i-trending-up"/></svg><span data-wl-value="lifetime-growth">&mdash;</span></span>
               <span class="wl-bal-note">growth compared to last month</span>
             </footer>
           </article>
-        </section>
-
-        <!-- Tasker, desktop: payout account strip (mobile shows the same account inside the compact card).
-             Static placeholder. Fill the data-wl-value spans from the tasker's verified bank account. -->
-        <section class="wl-bank wl-tasker-only wl-desk" aria-label="Payout account">
-          <span class="wl-bank-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
-          <div class="wl-bank-copy">
-            <p class="wl-bank-name"><span data-wl-value="bank-name">Guaranty Trust Bank (GTBank)</span><span class="wl-badge wl-badge-mint"><svg class="wl-i" aria-hidden="true"><use href="#i-circle-check"/></svg>BVN Matched</span></p>
-            <p class="wl-bank-meta"><span data-wl-value="bank-holder">Adebayo Olawale</span> &bull; Account <strong data-wl-value="bank-account">0234****821</strong> &bull; Tier 3 Verified Individual</p>
-          </div>
-          <p class="wl-bank-batch"><span class="wl-eyebrow-dot" aria-hidden="true"></span>Next Auto-batch: Today at 6:00 PM</p>
-          <button type="button" class="wl-btn wl-btn-grey" data-action="change-account"><svg class="wl-i" aria-hidden="true"><use href="#i-square-pen"/></svg>Change Account</button>
         </section>
 
         <!-- Tasker, mobile only: compact version of the four cards above -->
@@ -163,17 +144,9 @@
           <div class="wl-bal-mob-top">
             <div>
               <h2 class="wl-bal-label">Available to withdraw</h2>
-              <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">145,000</span><span class="wl-amt-dec">.00</span></p>
+              <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
             </div>
-            <span class="wl-pill"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg><span data-wl-value="escrow-short">&#8358;62,000 Escrow</span></span>
-          </div>
-          <div class="wl-acct">
-            <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
-            <div class="wl-acct-copy">
-              <p class="wl-acct-name">GTBank <span class="wl-acct-num">&bull;&bull;&bull;&bull;4821</span></p>
-              <p class="wl-acct-sub"><svg class="wl-i" aria-hidden="true"><use href="#i-circle-check"/></svg>BVN Verified Payout Target</p>
-            </div>
-            <button type="button" class="wl-acct-edit" data-action="change-account" aria-label="Change payout account"><svg class="wl-i" aria-hidden="true"><use href="#i-pencil"/></svg></button>
+            <span class="wl-pill"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
           </div>
           <button type="button" class="wl-btn wl-btn-block" data-action="withdraw"><svg class="wl-i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Withdraw to Bank</button>
         </section>
@@ -303,67 +276,11 @@
               <button type="button" class="wl-filter" data-filter="topup" aria-pressed="false">Top-ups</button>
             </div>
           </header>
-          <div class="wl-led-pane wl-tasker-only" id="ledgerTasker" data-total="48">
-            <ul class="wl-tx-list">
-            <li class="wl-tx" data-types="earning escrow">
-              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-arrow-down"/></svg></span>
-              <div class="wl-tx-main">
-                <p class="wl-tx-title"><span>Escrow Released: Kitchen Cabinet Installation</span><span class="wl-badge wl-badge-mint">Completed</span></p>
-                <p class="wl-tx-meta">Task #ST-90412 &bull; Client: Chinelo Okeke &bull; Victoria Island, Lagos</p>
-              </div>
-              <div class="wl-tx-side">
-                <p class="wl-tx-amt is-credit">+&#8358;45,000.00</p>
-                <p class="wl-tx-date">Today, 2:15 PM</p>
-              </div>
-            </li>
-            <li class="wl-tx" data-types="withdrawal">
-              <span class="wl-tx-icon wl-tx-icon-grey" aria-hidden="true"><svg class="wl-i"><use href="#i-arrow-up-right"/></svg></span>
-              <div class="wl-tx-main">
-                <p class="wl-tx-title"><span>Withdrawal to GTBank (*821)</span><span class="wl-badge wl-badge-grey">Processed</span></p>
-                <p class="wl-tx-meta">Ref: NIP-GTB-8219034 &bull; Adebayo Olawale &bull; Instant Settlement</p>
-              </div>
-              <div class="wl-tx-side">
-                <p class="wl-tx-amt is-debit">-&#8358;80,000.00</p>
-                <p class="wl-tx-date">Yesterday, 5:30 PM</p>
-              </div>
-            </li>
-            <li class="wl-tx" data-types="escrow">
-              <span class="wl-tx-icon wl-tx-icon-soft" aria-hidden="true"><svg class="wl-i"><use href="#i-hourglass"/></svg></span>
-              <div class="wl-tx-main">
-                <p class="wl-tx-title"><span>Locked In Escrow: Solar Inverter Troubleshooting</span><span class="wl-badge wl-badge-grey">In Escrow</span></p>
-                <p class="wl-tx-meta">Task #ST-90388 &bull; Client: Femi Adeleke &bull; Lekki Phase 1</p>
-              </div>
-              <div class="wl-tx-side">
-                <p class="wl-tx-amt is-hold">&#8358;62,000.00</p>
-                <p class="wl-tx-date">12 May 2025</p>
-              </div>
-            </li>
-            <li class="wl-tx" data-types="giftcard">
-              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-credit-card"/></svg></span>
-              <div class="wl-tx-main">
-                <p class="wl-tx-title"><span>Gift Card Credit Applied: Deep Cleaning</span><span class="wl-badge wl-badge-mint">Applied</span></p>
-                <p class="wl-tx-meta">Voucher ST-CLN-8829-**** applied &bull; Beneficiary: Cleaners United</p>
-              </div>
-              <div class="wl-tx-side">
-                <p class="wl-tx-amt is-credit">-&#8358;15,000.00</p>
-                <p class="wl-tx-date">10 May 2025</p>
-              </div>
-            </li>
-            <li class="wl-tx" data-types="earning">
-              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-arrow-down"/></svg></span>
-              <div class="wl-tx-main">
-                <p class="wl-tx-title"><span>Task Earning: Generator Servicing &amp; Oil Filter</span><span class="wl-badge wl-badge-mint">Completed</span></p>
-                <p class="wl-tx-meta">Task #ST-89912 &bull; Client: Tunde Bakare &bull; Surulere, Lagos</p>
-              </div>
-              <div class="wl-tx-side">
-                <p class="wl-tx-amt is-credit">+&#8358;38,000.00</p>
-                <p class="wl-tx-date">08 May 2025</p>
-              </div>
-            </li>
-            </ul>
-            <p class="wl-led-empty" hidden>No transactions in this view yet.</p>
+          <div class="wl-led-pane wl-tasker-only" id="ledgerTasker" data-live data-total="0">
+            <ul class="wl-tx-list" aria-live="polite"></ul>
+            <p class="wl-led-empty">Loading your transactions&hellip;</p>
             <footer class="wl-led-foot">
-              <p class="wl-led-count" aria-live="polite">Showing <span data-wl-shown>5</span> of <span data-wl-total>48</span> transaction<span data-wl-plural>s</span></p>
+              <p class="wl-led-count" aria-live="polite">Showing <span data-wl-shown>0</span> of <span data-wl-total>0</span> transaction<span data-wl-plural>s</span></p>
               <div class="wl-pager">
                 <button type="button" class="wl-pager-btn" data-action="ledger-prev" disabled>Previous</button>
                 <button type="button" class="wl-pager-btn wl-pager-next" data-action="ledger-next">Next</button>
@@ -445,28 +362,8 @@
             <h2 class="wl-sec-title" id="actTitle">Recent Activity</h2>
             <span class="wl-act-live">Updated live</span>
           </header>
-          <ul class="wl-act-list wl-tasker-only">
-            <li class="wl-act">
-              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-arrow-up-right"/></svg></span>
-              <div class="wl-act-main"><p class="wl-act-title">Payout to Bank</p><p class="wl-act-sub">GTBank &bull;&bull;&bull;&bull;4821 &bull; Completed</p></div>
-              <div class="wl-act-side"><p class="wl-act-amt is-debit">-&#8358;50,000</p><p class="wl-act-date">Today, 2:15 PM</p></div>
-            </li>
-            <li class="wl-act">
-              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-badge-check"/></svg></span>
-              <div class="wl-act-main"><p class="wl-act-title">Escrow Released</p><p class="wl-act-sub">Overhead Tank Pipe Repair</p></div>
-              <div class="wl-act-side"><p class="wl-act-amt is-credit">+&#8358;22,000</p><p class="wl-act-date">Yesterday</p></div>
-            </li>
-            <li class="wl-act">
-              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-gift"/></svg></span>
-              <div class="wl-act-main"><p class="wl-act-title">Cleaning Card Credit Applied</p><p class="wl-act-sub">ST-CLN-8829 &bull; Task #9021</p></div>
-              <div class="wl-act-side"><p class="wl-act-amt is-debit">-&#8358;31,500</p><p class="wl-act-date">May 14</p></div>
-            </li>
-            <li class="wl-act">
-              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-banknote"/></svg></span>
-              <div class="wl-act-main"><p class="wl-act-title">Task Earning Received</p><p class="wl-act-sub">Solar Inverter Setup</p></div>
-              <div class="wl-act-side"><p class="wl-act-amt is-credit">+&#8358;35,000</p><p class="wl-act-date">May 11</p></div>
-            </li>
-          </ul>
+          <ul class="wl-act-list wl-tasker-only" id="actTasker" aria-live="polite"></ul>
+          <p class="wl-act-empty wl-tasker-only" id="actTaskerEmpty">Loading your activity&hellip;</p>
           <ul class="wl-act-list wl-customer-only">
             <li class="wl-act">
               <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-gift"/></svg></span>
@@ -496,11 +393,9 @@
 
   <!-- ── SECTION 7 · Withdrawal popup (tasker only) ──────────────
        Native <dialog>: the browser handles focus trap, Esc and the backdrop.
-       UI only. Nothing is sent anywhere. wallet-ui.js fires a "wallet:withdraw"
-       event on #walletPage with {amount} when the tasker confirms; connect
-       the real transfer there. data-min and data-limit are the rules the
-       form checks (whole naira). -->
-  <dialog class="wl-modal wl-tasker-only" id="withdrawModal" aria-labelledby="wdTitle" data-min="1000" data-limit="500000">
+       js/wallet-data.js runs the steps and calls ST.payments.withdrawFromWallet
+       (the process-withdrawal Edge Function does the transfer and checks the balance). -->
+  <dialog class="wl-modal wl-tasker-only" id="withdrawModal" aria-labelledby="wdTitle">
     <header class="wl-modal-head">
       <span class="wl-modal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-wallet"/></svg></span>
       <div class="wl-modal-heading">
@@ -515,36 +410,29 @@
       <div class="wl-modal-body">
         <div class="wl-wd-avail">
           <span class="wl-wd-avail-label">Available balance</span>
-          <span class="wl-wd-avail-amt">&#8358;<span data-wd="available">145,000</span><span class="wl-amt-dec">.00</span></span>
+          <span class="wl-wd-avail-amt">&#8358;<span data-wd="available">&mdash;</span><span class="wl-amt-dec">.00</span></span>
         </div>
 
         <label class="wl-label" for="wdAmount">Amount to withdraw</label>
         <div class="wl-field" data-wd-field>
           <span class="wl-field-naira" aria-hidden="true">&#8358;</span>
-          <input class="wl-input" id="wdAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="wdError wdHint" />
+          <input class="wl-input" id="wdAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="wdError" />
         </div>
         <p class="wl-field-error" id="wdError" role="alert"></p>
         <div class="wl-presets" role="group" aria-label="Quick amounts">
-          <span class="wl-presets-label" id="wdHint">Quick pick</span>
+          <span class="wl-presets-label">Quick pick</span>
           <button type="button" class="wl-preset" data-wd-preset="0.25">25%</button>
           <button type="button" class="wl-preset" data-wd-preset="0.5">50%</button>
           <button type="button" class="wl-preset" data-wd-preset="1">Max</button>
         </div>
 
-        <div class="wl-acct wl-acct-card">
-          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
-          <div class="wl-acct-copy">
-            <p class="wl-acct-name">GTBank <span class="wl-acct-num">&bull;&bull;&bull;&bull;4821</span></p>
-            <p class="wl-acct-sub"><svg class="wl-i" aria-hidden="true"><use href="#i-circle-check"/></svg>BVN Verified Payout Target</p>
-          </div>
-          <button type="button" class="wl-acct-edit" data-action="change-account" aria-label="Change payout account"><svg class="wl-i" aria-hidden="true"><use href="#i-pencil"/></svg></button>
-        </div>
-
-        <dl class="wl-wd-facts">
-          <div><dt>Fee</dt><dd>&#8358;0.00 to GTBank</dd></div>
-          <div><dt>Arrives</dt><dd>Instant, about 15 mins</dd></div>
-          <div><dt>Daily instant limit</dt><dd>&#8358;500,000</dd></div>
-        </dl>
+        <label class="wl-label" for="wdBank">Bank name</label>
+        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdBank" type="text" autocomplete="off" placeholder="e.g. GTBank" /></div>
+        <label class="wl-label wl-label-gap" for="wdAcct">Account number</label>
+        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdAcct" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="10-digit account number" /></div>
+        <label class="wl-label wl-label-gap" for="wdName">Account name</label>
+        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdName" type="text" autocomplete="off" placeholder="Name on the account" /></div>
+        <p class="wl-field-error" id="wdFormError" role="alert"></p>
       </div>
       <footer class="wl-modal-foot">
         <button type="button" class="wl-btn wl-btn-grey" data-wd-close>Cancel</button>
@@ -556,17 +444,17 @@
     <div class="wl-modal-panel" id="wdStep2" data-wd-step="2" hidden>
       <div class="wl-modal-body">
         <div class="wl-wd-total">
-          <span class="wl-wd-avail-label">You will receive</span>
+          <span class="wl-wd-avail-label">You are withdrawing</span>
           <span class="wl-wd-total-amt">&#8358;<span data-wd="receive">0</span><span class="wl-amt-dec">.00</span></span>
         </div>
         <dl class="wl-wd-rows">
           <div><dt>Amount</dt><dd>&#8358;<span data-wd="amount">0</span>.00</dd></div>
-          <div><dt>Fee</dt><dd>&#8358;0.00</dd></div>
-          <div><dt>Bank</dt><dd>Guaranty Trust Bank (GTBank)</dd></div>
-          <div><dt>Account</dt><dd>Adebayo Olawale &bull; 0234****821</dd></div>
-          <div><dt>Arrives</dt><dd>Instant, about 15 mins</dd></div>
+          <div><dt>Bank</dt><dd data-wd="bank">-</dd></div>
+          <div><dt>Account number</dt><dd data-wd="acct">-</dd></div>
+          <div><dt>Account name</dt><dd data-wd="name">-</dd></div>
         </dl>
-        <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Bank transfers cannot be reversed. Check the account above before you confirm.</p>
+        <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Bank transfers cannot be reversed. Check the account details above before you confirm.</p>
+        <p class="wl-field-error" id="wdConfirmError" role="alert"></p>
       </div>
       <footer class="wl-modal-foot">
         <button type="button" class="wl-btn wl-btn-grey" data-wd-back>Back</button>
@@ -578,8 +466,8 @@
     <div class="wl-modal-panel" id="wdStep3" data-wd-step="3" hidden>
       <div class="wl-modal-body wl-wd-done">
         <span class="wl-wd-done-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
-        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal requested</h3>
-        <p class="wl-wd-done-text">&#8358;<span data-wd="amount">0</span>.00 is on its way to GTBank &bull;&bull;&bull;&bull;4821. Most transfers arrive within about 15 minutes.</p>
+        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal submitted</h3>
+        <p class="wl-wd-done-text">&#8358;<span data-wd="amount">0</span>.00 has been submitted to <span data-wd="bank">your bank</span>. Your balance has been updated.</p>
       </div>
       <footer class="wl-modal-foot">
         <button type="button" class="wl-btn wl-btn-block" data-wd-close>Done</button>
@@ -596,8 +484,10 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/wallet-ui.js"></script>
+  <script src="js/wallet-data.js"></script>
 </body>
 </html>
