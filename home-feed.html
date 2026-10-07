@@ -51,6 +51,7 @@
     .hf-loc-input:focus { border-color: var(--pt-green); box-shadow: var(--shadow-focus); }
     .hf-title { font-size: var(--text-h1-sm); font-weight: 800; line-height: 1.15; color: var(--pt-green); margin-bottom: var(--space-2); }
     .hf-sub { font-size: var(--text-sm); color: var(--pt-ink-muted); margin-bottom: var(--space-3); }
+    .hf-live[hidden] { display: none; }
     .hf-live {
       display: inline-flex; align-items: center; gap: var(--space-2);
       padding: var(--space-1) var(--space-3);
@@ -299,7 +300,7 @@
             <span data-role-only="customer">Verified neighborhood professionals ready to help.</span>
             <span data-role-only="tasker">New tasks near you, ready for your offer.</span>
           </p>
-          <div class="hf-live fade-up d2"><span class="hf-live-dot"></span><strong id="liveTaskCount">…</strong>&nbsp;tasks open now</div>
+          <div class="hf-live fade-up d2"><span class="hf-live-dot"></span><strong id="liveTaskCount">…</strong>&nbsp;<span id="hfLiveLabel">tasks open now</span></div>
         </div>
         <div class="hf-cta fade-up d3">
           <div data-role-only="customer">
@@ -553,38 +554,6 @@
 
     const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
 
-    /* ── Dummy fallback data ─────────────────────────────────── */
-    const DUMMY_TASKERS = [
-      { name:'Adebayo Okafor', service:'Electrician', location:'Lekki', rate:6000, rateUnit:'/hr', av:'av-1', verified:true,  uid:'' },
-      { name:'Chidi Cuts',     service:'Barber',      location:'V/I',   rate:3500, rateUnit:'/cut', av:'av-2', verified:true,  uid:'' },
-      { name:'Fatima Clean',   service:'Cleaner',     location:'Ikeja', rate:8000, rateUnit:'/day', av:'av-3', verified:false, uid:'' },
-      { name:'Kingsley Pipes', service:'Plumber',     location:'Yaba',  rate:5000, rateUnit:'/hr',  av:'av-4', verified:true,  uid:'' },
-      { name:'Sadia Beauty',   service:'Make-up',     location:'Ajah',  rate:15000,rateUnit:'/job', av:'av-5', verified:true,  uid:'' },
-      { name:'Emeka AutoCare', service:'Mechanic',    location:'Surulere',rate:8000,rateUnit:'/hr', av:'av-6', verified:false, uid:'' },
-      { name:'Grace Decor',    service:'Interior',    location:'Lekki', rate:50000,rateUnit:'/job', av:'av-1', verified:true,  uid:'' },
-      { name:'Tunde Lens',     service:'Photographer',location:'Ikeja', rate:30000,rateUnit:'/day', av:'av-2', verified:false, uid:'' },
-    ];
-
-    const DUMMY_TASKS = [
-      { id:'d1', title:'Fix leaking kitchen sink',        category:'plumber',     location:'Lekki, Lagos',          budget:8000,  urgent:true,  created_at: new Date(Date.now()-3600000).toISOString()  },
-      { id:'d2', title:'AC servicing and gas recharge',   category:'appliances',  location:'Victoria Island, Lagos', budget:12000, urgent:true,  created_at: new Date(Date.now()-7200000).toISOString()  },
-      { id:'d3', title:'Makeup for wedding aso-ebi',      category:'beauty',      location:'Surulere, Lagos',        budget:45000, urgent:false, created_at: new Date(Date.now()-10800000).toISOString() },
-      { id:'d4', title:'Electrical fault in bedroom',     category:'electrician', location:'Ikeja, Lagos',           budget:10000, urgent:true,  created_at: new Date(Date.now()-14400000).toISOString() },
-      { id:'d5', title:'House deep cleaning',             category:'cleaning',    location:'Ajah, Lagos',            budget:25000, urgent:false, created_at: new Date(Date.now()-18000000).toISOString() },
-      { id:'d6', title:'Generator servicing',             category:'mechanic',    location:'Lekki, Lagos',           budget:18000, urgent:false, created_at: new Date(Date.now()-21600000).toISOString() },
-      { id:'d7', title:'Painting 3-bedroom apartment',    category:'painter',     location:'Yaba, Lagos',            budget:80000, urgent:false, created_at: new Date(Date.now()-25200000).toISOString() },
-      { id:'d8', title:'Install CCTV cameras (4 units)',  category:'electrician', location:'Victoria Island, Lagos', budget:35000, urgent:false, created_at: new Date(Date.now()-28800000).toISOString() },
-      { id:'d9', title:'Maths & Physics tutoring',        category:'tutor',       location:'Ikeja, Lagos',           budget:15000, urgent:false, created_at: new Date(Date.now()-32400000).toISOString() },
-      { id:'d10',title:'Blocked drain repair urgently',   category:'plumber',     location:'Surulere, Lagos',        budget:6000,  urgent:true,  created_at: new Date(Date.now()-36000000).toISOString() },
-    ];
-
-    const DUMMY_SERVICES = [
-      { user_id:'', name:'Adebayo Okafor', service:'Electrician', location:'Lekki, Lagos',    price:6000,  rateUnit:'/hr',  rating:4.9, photo:'', av:'av-1' },
-      { user_id:'', name:'Chidi Cuts',     service:'Barber',      location:'V/I, Lagos',      price:3500,  rateUnit:'/cut', rating:4.8, photo:'', av:'av-2' },
-      { user_id:'', name:'Sadia Beauty',   service:'Make-up',     location:'Ajah, Lagos',     price:15000, rateUnit:'/job', rating:5.0, photo:'', av:'av-5' },
-      { user_id:'', name:'Kingsley Pipes', service:'Plumber',     location:'Yaba, Lagos',     price:5000,  rateUnit:'/hr',  rating:4.7, photo:'', av:'av-4' },
-    ];
-
     /* ── State ───────────────────────────────────────────────── */
     let _userRole   = 'customer';
     let _userId     = '';
@@ -609,12 +578,21 @@
       if (_userRole === 'tasker') initTaskerFeed();
       else initCustomerFeed();
 
-      /* Live task count */
+      loadLiveCount();
+    }
+
+    /* Real count of open tasks. If it can't be read, hide the chip rather than guess. */
+    async function loadLiveCount() {
+      const chip = document.querySelector('.hf-live');
       try {
-        const tasks = await window.ST.db.fetchTasks({ limit: 200 });
-        document.getElementById('liveTaskCount').textContent = tasks.length + '+';
-      } catch(e) {
-        document.getElementById('liveTaskCount').textContent = '50+';
+        const { count, error } = await window.supabase.from('tasks')
+          .select('id', { count: 'exact', head: true }).eq('status', 'open');
+        if (error || typeof count !== 'number') throw error || new Error('no count');
+        document.getElementById('liveTaskCount').textContent = count.toLocaleString();
+        const lbl = document.getElementById('hfLiveLabel');
+        if (lbl) lbl.textContent = count === 1 ? 'task open now' : 'tasks open now';
+      } catch (e) {
+        if (chip) chip.hidden = true;
       }
     }
 
@@ -721,6 +699,7 @@
     /* ── Customer feed (Step 3) ──────────────────────────────── */
     let _custList = [];
     let _custCat  = '';
+    let _custError = false;
     const STAR_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
     const PIN_SVG  = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
     const TICK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 2.1 3.2-.3 1 3 2.8 1.6-.9 3.1.9 3.1-2.8 1.6-1 3-3.2-.3L12 22l-2.4-2.1-3.2.3-1-3-2.8-1.6.9-3.1-.9-3.1 2.8-1.6 1-3 3.2.3z"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8" fill="none" stroke="var(--white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -787,23 +766,86 @@
         + '</div></a>';
     }
 
+    /* Chip value -> category values stored by post-task / post-service (and older free text) */
+    const CAT_ALIASES = {
+      electrician: ['electrician', 'electrical'], plumber: ['plumber', 'plumbing'], cleaning: ['cleaning', 'cleaner'],
+      barber: ['barber'], mechanic: ['mechanic'], beauty: ['beauty', 'makeup', 'hair', 'nails'],
+      photography: ['photography', 'photographer', 'photo'], cooking: ['cooking', 'chef', 'catering'],
+      tutoring: ['tutoring', 'tutor', 'lesson'], carpentry: ['carpentry', 'carpenter'],
+      painting: ['painting', 'painter'], laundry: ['laundry'], security: ['security'],
+    };
+
+    /* Exact category first; only items with no category fall back to their text */
     function _matchesCat(p, cat) {
       if (!cat) return true;
-      const key = cat.toLowerCase().slice(0, 5);
-      return (p.category + ' ' + p.service).toLowerCase().includes(key);
+      const keys = CAT_ALIASES[cat] || [cat];
+      const c = String(p.category || '').toLowerCase().replace(/[^a-z]/g, '');
+      if (c) return keys.some(k => c === k || c.startsWith(k));
+      return keys.some(k => (String(p.service || '')).toLowerCase().includes(k));
+    }
+
+    /* How well a place name matches the saved Home area (0 = none saved or no match) */
+    function _locScoreText(text) {
+      let loc = '';
+      try { loc = localStorage.getItem(LOC_KEY) || ''; } catch (e) {}
+      const words = loc.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2 && w !== 'lagos' && w !== 'nigeria');
+      const where = String(text || '').toLowerCase();
+      return words.reduce((n, w) => n + (where.includes(w) ? 1 : 0), 0);
+    }
+
+    function _errHtml(msg) {
+      return '<div class="hf-empty">' + msg + '<br /><a class="hf-empty-cta" href="home-feed.html">Try again</a></div>';
+    }
+
+    /* Ratings and verified flags live on the taskers / users rows, not in fetchServices().
+       Best effort: a blocked query just leaves those badges off. Nothing is invented. */
+    async function _enrichProviders(list) {
+      const uids = [...new Set(list.map(p => p.uid).filter(Boolean))];
+      if (!uids.length) return list;
+      try {
+        const [t, u] = await Promise.all([
+          window.supabase.from('taskers').select('user_id, rating, is_verified').in('user_id', uids),
+          window.supabase.from('users').select('id, is_verified').in('id', uids),
+        ]);
+        const tMap = {}; (t.data || []).forEach(r => { tMap[String(r.user_id)] = r; });
+        const uMap = {}; (u.data || []).forEach(r => { uMap[String(r.id)] = r; });
+        list.forEach(p => {
+          const tr = tMap[p.uid], ur = uMap[p.uid];
+          if (!p.verified) p.verified = !!((tr && tr.is_verified) || (ur && ur.is_verified));
+          if (!p.rating && tr) { const r = parseFloat(tr.rating); if (!isNaN(r) && r > 0) p.rating = r; }
+        });
+      } catch (e) { /* leave as is */ }
+      return list;
+    }
+
+    /* Number of offers already placed on each task (best effort) */
+    async function _attachOfferCounts(tasks) {
+      const ids = tasks.map(t => t.id).filter(Boolean);
+      if (!ids.length) return;
+      try {
+        const { data, error } = await window.supabase.from('task_applications').select('task_id').in('task_id', ids);
+        if (error || !data) return;
+        const n = {}; data.forEach(r => { n[String(r.task_id)] = (n[String(r.task_id)] || 0) + 1; });
+        tasks.forEach(t => { t._offers = n[String(t.id)] || 0; });
+      } catch (e) { /* leave off */ }
     }
 
     function renderCustomerFeed() {
       const nearEl = document.getElementById('hfNearbyList');
       const featEl = document.getElementById('hfFeaturedList');
       if (!nearEl || !featEl) return;
+      if (_custError) { const e = _errHtml('We couldn\'t load taskers right now.'); nearEl.innerHTML = e; featEl.innerHTML = e; return; }
       const list = _custList.filter(p => _matchesCat(p, _custCat));
-      const empty = '<div class="hf-empty">No taskers in this category yet. Try another one, or <a href="post-task.html">post a task</a>.</div>';
+      const empty = _custList.length && _custCat
+        ? '<div class="hf-empty">No taskers in this category yet. Try another one, or <a href="post-task.html">post a task</a>.</div>'
+        : '<div class="hf-empty">No taskers are listed yet. <a href="post-task.html">Post a task</a> and they will come to you.</div>';
       if (!list.length) { nearEl.innerHTML = empty; featEl.innerHTML = empty; return; }
 
       /* Nearby = one card per tasker. Featured = services not already shown above. */
       const seen = new Set();
-      const nearby = list.filter(p => { const k = p.uid || p.id || p.name; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
+      const nearby = list.filter(p => { const k = p.uid || p.id || p.name; if (seen.has(k)) return false; seen.add(k); return true; })
+        .sort((a, b) => _locScoreText(b.location) - _locScoreText(a.location))   /* saved area first, then newest */
+        .slice(0, 8);
       const shown = new Set(nearby.slice(0, 4).map(p => p.id));
       let featured = list.filter(p => !shown.has(p.id));
       if (featured.length < 4) featured = list;
@@ -843,33 +885,27 @@
         _custCat = (e.detail && e.detail.category) || '';
         renderCustomerFeed();
       });
+      window.addEventListener('st:location-change', () => { if (_userRole !== 'tasker') renderCustomerFeed(); });
       loadCustomerTasks();
-      let raw = [];
-      try { raw = await window.ST.db.fetchServices({ limit: 40 }); } catch (e) { raw = []; }
-      if (!raw || !raw.length) raw = DUMMY_SERVICES.concat(DUMMY_TASKERS);   /* demo fallback, replaced in Step 5 */
-      _custList = raw.map(_normProvider);
+      try {
+        const raw = await window.ST.db.fetchServices({ limit: 40 });
+        _custList = await _enrichProviders((raw || []).map(_normProvider));
+      } catch (e) { _custError = true; }
       renderCustomerFeed();
     }
 
     /* ── Tasker feed (Step 4) ────────────────────────────────── */
     let _tkTasks   = [];
     let _tkCat     = '';
+    let _tkError   = false;
     let _tkProfile;   /* undefined = still loading, false = lookup failed */
     const JOB_DONE = ['completed', 'cancelled', 'canceled', 'closed', 'done', 'expired', 'rejected', 'declined'];
 
     function _isUrgent(t) { return !!t.urgent || String(t.urgency || '').toLowerCase() === 'immediate'; }
 
-    /* Tasks have no detail page yet: open Find Work pre-filled with the title (Step 3 prefill) */
-    function _taskUrl(t) { return 'find-tasks.html?q=' + encodeURIComponent(t.title || ''); }
-
-    /* How well a task's area matches the saved Home location (0 = no match or none saved) */
-    function _locScore(t) {
-      let loc = '';
-      try { loc = localStorage.getItem(LOC_KEY) || ''; } catch (e) {}
-      const words = loc.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2 && w !== 'lagos' && w !== 'nigeria');
-      const where = String(t.location || '').toLowerCase();
-      return words.reduce((n, w) => n + (where.includes(w) ? 1 : 0), 0);
-    }
+    /* Opens Find Work with the apply form for this task already open */
+    function _taskUrl(t) { return 'find-tasks.html?task=' + encodeURIComponent(t.id || ''); }
+    function _locScore(t) { return _locScoreText(t.location); }
 
     function _skillKeys() {
       if (!_tkProfile) return [];
@@ -888,7 +924,8 @@
         + '<div class="hf-tcard-title">' + escapeHtml(t.title || 'Task') + '</div>'
         + (t.description ? '<div class="hf-card-desc">' + escapeHtml(t.description) + '</div>' : '')
         + '<div class="hf-tcard-foot">'
-        + '<div class="hf-tmeta"><span>' + PIN_SVG + escapeHtml(t.location || 'Lagos') + '</span><span>' + _timeAgo(t.created_at) + '</span></div>'
+        + '<div class="hf-tmeta"><span>' + PIN_SVG + escapeHtml(t.location || 'Lagos') + '</span><span>' + _timeAgo(t.created_at) + '</span>'
+        + (t._offers > 0 ? '<span>' + t._offers + (t._offers === 1 ? ' offer' : ' offers') + '</span>' : '') + '</div>'
         + '<span class="hf-offer">Offer</span></div></a>';
     }
 
@@ -898,6 +935,11 @@
     }
 
     function renderTaskerFeed() {
+      if (_tkError) {
+        const e = _errHtml('We couldn\'t load tasks right now.');
+        ['hfTaskNearby', 'hfTaskUrgent', 'hfTaskMatch'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = e; });
+        return;
+      }
       const base = _tkTasks.filter(t => _matchesCat({ category: t.category || '', service: t.title || '' }, _tkCat));
       const none = _tkCat ? 'No tasks in this category right now. Try another one.' : 'No tasks right now. Check back soon.';
 
@@ -974,11 +1016,13 @@
       const sec = document.getElementById('hfTopSec');
       const el  = document.getElementById('hfTopList');
       if (!el) return;
-      let raw = [];
-      try { raw = await window.ST.db.fetchServices({ limit: 40 }); } catch (e) { raw = []; }
-      if (!raw || !raw.length) raw = DUMMY_SERVICES.concat(DUMMY_TASKERS);   /* demo fallback, replaced in Step 5 */
+      let list = [];
+      try {
+        const raw = await window.ST.db.fetchServices({ limit: 40 });
+        list = await _enrichProviders((raw || []).map(_normProvider));
+      } catch (e) { list = []; }
       const seen = new Set();
-      const peers = raw.map(_normProvider)
+      const peers = list
         .filter(p => p.uid !== _userId)
         .filter(p => { const k = p.uid || p.id || p.name; if (seen.has(k)) return false; seen.add(k); return true; });
       const rated = peers.filter(p => p.rating).sort((a, b) => b.rating - a.rating).slice(0, 4);
@@ -997,10 +1041,10 @@
       loadTaskerProfile();
       loadTaskerJobs();
       loadTopRatedTaskers();
-      let raw = [];
-      try { raw = await window.ST.db.fetchTasks({ limit: 50 }); } catch (e) { raw = []; }
-      if (!raw || !raw.length) raw = DUMMY_TASKS;   /* demo fallback, replaced in Step 5 */
-      _tkTasks = raw;
+      try {
+        _tkTasks = (await window.ST.db.fetchTasks({ limit: 50 })) || [];
+        await _attachOfferCounts(_tkTasks);
+      } catch (e) { _tkError = true; }
       renderTaskerFeed();
     }
 

@@ -209,6 +209,11 @@
       if (_l0 && _li) { _li.value = _l0; TASK_FILTERS.location = _l0; }
       if (_q0 || _l0) renderTasks();
 
+      /* Deep link from Home (?task=ID): open the apply modal for that task */
+      const _tid = (_qs.get('task') || '').trim();
+      const _tk  = _tid && ALL_TASKS.find(t => String(t.id) === _tid);
+      if (_tk) openApply(_tk.id, _tk.title || 'Task', String(_tk.description || '').slice(0, 80));
+
       /* Task Type checkboxes */
       document.querySelectorAll('[name="ttype"]').forEach(cb => cb.addEventListener('change', () => {
         TASK_FILTERS.types = [...document.querySelectorAll('[name="ttype"]:checked')].map(c => c.value);
