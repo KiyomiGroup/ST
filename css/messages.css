@@ -162,6 +162,144 @@ body.msg-page {
   text-align: center;
 }
 
+/* List header: title + count chip, search, filter tabs, attention strip */
+.jr-panel-titlewrap { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+
+.jr-count-chip {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-mint);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.jr-list-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-3);
+  flex-shrink: 0;
+}
+
+.jr-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  transition: border-color var(--t) var(--ease);
+}
+.jr-search:focus-within { border-color: var(--color-primary); }
+.jr-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  outline: none;
+}
+
+.jr-tabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+}
+.jr-tabs::-webkit-scrollbar { display: none; }
+
+.jr-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.jr-tab:hover { background: var(--color-primary-soft-hover); }
+.jr-tab.is-active { background: var(--color-primary); color: var(--color-text-on-primary); }
+.jr-tab-count {
+  min-width: 18px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+.jr-attention-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-soft);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  text-align: left;
+  cursor: pointer;
+}
+.jr-attention-btn strong { font-family: var(--font-heading); font-size: var(--text-sm); }
+.jr-attention-btn span { color: var(--color-warning); font-weight: 700; white-space: nowrap; }
+
+/* List row extras */
+.msg-thread-item { align-items: flex-start; }
+.msg-thread-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+.jr-thread-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.jr-thread-time { flex-shrink: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-thread-job {
+  margin-top: var(--space-1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.msg-thread-preview.is-empty { font-style: italic; }
+.jr-thread-foot { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.jr-thread-foot .msg-thread-unread { margin-left: auto; }
+
+.jr-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.jr-chip--success { background: var(--color-mint); color: var(--color-primary); }
+.jr-chip--action  { background: var(--color-warning-soft); color: var(--color-warning); }
+.jr-chip--danger  { background: var(--color-danger-soft); color: var(--color-danger); }
+.jr-chip--muted   { background: var(--color-bg-muted); color: var(--color-text-secondary); }
+
 /* ── 4. Room: header, body, bubbles, composer ──────────────
    The room panel uses .jr-room, not .msg-chat: styles.css still has legacy
    global .msg-chat mobile rules (made for the dashboard panel) that would
@@ -557,6 +695,17 @@ body.msg-page {
   color: var(--color-text-muted);
 }
 .msg-status-error { font-size: var(--text-xs); color: var(--color-danger); }
+.msg-status-title { font-size: var(--text-sm); color: var(--color-text); }
+.msg-status-sub { font-size: var(--text-xs); }
+.msg-retry-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { display: inline-block; vertical-align: middle; animation: spin 0.8s linear infinite; }
