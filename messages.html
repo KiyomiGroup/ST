@@ -94,21 +94,29 @@
 
         <div class="msg-chat-body" id="chatBody" hidden></div>
 
+        <button class="jr-jump" id="jrJump" type="button" hidden>
+          New messages
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        </button>
+
+        <!-- Shown when a message is blocked for containing contact details (no "send anyway") -->
+        <div class="jr-warn" id="jrComposeWarn" role="alert" hidden>
+          <div class="jr-warn-text">
+            <strong>Message not sent</strong>
+            <span>This message appears to contain contact information that isn't allowed on StreetTasker. For your safety and protection, don't share phone numbers, WhatsApp links, email addresses or other off-platform contact details.</span>
+          </div>
+          <button class="jr-warn-btn" id="jrWarnEdit" type="button">Edit message</button>
+        </div>
+
         <div class="msg-input-bar" id="inputBar" hidden>
           <button class="msg-pay-request-btn" id="payRequestBtn" hidden onclick="openPayModal()" title="Request payment from customer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             Request payment
           </button>
           <div class="msg-input-wrap">
-            <textarea
-              id="msgInput"
-              class="msg-input"
-              placeholder="Type a message…"
-              rows="1"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
-              oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+            <textarea id="msgInput" class="msg-input" placeholder="Type a message…" rows="1" maxlength="2000" aria-label="Message"></textarea>
           </div>
-          <button class="msg-send-btn" onclick="sendMsg()" title="Send" aria-label="Send message">
+          <button class="msg-send-btn" id="msgSendBtn" type="button" title="Send" aria-label="Send message" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -140,6 +148,7 @@
   <script src="js/messages.js"></script>
   <script src="js/messages-list.js"></script>
   <script src="js/messages-room.js"></script>
+  <script src="js/messages-thread.js"></script>
 
   <script>
   'use strict';
@@ -153,27 +162,13 @@
   var _realtimeSub  = null;
   var _globalThreadSub = null;
   var _globalNotifSub  = null;
-  var _sending      = false;
 
   /* ── Utility ── */
   function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function showToast(msg, type) {
-    var c = document.getElementById('msgToastContainer');
-    if (!c) {
-      c = document.createElement('div');
-      c.id = 'msgToastContainer';
-      c.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;';
-      document.body.appendChild(c);
-    }
-    var t = document.createElement('div');
-    t.style.cssText = 'background:'+(type==='error'?'#dc2626':'#1e293b')+';color:#fff;padding:10px 18px;border-radius:9999px;font-size:var(--text-sm);font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);opacity:1;transition:opacity 0.3s;max-width:340px;text-align:center;';
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 350); }, 3500);
-  }
+  function showToast(msg, type) { JRThread.toast(msg, type); }
 
   function sidebarStatus(html) {
     var el = document.getElementById('threadList');
@@ -204,6 +199,7 @@
             (_user.user_metadata && _user.user_metadata.role) || 'customer';
     applyRoleShell();
     JRList.init({ role:_role, onSelect:function(id){ openThread(id); } });
+    JRThread.bindComposer();
 
     /* 2. Load conversations */
     await loadThreadList();
@@ -278,26 +274,14 @@
     var payBtn = document.getElementById('payRequestBtn');
     if (payBtn) payBtn.style.display = (_role === 'tasker') ? 'flex' : 'none';
 
-    await renderMessages(threadId);
+    await JRThread.open({ thread:t, user:_user, role:_role, onChange:threadChanged });
 
     /* Realtime subscription for this thread */
     if (_realtimeSub) { try { _realtimeSub.unsubscribe(); } catch(e){} }
     _realtimeSub = window.supabase
       .channel('thread:'+threadId)
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:'thread_id=eq.'+threadId }, function(payload) {
-        /* Own messages already shown optimistically — just stamp the real DB id */
-        if (_user && payload.new && payload.new.sender_id === _user.id) {
-          var body = document.getElementById('chatBody');
-          if (body) {
-            var tmps = body.querySelectorAll('[data-tmp="1"]');
-            if (tmps.length > 0) {
-              tmps[tmps.length-1].dataset.id = payload.new.id;
-              delete tmps[tmps.length-1].dataset.tmp;
-            }
-          }
-          return;
-        }
-        appendBubble(payload.new);
+        JRThread.onRealtimeInsert(payload.new);
       })
       .on('postgres_changes', { event:'UPDATE', schema:'public', table:'message_threads', filter:'id=eq.'+threadId }, function(payload) {
         if (payload.new && payload.new.agreed_price && payload.new.agreed_price !== t.agreed_price) {
@@ -322,188 +306,11 @@
   }
   window.closeMobileChat = closeMobileChat;
 
-  /* ════════════════════════════════════════════════
-     RENDER MESSAGES
-  ════════════════════════════════════════════════ */
-  async function renderMessages(threadId) {
-    var body = document.getElementById('chatBody');
-    body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:var(--text-sm);"><svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Loading…</div>';
-    try {
-      var res = await window.supabase.from('messages')
-        .select('id,sender_id,body,created_at,type,payment_request_id')
-        .eq('thread_id', threadId).order('created_at', { ascending: true });
-      if (res.error) throw res.error;
-      body.innerHTML = '';
-      var msgs = res.data || [];
-      if (!msgs.length) {
-        body.innerHTML = '<div style="text-align:center;padding:32px;font-size:var(--text-sm);color:var(--text-muted);">No messages yet. Say hello! 👋</div>';
-        return;
-      }
-      var lastDate = null;
-      msgs.forEach(function(m) {
-        var d = new Date(m.created_at).toLocaleDateString('en-NG',{weekday:'short',day:'numeric',month:'short'});
-        if (d !== lastDate) {
-          var div = document.createElement('div');
-          div.className = 'msg-date-divider';
-          div.textContent = d;
-          body.appendChild(div);
-          lastDate = d;
-        }
-        body.appendChild(buildBubble(m));
-      });
-      body.scrollTop = body.scrollHeight;
-    } catch(e) {
-      body.innerHTML = '<div style="padding:16px;font-size:var(--text-sm);color:var(--red);">Could not load messages: '+esc((e&&e.message)||String(e))+'</div>';
-    }
+  /* A message was sent: bump the thread to the top and redraw the list */
+  function threadChanged() {
+    _threads.sort(function(a,b){ return new Date(b.last_message_at||0) - new Date(a.last_message_at||0); });
+    renderThreadList();
   }
-
-  /* ════════════════════════════════════════════════
-     BUBBLE BUILDERS
-  ════════════════════════════════════════════════ */
-  function buildBubble(m) {
-    var isMine  = m.sender_id === _user.id;
-    var timeStr = new Date(m.created_at).toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit',hour12:true});
-
-    if (m.type === 'payment_request')  return buildPaymentRequestBubble(m, isMine, timeStr);
-    if (m.type === 'payment_confirmed') {
-      var pts = (m.body||'').split(':');
-      return buildPaymentConfirmedBubble(
-        isMine ? (pts[1]||'') : '',
-        parseInt(pts[2],10)||0, parseInt(pts[3],10)||0, parseInt(pts[4],10)||0, isMine
-      );
-    }
-
-    var wrap = document.createElement('div');
-    wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
-    if (m.id)     wrap.dataset.id  = String(m.id);
-    if (m._isTmp) wrap.dataset.tmp = '1';
-    wrap.innerHTML = '<div class="msg-bubble">'+esc(m.body||'')+'</div><div class="msg-time">'+timeStr+'</div>';
-    return wrap;
-  }
-
-  function buildPaymentRequestBubble(m, isMine, timeStr) {
-    var parts  = (m.body||'').split(':');
-    var amount = parts.length >= 3 ? parseInt(parts[2],10) : 0;
-    var reqId  = m.payment_request_id || (parts[1]||'');
-    var fmt    = amount > 0 ? Number(amount).toLocaleString('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0}) : '—';
-
-    var wrap = document.createElement('div');
-    wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
-    if (m.id)     wrap.dataset.id  = String(m.id);
-    if (m._isTmp) wrap.dataset.tmp = '1';
-    wrap.style.maxWidth = '340px';
-
-    var card = document.createElement('div');
-    card.className = 'payment-request-card'+(isMine?' mine-card':'');
-    card.id = 'prc-'+reqId;
-
-    var actionsHtml = (!isMine && _role === 'customer')
-      ? '<div class="prc-actions"><button class="prc-pay-btn" onclick="handleAcceptPayment(\''+reqId+'\','+amount+',\''+(_active||'')+'\')">Pay '+fmt+' securely</button></div>'
-      : '<div class="prc-actions"><span class="prc-status-badge accepted">Awaiting customer payment</span></div>';
-
-    card.innerHTML =
-      '<div class="prc-header"><div class="prc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>' +
-      '<span class="prc-label">Payment request</span></div>' +
-      '<div class="prc-amount">'+esc(fmt)+'</div>' +
-      '<div class="prc-notice"><strong>⚠ Important:</strong> Only pay through StreetTasker. Payments made outside are <strong>not eligible for refunds</strong> and may result in account suspension.</div>' +
-      actionsHtml;
-
-    wrap.appendChild(card);
-    var timeEl = document.createElement('div');
-    timeEl.className = 'msg-time';
-    timeEl.textContent = timeStr;
-    wrap.appendChild(timeEl);
-    return wrap;
-  }
-
-  function buildPaymentConfirmedBubble(code, totalPaid, earning, fee, isMine) {
-    var wrap = document.createElement('div');
-    wrap.className = 'msg-bubble-wrap '+(isMine?'mine':'theirs');
-    wrap.style.maxWidth = '360px';
-    wrap.innerHTML =
-      '<div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:18px 20px;width:100%;">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
-          '<div style="width:32px;height:32px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '</div>' +
-          '<strong style="font-size:var(--text-sm);color:#14532d;">Payment Confirmed ✓</strong>' +
-        '</div>' +
-        '<div style="font-size:var(--text-xs);color:#166534;margin-bottom:12px;line-height:1.6;">' +
-          '<strong>₦'+Number(totalPaid).toLocaleString()+'</strong> held in escrow.<br>' +
-          'Tasker earns <strong>₦'+Number(earning).toLocaleString()+'</strong> (₦'+Number(fee).toLocaleString()+' fee).' +
-        '</div>' +
-        (code
-          ? '<div style="background:#fff;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px;">' +
-              '<div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:#16a34a;margin-bottom:6px;">Your 6-digit code</div>' +
-              '<div style="font-size:var(--text-2xl);font-weight:900;letter-spacing:0.2em;color:#14532d;">'+esc(String(code))+'</div>' +
-              '<div style="font-size:var(--text-xs);color:#6b7280;margin-top:6px;">Give to the tasker ONLY after job is done</div>' +
-            '</div>'
-          : '') +
-        '<div style="font-size:var(--text-xs);color:#4b5563;line-height:1.6;">1. Tasker completes the job<br>2. You give them this code<br>3. They enter it → payment released</div>' +
-      '</div>';
-    return wrap;
-  }
-
-  /* ── Append incoming realtime bubble ── */
-  function appendBubble(m) {
-    var body = document.getElementById('chatBody');
-    if (!body || body.style.display === 'none') return;
-    var empty = body.querySelector('div[style*="text-align:center"]');
-    if (empty) empty.remove();
-    body.appendChild(buildBubble(m));
-    body.scrollTop = body.scrollHeight;
-  }
-
-  /* ════════════════════════════════════════════════
-     SEND MESSAGE
-  ════════════════════════════════════════════════ */
-  async function sendMsg() {
-    if (!_active || !_user || _sending) return;
-    var input = document.getElementById('msgInput');
-    var text  = input.value.trim();
-    if (!text) return;
-    _sending = true;
-
-    var t          = _threads.find(function(x){ return x.id === _active; });
-    var receiverId = t ? (_user.id===t.customer_id ? t.tasker_id : t.customer_id) : null;
-    if (!receiverId) { showToast('Cannot send — missing receiver.'); _sending=false; return; }
-
-    /* Optimistic bubble */
-    appendBubble({ id:'tmp-'+Date.now(), sender_id:_user.id, body:text, created_at:new Date().toISOString(), type:'text', _isTmp:true });
-    input.value = '';
-    input.style.height = 'auto';
-
-    try {
-      await window.supabase.from('messages').insert({
-        thread_id:_active, sender_id:_user.id, receiver_id:receiverId,
-        body:text, flagged:false, type:'text'
-      });
-      var isCustomer = _user.id === (t&&t.customer_id);
-      var unreadCol  = isCustomer ? 'tasker_unread' : 'customer_unread';
-      var curUnread  = isCustomer ? (t.tasker_unread||0) : (t.customer_unread||0);
-      await window.supabase.from('message_threads').update({
-        last_message: text.slice(0,80),
-        last_message_at: new Date().toISOString(),
-        [unreadCol]: curUnread+1
-      }).eq('id', _active);
-      if (t) {
-        t.last_message = text; t.last_message_at = new Date().toISOString();
-        if (isCustomer) t.tasker_unread = curUnread+1; else t.customer_unread = curUnread+1;
-      }
-      var senderName = (_user.user_metadata&&(_user.user_metadata.name||_user.user_metadata.email))||'Someone';
-      await window.supabase.from('notifications').insert({
-        user_id:receiverId, type:'new_message',
-        title:'💬 New message from '+senderName,
-        message: text.length>80 ? text.slice(0,80)+'…' : text,
-        data:{ thread_id:_active, sender_id:_user.id }, is_read:false
-      });
-    } catch(e) {
-      showToast('Send failed: '+((e&&e.message)||String(e)), 'error');
-    } finally {
-      _sending = false;
-    }
-  }
-  window.sendMsg = sendMsg;
 
   /* ════════════════════════════════════════════════
      PAYMENT MODAL (TASKER ONLY)
@@ -582,10 +389,8 @@
           receiver_id:t.tasker_id||t.customer_id,
           body:sysBody, type:'payment_confirmed', flagged:false
         }).select().single();
-        var chatBody = document.getElementById('chatBody');
-        if (chatBody && sysMsg.data) {
-          chatBody.appendChild(buildPaymentConfirmedBubble(completionCode, paidAmt, earning, fee, true));
-          chatBody.scrollTop = chatBody.scrollHeight;
+        if (sysMsg.data) {
+          JRThread.append({ id:sysMsg.data.id, sender_id:_user.id, body:sysBody, type:'payment_confirmed', created_at:new Date().toISOString() });
         }
       } catch(_se) {}
 
@@ -638,8 +443,7 @@
       var firstMsg = sessionStorage.getItem('st_first_msg');
       if (firstMsg) {
         sessionStorage.removeItem('st_first_msg');
-        document.getElementById('msgInput').value = firstMsg;
-        await sendMsg();
+        await JRThread.send(firstMsg);
       }
     } catch(e) {
       sidebarStatus('⚠ Could not open conversation:<br><span style="font-size:var(--text-xs);color:var(--red);">'+esc((e&&e.message)||String(e))+'</span>');
@@ -665,6 +469,14 @@
           _threads[idx].customer_unread = u.customer_unread;
           _threads[idx].tasker_unread   = u.tasker_unread;
           _threads[idx].agreed_price    = u.agreed_price;
+        }
+        if (idx !== -1 && u.id === _active) {
+          /* Open thread: anything arriving now is already on screen, keep it read */
+          var mine = _user.id === u.customer_id ? 'customer_unread' : 'tasker_unread';
+          if (u[mine] > 0) {
+            _threads[idx][mine] = 0;
+            window.supabase.from('message_threads').update({ [mine]: 0 }).eq('id', u.id).then(function(){}).catch(function(){});
+          }
         }
         renderThreadList();
         if (idx !== -1) JRList.refreshOne(_threads[idx], _role).then(function(){ renderThreadList(); if (u.id === _active) JRRoom.refresh(); }).catch(function(){});
