@@ -14,7 +14,7 @@
 <body class="msg-page">
   <div id="navbar-placeholder"></div>
 
-  <!-- Payment request modal (tasker only). Rebuilt as part of the Request sheet in steps 5-6. -->
+  <!-- Payment request modal (tasker only). Opened from the Request sheet; rebuilt with the money cards in step 6. -->
   <div class="pay-modal-overlay" id="payModalOverlay">
     <div class="pay-modal">
       <button class="modal-close" onclick="closePayModal()" title="Close">
@@ -109,10 +109,15 @@
         </div>
 
         <div class="msg-input-bar" id="inputBar" hidden>
-          <button class="msg-pay-request-btn" id="payRequestBtn" hidden onclick="openPayModal()" title="Request payment from customer">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Request payment
-          </button>
+          <!-- Request button + sheet (js/messages-request.js). Both roles; the items depend on role and job state. -->
+          <div class="jr-req-wrap">
+            <button class="jr-request-btn" id="jrRequestBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="jrSheet" hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Request
+            </button>
+            <div class="jr-sheet-backdrop" id="jrSheetBackdrop" hidden></div>
+            <div class="jr-sheet" id="jrSheet" role="dialog" aria-label="Request" hidden></div>
+          </div>
           <div class="msg-input-wrap">
             <textarea id="msgInput" class="msg-input" placeholder="Type a message…" rows="1" maxlength="2000" aria-label="Message"></textarea>
           </div>
@@ -149,6 +154,7 @@
   <script src="js/messages-list.js"></script>
   <script src="js/messages-room.js"></script>
   <script src="js/messages-thread.js"></script>
+  <script src="js/messages-request.js"></script>
 
   <script>
   'use strict';
@@ -200,6 +206,7 @@
     applyRoleShell();
     JRList.init({ role:_role, onSelect:function(id){ openThread(id); } });
     JRThread.bindComposer();
+    JRRequest.init({ handlers: { request_payment: openPayModal } });
 
     /* 2. Load conversations */
     await loadThreadList();
@@ -270,9 +277,8 @@
     /* Header + task status banner (js/messages-room.js) */
     JRRoom.open({ thread:t, user:_user, role:_role });
 
-    /* Request Payment button — tasker only */
-    var payBtn = document.getElementById('payRequestBtn');
-    if (payBtn) payBtn.style.display = (_role === 'tasker') ? 'flex' : 'none';
+    /* Request button + sheet (both roles; items depend on role and job state) */
+    JRRequest.setContext({ thread:t, user:_user, role:_role });
 
     await JRThread.open({ thread:t, user:_user, role:_role, onChange:threadChanged });
 
@@ -302,6 +308,7 @@
   window.openThread = openThread;
 
   function closeMobileChat() {
+    JRRequest.close();
     document.getElementById('msgChat').classList.remove('open');
   }
   window.closeMobileChat = closeMobileChat;
