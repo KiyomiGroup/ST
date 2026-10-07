@@ -322,7 +322,7 @@
     function oauthSignup(provider, role) {
       window.supabase?.auth?.signInWithOAuth({
         provider,
-        options: { redirectTo: window.location.origin + '/' + (role === 'tasker' ? 'dashboard-tasker.html' : 'home-feed.html') },
+        options: { redirectTo: window.location.origin + '/' + 'home-feed.html' },
       });
     }
 
@@ -385,7 +385,7 @@
 
       try {
         await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
-        window.location.href = 'dashboard-tasker.html';
+        window.location.href = 'home-feed.html';
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
