@@ -252,6 +252,21 @@
     if (o.isCustomer && o.id) {
       items.push({ label: 'View tasker profile', href: 'tasker-profile.html?id=' + encodeURIComponent(o.id) });
     }
+    if (o.isCustomer && window.JRList && window.JRList.archiveReady()) {
+      var archived = window.JRList.isArchived(ctx.thread);
+      items.push({
+        label: archived ? 'Unarchive conversation' : 'Archive conversation',
+        onClick: async function () {
+          try {
+            await window.JRList.setArchived(ctx.thread, !archived);
+            if (window.JRThread) window.JRThread.toast(archived ? 'Conversation restored' : 'Conversation archived');
+            paintMenu(ctx, o);
+          } catch (e) {
+            if (window.JRThread) window.JRThread.toast('Could not update: ' + ((e && e.message) || String(e)), 'error');
+          }
+        }
+      });
+    }
     return items;
   }
 
@@ -265,9 +280,16 @@
     btn.setAttribute('aria-expanded', 'false');
     btn.hidden = items.length === 0;
     items.forEach(function (it) {
-      var a = el('a', 'jr-menu-item', it.label);
+      var a;
+      if (it.href) {
+        a = el('a', 'jr-menu-item', it.label);
+        a.href = it.href;
+      } else {
+        a = el('button', 'jr-menu-item', it.label);
+        a.type = 'button';
+        a.addEventListener('click', it.onClick);
+      }
       a.setAttribute('role', 'menuitem');
-      a.href = it.href;
       menu.appendChild(a);
     });
     if (!menuBound) {
@@ -297,12 +319,14 @@
     var cachedTask = t._taskId ? cache.tasks[t._taskId] || null : null;
     paintHead(ctx, cachedProfile, cachedTask);
     paintBanner(ctx, cachedTask);
+    if (window.JRRequests) window.JRRequests.update(ctx);
 
     /* 2) then fill in profile + task details */
     var results = await Promise.all([getProfile(o.id, o.isCustomer), getTask(t._taskId)]);
     if (!current || current.thread.id !== token) return;   /* user switched threads meanwhile */
     paintHead(ctx, results[0], results[1]);
     paintBanner(ctx, results[1]);
+    if (window.JRRequests) window.JRRequests.update(ctx);
   }
 
   function refresh() {
@@ -311,6 +335,7 @@
     var o = otherOf(current);
     paintHead(current, cache.profiles[o.id + ':' + (o.isCustomer ? 't' : 'c')] || null, t._taskId ? cache.tasks[t._taskId] || null : null);
     paintBanner(current, t._taskId ? cache.tasks[t._taskId] || null : null);
+    if (window.JRRequests) window.JRRequests.update(current);
   }
 
   window.JRRoom = { open: open, refresh: refresh, statusFor: statusFor };

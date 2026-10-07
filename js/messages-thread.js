@@ -10,9 +10,14 @@
      JRThread.onRealtimeInsert(row)      realtime INSERT handler
      JRThread.send(text)                 send a text message (same path as the button)
      JRThread.toast(message, type)       small toast (type: 'error' for errors)
+     JRThread.registerRequest(row)       remember a job_requests row (card state)
+     JRThread.onRequestChange(row)       realtime INSERT/UPDATE of job_requests
+     JRThread.pendingKinds()             kinds that still have a pending request
+     JRThread.hasContactInfo(text)       same contact check the composer uses
+     JRThread.focusComposer()
 
    Message kinds rendered today:
-     text, payment_request, payment_confirmed, system.
+     text, payment_request, payment_confirmed, system, job_request.
    Anything else falls back to a text bubble. Image / file / location /
    structured request cards arrive in steps 5-8.
 
@@ -30,7 +35,8 @@
 
   var S = {
     thread: null, user: null, role: 'customer', onChange: null,
-    lastDay: null, sending: false, bound: false
+    lastDay: null, sending: false, bound: false,
+    requests: {}, requestsFailed: false
   };
 
   /* Extra contact patterns on top of ST.messages.CONTACT_PATTERNS (js/messages.js):
@@ -78,6 +84,7 @@
   }
   var ICON_CARD  = svg('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>');
   var ICON_CHECK = svg('<polyline points="20 6 9 17 4 12"/>');
+  var ICON_CLIPBOARD = svg('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>');
   var ICON_SPIN  = '<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
 
   /* ── toast ───────────────────────────────────────────────── */
@@ -222,11 +229,147 @@
     return wrap;
   }
 
+  /* ── job request card (step 5) ───────────────────────────── */
+  var REQ_STATUS_LABEL = { pending: 'Pending', fulfilled: 'Done', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired' };
+
+  function requestIdOf(m) {
+    if (m.job_request_id) return m.job_request_id;
+    var p = (m.body || '').split(':');
+    return p[0] === 'JOB_REQUEST' ? (p[1] || '') : '';
+  }
+  function requestKindOf(m, req) {
+    if (req && req.kind) return req.kind;
+    var p = (m.body || '').split(':');
+    return p[0] === 'JOB_REQUEST' ? (p[2] || '') : '';
+  }
+  function kindMeta(kind) {
+    var K = (window.JRRequests && window.JRRequests.KINDS) || {};
+    return K[kind] || { title: 'Request', byOther: 'sent you a request.', byMe: 'You sent a request.' };
+  }
+
+  async function respondToRequest(id, status) {
+    var req = S.requests[id];
+    if (!req) return;
+    try {
+      var r = await window.supabase.from('job_requests').update({ status: status }).eq('id', id).select().maybeSingle();
+      if (r.error) throw r.error;
+      var row = (r.data) || Object.assign({}, req, { status: status });
+      S.requests[id] = Object.assign({}, req, row);
+      repaintRequest(id);
+    } catch (e) {
+      toast((e && e.message) || 'Could not update the request', 'error');
+    }
+  }
+
+  function fillRequest(wrap) {
+    var m = wrap._msg, isMine = wrap._mine;
+    var id = requestIdOf(m);
+    var req = S.requests[id] || null;
+    var kind = requestKindOf(m, req);
+    var meta = kindMeta(kind);
+    var status = req ? req.status : 'pending';
+
+    wrap.textContent = '';
+    var card = el('div', 'jr-req jr-req--' + status + (isMine ? ' is-mine' : ''));
+
+    var head = el('div', 'jr-req-head');
+    var icon = el('div', 'jr-req-icon'); icon.innerHTML = ICON_CLIPBOARD;
+    head.appendChild(icon);
+    head.appendChild(el('span', 'jr-req-title', meta.title));
+    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, REQ_STATUS_LABEL[status] || status));
+    card.appendChild(head);
+
+    card.appendChild(el('div', 'jr-req-text', isMine ? meta.byMe : meta.byOther));
+    if (req && req.note) {
+      var note = el('div', 'jr-req-note', req.note);
+      card.appendChild(note);
+    }
+
+    if (req && status === 'pending') {
+      var actions = el('div', 'jr-req-actions');
+      if (req.requested_by !== S.user.id) {
+        var reply = el('button', 'jr-req-btn', 'Reply'); reply.type = 'button';
+        reply.addEventListener('click', focusComposer);
+        var done = el('button', 'jr-req-btn jr-req-btn--primary', 'Mark as done'); done.type = 'button';
+        done.addEventListener('click', function () { done.disabled = true; respondToRequest(id, 'fulfilled'); });
+        actions.appendChild(reply); actions.appendChild(done);
+      } else {
+        var cancel = el('button', 'jr-req-btn', 'Cancel request'); cancel.type = 'button';
+        cancel.addEventListener('click', function () { cancel.disabled = true; respondToRequest(id, 'cancelled'); });
+        actions.appendChild(cancel);
+      }
+      card.appendChild(actions);
+    }
+
+    wrap.appendChild(card);
+    wrap.appendChild(el('div', 'msg-time', timeLabel(m.created_at)));
+  }
+
+  function buildJobRequest(m, isMine) {
+    var wrap = baseWrap(m, isMine);
+    wrap.classList.add('is-card');
+    wrap.dataset.reqId = String(requestIdOf(m));
+    wrap._msg = m; wrap._mine = isMine;
+    fillRequest(wrap);
+    return wrap;
+  }
+
+  function repaintRequest(id) {
+    var body = $('chatBody');
+    if (!body) return;
+    var nodes = body.querySelectorAll('[data-req-id="' + String(id).replace(/"/g, '') + '"]');
+    for (var i = 0; i < nodes.length; i++) fillRequest(nodes[i]);
+    if (window.JRRequests && window.JRRequests.update) window.JRRequests.update();
+  }
+
+  async function loadRequests(msgs) {
+    S.requests = {}; S.requestsFailed = false;
+    var ids = [];
+    msgs.forEach(function (m) {
+      if (m.type !== 'job_request') return;
+      var id = requestIdOf(m);
+      if (id && ids.indexOf(id) === -1) ids.push(id);
+    });
+    if (!ids.length) return;
+    try {
+      var r = await window.supabase.from('job_requests').select('*').in('id', ids);
+      if (r.error) throw r.error;
+      (r.data || []).forEach(function (row) { S.requests[row.id] = row; });
+    } catch (_e) { S.requestsFailed = true; }
+  }
+
+  /* A request message arrived live: its job_requests row may not be loaded yet */
+  async function ensureRequest(m) {
+    var id = requestIdOf(m);
+    if (!id || S.requests[id]) return;
+    try {
+      var r = await window.supabase.from('job_requests').select('*').eq('id', id).maybeSingle();
+      if (r.data) { S.requests[id] = r.data; repaintRequest(id); }
+    } catch (_e) {}
+  }
+
+  function registerRequest(row) { if (row && row.id) S.requests[row.id] = row; }
+
+  function onRequestChange(row) {
+    if (!row || !row.id) return;
+    S.requests[row.id] = Object.assign({}, S.requests[row.id] || {}, row);
+    repaintRequest(row.id);
+  }
+
+  function pendingKinds() {
+    return Object.keys(S.requests)
+      .filter(function (k) { return S.requests[k].status === 'pending'; })
+      .map(function (k) { return S.requests[k].kind; });
+  }
+
+  function focusComposer() { var i = $('msgInput'); if (i) i.focus(); }
+
   function buildMessage(m) {
     var isMine = m.sender_id === S.user.id;
     if (m.type === 'system') return buildSystem(m);
     if (m.type === 'payment_request') return buildPaymentRequest(m, isMine);
     if (m.type === 'payment_confirmed') return buildPaymentConfirmed(m, isMine);
+    if (m.type === 'job_request') return buildJobRequest(m, isMine);
     return buildText(m, isMine);
   }
 
@@ -264,6 +407,7 @@
     var mine = S.user && m.sender_id === S.user.id;
     var node = appendNode(m);
     if (!node) return null;
+    if (m.type === 'job_request') ensureRequest(m);
     if (wasNear || mine) {
       scrollToBottom(body);
     } else {
@@ -272,9 +416,16 @@
     return node;
   }
 
+  function fetchMessages(threadId, cols) {
+    return window.supabase.from('messages').select(cols)
+      .eq('thread_id', threadId)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE);
+  }
+
   async function open(ctx) {
     S.thread = ctx.thread; S.user = ctx.user; S.role = ctx.role; S.onChange = ctx.onChange || null;
-    S.lastDay = null;
+    S.lastDay = null; S.requests = {}; S.requestsFailed = false;
     var token = ctx.thread.id;
     var body = $('chatBody');
     var input = $('msgInput');
@@ -284,14 +435,17 @@
 
     placeholder(body, ICON_SPIN + ' Loading…');
     try {
-      var res = await window.supabase.from('messages')
-        .select('id,sender_id,body,created_at,type,payment_request_id')
-        .eq('thread_id', token)
-        .order('created_at', { ascending: false })
-        .limit(PAGE_SIZE);
+      var cols = 'id,sender_id,body,created_at,type,payment_request_id,job_request_id';
+      var res = await fetchMessages(token, cols);
+      if (res.error && /job_request_id/.test(String(res.error.message || ''))) {
+        /* Step 5 SQL not run yet: load without the new column */
+        res = await fetchMessages(token, 'id,sender_id,body,created_at,type,payment_request_id');
+      }
       if (S.thread.id !== token) return;               /* user switched thread */
       if (res.error) throw res.error;
       var msgs = (res.data || []).slice().reverse();
+      await loadRequests(msgs);
+      if (S.thread.id !== token) return;
       body.textContent = '';
       if (!msgs.length) {
         placeholder(body, 'No messages yet. Say hello! 👋');
@@ -471,7 +625,12 @@
     append: append,
     onRealtimeInsert: onRealtimeInsert,
     send: send,
-    toast: toast
+    toast: toast,
+    registerRequest: registerRequest,
+    onRequestChange: onRequestChange,
+    pendingKinds: pendingKinds,
+    hasContactInfo: hasContactInfo,
+    focusComposer: focusComposer
   };
 
 })();

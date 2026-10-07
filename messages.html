@@ -14,7 +14,7 @@
 <body class="msg-page">
   <div id="navbar-placeholder"></div>
 
-  <!-- Payment request modal (tasker only). Opened from the Request sheet; rebuilt with the money cards in step 6. -->
+  <!-- Payment request modal (tasker only). Rebuilt as part of the Request sheet in steps 5-6. -->
   <div class="pay-modal-overlay" id="payModalOverlay">
     <div class="pay-modal">
       <button class="modal-close" onclick="closePayModal()" title="Close">
@@ -109,21 +109,30 @@
         </div>
 
         <div class="msg-input-bar" id="inputBar" hidden>
-          <!-- Request button + sheet (js/messages-request.js). Both roles; the items depend on role and job state. -->
-          <div class="jr-req-wrap">
-            <button class="jr-request-btn" id="jrRequestBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="jrSheet" hidden>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Request
-            </button>
-            <div class="jr-sheet-backdrop" id="jrSheetBackdrop" hidden></div>
-            <div class="jr-sheet" id="jrSheet" role="dialog" aria-label="Request" hidden></div>
-          </div>
+          <button class="msg-pay-request-btn" id="requestBtn" type="button" hidden aria-haspopup="dialog" title="Requests and job actions">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Request
+          </button>
           <div class="msg-input-wrap">
             <textarea id="msgInput" class="msg-input" placeholder="Type a message…" rows="1" maxlength="2000" aria-label="Message"></textarea>
           </div>
           <button class="msg-send-btn" id="msgSendBtn" type="button" title="Send" aria-label="Send message" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
+        </div>
+
+
+        <!-- Request sheet (built by js/messages-requests.js) -->
+        <div class="jr-sheet-layer" id="jrSheetLayer" hidden>
+          <div class="jr-sheet-backdrop" id="jrSheetBackdrop"></div>
+          <div class="jr-sheet" role="dialog" aria-modal="true" aria-labelledby="jrSheetTitle">
+            <div class="jr-sheet-grab" aria-hidden="true"></div>
+            <div class="jr-sheet-head">
+              <h2 class="jr-sheet-title" id="jrSheetTitle">Request</h2>
+              <button class="jr-icon-btn" id="jrSheetClose" type="button" aria-label="Close"><span id="jrSheetCloseIcon"></span></button>
+            </div>
+            <div class="jr-sheet-body" id="jrSheetBody"></div>
+          </div>
         </div>
 
       </section>
@@ -154,7 +163,7 @@
   <script src="js/messages-list.js"></script>
   <script src="js/messages-room.js"></script>
   <script src="js/messages-thread.js"></script>
-  <script src="js/messages-request.js"></script>
+  <script src="js/messages-requests.js"></script>
 
   <script>
   'use strict';
@@ -165,6 +174,7 @@
   var _threads      = [];
   var _active       = null;
   var _activeThread = null;
+  var _requestSub   = null;
   var _realtimeSub  = null;
   var _globalThreadSub = null;
   var _globalNotifSub  = null;
@@ -206,7 +216,7 @@
     applyRoleShell();
     JRList.init({ role:_role, onSelect:function(id){ openThread(id); } });
     JRThread.bindComposer();
-    JRRequest.init({ handlers: { request_payment: openPayModal } });
+    JRRequests.init({ onChange:threadChanged });
 
     /* 2. Load conversations */
     await loadThreadList();
@@ -277,9 +287,6 @@
     /* Header + task status banner (js/messages-room.js) */
     JRRoom.open({ thread:t, user:_user, role:_role });
 
-    /* Request button + sheet (both roles; items depend on role and job state) */
-    JRRequest.setContext({ thread:t, user:_user, role:_role });
-
     await JRThread.open({ thread:t, user:_user, role:_role, onChange:threadChanged });
 
     /* Realtime subscription for this thread */
@@ -297,6 +304,19 @@
       })
       .subscribe();
 
+    /* Live request cards: separate channel, only once the step 5 table exists
+       (so a missing table can never break live messages) */
+    if (_requestSub) { try { _requestSub.unsubscribe(); } catch(e){} _requestSub = null; }
+    JRRequests.whenReady().then(function(ok){
+      if (!ok || _active !== threadId) return;
+      _requestSub = window.supabase
+        .channel('requests:'+threadId)
+        .on('postgres_changes', { event:'*', schema:'public', table:'job_requests', filter:'thread_id=eq.'+threadId }, function(payload) {
+          JRThread.onRequestChange(payload.new);
+        })
+        .subscribe();
+    });
+
     /* Mark as read */
     var col = isCustomer ? 'customer_unread' : 'tasker_unread';
     window.supabase.from('message_threads').update({[col]:0}).eq('id',threadId).then(function(){}).catch(function(){});
@@ -308,7 +328,6 @@
   window.openThread = openThread;
 
   function closeMobileChat() {
-    JRRequest.close();
     document.getElementById('msgChat').classList.remove('open');
   }
   window.closeMobileChat = closeMobileChat;

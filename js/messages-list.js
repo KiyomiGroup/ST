@@ -24,7 +24,8 @@
       { key: 'all',       label: 'All' },
       { key: 'active',    label: 'Active Jobs' },
       { key: 'awaiting',  label: 'Awaiting Action' },
-      { key: 'completed', label: 'Completed' }
+      { key: 'completed', label: 'Completed' },
+      { key: 'archived',  label: 'Archived', needsArchive: true }
     ],
     tasker: [
       { key: 'all',       label: 'All' },
@@ -42,13 +43,14 @@
     awaiting:  'Nothing is waiting on you.',
     requests:  'No new customer requests.',
     payments:  'No payment activity yet.',
-    completed: 'No completed jobs yet.'
+    completed: 'No completed jobs yet.',
+    archived:  'No archived conversations.'
   };
 
   /* Job states derived from payment_requests + bookings (see derive()). */
   var ACTIVE_STATES = ['payment_pending', 'secured', 'awaiting_confirmation', 'disputed'];
 
-  var state = { filter: 'all', query: '', role: 'customer', onSelect: null, lastCtx: null };
+  var state = { filter: 'all', query: '', role: 'customer', onSelect: null, lastCtx: null, archiveReady: true };
 
   /* ── Small helpers ───────────────────────────────────────── */
   function el(tag, cls, text) {
@@ -133,8 +135,17 @@
     return { key: key, label: label, tone: tone, needsAction: needsAction, amount: amount };
   }
 
+  /* Customers can archive a conversation (needs customer_archived, step 5 SQL) */
+  function isArchived(t, role) { return role === 'customer' && state.archiveReady && t.customer_archived === true; }
+
+  function filtersFor(role) {
+    return FILTERS[role].filter(function (f) { return !f.needsArchive || state.archiveReady; });
+  }
+
   /* Does a thread belong in a filter tab? */
   function inFilter(t, role, filterKey, userId) {
+    if (filterKey === 'archived') return isArchived(t, role);
+    if (isArchived(t, role)) return false;
     var d = t._job || derive(t, role);
     var unread = unreadFor(t, userId);
     switch (filterKey) {
@@ -169,12 +180,22 @@
     var timeout = new Promise(function (_, rej) {
       setTimeout(function () { rej(new Error('Timed out. Check your connection.')); }, 10000);
     });
-    var query = window.supabase
-      .from('message_threads')
-      .select('id,customer_id,tasker_id,context_type,context_id,last_message,last_message_at,customer_unread,tasker_unread,agreed_price')
-      .or('customer_id.eq.' + userId + ',tasker_id.eq.' + userId)
-      .order('last_message_at', { ascending: false });
-    var res = await Promise.race([query, timeout]);
+    function run(cols) {
+      return window.supabase
+        .from('message_threads')
+        .select(cols)
+        .or('customer_id.eq.' + userId + ',tasker_id.eq.' + userId)
+        .order('last_message_at', { ascending: false });
+    }
+    var base = 'id,customer_id,tasker_id,context_type,context_id,last_message,last_message_at,customer_unread,tasker_unread,agreed_price';
+    var res = await Promise.race([run(base + ',customer_archived'), timeout]);
+    if (res.error && /customer_archived/.test(String(res.error.message || ''))) {
+      /* Step 5 SQL not run yet: load without the archive flag, hide the Archived tab */
+      state.archiveReady = false;
+      res = await Promise.race([run(base), timeout]);
+    } else if (!res.error) {
+      state.archiveReady = true;
+    }
     if (res.error) throw res.error;
     return res.data || [];
   }
@@ -333,8 +354,8 @@
     var host = document.getElementById('jrFilters');
     if (!host) return;
     host.textContent = '';
-    FILTERS[ctx.role].forEach(function (f) {
-      var count = f.key === 'all' ? 0 : ctx.threads.filter(function (t) {
+    filtersFor(ctx.role).forEach(function (f) {
+      var count = (f.key === 'all' || f.key === 'archived') ? 0 : ctx.threads.filter(function (t) {
         return inFilter(t, ctx.role, f.key, ctx.user.id);
       }).length;
       var b = el('button', 'jr-tab' + (state.filter === f.key ? ' is-active' : ''));
@@ -357,7 +378,7 @@
     var host = document.getElementById('jrAttention');
     if (!host) return;
     var n = ctx.role === 'customer'
-      ? ctx.threads.filter(function (t) { return (t._job || derive(t, ctx.role)).needsAction; }).length
+      ? ctx.threads.filter(function (t) { return !isArchived(t, ctx.role) && (t._job || derive(t, ctx.role)).needsAction; }).length
       : ctx.threads.filter(function (t) { return unreadFor(t, ctx.user.id) > 0; }).length;
     host.textContent = '';
     host.hidden = n === 0;
@@ -392,6 +413,7 @@
     renderTabs(ctx);
     renderAttention(ctx);
 
+    if (state.filter === 'archived' && !state.archiveReady) state.filter = 'all';
     var q = state.query;
     var rows = ctx.threads.filter(function (t) {
       return inFilter(t, ctx.role, state.filter, ctx.user.id) && matchesQuery(t, ctx.role, q);
@@ -434,7 +456,18 @@
     }
   }
 
+  /* Archive / unarchive (customer only). Throws on failure. */
+  async function setArchived(t, flag) {
+    var r = await window.supabase.from('message_threads').update({ customer_archived: !!flag }).eq('id', t.id);
+    if (r.error) throw r.error;
+    t.customer_archived = !!flag;
+    if (state.lastCtx) render(state.lastCtx);
+  }
+
   window.JRList = {
+    setArchived: setArchived,
+    isArchived: function (t) { return isArchived(t, state.role); },
+    archiveReady: function () { return state.archiveReady; },
     init: init,
     load: load,
     render: render,
