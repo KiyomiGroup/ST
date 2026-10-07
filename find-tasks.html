@@ -200,6 +200,15 @@
         mode: 'area',
       });
 
+      /* Prefill from the Home search (?q=...&location=...) */
+      const _qs = new URLSearchParams(window.location.search);
+      const _q0 = (_qs.get('q') || _qs.get('service') || '').trim();
+      const _l0 = (_qs.get('location') || '').trim();
+      const _li = document.getElementById('taskLocationInput');
+      if (_q0 && si) { si.value = _q0; TASK_FILTERS.search = _q0; }
+      if (_l0 && _li) { _li.value = _l0; TASK_FILTERS.location = _l0; }
+      if (_q0 || _l0) renderTasks();
+
       /* Task Type checkboxes */
       document.querySelectorAll('[name="ttype"]').forEach(cb => cb.addEventListener('change', () => {
         TASK_FILTERS.types = [...document.querySelectorAll('[name="ttype"]:checked')].map(c => c.value);

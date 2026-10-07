@@ -101,6 +101,116 @@
     }
     @media (prefers-reduced-motion: reduce) { .hf-live-dot { animation: none; } }
 
+    /* ── Search (reuses .spg-searchbar from styles.css) ───────── */
+    .hf-search { padding-bottom: var(--space-3); }
+    .hf-search .spg-searchbar { margin: 0; max-width: 880px; }
+    .hf-search-loc { position: relative; }
+    @media (max-width: 900px) { .hf-search .spg-searchbar { margin: 0; } }
+
+    /* ── Feed: customer (Step 3). Old two-column feed stays for taskers until Step 4 ── */
+    .hf-feed-customer { display: none; padding-bottom: var(--space-8); }
+    body.role-customer .hf-feed-customer { display: block; }
+    .feed-body { display: none; }
+    body.role-tasker .feed-body { display: block; }
+
+    .hf-sec { margin-top: var(--space-6); }
+    .hf-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+    .hf-sec-head h2 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xl); font-weight: 800; color: var(--pt-ink); }
+    .hf-sec-sub { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+    .hf-sec-head a { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); font-weight: 700; color: var(--pt-green); white-space: nowrap; }
+    .hf-sec-head a:hover { text-decoration: underline; }
+
+    /* Cards: a swipe row on mobile, a grid from tablet up */
+    .hf-row { display: flex; gap: var(--space-4); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: var(--space-1); }
+    .hf-row::-webkit-scrollbar { display: none; }
+    .hf-row-stack { flex-direction: column; overflow: visible; }
+    .hf-card {
+      flex: 0 0 240px; display: flex; flex-direction: column;
+      background: var(--white); border: 1px solid var(--color-card-border);
+      border-radius: var(--radius-2xl); box-shadow: var(--shadow-pt-card);
+      overflow: hidden; color: inherit; text-decoration: none;
+      transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+    }
+    .hf-row-stack .hf-card { flex: none; }
+    a.hf-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .hf-card-media { position: relative; aspect-ratio: 4 / 3; background: var(--pt-field); overflow: hidden; }
+    .hf-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hf-media-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--text-xl); font-weight: 800; color: var(--white); }
+    .hf-chip-badge {
+      position: absolute; display: inline-flex; align-items: center; gap: var(--space-1);
+      padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
+      font-size: var(--text-xs); font-weight: 700;
+    }
+    .hf-badge-pro { top: var(--space-2); left: var(--space-2); background: var(--pt-green); color: var(--white); }
+    .hf-badge-rating { right: var(--space-2); bottom: var(--space-2); background: var(--white); color: var(--pt-ink); box-shadow: var(--shadow-pt-pill); }
+    .hf-badge-rating svg { color: var(--amber); }
+    .hf-card-body { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); flex: 1; }
+    .hf-card-kicker { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pt-green); }
+    .hf-card-name { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-base); font-weight: 800; color: var(--pt-ink); }
+    .hf-card-name svg { color: var(--pt-green); flex-shrink: 0; }
+    .hf-card-trade { font-size: var(--text-sm); font-weight: 600; color: var(--pt-green); }
+    .hf-card-desc { font-size: var(--text-xs); color: var(--pt-ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .hf-card-loc { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--pt-ink-muted); }
+    .hf-card-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: auto; padding-top: var(--space-3); }
+    .hf-price { font-size: var(--text-base); font-weight: 800; color: var(--pt-ink); }
+    .hf-price small { font-size: var(--text-xs); font-weight: 500; color: var(--pt-ink-muted); }
+    .hf-book { padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: var(--pt-mint); color: var(--pt-green); font-size: var(--text-xs); font-weight: 700; }
+    .hf-empty { padding: var(--space-5); text-align: center; font-size: var(--text-sm); color: var(--pt-ink-muted); background: var(--white); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); flex: 1; }
+    .hf-skel-line { height: 12px; border-radius: var(--radius-pill); margin-bottom: var(--space-2); }
+    .hf-skel-short { width: 60%; }
+    .hf-card-skel { pointer-events: none; }
+
+    /* Your active tasks */
+    .hf-task-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .hf-task {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+      padding: var(--space-4) var(--space-5); background: var(--white);
+      border: 1px solid var(--color-card-border); border-radius: var(--radius-2xl); box-shadow: var(--shadow-pt-card);
+      color: inherit; text-decoration: none;
+    }
+    a.hf-task:hover { box-shadow: var(--shadow-md); }
+    .hf-task-main { min-width: 0; }
+    .hf-task-cat { display: inline-block; margin-bottom: var(--space-1); padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--pt-mint-soft); color: var(--pt-green); font-size: var(--text-xs); font-weight: 700; }
+    .hf-task-title { font-size: var(--text-base); font-weight: 800; color: var(--pt-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hf-task-meta { margin-top: var(--space-1); font-size: var(--text-xs); color: var(--pt-ink-muted); }
+    .hf-task-side { text-align: right; flex-shrink: 0; }
+    .hf-task-budget { font-size: var(--text-base); font-weight: 800; color: var(--pt-ink); }
+    .hf-task-status { font-size: var(--text-xs); font-weight: 600; color: var(--pt-green); text-transform: capitalize; }
+    .hf-empty-cta { display: inline-flex; margin-top: var(--space-3); padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: var(--pt-green); color: var(--white); font-size: var(--text-sm); font-weight: 700; }
+
+    /* Green banner */
+    .hf-banner {
+      margin-top: var(--space-7); padding: var(--space-6) var(--space-5);
+      display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-5);
+      background: var(--pt-green); color: var(--white); border-radius: var(--radius-2xl);
+      position: relative; overflow: hidden;
+    }
+    .hf-banner::after { content: ''; position: absolute; right: -60px; bottom: -80px; width: 240px; height: 240px; border-radius: 50%; background: var(--pt-escrow-icon); opacity: 0.45; pointer-events: none; }
+    .hf-banner-copy { position: relative; z-index: 1; }
+    .hf-banner-tag { display: inline-block; margin-bottom: var(--space-3); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--pt-escrow-icon); color: var(--pt-mint); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .hf-banner h2 { font-size: var(--text-h2); font-weight: 800; margin-bottom: var(--space-2); }
+    .hf-banner p { font-size: var(--text-base); color: var(--pt-escrow-text); max-width: 460px; }
+    .hf-banner-btn { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: var(--space-2); height: 48px; padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--pt-mint); color: var(--pt-green); font-size: var(--text-sm); font-weight: 800; white-space: nowrap; }
+    .hf-banner-btn:hover { background: var(--pt-mint-soft); }
+
+    /* Browse categories */
+    .hf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+    .hf-cat { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-4) var(--space-2); background: var(--white); border: 1px solid var(--color-card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pt-pill); font-size: var(--text-xs); font-weight: 700; color: var(--pt-ink); text-decoration: none; transition: transform var(--t) var(--ease); }
+    .hf-cat:hover { transform: translateY(-2px); }
+    .hf-cat-ic { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pt-mint-soft); color: var(--pt-green); }
+    .hf-sec :focus-visible, .hf-banner-btn:focus-visible, a.hf-card:focus-visible { outline: 2px solid var(--pt-green); outline-offset: 2px; }
+
+    @media (min-width: 640px) {
+      .hf-row-stack { display: grid; grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) {
+      .hf-row { display: grid; grid-template-columns: repeat(4, 1fr); overflow: visible; }
+      .hf-row-stack { grid-template-columns: repeat(4, 1fr); }
+      .hf-card { flex: none; }
+      .hf-banner { flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-7) var(--space-7); }
+      .hf-cats { grid-template-columns: repeat(8, 1fr); }
+    }
+
     /* ── Main Feed Grid ───────────────────────────────────────── */
     .feed-body { padding: 24px 0 64px; }
     .feed-layout {
@@ -606,6 +716,25 @@
       </div>
     </section>
 
+    <!-- SEARCH — same .spg-searchbar pattern as find-taskers / find-tasks -->
+    <div class="hf-search">
+      <div class="container">
+        <form id="hfSearchForm" class="spg-searchbar fade-up d3" novalidate>
+          <div class="spg-searchbar-field">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="hfSearchInput" name="q" placeholder="Service or tasker name..." autocomplete="off" aria-label="Search" />
+          </div>
+          <div class="spg-searchbar-divider spg-searchbar-location-wrap"></div>
+          <div class="spg-searchbar-field spg-searchbar-location-wrap hf-search-loc">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" id="hfSearchLoc" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" aria-label="Location" />
+            <div id="hfSearchLocSuggestions" class="location-suggestions"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" aria-label="Search"><span>Search</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </form>
+      </div>
+    </div>
+
     <!-- CATEGORY CHIPS — filter the feed (wired to the sections in Steps 3-5) -->
     <nav class="hf-chips" aria-label="Filter by category">
       <div class="container">
@@ -627,6 +756,83 @@
         </div>
       </div>
     </nav>
+
+    <!-- CUSTOMER FEED (Step 3) — shown for body.role-customer only -->
+    <main class="hf-feed hf-feed-customer" aria-label="Customer home feed">
+      <div class="container">
+
+        <section class="hf-sec" aria-labelledby="hfNearbyTitle">
+          <div class="hf-sec-head">
+            <h2 id="hfNearbyTitle"><span class="hf-live-dot" aria-hidden="true"></span>Nearby Taskers Live</h2>
+            <a href="find-taskers.html">See all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-row" id="hfNearbyList">
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+          </div>
+        </section>
+
+        <section class="hf-sec" aria-labelledby="hfFeaturedTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfFeaturedTitle">Top-Notch Services Featured</h2>
+              <p class="hf-sec-sub">Vetted, on-demand services popular near you</p>
+            </div>
+            <a href="find-taskers.html">See all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-row hf-row-stack" id="hfFeaturedList">
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+          </div>
+        </section>
+
+        <section class="hf-sec" aria-labelledby="hfMyTasksTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfMyTasksTitle">Your active tasks</h2>
+              <p class="hf-sec-sub">Tasks you've posted that are still in progress</p>
+            </div>
+            <a href="dashboard-customer.html?panel=my-tasks">My tasks <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-task-list" id="hfMyTasksList">
+            <div class="hf-task hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div></div>
+          </div>
+        </section>
+
+        <section class="hf-banner" aria-labelledby="hfBannerTitle">
+          <div class="hf-banner-copy">
+            <span class="hf-banner-tag">Fast, free &amp; community powered</span>
+            <h2 id="hfBannerTitle">Got something to fix?</h2>
+            <p>Post your task and get matched with top local providers in minutes.</p>
+          </div>
+          <a href="post-task.html" class="hf-banner-btn">Post a Task — It's Free <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        </section>
+
+        <section class="hf-sec" aria-labelledby="hfCatsTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfCatsTitle">Browse Categories</h2>
+              <p class="hf-sec-sub">Top-rated providers in every trade</p>
+            </div>
+          </div>
+          <div class="hf-cats">
+          <a href="find-taskers.html?category=electrician" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span>Electrical</span></a>
+          <a href="find-taskers.html?category=plumber" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></span><span>Plumbing</span></a>
+          <a href="find-taskers.html?category=cleaning" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg></span><span>Cleaning</span></a>
+          <a href="find-taskers.html?category=barber" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg></span><span>Barber</span></a>
+          <a href="find-taskers.html?category=beauty" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span><span>Beauty</span></a>
+          <a href="find-taskers.html?category=mechanic" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span>Mechanic</span></a>
+          <a href="find-taskers.html?category=photography" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span>Photo</span></a>
+          <a href="find-taskers.html?category=tutoring" class="hf-cat"><span class="hf-cat-ic"><svg width="22" height="22" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span>Tutor</span></a>
+          </div>
+        </section>
+
+      </div>
+    </main>
 
     <!-- MAIN FEED BODY -->
     <div class="feed-body">
@@ -892,14 +1098,19 @@
         renderWelcome(user, _userRole);
       }
       initHomeHero();
+      initHomeSearch();
 
-      /* Load all sections in parallel */
-      Promise.all([
-        loadNearbyTaskers(),
-        loadFeaturedServices(),
-        loadAllTasks(),
-        loadTopRated(),
-      ]);
+      /* Customers get the new feed (Step 3); taskers keep the old one until Step 4 */
+      if (_userRole === 'tasker') {
+        Promise.all([
+          loadNearbyTaskers(),
+          loadFeaturedServices(),
+          loadAllTasks(),
+          loadTopRated(),
+        ]);
+      } else {
+        initCustomerFeed();
+      }
 
       /* Live task count */
       try {
@@ -987,6 +1198,162 @@
           window.dispatchEvent(new CustomEvent('st:category-change', { detail: { category: cat } }));
         });
       }
+    }
+
+    /* ── Search (Step 3): same fields as the search pages ───── */
+    function initHomeSearch() {
+      const form = document.getElementById('hfSearchForm');
+      if (!form) return;
+      const isTasker = _userRole === 'tasker';
+      const q = document.getElementById('hfSearchInput');
+      if (q) q.placeholder = isTasker ? 'Search tasks near you...' : 'Service or tasker name...';
+      if (typeof initLocationInput === 'function') {
+        initLocationInput({ inputId: 'hfSearchLoc', dropdownId: 'hfSearchLocSuggestions', gps: true, mode: 'area' });
+      }
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const term = (q && q.value.trim()) || '';
+        let loc = (document.getElementById('hfSearchLoc')?.value || '').trim();
+        if (!loc) { try { loc = localStorage.getItem(LOC_KEY) || ''; } catch (err) {} }
+        const p = new URLSearchParams();
+        if (term) p.set(isTasker ? 'q' : 'service', term);
+        if (loc)  p.set('location', loc);
+        const qs = p.toString();
+        window.location.href = (isTasker ? 'find-tasks.html' : 'find-taskers.html') + (qs ? '?' + qs : '');
+      });
+    }
+
+    /* ── Customer feed (Step 3) ──────────────────────────────── */
+    let _custList = [];
+    let _custCat  = '';
+    const STAR_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    const PIN_SVG  = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+    const TICK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 2.1 3.2-.3 1 3 2.8 1.6-.9 3.1.9 3.1-2.8 1.6-1 3-3.2-.3L12 22l-2.4-2.1-3.2.3-1-3-2.8-1.6.9-3.1-.9-3.1 2.8-1.6 1-3 3.2.3z"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8" fill="none" stroke="var(--white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function _normProvider(s, i) {
+      const rating = parseFloat(s.rating);
+      return {
+        id:   String(s.id || ''),
+        uid:  String(s.user_id || s.uid || ''),
+        name: s.provider_name || s.business_name || s.name || 'Provider',
+        service:  s.service_name || s.service || '',
+        category: s.category || '',
+        location: s.location || 'Lagos',
+        price: Number(s.price || s.rate_value || s.rate || 0),
+        unit:  s.rate_unit || s.rateUnit || '',
+        photo: s.photo || s.photo_url || '',
+        rating: isNaN(rating) || rating <= 0 ? null : rating,   /* real ratings only */
+        verified: !!(s.is_verified || s.verified),
+        desc: s.description || '',
+        av:   s.av || AV[i % AV.length],
+      };
+    }
+
+    function _mediaHtml(p, badgesHtml) {
+      const init = String(p.name).replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
+      const body = p.photo
+        ? '<img src="' + escapeHtml(p.photo) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" onerror="this.remove()" />'
+        : '<div class="hf-media-ph ' + p.av + '">' + escapeHtml(init) + '</div>';
+      return '<div class="hf-card-media">' + body + badgesHtml + '</div>';
+    }
+
+    function _priceHtml(p) {
+      if (!(p.price > 0)) return '<span class="hf-price"><small>Get a quote</small></span>';
+      return '<span class="hf-price"><small>From </small>₦' + p.price.toLocaleString() + (p.unit ? '<small>' + escapeHtml(p.unit) + '</small>' : '') + '</span>';
+    }
+
+    function _ratingBadge(p) {
+      return p.rating ? '<span class="hf-chip-badge hf-badge-rating">' + STAR_SVG + p.rating.toFixed(1) + '</span>' : '';
+    }
+
+    function _profileUrl(p) { return p.uid ? 'tasker-profile.html?id=' + encodeURIComponent(p.uid) : 'find-taskers.html'; }
+
+    function taskerCardHtml(p) {
+      return '<a class="hf-card" href="' + _profileUrl(p) + '">'
+        + _mediaHtml(p, _ratingBadge(p))
+        + '<div class="hf-card-body">'
+        + '<div class="hf-card-name">' + escapeHtml(p.name) + (p.verified ? TICK_SVG : '') + '</div>'
+        + (p.service ? '<div class="hf-card-trade">' + escapeHtml(p.service) + '</div>' : '')
+        + '<div class="hf-card-loc">' + PIN_SVG + escapeHtml(p.location) + '</div>'
+        + '<div class="hf-card-foot">' + _priceHtml(p) + '<span class="hf-book">Book</span></div>'
+        + '</div></a>';
+    }
+
+    function serviceCardHtml(p) {
+      const pro = p.verified ? '<span class="hf-chip-badge hf-badge-pro">Verified Pro</span>' : '';
+      return '<a class="hf-card" href="' + _profileUrl(p) + '">'
+        + _mediaHtml(p, pro + _ratingBadge(p))
+        + '<div class="hf-card-body">'
+        + (p.category ? '<div class="hf-card-kicker">' + escapeHtml(p.category) + '</div>' : '')
+        + '<div class="hf-card-name">' + escapeHtml(p.service || p.name) + '</div>'
+        + (p.desc ? '<div class="hf-card-desc">' + escapeHtml(p.desc) + '</div>' : '')
+        + '<div class="hf-card-loc">' + PIN_SVG + escapeHtml(p.location) + '</div>'
+        + '<div class="hf-card-foot">' + _priceHtml(p) + '<span class="hf-book">Book</span></div>'
+        + '</div></a>';
+    }
+
+    function _matchesCat(p, cat) {
+      if (!cat) return true;
+      const key = cat.toLowerCase().slice(0, 5);
+      return (p.category + ' ' + p.service).toLowerCase().includes(key);
+    }
+
+    function renderCustomerFeed() {
+      const nearEl = document.getElementById('hfNearbyList');
+      const featEl = document.getElementById('hfFeaturedList');
+      if (!nearEl || !featEl) return;
+      const list = _custList.filter(p => _matchesCat(p, _custCat));
+      const empty = '<div class="hf-empty">No taskers in this category yet. Try another one, or <a href="post-task.html">post a task</a>.</div>';
+      if (!list.length) { nearEl.innerHTML = empty; featEl.innerHTML = empty; return; }
+
+      /* Nearby = one card per tasker. Featured = services not already shown above. */
+      const seen = new Set();
+      const nearby = list.filter(p => { const k = p.uid || p.id || p.name; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
+      const shown = new Set(nearby.slice(0, 4).map(p => p.id));
+      let featured = list.filter(p => !shown.has(p.id));
+      if (featured.length < 4) featured = list;
+      featured = featured.slice(0, 4);
+
+      nearEl.innerHTML = nearby.map(taskerCardHtml).join('');
+      featEl.innerHTML = featured.map(serviceCardHtml).join('');
+    }
+
+    async function loadCustomerTasks() {
+      const el = document.getElementById('hfMyTasksList');
+      if (!el) return;
+      const none = '<div class="hf-empty">You have no active tasks yet.<br /><a class="hf-empty-cta" href="post-task.html">Post a Task</a></div>';
+      try {
+        const tasks = await window.ST.db.fetchMyTasks();
+        const done = ['completed', 'cancelled', 'canceled', 'closed', 'done', 'expired'];
+        const active = (tasks || []).filter(t => !done.includes(String(t.status || '').toLowerCase())).slice(0, 3);
+        if (!active.length) { el.innerHTML = none; return; }
+        el.innerHTML = active.map(t =>
+          '<a class="hf-task" href="dashboard-customer.html?panel=my-tasks">'
+          + '<div class="hf-task-main">'
+          + (t.category ? '<span class="hf-task-cat">' + escapeHtml(t.category) + '</span>' : '')
+          + '<div class="hf-task-title">' + escapeHtml(t.title || 'Task') + '</div>'
+          + '<div class="hf-task-meta">' + escapeHtml(t.location || 'Lagos') + ' · ' + _timeAgo(t.created_at) + '</div>'
+          + '</div>'
+          + '<div class="hf-task-side"><div class="hf-task-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div>'
+          + '<div class="hf-task-status">' + escapeHtml(String(t.status || 'open').replace(/_/g, ' ')) + '</div></div>'
+          + '</a>').join('');
+      } catch (e) {
+        el.innerHTML = none;
+      }
+    }
+
+    async function initCustomerFeed() {
+      window.addEventListener('st:category-change', e => {
+        if (_userRole === 'tasker') return;
+        _custCat = (e.detail && e.detail.category) || '';
+        renderCustomerFeed();
+      });
+      loadCustomerTasks();
+      let raw = [];
+      try { raw = await window.ST.db.fetchServices({ limit: 40 }); } catch (e) { raw = []; }
+      if (!raw || !raw.length) raw = DUMMY_SERVICES.concat(DUMMY_TASKERS);   /* demo fallback, replaced in Step 5 */
+      _custList = raw.map(_normProvider);
+      renderCustomerFeed();
     }
 
     /* ── Nearby Taskers ──────────────────────────────────────── */
