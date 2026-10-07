@@ -224,7 +224,7 @@
             const role = existingUser.role || oauthRole || 'customer';
             localStorage.setItem('st_role', role);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
-            window.location.replace(takeRememberedRedirect() || (role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html'));
+            window.location.replace(takeRememberedRedirect() || window.ST.auth.getHomeUrl());
           }
         }
 
@@ -259,7 +259,7 @@
             if (!existingRow) {
               dest = role === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html';
             } else {
-              dest = window.ST.auth.getDashboardUrl(role);
+              dest = window.ST.auth.getHomeUrl();
             }
             window.location.replace(dest);
           }
@@ -268,7 +268,7 @@
           const session = await window.ST.auth.getSession();
           if (session) {
             const role = await window.ST.auth.getUserRole(session.user);
-            window.location.replace(window.ST.auth.getDashboardUrl(role));
+            window.location.replace(window.ST.auth.getHomeUrl());
           }
         }, 1500);
         return;
@@ -291,7 +291,7 @@
       /* ── If already logged in, redirect away ── */
       window.ST.auth.getSession().then(session => {
         if (session) {
-          window.location.href = requestedRedirect() || 'index.html';
+          window.location.href = requestedRedirect() || window.ST.auth.getHomeUrl();
         }
       });
 
@@ -335,11 +335,11 @@
                   return;
                 }
               } catch(e) {}
-              showToast('Welcome back! Taking you to your dashboard...');
-              setTimeout(() => { window.location.href = 'dashboard-tasker.html'; }, 800);
+              showToast('Welcome back! Taking you home...');
+              setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
             } else {
-              showToast('Welcome back! Taking you to your dashboard...');
-              setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 800);
+              showToast('Welcome back! Taking you home...');
+              setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
             }
           }
 

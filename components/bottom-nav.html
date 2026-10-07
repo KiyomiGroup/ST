@@ -1,11 +1,11 @@
-<!-- StreetTasker — global mobile bottom nav (Overview / Tasks / + / Messages / Profile)
+<!-- StreetTasker — global mobile bottom nav (Home / Tasks / + / Messages / Profile)
      Injected on every page via js/app.js. Only visible when logged in —
      see body.st-logged-in gate in css/styles.css. Hrefs below are role-aware
      and get rewritten by the inline script once auth state is known. -->
 <nav class="st-bottom-nav" id="stBottomNav" aria-label="Primary">
-  <a href="dashboard-customer.html" class="st-bn-item" id="stBnOverview">
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>
-    <span>Overview</span>
+  <a href="home-feed.html" class="st-bn-item" id="stBnHome">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+    <span>Home</span>
   </a>
   <a href="find-taskers.html" class="st-bn-item" id="stBnTasks">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -29,13 +29,13 @@
   var isTasker  = role === 'tasker';
   var dashUrl   = isTasker ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 
-  var elOverview = document.getElementById('stBnOverview');
+  var elHome     = document.getElementById('stBnHome');
   var elTasks    = document.getElementById('stBnTasks');
   var elPlus     = document.getElementById('stBnPlus');
   var elMessages = document.getElementById('stBnMessages');
   var elProfile  = document.getElementById('stBnProfile');
 
-  if (elOverview) elOverview.href = dashUrl;
+  if (elHome)     elHome.href     = 'home-feed.html';
   if (elTasks)    elTasks.href    = isTasker ? 'find-tasks.html' : 'find-taskers.html';
   if (elPlus)     elPlus.href     = isTasker ? 'post-service.html' : 'post-task.html';
   /* Messages is its own page (messages.html) for both roles. */
@@ -44,16 +44,17 @@
 
   /* Active tab based on the current page */
   var page = (window.location.pathname.split('/').pop() || 'index.html');
-  [elOverview, elTasks, elMessages, elProfile].forEach(function (el) {
+  [elHome, elTasks, elMessages, elProfile].forEach(function (el) {
     if (el) el.classList.remove('active');
   });
-  if (page === dashUrl) {
+  if (page === 'home-feed.html') {
+    if (elHome) elHome.classList.add('active');
+  } else if (page === dashUrl) {
     var hash  = window.location.hash.replace('#', '');
     var panel = new URLSearchParams(window.location.search).get('panel');
     var current = hash || panel || '';
     if (current === 'profile' && elProfile) elProfile.classList.add('active');
     else if (current === 'messages' && elMessages) elMessages.classList.add('active');
-    else if (elOverview) elOverview.classList.add('active');
   } else if ((page === 'find-tasks.html' || page === 'find-taskers.html' || page === 'find-services.html') && elTasks) {
     elTasks.classList.add('active');
   } else if (page === 'messages.html' && elMessages) {

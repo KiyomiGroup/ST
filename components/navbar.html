@@ -4,7 +4,7 @@
 
     <!-- LEFT: Logo + role badge + tagline — all inline on one row -->
     <div class="nav-left">
-      <a href="index.html" class="nav-logo" aria-label="StreetTasker home">
+      <a href="index.html" class="nav-logo" id="navLogo" aria-label="StreetTasker home">
         <img src="images/logo-nav.svg" alt="StreetTasker"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
         <span class="nav-logo-text" style="display:none;">StreetTasker</span>
@@ -32,6 +32,10 @@
     <!-- CENTRE: Logged-in pill nav — TASKER -->
     <div class="nav-pill-wrap nav-tasker" id="navPillTasker" style="display:none;">
       <nav class="nav-pill" aria-label="Tasker navigation">
+        <a href="home-feed.html" class="nav-pill-item" id="np-home">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+          Home
+        </a>
         <a href="dashboard-tasker.html" class="nav-pill-item" id="np-overview">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           Overview
@@ -50,6 +54,10 @@
     <!-- CENTRE: Logged-in pill nav — CUSTOMER -->
     <div class="nav-pill-wrap nav-customer" id="navPillCustomer" style="display:none;">
       <nav class="nav-pill" aria-label="Customer navigation">
+        <a href="home-feed.html" class="nav-pill-item" id="npc-home">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+          Home
+        </a>
         <a href="dashboard-customer.html" class="nav-pill-item" id="npc-overview">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           Overview
@@ -99,7 +107,6 @@
         <div class="nav-menu" id="navSettingsMenu" role="menu" hidden>
           <!-- Page shortcuts, shown per role by auth.js (data-nav-role) -->
           <a href="find-taskers.html" class="nav-menu-item" role="menuitem" data-nav-role="customer" hidden>Find Taskers</a>
-          <a href="home-feed.html" class="nav-menu-item" role="menuitem" data-nav-role="customer" hidden>Home Feed</a>
           <a href="post-service.html" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>Post a Service</a>
           <a href="dashboard-tasker.html?panel=services" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>My Services</a>
           <a href="dashboard-tasker.html?panel=verification" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>Verification</a>
@@ -142,12 +149,15 @@
 
 <!-- Mobile menu -->
 <div class="nav-mobile" id="navMobile">
-  <a href="post-task.html" class="nav-link" id="nav-mobile-action">Post a Task</a>
-  <a href="find-tasks.html" class="nav-link">Find Tasks</a>
-  <a href="post-service.html" class="nav-link">Services</a>
-  <a href="local-taskers.html" class="nav-link">Local Taskers</a>
-  <a href="gift-cards.html" class="nav-link">Gift Cards</a>
-  <a href="dashboard-customer.html" class="nav-link" id="nav-mobile-dashboard" style="display:none;">Dashboard</a>
+  <!-- data-nav-for = who sees the link: guest (logged out), customer, tasker. Applied by auth.js. -->
+  <a href="home-feed.html" class="nav-link" id="nav-mobile-home" data-nav-for="customer tasker" style="display:none;">Home</a>
+  <a href="post-task.html" class="nav-link" id="nav-mobile-action" data-nav-for="guest customer">Post a Task</a>
+  <a href="find-taskers.html" class="nav-link" data-nav-for="customer" style="display:none;">Find Taskers</a>
+  <a href="find-tasks.html" class="nav-link" data-nav-for="guest tasker">Find Tasks</a>
+  <a href="post-service.html" class="nav-link" data-nav-for="guest tasker">Services</a>
+  <a href="local-taskers.html" class="nav-link" data-nav-for="guest customer">Local Taskers</a>
+  <a href="gift-cards.html" class="nav-link" data-nav-for="guest customer tasker">Gift Cards</a>
+  <a href="dashboard-customer.html" class="nav-link" id="nav-mobile-dashboard" data-nav-for="customer tasker" style="display:none;">Dashboard</a>
   <div class="nav-mobile-actions">
     <a href="signup.html" class="btn btn-ghost btn-full" id="nav-mobile-signup">Sign Up</a>
     <a href="login.html"  class="btn btn-ghost btn-full" id="nav-mobile-login">Log in</a>

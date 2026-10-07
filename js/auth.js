@@ -21,6 +21,17 @@ async function getUserRole(user) {
 function getDashboardUrl(role) {
   return role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 }
+/* Home = the logged-in landing page (home-feed.html) for both roles.
+   Logo click, login and signup all land here. */
+function getHomeUrl() { return 'home-feed.html'; }
+
+/* Shows each mobile-menu link only to the audience in its data-nav-for
+   ("guest customer tasker"). audience: 'guest' | 'customer' | 'tasker'. */
+function _applyMobileMenuAudience(audience) {
+  document.querySelectorAll('#navMobile [data-nav-for]').forEach(el => {
+    el.style.display = el.dataset.navFor.split(/\s+/).includes(audience) ? '' : 'none';
+  });
+}
 
 /* ── Navbar sync ─────────────────────────────────────────────── */
 /* ── Instant navbar init from localStorage (runs before network) ── */
@@ -108,6 +119,11 @@ function _applyNavState(loggedIn, role, name) {
       .forEach(el => el && (el.style.display = 'none'));
     const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'flex';
 
+    /* Logo goes Home when logged in; mobile menu shows only this role's links */
+    const logo = $('navLogo');
+    if (logo) logo.href = getHomeUrl();
+    _applyMobileMenuAudience(isTasker ? 'tasker' : 'customer');
+
     /* Highlight active pill item based on current page */
     _highlightActivePillItem();
 
@@ -124,6 +140,9 @@ function _applyNavState(loggedIn, role, name) {
     [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
       .forEach(el => el && (el.style.display = ''));
     const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'none';
+    const logoOut = $('navLogo');
+    if (logoOut) logoOut.href = 'index.html';
+    _applyMobileMenuAudience('guest');
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
     if (mPlus) mPlus.style.display = '';
@@ -142,6 +161,7 @@ function _highlightActivePillItem() {
   const map = {
     'dashboard-tasker.html':   { '': 'np-overview',      'applications': 'np-applications', 'bookings': 'np-bookings', 'messages': 'np-messages', 'wallet': 'np-wallet' },
     'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
+    'home-feed.html':          { '': ['np-home', 'npc-home'] },
     'find-tasks.html':         { '': 'np-find-tasks' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
@@ -486,7 +506,7 @@ async function initDashboardWelcome() {
 
 window.ST      = window.ST || {};
 window.ST.auth = {
-  getSession, getCurrentUser, getUserRole, getDashboardUrl,
+  getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
   signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
   initDashboardWelcome,
 };
