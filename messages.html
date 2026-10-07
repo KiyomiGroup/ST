@@ -73,16 +73,24 @@
         </div>
 
         <div class="msg-chat-head" id="chatHead" hidden>
-          <button class="msg-mobile-back" onclick="closeMobileChat()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
+          <button class="msg-mobile-back" onclick="closeMobileChat()" aria-label="Back to conversations">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <div class="msg-chat-head-avatar" id="chatHeadAvatar">??</div>
           <div class="msg-chat-head-main">
             <div class="msg-chat-head-name" id="chatHeadName">—</div>
             <div class="msg-chat-head-sub"  id="chatHeadSub">—</div>
           </div>
+          <div class="jr-menu-wrap">
+            <button class="jr-icon-btn" id="chatHeadMore" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="More options" hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+            </button>
+            <div class="jr-menu" id="chatHeadMenu" role="menu" hidden></div>
+          </div>
         </div>
+
+        <!-- Task status banner (built by js/messages-room.js) -->
+        <div class="jr-banner" id="jrBanner" hidden></div>
 
         <div class="msg-chat-body" id="chatBody" hidden></div>
 
@@ -131,6 +139,7 @@
   <script src="js/app.js"></script>
   <script src="js/messages.js"></script>
   <script src="js/messages-list.js"></script>
+  <script src="js/messages-room.js"></script>
 
   <script>
   'use strict';
@@ -254,52 +263,20 @@
     var isCustomer = _user.id === t.customer_id;
     var other    = isCustomer ? t.tasker : t.customer;
     var name     = (other && other.name) || (isCustomer ? 'Tasker' : 'Customer');
-    var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
 
     /* Reveal chat UI */
     document.getElementById('chatEmpty').style.display  = 'none';
     document.getElementById('chatHead').style.display   = 'flex';
     document.getElementById('chatBody').style.display   = 'flex';
     document.getElementById('inputBar').style.display   = 'flex';
-    document.getElementById('chatHeadAvatar').textContent = initials;
-    document.getElementById('chatHeadSub').textContent  = t.context_type === 'booking' ? 'Service booking' : 'Task application';
     document.getElementById('msgChat').classList.add('open');
 
-    renderChatHeader(name, t.agreed_price);
+    /* Header + task status banner (js/messages-room.js) */
+    JRRoom.open({ thread:t, user:_user, role:_role });
 
     /* Request Payment button — tasker only */
     var payBtn = document.getElementById('payRequestBtn');
     if (payBtn) payBtn.style.display = (_role === 'tasker') ? 'flex' : 'none';
-
-    /* Enrich sub-heading with actual task/service title (non-blocking) */
-    if (t.context_id) {
-      (async function() {
-        try {
-          if (t.context_type === 'booking') {
-            var bk = await window.supabase.from('bookings').select('notes,task_id').eq('id', t.context_id).maybeSingle();
-            if (bk.data) {
-              var label = 'Service booking';
-              if (bk.data.task_id) {
-                var tk = await window.supabase.from('tasks').select('title').eq('id', bk.data.task_id).maybeSingle();
-                if (tk.data && tk.data.title) label = tk.data.title;
-              }
-              if (bk.data.notes && label === 'Service booking') label = bk.data.notes.slice(0,40);
-              var subEl = document.getElementById('chatHeadSub');
-              if (subEl) subEl.textContent = label;
-            }
-          } else {
-            var app = await window.supabase.from('task_applications').select('task_id').eq('id', t.context_id).maybeSingle();
-            if (app.data && app.data.task_id) {
-              var tk2 = await window.supabase.from('tasks').select('title').eq('id', app.data.task_id).maybeSingle();
-              if (tk2.data && tk2.data.title) {
-                var subEl2 = document.getElementById('chatHeadSub');
-                if (subEl2) subEl2.textContent = tk2.data.title;
-              }
-            }
-          }
-        } catch(_e) {}
-      })();
-    }
 
     await renderMessages(threadId);
 
@@ -325,7 +302,7 @@
       .on('postgres_changes', { event:'UPDATE', schema:'public', table:'message_threads', filter:'id=eq.'+threadId }, function(payload) {
         if (payload.new && payload.new.agreed_price && payload.new.agreed_price !== t.agreed_price) {
           t.agreed_price = payload.new.agreed_price;
-          renderChatHeader(name, t.agreed_price);
+          JRRoom.refresh();
         }
       })
       .subscribe();
@@ -339,18 +316,6 @@
     renderThreadList(); /* refresh tab counts + attention strip */
   }
   window.openThread = openThread;
-
-  /* ── Chat header with agreed price badge ── */
-  function renderChatHeader(name, agreedPrice) {
-    var el = document.getElementById('chatHeadName');
-    if (!el) return;
-    var html = esc(name);
-    if (agreedPrice && agreedPrice > 0) {
-      var fmt = Number(agreedPrice).toLocaleString('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0});
-      html += ' <span class="msg-agreed-price-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Agreed: '+fmt+'</span>';
-    }
-    el.innerHTML = html;
-  }
 
   function closeMobileChat() {
     document.getElementById('msgChat').classList.remove('open');
@@ -702,7 +667,7 @@
           _threads[idx].agreed_price    = u.agreed_price;
         }
         renderThreadList();
-        if (idx !== -1) JRList.refreshOne(_threads[idx], _role).then(renderThreadList).catch(function(){});
+        if (idx !== -1) JRList.refreshOne(_threads[idx], _role).then(function(){ renderThreadList(); if (u.id === _active) JRRoom.refresh(); }).catch(function(){});
         if (u.id !== _active) {
           var isCustomer = _user.id === u.customer_id;
           var myUnread   = isCustomer ? u.customer_unread : u.tasker_unread;

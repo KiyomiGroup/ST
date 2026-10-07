@@ -248,6 +248,7 @@
       t.booking = bk || null;
       t.application = ap || null;
       var taskId = (bk && bk.task_id) || (ap && ap.task_id);
+      t._taskId = taskId || null;
       t._title = (taskId && titles[taskId]) ||
                  (bk && bk.notes ? String(bk.notes).slice(0, 48) : '') ||
                  (t.context_type === 'booking' ? 'Service booking' : 'Task application');
