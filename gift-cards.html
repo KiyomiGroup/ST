@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Give the gift of free time. StreetTasker gift cards pay for trusted local help across Nigeria: cleaning, repairs, moving, furniture assembly and more." />
   <title>Gift Cards — Street Taskers</title>
+  <link rel="canonical" href="https://streettasker.com/gift-cards.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Street Taskers" />
+  <meta property="og:title" content="StreetTasker Gift Cards: Give the Gift of Free Time" />
+  <meta property="og:description" content="Gift cards for trusted local help across Nigeria: cleaning, repairs, moving and more. Delivered by email or WhatsApp, never expires." />
+  <meta property="og:url" content="https://streettasker.com/gift-cards.html" />
+  <meta name="twitter:card" content="summary" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"StreetTasker Gift Cards","url":"https://streettasker.com/gift-cards.html","description":"Gift cards that pay for trusted local help across Nigeria."}</script>
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -126,7 +134,7 @@
           <p class="gc-section-stat">Over 12,400+ Gifting Tasks Booked</p>
         </header>
 
-        <div class="gc-tiles">
+        <div class="gc-tiles" id="gc-tiles">
           <article class="gc-tile gc-tile--popular" data-card="cleaning" data-recommended="30000">
             <span class="gc-tile-ribbon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-star"/></svg>Most Popular Gift</span>
             <span class="gc-tile-icon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-brush"/></svg></span>
@@ -194,7 +202,7 @@
               <a href="?card=moving&amp;amount=50000#customize" class="btn gc-tile-btn" data-select>Select &amp; Customize</a>
             </div>
           </article>
-          <article class="gc-tile" data-card="wardrobe" data-recommended="35000">
+          <article class="gc-tile" data-more data-card="wardrobe" data-recommended="35000">
             <span class="gc-tile-icon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-shirt"/></svg></span>
             <div class="gc-tile-head">
               <h3 class="gc-tile-title">Wardrobe &amp; Tailoring</h3>
@@ -216,7 +224,7 @@
               <a href="?card=wardrobe&amp;amount=35000#customize" class="btn gc-tile-btn" data-select>Select &amp; Customize</a>
             </div>
           </article>
-          <article class="gc-tile" data-card="tech" data-recommended="45000">
+          <article class="gc-tile" data-more data-card="tech" data-recommended="45000">
             <span class="gc-tile-icon"><svg class="gc-icon" aria-hidden="true"><use href="#gc-plug-zap"/></svg></span>
             <div class="gc-tile-head">
               <h3 class="gc-tile-title">Tech &amp; Inverter Servicing</h3>
@@ -566,7 +574,68 @@
       </div>
     </section>
 
-    <!-- Next section goes here (corporate gifting) -->
+    <!-- ── Corporate & bulk gifting (#corporate) ─────────────── -->
+    <section class="gc-corp" id="corporate" aria-labelledby="gc-corp-title">
+      <div class="gc-section-inner gc-corp-inner">
+        <div class="gc-corp-copy">
+          <p class="gc-tag"><svg class="gc-icon" aria-hidden="true"><use href="#gc-gift"/></svg>For Businesses &amp; Teams</p>
+          <h2 id="gc-corp-title" class="gc-section-title">Corporate &amp; Bulk Gifting</h2>
+          <p class="gc-section-text">Reward your team, thank your clients, or run an event giveaway with StreetTasker gift cards, bought in bulk and delivered by email.</p>
+          <ul class="gc-corp-list">
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-badge-check"/></svg>Staff rewards, festive gifts and client thank-yous</li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-badge-check"/></svg>One invoice for many cards, each with a personal message</li>
+            <li><svg class="gc-icon" aria-hidden="true"><use href="#gc-badge-check"/></svg>Cards never expire and can be locked to a service category</li>
+          </ul>
+          <a href="#gc-corp-company" class="btn gc-btn gc-btn-dark gc-corp-cta">Inquire About Bulk Gifting</a>
+        </div>
+
+        <form class="gc-corp-form" id="gc-corp-form" novalidate aria-describedby="gc-corp-note">
+          <h3 class="gc-corp-form-title">Tell us what you need</h3>
+          <div class="gc-cz-fields">
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-company">Company name</label>
+              <input id="gc-corp-company" class="gc-cz-input" type="text" name="company" maxlength="100" autocomplete="organization" required />
+            </div>
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-name">Your name</label>
+              <input id="gc-corp-name" class="gc-cz-input" type="text" name="contact_name" maxlength="80" autocomplete="name" required />
+            </div>
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-email">Work email</label>
+              <input id="gc-corp-email" class="gc-cz-input" type="email" name="email" maxlength="120" autocomplete="email" required />
+            </div>
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-phone">Phone (optional)</label>
+              <input id="gc-corp-phone" class="gc-cz-input" type="tel" name="phone" maxlength="30" autocomplete="tel" />
+            </div>
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-qty">How many cards?</label>
+              <div class="gc-cz-select">
+                <select id="gc-corp-qty" class="gc-cz-input" name="quantity">
+                  <option value="10 to 49">10 to 49</option>
+                  <option value="50 to 199">50 to 199</option>
+                  <option value="200 or more">200 or more</option>
+                  <option value="Not sure yet">Not sure yet</option>
+                </select>
+              </div>
+            </div>
+            <div class="gc-cz-field">
+              <label class="gc-cz-label" for="gc-corp-budget">Budget per card (optional)</label>
+              <input id="gc-corp-budget" class="gc-cz-input" type="text" name="budget" maxlength="40" placeholder="e.g. ₦20,000" />
+            </div>
+            <div class="gc-cz-field gc-cz-field--note">
+              <label class="gc-cz-label" for="gc-corp-msg">Anything else we should know?</label>
+              <textarea id="gc-corp-msg" class="gc-cz-input gc-corp-textarea" name="message" maxlength="1000" rows="4"></textarea>
+            </div>
+            <div class="gc-corp-trap" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+          </div>
+          <p class="gc-cz-error" id="gc-corp-error" role="alert" hidden></p>
+          <button type="submit" class="btn gc-btn gc-btn-dark gc-corp-submit" id="gc-corp-submit">Send Enquiry</button>
+          <p class="gc-corp-note" id="gc-corp-note">We reply within one working day. Your details are used only to answer this enquiry.</p>
+          <p class="gc-corp-done" id="gc-corp-done" role="status" hidden>Thank you! We have your enquiry and will email you within one working day.</p>
+        </form>
+      </div>
+    </section>
 
   </div>
 
@@ -580,5 +649,6 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/gift-cards.js"></script>
+  <script src="js/gift-cards-extras.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ Allow: /find-taskers.html
 Allow: /explore-tasks.html
 Allow: /signup.html
 Allow: /login.html
+Allow: /gift-cards.html
 Allow: /404.html
 
 # Private dashboard pages — no need to index
@@ -17,5 +18,8 @@ Disallow: /post-task.html
 Disallow: /post-service.html
 Disallow: /verify.html
 Disallow: /subscription.html
+Disallow: /redeem.html
+Disallow: /gift-card-success.html
+Disallow: /wallet.html
 
 Sitemap: https://streettasker.com/sitemap.xml
