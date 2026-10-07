@@ -107,11 +107,10 @@
     .hf-search-loc { position: relative; }
     @media (max-width: 900px) { .hf-search .spg-searchbar { margin: 0; } }
 
-    /* ── Feed: customer (Step 3). Old two-column feed stays for taskers until Step 4 ── */
-    .hf-feed-customer { display: none; padding-bottom: var(--space-8); }
+    /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
+    .hf-feed-customer, .hf-feed-tasker { display: none; padding-bottom: var(--space-8); }
     body.role-customer .hf-feed-customer { display: block; }
-    .feed-body { display: none; }
-    body.role-tasker .feed-body { display: block; }
+    body.role-tasker   .hf-feed-tasker   { display: block; }
 
     .hf-sec { margin-top: var(--space-6); }
     .hf-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
@@ -188,7 +187,7 @@
     .hf-banner::after { content: ''; position: absolute; right: -60px; bottom: -80px; width: 240px; height: 240px; border-radius: 50%; background: var(--pt-escrow-icon); opacity: 0.45; pointer-events: none; }
     .hf-banner-copy { position: relative; z-index: 1; }
     .hf-banner-tag { display: inline-block; margin-bottom: var(--space-3); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--pt-escrow-icon); color: var(--pt-mint); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-    .hf-banner h2 { font-size: var(--text-h2); font-weight: 800; margin-bottom: var(--space-2); }
+    .hf-banner h2 { font-size: var(--text-h2); font-weight: 800; margin-bottom: var(--space-2); color: var(--white); }
     .hf-banner p { font-size: var(--text-base); color: var(--pt-escrow-text); max-width: 460px; }
     .hf-banner-btn { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: var(--space-2); height: 48px; padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--pt-mint); color: var(--pt-green); font-size: var(--text-sm); font-weight: 800; white-space: nowrap; }
     .hf-banner-btn:hover { background: var(--pt-mint-soft); }
@@ -211,448 +210,48 @@
       .hf-cats { grid-template-columns: repeat(8, 1fr); }
     }
 
-    /* ── Main Feed Grid ───────────────────────────────────────── */
-    .feed-body { padding: 24px 0 64px; }
-    .feed-layout {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 24px;
-      align-items: start;
+    /* ── Tasker feed (Step 4) ─────────────────────────────────── */
+    .hf-profile {
+      display: none; align-items: center; flex-wrap: wrap; gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      background: var(--pt-mint-soft); border: 1px solid var(--pt-mint); border-radius: var(--radius-2xl);
     }
-    .feed-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
-    .feed-aside { display: flex; flex-direction: column; gap: 20px; position: sticky; top: calc(var(--nav-height) + 64px); }
+    .hf-profile.show { display: flex; }
+    .hf-profile-ic { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--white); color: var(--pt-green); }
+    .hf-profile-copy { flex: 1; min-width: 200px; }
+    .hf-profile-copy h2 { font-size: var(--text-base); font-weight: 800; color: var(--pt-green); }
+    .hf-profile-copy p { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+    .hf-profile-btn { display: inline-flex; align-items: center; height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--pt-green); color: var(--white); font-size: var(--text-sm); font-weight: 700; white-space: nowrap; }
+    .hf-profile-btn:hover { background: var(--color-forest-800); }
 
-    /* ── Section Headings ─────────────────────────────────────── */
-    .feed-section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
+    .hf-tgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .hf-tcard {
+      display: flex; flex-direction: column; gap: var(--space-2); min-width: 0;
+      padding: var(--space-4) var(--space-5); background: var(--white);
+      border: 1px solid var(--color-card-border); border-radius: var(--radius-2xl); box-shadow: var(--shadow-pt-card);
+      color: inherit; text-decoration: none;
+      transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
     }
-    .feed-section-head h3 {
-      font-size: var(--text-base);
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .feed-section-head h3 .section-badge {
-      font-size: var(--text-xs);
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 2px 7px;
-      border-radius: var(--radius-pill);
-    }
-    .sb-green  { background: var(--green-light); color: var(--green); }
-    .sb-amber  { background: var(--amber-light); color: var(--amber); }
-    .sb-blue   { background: var(--blue-light); color: var(--blue); }
-    .feed-section-head a {
-      font-size: var(--text-xs);
-      font-weight: 600;
-      color: var(--blue);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .feed-section-head a:hover { text-decoration: underline; }
-
-    /* ── Nearby Taskers (horizontal scroll cards) ──────────────── */
-    .tasker-scroll {
-      display: flex;
-      gap: 14px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
-    }
-    .tasker-scroll::-webkit-scrollbar { display: none; }
-    .tasker-scroll-card {
-      flex-shrink: 0;
-      width: 160px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 16px 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease), border-color var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    .tasker-scroll-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-      border-color: var(--blue-border);
-    }
-    .tsc-avatar {
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      margin: 0 auto 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--white);
-      overflow: hidden;
-      position: relative;
-    }
-    .tsc-verified {
-      position: absolute;
-      bottom: -2px; right: -2px;
-      width: 16px; height: 16px;
-      background: var(--blue);
-      border-radius: 50%;
-      border: 2px solid var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tsc-name {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      margin-bottom: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tsc-service {
-      font-size: var(--text-xs);
-      color: var(--blue);
-      background: var(--blue-light);
-      padding: 2px 8px;
-      border-radius: var(--radius-pill);
-      display: inline-block;
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-    .tsc-meta {
-      font-size: var(--text-xs);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-    }
-    .tsc-rate {
-      font-size: var(--text-xs);
-      font-weight: 800;
-      color: var(--text-primary);
-      margin-top: 8px;
-    }
-
-    /* ── Featured Services Grid ───────────────────────────────── */
-    .featured-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    .feat-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      cursor: pointer;
-      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    .feat-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-    .feat-card-img {
-      height: 110px;
-      background: var(--bg-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--text-2xl);
-      position: relative;
-      overflow: hidden;
-    }
-    .feat-card-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      position: absolute;
-      inset: 0;
-    }
-    .feat-card-img-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%);
-    }
-    .feat-card-body { padding: 12px 14px 14px; }
-    .feat-card-name {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .feat-card-loc {
-      font-size: var(--text-xs);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      margin-bottom: 6px;
-    }
-    .feat-card-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .feat-card-price {
-      font-size: var(--text-sm);
-      font-weight: 800;
-      color: var(--text-primary);
-    }
-    .feat-card-stars {
-      font-size: var(--text-xs);
-      color: var(--amber);
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-
-    /* ── Urgent Tasks ─────────────────────────────────────────── */
-    .urgent-list { display: flex; flex-direction: column; gap: 10px; }
-    .urgent-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 14px 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      cursor: pointer;
-      transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-    }
-    .urgent-card:hover {
-      box-shadow: var(--shadow-md);
-      border-color: var(--amber-light);
-    }
-    .urgent-card.hot { border-left: 3px solid var(--amber); }
-    .urgent-icon {
-      width: 38px; height: 38px;
-      border-radius: var(--radius-sm);
-      background: var(--amber-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      /* SVG icon centered */
-      flex-shrink: 0;
-    }
-    .urgent-title {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .urgent-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .urgent-meta span {
-      font-size: var(--text-xs);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-    .urgent-budget {
-      font-size: var(--text-sm);
-      font-weight: 800;
-      color: var(--green);
-      margin-left: auto;
-      white-space: nowrap;
-    }
-    .urgent-badge {
-      font-size: var(--text-xs);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 2px 6px;
-      border-radius: var(--radius-pill);
-      background: var(--amber-light);
-      color: var(--amber);
-    }
-
-    /* ── Open Tasks (full list) ───────────────────────────────── */
-    .open-task-list { display: flex; flex-direction: column; gap: 10px; }
-    .open-task-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 14px 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      cursor: pointer;
-      transition: box-shadow var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-    }
-    .open-task-card:hover { box-shadow: var(--shadow-md); }
-    .otc-icon {
-      width: 38px; height: 38px;
-      border-radius: var(--radius-sm);
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      /* SVG icon centered */
-      flex-shrink: 0;
-    }
-    .otc-title { font-size: var(--text-sm); font-weight: 700; margin-bottom: 4px; }
-    .otc-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .otc-meta span { font-size: var(--text-xs); color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
-    .otc-right { margin-left: auto; text-align: right; flex-shrink: 0; }
-    .otc-budget { font-size: var(--text-sm); font-weight: 800; color: var(--green); }
-    .otc-open {
-      font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.06em; color: var(--green); background: var(--green-light);
-      padding: 2px 7px; border-radius: var(--radius-pill); display: inline-block;
-      margin-top: 3px;
-    }
-
-    /* ── Top Rated (aside widget) ─────────────────────────────── */
-    .aside-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-    }
-    .aside-card-title {
-      font-size: var(--text-sm);
-      font-weight: 800;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .top-rated-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-    }
-    .top-rated-row:last-child { border-bottom: none; }
-    .top-rated-row:hover { background: var(--bg-subtle); border-radius: var(--radius-sm); margin: 0 -4px; padding: 9px 4px; }
-    .tr-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: var(--text-xs); font-weight: 700; color: var(--white);
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    .tr-name { font-size: var(--text-sm); font-weight: 700; }
-    .tr-service { font-size: var(--text-xs); color: var(--text-muted); }
-    .tr-stars { margin-left: auto; font-size: var(--text-xs); color: var(--amber); font-weight: 700; white-space: nowrap; }
-
-    /* ── Post-a-task aside promo ──────────────────────────────── */
-    .aside-promo {
-      background: linear-gradient(135deg, #0A84FF 0%, #006AE8 100%);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      color: var(--white);
-    }
-    .aside-promo h4 { color: var(--white); font-size: var(--text-base); margin-bottom: 6px; }
-    .aside-promo p  { color: rgba(255,255,255,0.75); font-size: var(--text-xs); margin-bottom: 16px; line-height: 1.5; }
-    .aside-promo-btn {
-      display: block;
-      text-align: center;
-      background: var(--white);
-      color: var(--blue);
-      border-radius: var(--radius-pill);
-      padding: 10px;
-      font-size: var(--text-sm);
-      font-weight: 700;
-      text-decoration: none;
-      transition: background var(--t) var(--ease);
-    }
-    .aside-promo-btn:hover { background: rgba(255,255,255,0.88); }
-
-    /* ── Categories shortcut grid ─────────────────────────────── */
-    .cat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .cat-grid-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      padding: 10px 6px;
-      border-radius: var(--radius-md);
-      background: var(--bg-subtle);
-      cursor: pointer;
-      transition: background var(--t) var(--ease), box-shadow var(--t) var(--ease);
-      text-decoration: none;
-      color: inherit;
-      font-size: var(--text-xs);
-      font-weight: 600;
-      text-align: center;
-      color: var(--text-secondary);
-    }
-    .cat-grid-item:hover { background: var(--blue-light); color: var(--blue); box-shadow: var(--shadow-xs); }
-    .cat-grid-item-icon { width: 22px; height: 22px; flex-shrink: 0; }
+    a.hf-tcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .hf-tcard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+    .hf-tflags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+    .hf-tcard .hf-task-cat { margin-bottom: 0; text-transform: capitalize; }
+    .hf-tflag-urgent { display: inline-block; padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--pt-danger-soft); color: var(--pt-danger); font-size: var(--text-xs); font-weight: 700; }
+    .hf-tbudget { font-size: var(--text-md); font-weight: 800; color: var(--pt-ink); white-space: nowrap; }
+    .hf-tcard-title { font-size: var(--text-base); font-weight: 800; color: var(--pt-ink); }
+    .hf-tcard-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: auto; padding-top: var(--space-3); }
+    .hf-tmeta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); min-width: 0; font-size: var(--text-xs); color: var(--pt-ink-muted); }
+    .hf-tmeta span { display: inline-flex; align-items: center; gap: var(--space-1); }
+    .hf-offer { flex-shrink: 0; padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: var(--pt-green); color: var(--white); font-size: var(--text-xs); font-weight: 700; }
+    .hf-tcard-skel { pointer-events: none; }
+    .hf-sec-note { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+    .hf-sec[hidden] { display: none; }
+    @media (min-width: 640px) { .hf-tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 900px) { .hf-tgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
     /* ── Skeleton ─────────────────────────────────────────────── */
     .skel { background: linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: var(--radius-sm); }
     @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    /* ── Load more button ─────────────────────────────────────── */
-    .load-more-btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: border-color var(--t) var(--ease), color var(--t) var(--ease);
-      text-align: center;
-      margin-top: 4px;
-    }
-    .load-more-btn:hover { border-color: var(--blue); color: var(--blue); }
-
-    /* ── Responsive ───────────────────────────────────────────── */
-    @media(max-width: 900px) {
-      .feed-layout { grid-template-columns: 1fr; }
-      .feed-aside  { display: none; }
-    }
-    @media(max-width: 600px) {
-      .featured-grid { grid-template-columns: repeat(2, 1fr); }
-      .cat-grid      { grid-template-columns: repeat(4, 1fr); }
-      .feed-topbar-btn span { display: none; }
-    }
 
     /* ── Avatar color variants ────────────────────────────────── */
     .av-1 { background: #1E3A5F; }
@@ -834,166 +433,104 @@
       </div>
     </main>
 
-    <!-- MAIN FEED BODY -->
-    <div class="feed-body">
+    <!-- TASKER FEED (Step 4) — shown for body.role-tasker only -->
+    <main class="hf-feed hf-feed-tasker" aria-label="Tasker home feed">
       <div class="container">
-        <div class="feed-layout">
 
-          <!-- ── LEFT / MAIN ───────────────────────────────────── -->
-          <div class="feed-main">
+        <aside class="hf-profile" id="hfProfileCard" aria-labelledby="hfProfileTitle">
+          <span class="hf-profile-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <div class="hf-profile-copy">
+            <h2 id="hfProfileTitle">Complete your profile</h2>
+            <p>Add your service and area so customers can find you and we can match you to the right tasks.</p>
+          </div>
+          <a href="dashboard-tasker.html?setup=1" class="hf-profile-btn">Complete profile</a>
+        </aside>
 
-            <!-- Nearby Taskers -->
-            <section class="fade-up">
-              <div class="feed-section-head">
-                <h3>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  Nearby Taskers
-                  <span class="section-badge sb-green">Live</span>
-                </h3>
-                <a href="find-taskers.html">See all →</a>
-              </div>
-              <div class="tasker-scroll" id="nearbyTaskersList">
-                <!-- Skeleton placeholders -->
-                <div class="tasker-scroll-card" style="pointer-events:none;">
-                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
-                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
-                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
-                </div>
-                <div class="tasker-scroll-card" style="pointer-events:none;">
-                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
-                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
-                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
-                </div>
-                <div class="tasker-scroll-card" style="pointer-events:none;">
-                  <div class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;"></div>
-                  <div class="skel" style="height:10px;width:80%;margin:0 auto 6px;"></div>
-                  <div class="skel" style="height:8px;width:60%;margin:0 auto;"></div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Featured Services -->
-            <section class="fade-up d1">
-              <div class="feed-section-head">
-                <h3>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  Top-Notch Services
-                  <span class="section-badge sb-blue">Featured</span>
-                </h3>
-                <a href="find-taskers.html">See all →</a>
-              </div>
-              <div class="featured-grid" id="featuredServicesList">
-                <!-- Skeletons -->
-                <div class="feat-card" style="pointer-events:none;">
-                  <div class="feat-card-img"><div class="skel" style="width:100%;height:100%;position:absolute;inset:0;"></div></div>
-                  <div class="feat-card-body"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
-                </div>
-                <div class="feat-card" style="pointer-events:none;">
-                  <div class="feat-card-img"><div class="skel" style="width:100%;height:100%;position:absolute;inset:0;"></div></div>
-                  <div class="feat-card-body"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Urgent Tasks -->
-            <section class="fade-up d2">
-              <div class="feed-section-head">
-                <h3>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Urgent Tasks
-                  <span class="section-badge sb-amber">Needs Help</span>
-                </h3>
-                <a href="explore-tasks.html?filter=urgent">See all →</a>
-              </div>
-              <div class="urgent-list" id="urgentTasksList">
-                <div class="urgent-card" style="pointer-events:none;">
-                  <div class="urgent-icon"><div class="skel" style="width:100%;height:100%;"></div></div>
-                  <div style="flex:1;"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
-                </div>
-              </div>
-            </section>
-
-            <!-- All Open Tasks (Full Listing) -->
-            <section class="fade-up d3">
-              <div class="feed-section-head">
-                <h3>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Open Tasks
-                  <span id="openTaskCount" class="section-badge sb-green" style="display:none;"></span>
-                </h3>
-                <a href="explore-tasks.html">Browse all →</a>
-              </div>
-              <!-- Filter chips -->
-              <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-                <button class="cat-chip active" onclick="filterOpenTasks(this, '')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--blue);background:var(--blue);color:var(--white);">All</button>
-                <button class="cat-chip" onclick="filterOpenTasks(this, 'electrician')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Electrician</button>
-                <button class="cat-chip" onclick="filterOpenTasks(this, 'plumber')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Plumber</button>
-                <button class="cat-chip" onclick="filterOpenTasks(this, 'cleaning')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Cleaning</button>
-                <button class="cat-chip" onclick="filterOpenTasks(this, 'beauty')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Beauty</button>
-                <button class="cat-chip" onclick="filterOpenTasks(this, 'mechanic')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);">Mechanic</button>
-              </div>
-              <div class="open-task-list" id="openTasksList">
-                <div class="open-task-card" style="pointer-events:none;">
-                  <div class="otc-icon"><div class="skel" style="width:100%;height:100%;"></div></div>
-                  <div style="flex:1;"><div class="skel" style="height:11px;width:70%;margin-bottom:8px;"></div><div class="skel" style="height:9px;width:50%;"></div></div>
-                </div>
-              </div>
-              <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreTasks()" style="display:none;">Load more tasks</button>
-            </section>
-
-          </div><!-- /feed-main -->
-
-          <!-- ── RIGHT ASIDE ─────────────────────────────────── -->
-          <aside class="feed-aside">
-
-            <!-- Post a task promo -->
-            <div class="aside-promo fade-up">
-              <h4>Got something to fix?</h4>
-              <p>Post your task and get matched with top local providers in minutes.</p>
-              <a href="post-task.html" class="aside-promo-btn">Post a Task — It's Free</a>
+        <section class="hf-sec" aria-labelledby="hfTNearbyTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfTNearbyTitle"><span class="hf-live-dot" aria-hidden="true"></span>Nearby Tasks</h2>
+              <p class="hf-sec-sub">Fresh requests close to your saved area</p>
             </div>
-
-            <!-- Top Rated Providers -->
-            <div class="aside-card fade-up d1">
-              <div class="aside-card-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                Top-Rated Providers
-              </div>
-              <div id="topRatedList">
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
-                  <div class="skel" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>
-                  <div style="flex:1;"><div class="skel" style="height:10px;width:70%;margin-bottom:5px;"></div><div class="skel" style="height:8px;width:50%;"></div></div>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
-                  <div class="skel" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>
-                  <div style="flex:1;"><div class="skel" style="height:10px;width:70%;margin-bottom:5px;"></div><div class="skel" style="height:8px;width:50%;"></div></div>
-                </div>
-              </div>
+            <a href="find-tasks.html">Find work <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-tgrid" id="hfTaskNearby">
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
             </div>
+        </section>
 
-            <!-- Browse by Category -->
-            <div class="aside-card fade-up d2">
-              <div class="aside-card-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Browse Categories
-              </div>
-              <div class="cat-grid">
-                <a href="find-taskers.html?category=electrician" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Electrical</a>
-                <a href="find-taskers.html?category=plumber" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>Plumbing</a>
-                <a href="find-taskers.html?category=cleaning" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>Cleaning</a>
-                <a href="find-taskers.html?category=barber" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg>Barber</a>
-                <a href="find-taskers.html?category=beauty" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Beauty</a>
-                <a href="find-taskers.html?category=mechanic" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mechanic</a>
-                <a href="find-taskers.html?category=photography" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Photo</a>
-                <a href="find-taskers.html?category=tutoring" class="cat-grid-item"><svg class="cat-grid-item-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Tutor</a>
-              </div>
+        <section class="hf-sec" aria-labelledby="hfTUrgentTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfTUrgentTitle">Urgent Tasks</h2>
+              <p class="hf-sec-sub">Customers who need help right now</p>
             </div>
+            <a href="find-tasks.html">See all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-tgrid" id="hfTaskUrgent">
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            </div>
+        </section>
 
-          </aside>
+        <section class="hf-sec" aria-labelledby="hfTMatchTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfTMatchTitle">Tasks matching your skills</h2>
+              <p class="hf-sec-sub"><span id="hfMatchSub">Based on the service on your profile</span></p>
+            </div>
+            <a href="find-tasks.html">Find work <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-tgrid" id="hfTaskMatch">
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
+            </div>
+        </section>
 
-        </div><!-- /feed-layout -->
+        <section class="hf-sec" aria-labelledby="hfJobsTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfJobsTitle">Your active jobs</h2>
+              <p class="hf-sec-sub">Bookings and tasks you've been accepted for</p>
+            </div>
+            <a href="dashboard-tasker.html?panel=bookings">My bookings <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-task-list" id="hfJobsList">
+            <div class="hf-task hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div></div>
+          </div>
+        </section>
+
+        <section class="hf-banner" aria-labelledby="hfPostSvcTitle">
+          <div class="hf-banner-copy">
+            <span class="hf-banner-tag">Grow your business</span>
+            <h2 id="hfPostSvcTitle">Offer a service people can book.</h2>
+            <p>Post your service once and get found by customers near you, any time of day.</p>
+          </div>
+          <a href="post-service.html" class="hf-banner-btn">Post a Service <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        </section>
+
+        <section class="hf-sec" id="hfTopSec" aria-labelledby="hfTopTitle">
+          <div class="hf-sec-head">
+            <div>
+              <h2 id="hfTopTitle">Top-Rated Taskers</h2>
+              <p class="hf-sec-sub">See how the best in your field present themselves</p>
+            </div>
+            <a href="find-taskers.html">See all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          </div>
+          <div class="hf-row" id="hfTopList">
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            <div class="hf-card hf-card-skel" aria-hidden="true"><div class="hf-card-media skel"></div><div class="hf-card-body"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div></div>
+            </div>
+        </section>
+
       </div>
-    </div><!-- /feed-body -->
+    </main>
 
   </div><!-- /feed-root -->
 
@@ -1015,36 +552,6 @@
     'use strict';
 
     const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
-
-    /* SVG icons matching the find-taskers page style */
-    const CAT_ICONS = {
-      electrician: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-      plumber:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>',
-      cleaning:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>',
-      cleaner:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><path d="M12 7v10"/></svg>',
-      barber:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="4" r="2"/><path d="m5.81 10.186 1.768-2.832L10 12"/><circle cx="18" cy="4" r="2"/><path d="m18.19 10.186-1.768-2.832L14 12"/><path d="m8 20 4-8 4 8"/><path d="M6 20h12"/></svg>',
-      mechanic:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
-      beauty:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-      photographer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
-      photography: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
-      chef:        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>',
-      cooking:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>',
-      tutor:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-      tutoring:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-      carpenter:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/></svg>',
-      carpentry:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/></svg>',
-      painter:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
-      painting:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
-      laundry:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
-      security:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-      appliances:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
-      ac:          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 24V6m0 0L4 10m4-4 4 4M16 0v18m0 0 4-4m-4 4-4-4"/></svg>',
-      moving:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
-    };
-    function catEmoji(cat) {
-      const k = (cat||'').toLowerCase().replace(/[^a-z]/g,'');
-      return CAT_ICONS[k] || '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
-    }
 
     /* ── Dummy fallback data ─────────────────────────────────── */
     const DUMMY_TASKERS = [
@@ -1079,11 +586,8 @@
     ];
 
     /* ── State ───────────────────────────────────────────────── */
-    let _allTasks   = [];
-    let _taskOffset = 0;
-    const TASK_PAGE = 8;
-    let _currentCat = '';
     let _userRole   = 'customer';
+    let _userId     = '';
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initFeed() {
@@ -1095,22 +599,15 @@
           return;
         }
         _userRole = await window.ST.auth.getUserRole(user);
+        _userId   = String(user.id || '');
         renderWelcome(user, _userRole);
       }
       initHomeHero();
       initHomeSearch();
 
-      /* Customers get the new feed (Step 3); taskers keep the old one until Step 4 */
-      if (_userRole === 'tasker') {
-        Promise.all([
-          loadNearbyTaskers(),
-          loadFeaturedServices(),
-          loadAllTasks(),
-          loadTopRated(),
-        ]);
-      } else {
-        initCustomerFeed();
-      }
+      /* One feed per role: customers (Step 3), taskers (Step 4) */
+      if (_userRole === 'tasker') initTaskerFeed();
+      else initCustomerFeed();
 
       /* Live task count */
       try {
@@ -1181,7 +678,7 @@
         }
       }
 
-      /* Category chips: filter the open-tasks list now; Steps 3-5 hook the other sections */
+      /* Category chips: each feed listens for st:category-change */
       const row = document.getElementById('catScrollInner');
       if (row) {
         row.addEventListener('click', e => {
@@ -1193,8 +690,6 @@
             c.setAttribute('aria-pressed', String(on));
           });
           const cat = chip.dataset.cat || '';
-          _currentCat = cat;
-          try { renderOpenTasks(cat, true); } catch (err) {}
           window.dispatchEvent(new CustomEvent('st:category-change', { detail: { category: cat } }));
         });
       }
@@ -1356,234 +851,157 @@
       renderCustomerFeed();
     }
 
-    /* ── Nearby Taskers ──────────────────────────────────────── */
-    async function loadNearbyTaskers() {
-      const el = document.getElementById('nearbyTaskersList');
-      if (!el) return;
-      try {
-        const data = await window.ST.db.fetchServices({ limit: 10 });
-        const list = (data && data.length) ? data : DUMMY_TASKERS;
-        renderNearbyTaskers(list, el);
-      } catch(e) {
-        renderNearbyTaskers(DUMMY_TASKERS, el);
-      }
+    /* ── Tasker feed (Step 4) ────────────────────────────────── */
+    let _tkTasks   = [];
+    let _tkCat     = '';
+    let _tkProfile;   /* undefined = still loading, false = lookup failed */
+    const JOB_DONE = ['completed', 'cancelled', 'canceled', 'closed', 'done', 'expired', 'rejected', 'declined'];
+
+    function _isUrgent(t) { return !!t.urgent || String(t.urgency || '').toLowerCase() === 'immediate'; }
+
+    /* Tasks have no detail page yet: open Find Work pre-filled with the title (Step 3 prefill) */
+    function _taskUrl(t) { return 'find-tasks.html?q=' + encodeURIComponent(t.title || ''); }
+
+    /* How well a task's area matches the saved Home location (0 = no match or none saved) */
+    function _locScore(t) {
+      let loc = '';
+      try { loc = localStorage.getItem(LOC_KEY) || ''; } catch (e) {}
+      const words = loc.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2 && w !== 'lagos' && w !== 'nigeria');
+      const where = String(t.location || '').toLowerCase();
+      return words.reduce((n, w) => n + (where.includes(w) ? 1 : 0), 0);
     }
 
-    function renderNearbyTaskers(list, el) {
-      el.innerHTML = list.slice(0, 10).map((t, i) => {
-        const safeName = escapeHtml(t.provider_name || t.business_name || t.name || 'Provider');
-        const safeSvc  = escapeHtml(t.service_name || t.service || '');
-        const safeLoc  = escapeHtml(t.location || 'Lagos');
-        const safeId   = escapeHtml(t.user_id || t.uid || '');
-        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
-        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-        const av   = t.av || AV[i % AV.length];
-        const rate = t.rate_value ? '₦' + Number(t.rate_value).toLocaleString() : (t.rate ? '₦' + Number(t.rate).toLocaleString() : '');
-        const rateUnit = t.rate_unit || t.rateUnit || '/hr';
-        const photoHtml = t.photo_url
-          ? '<img src="' + escapeHtml(t.photo_url) + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
-          : init;
-        const verifiedHtml = t.is_verified
-          ? '<div class="tsc-verified"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
-          : '';
-        return '<a href="' + profileUrl + '" class="tasker-scroll-card fade-up" style="animation-delay:' + (i*0.05) + 's;">'
-          + '<div class="tsc-avatar ' + av + '">'
-          + photoHtml
-          + verifiedHtml
-          + '</div>'
-          + '<div class="tsc-name">' + safeName + '</div>'
-          + (safeSvc ? '<div class="tsc-service">' + safeSvc + '</div>' : '')
-          + '<div class="tsc-meta"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</div>'
-          + (rate ? '<div class="tsc-rate">' + rate + '<span style="font-size:var(--text-xs);font-weight:500;color:var(--text-muted);">' + rateUnit + '</span></div>' : '')
-          + '</a>';
-      }).join('');
+    function _skillKeys() {
+      if (!_tkProfile) return [];
+      return [_tkProfile.category, _tkProfile.service, _tkProfile.service_name]
+        .map(v => String(v || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 5))
+        .filter((v, i, a) => v.length >= 3 && a.indexOf(v) === i);
     }
 
-    /* ── Featured Services ────────────────────────────────────── */
-    async function loadFeaturedServices() {
-      const el = document.getElementById('featuredServicesList');
-      if (!el) return;
-      try {
-        const data = await window.ST.db.fetchServices({ limit: 6 });
-        const list = (data && data.length >= 2) ? data : DUMMY_SERVICES;
-        renderFeaturedServices(list, el);
-      } catch(e) {
-        renderFeaturedServices(DUMMY_SERVICES, el);
-      }
+    function taskFeedCardHtml(t) {
+      const urgent = _isUrgent(t);
+      const flags = (t.category ? '<span class="hf-task-cat">' + escapeHtml(t.category) + '</span>' : '')
+        + (urgent ? '<span class="hf-tflag-urgent">Urgent</span>' : '');
+      return '<a class="hf-tcard" href="' + _taskUrl(t) + '">'
+        + '<div class="hf-tcard-top"><div class="hf-tflags">' + flags + '</div>'
+        + '<div class="hf-tbudget">₦' + Number(t.budget || 0).toLocaleString() + '</div></div>'
+        + '<div class="hf-tcard-title">' + escapeHtml(t.title || 'Task') + '</div>'
+        + (t.description ? '<div class="hf-card-desc">' + escapeHtml(t.description) + '</div>' : '')
+        + '<div class="hf-tcard-foot">'
+        + '<div class="hf-tmeta"><span>' + PIN_SVG + escapeHtml(t.location || 'Lagos') + '</span><span>' + _timeAgo(t.created_at) + '</span></div>'
+        + '<span class="hf-offer">Offer</span></div></a>';
     }
 
-    function renderFeaturedServices(list, el) {
-      el.innerHTML = list.slice(0, 6).map((s, i) => {
-        const safeName = escapeHtml(s.provider_name || s.business_name || s.name || 'Provider');
-        const safeSvc  = escapeHtml(s.service_name || s.service || '');
-        const safeLoc  = escapeHtml(s.location || 'Lagos');
-        const safeId   = escapeHtml(s.user_id || '');
-        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
-        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-        const av   = s.av || AV[i % AV.length];
-        const price = s.price || s.rate_value || 0;
-        const rateUnit = s.rate_unit || s.rateUnit || '/job';
-        const rating = s.rating || (4.5 + Math.random() * 0.5).toFixed(1);
-        const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
-
-        const imgSection = s.photo_url || s.photo
-          ? '<div class="feat-card-img"><img src="' + escapeHtml(s.photo_url || s.photo) + '" alt="' + safeName + '" onerror="this.style.display=\'none\'"/><div class="feat-card-img-overlay"></div></div>'
-          : '<div class="feat-card-img" style="background:linear-gradient(135deg, var(--blue-light) 0%, var(--bg-subtle) 100%);display:flex;align-items:center;justify-content:center;"><div style="opacity:0.4;">' + catEmoji(safeSvc) + '</div></div>';
-
-        return '<a href="' + profileUrl + '" class="feat-card fade-up" style="animation-delay:' + (i*0.06) + 's;">'
-          + imgSection
-          + '<div class="feat-card-body">'
-          + '<div class="feat-card-name">' + safeName + '</div>'
-          + '<div class="feat-card-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</div>'
-          + '<div class="feat-card-bottom">'
-          + '<div class="feat-card-price">₦' + Number(price).toLocaleString() + '<span style="font-size:var(--text-xs);font-weight:500;color:var(--text-muted);">' + rateUnit + '</span></div>'
-          + '<div class="feat-card-stars">' + stars + ' ' + rating + '</div>'
-          + '</div></div></a>';
-      }).join('');
+    function _fillTasks(id, list, emptyHtml) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = list.length ? list.map(taskFeedCardHtml).join('') : '<div class="hf-empty">' + emptyHtml + '</div>';
     }
 
-    /* ── All Tasks ───────────────────────────────────────────── */
-    async function loadAllTasks() {
-      try {
-        const data = await window.ST.db.fetchTasks({ limit: 50 });
-        _allTasks = (data && data.length) ? data : DUMMY_TASKS;
-      } catch(e) {
-        _allTasks = DUMMY_TASKS;
-      }
+    function renderTaskerFeed() {
+      const base = _tkTasks.filter(t => _matchesCat({ category: t.category || '', service: t.title || '' }, _tkCat));
+      const none = _tkCat ? 'No tasks in this category right now. Try another one.' : 'No tasks right now. Check back soon.';
 
-      /* Update count badge */
-      const badge = document.getElementById('openTaskCount');
-      if (badge && _allTasks.length) {
-        badge.textContent = _allTasks.length + (typeof _allTasks.length === 'number' && _allTasks.length >= 50 ? '+' : '');
-        badge.style.display = '';
-      }
+      /* Nearby: tasks in your saved area first, then newest */
+      const nearby = base.slice().sort((a, b) => _locScore(b) - _locScore(a)).slice(0, 6);
+      _fillTasks('hfTaskNearby', nearby, none);
 
-      renderUrgentTasks();
-      renderOpenTasks(_currentCat, true);
-    }
+      _fillTasks('hfTaskUrgent', base.filter(_isUrgent).slice(0, 3),
+        _tkCat ? none : 'No urgent tasks right now.');
 
-    function renderUrgentTasks() {
-      const el = document.getElementById('urgentTasksList');
-      if (!el) return;
-      const urgent = _allTasks.filter(t => t.urgent).slice(0, 4);
-      const list = urgent.length ? urgent : _allTasks.filter(t => Number(t.budget) > 15000).slice(0, 3);
-      if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm);text-align:center;padding:20px 0;">No urgent tasks right now.</p>'; return; }
-
-      el.innerHTML = list.map((t, i) => {
-        const safeTitle = escapeHtml(t.title || 'Task');
-        const safeLoc   = escapeHtml(t.location || 'Lagos');
-        const safeCat   = escapeHtml(t.category || '');
-        const emoji     = catEmoji(safeCat);
-        const timeAgo   = _timeAgo(t.created_at);
-        const taskUrl   = t.id && !String(t.id).startsWith('d') ? 'task-detail.html?id=' + t.id : 'explore-tasks.html';
-        return '<a href="' + taskUrl + '" class="urgent-card hot fade-up" style="animation-delay:' + (i*0.06) + 's;">'
-          + '<div class="urgent-icon">' + emoji + '</div>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div class="urgent-title">' + safeTitle + '</div>'
-          + '<div class="urgent-meta">'
-          + '<span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
-          + '<span>' + timeAgo + '</span>'
-          + '<span class="urgent-badge">Urgent</span>'
-          + '</div></div>'
-          + '<div class="urgent-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div>'
-          + '</a>';
-      }).join('');
-    }
-
-    function renderOpenTasks(cat, reset) {
-      const el = document.getElementById('openTasksList');
-      if (!el) return;
-      if (reset) { _taskOffset = 0; el.innerHTML = ''; }
-
-      const filtered = cat ? _allTasks.filter(t => (t.category||'').toLowerCase() === cat.toLowerCase()) : _allTasks;
-      const page = filtered.slice(_taskOffset, _taskOffset + TASK_PAGE);
-      _taskOffset += page.length;
-
-      if (!filtered.length) {
-        el.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm);text-align:center;padding:30px 0;">No open tasks in this category.</p>';
-        document.getElementById('loadMoreBtn').style.display = 'none';
+      const keys = _skillKeys();
+      const sub = document.getElementById('hfMatchSub');
+      if (!keys.length) {
+        const el = document.getElementById('hfTaskMatch');
+        if (!el || _tkProfile === undefined) return;   /* keep the skeleton until the profile is known */
+        el.innerHTML = _tkProfile === false
+          ? '<div class="hf-empty">We couldn\'t load your skills right now.</div>'
+          : '<div class="hf-empty">Add your service to your profile to see tasks that match your skills.<br /><a class="hf-empty-cta" href="dashboard-tasker.html?setup=1">Complete profile</a></div>';
         return;
       }
-
-      page.forEach((t, i) => {
-        const safeTitle = escapeHtml(t.title || 'Task');
-        const safeLoc   = escapeHtml(t.location || 'Lagos');
-        const safeCat   = escapeHtml(t.category || '');
-        const emoji     = catEmoji(safeCat);
-        const timeAgo   = _timeAgo(t.created_at);
-        const taskUrl   = t.id && !String(t.id).startsWith('d') ? 'task-detail.html?id=' + t.id : 'explore-tasks.html';
-        const card = document.createElement('a');
-        card.href = taskUrl;
-        card.className = 'open-task-card fade-up';
-        card.style.animationDelay = (i * 0.04) + 's';
-        card.innerHTML = '<div class="otc-icon">' + emoji + '</div>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div class="otc-title">' + safeTitle + '</div>'
-          + '<div class="otc-meta">'
-          + '<span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + safeLoc + '</span>'
-          + '<span>' + timeAgo + '</span>'
-          + (safeCat ? '<span style="text-transform:capitalize;">' + safeCat + '</span>' : '')
-          + (t.urgent ? '<span class="urgent-badge">Urgent</span>' : '')
-          + '</div></div>'
-          + '<div class="otc-right"><div class="otc-budget">₦' + Number(t.budget || 0).toLocaleString() + '</div><div class="otc-open">Open</div></div>';
-        el.appendChild(card);
-      });
-
-      const loadBtn = document.getElementById('loadMoreBtn');
-      if (loadBtn) loadBtn.style.display = _taskOffset < filtered.length ? 'block' : 'none';
+      const svc = _tkProfile.service || _tkProfile.service_name || _tkProfile.category;
+      if (sub && svc) sub.textContent = 'Matched to your service: ' + svc;
+      const match = base.filter(t => { const h = ((t.category || '') + ' ' + (t.title || '')).toLowerCase(); return keys.some(k => h.includes(k)); }).slice(0, 6);
+      _fillTasks('hfTaskMatch', match, 'No tasks match your skills right now. We\'ll show them here as they come in.');
     }
 
-    function filterOpenTasks(btn, cat) {
-      document.querySelectorAll('.cat-chip').forEach(b => {
-        b.style.background = 'var(--white)';
-        b.style.color = 'var(--text-secondary)';
-        b.style.borderColor = 'var(--border)';
-      });
-      btn.style.background = 'var(--blue)';
-      btn.style.color = 'var(--white)';
-      btn.style.borderColor = 'var(--blue)';
-      _currentCat = cat;
-      renderOpenTasks(cat, true);
-    }
-    window.filterOpenTasks = filterOpenTasks;
-
-    function loadMoreTasks() {
-      renderOpenTasks(_currentCat, false);
-    }
-    window.loadMoreTasks = loadMoreTasks;
-
-    /* ── Top Rated ───────────────────────────────────────────── */
-    async function loadTopRated() {
-      const el = document.getElementById('topRatedList');
-      if (!el) return;
+    async function loadTaskerProfile() {
+      const card = document.getElementById('hfProfileCard');
       try {
-        const data = await window.ST.db.fetchServices({ limit: 8 });
-        const list = (data && data.length) ? data : DUMMY_SERVICES;
-        renderTopRated(list, el);
-      } catch(e) {
-        renderTopRated(DUMMY_SERVICES, el);
+        const row = await window.ST.db.fetchMyTaskerProfile();
+        _tkProfile = row || {};
+        /* Same completeness check as login.html: a service and a location */
+        const complete = !!((_tkProfile.service || _tkProfile.service_name) && _tkProfile.location);
+        if (card) card.classList.toggle('show', !complete);
+      } catch (e) {
+        _tkProfile = false;   /* unknown: don't nag */
+      }
+      renderTaskerFeed();
+    }
+
+    async function loadTaskerJobs() {
+      const el = document.getElementById('hfJobsList');
+      if (!el) return;
+      const none = '<div class="hf-empty">No active jobs yet. Make an offer on a task to get started.<br /><a class="hf-empty-cta" href="find-tasks.html">Find Work</a></div>';
+      try {
+        const [bookings, apps] = await Promise.all([
+          window.ST.db.fetchTaskerBookings().catch(() => []),
+          window.ST.db.fetchMyApplications().catch(() => []),
+        ]);
+        const live = s => !JOB_DONE.includes(String(s || '').toLowerCase());
+        const jobs = []; const seen = new Set();
+        (bookings || []).filter(b => live(b.status)).forEach(b => {
+          if (b.task_id) seen.add(String(b.task_id));
+          jobs.push({ title: (b.tasks && b.tasks.title) || 'Booking', loc: b.tasks && b.tasks.location, budget: b.tasks && b.tasks.budget, status: b.status || 'booked', at: b.created_at });
+        });
+        (apps || []).filter(a => a.status === 'accepted' && a.tasks && live(a.tasks.status) && !seen.has(String(a.task_id))).forEach(a => {
+          jobs.push({ title: a.tasks.title || 'Task', loc: a.tasks.location, budget: a.tasks.budget, status: 'accepted', at: a.created_at });
+        });
+        jobs.sort((x, y) => new Date(y.at || 0) - new Date(x.at || 0));
+        if (!jobs.length) { el.innerHTML = none; return; }
+        el.innerHTML = jobs.slice(0, 3).map(j =>
+          '<a class="hf-task" href="dashboard-tasker.html?panel=bookings">'
+          + '<div class="hf-task-main"><div class="hf-task-title">' + escapeHtml(j.title) + '</div>'
+          + '<div class="hf-task-meta">' + escapeHtml(j.loc || 'Lagos') + ' · ' + _timeAgo(j.at) + '</div></div>'
+          + '<div class="hf-task-side">' + (Number(j.budget) > 0 ? '<div class="hf-task-budget">₦' + Number(j.budget).toLocaleString() + '</div>' : '')
+          + '<div class="hf-task-status">' + escapeHtml(String(j.status).replace(/_/g, ' ')) + '</div></div></a>').join('');
+      } catch (e) {
+        el.innerHTML = none;
       }
     }
 
-    function renderTopRated(list, el) {
-      const sorted = [...list].sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5)).slice(0, 5);
-      el.innerHTML = sorted.map((s, i) => {
-        const safeName = escapeHtml(s.provider_name || s.business_name || s.name || 'Provider');
-        const safeSvc  = escapeHtml(s.service_name || s.service || '');
-        const safeId   = escapeHtml(s.user_id || '');
-        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
-        const init = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-        const av = s.av || AV[i % AV.length];
-        const rating = (s.rating || (4.5 + Math.random() * 0.5)).toFixed(1);
-        const photoHtml = s.photo_url
-          ? '<img src="' + escapeHtml(s.photo_url) + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'"/>'
-          : init;
-        return '<a href="' + profileUrl + '" class="top-rated-row">'
-          + '<div class="tr-avatar ' + av + '">' + photoHtml + '</div>'
-          + '<div><div class="tr-name">' + safeName + '</div><div class="tr-service">' + safeSvc + '</div></div>'
-          + '<div class="tr-stars">★ ' + rating + '</div>'
-          + '</a>';
-      }).join('');
+    /* Peers: real ratings only. No rating data yet means the section stays hidden, not faked. */
+    async function loadTopRatedTaskers() {
+      const sec = document.getElementById('hfTopSec');
+      const el  = document.getElementById('hfTopList');
+      if (!el) return;
+      let raw = [];
+      try { raw = await window.ST.db.fetchServices({ limit: 40 }); } catch (e) { raw = []; }
+      if (!raw || !raw.length) raw = DUMMY_SERVICES.concat(DUMMY_TASKERS);   /* demo fallback, replaced in Step 5 */
+      const seen = new Set();
+      const peers = raw.map(_normProvider)
+        .filter(p => p.uid !== _userId)
+        .filter(p => { const k = p.uid || p.id || p.name; if (seen.has(k)) return false; seen.add(k); return true; });
+      const rated = peers.filter(p => p.rating).sort((a, b) => b.rating - a.rating).slice(0, 4);
+      if (!rated.length) { if (sec) sec.hidden = true; return; }
+      if (sec) sec.hidden = false;
+      el.innerHTML = rated.map(taskerCardHtml).join('');
+    }
+
+    async function initTaskerFeed() {
+      window.addEventListener('st:category-change', e => {
+        if (_userRole !== 'tasker') return;
+        _tkCat = (e.detail && e.detail.category) || '';
+        renderTaskerFeed();
+      });
+      window.addEventListener('st:location-change', () => { if (_userRole === 'tasker') renderTaskerFeed(); });
+      loadTaskerProfile();
+      loadTaskerJobs();
+      loadTopRatedTaskers();
+      let raw = [];
+      try { raw = await window.ST.db.fetchTasks({ limit: 50 }); } catch (e) { raw = []; }
+      if (!raw || !raw.length) raw = DUMMY_TASKS;   /* demo fallback, replaced in Step 5 */
+      _tkTasks = raw;
+      renderTaskerFeed();
     }
 
     /* ── Utilities ───────────────────────────────────────────── */
