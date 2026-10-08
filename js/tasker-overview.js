@@ -533,10 +533,6 @@
   }
 
   function bind() {
-    $('tovBack').addEventListener('click', function () {
-      if (window.history.length > 1) window.history.back(); else window.location.href = 'index.html';
-    });
-
     var ft = $('tovFilterToggle');
     ft.addEventListener('click', function () {
       var f = $('tovFilters');

@@ -3782,7 +3782,6 @@ body.tdash-overview .dashboard-page { background: var(--to-page-bg); }
   display: flex; align-items: center; gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
-.tov-back,
 .tov-icon-btn {
   flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -3792,7 +3791,6 @@ body.tdash-overview .dashboard-page { background: var(--to-page-bg); }
   cursor: pointer;
   transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
 }
-.tov-back:hover,
 .tov-icon-btn:hover { background: var(--color-bg-muted); border-color: var(--color-border-strong); }
 .tov-head-text { flex: 1; min-width: 0; }
 .tov-title {
@@ -4511,4 +4509,37 @@ body.tdash-overview .dashboard-page { background: var(--to-page-bg); }
     background: var(--tm-panel); color: var(--to-dark-text);
     font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; text-decoration: none;
   }
+}
+
+
+/* ================================================================
+   CUSTOMER DASHBOARD — OVERVIEW
+   dashboard-customer.html, #panel-overview. Markup in the page, data
+   in js/customer-overview.js. It reuses the tasker overview classes
+   (.tov-*) and tokens (--to-*) so both dashboards look identical.
+   Only the page-level rules below are customer specific.
+
+   The page's own "Welcome back" header is hidden on the Overview: the
+   Overview carries its own title and Post a Task button.
+   ================================================================ */
+body.cdash-page .dashboard-body .container {
+  max-width: calc(var(--to-content-width) + 2 * var(--space-5));
+}
+body.cdash-overview .ds-main-head { display: none; }
+body.cdash-overview .dashboard-page { background: var(--to-page-bg); }
+/* Other panels stay readable at a narrower width */
+body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
+  max-width: 880px;
+  margin-inline: auto;
+}
+/* Links styled as the tasker overview's buttons */
+.tov a.tov-link-btn,
+.tov a.tov-payout { text-decoration: none; }
+.tov a.tov-payout { display: inline-flex; align-items: center; }
+
+/* STAGE 1 interim: the mobile layout (.tom) is built in Stage 3, so until then
+   the customer page keeps the stacked desktop layout on small screens.
+   Stage 3 removes this rule. */
+@media (max-width: 768px) {
+  body.cdash-page .tov { display: block; }
 }

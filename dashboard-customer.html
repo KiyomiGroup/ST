@@ -277,7 +277,7 @@
        (loaded by js/app.js), matching every other mobile page. */
   </style>
 </head>
-<body class="ds-page">
+<body class="ds-page cdash-page cdash-overview">
 
   <!-- Shared global top nav — visible on mobile only for this page (its
        own .ds-topnav below covers desktop, unchanged). The hamburger is
@@ -443,15 +443,87 @@
 
 
 
-            <!-- Overview Panel -->
+            <!-- Overview Panel (js/customer-overview.js fills the data) -->
             <div id="panel-overview" class="dashboard-panel active">
-              <div class="dashboard-stats">
-                <div class="stat-card"><div class="stat-card-label">Posted Tasks</div><div class="stat-card-value" id="statTotal">—</div></div>
-                <div class="stat-card"><div class="stat-card-label">Active Tasks</div><div class="stat-card-value" id="statActive">—</div></div>
-                <div class="stat-card"><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statDone">—</div></div>
+              <div class="tov" id="cov">
+
+                <header class="tov-head">
+                  <div class="tov-head-text">
+                    <h1 class="tov-title">Overview</h1>
+                    <p class="tov-sub">Manage and track all your active requests, bookings, and escrow in one place.</p>
+                  </div>
+                  <div class="tov-head-actions">
+                    <a href="post-task.html" class="btn btn-primary btn-lg tov-browse">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Post a Task
+                    </a>
+                  </div>
+                </header>
+
+                <!-- Stat cards -->
+                <section class="tov-stats" aria-label="Summary">
+                  <article class="tov-card">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Posted tasks</span>
+                      <span class="tov-bubble" aria-hidden="true">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      </span>
+                    </div>
+                    <div class="tov-value" id="covPostedValue">0 <span class="tov-value-unit">Tasks</span></div>
+                    <div class="tov-trend" id="covPostedSub"><span class="tov-muted">No tasks posted yet</span></div>
+                    <div class="tov-card-foot">
+                      <span class="tov-foot-text">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span id="covOffersText">0 Offers Pending Review</span>
+                      </span>
+                      <a href="customer-applications.html" class="tov-link-btn">View</a>
+                    </div>
+                  </article>
+
+                  <article class="tov-card">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Active tasks</span>
+                      <span class="tov-bubble" aria-hidden="true">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      </span>
+                    </div>
+                    <div class="tov-value" id="covActiveValue">0 <span class="tov-value-unit">In Progress</span></div>
+                    <div class="tov-trend" id="covActiveSub"><span class="tov-muted">Nothing scheduled yet</span></div>
+                    <div class="tov-bars" id="covBars" aria-hidden="true"></div>
+                  </article>
+
+                  <article class="tov-card">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Completed tasks</span>
+                      <span class="tov-bubble" aria-hidden="true">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                    </div>
+                    <div class="tov-value" id="covDoneValue">0 <span class="tov-value-unit">Tasks</span></div>
+                    <div class="tov-trend" id="covDoneSub"><span class="tov-muted">Complete a task to build your record</span></div>
+                    <svg class="tov-spark" id="covSpark" viewBox="0 0 230 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+                  </article>
+
+                  <article class="tov-card">
+                    <div class="tov-card-top">
+                      <span class="tov-label">Escrow / Wallet <span class="tov-secured">Secured</span></span>
+                      <a href="wallet.html" class="tov-arrow" aria-label="Open wallet">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                      </a>
+                    </div>
+                    <div class="tov-value" id="covWalletValue">&#8358;0</div>
+                    <div class="tov-sub-line">In Escrow: <strong id="covEscrowValue">&#8358;0</strong></div>
+                    <div class="tov-card-foot tov-card-foot-end">
+                      <a href="wallet.html" class="tov-payout">Top Up</a>
+                    </div>
+                  </article>
+                </section>
+
+                <!-- STAGE 1 interim: the old recent-tasks list stays until the
+                     Active Requests panel replaces it in Stage 2. -->
+                <div class="panel-header"><h2>Recent Tasks</h2><button class="btn btn-ghost btn-sm" onclick="switchPanel('my-tasks',document.querySelector('[data-panel=my-tasks]'))">View all</button></div>
+                <div class="task-row-list" id="recentList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading...</p></div>
               </div>
-              <div class="panel-header"><h2>Recent Tasks</h2><button class="btn btn-ghost btn-sm" onclick="switchPanel('my-tasks',document.querySelector('[data-panel=my-tasks]'))">View all</button></div>
-              <div class="task-row-list" id="recentList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading...</p></div>
             </div>
 
             <!-- My Tasks Panel -->
@@ -618,6 +690,7 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/location.js"></script>
+  <script src="js/customer-overview.js"></script>
   <script>
     'use strict';
     var custNotifLoaded = false;
@@ -636,6 +709,7 @@
       document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
       var p = document.getElementById('panel-' + id);
       if (p) p.classList.add('active');
+      document.body.classList.toggle('cdash-overview', id === 'overview');
       if (btn) {
         btn.classList.add('active');
         /* If this is a pill in the black nav and it's off-screen (nav
@@ -916,9 +990,13 @@
 
       var active = tasks.filter(function(t) { return t.status === 'open' || t.status === 'active'; }).length;
       var done   = tasks.filter(function(t) { return t.status === 'completed'; }).length;
-      document.getElementById('statTotal').textContent  = tasks.length;
-      document.getElementById('statActive').textContent = active;
-      document.getElementById('statDone').textContent   = done;
+      /* The old stat cards were replaced by js/customer-overview.js; these
+         ids no longer exist, so each write is guarded. */
+      var legacyStats = { statTotal: tasks.length, statActive: active, statDone: done };
+      Object.keys(legacyStats).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = legacyStats[id];
+      });
       /* Pending Tasks icon: dot when any task is still open / pending */
       var pendingDot = document.getElementById('custPendingDot');
       if (pendingDot) pendingDot.hidden = !tasks.some(function(t) { return t.status === 'open' || t.status === 'pending'; });
@@ -945,7 +1023,8 @@
         })();
       }
 
-      document.getElementById('recentList').innerHTML = tasks.slice(0,4).length
+      var recentEl = document.getElementById('recentList');
+      if (recentEl) recentEl.innerHTML = tasks.slice(0,4).length
         ? tasks.slice(0,4).map(taskCard).join('')
         : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
 
