@@ -3,6 +3,8 @@
    Customer "Applications" page (customer-applications.html).
    Stage 1: load every application on the customer's tasks (batched queries),
    then filter, search, sort and render applicant cards.
+   Stage 3: Accept uses the accept_application() database function when it exists (atomic),
+   otherwise falls back to the three separate updates.
    Stage 2: sidebar snapshot, Accept / Decline (with confirmation), Message Tasker.
    Data: tasks -> task_applications -> taskers + users (names, photos, ratings).
    ============================================================ */
@@ -274,11 +276,16 @@
   $('apAcConfirm').addEventListener('click', async function () {
     var btn = this, a = current, err = $('apAcError'); btn.disabled = true; err.hidden = true;
     try {
-      await window.updateApplicationStatus(a.id, 'accepted');          /* also notifies the tasker */
-      var closed = await window.supabase.from('task_applications').update({ status: 'closed' })
-        .eq('task_id', a.task.id).eq('status', 'pending').neq('id', a.id);
-      var tk = await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', a.task.id);
-      if (closed.error || tk.error) toast('Hired, but some follow-up updates failed. Please refresh.');
+      var rpc = await window.supabase.rpc('accept_application', { p_application_id: String(a.id) });
+      if (rpc.error) {
+        /* Function not installed yet: use the original three-step flow */
+        if (!/could not find the function|does not exist|PGRST202|42883/i.test((rpc.error.code || '') + ' ' + (rpc.error.message || ''))) throw new Error(rpc.error.message);
+        await window.updateApplicationStatus(a.id, 'accepted');        /* also notifies the tasker */
+        var closed = await window.supabase.from('task_applications').update({ status: 'closed' })
+          .eq('task_id', a.task.id).eq('status', 'pending').neq('id', a.id);
+        var tk = await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', a.task.id);
+        if (closed.error || tk.error) toast('Hired, but some follow-up updates failed. Please refresh.');
+      }
       a.status = 'accepted'; a.group = 'accepted';
       state.apps.forEach(function (x) { if (x !== a && x.task.id === a.task.id && x.group === 'pending') { x.status = 'closed'; x.group = 'declined'; } });
       a.task.status = 'in_progress';
