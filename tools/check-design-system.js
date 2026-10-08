@@ -23,7 +23,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const BASELINE = path.join(__dirname, 'design-baseline.json');
 const SKIP_FILES = new Set(['css/tokens.css']);     // tokens are allowed to hold raw values
-const SKIP_DIRS = new Set(['node_modules', '.git', 'images', 'tools']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'images', 'tools', 'vendor']);   // vendor = third-party files we do not edit
 
 const RULES = {
   hex:       /(?<!href=")(?<!url\()(?<![&\w])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g,
