@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Applications — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/applications.css" />
+  <link rel="stylesheet" href="css/customer-applications.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="ap-page" id="applicationsPage">
+    <div class="ap-container">
+
+      <header class="ap-header">
+        <div>
+          <div class="ap-title-row">
+            <h1 class="ap-title">Applications</h1>
+            <span class="ap-count" id="apTotal" hidden></span>
+          </div>
+          <p class="ap-lede">Offers from taskers on your tasks. Compare proposals, check profiles and choose who to hire.</p>
+        </div>
+        <a href="post-task.html" class="ap-link">Post a Task<svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </header>
+
+      <div class="ap-layout" id="apLayout">
+        <div class="ap-main">
+          <div class="ap-tabs" role="group" aria-label="Filter by status" id="apTabs">
+            <button type="button" class="ap-tab" data-filter="all" aria-pressed="true">All <span class="ap-tab-n" data-count="all"></span></button>
+            <button type="button" class="ap-tab" data-filter="pending" aria-pressed="false">Needs Review <span class="ap-tab-n" data-count="pending"></span></button>
+            <button type="button" class="ap-tab" data-filter="accepted" aria-pressed="false">Accepted <span class="ap-tab-n" data-count="accepted"></span></button>
+            <button type="button" class="ap-tab" data-filter="declined" aria-pressed="false">Declined <span class="ap-tab-n" data-count="declined"></span></button>
+          </div>
+
+          <div class="ap-toolbar">
+            <label class="ap-search">
+              <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
+              <input type="search" class="ap-input" id="apSearch" placeholder="Search by tasker name or task title…" aria-label="Search applications" />
+            </label>
+            <select class="ap-select" id="apTask" aria-label="Filter by task"><option value="">All My Tasks</option></select>
+            <select class="ap-select" id="apSort" aria-label="Sort applications">
+              <option value="recent">Most Recent</option>
+              <option value="oldest">Oldest First</option>
+              <option value="lowest">Lowest Offer</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+          </div>
+
+          <div class="ap-list" id="apList" aria-live="polite" aria-busy="true">
+            <div class="ap-state"><p class="ap-state-text">Loading applications…</p></div>
+          </div>
+          <button type="button" class="ap-btn ap-more" id="apMore" hidden>Load More Applications</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/customer-applications.js"></script>
+</body>
+</html>
