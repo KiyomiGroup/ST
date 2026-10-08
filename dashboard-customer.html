@@ -453,6 +453,9 @@
                     <p class="tov-sub">Manage and track all your active requests, bookings, and escrow in one place.</p>
                   </div>
                   <div class="tov-head-actions">
+                    <button type="button" class="tov-icon-btn" id="covFilterToggle" aria-label="Show or hide filters" aria-expanded="true" aria-controls="covFilters">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    </button>
                     <a href="post-task.html" class="btn btn-primary btn-lg tov-browse">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       Post a Task
@@ -519,10 +522,76 @@
                   </article>
                 </section>
 
-                <!-- STAGE 1 interim: the old recent-tasks list stays until the
-                     Active Requests panel replaces it in Stage 2. -->
-                <div class="panel-header"><h2>Recent Tasks</h2><button class="btn btn-ghost btn-sm" onclick="switchPanel('my-tasks',document.querySelector('[data-panel=my-tasks]'))">View all</button></div>
-                <div class="task-row-list" id="recentList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading...</p></div>
+                <!-- Filters -->
+                <section class="tov-filters" id="covFilters" aria-label="Filter requests">
+                  <button type="button" class="tov-chip" id="covActiveFilters" title="Clear all filters">
+                    Active filters <span class="tov-chip-count" id="covFilterCount" hidden>0</span>
+                  </button>
+                  <label class="tov-select">
+                    <span class="sr-only">Trade category</span>
+                    <select id="covCategory"><option value="">All categories</option></select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </label>
+                  <label class="tov-select">
+                    <span class="sr-only">Request status</span>
+                    <select id="covStatus">
+                      <option value="">All statuses</option>
+                      <option value="open">Open for offers</option>
+                      <option value="pending">Pending</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="progress">In progress</option>
+                      <option value="review">Review</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </label>
+                  <span class="tov-filter-gap"></span>
+                  <label class="tov-month"><span class="sr-only">From month</span><input type="month" id="covFrom" /></label>
+                  <label class="tov-month"><span class="sr-only">To month</span><input type="month" id="covTo" /></label>
+                  <label class="tov-search">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span class="sr-only">Search requests</span>
+                    <input type="search" id="covSearch" placeholder="Search task, tasker, or #ID..." autocomplete="off" />
+                  </label>
+                </section>
+
+                <!-- Active Requests -->
+                <section class="tov-assign" id="covAssign" aria-labelledby="covAssignTitle">
+                  <div class="tov-assign-head">
+                    <div class="tov-assign-title">
+                      <h2 id="covAssignTitle">Active Requests</h2>
+                      <span class="tov-live" id="covLive"><i aria-hidden="true"></i>Real-time</span>
+                    </div>
+                    <div class="tov-notch">
+                      <div class="tov-tabs" role="tablist" aria-label="Request status">
+                        <button type="button" class="tov-tab" role="tab" data-tab="all" aria-selected="false">All Jobs</button>
+                        <button type="button" class="tov-tab is-active" role="tab" data-tab="progress" aria-selected="true">In Progress <span class="tov-tab-count" id="covCountProgress">0</span></button>
+                        <button type="button" class="tov-tab" role="tab" data-tab="completed" aria-selected="false">Completed <span class="tov-tab-count" id="covCountCompleted">0</span></button>
+                      </div>
+                    </div>
+                    <div class="tov-assign-tools">
+                      <button type="button" class="tov-dark-icon" id="covExpand" aria-label="Expand list" aria-pressed="false">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                      </button>
+                      <div class="tov-more">
+                        <button type="button" class="tov-dark-icon" id="covMore" aria-label="More options" aria-haspopup="menu" aria-expanded="false">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                        </button>
+                        <div class="tov-more-menu" id="covMoreMenu" role="menu" hidden>
+                          <button type="button" role="menuitem" id="covRefresh">Refresh now</button>
+                          <a href="dashboard-customer.html?panel=bookings" role="menuitem">Open all bookings</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="tov-assign-body">
+                    <div class="tov-list" id="covList" role="list" aria-live="polite">
+                      <p class="tov-empty">Loading requests&hellip;</p>
+                    </div>
+                    <div class="tov-detail" id="covDetail" aria-live="polite"></div>
+                  </div>
+                </section>
               </div>
             </div>
 

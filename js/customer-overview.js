@@ -3,7 +3,11 @@
    Fills the markup in dashboard-customer.html (#cov). It reuses the
    tasker overview classes (.tov-*) so both dashboards match.
 
-   STAGE 1: the four stat cards (posted, active, completed, wallet).
+   Fills the four stat cards, the filters and the Active Requests
+   panel (list, detail, Message Tasker, Pay Now / Release Funds).
+
+   Reuses these page globals at click time:
+   openTaskerChat, openPaymentModal, confirmComplete, showToast.
 
    Data: tasks the customer posted, bookings made, pending offers
    (task_applications) and the wallet. Anything with no data source
@@ -28,7 +32,11 @@
     requests: [],
     offersPending: 0,
     wallet: null,
-    loaded: false
+    loaded: false,
+    tab: 'progress',
+    selectedId: null,
+    defaults: { from: '', to: '' },
+    channel: null
   };
 
   /* ── tiny helpers ─────────────────────────────────────────── */
@@ -36,6 +44,16 @@
   function naira(n) { return '₦' + Math.round(Number(n) || 0).toLocaleString('en-NG'); }
   function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
   function startOfDay(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  function nairaCents(n) {
+    return '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function toast(msg) { if (typeof window.showToast === 'function') window.showToast(msg); }
+  function initials(name) {
+    var s = String(name || '').replace(/[^a-zA-Z ]/g, '').trim().split(/\s+/).filter(Boolean)
+      .map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+    return s || 'ST';
+  }
+  function shortId(r) { return '#TSK-' + String((r.task ? r.task.id : r.id) || '').replace(/-/g, '').slice(0, 4).toUpperCase(); }
   function esc(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -138,6 +156,39 @@
         amount: Number(t.budget) || 0,
         offers: offersByTask[t.id] || 0
       });
+    });
+
+    /* tasker profiles and service names, one batched lookup each */
+    var taskerIds = [], svcIds = [];
+    bookings.forEach(function (b) {
+      if (b.tasker_id && taskerIds.indexOf(b.tasker_id) === -1) taskerIds.push(b.tasker_id);
+      if (b.service_id && svcIds.indexOf(b.service_id) === -1) svcIds.push(b.service_id);
+    });
+    var look = await Promise.all([
+      taskerIds.length ? safe(sb.from('taskers').select('*').in('user_id', taskerIds)) : null,
+      taskerIds.length ? safe(sb.from('users').select('id,name,first_name,last_name').in('id', taskerIds)) : null,
+      svcIds.length ? safe(sb.from('services').select('*').in('id', svcIds)) : null
+    ]);
+    var profiles = {}, users = {}, svcs = {};
+    (look[0] || []).forEach(function (t) { profiles[t.user_id] = t; });
+    (look[1] || []).forEach(function (u) { users[u.id] = u; });
+    (look[2] || []).forEach(function (v) { svcs[v.id] = v; });
+
+    requests.forEach(function (r) {
+      var b = r.booking, t = r.task;
+      var sv = (b && b.service_id && svcs[b.service_id]) || null;
+      var p = (b && b.tasker_id && profiles[b.tasker_id]) || null;
+      var u = (b && b.tasker_id && users[b.tasker_id]) || null;
+      r.title = (t && t.title) || (sv && (sv.service_name || sv.service)) ||
+        (b && b.notes ? String(b.notes).slice(0, 48) : 'Service booking');
+      r.category = (t && t.category) || (sv && sv.category) || (p && (p.service || p.service_name)) || '';
+      r.location = (t && t.location) || (sv && sv.location) || (p && p.location) || '';
+      r.tasker = b ? ((p && (p.business_name || p.name)) || (u && ((u.first_name && u.last_name) ? u.first_name + ' ' + u.last_name : u.name)) || 'Tasker') : '';
+      var rt = p ? parseFloat(p.rating) : NaN;
+      r.rating = isFinite(rt) && rt > 0 ? rt : null;
+      var rc = p ? (p.review_count != null ? p.review_count : p.reviews_count) : null;
+      r.reviews = rc != null && isFinite(Number(rc)) ? Number(rc) : null;
+      r.addons = b && Array.isArray(b.add_ons) ? b.add_ons : [];
     });
 
     state.requests = requests;
@@ -243,21 +294,413 @@
       }).join('');
   }
 
-  /* ── load ─────────────────────────────────────────────────── */
-  async function reload() {
-    try {
-      var ok = await fetchAll();
-      if (!ok) return;
-      state.loaded = true;
-      renderStats();
-    } catch (e) {
-      console.warn('[Customer overview] load failed:', e && e.message);
+  /* ── labels ───────────────────────────────────────────────── */
+  function statusLabel(r) {
+    if (payState(r) === 'disputed') return 'Disputed';
+    if (r.booking) {
+      switch (r.booking.status) {
+        case 'pending':       return 'Pending';
+        case 'confirmed':     return 'Scheduled';
+        case 'in_progress':   return 'In Progress';
+        case 'provider_done':
+        case 'awaiting_code':
+        case 'awaiting_confirmation': return 'Review';
+        case 'completed':     return 'Completed';
+        default:              return 'Pending';
+      }
+    }
+    if (group(r) === 'completed') return 'Completed';
+    return r.offers > 0 ? plural(r.offers, 'Offer', 'Offers') : 'Open';
+  }
+  /* key used by the status filter */
+  function statusKey(r) {
+    if (!r.booking) return group(r) === 'completed' ? 'completed' : 'open';
+    var l = statusLabel(r);
+    return l === 'In Progress' ? 'progress' : l.toLowerCase();
+  }
+  function statusTone(r) {
+    var l = statusLabel(r);
+    if (l === 'In Progress') return 'progress';
+    if (l === 'Completed') return 'done';
+    if (l === 'Review' || l === 'Pending' || l === 'Disputed') return 'warn';
+    return 'muted';
+  }
+  function dueText(r) {
+    if (group(r) === 'completed') return 'Completed';
+    var b = r.booking, t = r.task;
+    var when = (b && b.scheduled_time) || (t && t.deadline) || null;
+    if (!when) {
+      var ago = Math.max(0, Math.round((startOfDay(new Date()) - startOfDay(createdDate(r))) / DAY));
+      return ago === 0 ? 'Posted today' : 'Posted ' + ago + (ago === 1 ? ' day ago' : ' days ago');
+    }
+    var diff = Math.round((startOfDay(new Date(when)) - startOfDay(new Date())) / DAY);
+    if (diff === 0) return 'Due today';
+    if (diff > 0) return 'Due in ' + diff + (diff === 1 ? ' day' : ' days');
+    return 'Overdue ' + Math.abs(diff) + (diff === -1 ? ' day' : ' days');
+  }
+  function scheduleText(r) {
+    var b = r.booking, t = r.task;
+    var when = (b && b.scheduled_time) || null;
+    if (!when) return t && t.deadline ? 'Deadline ' + new Date(t.deadline).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }) : 'No date set yet';
+    var d = new Date(when);
+    var diff = Math.round((startOfDay(d) - startOfDay(new Date())) / DAY);
+    var day = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday'
+      : d.toLocaleDateString('en-NG', { weekday: 'short', day: 'numeric', month: 'short' });
+    var time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: d.getMinutes() ? '2-digit' : undefined });
+    return 'Scheduled for ' + day + ', ' + time;
+  }
+
+  /* what the main button does for this request */
+  function actionFor(r) {
+    var b = r.booking;
+    if (!b) {
+      if (group(r) === 'completed') return { label: 'Completed', disabled: true };
+      return r.offers > 0 ? { label: 'Review Offers', act: 'offers' } : { label: 'No Offers Yet', disabled: true };
+    }
+    var ps = payState(r);
+    if (ps === 'disputed') return { label: 'Dispute Open', disabled: true };
+    switch (b.status) {
+      case 'pending':
+        return { label: 'Awaiting Tasker', disabled: true };
+      case 'confirmed':
+      case 'in_progress':
+        return ps === 'held' ? { label: 'Release Funds', act: 'release' } : { label: 'Pay Now', act: 'pay' };
+      case 'provider_done':
+        return ps === 'held' ? { label: 'Release Funds', act: 'release' } : { label: 'Pay Now', act: 'pay' };
+      case 'awaiting_code':
+      case 'awaiting_confirmation':
+        return { label: 'Awaiting Tasker', disabled: true };
+      case 'completed':
+        return { label: 'Completed', disabled: true };
+      default:
+        return { label: 'Unavailable', disabled: true };
     }
   }
 
-  function init() {
+  /* ── filters ──────────────────────────────────────────────── */
+  function visible() { return state.requests.filter(function (r) { return group(r) !== 'dead'; }); }
+
+  function populateFilters() {
+    var list = visible();
+    var cats = [];
+    list.forEach(function (r) { if (r.category && cats.indexOf(r.category) === -1) cats.push(r.category); });
+    cats.sort();
+    var sel = $('covCategory'), keep = sel.value;
+    sel.innerHTML = '<option value="">All categories</option>' + cats.map(function (c) {
+      return '<option value="' + esc(c) + '">' + esc(String(c).replace(/_/g, ' ')) + '</option>';
+    }).join('');
+    sel.value = cats.indexOf(keep) !== -1 ? keep : '';
+
+    var keys = list.map(requestDate).concat([new Date()]);
+    var min = new Date(Math.min.apply(null, keys)), max = new Date(Math.max.apply(null, keys));
+    state.defaults.from = monthKey(min);
+    state.defaults.to = monthKey(max);
+    var f = $('covFrom'), t = $('covTo');
+    if (!state.loaded || !f.value) f.value = state.defaults.from;
+    if (!state.loaded || !t.value) t.value = state.defaults.to;
+    f.min = t.min = state.defaults.from;
+    f.max = t.max = state.defaults.to;
+  }
+
+  function activeFilterCount() {
+    var n = 0;
+    if ($('covCategory').value) n++;
+    if ($('covStatus').value) n++;
+    if ($('covFrom').value !== state.defaults.from || $('covTo').value !== state.defaults.to) n++;
+    if ($('covSearch').value.trim()) n++;
+    return n;
+  }
+
+  function applyFilters(list) {
+    var cat = $('covCategory').value, st = $('covStatus').value;
+    var q = $('covSearch').value.trim().toLowerCase().replace(/^#/, '');
+    var from = $('covFrom').value, to = $('covTo').value;
+    return list.filter(function (r) {
+      if (cat && r.category !== cat) return false;
+      if (st && statusKey(r) !== st) return false;
+      var k = monthKey(requestDate(r));
+      if (from && k < from) return false;
+      if (to && k > to) return false;
+      if (q) {
+        var hay = (r.title + ' ' + r.tasker + ' ' + shortId(r) + ' ' + r.id).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function byTab(list, tab) {
+    return list.filter(function (r) { return tab === 'all' ? true : group(r) === tab; });
+  }
+
+  /* ── requests list + detail ───────────────────────────────── */
+  function renderRequests() {
+    var filtered = applyFilters(visible());
+    $('covCountProgress').textContent = byTab(filtered, 'progress').length;
+    $('covCountCompleted').textContent = byTab(filtered, 'completed').length;
+
+    var n = activeFilterCount();
+    var badge = $('covFilterCount');
+    badge.textContent = n;
+    badge.hidden = n === 0;
+
+    var rows = byTab(filtered, state.tab);
+    var list = $('covList');
+    if (!rows.length) {
+      list.innerHTML = '<p class="tov-empty">' + (visible().length
+        ? (n ? 'No requests match these filters.' : 'Nothing in this tab yet.')
+        : 'No requests yet. Post a task to get offers from taskers near you.') + '</p>';
+      state.selectedId = null;
+      renderDetail(null);
+      return;
+    }
+    if (!rows.some(function (r) { return r.id === state.selectedId; })) state.selectedId = rows[0].id;
+
+    list.innerHTML = rows.map(function (r) {
+      var sel = r.id === state.selectedId;
+      return '<button type="button" role="listitem" class="tov-item' + (sel ? ' is-selected' : '') + '" data-id="' + esc(r.id) + '" aria-current="' + sel + '">' +
+        '<span class="tov-item-top">' +
+          '<span class="tov-avatar">' + esc(initials(r.booking ? r.tasker : r.title)) + '</span>' +
+          '<span class="tov-item-main">' +
+            '<span class="tov-item-meta"><span class="tov-item-id">' + esc(shortId(r)) + '</span>' +
+              (r.category ? '<span class="tov-tag">' + esc(String(r.category).replace(/_/g, ' ')) + '</span>' : '') + '</span>' +
+            '<span class="tov-item-title">' + esc(r.title) + '</span>' +
+          '</span>' +
+          '<span class="tov-status tov-status-' + statusTone(r) + '">' + esc(statusLabel(r)) + '</span>' +
+        '</span>' +
+        '<span class="tov-item-foot"><span class="tov-due">' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+          esc(dueText(r)) + '</span><span class="tov-item-amount">' + esc(naira(r.amount)) + '</span></span>' +
+      '</button>';
+    }).join('');
+
+    renderDetail(rows.filter(function (r) { return r.id === state.selectedId; })[0]);
+  }
+
+  function renderDetail(r) {
+    var el = $('covDetail');
+    if (!r) { el.innerHTML = '<p class="tov-empty tov-empty-detail">Select a request to see its details.</p>'; return; }
+
+    var act = actionFor(r), ps = payState(r), tone = statusTone(r);
+    var chatOk = !!(r.booking && r.booking.tasker_id);
+
+    var addons = r.addons.map(function (a) {
+      var label = a && (a.name || a.label || a.title) || 'Add-on';
+      var price = a && (a.price != null ? a.price : a.amount);
+      return '<div class="tov-addon"><strong>' + esc(nairaCents(price)) + '</strong><span>' + esc(label) + '</span></div>';
+    }).join('');
+
+    var notice;
+    if (ps === 'disputed') notice = '<strong>Dispute open:</strong> Payment is frozen while our team reviews the issue.';
+    else if (ps === 'held') notice = '<strong>StreetTasker Escrow Protected:</strong> Funds are held safely and only released when you confirm satisfactory job completion.';
+    else if (ps === 'released') notice = '<strong>Payment released:</strong> The tasker has been paid for this job.';
+    else if (!r.booking) notice = '<strong>Escrow protected:</strong> Review the offers and pick a tasker. Your payment stays in escrow until you confirm the job is done.';
+    else if (r.booking.status === 'pending') notice = '<strong>Waiting for the tasker:</strong> You can pay once they confirm your booking.';
+    else notice = '<strong>Payment required:</strong> Pay now to lock in this booking. Funds stay in escrow until you confirm the job is done.';
+
+    var who;
+    if (r.booking) {
+      who = '<div class="tov-person"><span class="tov-avatar tov-avatar-lg">' + esc(initials(r.tasker)) + '</span>' +
+        '<span class="tov-person-name">' + esc(r.tasker) +
+        (r.rating ? '<br /><span class="tov-loc-sub">★ ' + esc(r.rating.toFixed(1)) + (r.reviews != null ? ' (' + esc(r.reviews) + ')' : '') + '</span>' : '') +
+        '</span></div>';
+    } else {
+      who = '<div class="tov-person"><span class="tov-avatar tov-avatar-lg">' + esc(initials(r.title)) + '</span>' +
+        '<span class="tov-person-name">No tasker yet<br /><span class="tov-loc-sub">' + esc(plural(r.offers, 'offer', 'offers') + ' received') + '</span></span></div>';
+    }
+
+    el.innerHTML =
+      '<div class="tov-detail-grid">' +
+        '<div class="tov-dcol">' +
+          '<span class="tov-dlabel">Task details</span>' +
+          '<div class="tov-did"><span>' + esc(shortId(r)) + '</span><span class="tov-status tov-status-' + tone + '">' + esc(tone === 'progress' || (r.booking && r.booking.status === 'confirmed') ? 'Active' : statusLabel(r)) + '</span></div>' +
+          '<span class="tov-dtitle">' + esc(r.title) + '</span>' +
+        '</div>' +
+        '<div class="tov-dcol"><span class="tov-dlabel">Assigned tasker</span>' + who + '</div>' +
+        '<div class="tov-dcol">' +
+          '<span class="tov-dlabel">Location &amp; booking</span>' +
+          '<div class="tov-loc">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span><strong>' + esc(r.location || 'Location not set') + '</strong><span class="tov-loc-sub">' + esc(scheduleText(r)) + '</span></span></div>' +
+        '</div>' +
+      '</div>' +
+      (addons ? '<div class="tov-addons">' + addons + '</div>' : '') +
+      '<div class="tov-escrow-note"><span class="tov-note-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><p>' + notice + '</p></div>' +
+      '<div class="tov-detail-foot">' +
+        '<dl class="tov-totals">' +
+          '<div><dt>Subtotal</dt><dd>' + esc(nairaCents(r.amount)) + '</dd></div>' +
+          '<div><dt>Platform fee</dt><dd class="tov-fee">' + esc(nairaCents(0)) + ' <small>(Free)</small></dd></div>' +
+          '<div><dt>Escrow balance</dt><dd>' + esc(nairaCents(ps === 'held' ? r.amount : 0)) + '</dd></div>' +
+        '</dl>' +
+        '<div class="tov-actions">' +
+          '<button type="button" class="tov-round" data-act="copy" aria-label="Copy reference" title="Copy reference">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>' +
+          '<button type="button" class="tov-round" data-act="ics" aria-label="Add to calendar" title="Add to calendar"' + (icsDate(r) ? '' : ' disabled') + '>' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>' +
+          '<button type="button" class="tov-btn-light" data-act="chat"' + (chatOk ? '' : ' disabled title="Book a tasker to start messaging"') + '>' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+            '<span>Message<br>Tasker</span></button>' +
+          '<button type="button" class="tov-btn-main" data-act="' + (act.act || '') + '"' + (act.disabled ? ' disabled' : '') + '>' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' +
+            '<span>' + esc(act.label).replace(' ', '<br>') + '</span></button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function icsDate(r) {
+    var w = (r.booking && r.booking.scheduled_time) || (r.task && r.task.deadline) || null;
+    return w ? new Date(w) : null;
+  }
+  function icsFor(r) {
+    var start = icsDate(r); if (!start) return;
+    var end = new Date(start.getTime() + 60 * 60 * 1000);
+    var f = function (d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); };
+    var text = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StreetTasker//Overview//EN', 'BEGIN:VEVENT',
+      'UID:' + r.id + '@streettasker.com', 'DTSTAMP:' + f(new Date()), 'DTSTART:' + f(start), 'DTEND:' + f(end),
+      'SUMMARY:' + String(r.title).replace(/[,;\n]/g, ' '),
+      'LOCATION:' + String(r.location || '').replace(/[,;\n]/g, ' '),
+      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    var blob = new Blob([text], { type: 'text/calendar' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = shortId(r).replace('#', '') + '.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+  }
+
+  /* ── events ───────────────────────────────────────────────── */
+  function selected() {
+    return state.requests.filter(function (r) { return r.id === state.selectedId; })[0];
+  }
+
+  function runAction(kind, r) {
+    if (!r) return;
+    switch (kind) {
+      case 'copy':
+        var ref = shortId(r);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ref).then(function () { toast('Reference ' + ref + ' copied'); }, function () { toast(ref); });
+        } else { toast(ref); }
+        break;
+      case 'ics':    icsFor(r); break;
+      case 'chat':   if (typeof window.openTaskerChat === 'function') window.openTaskerChat('booking', r.booking.id, r.booking.tasker_id || ''); break;
+      case 'offers': window.location.href = 'customer-applications.html'; break;
+      case 'pay':    if (typeof window.openPaymentModal === 'function') window.openPaymentModal(r.booking.id, r.title); break;
+      /* Same flow as the Bookings panel: confirm, then the 6-digit code is shown for the tasker */
+      case 'release': if (typeof window.confirmComplete === 'function') window.confirmComplete(r.booking.id); break;
+    }
+  }
+
+  function bind() {
+    var ft = $('covFilterToggle');
+    ft.addEventListener('click', function () {
+      var f = $('covFilters');
+      var open = f.classList.toggle('is-collapsed') === false;
+      ft.setAttribute('aria-expanded', String(open));
+    });
+
+    ['covCategory', 'covStatus', 'covFrom', 'covTo'].forEach(function (id) { $(id).addEventListener('change', renderRequests); });
+    $('covSearch').addEventListener('input', renderRequests);
+    $('covActiveFilters').addEventListener('click', function () {
+      $('covCategory').value = ''; $('covStatus').value = '';
+      $('covFrom').value = state.defaults.from; $('covTo').value = state.defaults.to;
+      $('covSearch').value = '';
+      renderRequests();
+    });
+
+    var tabs = $('cov').querySelectorAll('.tov-tab');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        state.tab = tab.dataset.tab;
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.classList.toggle('is-active', on);
+          t.setAttribute('aria-selected', String(on));
+        });
+        renderRequests();
+      });
+    });
+
+    $('covList').addEventListener('click', function (e) {
+      var item = e.target.closest('.tov-item');
+      if (!item) return;
+      state.selectedId = item.dataset.id;
+      renderRequests();
+    });
+
+    $('covExpand').addEventListener('click', function () {
+      var on = $('covAssign').classList.toggle('is-expanded');
+      this.setAttribute('aria-pressed', String(on));
+      this.setAttribute('aria-label', on ? 'Collapse list' : 'Expand list');
+    });
+
+    var more = $('covMore'), menu = $('covMoreMenu');
+    more.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = menu.hidden;
+      menu.hidden = !open;
+      more.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', function () { menu.hidden = true; more.setAttribute('aria-expanded', 'false'); });
+    $('covRefresh').addEventListener('click', function () { reload(true); });
+
+    $('covDetail').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-act]');
+      if (!btn || btn.disabled) return;
+      runAction(btn.dataset.act, selected());
+    });
+  }
+
+  /* ── load + realtime ─────────────────────────────────────── */
+  var reloadTimer = null;
+  async function reload(manual) {
+    try {
+      var ok = await fetchAll();
+      if (!ok) return;
+      populateFilters();
+      if (!state.loaded) {
+        /* land on a tab that has something in it */
+        var live = visible();
+        var hasProgress = live.some(function (r) { return group(r) === 'progress'; });
+        var hasDone = live.some(function (r) { return group(r) === 'completed'; });
+        if (!hasProgress) state.tab = hasDone ? 'completed' : 'all';
+        $('cov').querySelectorAll('.tov-tab').forEach(function (t) {
+          var on = t.dataset.tab === state.tab;
+          t.classList.toggle('is-active', on);
+          t.setAttribute('aria-selected', String(on));
+        });
+      }
+      state.loaded = true;
+      renderStats();
+      renderRequests();
+      if (manual) toast('Requests refreshed');
+    } catch (e) {
+      console.warn('[Customer overview] load failed:', e && e.message);
+      $('covList').innerHTML = '<p class="tov-empty">Could not load your requests. <button type="button" class="tov-link-btn" id="covRetry">Try again</button></p>';
+      var r = $('covRetry'); if (r) r.addEventListener('click', function () { reload(true); });
+    }
+  }
+
+  function subscribe() {
+    var live = $('covLive');
+    function schedule() {
+      clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(function () { reload(false); }, 600);
+    }
+    try {
+      if (!window.supabase.channel || !state.uid) { live.hidden = true; return; }
+      state.channel = window.supabase.channel('cov-requests-' + state.uid)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: 'customer_id=eq.' + state.uid }, schedule)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: 'customer_id=eq.' + state.uid }, schedule)
+        .subscribe(function (status) { live.classList.toggle('is-off', status !== 'SUBSCRIBED'); });
+    } catch (e) { live.hidden = true; }
+  }
+
+  async function init() {
     if (!$('cov') || !window.supabase) return;
-    reload();
+    bind();
+    await reload(false);
+    subscribe();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
