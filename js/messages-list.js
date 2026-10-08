@@ -132,6 +132,13 @@
       case 'cancelled': label = 'Cancelled'; tone = 'muted'; break;
       default: break;
     }
+
+    /* A transport / extra-cost request waiting for the customer's approval comes first */
+    if (t.addonPending && ['completed', 'cancelled', 'disputed'].indexOf(key) === -1) {
+      label = isCustomer ? 'Approval needed' : 'Awaiting customer approval';
+      tone = isCustomer ? 'action' : 'muted';
+      needsAction = isCustomer;
+    }
     return { key: key, label: label, tone: tone, needsAction: needsAction, amount: amount };
   }
 
@@ -155,7 +162,7 @@
       case 'awaiting':  /* customer: things I must act on; tasker: things the customer must act on */
         return role === 'customer'
           ? d.needsAction
-          : (d.key === 'payment_pending' || d.key === 'awaiting_confirmation');
+          : (d.key === 'payment_pending' || d.key === 'awaiting_confirmation' || !!t.addonPending);
       case 'requests':  /* tasker: new inquiries or unread customer messages */
         return d.key === 'inquiry' || unread > 0;
       case 'payments':
@@ -222,12 +229,25 @@
     var sb = window.supabase;
     var threadIds = threads.map(function (t) { return t.id; });
 
-    var prByThread = {};
+    var prByThread = {}, addonByThread = {};
+    var ADDONS = ['transport', 'additional_cost'];
     try {
-      var pr = await sb.from('payment_requests')
-        .select('id,thread_id,amount,status,created_at')
+      var prCols = 'id,thread_id,amount,status,created_at,kind';
+      var pr = await sb.from('payment_requests').select(prCols)
         .in('thread_id', threadIds).order('created_at', { ascending: false });
-      (pr.data || []).forEach(function (r) { if (!prByThread[r.thread_id]) prByThread[r.thread_id] = r; });
+      if (pr.error) {
+        /* Step 6 SQL not run yet: no kind column */
+        pr = await sb.from('payment_requests').select('id,thread_id,amount,status,created_at')
+          .in('thread_id', threadIds).order('created_at', { ascending: false });
+      }
+      (pr.data || []).forEach(function (r) {
+        var isAddon = ADDONS.indexOf(r.kind) !== -1;
+        if (isAddon) {
+          if (r.status === 'pending') addonByThread[r.thread_id] = true;
+        } else if (!prByThread[r.thread_id]) {
+          prByThread[r.thread_id] = r;       /* latest payment-type request */
+        }
+      });
     } catch (_e) {}
 
     var bookingIds = [], appIds = [];
@@ -240,7 +260,7 @@
     var bookings = {}, apps = {};
     try {
       if (bookingIds.length) {
-        var b = await sb.from('bookings').select('id,task_id,status,payment_status,notes').in('id', bookingIds);
+        var b = await sb.from('bookings').select('id,task_id,status,payment_status,notes,amount').in('id', bookingIds);
         (b.data || []).forEach(function (r) { bookings[r.id] = r; });
       }
     } catch (_e) {}
@@ -264,6 +284,7 @@
 
     threads.forEach(function (t) {
       t.latestRequest = prByThread[t.id] || null;
+      t.addonPending = !!addonByThread[t.id];
       var bk = t.context_type === 'booking' ? bookings[t.context_id] : null;
       var ap = t.context_type !== 'booking' ? apps[t.context_id] : null;
       t.booking = bk || null;

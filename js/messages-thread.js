@@ -12,12 +12,14 @@
      JRThread.toast(message, type)       small toast (type: 'error' for errors)
      JRThread.registerRequest(row)       remember a job_requests row (card state)
      JRThread.onRequestChange(row)       realtime INSERT/UPDATE of job_requests
-     JRThread.pendingKinds()             kinds that still have a pending request
+     JRThread.pendingKinds()             kinds that still have a pending request (asks + money)
+     JRThread.registerMoney(row) / onMoneyChange(row) / getMoney(id) / moneyRows()
+                                         payment_requests rows for this thread (card state)
      JRThread.hasContactInfo(text)       same contact check the composer uses
      JRThread.focusComposer()
 
    Message kinds rendered today:
-     text, payment_request, payment_confirmed, system, job_request.
+     text, payment_request (all money kinds), payment_confirmed, system, job_request.
    Anything else falls back to a text bubble. Image / file / location /
    structured request cards arrive in steps 5-8.
 
@@ -36,7 +38,8 @@
   var S = {
     thread: null, user: null, role: 'customer', onChange: null,
     lastDay: null, sending: false, bound: false,
-    requests: {}, requestsFailed: false
+    requests: {}, requestsFailed: false,
+    money: {}, moneyFailed: false
   };
 
   /* Extra contact patterns on top of ST.messages.CONTACT_PATTERNS (js/messages.js):
@@ -142,50 +145,156 @@
     return row;
   }
 
-  /* Payment request card. Rebuilt with live states in step 6. */
-  function buildPaymentRequest(m, isMine) {
-    var parts  = (m.body || '').split(':');
-    var amount = parts.length >= 3 ? parseInt(parts[2], 10) : 0;
-    var reqId  = m.payment_request_id || (parts[1] || '');
-    var fmt    = amount > 0 ? naira(amount) : '—';
+  /* ── money request card (step 6) ─────────────────────────── */
+  var MONEY_STATUS_LABEL = {
+    pending: 'Payment requested', accepted: 'Payment processing', approved: 'Approved',
+    paid: 'Paid', declined: 'Declined', cancelled: 'Cancelled'
+  };
+  var ADDON_BREAKDOWN_LABEL = { work: 'Additional work', materials: 'Materials' };
 
-    var wrap = baseWrap(m, isMine);
-    wrap.classList.add('is-card');
+  function moneyIdOf(m) {
+    if (m.payment_request_id) return m.payment_request_id;
+    var p = (m.body || '').split(':');
+    return p[0] === 'PAYMENT_REQUEST' ? (p[1] || '') : '';
+  }
 
-    var card = el('div', 'payment-request-card' + (isMine ? ' mine-card' : ''));
-    card.id = 'prc-' + reqId;
+  function fillMoney(wrap) {
+    var m = wrap._msg, isMine = wrap._mine;
+    var id = moneyIdOf(m);
+    var req = S.money[id] || null;
+    var J = window.JRMoney;
+    var parts = (m.body || '').split(':');
+    var amount = req ? Number(req.amount) : (parseInt(parts[2], 10) || 0);
+    var kind = req ? (req.kind || 'payment') : 'payment';
+    var addon = J ? J.isAddon(kind) : false;
+    var status = req ? req.status : 'pending';
+    var busy = !!(req && req._busy);
+    var fmt = amount > 0 ? naira(amount) : '—';
+    var isCustomer = S.role === 'customer';
+    var title = (J && J.KINDS[kind]) ? J.KINDS[kind].title : 'Payment request';
+
+    wrap.textContent = '';
+    var card = el('div', 'payment-request-card jr-money jr-money--' + status + (isMine ? ' mine-card' : ''));
+    card.id = 'prc-' + id;
 
     var head = el('div', 'prc-header');
     var icon = el('div', 'prc-icon'); icon.innerHTML = ICON_CARD;
     head.appendChild(icon);
-    head.appendChild(el('span', 'prc-label', 'Payment request'));
+    head.appendChild(el('span', 'prc-label', title));
+    var pillText = (status === 'pending' && addon) ? 'Awaiting approval' : (MONEY_STATUS_LABEL[status] || status);
+    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, pillText));
     card.appendChild(head);
+
     card.appendChild(el('div', 'prc-amount', fmt));
 
-    var notice = el('div', 'prc-notice');
-    notice.appendChild(el('strong', null, 'Important: '));
-    notice.appendChild(document.createTextNode('Only pay through StreetTasker. Payments made outside are '));
-    notice.appendChild(el('strong', null, 'not eligible for refunds'));
-    notice.appendChild(document.createTextNode(' and may result in account suspension.'));
-    card.appendChild(notice);
+    if (req && req.reason) card.appendChild(el('div', 'jr-req-note', req.reason));
+
+    var bd = req && req.breakdown;
+    if (bd && typeof bd === 'object') {
+      var lines = Object.keys(bd).filter(function (k) { return Number(bd[k]) > 0 && ADDON_BREAKDOWN_LABEL[k]; });
+      if (lines.length) {
+        var list = el('div', 'jr-money-lines');
+        lines.forEach(function (k) {
+          var row = el('div', 'jr-money-line');
+          row.appendChild(el('span', null, ADDON_BREAKDOWN_LABEL[k]));
+          row.appendChild(el('span', null, naira(bd[k])));
+          list.appendChild(row);
+        });
+        card.appendChild(list);
+      }
+    }
 
     var actions = el('div', 'prc-actions');
-    if (!isMine && S.role === 'customer') {
-      var pay = el('button', 'prc-pay-btn', 'Pay ' + fmt + ' securely');
-      pay.type = 'button';
-      pay.addEventListener('click', function () {
-        if (window.handleAcceptPayment) window.handleAcceptPayment(reqId, amount, S.thread ? S.thread.id : '');
-      });
-      actions.appendChild(pay);
-    } else {
-      actions.appendChild(el('span', 'prc-status-badge accepted', 'Awaiting customer payment'));
+    var payable = !!req && !busy && isCustomer && (addon ? status === 'approved' : (status === 'pending' || status === 'accepted'));
+    function button(label, cls, fn) {
+      var b = el('button', cls, label); b.type = 'button'; b.disabled = busy;
+      b.addEventListener('click', fn);
+      return b;
     }
-    card.appendChild(actions);
+
+    if (!req) {
+      /* Request row not loaded (older cards / no access): keep the old behaviour */
+      if (isCustomer && !isMine) actions.appendChild(button('Pay ' + fmt + ' securely', 'prc-pay-btn', function () { if (J) J.pay(id); }));
+      else actions.appendChild(el('span', 'prc-status-badge accepted', 'Awaiting customer payment'));
+    } else if (addon && status === 'pending' && isCustomer) {
+      actions.classList.add('is-stack');
+      var row1 = el('div', 'prc-actions');
+      row1.appendChild(button('Approve ' + fmt, 'prc-pay-btn', function () { J.respond(id, 'approved'); }));
+      row1.appendChild(button('Decline', 'jr-req-btn', function () { J.respond(id, 'declined'); }));
+      actions.appendChild(row1);
+      actions.appendChild(button('Ask a question', 'jr-req-btn', focusComposer));
+    } else if (payable) {
+      actions.appendChild(button((busy ? 'Opening payment…' : 'Pay ' + fmt + ' securely'), 'prc-pay-btn', function () { J.pay(id); }));
+    } else if (busy) {
+      actions.appendChild(el('span', 'prc-status-badge accepted', 'Opening payment…'));
+    } else if (!isCustomer && (status === 'pending' || status === 'accepted')) {
+      if (status === 'pending') actions.appendChild(button('Cancel request', 'jr-req-btn', function () { J.respond(id, 'cancelled'); }));
+      else actions.appendChild(el('span', 'prc-status-badge accepted', 'Customer is paying'));
+    } else if (!isCustomer && status === 'approved') {
+      actions.appendChild(el('span', 'prc-status-badge accepted', 'Approved. Waiting for payment'));
+    } else if (status === 'paid') {
+      actions.appendChild(el('span', 'prc-status-badge paid', '✓ Paid. Funds in escrow'));
+    }
+    if (actions.childNodes.length) card.appendChild(actions);
+
+    if (req && !addon && (status === 'pending' || status === 'accepted') && isCustomer) {
+      var notice = el('div', 'prc-notice');
+      notice.appendChild(el('strong', null, 'Important: '));
+      notice.appendChild(document.createTextNode('Only pay through StreetTasker. Payments made outside are '));
+      notice.appendChild(el('strong', null, 'not eligible for refunds'));
+      notice.appendChild(document.createTextNode(' and may result in account suspension.'));
+      card.appendChild(notice);
+    }
 
     wrap.appendChild(card);
     wrap.appendChild(el('div', 'msg-time', timeLabel(m.created_at)));
+  }
+
+  function buildPaymentRequest(m, isMine) {
+    var wrap = baseWrap(m, isMine);
+    wrap.classList.add('is-card');
+    wrap.dataset.moneyId = String(moneyIdOf(m));
+    wrap._msg = m; wrap._mine = isMine;
+    fillMoney(wrap);
     return wrap;
   }
+
+  function repaintMoney(id) {
+    var body = $('chatBody');
+    if (!body) return;
+    var nodes = body.querySelectorAll('[data-money-id="' + String(id).replace(/"/g, '') + '"]');
+    for (var i = 0; i < nodes.length; i++) fillMoney(nodes[i]);
+    if (window.JRRequests && window.JRRequests.update) window.JRRequests.update();
+  }
+
+  async function loadMoney(threadId) {
+    S.money = {}; S.moneyFailed = false;
+    try {
+      var r = await window.supabase.from('payment_requests').select('*').eq('thread_id', threadId).limit(200);
+      if (r.error) throw r.error;
+      (r.data || []).forEach(function (row) { S.money[row.id] = row; });
+    } catch (_e) { S.moneyFailed = true; }
+  }
+
+  async function ensureMoney(m) {
+    var id = moneyIdOf(m);
+    if (!id || S.money[id]) return;
+    try {
+      var r = await window.supabase.from('payment_requests').select('*').eq('id', id).maybeSingle();
+      if (r.data) { S.money[id] = r.data; repaintMoney(id); }
+    } catch (_e) {}
+  }
+
+  function registerMoney(row) { if (row && row.id) S.money[row.id] = row; }
+  function onMoneyChange(row) {
+    if (!row || !row.id) return;
+    var merged = Object.assign({}, S.money[row.id] || {}, row);
+    if (!('_busy' in row)) delete merged._busy;       /* busy only lasts while the caller says so */
+    S.money[row.id] = merged;
+    repaintMoney(row.id);
+  }
+  function getMoney(id) { return S.money[id] || null; }
+  function moneyRows() { return Object.keys(S.money).map(function (k) { return S.money[k]; }); }
 
   /* Payment confirmed card.
      SECURITY NOTE: the completion code is stored in the message body, so the
@@ -357,9 +466,14 @@
   }
 
   function pendingKinds() {
-    return Object.keys(S.requests)
+    var kinds = Object.keys(S.requests)
       .filter(function (k) { return S.requests[k].status === 'pending'; })
       .map(function (k) { return S.requests[k].kind; });
+    Object.keys(S.money).forEach(function (k) {
+      var r = S.money[k];
+      if (r.status === 'pending') kinds.push(r.kind || 'payment');
+    });
+    return kinds;
   }
 
   function focusComposer() { var i = $('msgInput'); if (i) i.focus(); }
@@ -408,6 +522,7 @@
     var node = appendNode(m);
     if (!node) return null;
     if (m.type === 'job_request') ensureRequest(m);
+    if (m.type === 'payment_request') ensureMoney(m);
     if (wasNear || mine) {
       scrollToBottom(body);
     } else {
@@ -425,7 +540,7 @@
 
   async function open(ctx) {
     S.thread = ctx.thread; S.user = ctx.user; S.role = ctx.role; S.onChange = ctx.onChange || null;
-    S.lastDay = null; S.requests = {}; S.requestsFailed = false;
+    S.lastDay = null; S.requests = {}; S.requestsFailed = false; S.money = {}; S.moneyFailed = false;
     var token = ctx.thread.id;
     var body = $('chatBody');
     var input = $('msgInput');
@@ -444,7 +559,7 @@
       if (S.thread.id !== token) return;               /* user switched thread */
       if (res.error) throw res.error;
       var msgs = (res.data || []).slice().reverse();
-      await loadRequests(msgs);
+      await Promise.all([loadRequests(msgs), loadMoney(token)]);
       if (S.thread.id !== token) return;
       body.textContent = '';
       if (!msgs.length) {
@@ -630,7 +745,11 @@
     onRequestChange: onRequestChange,
     pendingKinds: pendingKinds,
     hasContactInfo: hasContactInfo,
-    focusComposer: focusComposer
+    focusComposer: focusComposer,
+    registerMoney: registerMoney,
+    onMoneyChange: onMoneyChange,
+    getMoney: getMoney,
+    moneyRows: moneyRows
   };
 
 })();

@@ -385,10 +385,30 @@ async function initiatePayment({ contextType, contextId, bookingId, taskId, amou
               .update({ status: 'paid', paid_at: new Date().toISOString() })
               .eq('id', payment.id);
 
-            /* 2. Update booking with payment status + completion code */
-            await window.supabase.from('bookings')
-              .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira, status: 'confirmed' })
-              .eq('id', bookingId);
+            /* 2. Update booking with payment status + completion code.
+                  A booking that is ALREADY paid is a top-up (an extra payment such as
+                  transport or additional cost approved in the conversation): add it to the
+                  total and keep the existing code, attempts and status. Without this an
+                  extra payment would overwrite the amount and issue a new code. */
+            var existingBk = null;
+            if (bookingId) {
+              try {
+                var exRes = await window.supabase.from('bookings')
+                  .select('amount, payment_status, completion_code').eq('id', bookingId).maybeSingle();
+                existingBk = exRes.data || null;
+              } catch(_ex) {}
+            }
+            var isTopUp = !!(existingBk && existingBk.payment_status === 'paid' && existingBk.completion_code);
+            var finalCode = isTopUp ? existingBk.completion_code : code;
+            if (isTopUp) {
+              await window.supabase.from('bookings')
+                .update({ amount: (Number(existingBk.amount) || 0) + Number(amountNaira) })
+                .eq('id', bookingId);
+            } else {
+              await window.supabase.from('bookings')
+                .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira, status: 'confirmed' })
+                .eq('id', bookingId);
+            }
 
             /* 3. Write escrow record readable by TASKER (they own this row) 
                   RLS NOTE: customer cannot update tasker's wallet directly.
@@ -434,13 +454,13 @@ async function initiatePayment({ contextType, contextId, bookingId, taskId, amou
                   type:     'payment_received',
                   title:    '💰 Payment received! ' + fmtAmt,
                   message:  'A customer has paid ' + fmtAmt + ' for your service. Your earning (' + fmtEarning + ' after 12% fee) is held in escrow. Complete the job, get the customer to confirm, then enter the code to release payment.',
-                  data:     { booking_id: bookingId, payment_id: payment.id, completion_code: code },
+                  data:     { booking_id: bookingId, payment_id: payment.id },   /* never include the completion code here: the tasker must not see it */
                   is_read:  false,
                 });
               } catch(_ne) {}
             }
 
-            resolve({ reference: response.reference, paymentId: payment.id, completionCode: code, taskerUserId: resolvedTaskerId });
+            resolve({ reference: response.reference, paymentId: payment.id, completionCode: finalCode, topUp: isTopUp, taskerUserId: resolvedTaskerId });
           } catch(e) { reject(e); }
         })();
       },
@@ -611,8 +631,9 @@ async function raiseDispute(bookingId, reason) {
 /* ── Fetch payment for a booking ─────────────────────────────── */
 async function fetchPayment(bookingId) {
   try {
+    /* limit(1): a booking can now have several payments (top-ups) */
     var { data } = await window.supabase.from('payments')
-      .select('*').eq('booking_id', bookingId).maybeSingle();
+      .select('*').eq('booking_id', bookingId).limit(1).maybeSingle();
     return data;
   } catch(e) { return null; }
 }

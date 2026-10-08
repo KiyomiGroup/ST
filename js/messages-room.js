@@ -6,6 +6,7 @@
      JRRoom.open({ thread, user, role })  draw header + banner for a thread
      JRRoom.refresh()                     redraw after the thread's data changed
      JRRoom.statusFor(thread, role)       { key, label } for the status pill
+     JRRoom.current()                     { thread, user, role } of the open room
 
    Data (all best-effort; a blocked query just leaves that part blank):
      users            name, avatar_url, is_verified
@@ -89,7 +90,7 @@
     return { key: 'inquiry', label: '', job: job };
   }
 
-  function bannerText(st, role, amount) {
+  function bannerText(st, role, amount, held) {
     var isCustomer = role === 'customer';
     var amt = amount ? naira(amount) : '';
     switch (st.key) {
@@ -98,7 +99,7 @@
           ? (amt ? amt + ' requested. Pay securely through StreetTasker SafePay.' : 'Payment requested. Pay securely through StreetTasker SafePay.')
           : 'Waiting for the customer to pay' + (amt ? ' ' + amt : '') + '.';
       case 'secured':
-        return (amt ? 'SafePay is holding ' + amt + ' ' : 'SafePay is holding the payment ') + 'until the work is signed off.';
+        return (held ? 'SafePay is holding ' + naira(held) + ' ' : (amt ? 'SafePay is holding ' + amt + ' ' : 'SafePay is holding the payment ')) + 'until the work is signed off.';
       case 'awaiting_confirmation':
         return isCustomer ? 'Review the work, then release payment.' : 'Waiting for the customer to confirm the work is done.';
       case 'completed': return 'This task is complete.';
@@ -221,6 +222,12 @@
     var st = statusFor(t, ctx.role);
     var title = (task && task.title) || t._title || '';
     var amount = (st.job && st.job.amount) || t.agreed_price || 0;
+    var held = 0;
+    if (window.JRMoney) {
+      var sm = window.JRMoney.summary(t);
+      if (sm.total > 0) amount = sm.total;          /* agreed + approved extras */
+      held = sm.paid;
+    }
 
     host.textContent = '';
     if (!title && st.key === 'inquiry') { host.hidden = true; return; }
@@ -231,7 +238,7 @@
 
     var main = el('div', 'jr-banner-main');
     main.appendChild(el('div', 'jr-banner-title', title || 'Task discussion'));
-    main.appendChild(el('div', 'jr-banner-text', bannerText(st, ctx.role, amount)));
+    main.appendChild(el('div', 'jr-banner-text', bannerText(st, ctx.role, amount, held)));
     if (task && task.location) {
       var loc = el('div', 'jr-banner-meta');
       loc.appendChild(svgSpan('jr-banner-pin', ICON_PIN));
@@ -338,6 +345,6 @@
     if (window.JRRequests) window.JRRequests.update(current);
   }
 
-  window.JRRoom = { open: open, refresh: refresh, statusFor: statusFor };
+  window.JRRoom = { open: open, refresh: refresh, statusFor: statusFor, current: function () { return current; } };
 
 })();
