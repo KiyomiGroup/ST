@@ -17,10 +17,14 @@
     <defs>
       <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
       <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
       <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
       <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
       <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     </defs>
   </svg>
 
@@ -43,9 +47,38 @@
 
       <div class="bk-layout" id="bkLayout">
         <div class="bk-main">
+          <div class="bk-tabs" role="group" aria-label="Filter by status" id="bkTabs">
+            <button type="button" class="bk-tab" data-filter="all" aria-pressed="true">All <span class="bk-tab-n" data-count="all"></span></button>
+            <button type="button" class="bk-tab" data-filter="pending" aria-pressed="false">Pending <span class="bk-tab-n" data-count="pending"></span></button>
+            <button type="button" class="bk-tab" data-filter="progress" aria-pressed="false">In Progress <span class="bk-tab-n" data-count="progress"></span></button>
+            <button type="button" class="bk-tab" data-filter="signoff" aria-pressed="false">Sign-Off <span class="bk-tab-n" data-count="signoff"></span></button>
+            <button type="button" class="bk-tab" data-filter="completed" aria-pressed="false">Completed <span class="bk-tab-n" data-count="completed"></span></button>
+            <button type="button" class="bk-tab" data-filter="cancelled" aria-pressed="false">Cancelled <span class="bk-tab-n" data-count="cancelled"></span></button>
+          </div>
+
+          <div class="bk-toolbar">
+            <label class="bk-search">
+              <svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>
+              <input type="search" class="bk-input" id="bkSearch" placeholder="Search by job, customer or booking ID…" aria-label="Search bookings" />
+            </label>
+            <select class="bk-select" id="bkCategory" aria-label="Filter by service"><option value="">All Services</option></select>
+            <select class="bk-select" id="bkRange" aria-label="Filter by date">
+              <option value="all">All Time</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+            </select>
+            <select class="bk-select" id="bkSort" aria-label="Sort bookings">
+              <option value="recent">Most Recent</option>
+              <option value="oldest">Oldest First</option>
+              <option value="amount">Highest Amount</option>
+              <option value="upcoming">Soonest Scheduled</option>
+            </select>
+          </div>
+
           <div class="bk-list" id="bkList" aria-live="polite" aria-busy="true">
             <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>
           </div>
+          <button type="button" class="bk-btn bk-more" id="bkMore" hidden>Load More Bookings</button>
         </div>
       </div>
 
