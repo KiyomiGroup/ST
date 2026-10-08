@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bookings — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/bookings.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="bk-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="bk-page" id="bookingsPage">
+    <div class="bk-container">
+
+      <header class="bk-header">
+        <div>
+          <div class="bk-title-row">
+            <h1 class="bk-title">Bookings</h1>
+            <span class="bk-count" id="bkTotal" hidden></span>
+          </div>
+          <p class="bk-lede">Track incoming job requests, active work and your escrow payouts.</p>
+        </div>
+        <div class="bk-header-actions">
+          <a class="bk-btn" href="find-tasks.html"><svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>Browse Open Tasks</a>
+          <a class="bk-btn bk-btn-primary" href="post-service.html"><svg class="bk-i" aria-hidden="true"><use href="#i-plus"/></svg>Post a Service</a>
+        </div>
+      </header>
+
+      <div class="bk-layout" id="bkLayout">
+        <div class="bk-main">
+          <div class="bk-list" id="bkList" aria-live="polite" aria-busy="true">
+            <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/bookings.js"></script>
+</body>
+</html>

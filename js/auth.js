@@ -163,6 +163,8 @@ function _highlightActivePillItem() {
     'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
     'home-feed.html':          { '': ['np-home', 'npc-home'] },
     'find-tasks.html':         { '': 'np-find-tasks' },
+    'applications.html':       { '': 'np-applications' },
+    'bookings.html':           { '': 'np-bookings' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
     'messages.html':           { '': ['np-messages', 'npc-messages'] },

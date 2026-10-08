@@ -243,6 +243,58 @@ async function updateApplicationStatus(applicationId, status) {
   return data;
 }
 
+/* Tasker edits a still-pending proposal (pitch text and proposed rate).
+   Stored in the same "<pitch> | Proposed rate: ₦N" format the customer views parse. */
+async function updateMyApplication(applicationId, { message, rate }) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to edit your offer.');
+  const amount = Math.round(Number(rate));
+  if (!amount || amount <= 0) throw new Error('Enter a valid offer amount.');
+  const pitch = String(message || '').replace(/\|\s*Proposed rate:.*$/i, '').trim();
+  const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG');
+  const { data, error } = await window.supabase.from('task_applications')
+    .update({ message: stored })
+    .eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending')
+    .select('id, task_id, message').maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('This application can no longer be edited.');
+  try {
+    const { data: task } = await window.supabase.from('tasks')
+      .select('user_id, customer_id, title').eq('id', data.task_id).single();
+    const ownerId = task?.customer_id || task?.user_id;
+    if (ownerId) await _insertNotification({
+      userId: ownerId, type: 'task_application', title: 'Offer Updated',
+      message: `A tasker updated their offer for "${task.title}"`,
+      data: { task_id: data.task_id, application_id: data.id, tasker_id: user.id },
+    });
+  } catch(e) { /* silent */ }
+  return data;
+}
+
+/* Tasker withdraws a still-pending proposal. */
+async function withdrawMyApplication(applicationId) {
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Log in to withdraw your application.');
+  const { data: app } = await window.supabase.from('task_applications')
+    .select('id, task_id, status').eq('id', applicationId).eq('tasker_id', user.id).maybeSingle();
+  if (!app) throw new Error('Application not found.');
+  if (app.status !== 'pending') throw new Error('Only pending applications can be withdrawn.');
+  const { error } = await window.supabase.from('task_applications')
+    .delete().eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending');
+  if (error) throw error;
+  try {
+    const { data: task } = await window.supabase.from('tasks')
+      .select('user_id, customer_id, title').eq('id', app.task_id).single();
+    const ownerId = task?.customer_id || task?.user_id;
+    if (ownerId) await _insertNotification({
+      userId: ownerId, type: 'task_application', title: 'Application Withdrawn',
+      message: `A tasker withdrew their application for "${task.title}"`,
+      data: { task_id: app.task_id, tasker_id: user.id },
+    });
+  } catch(e) { /* silent */ }
+  return true;
+}
+
 /* ── Notifications ──────────────────────────────────────────── */
 
 async function _insertNotification({ userId, type, title, message, data = {} }) {
