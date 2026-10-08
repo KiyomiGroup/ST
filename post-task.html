@@ -406,7 +406,7 @@
         <h2 style="margin-bottom:8px;">Task saved — verify to post</h2>
         <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a id="verifyToPostBtn" href="verify.html?role=customer&return=dashboard-customer.html%3Fpanel%3Dmy-tasks" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
+          <a id="verifyToPostBtn" href="verify.html?role=customer&return=my-tasks.html" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
           <button class="btn btn-ghost" onclick="saveDraftTask()">Save as Draft — Verify Later</button>
         </div>
       </div>
@@ -415,7 +415,7 @@
         <h2>Task is live!</h2>
         <p>Your task "<span data-task-title></span>" is now live. Taskers will apply shortly.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="closeTaskModal();window.location.href='dashboard-customer.html?panel=my-tasks'">Go to Dashboard</button>
+          <button class="btn btn-primary" onclick="closeTaskModal();window.location.href='my-tasks.html'">Go to Dashboard</button>
           <button class="btn btn-outline" onclick="closeTaskModal()">Post Another</button>
         </div>
       </div>

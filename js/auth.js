@@ -86,7 +86,7 @@ function _applyNavState(loggedIn, role, name) {
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
-    setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
+    setHref('navIconPending',  isTasker ? panelUrl('bookings') : 'my-tasks.html');
     setHref('navIconMessages', 'messages.html');
     setHref('navBellBtn',      panelUrl('notifications'));
     setHref('navMenuSettings', panelUrl('profile'));
@@ -160,11 +160,12 @@ function _highlightActivePillItem() {
   /* Match by page + panel */
   const map = {
     'dashboard-tasker.html':   { '': 'np-overview',      'applications': 'np-applications', 'bookings': 'np-bookings', 'messages': 'np-messages', 'wallet': 'np-wallet' },
-    'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
+    'dashboard-customer.html': { '': 'npc-overview',     'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
     'home-feed.html':          { '': ['np-home', 'npc-home'] },
     'find-tasks.html':         { '': 'np-find-tasks' },
     'applications.html':       { '': 'np-applications' },
     'customer-applications.html': { '': 'npc-applications' },
+    'my-tasks.html':           { '': 'npc-tasks' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
     'messages.html':           { '': ['np-messages', 'npc-messages'] },

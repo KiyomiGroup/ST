@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Tasks — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/applications.css" />
+  <link rel="stylesheet" href="css/my-tasks.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="ap-page" id="myTasksPage">
+    <div class="ap-container">
+
+      <header class="ap-header">
+        <div>
+          <div class="ap-title-row">
+            <h1 class="ap-title">My Tasks</h1>
+            <span class="ap-count" id="mtTotal" hidden></span>
+          </div>
+          <p class="ap-lede">Manage your postings, review offers from taskers, follow active jobs and keep every payment protected by escrow.</p>
+        </div>
+        <a href="post-task.html" class="ap-btn ap-btn-primary">Post a New Task</a>
+      </header>
+
+      <div class="ap-layout has-side" id="mtLayout">
+        <div class="ap-main">
+          <div class="ap-tabs" role="group" aria-label="Filter by status" id="mtTabs">
+            <button type="button" class="ap-tab" data-filter="all" aria-pressed="true">All Tasks <span class="ap-tab-n" data-count="all"></span></button>
+            <button type="button" class="ap-tab" data-filter="open" aria-pressed="false">Open for Offers <span class="ap-tab-n" data-count="open"></span></button>
+            <button type="button" class="ap-tab" data-filter="progress" aria-pressed="false">In Progress <span class="ap-tab-n" data-count="progress"></span></button>
+            <button type="button" class="ap-tab" data-filter="completed" aria-pressed="false">Completed <span class="ap-tab-n" data-count="completed"></span></button>
+          </div>
+
+          <div class="ap-toolbar">
+            <label class="ap-search">
+              <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
+              <input type="search" class="ap-input" id="mtSearch" placeholder="Search by title, category, location or tasker…" aria-label="Search your tasks" />
+            </label>
+            <select class="ap-select" id="mtCategory" aria-label="Filter by category"><option value="">All Categories</option></select>
+            <select class="ap-select" id="mtSort" aria-label="Sort tasks">
+              <option value="recent">Recently Posted</option>
+              <option value="oldest">Oldest First</option>
+              <option value="budget-high">Budget: High to Low</option>
+              <option value="budget-low">Budget: Low to High</option>
+            </select>
+          </div>
+
+          <div class="ap-list" id="mtList" aria-live="polite" aria-busy="true">
+            <div class="ap-state"><p class="ap-state-text">Loading your tasks…</p></div>
+          </div>
+          <button type="button" class="ap-btn ap-more" id="mtMore" hidden>Load More Tasks</button>
+
+          <section class="ap-mobile-only ap-note-card">
+            <span class="ap-cta-icon is-solid"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <div><strong>Escrow Protected</strong>
+            <p>Your payment is held safely and released to the tasker only after you confirm the job is done. Never pay cash upfront.</p></div>
+          </section>
+        </div>
+
+        <aside class="ap-side" aria-label="Payment protection">
+          <section class="ap-escrow">
+            <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protection</h2>
+            <p>Your payment is held in escrow and released to the tasker only after you confirm the job is done. Never pay cash upfront outside the app.</p>
+            <div class="mt-held" id="mtHeldWrap" hidden>
+              <span class="mt-held-label">Currently held for you</span>
+              <span class="mt-held-value" id="mtHeld"></span>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <dialog class="ap-dialog" id="mtCloseDlg" aria-labelledby="mtClTitle">
+    <div class="ap-dialog-body">
+      <h2 class="ap-dialog-title" id="mtClTitle">Close this post?</h2>
+      <p class="ap-state-text" id="mtClText"></p>
+      <p class="ap-error" id="mtClError" role="alert" hidden></p>
+      <div class="ap-actions ap-dialog-actions">
+        <button type="button" class="ap-btn" data-close>Keep It Open</button>
+        <button type="button" class="ap-btn ap-btn-danger" id="mtClConfirm">Close Post</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/my-tasks.js"></script>
+</body>
+</html>

@@ -403,7 +403,7 @@
               <h2 id="hfMyTasksTitle">Your active tasks</h2>
               <p class="hf-sec-sub">Tasks you've posted that are still in progress</p>
             </div>
-            <a href="dashboard-customer.html?panel=my-tasks">My tasks <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+            <a href="my-tasks.html">My tasks <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
           </div>
           <div class="hf-task-list" id="hfMyTasksList">
             <div class="hf-task hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div></div>
@@ -872,7 +872,7 @@
         const active = (tasks || []).filter(t => !done.includes(String(t.status || '').toLowerCase())).slice(0, 3);
         if (!active.length) { el.innerHTML = none; return; }
         el.innerHTML = active.map(t =>
-          '<a class="hf-task" href="dashboard-customer.html?panel=my-tasks">'
+          '<a class="hf-task" href="my-tasks.html">'
           + '<div class="hf-task-main">'
           + (t.category ? '<span class="hf-task-cat">' + escapeHtml(t.category) + '</span>' : '')
           + '<div class="hf-task-title">' + escapeHtml(t.title || 'Task') + '</div>'

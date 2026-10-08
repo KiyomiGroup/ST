@@ -97,7 +97,13 @@
         pitch: msg.pitch, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
       };
     });
-    buildTaskOptions(); render();
+    buildTaskOptions();
+    /* Arriving from My Tasks (?task=<id>): show only that task's applications */
+    var wanted = new URLSearchParams(window.location.search).get('task');
+    if (wanted && state.apps.some(function (a) { return String(a.task.id) === wanted; })) {
+      state.task = wanted; $('apTask').value = wanted;
+    }
+    render();
   }
 
   /* ── Render ───────────────────────────────────────────── */
