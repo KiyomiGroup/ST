@@ -46,7 +46,7 @@
 
 /* TESTING: swap to pk_test_... and your test secret key while testing
    LIVE:    pk_live_cd782742c439571c4b3773383f7cda0c36166c62 */
-const PAYSTACK_PUBLIC_KEY = 'pk_test_84c8ce3a6ce36d6db3b15de1dc2e569424d4ca98';
+const PAYSTACK_PUBLIC_KEY = 'pk_live_cd782742c439571c4b3773383f7cda0c36166c62';
 const PLATFORM_COMMISSION = 0.12;
 
 /* ── Commission calculator ───────────────────────────────────── */
@@ -475,14 +475,24 @@ async function markJobDone(bookingId) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
 
-  await window.supabase.from('bookings')
-    .update({ status: 'awaiting_confirmation' })
+  var { data: bk } = await window.supabase.from('bookings')
+    .select('customer_id, status, payment_status').eq('id', bookingId).maybeSingle();
+  if (!bk) throw new Error('Booking not found.');
+  if (bk.payment_status !== 'paid') throw new Error('The customer has not paid into escrow yet.');
+  if (['provider_done', 'awaiting_code', 'awaiting_confirmation', 'completed', 'cancelled', 'disputed'].indexOf(bk.status) !== -1) {
+    throw new Error('This job can\u2019t be marked as done right now.');
+  }
+
+  /* provider_done = tasker says done, waiting for the customer.
+     The customer's confirmation (confirmJobComplete) then sets awaiting_confirmation,
+     which is the tasker's cue to enter the 6-digit code. */
+  var { error: upErr } = await window.supabase.from('bookings')
+    .update({ status: 'provider_done' })
     .eq('id', bookingId);
+  if (upErr) throw upErr;
 
   /* Notify customer */
-  var { data: bk } = await window.supabase.from('bookings')
-    .select('customer_id').eq('id', bookingId).maybeSingle();
-  if (bk && bk.customer_id) {
+  if (bk.customer_id) {
     await window.supabase.from('notifications').insert({
       user_id: bk.customer_id, type: 'job_done',
       title: '✅ Job Marked Complete',

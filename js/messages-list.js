@@ -97,7 +97,7 @@
        disputed              booking.status = disputed
        completed             booking completed / payment released
        cancelled             booking cancelled
-       awaiting_confirmation booking.status = awaiting_confirmation
+       awaiting_confirmation booking.status = awaiting_confirmation or provider_done
        secured               booking paid, or latest payment request paid
        payment_pending       latest payment request pending / accepted
        inquiry               none of the above (just talking)           */
@@ -109,7 +109,7 @@
     if (bk && bk.status === 'disputed') key = 'disputed';
     else if (bk && (bk.status === 'completed' || bk.payment_status === 'released')) key = 'completed';
     else if (bk && bk.status === 'cancelled') key = 'cancelled';
-    else if (bk && bk.status === 'awaiting_confirmation') key = 'awaiting_confirmation';
+    else if (bk && (bk.status === 'awaiting_confirmation' || bk.status === 'provider_done')) key = 'awaiting_confirmation';
     else if ((bk && bk.payment_status === 'paid') || (pr && pr.status === 'paid')) key = 'secured';
     else if (pr && (pr.status === 'pending' || pr.status === 'accepted')) key = 'payment_pending';
 

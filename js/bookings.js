@@ -5,7 +5,9 @@
             service details, map each booking onto a tab group and a label.
    Stage 2: tabs with counts, search, service / date / sort filters, load more,
             full booking cards.
-   Stage 3: actions (Confirm, Decline, Message, Mark Done, Enter Code).
+   Stage 3: actions: Confirm, Decline, Message Customer, Mark Job Done, Enter Code.
+            Mark Done now sets status provider_done (waiting on the customer);
+            the customer's confirmation sets awaiting_confirmation (enter the code).
    Stage 4: sidebar.  Stage 5: mobile + accessibility.
 
    Data: bookings where tasker_id = the signed-in user. completion_code is
@@ -24,6 +26,7 @@
   var icon = function (id) { return '<svg class="bk-i" aria-hidden="true"><use href="#i-' + id + '"/></svg>'; };
   var naira = function (n) { return '\u20A6' + Number(n || 0).toLocaleString('en-NG'); };
 
+  var MAX_CODE_TRIES = 3; /* mirrors the limit in ST.payments.submitCompletionCode */
   var SIGNOFF = ['provider_done', 'awaiting_code', 'awaiting_confirmation'];
 
   /* Which tab a booking belongs to:
@@ -169,6 +172,7 @@
         amount: Number(b.amount) || 0,
         budget: Number(t.budget) || 0,
         note: b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : '',
+        customerId: b.customer_id || '',
         taskId: t.id || '',
         created: b.created_at,
         scheduled: when,
@@ -259,7 +263,11 @@
       case 'progress':  return paid
         ? { tone: '', text: 'Payment is secured in escrow. Complete the job, then mark it as done.' }
         : { tone: 'warn', text: 'Waiting for the customer to pay into escrow. Don\u2019t start work until payment is secured.' };
-      case 'signoff':   return { tone: 'warn', text: 'Waiting for the customer to sign off. Once they confirm, enter their 6-digit code to receive your payment.' };
+      case 'signoff':   return (v.raw.status !== 'provider_done' && (Number(v.raw.code_attempts) || 0) >= MAX_CODE_TRIES)
+        ? { tone: 'danger', text: 'Too many incorrect code attempts. Please contact support to release this payment.' }
+        : v.raw.status === 'provider_done'
+        ? { tone: 'warn', text: 'You marked this job as done. Waiting for the customer to confirm it.' }
+        : { tone: '', text: 'The customer confirmed the job. Ask them for their 6-digit code and enter it to receive your payment.' };
       case 'completed': return { tone: 'muted', text: 'Job complete. Your payout has been released to your wallet.' };
       default:          return { tone: 'muted', text: 'This booking was cancelled.' };
     }
@@ -280,13 +288,34 @@
       '<div><div class="bk-fig-label">' + (earned ? 'You Earned' : 'You Receive') + '</div><div class="bk-fig-value is-green">' + naira(p.net) + '</div></div></div>';
   }
 
+  /* Buttons for a booking, depending on where it is in the job */
+  function actions(v) {
+    var id = esc(v.id), st = v.raw.status || 'pending', paid = v.raw.payment_status === 'paid';
+    var msg = '<button type="button" class="bk-btn" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Customer</button>';
+    if (v.group === 'pending') {
+      return '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Confirm Booking</button>' +
+        (paid ? '' : '<button type="button" class="bk-btn bk-btn-quiet" data-act="decline" data-id="' + id + '">Decline</button>');
+    }
+    if (v.disputed) return msg;
+    if (v.group === 'progress') {
+      return (paid ? '<button type="button" class="bk-btn bk-btn-primary" data-act="done" data-id="' + id + '">' + icon('check') + 'Mark Job as Done</button>' : '') + msg;
+    }
+    if (v.group === 'signoff') {
+      if (st === 'provider_done') return '<button type="button" class="bk-btn bk-btn-primary" disabled>Awaiting Customer Sign-Off</button>' + msg;
+      var left = Math.max(0, MAX_CODE_TRIES - (Number(v.raw.code_attempts) || 0));
+      if (!left) return '<button type="button" class="bk-btn bk-btn-primary" disabled>Code Locked</button>' + msg;
+      return '<button type="button" class="bk-btn bk-btn-primary" data-act="code" data-id="' + id + '">' + icon('lock') + 'Enter Completion Code</button>' + msg;
+    }
+    return '';
+  }
+
   function card(v) {
     var shown = v.amount || v.budget;
     var when = v.when
       ? '<span class="bk-meta">' + icon('calendar') + esc(v.when) + '</span>'
       : '<span class="bk-meta">' + icon('clock') + 'Requested ' + esc(ago(v.created)) + '</span>';
     var h = hint(v);
-    var links = '';
+    var links = actions(v);
     if (v.taskId) links += '<a class="bk-btn bk-btn-text" href="find-tasks.html?task=' + encodeURIComponent(v.taskId) + '">View Task Details' + icon('arrow-right') + '</a>';
     if (v.group === 'completed') links += '<a class="bk-btn bk-btn-text" href="wallet.html">' + icon('wallet') + 'View in Wallet</a>';
 
@@ -348,6 +377,128 @@
     render();
   }
 
+  /* ── Actions ──────────────────────────────────────────── */
+  var current = null; /* the booking an open dialog is about */
+  var toast = function (m) { if (window.showToast) window.showToast(m); };
+  var find = function (id) { return state.rows.filter(function (v) { return String(v.id) === String(id); })[0]; };
+
+  /* Apply a change to a booking and redraw its tab, counts and card */
+  function patch(v, changes) {
+    Object.assign(v.raw, changes);
+    v.group = group(v.raw); v.disputed = isDisputed(v.raw); v.label = label(v.raw);
+    render();
+  }
+
+  async function notify(userId, type, title, message, bookingId) {
+    if (!userId) return;
+    try {
+      await window.supabase.from('notifications').insert({
+        user_id: userId, type: type, title: title, message: message, data: { booking_id: bookingId }, is_read: false
+      });
+    } catch (e) { /* notifications are best effort */ }
+  }
+
+  function showError(el, msg) { el.textContent = msg; el.hidden = !msg; }
+
+  async function setStatus(v, from, to) {
+    var r = await window.supabase.from('bookings').update({ status: to }).eq('id', v.id).eq('status', from).select('id').maybeSingle();
+    if (r.error) throw r.error;
+    if (!r.data) throw new Error('This booking was just updated somewhere else. Refresh the page and try again.');
+  }
+
+  async function doConfirm(v, btn) {
+    btn.disabled = true;
+    try {
+      await setStatus(v, 'pending', 'confirmed');
+      await notify(v.customerId, 'booking_confirmed', 'Booking Confirmed \u2705', 'Your booking has been confirmed by the service provider.', v.id);
+      patch(v, { status: 'confirmed' });
+      toast('Booking confirmed. The customer has been notified.');
+    } catch (e) { btn.disabled = false; toast(e.message || 'Could not confirm this booking.'); }
+  }
+
+  function openDialog(id, v, textId, text) {
+    current = v;
+    if (textId) $(textId).textContent = text;
+    $(id).showModal();
+  }
+
+  async function doDecline() {
+    var v = current, btn = $('bkDeclineGo'); if (!v) return;
+    btn.disabled = true; showError($('bkDeclineError'), '');
+    try {
+      await setStatus(v, 'pending', 'cancelled');
+      await notify(v.customerId, 'booking_declined', 'Booking Declined', 'The service provider can\u2019t take this booking. You have not been charged.', v.id);
+      $('bkDeclineDlg').close();
+      patch(v, { status: 'cancelled' });
+      toast('Booking declined.');
+    } catch (e) { showError($('bkDeclineError'), e.message || 'Could not decline this booking.'); }
+    btn.disabled = false;
+  }
+
+  async function doDone() {
+    var v = current, btn = $('bkDoneGo'); if (!v) return;
+    btn.disabled = true; showError($('bkDoneError'), '');
+    try {
+      await window.ST.payments.markJobDone(v.id);
+      $('bkDoneDlg').close();
+      patch(v, { status: 'provider_done' });
+      toast('Job marked as done. The customer has been asked to confirm.');
+    } catch (e) { showError($('bkDoneError'), e.message || 'Could not mark this job as done.'); }
+    btn.disabled = false;
+  }
+
+  function openCode(v) {
+    current = v;
+    var left = Math.max(0, MAX_CODE_TRIES - (Number(v.raw.code_attempts) || 0));
+    $('bkCodeInput').value = ''; showError($('bkCodeError'), '');
+    $('bkCodeText').textContent = 'The customer gives you a 6-digit code after confirming the job is done. Enter it to release your payment to your wallet. ' +
+      left + (left === 1 ? ' attempt' : ' attempts') + ' left.';
+    $('bkCodeDlg').showModal();
+    $('bkCodeInput').focus();
+  }
+
+  async function doCode(e) {
+    e.preventDefault();
+    var v = current, btn = $('bkCodeGo'), input = $('bkCodeInput'); if (!v) return;
+    var code = input.value.replace(/\s/g, '');
+    if (!/^\d{6}$/.test(code)) { showError($('bkCodeError'), 'Enter the 6-digit code.'); return; }
+    btn.disabled = true; btn.textContent = 'Verifying\u2026'; showError($('bkCodeError'), '');
+    try {
+      await window.ST.payments.submitCompletionCode(v.id, code);
+      $('bkCodeDlg').close();
+      patch(v, { status: 'completed', payment_status: 'released' });
+      toast('Payment released to your wallet.');
+    } catch (err) {
+      var m = err && err.message ? err.message : 'Could not verify the code.';
+      showError($('bkCodeError'), m);
+      if (/^Incorrect code/.test(m)) { v.raw.code_attempts = (Number(v.raw.code_attempts) || 0) + 1; render(); }
+    }
+    btn.disabled = false; btn.textContent = 'Claim Payment';
+  }
+
+  /* Open the booking's chat on the Messages page */
+  function openChat(v) {
+    try {
+      sessionStorage.setItem('st_chat_context', JSON.stringify({
+        contextType: 'booking', contextId: v.id, taskerId: state.user.id, customerId: v.customerId, senderRole: 'tasker'
+      }));
+    } catch (e) { /* storage blocked: Messages still opens */ }
+    window.location.href = 'messages.html';
+  }
+
+  function onAction(btn) {
+    var v = find(btn.dataset.id); if (!v) return;
+    switch (btn.dataset.act) {
+      case 'confirm': doConfirm(v, btn); break;
+      case 'decline': showError($('bkDeclineError'), ''); openDialog('bkDeclineDlg', v, 'bkDeclineText',
+        'Decline \u201C' + v.title + '\u201D from ' + v.customer + '? They will be told you can\u2019t take it, and they have not been charged.'); break;
+      case 'done':    showError($('bkDoneError'), ''); openDialog('bkDoneDlg', v, 'bkDoneText',
+        'The customer will be asked to confirm the job is complete. Once they do, you enter their 6-digit code to receive ' + naira(payout(v.amount).net) + ' in your wallet.'); break;
+      case 'code':    openCode(v); break;
+      case 'message': openChat(v); break;
+    }
+  }
+
   /* ── Events ───────────────────────────────────────────── */
   $('bkTabs').addEventListener('click', function (e) {
     var btn = e.target.closest('.bk-tab');
@@ -365,6 +516,8 @@
   $('bkSort').addEventListener('change', function (e) { state.sort = e.target.value; state.shown = PAGE_SIZE; render(); });
   $('bkMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });
   $('bkList').addEventListener('click', function (e) {
+    var act = e.target.closest('[data-act]');
+    if (act) onAction(act);
     if (e.target.closest('#bkClear')) resetFilters();
     if (e.target.closest('#bkRetry')) {
       $('bkList').setAttribute('aria-busy', 'true');
@@ -372,6 +525,13 @@
       start();
     }
   });
+  document.querySelectorAll('.bk-dialog').forEach(function (dlg) {
+    dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
+  });
+  $('bkDeclineGo').addEventListener('click', doDecline);
+  $('bkDoneGo').addEventListener('click', doDone);
+  $('bkCodeForm').addEventListener('submit', doCode);
+  $('bkCodeInput').addEventListener('input', function (e) { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
   /* A customer photo that fails to load falls back to initials */
   $('bkList').addEventListener('error', function (e) {
     var img = e.target;
