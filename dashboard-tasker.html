@@ -9,6 +9,10 @@
       if (q.get('panel') === 'messages' || window.location.hash === '#messages' || sessionStorage.getItem('st_chat_context')) {
         window.location.replace('messages.html');
       }
+      /* Applications moved to their own page too (applications.html). */
+      if (q.get('panel') === 'applications' || window.location.hash === '#my-applications') {
+        window.location.replace('applications.html');
+      }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -1535,6 +1539,7 @@ function openMessagesPanel() {
       }
       /* The wallet is its own page now (wallet.html). Old ?panel=wallet links and bookmarks land there. */
       if (startHash === 'wallet') { window.location.replace('wallet.html'); }
+      if (startHash === 'my-applications') { window.location.replace('applications.html'); }
       var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','messages'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));

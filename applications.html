@@ -67,10 +67,22 @@
             </select>
           </div>
 
-          <div class="ap-list" id="apList" aria-live="polite">
+          <div class="ap-list" id="apList" aria-live="polite" aria-busy="true">
             <div class="ap-state"><p class="ap-state-text">Loading your applications…</p></div>
           </div>
           <button type="button" class="ap-btn ap-more" id="apMore" hidden>Load More Applications</button>
+
+          <section class="ap-mobile-only ap-cta">
+            <span class="ap-cta-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg></span>
+            <h2 class="ap-state-title">Looking for more jobs?</h2>
+            <p class="ap-state-text">New tasks are posted every day. Send a proposal early to stand out.</p>
+            <a class="ap-btn ap-btn-block" href="find-tasks.html">Browse Open Tasks</a>
+          </section>
+          <section class="ap-mobile-only ap-note-card">
+            <span class="ap-cta-icon is-solid"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <div><strong>100% Escrow Protected</strong>
+            <p>Funds are held safely and released only when the customer approves your completed work. Never accept off-platform cash.</p></div>
+          </section>
         </div>
 
         <aside class="ap-side" aria-label="Application summary">

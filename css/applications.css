@@ -5,9 +5,9 @@
    (same visual language as wallet.html and post-task.html). No new tokens.
 
    STAGES
-   1. Shell, header, tabs, toolbar, application cards .... this file, done
-   2. Sidebar (metrics, tips, escrow, support) + actions .. next
-   3. Mobile pass ........................................ next
+   1. Shell, header, tabs, toolbar, application cards .... done
+   2. Sidebar (metrics, tips, escrow, support) + dialogs .. done
+   3. Mobile pass, accessibility ............................ done
    ============================================================ */
 
 .ap-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
@@ -139,11 +139,103 @@
 .ap-state-text { margin: var(--space-2) auto var(--space-4); max-width: 420px; font-size: var(--text-sm); color: var(--pt-ink-muted); }
 .ap-more { align-self: center; }
 
-/* Basic stacking so the page never breaks on phones (full mobile pass is Stage 3) */
+
+/* ── Sidebar (Stage 2) ───────────────────────────────────── */
+.ap-side { display: flex; flex-direction: column; gap: var(--space-4); position: sticky; top: calc(var(--nav-height) + var(--space-4)); }
+.ap-panel { padding: var(--space-5); border-radius: var(--radius-card); background: var(--color-bg); box-shadow: var(--shadow-pt-card); }
+.ap-panel-title { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; letter-spacing: -0.02em; margin-bottom: var(--space-4); }
+.ap-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.ap-stat, .ap-stat-wide { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); }
+.ap-stat-wide { margin-top: var(--space-3); gap: var(--space-3); }
+.ap-stat-label { display: block; font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.ap-stat-value { display: block; font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 800; letter-spacing: -0.025em; }
+.ap-stat-value.is-green { color: var(--pt-green); }
+.ap-stat-sub { font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.ap-stat-row { display: flex; justify-content: space-between; gap: var(--space-3); }
+.ap-stat-row .is-end { text-align: right; }
+.ap-bar { display: flex; height: 8px; border-radius: var(--radius-pill); overflow: hidden; background: var(--pt-field-strong); }
+.ap-bar span { display: block; height: 100%; }
+.ap-bar .is-pending { background: var(--pt-field-icon); }
+.ap-bar .is-active { background: var(--pt-mint); }
+.ap-bar .is-done { background: var(--pt-green); }
+.ap-wallet { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-3); padding: var(--space-3); border-radius: var(--radius-pill); background: var(--pt-field); }
+.ap-wallet-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); }
+.ap-wallet-body { flex: 1; min-width: 0; }
+.ap-wallet-amt { display: block; font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; }
+.ap-tips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.ap-tips li { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.ap-tips strong { font-family: var(--font-heading); color: var(--pt-ink); }
+.ap-escrow { padding: var(--space-5); border-radius: var(--radius-card); background: var(--pt-green); color: var(--color-text-on-primary); }
+.ap-escrow p { font-size: var(--text-sm); line-height: 22px; }
+.ap-help { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.ap-help strong { display: block; font-family: var(--font-heading); font-size: var(--text-sm); }
+
+/* ── Card extras ─────────────────────────────────────────── */
+.ap-btn-text { background: transparent; color: var(--pt-green); padding: 0 var(--space-3); }
+.ap-btn-text:hover { background: var(--pt-mint-soft); }
+.ap-btn-quiet { margin-left: auto; background: transparent; color: var(--pt-ink-muted); font-weight: 500; }
+.ap-btn-danger { background: var(--color-danger); color: var(--color-text-on-primary); }
+.ap-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+.ap-escrow-line { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--pt-green); }
+.ap-card.is-removing { opacity: 0.4; pointer-events: none; }
+
+/* ── Dialogs ─────────────────────────────────────────────── */
+.ap-dialog { width: min(480px, calc(100% - 2 * var(--space-4))); padding: 0; border: 0; border-radius: var(--radius-card); background: var(--color-bg); color: var(--pt-ink); box-shadow: var(--shadow-pt-card); }
+.ap-dialog::backdrop { background: color-mix(in srgb, var(--pt-ink) 45%, transparent); }
+.ap-dialog-body { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: var(--space-6); }
+.ap-dialog-title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; letter-spacing: -0.02em; }
+.ap-dialog-actions { justify-content: flex-end; }
+.ap-field { display: flex; flex-direction: column; gap: var(--space-2); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; }
+.ap-input-plain { padding: 0 var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); box-shadow: none; font-family: var(--font-body); font-weight: 400; }
+.ap-textarea { height: auto; padding: var(--space-3) var(--space-4); resize: vertical; }
+.ap-error { font-size: var(--text-sm); color: var(--color-danger); }
+
+@media (max-width: 1024px) { .ap-layout.has-side { grid-template-columns: minmax(0, 1fr); } .ap-side { position: static; } }
+
+.ap-figures > div:empty { display: none; }
+.ap-mobile-only { display: none; }
+.ap-btn-block { width: 100%; }
+.ap-cta, .ap-note-card { padding: var(--space-5); border-radius: var(--radius-card); background: var(--pt-field); }
+.ap-cta { text-align: center; }
+.ap-cta-icon { display: inline-grid; place-items: center; width: 48px; height: 48px; margin-bottom: var(--space-3); border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); }
+.ap-cta-icon.is-solid { background: var(--pt-green); color: var(--color-text-on-primary); margin: 0; flex-shrink: 0; }
+.ap-note-card { display: flex; gap: var(--space-4); align-items: flex-start; }
+.ap-note-card strong { font-family: var(--font-heading); font-size: var(--text-sm); }
+.ap-note-card p { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 20px; color: var(--pt-ink-muted); }
+
+/* ── Mobile (matches the mobile design) ──────────────────── */
 @media (max-width: 768px) {
   .ap-page { padding-top: calc(var(--nav-height) + var(--space-4)); }
   .ap-container { width: calc(100% - 2 * var(--space-4)); }
   .ap-layout.has-side { grid-template-columns: minmax(0, 1fr); }
-  .ap-figures { grid-template-columns: minmax(0, 1fr); }
-  .ap-header { flex-direction: column; align-items: flex-start; }
+  .ap-side { display: none; }
+  .ap-mobile-only { display: block; }
+  .ap-note-card.ap-mobile-only { display: flex; }
+  .ap-header { flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-4); }
+  .ap-title { font-size: var(--text-xl); }
+  .ap-lede { font-size: var(--text-sm); line-height: 22px; }
+
+  /* Tabs scroll sideways instead of wrapping */
+  .ap-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); scrollbar-width: none; }
+  .ap-tabs::-webkit-scrollbar { display: none; }
+  .ap-tab { flex-shrink: 0; height: 44px; }
+
+  .ap-toolbar { padding: var(--space-2); gap: var(--space-2); }
+  .ap-search { flex-basis: 100%; }
+  .ap-select { flex: 1 1 0; min-width: 0; height: 44px; }
+
+  .ap-card { padding: var(--space-4); border-radius: var(--radius-xl); }
+  .ap-card-title { font-size: var(--text-base); }
+  .ap-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: var(--space-3); gap: var(--space-3); }
+  .ap-figures > div:nth-child(3) { grid-column: 1 / -1; }
+  .ap-fig-value { font-size: var(--text-lg); }
+  .ap-actions { gap: var(--space-2); }
+  .ap-actions .ap-btn { height: 44px; flex: 1 1 auto; }
+  .ap-btn-quiet { margin-left: 0; flex-basis: 100%; }
+  .ap-dialog-actions .ap-btn { flex: 1 1 0; }
+  .ap-more { width: 100%; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-page *, .ap-page *::before, .ap-page *::after { transition: none; scroll-behavior: auto; }
 }

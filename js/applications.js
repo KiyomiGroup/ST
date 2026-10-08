@@ -2,6 +2,8 @@
    STREETTASKER — applications.js
    Tasker "My Applications" page (applications.html).
    Stage 1: load the signed-in tasker's applications, filter, search, sort, render.
+   Stage 2: sidebar metrics, escrow lookup, Edit Offer, Withdraw, Message Customer.
+   Stage 3: aria-busy while loading (mobile layout lives in applications.css).
    Data: task_applications joined to tasks. The proposed rate is stored inside
    the message text ("| Proposed rate: ...") so it is parsed out here.
    ============================================================ */
@@ -9,7 +11,7 @@
   'use strict';
 
   var PAGE_SIZE = 10;
-  var state = { apps: [], filter: 'all', query: '', category: '', sort: 'recent', shown: PAGE_SIZE };
+  var state = { user: null, apps: [], escrowByTask: {}, wallet: null, filter: 'all', query: '', category: '', sort: 'recent', shown: PAGE_SIZE };
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = window.escapeHtml || function (s) { return String(s == null ? '' : s); };
@@ -45,6 +47,7 @@
     var sess = await window.supabase.auth.getSession();
     var user = sess.data.session && sess.data.session.user;
     if (!user) { window.location.replace('login.html?next=applications.html'); return; }
+    state.user = user;
 
     var role = null;
     try { role = await window.ST.auth.getUserRole(user); } catch (e) { /* fall back to cache */ }
@@ -85,10 +88,51 @@
       return {
         id: a.id, raw: a, task: t, status: a.status, group: group(a.status), created: a.created_at,
         pitch: p.pitch, offer: p.rate != null ? p.rate : (t.budget || null),
-        customer: names[t.customer_id || t.user_id] || '', rivals: rivals[t.id] || 0,
+        ownerId: t.customer_id || t.user_id || null, customer: names[t.customer_id || t.user_id] || '', rivals: rivals[t.id] || 0,
       };
     });
+    await loadMoney(user.id);
     buildCategories(); render();
+  }
+
+  /* Escrow held per task (task -> booking -> escrow_payments) and wallet balance.
+     Each lookup may be blocked by row permissions; the UI then shows a dash. */
+  async function loadMoney(uid) {
+    state.escrowTotal = null;
+    try {
+      var held = await window.supabase.from('escrow_payments').select('booking_id, tasker_amount, status')
+        .eq('tasker_id', uid).eq('status', 'held');
+      var rows = held.data || [];
+      state.escrowTotal = rows.reduce(function (n, r) { return n + Number(r.tasker_amount || 0); }, 0);
+      var tids = state.apps.filter(function (a) { return a.group === 'accepted'; }).map(function (a) { return a.task.id; });
+      if (rows.length && tids.length) {
+        var b = await window.supabase.from('bookings').select('id, task_id').eq('tasker_id', uid).in('task_id', tids);
+        var bookingTask = {}; (b.data || []).forEach(function (x) { bookingTask[x.id] = x.task_id; });
+        rows.forEach(function (r) { if (bookingTask[r.booking_id]) state.escrowByTask[bookingTask[r.booking_id]] = Number(r.tasker_amount || 0); });
+      }
+    } catch (e) { /* leave null */ }
+    try {
+      var w = await window.ST.payments.getWallet(uid);
+      state.wallet = w && !w._stub ? Number(w.balance || 0) : null;
+    } catch (e) { /* leave null */ }
+  }
+
+  function renderMetrics() {
+    var a = state.apps, c = { pending: 0, accepted: 0, completed: 0 }, pendingValue = 0, week = 0;
+    a.forEach(function (x) {
+      if (c[x.group] != null) c[x.group]++;
+      if (x.group === 'pending') pendingValue += Number(x.offer || 0);
+      if (Date.now() - new Date(x.created).getTime() < 7 * 864e5) week++;
+    });
+    $('mTotal').textContent = a.length;
+    $('mWeek').textContent = week ? '+' + week + ' this week' : '';
+    $('mRate').textContent = a.length ? Math.round((c.accepted + c.completed) / a.length * 100) + '%' : '\u2014';
+    $('mPending').textContent = naira(pendingValue);
+    $('mEscrow').textContent = state.escrowTotal == null ? '\u2014' : naira(state.escrowTotal);
+    $('mWallet').textContent = state.wallet == null ? '\u2014' : naira(state.wallet);
+    var bar = $('mBar').children, n = a.length || 1;
+    bar[0].style.width = (c.pending / n * 100) + '%'; bar[1].style.width = (c.accepted / n * 100) + '%'; bar[2].style.width = (c.completed / n * 100) + '%';
+    $('mBarText').textContent = c.pending + ' pending \u2022 ' + c.accepted + ' active \u2022 ' + c.completed + ' done';
   }
 
   /* ── Render ───────────────────────────────────────────── */
@@ -152,25 +196,36 @@
       body += '<div><div class="ap-proposal-head"><span class="ap-fig-label">Your Submitted Proposal</span></div>' +
         '<p class="ap-quote">\u201C' + esc(a.pitch) + '\u201D</p></div>';
     }
-    /* Stage 2 adds: Edit Offer, Withdraw, Message Customer, escrow note */
-    var actions = '<div class="ap-actions"><a class="ap-btn" href="explore-tasks.html">View Task Details</a></div>';
+    var id = esc(a.id), taskHref = 'find-tasks.html?task=' + encodeURIComponent(t.id || '');
+    var actions = '<div class="ap-actions"><a class="ap-btn" href="' + taskHref + '">View Task Details</a>';
+    if (g === 'pending') {
+      actions += '<button type="button" class="ap-btn ap-btn-text" data-act="edit" data-id="' + id + '">Edit Offer</button>' +
+        '<button type="button" class="ap-btn ap-btn-quiet" data-act="withdraw" data-id="' + id + '">Withdraw Application</button>';
+    } else if (g === 'accepted') {
+      actions = '<div class="ap-actions">' + (a.ownerId ? '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Customer</button>' : '') +
+        '<a class="ap-btn" href="dashboard-tasker.html?panel=bookings">View Booking Details</a><a class="ap-btn ap-btn-text" href="' + taskHref + '">View Task</a>';
+      if (state.escrowByTask[t.id]) body += '<div class="ap-escrow-line">' + icon('lock') + 'Funds of ' + naira(state.escrowByTask[t.id]) + ' secured in Escrow</div>';
+    }
+    actions += '</div>';
     return '<article class="ap-card" data-id="' + esc(a.id) + '"><div class="ap-card-top">' + badge(a) + when + '</div>' +
       '<div><h2 class="ap-card-title">' + esc(t.title || 'Task') + '</h2>' + sub + '</div>' + body + actions + '</article>';
   }
 
   function render() {
+    $('apList').setAttribute('aria-busy', 'false');
     var all = state.apps, list = visible(), host = $('apList');
     var counts = { all: all.length, pending: 0, accepted: 0, declined: 0, completed: 0 };
     all.forEach(function (a) { counts[a.group]++; });
     document.querySelectorAll('[data-count]').forEach(function (el) {
       var n = counts[el.getAttribute('data-count')]; el.textContent = n > 0 ? n : '';
     });
+    renderMetrics();
     var total = $('apTotal'); total.hidden = !all.length; total.textContent = all.length + ' Total';
 
     if (!all.length) {
       host.innerHTML = '<div class="ap-state"><h2 class="ap-state-title">No applications yet</h2>' +
         '<p class="ap-state-text">Browse open tasks and send a proposal to get hired.</p>' +
-        '<a class="ap-btn ap-btn-primary" href="explore-tasks.html">Browse Open Tasks</a></div>';
+        '<a class="ap-btn ap-btn-primary" href="find-tasks.html">Browse Open Tasks</a></div>';
       $('apMore').hidden = true; return;
     }
     if (!list.length) {
@@ -183,6 +238,7 @@
   }
 
   function renderError(msg) {
+    $('apList').setAttribute('aria-busy', 'false');
     $('apList').innerHTML = '<div class="ap-state"><h2 class="ap-state-title">Could not load applications</h2><p class="ap-state-text">' + esc(msg) + '</p></div>';
   }
 
@@ -198,6 +254,61 @@
   $('apCategory').addEventListener('change', function (e) { state.category = e.target.value; reset(); });
   $('apSort').addEventListener('change', function (e) { state.sort = e.target.value; reset(); });
   $('apMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });
+
+  /* ── Card actions ─────────────────────────────────────── */
+  var current = null;
+  function findApp(id) { return state.apps.filter(function (a) { return String(a.id) === String(id); })[0]; }
+  function wire(dlg) { dlg.addEventListener('click', function (e) { if (e.target === dlg || e.target.hasAttribute('data-close')) dlg.close(); }); }
+  wire($('apEditDlg')); wire($('apWithdrawDlg'));
+
+  $('apList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var a = findApp(b.getAttribute('data-id')); if (!a) return;
+    current = a;
+    var act = b.getAttribute('data-act');
+    if (act === 'edit') {
+      $('apEditTask').textContent = a.task.title || '';
+      $('apEditRate').value = a.offer || '';
+      $('apEditPitch').value = a.pitch || '';
+      $('apEditError').hidden = true;
+      $('apEditDlg').showModal();
+    } else if (act === 'withdraw') {
+      $('apWdText').textContent = 'Your offer for \u201C' + (a.task.title || 'this task') + '\u201D will be removed and the client will be told. You can apply again later if the task is still open.';
+      $('apWithdrawDlg').showModal();
+    } else if (act === 'message') {
+      sessionStorage.setItem('st_chat_context', JSON.stringify({
+        contextType: 'task_application', contextId: a.id, taskerId: state.user.id, customerId: a.ownerId, senderRole: 'tasker' }));
+      window.location.href = 'messages.html';
+    }
+  });
+
+  $('apEditForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var save = $('apEditSave'), err = $('apEditError');
+    save.disabled = true; err.hidden = true;
+    try {
+      var rate = Number($('apEditRate').value), pitch = $('apEditPitch').value.trim();
+      await window.updateMyApplication(current.id, { message: pitch, rate: rate });
+      current.offer = Math.round(rate); current.pitch = pitch;
+      $('apEditDlg').close(); render();
+      if (window.showToast) window.showToast('Offer updated');
+    } catch (x) { err.textContent = x.message || 'Could not save changes.'; err.hidden = false; }
+    save.disabled = false;
+  });
+
+  $('apWdConfirm').addEventListener('click', async function () {
+    var btn = this; btn.disabled = true;
+    try {
+      await window.withdrawMyApplication(current.id);
+      state.apps = state.apps.filter(function (a) { return a !== current; });
+      $('apWithdrawDlg').close(); render();
+      if (window.showToast) window.showToast('Application withdrawn');
+    } catch (x) {
+      $('apWithdrawDlg').close();
+      if (window.showToast) window.showToast(x.message || 'Could not withdraw');
+    }
+    btn.disabled = false;
+  });
 
   load().catch(function (e) { renderError(e && e.message ? e.message : 'Something went wrong.'); });
 })();
