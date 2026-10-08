@@ -21,17 +21,6 @@ async function getUserRole(user) {
 function getDashboardUrl(role) {
   return role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 }
-/* Home = the logged-in landing page (home-feed.html) for both roles.
-   Logo click, login and signup all land here. */
-function getHomeUrl() { return 'home-feed.html'; }
-
-/* Shows each mobile-menu link only to the audience in its data-nav-for
-   ("guest customer tasker"). audience: 'guest' | 'customer' | 'tasker'. */
-function _applyMobileMenuAudience(audience) {
-  document.querySelectorAll('#navMobile [data-nav-for]').forEach(el => {
-    el.style.display = el.dataset.navFor.split(/\s+/).includes(audience) ? '' : 'none';
-  });
-}
 
 /* ── Navbar sync ─────────────────────────────────────────────── */
 /* ── Instant navbar init from localStorage (runs before network) ── */
@@ -80,14 +69,13 @@ function _applyNavState(loggedIn, role, name) {
 
     /* Icon bar links, per role:
        Pending Tasks -> customer: My Tasks, tasker: Bookings
-       Messages -> messages.html (its own page, both roles)
-       Notifications -> that panel on the user's dashboard
+       Messages / Notifications -> that panel on the user's dashboard
        Settings icon -> dropdown (Settings + Log out)
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
-    setHref('navIconPending',  isTasker ? panelUrl('bookings') : 'my-tasks.html');
-    setHref('navIconMessages', 'messages.html');
+    setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
+    setHref('navIconMessages', panelUrl('messages'));
     setHref('navBellBtn',      panelUrl('notifications'));
     setHref('navMenuSettings', panelUrl('profile'));
     document.querySelectorAll('.nav-menu-item[data-nav-role]').forEach(el => {
@@ -119,11 +107,6 @@ function _applyNavState(loggedIn, role, name) {
       .forEach(el => el && (el.style.display = 'none'));
     const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'flex';
 
-    /* Logo goes Home when logged in; mobile menu shows only this role's links */
-    const logo = $('navLogo');
-    if (logo) logo.href = getHomeUrl();
-    _applyMobileMenuAudience(isTasker ? 'tasker' : 'customer');
-
     /* Highlight active pill item based on current page */
     _highlightActivePillItem();
 
@@ -140,9 +123,6 @@ function _applyNavState(loggedIn, role, name) {
     [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
       .forEach(el => el && (el.style.display = ''));
     const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'none';
-    const logoOut = $('navLogo');
-    if (logoOut) logoOut.href = 'index.html';
-    _applyMobileMenuAudience('guest');
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
     if (mPlus) mPlus.style.display = '';
@@ -160,15 +140,10 @@ function _highlightActivePillItem() {
   /* Match by page + panel */
   const map = {
     'dashboard-tasker.html':   { '': 'np-overview',      'applications': 'np-applications', 'bookings': 'np-bookings', 'messages': 'np-messages', 'wallet': 'np-wallet' },
-    'dashboard-customer.html': { '': 'npc-overview',     'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
-    'home-feed.html':          { '': ['np-home', 'npc-home'] },
+    'dashboard-customer.html': { '': 'npc-overview',     'my-tasks': 'npc-tasks', 'applications': 'npc-applications', 'bookings': 'npc-bookings', 'messages': 'npc-messages', 'wallet': 'npc-wallet' },
     'find-tasks.html':         { '': 'np-find-tasks' },
-    'applications.html':       { '': 'np-applications' },
-    'customer-applications.html': { '': 'npc-applications' },
-    'my-tasks.html':           { '': 'npc-tasks' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
-    'messages.html':           { '': ['np-messages', 'npc-messages'] },
   };
   const pageMap = map[page];
   if (pageMap) {
@@ -425,6 +400,25 @@ async function logoutUser() {
   window.location.href = 'index.html?_=' + Date.now();
 }
 
+/* Pages like the gift card redeem page send people to log in or sign up first. login.html and signup.html
+   park the page they were heading to here; whichever dashboard they land on sends them on. Only pages on
+   this site are accepted, and only for 30 minutes. Returns the page to go to, or null. */
+async function takePostLoginRedirect() {
+  const KEY = 'st_post_login';
+  try {
+    const raw = sessionStorage.getItem(KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d || !d.at || Date.now() - d.at > 30 * 60 * 1000) { sessionStorage.removeItem(KEY); return null; }
+    const user = await getCurrentUser();
+    if (!user) return null;                         // not logged in yet: keep it for after login
+    sessionStorage.removeItem(KEY);
+    const u = new URL(d.to, window.location.origin + '/');
+    if (u.origin !== window.location.origin || u.pathname === window.location.pathname) return null;
+    return u.pathname + u.search + u.hash;
+  } catch (e) { return null; }
+}
+
 async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
@@ -509,7 +503,7 @@ async function initDashboardWelcome() {
 
 window.ST      = window.ST || {};
 window.ST.auth = {
-  getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
+  getSession, getCurrentUser, getUserRole, getDashboardUrl,
   signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
-  initDashboardWelcome,
+  initDashboardWelcome, takePostLoginRedirect,
 };

@@ -64,7 +64,7 @@
     return Promise.race([session, slow]);
   }
 
-  function start(raw) {
+  function start(raw, typedByHand) {
     code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     code = code.length === 14 ? 'ST-' + code.slice(2, 6) + '-' + code.slice(6, 10) + '-' + code.slice(10) : code;
     show('loading');
@@ -82,6 +82,8 @@
       if (d.status === 'redeemed') { problem('Already redeemed', 'This gift card has already been used.'); return; }
       if (d.status !== 'active') { problem('Card not available', 'This gift card is no longer valid. Please contact support.'); return; }
       renderCard(d);
+      // Typed in by hand and not logged in: say clearly that an account comes first
+      if (typedByHand && !token) openAccountDialog();
     }).catch(function (err) {
       if (err && err.message === 'timeout') problem('This is taking too long', 'Please check your connection and try again in a moment.');
       else problem('We couldn\u2019t reach the server', 'Check your connection and try again.');
@@ -101,7 +103,10 @@
 
     var back = encodeURIComponent('redeem.html?code=' + code);
     document.getElementById('rd-login').setAttribute('href', 'login.html?redirect=' + back);
-    document.getElementById('rd-signup').setAttribute('href', 'signup.html');
+    var signupHref = 'signup.html?redirect=' + back;
+    document.getElementById('rd-signup').setAttribute('href', signupHref);
+    document.getElementById('rd-dialog-signup').setAttribute('href', signupHref);
+    document.getElementById('rd-dialog-login').setAttribute('href', 'login.html?redirect=' + back);
     document.getElementById('rd-actions-in').hidden = !token;
     document.getElementById('rd-actions-out').hidden = !!token;
     show('card');
@@ -145,8 +150,14 @@
       return;
     }
     err.hidden = true;
-    start(v);
+    start(v, true);
   });
+
+  var dialog = document.getElementById('rd-dialog');
+  function openAccountDialog() {
+    if (dialog && typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
+  }
+  document.getElementById('rd-dialog-close').addEventListener('click', function () { if (dialog.open) dialog.close(); });
 
   var fromLink = new URLSearchParams(window.location.search).get('code');
   if (fromLink) start(fromLink); else show('entry');

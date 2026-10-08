@@ -319,10 +319,26 @@
       btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     }
 
+    /* ?redirect=redeem.html%3Fcode%3D... (from the gift card redeem page): only pages on this site are accepted.
+       Saved in this tab so it survives the Google/Apple round trip; the dashboard sends them on (see auth.js). */
+    function safeRedirect(raw) {
+      if (!raw) return null;
+      try {
+        const u = new URL(raw, window.location.origin + '/');
+        if (u.origin !== window.location.origin) return null;
+        if (u.pathname === '/login.html' || u.pathname === '/signup.html') return null;
+        return u.pathname + u.search + u.hash;
+      } catch (e) { return null; }
+    }
+    const afterSignupPage = safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
+    try {
+      if (afterSignupPage) sessionStorage.setItem('st_post_login', JSON.stringify({ to: afterSignupPage, at: Date.now() }));
+    } catch (e) { /* storage blocked: they land on their dashboard instead */ }
+
     function oauthSignup(provider, role) {
       window.supabase?.auth?.signInWithOAuth({
         provider,
-        options: { redirectTo: window.location.origin + '/' + 'home-feed.html' },
+        options: { redirectTo: window.location.origin + '/' + (role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html') },
       });
     }
 
@@ -351,7 +367,7 @@
 
       try {
         await window.ST.auth.signUpUser({ name, email, password, role: 'customer' });
-        window.location.href = 'home-feed.html';
+        window.location.href = afterSignupPage || 'dashboard-customer.html';
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
@@ -385,7 +401,7 @@
 
       try {
         await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
-        window.location.href = 'home-feed.html';
+        window.location.href = afterSignupPage || 'dashboard-tasker.html';
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';

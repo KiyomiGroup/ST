@@ -977,3 +977,11 @@
   }
   .gcp-fine { margin: auto 0 0; padding: 6mm 0 9mm; font-size: 10pt; color: var(--gc-ink-muted); }
 }
+
+/* ── Redeem page: "create an account first" popup ── */
+.gcs-dialog { width: min(440px, calc(100vw - var(--space-6))); padding: var(--space-6); border: 1px solid var(--gc-tile-border); border-radius: var(--radius-gc-tile); background: var(--color-bg); color: var(--gc-ink); text-align: center; box-shadow: var(--shadow-gc-tile); }
+.gcs-dialog::backdrop { background: var(--gc-hero-bg); opacity: 0.6; }
+.gcs-dialog-title { margin: 0 0 var(--space-3); font-family: var(--font-heading); font-size: var(--text-xl); }
+.gcs-dialog-text { margin: 0 0 var(--space-5); font-size: var(--text-gc-body); line-height: 1.5; color: var(--gc-ink-muted); }
+.gcs-dialog .gcs-actions { margin-top: 0; }
+.gcs-dialog-close { margin-top: var(--space-4); padding: var(--space-2) var(--space-4); border: 0; background: transparent; font: inherit; font-size: var(--text-sm); color: var(--gc-ink-muted); text-decoration: underline; cursor: pointer; }

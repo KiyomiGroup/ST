@@ -15,6 +15,7 @@
     general:      { label: 'General Voucher', icon: '#gc-gift' }
   };
   var LOCKS = { cleaning: 'Cleaning', handyman: 'Handyman & Home Repairs', moving: 'Moving & Heavy Lifting', wardrobe: 'Wardrobe & Tailoring', tech: 'Tech & Inverter Servicing' };
+  var redeemLink = '';
   var REF_RE = /^GC-[A-Z2-9]{20}$/;
   var POLL_MS = 2500;
   var MAX_TRIES = 8;       // about 20 seconds of waiting for the bank
@@ -73,8 +74,11 @@
       } catch (e) { qrBox.hidden = true; }
     }
 
-    var text = card.senderName + ' sent you a StreetTasker gift card worth ' + naira(card.amount) +
-      '!\nYour code: ' + card.code + '\n\nRedeem it here: ' + window.location.origin + '/redeem.html?code=' + encodeURIComponent(card.code);
+    // The shared link opens the redeem page, where the person types the code (they need a free account to redeem)
+    var link = window.location.origin + '/redeem.html';
+    var text = card.senderName + ' sent you a StreetTasker gift card worth ' + naira(card.amount) + '!' +
+      '\n\nYour code: ' + card.code + '\n\nRedeem it here: ' + link + '\n(Open the link, enter your code, and create a free account to add it to your wallet.)';
+    redeemLink = link;
     document.getElementById('gcs-share').setAttribute('href', 'https://wa.me/?text=' + encodeURIComponent(text));
 
     document.title = 'Your Gift Card \u2014 Street Taskers';
@@ -124,6 +128,21 @@
   }
 
   // ── Buttons ──
+  var linkBtn = document.getElementById('gcs-copylink');
+  linkBtn.addEventListener('click', function () {
+    var link = redeemLink || window.location.origin + '/redeem.html';
+    function done() {
+      var label = linkBtn.querySelector('span');
+      label.textContent = 'Link copied';
+      setTimeout(function () { label.textContent = 'Copy redeem link'; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(done, function () { window.prompt('Copy this link:', link); });
+    } else {
+      window.prompt('Copy this link:', link);
+    }
+  });
+
   var copyBtn = document.getElementById('gcs-copy');
   copyBtn.addEventListener('click', function () {
     var code = document.querySelector('.gcs-code-value').textContent;
