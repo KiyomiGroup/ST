@@ -21,6 +21,9 @@
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
       <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
       <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
       <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
     </defs>
   </svg>
@@ -39,7 +42,7 @@
         <a href="post-task.html" class="ap-link">Post a Task<svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
       </header>
 
-      <div class="ap-layout" id="apLayout">
+      <div class="ap-layout has-side" id="apLayout">
         <div class="ap-main">
           <div class="ap-tabs" role="group" aria-label="Filter by status" id="apTabs">
             <button type="button" class="ap-tab" data-filter="all" aria-pressed="true">All <span class="ap-tab-n" data-count="all"></span></button>
@@ -67,10 +70,83 @@
           </div>
           <button type="button" class="ap-btn ap-more" id="apMore" hidden>Load More Applications</button>
         </div>
+
+        <aside class="ap-side" aria-label="Application summary">
+          <section class="ap-panel">
+            <h2 class="ap-panel-title">Your Hiring Snapshot</h2>
+            <div class="ap-stat-grid">
+              <div class="ap-stat"><span class="ap-stat-label">Received</span><span class="ap-stat-value" id="mTotal">—</span><span class="ap-stat-sub" id="mWeek"></span></div>
+              <div class="ap-stat"><span class="ap-stat-label">Needs Review</span><span class="ap-stat-value is-green" id="mPending">—</span><span class="ap-stat-sub" id="mTasks"></span></div>
+            </div>
+            <div class="ap-stat-wide">
+              <div class="ap-stat-row"><div><span class="ap-stat-label">Lowest Pending Offer</span><span class="ap-stat-value" id="mLow">—</span></div>
+              <div class="is-end"><span class="ap-stat-label">Hired</span><span class="ap-stat-value is-green" id="mHired">—</span></div></div>
+              <div class="ap-bar" id="mBar" role="img" aria-label="Pipeline"><span class="is-pending"></span><span class="is-active"></span><span class="is-done"></span></div>
+              <p class="ap-stat-sub" id="mBarText"></p>
+            </div>
+          </section>
+
+          <section class="ap-panel">
+            <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-bulb"/></svg>Hiring Tips</h2>
+            <ol class="ap-tips">
+              <li><strong>Check the profile</strong><span>Ratings, past jobs and verification tell you more than the price alone.</span></li>
+              <li><strong>Compare more than one offer</strong><span>The lowest offer isn’t always the best fit. Read each proposal.</span></li>
+              <li><strong>Keep it on StreetTasker</strong><span>Chat and pay inside the app so your payment stays protected.</span></li>
+            </ol>
+          </section>
+
+          <section class="ap-escrow">
+            <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protection</h2>
+            <p>Your payment is held in escrow and released to the tasker only after you confirm the job is done. Never pay cash upfront outside the app.</p>
+          </section>
+
+          <section class="ap-panel ap-help">
+            <div><strong>Need help choosing?</strong><span class="ap-stat-sub">Our support team is here to help.</span></div>
+            <a class="ap-btn" href="messages.html">Chat</a>
+          </section>
+        </aside>
       </div>
 
     </div>
   </div>
+
+
+  <dialog class="ap-dialog" id="apAcceptDlg" aria-labelledby="apAcTitle">
+    <div class="ap-dialog-body">
+      <h2 class="ap-dialog-title" id="apAcTitle">Hire this tasker?</h2>
+      <div class="ap-summary" id="apAcSummary"></div>
+      <p class="ap-state-text">Accepting declines the other pending applications on this task and notifies the tasker.</p>
+      <p class="ap-error" id="apAcError" role="alert" hidden></p>
+      <div class="ap-actions ap-dialog-actions">
+        <button type="button" class="ap-btn" data-close>Not Yet</button>
+        <button type="button" class="ap-btn ap-btn-primary" id="apAcConfirm">Accept Offer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="ap-dialog" id="apDeclineDlg" aria-labelledby="apDcTitle">
+    <div class="ap-dialog-body">
+      <h2 class="ap-dialog-title" id="apDcTitle">Decline this application?</h2>
+      <p class="ap-state-text" id="apDcText"></p>
+      <p class="ap-error" id="apDcError" role="alert" hidden></p>
+      <div class="ap-actions ap-dialog-actions">
+        <button type="button" class="ap-btn" data-close>Keep It</button>
+        <button type="button" class="ap-btn ap-btn-danger" id="apDcConfirm">Decline</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="ap-dialog" id="apFirstDlg" aria-labelledby="apFmTitle">
+    <div class="ap-dialog-body">
+      <h2 class="ap-dialog-title" id="apFmTitle">Message <span id="apFmName"></span></h2>
+      <p class="ap-state-text">They’ve been notified. Start the conversation to get things moving.</p>
+      <label class="ap-field"><span>Your message</span><textarea class="ap-input ap-input-plain ap-textarea" id="apFmText" rows="4" maxlength="1000"></textarea></label>
+      <div class="ap-actions ap-dialog-actions">
+        <button type="button" class="ap-btn" data-close>Skip</button>
+        <button type="button" class="ap-btn ap-btn-primary" id="apFmSend">Send Message</button>
+      </div>
+    </div>
+  </dialog>
 
   <div id="footer-placeholder"></div>
 

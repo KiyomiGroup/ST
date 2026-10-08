@@ -3,6 +3,7 @@
    Customer "Applications" page (customer-applications.html).
    Stage 1: load every application on the customer's tasks (batched queries),
    then filter, search, sort and render applicant cards.
+   Stage 2: sidebar snapshot, Accept / Decline (with confirmation), Message Tasker.
    Data: tasks -> task_applications -> taskers + users (names, photos, ratings).
    ============================================================ */
 (function () {
@@ -155,9 +156,19 @@
 
     var pitch = a.pitch ? '<div><div class="ap-proposal-head"><span class="ap-fig-label">Their Proposal</span></div><p class="ap-quote">\u201C' + esc(a.pitch) + '\u201D</p></div>' : '';
     var profile = 'tasker-profile.html?id=' + encodeURIComponent(a.taskerId || '') + '&task=' + encodeURIComponent(t.id || '') + '&app=' + encodeURIComponent(a.id);
-    /* Stage 2 adds: Accept, Decline, Message Tasker */
-    var actions = '<div class="ap-actions"><a class="ap-btn' + (a.group === 'pending' ? ' ap-btn-primary' : '') + '" href="' + profile + '">' +
-      (a.group === 'pending' ? 'View Profile &amp; Decide' : 'View Profile') + '</a></div>';
+    var id = esc(a.id);
+    var actions = '<div class="ap-actions">';
+    if (a.group === 'pending') {
+      actions += '<button type="button" class="ap-btn ap-btn-primary" data-act="accept" data-id="' + id + '">Accept Offer</button>' +
+        '<a class="ap-btn" href="' + profile + '">View Profile</a>' +
+        '<button type="button" class="ap-btn ap-btn-quiet" data-act="decline" data-id="' + id + '">Decline</button>';
+    } else if (a.group === 'accepted') {
+      actions += '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Tasker</button>' +
+        '<a class="ap-btn" href="' + profile + '">View Profile</a>';
+    } else {
+      actions += '<a class="ap-btn" href="' + profile + '">View Profile</a>';
+    }
+    actions += '</div>';
 
     return '<article class="ap-card" data-id="' + esc(a.id) + '"><div class="ap-card-top">' + badge(a) +
       '<span class="ap-meta">' + icon('clock') + 'Applied ' + esc(ago(a.created)) + '</span></div>' +
@@ -165,7 +176,24 @@
       '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + actions + '</article>';
   }
 
+  function renderMetrics() {
+    var a = state.apps, pend = a.filter(function (x) { return x.group === 'pending'; }), tasks = {}, week = 0, low = null;
+    pend.forEach(function (x) { tasks[x.task.id] = 1; if (x.offer != null && (low == null || x.offer < low)) low = x.offer; });
+    a.forEach(function (x) { if (Date.now() - new Date(x.created).getTime() < 7 * 864e5) week++; });
+    var hired = a.filter(function (x) { return x.group === 'accepted'; }).length, declined = a.length - pend.length - hired;
+    $('mTotal').textContent = a.length;
+    $('mWeek').textContent = week ? '+' + week + ' this week' : '';
+    $('mPending').textContent = pend.length;
+    $('mTasks').textContent = pend.length ? 'across ' + Object.keys(tasks).length + (Object.keys(tasks).length === 1 ? ' task' : ' tasks') : '';
+    $('mLow').textContent = low == null ? '\u2014' : naira(low);
+    $('mHired').textContent = hired;
+    var bar = $('mBar').children, n = a.length || 1;
+    bar[0].style.width = (pend.length / n * 100) + '%'; bar[1].style.width = (hired / n * 100) + '%'; bar[2].style.width = (declined / n * 100) + '%';
+    $('mBarText').textContent = pend.length + ' to review \u2022 ' + hired + ' hired \u2022 ' + declined + ' declined';
+  }
+
   function render() {
+    renderMetrics();
     $('apList').setAttribute('aria-busy', 'false');
     var all = state.apps, list = visible(), host = $('apList');
     var counts = { all: all.length, pending: 0, accepted: 0, declined: 0 };
@@ -209,6 +237,70 @@
   $('apTask').addEventListener('change', function (e) { state.task = e.target.value; reset(); });
   $('apSort').addEventListener('change', function (e) { state.sort = e.target.value; reset(); });
   $('apMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });
+
+  /* ── Actions ──────────────────────────────────────────── */
+  var current = null;
+  function findApp(id) { return state.apps.filter(function (a) { return String(a.id) === String(id); })[0]; }
+  function toast(m) { if (window.showToast) window.showToast(m); }
+  function wire(dlg) { dlg.addEventListener('click', function (e) { if (e.target === dlg || e.target.hasAttribute('data-close')) dlg.close(); }); }
+  ['apAcceptDlg', 'apDeclineDlg', 'apFirstDlg'].forEach(function (id) { wire($(id)); });
+
+  function openChat(a, firstMsg) {
+    if (!a.taskerId) { toast('Cannot open chat \u2014 tasker ID missing.'); return; }
+    sessionStorage.setItem('st_chat_context', JSON.stringify({
+      contextType: 'task_application', contextId: String(a.id), taskerId: String(a.taskerId), customerId: String(state.user.id) }));
+    if (firstMsg) sessionStorage.setItem('st_first_msg', firstMsg);
+    window.location.href = 'messages.html';
+  }
+
+  $('apList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var a = findApp(b.getAttribute('data-id')); if (!a) return;
+    current = a;
+    var act = b.getAttribute('data-act');
+    if (act === 'message') { openChat(a); return; }
+    if (act === 'accept') {
+      var taken = state.apps.some(function (x) { return x.task.id === a.task.id && x.group === 'accepted'; });
+      if (taken) { toast('You already hired someone for this task.'); return; }
+      $('apAcSummary').innerHTML = '<strong>' + esc(a.name) + '</strong>for \u201C' + esc(a.task.title || 'your task') + '\u201D' +
+        (a.offer ? ' at <b>' + naira(a.offer) + '</b>' : '');
+      $('apAcError').hidden = true; $('apAcceptDlg').showModal();
+    } else if (act === 'decline') {
+      $('apDcText').textContent = a.name + ' will be told their application wasn\u2019t accepted this time. This can\u2019t be undone.';
+      $('apDcError').hidden = true; $('apDeclineDlg').showModal();
+    }
+  });
+
+  $('apAcConfirm').addEventListener('click', async function () {
+    var btn = this, a = current, err = $('apAcError'); btn.disabled = true; err.hidden = true;
+    try {
+      await window.updateApplicationStatus(a.id, 'accepted');          /* also notifies the tasker */
+      var closed = await window.supabase.from('task_applications').update({ status: 'closed' })
+        .eq('task_id', a.task.id).eq('status', 'pending').neq('id', a.id);
+      var tk = await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', a.task.id);
+      if (closed.error || tk.error) toast('Hired, but some follow-up updates failed. Please refresh.');
+      a.status = 'accepted'; a.group = 'accepted';
+      state.apps.forEach(function (x) { if (x !== a && x.task.id === a.task.id && x.group === 'pending') { x.status = 'closed'; x.group = 'declined'; } });
+      a.task.status = 'in_progress';
+      $('apAcceptDlg').close(); render();
+      $('apFmName').textContent = a.name;
+      $('apFmText').value = 'Hi! I accepted your application. When are you available to get started?';
+      $('apFirstDlg').showModal();
+    } catch (x) { err.textContent = x.message || 'Could not accept this application.'; err.hidden = false; }
+    btn.disabled = false;
+  });
+
+  $('apDcConfirm').addEventListener('click', async function () {
+    var btn = this, a = current, err = $('apDcError'); btn.disabled = true; err.hidden = true;
+    try {
+      await window.updateApplicationStatus(a.id, 'rejected');          /* also notifies the tasker */
+      a.status = 'rejected'; a.group = 'declined';
+      $('apDeclineDlg').close(); render(); toast('Application declined.');
+    } catch (x) { err.textContent = x.message || 'Could not decline this application.'; err.hidden = false; }
+    btn.disabled = false;
+  });
+
+  $('apFmSend').addEventListener('click', function () { openChat(current, $('apFmText').value.trim()); });
 
   load().catch(function (e) { renderError(e && e.message ? e.message : 'Something went wrong.'); });
 })();

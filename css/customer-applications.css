@@ -6,7 +6,7 @@
 
    STAGES
    1. Applicant card (avatar, rating, offer vs budget) ... done
-   2. Sidebar + Accept / Decline dialogs .................. next
+   2. Sidebar + Accept / Decline / first-message dialogs .. done
    3. Mobile pass ........................................ next
    ============================================================ */
 
@@ -27,6 +27,10 @@
 .ap-delta { margin-top: var(--space-1); font-size: var(--text-xs); font-weight: 700; color: var(--pt-ink-muted); }
 .ap-delta.is-below { color: var(--pt-green); }
 .ap-delta.is-above { color: var(--color-warning); }
+
+.ap-summary { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.ap-summary strong { display: block; font-family: var(--font-heading); font-size: var(--text-md); color: var(--pt-ink); }
+.ap-summary b { color: var(--pt-green); font-family: var(--font-heading); }
 
 @media (max-width: 768px) {
   .ap-avatar { width: 40px; height: 40px; }

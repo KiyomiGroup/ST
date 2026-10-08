@@ -86,7 +86,7 @@ function _applyNavState(loggedIn, role, name) {
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
-    setHref('navIconPending',  isTasker ? 'bookings.html' : panelUrl('my-tasks'));
+    setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
     setHref('navIconMessages', 'messages.html');
     setHref('navBellBtn',      panelUrl('notifications'));
     setHref('navMenuSettings', panelUrl('profile'));
@@ -164,7 +164,7 @@ function _highlightActivePillItem() {
     'home-feed.html':          { '': ['np-home', 'npc-home'] },
     'find-tasks.html':         { '': 'np-find-tasks' },
     'applications.html':       { '': 'np-applications' },
-    'bookings.html':           { '': 'np-bookings' },
+    'customer-applications.html': { '': 'npc-applications' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
     'messages.html':           { '': ['np-messages', 'npc-messages'] },
