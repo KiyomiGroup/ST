@@ -13,6 +13,10 @@
       if (q.get('panel') === 'applications' || window.location.hash === '#my-applications') {
         window.location.replace('applications.html');
       }
+      /* Bookings moved to their own page too (bookings.html). */
+      if (q.get('panel') === 'bookings' || window.location.hash === '#bookings') {
+        window.location.replace('bookings.html');
+      }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -1687,6 +1691,9 @@ function openMessagesPanel() {
     var _bookingsLoaded = false;
 
     async function loadBookings() {
+      /* The Bookings tab (desktop and mobile menus) now opens the Bookings page */
+      window.location.href = 'bookings.html';
+      return;
       var el = document.getElementById('bookingsList');
       if (!el) return;
       el.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm);padding:20px 0;text-align:center;">Loading bookings...</p>';

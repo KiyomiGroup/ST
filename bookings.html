@@ -24,6 +24,8 @@
       <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
       <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     </defs>
   </svg>
@@ -84,6 +86,45 @@
 
     </div>
   </div>
+
+  <dialog class="bk-dialog" id="bkDeclineDlg" aria-labelledby="bkDeclineTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkDeclineTitle">Decline this booking?</h2>
+      <p class="bk-state-text" id="bkDeclineText"></p>
+      <p class="bk-error" id="bkDeclineError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Keep Request</button>
+        <button type="button" class="bk-btn bk-btn-danger" id="bkDeclineGo">Decline Booking</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkDoneDlg" aria-labelledby="bkDoneTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkDoneTitle">Mark this job as done?</h2>
+      <p class="bk-state-text" id="bkDoneText"></p>
+      <p class="bk-error" id="bkDoneError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Not Yet</button>
+        <button type="button" class="bk-btn bk-btn-primary" id="bkDoneGo">Yes, Job Is Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkCodeDlg" aria-labelledby="bkCodeTitle">
+    <form class="bk-dialog-body" id="bkCodeForm" novalidate>
+      <h2 class="bk-dialog-title" id="bkCodeTitle">Enter completion code</h2>
+      <p class="bk-state-text" id="bkCodeText">The customer gives you a 6-digit code after confirming the job is done. Enter it to release your payment to your wallet.</p>
+      <label class="bk-field"><span>6-digit code</span>
+        <input class="bk-code-input" type="text" id="bkCodeInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" />
+      </label>
+      <p class="bk-error" id="bkCodeError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Cancel</button>
+        <button type="submit" class="bk-btn bk-btn-primary" id="bkCodeGo">Claim Payment</button>
+      </div>
+    </form>
+  </dialog>
 
   <div id="footer-placeholder"></div>
 
