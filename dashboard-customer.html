@@ -22,7 +22,6 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <style>
     @keyframes spin { to { transform: rotate(360deg); } }
-    .app-card { background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start; }
     .app-avatar { width:44px;height:44px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--text-sm);color:var(--blue);flex-shrink:0;overflow:hidden; }
     .app-actions { display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end; }
     .status-pill { font-size:var(--text-xs);font-weight:700;text-transform:capitalize;padding:2px 8px;border-radius:999px;border:1px solid; }
@@ -461,15 +460,6 @@
               <div class="task-row-list" id="allTasksList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading...</p></div>
             </div>
 
-            <!-- Applications Panel -->
-            <div id="panel-applications" class="dashboard-panel">
-              <div class="panel-header">
-                <h2>Task Applications</h2>
-                <span style="font-size:var(--text-sm);color:var(--text-muted);">Taskers who want to do your tasks</span>
-              </div>
-              <div id="appTaskList"><div style="text-align:center;padding:32px;color:var(--text-muted);">Loading...</div></div>
-            </div>
-
             <!-- Notifications Panel -->
             <div id="panel-notifications" class="dashboard-panel">
               <div class="panel-header">
@@ -616,14 +606,6 @@
     </div>
   </div>
 
-  <!-- Applicant Detail Modal -->
-  <div id="applicantModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;">
-    <div style="background:var(--white);border-radius:var(--radius-xl);max-width:460px;width:100%;position:relative;margin:auto;">
-      <button onclick="closeApplicantModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px;z-index:1;line-height:1;font-size:var(--text-lg);">&#x2715;</button>
-      <div id="applicantModalBody" style="padding:24px;"></div>
-    </div>
-  </div>
-
   <div id="footer-placeholder"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -638,7 +620,6 @@
   <script src="js/location.js"></script>
   <script>
     'use strict';
-    var appLoaded = false;
     var custNotifLoaded = false;
 
     /* Labels shown under the StreetTasker wordmark in the global mobile
@@ -773,92 +754,6 @@
       '</div>';
     }
 
-    /* ── Task Applications ───────────────────────────────────── */
-    async function loadApplications() {
-      if (appLoaded) return;
-      appLoaded = true;
-      var container = document.getElementById('appTaskList');
-      try {
-        var s2 = await window.supabase.auth.getSession();
-        var uid2 = s2.data.session && s2.data.session.user.id;
-        if (!uid2) throw new Error('Not logged in');
-        var r2 = await window.supabase.from('tasks').select('*')
-          .or('customer_id.eq.' + uid2 + ',user_id.eq.' + uid2)
-          .order('created_at', { ascending: false });
-        var tasks = r2.data || [];
-        if (!tasks.length) {
-          container.innerHTML = empty('Post a task to start receiving applications from taskers.', 'Post a Task', 'post-task.html');
-          return;
-        }
-
-        var html = '';
-        var totalApps = 0;
-
-        for (var i = 0; i < Math.min(tasks.length, 10); i++) {
-          var task = tasks[i];
-          var apps;
-          try {
-            var aRes = await window.supabase.from('task_applications').select('*')
-              .eq('task_id', task.id).order('created_at', { ascending: false });
-            apps = aRes.data || [];
-            for (var j = 0; j < apps.length; j++) {
-              try {
-                var tid_j = String(apps[j].tasker_id);
-                /* Try taskers table first */
-                var tRow = await window.supabase.from('taskers')
-                  .select('name, service, service_name, location, rating, photo_url, user_id, business_name')
-                  .eq('user_id', tid_j).maybeSingle();
-                /* Also fetch from users table for name fallback */
-                var uRow = await window.supabase.from('users')
-                  .select('name, business_name, avatar_url')
-                  .eq('id', tid_j).maybeSingle();
-                var t = tRow.data || {};
-                var u = uRow.data || {};
-                apps[j].taskers = {
-                  name:          t.name          || u.name          || u.business_name || '',
-                  business_name: t.business_name || u.business_name || '',
-                  service:       t.service       || t.service_name  || '',
-                  location:      t.location      || '',
-                  rating:        t.rating        || '',
-                  photo_url:     t.photo_url     || u.avatar_url    || '',
-                  user_id:       tid_j,
-                };
-              } catch(e2) { apps[j].taskers = { user_id: String(apps[j].tasker_id) }; }
-            }
-          } catch(e) { apps = []; }
-          if (!apps.length) continue;
-          totalApps += apps.length;
-
-          html += '<div style="margin-bottom:24px;">' +
-            '<div style="font-size:var(--text-sm);font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);">' +
-            '&#128203; ' + task.title + ' <span style="font-size:var(--text-xs);font-weight:400;color:var(--text-muted);">— ' + apps.length + ' applicant' + (apps.length>1?'s':'') + '</span></div>' +
-            apps.map(function(a) { return applicationCard(a, task.id); }).join('') +
-            '</div>';
-        }
-
-        if (!html) {
-          container.innerHTML = empty('No applications yet. Taskers will apply as they see your tasks.', null, null);
-          return;
-        }
-
-        if (totalApps > 0) {
-          var badge2 = document.getElementById('custAppBadge');
-          if (badge2) { badge2.textContent = totalApps > 9 ? '9+' : String(totalApps); badge2.style.display = 'inline'; }
-        }
-
-        container.innerHTML = html;
-        /* Delegated click — handles all app card buttons safely */
-        container.onclick = function(e) {
-          var btn = e.target.closest('[data-open-app]');
-          if (!btn) return;
-          openApplicantModal(btn.dataset.openApp, btn.dataset.task);
-        };
-      } catch(e) {
-        container.innerHTML = '<p style="color:var(--red);font-size:var(--text-sm);padding:16px;">Could not load applications: ' + e.message + '</p>';
-      }
-    }
-    window.loadApplications = loadApplications;
-
     /* ── My Tasks panel — loads on-demand ───────────────────── */
     var myTasksLoaded = false;
     async function loadMyTasks() {
@@ -883,244 +778,6 @@
       }
     }
     window.loadMyTasks = loadMyTasks;
-
-    var _appDataMap = {};
-
-    function openApplicantModal(appId, taskId) {
-      var appData = _appDataMap[String(appId)];
-      if (!appData) return;
-      var tasker   = appData.taskers || {};
-      var dispName = tasker.business_name || tasker.name || 'Service Provider';
-      /* If name still generic, show shortened tasker ID so at least it's unique */
-      if (dispName === 'Service Provider' && appData.tasker_id) {
-        dispName = 'Tasker #' + String(appData.tasker_id).slice(0,6).toUpperCase();
-      }
-      var svc      = tasker.service || tasker.service_name || '';
-      var loc      = tasker.location || '';
-      var rating   = tasker.rating ? parseFloat(tasker.rating).toFixed(1) : '';
-      var photo    = tasker.photo_url || '';
-      var bio      = tasker.bio || '';
-      var userId   = tasker.user_id || String(appData.tasker_id || '');
-      var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ')
-                      .filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
-      var isAccepted = appData.status === 'accepted' || appData.status === 'completed';
-      var isPending  = appData.status === 'pending';
-      var wpRaw    = appData.applicant_whatsapp || tasker.whatsapp || '';
-      var wpDigits = wpRaw.replace(/[^\d]/g,'').replace(/^234/,'').replace(/^0/,'');
-      var msgRaw   = appData.message || '';
-      var priceMatch = msgRaw.match(/\|\s*Proposed rate:\s*(\S+)/);
-      var msgClean = msgRaw.replace(/\|\s*Proposed rate:.*$/, '').trim();
-      var priceStr = priceMatch ? priceMatch[1] : '';
-      var photoHtml = photo
-        ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;" />'
-        : initials;
-      var contactHtml = '';
-      if (isAccepted) {
-        contactHtml = '<div style="background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">' +
-          '<div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Connected via StreetTasker</div>' +
-          '<button data-msg-app="' + appId + '" data-msg-tasker="' + userId + '" data-msg-type="task_application" ' +
-          'style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-          'Open Messages</button>' +
-          '</div>';
-      } else if (isPending) {
-        contactHtml = '<div style="background:var(--bg-subtle);border:1px dashed var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;text-align:center;">' +
-          '<div style="font-size:var(--text-sm);font-weight:600;color:var(--text-secondary);">Messaging unlocked after acceptance</div>' +
-          '<div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:3px;">Accept this application to start messaging the tasker.</div>' +
-          '</div>';
-      }
-      var actionBtns = '';
-      if (isPending) {
-        actionBtns = '<div style="display:flex;gap:8px;">' +
-          '<button class="btn btn-primary" data-modal-accept data-app="' + appId + '" data-task="' + taskId + '" style="flex:1;">Accept Application</button>' +
-          '<button class="btn btn-ghost" data-modal-reject data-app="' + appId + '" style="color:var(--red);">Decline</button>' +
-          '</div>' +
-          '<p style="font-size:var(--text-xs);color:var(--text-muted);text-align:center;margin-top:6px;">Accepting closes other applications for this task.</p>';
-      } else if (isAccepted) {
-        actionBtns = '<div style="padding:10px;background:var(--green-light);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;color:var(--green);text-align:center;">Accepted</div>';
-      }
-      var body = document.getElementById('applicantModalBody');
-      var modal = document.getElementById('applicantModal');
-      if (!body || !modal) return;
-      body.innerHTML =
-        '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding-right:20px;">' +
-          '<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--text-base);flex-shrink:0;overflow:hidden;">' + photoHtml + '</div>' +
-          '<div style="flex:1;">' +
-            '<div style="font-size:var(--text-base);font-weight:800;">' + escapeHtml(dispName) + (priceStr ? ' <span style="padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:700;">' + escapeHtml(priceStr) + '</span>' : '') + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;">' + escapeHtml([svc,loc,rating?'Rating: '+rating:''].filter(Boolean).join(' · ')) + '</div>' +
-          '</div>' +
-        '</div>' +
-        (bio ? '<p style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6;margin-bottom:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--radius-md);">' + escapeHtml(bio) + '</p>' : '') +
-        (msgClean ? '<p style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6;margin-bottom:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--radius-md);border-left:3px solid var(--blue);">' + escapeHtml(msgClean) + '</p>' : '') +
-        contactHtml + actionBtns;
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      /* Wire modal buttons via delegation - safe from quoting issues */
-      body.onclick = function(e) {
-        var acc = e.target.closest('[data-modal-accept]');
-        if (acc) { acceptAppFromModal(acc); return; }
-        var rej = e.target.closest('[data-modal-reject]');
-        if (rej) { rejectApp(rej); closeApplicantModal(); }
-      };
-    }
-    window.openApplicantModal = openApplicantModal;
-
-    function closeApplicantModal() {
-      var m = document.getElementById('applicantModal');
-      if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
-    }
-    window.closeApplicantModal = closeApplicantModal;
-
-    /* Close on backdrop click */
-    document.addEventListener('click', function(e) {
-      /* Message Tasker buttons — data-attribute delegation */
-      var msgBtn = e.target.closest('[data-msg-app]');
-      if (msgBtn) {
-        var appId    = msgBtn.dataset.msgApp;
-        var taskerId = msgBtn.dataset.msgTasker;
-        var ctxType  = msgBtn.dataset.msgType || 'task_application';
-        if (taskerId && taskerId !== 'undefined' && taskerId !== '') {
-          openInAppChat(ctxType, appId, taskerId);
-        } else {
-          showToast('Cannot open chat — tasker ID missing. Try refreshing.');
-        }
-        return;
-      }
-
-      var modal = document.getElementById('applicantModal');
-      if (modal && e.target === modal) closeApplicantModal();
-    });
-
-    async function acceptAppFromModal(btnEl) {
-      var appId  = btnEl.dataset.app;
-      var taskId = btnEl.dataset.task;
-      btnEl.disabled = true; btnEl.textContent = 'Accepting...';
-      try {
-        await window.supabase.from('task_applications').update({ status: 'accepted' }).eq('id', appId);
-        await window.supabase.from('task_applications').update({ status: 'closed' })
-          .eq('task_id', taskId).eq('status', 'pending').neq('id', appId);
-        await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', taskId);
-        /* Notify the accepted tasker */
-        try {
-          var appData = _appDataMap[String(appId)];
-          if (appData && appData.tasker_id) {
-            await window.supabase.from('notifications').insert({
-              user_id: String(appData.tasker_id), type: 'application_accepted',
-              title: 'Application Accepted!',
-              message: 'Your application was accepted. Check My Applications to see details.',
-              data: { task_id: taskId, application_id: appId }, is_read: false,
-            });
-          }
-        } catch(e2) { /* non-blocking */ }
-        showToast('Accepted! You can now message the tasker.');
-        closeApplicantModal();
-        appLoaded = false;
-        await loadApplications();
-        /* Open first-message prompt after a short delay */
-        var appData2 = _appDataMap[String(appId)];
-        if (appData2) {
-          setTimeout(function() {
-            openFirstMessagePrompt(String(appId), String(appData2.tasker_id || ''), appData2.taskers && (appData2.taskers.business_name || appData2.taskers.name) || 'the tasker');
-          }, 600);
-        }
-      } catch(e) {
-        showToast('Error: ' + e.message);
-        btnEl.disabled = false; btnEl.textContent = 'Accept Application';
-      }
-    }
-    window.acceptAppFromModal = acceptAppFromModal;
-
-    function applicationCard(a, taskId) {
-      _appDataMap[String(a.id)] = a;
-      var tasker   = a.taskers || {};
-      var dispName = tasker.business_name || tasker.name || 'Service Provider';
-      /* If name still generic, show shortened tasker ID so at least it's unique */
-      if (dispName === 'Service Provider' && a.tasker_id) {
-        dispName = 'Tasker #' + String(a.tasker_id).slice(0,6).toUpperCase();
-      }
-      var svc      = tasker.service || '';
-      var loc      = tasker.location || '';
-      var photo    = tasker.photo_url || '';
-      /* tasker_id on task_applications IS the auth user id of the tasker */
-      var userId   = String(a.tasker_id || tasker.user_id || '');
-      var initials = dispName.replace(/[^a-zA-Z ]/g,'').trim().split(' ')
-                       .filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '??';
-      var msgRaw   = a.message || '';
-      var priceMatch = msgRaw.match(/\|\s*Proposed rate:\s*(\S+)/);
-      var msgClean = msgRaw.replace(/\|\s*Proposed rate:.*$/, '').trim();
-      var priceTag = priceMatch ? ' <span style="padding:1px 6px;background:var(--blue-light);color:var(--blue);border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:700;">' + escapeHtml(priceMatch[1]) + '</span>' : '';
-      var statusColors = { pending:'#f59e0b', accepted:'#16a34a', rejected:'#dc2626', closed:'#9ca3af' };
-      var statusColor  = statusColors[a.status] || '#f59e0b';
-      var statusLabel  = { pending:'Pending', accepted:'Accepted', rejected:'Declined', closed:'Closed' }[a.status] || a.status;
-      var isPending    = a.status === 'pending';
-      var isAccepted   = a.status === 'accepted' || a.status === 'completed';
-      var photoHtml = photo
-        ? '<img src="' + escapeHtml(photo) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
-        : initials;
-      var appId  = String(a.id);
-      var tid    = String(taskId);
-      var actions = '';
-      var profileUrl = userId ? 'tasker-profile.html?id=' + encodeURIComponent(userId) + '&task=' + encodeURIComponent(tid) + '&app=' + encodeURIComponent(appId) : '#';
-      if (isPending) {
-        actions = '<div style="margin-top:10px;display:flex;gap:8px;">' +
-          '<a href="' + profileUrl + '" class="btn btn-primary btn-sm" style="flex:1;text-align:center;text-decoration:none;">View Profile & Decide</a>' +
-          '<button class="btn btn-ghost btn-sm" data-modal-reject data-app="' + appId + '" style="color:var(--red);">Decline</button>' +
-          '</div>';
-      } else if (isAccepted) {
-        actions = '<div style="margin-top:10px;padding:12px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
-          '<div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Application Accepted</div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
-          '<button data-msg-app="' + appId + '" data-msg-tasker="' + userId + '" data-msg-type="task_application" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-            'Message Tasker' +
-          '</button>' +
-          (userId ? '<a href="' + profileUrl + '" style="display:inline-flex;align-items:center;gap:5px;padding:8px 12px;font-size:var(--text-sm);color:var(--blue);text-decoration:none;">View Profile</a>' : '') +
-          '</div></div>';
-      } else if (a.status === 'closed') {
-        actions = '<div style="margin-top:6px;font-size:var(--text-xs);color:var(--text-muted);">Closed - another applicant was accepted</div>';
-      }
-      return '<div class="app-card" id="app-' + a.id + '" style="flex-direction:column;align-items:stretch;padding:14px;">' +
-        '<div style="display:flex;gap:10px;align-items:flex-start;">' +
-          '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--text-xs);flex-shrink:0;overflow:hidden;">' + photoHtml + '</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-              '<span style="font-weight:700;font-size:var(--text-sm);">' + escapeHtml(dispName) + '</span>' +
-              priceTag +
-              '<span style="padding:2px 7px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:700;border:1px solid;color:' + statusColor + ';border-color:' + statusColor + ';">' + statusLabel + '</span>' +
-            '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;">' + escapeHtml([svc,loc].filter(Boolean).join(' · ')) + '</div>' +
-            (msgClean ? '<p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:6px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escapeHtml(msgClean) + '</p>' : '') +
-          '</div>' +
-        '</div>' +
-        actions +
-      '</div>';
-    }
-
-
-    async function acceptApp(btnEl) {
-      /* btnEl can be a button element (new data-attr approach) or a string ID (legacy) */
-      var appId  = (btnEl && btnEl.dataset) ? btnEl.dataset.app  : btnEl;
-      var taskId = (btnEl && btnEl.dataset) ? btnEl.dataset.task : arguments[1];
-      if (!confirm('Accept this tasker for the job?')) return;
-      try {
-        await window.supabase.from('task_applications').update({status:'accepted'}).eq('id',appId);
-        showToast('\uD83C\uDF89 Application accepted! The tasker has been notified.');
-        appLoaded = false;
-        await loadApplications();
-      } catch(e) { showToast('Error: ' + e.message); }
-    }
-    window.acceptApp = acceptApp;
-
-    async function rejectApp(btnEl) {
-      var appId = (btnEl && btnEl.dataset) ? btnEl.dataset.app : btnEl;
-      try {
-        await window.supabase.from('task_applications').update({status:'rejected'}).eq('id',appId);
-        showToast('Application declined.');
-        appLoaded = false;
-        await loadApplications();
-      } catch(e) { showToast('Error: ' + e.message); }
-    }
-    window.rejectApp = rejectApp;
 
     /* ── Notifications ───────────────────────────────────────── */
     async function loadCustNotifications() {
@@ -1161,11 +818,7 @@
         el.onclick = function(e) {
           var card = e.target.closest('[data-notif-action]');
           if (!card) return;
-          if (card.dataset.notifAction === 'applications') {
-            window.location.href = 'customer-applications.html';
-            appLoaded = false;
-            loadApplications();
-          }
+          if (card.dataset.notifAction === 'applications') window.location.href = 'customer-applications.html';
         };
       } catch(e) {
         el.innerHTML = '<p style="color:var(--red);font-size:var(--text-sm);padding:16px;">Could not load notifications.</p>';
@@ -1534,40 +1187,6 @@
       } catch(e) { showToast('Could not open messages: ' + e.message); }
     }
     window.openInAppChat = openInAppChat;
-
-    function openFirstMessagePrompt(appId, taskerId, taskerName) {
-      var modal = document.getElementById('firstMsgModal');
-      if (!modal) {
-        /* Create modal dynamically */
-        modal = document.createElement('div');
-        modal.id = 'firstMsgModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-        modal.innerHTML =
-          '<div style="background:#fff;border-radius:16px;padding:32px;max-width:460px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);text-align:left;">' +
-          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
-          '<div style="width:44px;height:44px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;">' +
-          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>' +
-          '<div><div style="font-weight:800;font-size:var(--text-base);">Send a message to <span id="firstMsgName"></span></div>' +
-          '<div style="font-size:var(--text-xs);color:var(--text-muted);">Start the conversation to get things moving.</div></div></div>' +
-          '<textarea id="firstMsgText" rows="4" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:var(--text-sm);font-family:var(--font);resize:vertical;outline:none;box-sizing:border-box;margin-bottom:12px;" ' +
-          'onfocus="this.style.borderColor=&quot;var(--blue)&quot;" onblur="this.style.borderColor=&quot;var(--border)&quot;"></textarea>' +
-          '<div style="display:flex;gap:8px;">' +
-          '<button id="firstMsgSend" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:var(--text-sm);cursor:pointer;">Send Message</button>' +
-          '<button onclick="document.getElementById(&quot;firstMsgModal&quot;).remove()" style="padding:11px 16px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:var(--text-sm);">Skip</button>' +
-          '</div></div>';
-        document.body.appendChild(modal);
-      }
-      document.getElementById('firstMsgName').textContent = taskerName || 'the tasker';
-      var defaultMsg = 'Hi! I accepted your application. When are you available to get started?';
-      document.getElementById('firstMsgText').value = defaultMsg;
-      document.getElementById('firstMsgSend').onclick = function() {
-        openInAppChat('task_application', appId, taskerId);
-        sessionStorage.setItem('st_first_msg', document.getElementById('firstMsgText').value);
-        modal.remove();
-      };
-      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
-    }
-    window.openFirstMessagePrompt = openFirstMessagePrompt;
 
     function openTaskerChat(contextType, contextId, otherUserId) {
       openInAppChat(contextType, contextId, otherUserId);
