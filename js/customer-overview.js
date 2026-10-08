@@ -6,6 +6,9 @@
    Fills the four stat cards, the filters and the Active Requests
    panel (list, detail, Message Tasker, Pay Now / Release Funds).
 
+   The desktop layout is #cov (.tov-*); the phone layout is #com (.tom-*).
+   Only one of them is shown at a time (css/styles.css).
+
    Reuses these page globals at click time:
    openTaskerChat, openPaymentModal, confirmComplete, showToast.
 
@@ -26,6 +29,7 @@
   var DEAD_BOOKING   = ['cancelled', 'canceled', 'declined', 'rejected'];
   var DEAD_TASK      = ['cancelled', 'canceled'];
 
+  var mstate = { tab: 'progress', cat: '', q: '', selectedId: null };
   var state = {
     uid: null,
     tasks: [],
@@ -35,6 +39,7 @@
     loaded: false,
     tab: 'progress',
     selectedId: null,
+    name: '',
     defaults: { from: '', to: '' },
     channel: null
   };
@@ -111,8 +116,12 @@
         .order('created_at', { ascending: false })),
       safe(sb.from('bookings').select('*').eq('customer_id', user.id).order('created_at', { ascending: false })),
       (window.ST && window.ST.payments && window.ST.payments.getWallet)
-        ? window.ST.payments.getWallet(user.id).catch(function () { return null; }) : null
+        ? window.ST.payments.getWallet(user.id).catch(function () { return null; }) : null,
+      safe(sb.from('users').select('name,first_name').eq('id', user.id).maybeSingle())
     ]);
+    var me = results[3] || {};
+    state.name = me.first_name || (me.name ? String(me.name).split(' ')[0] : '') ||
+      ((user.user_metadata && user.user_metadata.name) ? String(user.user_metadata.name).split(' ')[0] : '');
 
     var tasks = results[0] || [];
     var bookings = results[1] || [];
@@ -269,6 +278,11 @@
     var held = 0;
     all.forEach(function (r) { if (r.booking && r.booking.status !== 'completed' && payState(r) === 'held') held += r.amount; });
     $('covEscrowValue').textContent = naira(held);
+
+    renderMobileStats({
+      posted: tasks.length, newToday: newToday, newWeek: newWeek, live: live, completed: completed,
+      sched: sched, closed: closed, held: held, balance: w.balance || 0, months: months, all: all
+    });
   }
 
   /* running total of completed tasks by month for the sparkline (needs 2+ distinct points) */
@@ -651,6 +665,182 @@
     });
   }
 
+  /* ══════════════ Mobile layout (#com) ══════════════ */
+  function compact(n) {
+    n = Math.round(Number(n) || 0);
+    if (n >= 1000000) return '₦' + (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return '₦' + (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+    return '₦' + n;
+  }
+
+  function renderMobileStats(c) {
+    if (!$('com')) return;
+    $('comTitle').textContent = 'Hello' + (state.name ? ', ' + state.name : '') + ' 👋';
+
+    $('comPosted').textContent = c.posted;
+    $('comPostedTrend').innerHTML = c.newToday > 0
+      ? '<span class="tom-up">' + trendIcon(true) + '+' + c.newToday + ' new</span>'
+      : c.newWeek > 0 ? '<span class="tom-up">' + trendIcon(true) + '+' + c.newWeek + ' this week</span>'
+      : '<span class="tom-muted">' + (c.posted ? 'No new tasks this week' : 'Nothing posted yet') + '</span>';
+    $('comOffers').textContent = plural(state.offersPending, 'offer', 'offers') + ' pending';
+
+    $('comActive').textContent = c.live.length;
+    $('comActiveSub').textContent = c.sched > 0 ? '+' + c.sched + ' scheduled' : 'Nothing scheduled';
+
+    /* requests per weekday, Monday to Friday of this week */
+    var now = new Date(), dow = (now.getDay() + 6) % 7;
+    var monday = startOfDay(new Date(now.getTime() - dow * DAY));
+    var counts = [0, 0, 0, 0, 0];
+    c.all.forEach(function (r) {
+      var i = Math.round((startOfDay(requestDate(r)) - monday) / DAY);
+      if (i >= 0 && i < 5) counts[i]++;
+    });
+    var max = Math.max.apply(null, counts.concat([1])), letters = ['M', 'T', 'W', 'T', 'F'];
+    $('comDays').innerHTML = counts.map(function (n, i) {
+      return '<span class="tom-day"><span class="tom-day-bar' + (i === dow ? ' is-today' : '') + '" data-h="' +
+        (n ? Math.max(16, Math.round((n / max) * 100)) : 8) + '" title="' + n + (n === 1 ? ' task' : ' tasks') + '"></span><span class="tom-day-label">' + letters[i] + '</span></span>';
+    }).join('');
+    $('comDays').querySelectorAll('.tom-day-bar').forEach(function (b) { b.style.height = b.dataset.h + '%'; });
+
+    $('comDone').textContent = c.completed.length;
+    $('comDoneSub').innerHTML = c.closed > 0
+      ? '<span class="tom-up">' + trendIcon(true) + (c.completed.length / c.closed * 100).toFixed(0) + '% rate</span>'
+      : '<span class="tom-muted">No tasks closed yet</span>';
+    renderSpark(c.months, c.completed, $('comSpark'));
+
+    $('comWallet').textContent = naira(c.balance);
+    $('comEscrowSub').textContent = compact(c.held) + ' held in escrow';
+
+    /* review prompt: only once a booked job has finished */
+    var done = c.completed.filter(function (r) { return r.booking && r.booking.tasker_id; })
+      .sort(function (a, b) { return doneDate(b) - doneDate(a); })[0];
+    $('comPromo').hidden = !done;
+    if (done) $('comPromoBtn').href = 'tasker-profile.html?id=' + encodeURIComponent(done.booking.tasker_id);
+  }
+
+  function mList() {
+    var q = mstate.q.trim().toLowerCase().replace(/^#/, '');
+    return visible().filter(function (r) {
+      if (mstate.cat && r.category !== mstate.cat) return false;
+      if (q) {
+        var hay = (r.title + ' ' + r.tasker + ' ' + shortId(r) + ' ' + (r.location || '')).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMobile() {
+    if (!$('com')) return;
+    var base = mList();
+
+    /* category chips: counts over live work */
+    var live = visible().filter(function (r) { return group(r) === 'progress'; });
+    var cats = {};
+    live.forEach(function (r) { if (r.category) cats[r.category] = (cats[r.category] || 0) + 1; });
+    var chips = '<button type="button" class="tom-cat' + (mstate.cat ? '' : ' is-active') + '" data-cat="">All (' + live.length + ')</button>';
+    Object.keys(cats).sort().forEach(function (c) {
+      chips += '<button type="button" class="tom-cat' + (mstate.cat === c ? ' is-active' : '') + '" data-cat="' + esc(c) + '">' +
+        esc(String(c).replace(/_/g, ' ')) + '</button>';
+    });
+    $('comCats').innerHTML = chips;
+
+    $('comCountProgress').textContent = byTab(base, 'progress').length;
+    $('comCountCompleted').textContent = byTab(base, 'completed').length;
+
+    var rows = byTab(base, mstate.tab);
+    var feat = $('comFeature'), qw = $('comQueueWrap');
+    if (!rows.length) {
+      feat.innerHTML = '<p class="tom-empty">' + (visible().length ? 'Nothing here right now.' : 'No requests yet. Tap Post Task to get started.') + '</p>';
+      qw.hidden = true;
+      mstate.selectedId = null;
+      return;
+    }
+    if (!rows.some(function (r) { return r.id === mstate.selectedId; })) mstate.selectedId = rows[0].id;
+    var r = rows.filter(function (x) { return x.id === mstate.selectedId; })[0];
+    var act = actionFor(r), ps = payState(r), chatOk = !!(r.booking && r.booking.tasker_id);
+
+    var addons = r.addons.map(function (a) {
+      var label = a && (a.name || a.label || a.title) || 'Add-on', price = a && (a.price != null ? a.price : a.amount);
+      return '<span class="tom-chip-sm">' + esc(label) + ' • ' + esc(naira(price)) + '</span>';
+    }).join('');
+    var note = ps === 'held' ? '<strong>StreetTasker Escrow Protected:</strong> Funds released only when satisfied.'
+      : ps === 'released' ? '<strong>Payment released</strong> to the tasker.'
+      : ps === 'disputed' ? '<strong>Dispute open.</strong> Payment is frozen while we review.'
+      : !r.booking ? '<strong>Escrow protected.</strong> Pick an offer; you pay into escrow, not to the tasker.'
+      : r.booking.status === 'pending' ? '<strong>Waiting for the tasker</strong> to confirm your booking.'
+      : '<strong>Payment required.</strong> Pay now to lock in this booking.';
+
+    var person = r.booking
+      ? '<div class="tom-client"><span class="tom-client-av">' + esc(initials(r.tasker)) + '</span>' +
+        '<span class="tom-client-text"><strong>' + esc(r.tasker) +
+        (r.rating ? ' <span class="tom-star">★ ' + esc(r.rating.toFixed(1)) + '</span>' : '') + '</strong><small>' +
+        esc([r.location, r.booking.scheduled_time ? scheduleText(r).replace('Scheduled for ', '') : ''].filter(Boolean).join(' • ') || 'Details to be confirmed') + '</small></span></div>'
+      : '<div class="tom-client"><span class="tom-client-av">' + esc(initials(r.title)) + '</span>' +
+        '<span class="tom-client-text"><strong>No tasker yet</strong><small>' + esc(plural(r.offers, 'offer', 'offers') + ' received' + (r.location ? ' • ' + r.location : '')) + '</small></span></div>';
+
+    feat.innerHTML =
+      '<div class="tom-feature-top">' +
+        '<div class="tom-feature-ids"><span class="tom-id">' + esc(shortId(r)) + '</span><span class="tom-state">' + esc(statusLabel(r)) + '</span></div>' +
+        '<div class="tom-escrow-amt"><small>' + (ps === 'held' ? 'In escrow' : 'Fixed quote') + '</small><strong>' + esc(naira(r.amount)) + '</strong></div>' +
+      '</div>' +
+      '<h3 class="tom-feature-title">' + esc(r.title) + '</h3>' +
+      '<p class="tom-due"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + esc(dueText(r)) + '</p>' +
+      person +
+      (addons ? '<div class="tom-addons"><span class="tom-addons-label">Add-ons</span>' + addons + '</div>' : '') +
+      '<div class="tom-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p>' + note + '</p></div>' +
+      '<div class="tom-feature-actions">' +
+        '<button type="button" class="tom-act-ghost" data-act="chat"' + (chatOk ? '' : ' disabled') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message</button>' +
+        '<button type="button" class="tom-act-main" data-act="' + (act.act || '') + '"' + (act.disabled ? ' disabled' : '') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' + esc(act.label) + '</button>' +
+      '</div>';
+
+    var others = rows.filter(function (x) { return x.id !== r.id; });
+    qw.hidden = !others.length;
+    $('comQueueTitle').textContent = mstate.tab === 'completed' ? 'Recently Completed' : 'Other Active Tasks';
+    $('comQueue').innerHTML = others.map(function (x) {
+      var offers = !x.booking && x.offers > 0;
+      return '<div class="tom-qc" data-id="' + esc(x.id) + '">' +
+        '<div class="tom-qc-top"><span class="tom-qc-id">' + esc(shortId(x)) + '</span><span class="tom-qc-pill">' + esc(statusLabel(x)) + '</span></div>' +
+        '<div class="tom-qc-title">' + esc(x.title) + '</div>' +
+        '<div class="tom-qc-amt">' + esc(naira(x.amount)) + '</div>' +
+        '<button type="button" class="tom-qc-btn" data-qact="' + (offers ? 'offers' : 'view') + '">' + (offers ? 'Review Bids →' : 'View Details') + '</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function bindMobile() {
+    if (!$('com')) return;
+    $('comSearch').addEventListener('input', function () { mstate.q = this.value; renderMobile(); });
+    $('comCats').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cat]'); if (!b) return;
+      mstate.cat = b.dataset.cat; renderMobile();
+    });
+    var tabs = $('com').querySelectorAll('.tom-tab');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        mstate.tab = tab.dataset.mtab;
+        tabs.forEach(function (t) {
+          var on = t === tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on));
+        });
+        renderMobile();
+      });
+    });
+    $('comQueue').addEventListener('click', function (e) {
+      var card = e.target.closest('.tom-qc'); if (!card) return;
+      var btn = e.target.closest('[data-qact]');
+      if (btn && btn.dataset.qact === 'offers') { window.location.href = 'customer-applications.html'; return; }
+      mstate.selectedId = card.dataset.id; renderMobile();
+      $('comFeature').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    $('comFeature').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-act]');
+      if (!btn || btn.disabled) return;
+      runAction(btn.dataset.act, state.requests.filter(function (x) { return x.id === mstate.selectedId; })[0]);
+    });
+  }
+
   /* ── load + realtime ─────────────────────────────────────── */
   var reloadTimer = null;
   async function reload(manual) {
@@ -670,9 +860,16 @@
           t.setAttribute('aria-selected', String(on));
         });
       }
+      if (!state.loaded) {
+        mstate.tab = state.tab === 'completed' ? 'completed' : 'progress';
+        if ($('com')) $('com').querySelectorAll('.tom-tab').forEach(function (t) {
+          var on = t.dataset.mtab === mstate.tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on));
+        });
+      }
       state.loaded = true;
       renderStats();
       renderRequests();
+      renderMobile();
       if (manual) toast('Requests refreshed');
     } catch (e) {
       console.warn('[Customer overview] load failed:', e && e.message);
@@ -682,23 +879,28 @@
   }
 
   function subscribe() {
-    var live = $('covLive');
+    var live = $('covLive'), mlive = $('comRealtime');
     function schedule() {
       clearTimeout(reloadTimer);
       reloadTimer = setTimeout(function () { reload(false); }, 600);
     }
     try {
-      if (!window.supabase.channel || !state.uid) { live.hidden = true; return; }
+      if (!window.supabase.channel || !state.uid) { live.hidden = true; if (mlive) mlive.hidden = true; return; }
       state.channel = window.supabase.channel('cov-requests-' + state.uid)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: 'customer_id=eq.' + state.uid }, schedule)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: 'customer_id=eq.' + state.uid }, schedule)
-        .subscribe(function (status) { live.classList.toggle('is-off', status !== 'SUBSCRIBED'); });
-    } catch (e) { live.hidden = true; }
+        .subscribe(function (status) {
+          var off = status !== 'SUBSCRIBED';
+          live.classList.toggle('is-off', off);
+          if (mlive) mlive.classList.toggle('is-off', off);
+        });
+    } catch (e) { live.hidden = true; if (mlive) mlive.hidden = true; }
   }
 
   async function init() {
     if (!$('cov') || !window.supabase) return;
     bind();
+    bindMobile();
     await reload(false);
     subscribe();
   }

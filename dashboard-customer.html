@@ -445,6 +445,95 @@
 
             <!-- Overview Panel (js/customer-overview.js fills the data) -->
             <div id="panel-overview" class="dashboard-panel active">
+              <!-- ═══ OVERVIEW — mobile layout (shown at 768px and below; js/customer-overview.js fills it) ═══ -->
+              <div class="tom" id="com">
+                <div class="tom-welcome">
+                  <div class="tom-welcome-text">
+                    <h1 class="tom-title" id="comTitle">Hello</h1>
+                    <p class="tom-sub">Manage active requests &amp; escrow</p>
+                  </div>
+                  <a href="post-task.html" class="tom-post">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Post Task
+                  </a>
+                </div>
+
+                <div class="tom-stats">
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Posted Tasks</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                    <div class="tom-value" id="comPosted">0</div>
+                    <div class="tom-trend" id="comPostedTrend"></div>
+                    <div class="tom-card-foot">
+                      <a href="customer-applications.html" class="tom-link" id="comOffers">0 offers pending</a>
+                    </div>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">In Progress</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                    <div class="tom-value" id="comActive">0</div>
+                    <div class="tom-trend" id="comActiveSub"></div>
+                    <div class="tom-days" id="comDays" aria-hidden="true"></div>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Completed</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg></div>
+                    <div class="tom-value" id="comDone">0</div>
+                    <div class="tom-trend" id="comDoneSub"></div>
+                    <svg class="tom-spark" id="comSpark" viewBox="0 0 230 56" aria-hidden="true"></svg>
+                  </article>
+
+                  <article class="tom-card">
+                    <div class="tom-card-top"><span class="tom-label">Wallet</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+                    <div class="tom-value" id="comWallet">&#8358;0</div>
+                    <div class="tom-trend" id="comEscrowSub"></div>
+                    <div class="tom-card-foot tom-card-foot-end">
+                      <a href="wallet.html" class="tom-btn-dark">Top Up</a>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="tom-search">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <label class="sr-only" for="comSearch">Search requests</label>
+                  <input type="search" id="comSearch" placeholder="Search tasks, taskers, or IDs..." autocomplete="off" />
+                </div>
+                <div class="tom-cats" id="comCats" role="group" aria-label="Filter by category"></div>
+
+                <section class="tom-panel" aria-labelledby="comPanelTitle">
+                  <div class="tom-panel-head">
+                    <h2 id="comPanelTitle">Active Requests</h2>
+                    <span class="tom-live" id="comRealtime"><i aria-hidden="true"></i>Real-time</span>
+                    <a href="dashboard-customer.html?panel=bookings" class="tom-history">History
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+                  </div>
+                  <div class="tom-tabs" role="tablist" aria-label="Request status">
+                    <button type="button" class="tom-tab is-active" role="tab" data-mtab="progress" aria-selected="true">In Progress <span id="comCountProgress">0</span></button>
+                    <button type="button" class="tom-tab" role="tab" data-mtab="completed" aria-selected="false">Completed <span id="comCountCompleted">0</span></button>
+                  </div>
+                  <div class="tom-feature" id="comFeature" aria-live="polite"></div>
+                  <div class="tom-queue-wrap" id="comQueueWrap" hidden>
+                    <div class="tom-queue-head">
+                      <h3 class="tom-queue-title" id="comQueueTitle">Other Active Tasks</h3>
+                      <span class="tom-queue-hint">Swipe left</span>
+                    </div>
+                    <div class="tom-swipe" id="comQueue"></div>
+                  </div>
+                </section>
+
+                <aside class="tom-promo" id="comPromo" hidden>
+                  <span class="tom-promo-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                  </span>
+                  <div class="tom-promo-text"><strong>Leave a Review after Payout</strong><span>Helps verify quality Lagos artisan taskers</span></div>
+                  <a href="#" class="tom-promo-btn" id="comPromoBtn">Review</a>
+                </aside>
+              </div>
+              <!-- ═══ END OVERVIEW mobile layout ═══ -->
+
               <div class="tov" id="cov">
 
                 <header class="tov-head">

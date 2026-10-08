@@ -4537,9 +4537,57 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 .tov a.tov-payout { text-decoration: none; }
 .tov a.tov-payout { display: inline-flex; align-items: center; }
 
-/* STAGE 1 interim: the mobile layout (.tom) is built in Stage 3, so until then
-   the customer page keeps the stacked desktop layout on small screens.
-   Stage 3 removes this rule. */
+/* Mobile additions for the customer Overview (768px and below).
+   Everything else comes from the shared .tom-* rules above. */
 @media (max-width: 768px) {
-  body.cdash-page .tov { display: block; }
+  .tom-welcome { align-items: center; }
+  .tom-welcome-text { min-width: 0; }
+  .tom-welcome-text .tom-sub { margin-top: var(--space-1); font-size: var(--text-sm); }
+  .tom-post {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-1);
+    height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-pill);
+    background: var(--tm-panel); color: var(--to-dark-text);
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
+    text-decoration: none; white-space: nowrap; box-shadow: var(--shadow-primary-md);
+  }
+  a.tom-btn-dark, a.tom-btn-soft { text-decoration: none; }
+  .tom-link {
+    display: inline-flex; align-items: center; gap: var(--space-1);
+    font-size: var(--text-xs); font-weight: 700; color: var(--to-green); text-decoration: none;
+  }
+
+  /* "Other Active Tasks": cards you swipe sideways */
+  .tom-queue-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+  .tom-queue-hint { font-size: var(--text-xs); font-weight: 700; color: var(--tm-mint); }
+  .tom-swipe {
+    display: flex; gap: var(--space-3); margin-top: var(--space-3); padding-bottom: var(--space-1);
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  }
+  .tom-swipe::-webkit-scrollbar { display: none; }
+  .tom-qc {
+    flex: 0 0 72%; min-width: 0; scroll-snap-align: start;
+    display: flex; flex-direction: column; gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--tm-card); border: 1px solid var(--tm-border); border-radius: var(--radius-xl);
+  }
+  .tom-qc-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .tom-qc-id { font-size: var(--text-xs); color: var(--tm-text-soft); }
+  .tom-qc-pill {
+    padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+    background: var(--tm-chip); color: var(--tm-mint);
+    font-size: var(--text-2xs); font-weight: 700; white-space: nowrap;
+  }
+  .tom-qc-title {
+    font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; color: var(--to-dark-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tom-qc-amt { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; color: var(--to-dark-text); }
+  .tom-qc-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+    height: 44px; margin-top: auto; border: 0; border-radius: var(--radius-pill);
+    background: var(--tm-panel-deep); color: var(--tm-mint);
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; cursor: pointer;
+  }
+  .tom-qc-btn:focus-visible { outline: 2px solid var(--tm-mint); outline-offset: 2px; }
+  .tom-star { color: var(--tm-mint); font-size: var(--text-xs); }
 }
