@@ -67,7 +67,7 @@
       var ar = await window.supabase.from('task_applications').select('*')
         .in('task_id', state.tasks.map(function (t) { return t.id; })).order('created_at', { ascending: false });
       if (ar.error) { renderError(ar.error.message); return; }
-      rows = ar.data || [];
+      rows = (ar.data || []).filter(function (a) { return a.status !== 'withdrawn'; });  /* taskers' withdrawn offers stay private */
     }
 
     /* One batched lookup each for tasker profiles and user records */
@@ -97,13 +97,7 @@
         pitch: msg.pitch, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
       };
     });
-    buildTaskOptions();
-    /* Arriving from My Tasks (?task=<id>): show only that task's applications */
-    var wanted = new URLSearchParams(window.location.search).get('task');
-    if (wanted && state.apps.some(function (a) { return String(a.task.id) === wanted; })) {
-      state.task = wanted; $('apTask').value = wanted;
-    }
-    render();
+    buildTaskOptions(); render();
   }
 
   /* ── Render ───────────────────────────────────────────── */
