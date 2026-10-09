@@ -78,7 +78,6 @@
 
         <div class="gcs-actions">
           <button type="button" class="btn gcs-btn gcs-btn--primary" id="gcs-print"><svg class="gc-icon" aria-hidden="true"><use href="#gc-printer"/></svg>Save as PDF / Print</button>
-          <button type="button" class="btn gcs-btn gcs-btn--ghost" id="gcs-copylink"><svg class="gc-icon" aria-hidden="true"><use href="#gc-copy"/></svg><span>Copy redeem link</span></button>
           <a class="btn gcs-btn gcs-btn--ghost" id="gcs-share" href="#" target="_blank" rel="noopener"><svg class="gc-icon" aria-hidden="true"><use href="#gc-message-circle"/></svg>Share on WhatsApp</a>
         </div>
         <a class="gcs-link" href="gift-cards.html">Buy another gift card<svg class="gc-icon" aria-hidden="true"><use href="#gc-arrow-right"/></svg></a>
@@ -99,44 +98,6 @@
     </section>
   </div>
 
-  <!-- The page that prints / saves as PDF. Hidden on screen; see "Printable gift card" in css/gift-cards.css -->
-  <div class="gcp" id="gcp" aria-hidden="true">
-    <div class="gcp-frame">
-      <div class="gcp-band">
-        <span class="gcp-brand"><svg class="gc-icon" aria-hidden="true"><use href="#gc-handshake"/></svg>StreetTasker</span>
-        <span class="gcp-kind">Gift Card</span>
-      </div>
-      <div class="gcp-bow"><svg class="gc-icon" aria-hidden="true"><use href="#gc-gift"/></svg></div>
-
-      <p class="gcp-eyebrow">A gift for you</p>
-      <h2 class="gcp-to" data-f="recipient"></h2>
-      <p class="gcp-msg" data-f="message"></p>
-      <p class="gcp-from">With love from <strong data-f="sender"></strong></p>
-
-      <div class="gcp-amount">
-        <span class="gcp-amount-label">Gift value</span>
-        <strong class="gcp-amount-value" data-f="amount"></strong>
-        <span class="gcp-amount-for" data-f="usable"></span>
-      </div>
-
-      <div class="gcp-redeem">
-        <div class="gcp-code">
-          <span class="gcp-code-label">Your gift code</span>
-          <strong class="gcp-code-value" data-f="code"></strong>
-          <span class="gcp-code-url">streettasker.com/redeem</span>
-        </div>
-        <div class="gcp-qr" id="gcp-qr"></div>
-      </div>
-
-      <ol class="gcp-steps">
-        <li><span>1</span>Go to <strong>streettasker.com/redeem</strong> or scan the code</li>
-        <li><span>2</span>Log in, or create a free account</li>
-        <li><span>3</span>Enter your code and start booking</li>
-      </ol>
-      <p class="gcp-fine">This card never expires. Questions? kiyomigroups@gmail.com</p>
-    </div>
-  </div>
-
   <div id="footer-placeholder"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -146,7 +107,6 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/vendor/qrcode.min.js"></script>
   <script src="js/gift-card-success.js"></script>
 </body>
 </html>

@@ -86,8 +86,7 @@
     state.apps = rows.map(function (a) {
       var t = a.tasks || {}; var p = parseMessage(a.message);
       return {
-        id: a.id, raw: a, task: t, status: a.status,
-        group: (a.status === 'accepted' && t.status === 'completed') ? 'completed' : group(a.status), created: a.created_at,
+        id: a.id, raw: a, task: t, status: a.status, group: group(a.status), created: a.created_at,
         pitch: p.pitch, offer: p.rate != null ? p.rate : (t.budget || null),
         ownerId: t.customer_id || t.user_id || null, customer: names[t.customer_id || t.user_id] || '', rivals: rivals[t.id] || 0,
       };
@@ -165,7 +164,7 @@
     var map = {
       pending:   ['ap-badge-pending',   '<span class="ap-badge-dot"></span>Pending Review'],
       accepted:  ['ap-badge-accepted',  icon('circle-check') + 'Accepted \u2022 Ready to Start'],
-      declined:  ['ap-badge-declined',  a.status === 'withdrawn' ? 'Withdrawn' : 'Declined'],
+      declined:  ['ap-badge-declined',  'Declined'],
       completed: ['ap-badge-completed', icon('circle-check') + 'Completed'],
     }[a.group];
     return '<span class="ap-badge ' + map[0] + '">' + map[1] + '</span>';
@@ -301,7 +300,7 @@
     var btn = this; btn.disabled = true;
     try {
       await window.withdrawMyApplication(current.id);
-      current.status = 'withdrawn'; current.group = 'declined';
+      state.apps = state.apps.filter(function (a) { return a !== current; });
       $('apWithdrawDlg').close(); render();
       if (window.showToast) window.showToast('Application withdrawn');
     } catch (x) {

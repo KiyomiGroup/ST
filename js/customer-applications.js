@@ -67,7 +67,7 @@
       var ar = await window.supabase.from('task_applications').select('*')
         .in('task_id', state.tasks.map(function (t) { return t.id; })).order('created_at', { ascending: false });
       if (ar.error) { renderError(ar.error.message); return; }
-      rows = (ar.data || []).filter(function (a) { return a.status !== 'withdrawn'; });  /* taskers' withdrawn offers stay private */
+      rows = ar.data || [];
     }
 
     /* One batched lookup each for tasker profiles and user records */

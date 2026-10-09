@@ -10,8 +10,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
     return;
   }
   window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    // A page can set window.__ST_SKIP_URL_SESSION__ = true first (redeem.html does: its ?code= is a gift card, not a sign-in code)
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: window.__ST_SKIP_URL_SESSION__ !== true },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   });
   console.log('[StreetTasker] Supabase client initialized ✓');
 })();

@@ -193,29 +193,6 @@ Nav buttons are a fixed exception, defined in section 5.
 
 ---
 
-### 4.6 Mobile menu drawer (implemented)
-
-One menu for guests, customers and taskers at 768px and below. It replaces the old hamburger menu and the two dashboard drawers. Markup is `#navDrawer` in `components/navbar.html`; behaviour is `initNavDrawer()` in `js/app.js`; role visibility is `_syncNavDrawer()` in `js/auth.js`.
-
-- Slides in from the left over a dim overlay. Width is `--drawer-width`, never wider than the screen minus 32px so the close tab always shows.
-- Dark forest panel (`--drawer-bg`), white text, mint accent (`--drawer-accent`) for icons, the current-page bar, counts and dots.
-- Header: avatar, name and email (logged in) or the logo (guests). Log out is pinned to the bottom; guests get Sign Up, Log in and Become a Tasker there instead.
-- Pages already in the mobile bottom nav (Home, Tasks, Post, Messages, Profile) are not repeated in the drawer.
-- Rows are 48px tall minimum. The current page gets `aria-current="page"`.
-
-| Token | Value | Use |
-|---|---|---|
-| `--drawer-width` | 320px | Panel width |
-| `--drawer-bg` | forest-900 | Panel |
-| `--drawer-bg-raised` | forest-800 | Avatar fill, close tab |
-| `--drawer-overlay` | forest-900 at 55% | Dim layer behind the panel |
-| `--drawer-text` / `--drawer-text-muted` | white / white at 72% | Text |
-| `--drawer-hover` / `--drawer-active` | white at 8% / 14% | Row hover, current row |
-| `--drawer-border` | white at 16% | Dividers, outline buttons |
-| `--drawer-accent` / `--drawer-accent-ink` | mint / dark green | Accent and text on it |
-
----
-
 ## 5. Logged-out desktop navigation (implemented)
 
 Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block at the end of `css/styles.css`. Applies at 1044px and wider, to `body:not(.st-logged-in)` only.

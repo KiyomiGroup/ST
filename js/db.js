@@ -151,24 +151,19 @@ async function applyToTask({ taskId, message = '' }) {
   await ensureUserProfile(user);
 
   const { data: existing } = await window.supabase.from('task_applications')
-    .select('id, status').eq('task_id', taskId).eq('tasker_id', user.id).maybeSingle();
-  if (existing && existing.status !== 'withdrawn') throw new Error('You have already applied for this task.');
+    .select('id').eq('task_id', taskId).eq('tasker_id', user.id).maybeSingle();
+  if (existing) throw new Error('You have already applied for this task.');
 
   const { data: taskerRow } = await window.supabase.from('taskers')
     .select('name, service').eq('user_id', String(user.id)).maybeSingle();
   const taskerName = taskerRow?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'A tasker';
 
-  /* A withdrawn application is revived in place (one row per tasker per task) */
-  const { data: app, error } = existing
-    ? await window.supabase.from('task_applications')
-        .update({ message: message.trim() || null, status: 'pending' })
-        .eq('id', existing.id).eq('tasker_id', user.id).eq('status', 'withdrawn').select().single()
-    : await window.supabase.from('task_applications').insert({
-        task_id:   taskId,
-        tasker_id: user.id,
-        message:   message.trim() || null,
-        status:    'pending',
-      }).select().single();
+  const { data: app, error } = await window.supabase.from('task_applications').insert({
+    task_id:   taskId,
+    tasker_id: user.id,
+    message:   message.trim() || null,
+    status:    'pending',
+  }).select().single();
   if (error) throw error;
 
   /* Notify task owner */
@@ -195,7 +190,7 @@ async function fetchTaskApplications(taskId) {
     .select('*, taskers:tasker_id(name, service, location, rating, photo_url, user_id, business_name)')
     .eq('task_id', taskId).order('created_at', { ascending: false });
   if (error) return [];
-  const rows = (data || []).filter(a => a.status !== 'withdrawn');
+  const rows = data || [];
   /* For accepted applications fetch tasker contact details */
   await Promise.all(rows.map(async a => {
     const userId = a.taskers?.user_id;
@@ -276,8 +271,7 @@ async function updateMyApplication(applicationId, { message, rate }) {
   return data;
 }
 
-/* Tasker withdraws a still-pending proposal. The row is kept with status 'withdrawn'
-   (needs allow_withdrawn_closed.sql) so history survives and the tasker can re-apply. */
+/* Tasker withdraws a still-pending proposal. */
 async function withdrawMyApplication(applicationId) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to withdraw your application.');
@@ -285,11 +279,9 @@ async function withdrawMyApplication(applicationId) {
     .select('id, task_id, status').eq('id', applicationId).eq('tasker_id', user.id).maybeSingle();
   if (!app) throw new Error('Application not found.');
   if (app.status !== 'pending') throw new Error('Only pending applications can be withdrawn.');
-  const { data: gone, error } = await window.supabase.from('task_applications')
-    .update({ status: 'withdrawn' })
-    .eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending').select('id');
+  const { error } = await window.supabase.from('task_applications')
+    .delete().eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending');
   if (error) throw error;
-  if (!gone || !gone.length) throw new Error('This application could not be withdrawn. Please refresh.');
   try {
     const { data: task } = await window.supabase.from('tasks')
       .select('user_id, customer_id, title').eq('id', app.task_id).single();

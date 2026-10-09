@@ -14,10 +14,6 @@
     congrats:     { label: 'Congratulations', icon: '#gc-party' },
     general:      { label: 'General Voucher', icon: '#gc-gift' }
   };
-  var LOCKS = { cleaning: 'Cleaning', handyman: 'Handyman & Home Repairs', moving: 'Moving & Heavy Lifting', wardrobe: 'Wardrobe & Tailoring', tech: 'Tech & Inverter Servicing' };
-  var OCCASIONS = { birthday: ' to wish you a happy birthday', thanks: ' to say thank you', housewarming: ' to celebrate your new home',
-    congrats: ' to say congratulations', cleaning: ' to treat you to a cleaner home' };
-  var redeemLink = '';
   var REF_RE = /^GC-[A-Z2-9]{20}$/;
   var POLL_MS = 2500;
   var MAX_TRIES = 8;       // about 20 seconds of waiting for the bank
@@ -64,23 +60,8 @@
     if (icon) icon.setAttribute('href', theme.icon);
     document.querySelector('.gcs-card .gc-cz-card-msg').hidden = !card.message;
 
-    // The printable sheet: what the card can be used for, a QR code to the redeem page, no empty message
-    setField('usable', LOCKS[card.category] ? 'Valid for ' + LOCKS[card.category] + ' bookings' : 'Valid on any StreetTasker booking');
-    var sheetMsg = document.querySelector('.gcp-msg'); if (sheetMsg) sheetMsg.hidden = !card.message;
-    var redeemUrl = window.location.origin + '/redeem.html?code=' + encodeURIComponent(card.code);
-    var qrBox = document.getElementById('gcp-qr');
-    if (qrBox && typeof qrcode === 'function') {
-      try {
-        var qr = qrcode(0, 'M'); qr.addData(redeemUrl); qr.make();
-        qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });   // generated here from our own text, not from user input
-      } catch (e) { qrBox.hidden = true; }
-    }
-
-    // The link opens the redeem page with this card's code already in it, so the message needs nothing else
-    var link = window.location.origin + '/redeem.html?code=' + encodeURIComponent(card.code);
-    var text = 'From StreetTasker. ' + card.senderName + ' just sent you ' + naira(card.amount) + ' Giftcard' +
-      (OCCASIONS[card.theme] || '') + '. Redeem it here: ' + link;
-    redeemLink = link;
+    var text = card.senderName + ' sent you a StreetTasker gift card worth ' + naira(card.amount) +
+      '!\nYour code: ' + card.code + '\n\n' + window.location.origin;
     document.getElementById('gcs-share').setAttribute('href', 'https://wa.me/?text=' + encodeURIComponent(text));
 
     document.title = 'Your Gift Card \u2014 Street Taskers';
@@ -130,21 +111,6 @@
   }
 
   // ── Buttons ──
-  var linkBtn = document.getElementById('gcs-copylink');
-  linkBtn.addEventListener('click', function () {
-    var link = redeemLink || window.location.origin + '/redeem.html';   // same link as in the WhatsApp message
-    function done() {
-      var label = linkBtn.querySelector('span');
-      label.textContent = 'Link copied';
-      setTimeout(function () { label.textContent = 'Copy redeem link'; }, 2000);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(link).then(done, function () { window.prompt('Copy this link:', link); });
-    } else {
-      window.prompt('Copy this link:', link);
-    }
-  });
-
   var copyBtn = document.getElementById('gcs-copy');
   copyBtn.addEventListener('click', function () {
     var code = document.querySelector('.gcs-code-value').textContent;
