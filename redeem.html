@@ -135,5 +135,18 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/redeem.js"></script>
+  <script>
+    /* If the page is still on "Looking up" after 10 seconds, say why instead of spinning forever */
+    setTimeout(function () {
+      var box = document.getElementById('rd-loading');
+      if (!box || box.hidden) return;
+      var ran = window.__rdBooted === true;
+      box.querySelector('h1').textContent = ran ? 'This is taking too long' : 'This page did not finish loading';
+      var sp = box.querySelector('.gcs-spinner'); if (sp) sp.hidden = true;
+      var p = document.createElement('p'); p.className = 'gcs-lead';
+      p.textContent = ran ? 'Please refresh the page and try again.' : 'Please refresh with Ctrl+Shift+R. If it keeps happening, email kiyomigroups@gmail.com.';
+      box.appendChild(p);
+    }, 10000);
+  </script>
 </body>
 </html>

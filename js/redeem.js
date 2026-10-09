@@ -3,6 +3,7 @@
    the gift-card-redeem Edge Function. This page only shows the result. */
 (function () {
   'use strict';
+  window.__rdBooted = true;   // lets redeem.html tell "the script never ran" apart from "the script is waiting"
 
   var THEMES = {
     cleaning: { label: 'Cleaning & Home', icon: '#gc-brush' }, birthday: { label: 'Happy Birthday', icon: '#gc-cake' },
@@ -105,8 +106,9 @@
     document.getElementById('rd-login').setAttribute('href', 'login.html?redirect=' + back);
     var signupHref = 'signup.html?redirect=' + back;
     document.getElementById('rd-signup').setAttribute('href', signupHref);
-    document.getElementById('rd-dialog-signup').setAttribute('href', signupHref);
-    document.getElementById('rd-dialog-login').setAttribute('href', 'login.html?redirect=' + back);
+    var dSignup = document.getElementById('rd-dialog-signup'), dLogin = document.getElementById('rd-dialog-login');   // missing if the page is an older copy
+    if (dSignup) dSignup.setAttribute('href', signupHref);
+    if (dLogin) dLogin.setAttribute('href', 'login.html?redirect=' + back);
     document.getElementById('rd-actions-in').hidden = !token;
     document.getElementById('rd-actions-out').hidden = !!token;
     show('card');
@@ -157,8 +159,14 @@
   function openAccountDialog() {
     if (dialog && typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
   }
-  document.getElementById('rd-dialog-close').addEventListener('click', function () { if (dialog.open) dialog.close(); });
+  var dialogClose = document.getElementById('rd-dialog-close');
+  if (dialogClose) dialogClose.addEventListener('click', function () { if (dialog && dialog.open) dialog.close(); });
 
   var fromLink = new URLSearchParams(window.location.search).get('code');
-  if (fromLink) start(fromLink); else show('entry');
+  try {
+    if (fromLink) start(fromLink); else show('entry');
+  } catch (e) {
+    if (window.console) console.error('[redeem] could not start:', e);
+    problem('Something went wrong', 'Please refresh the page and try again.');
+  }
 })();
