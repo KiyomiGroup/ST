@@ -33,22 +33,35 @@
   }
   function problem(title, text) { setField('problem-title', title); setField('problem-text', text); show('problem'); }
 
+  var TIMEOUT_MS = 20000;
   function call(action) {
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT_MS);
     return fetch(FUNCTION_URL, {
       method: 'POST',
+      signal: ctl ? ctl.signal : undefined,
       headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: 'Bearer ' + (token || ANON_KEY) },
       body: JSON.stringify({ action: action, code: code })
     }).then(function (res) {
+      clearTimeout(timer);
       return res.json().catch(function () { return {}; }).then(function (data) { return { status: res.status, data: data }; });
+    }, function (err) {
+      clearTimeout(timer);
+      if (window.console) console.error('[redeem] request to gift-card-redeem failed:', (err && err.name) || '', (err && err.message) || err);
+      var e = new Error(err && err.name === 'AbortError' ? 'timeout' : 'network');
+      throw e;
     });
   }
 
   function getToken() {
     var auth = window.supabase && window.supabase.auth;
     if (!auth) return Promise.resolve('');
-    return auth.getSession().then(function (r) {
+    // If the login check is slow or stuck, carry on without it: looking up a card does not need a login
+    var slow = new Promise(function (resolve) { setTimeout(function () { resolve(''); }, 3000); });
+    var session = auth.getSession().then(function (r) {
       return r && r.data && r.data.session ? r.data.session.access_token : '';
     }, function () { return ''; });
+    return Promise.race([session, slow]);
   }
 
   function start(raw) {
@@ -69,8 +82,9 @@
       if (d.status === 'redeemed') { problem('Already redeemed', 'This gift card has already been used.'); return; }
       if (d.status !== 'active') { problem('Card not available', 'This gift card is no longer valid. Please contact support.'); return; }
       renderCard(d);
-    }).catch(function () {
-      problem('We couldn\u2019t reach the server', 'Check your connection and try again.');
+    }).catch(function (err) {
+      if (err && err.message === 'timeout') problem('This is taking too long', 'Please check your connection and try again in a moment.');
+      else problem('We couldn\u2019t reach the server', 'Check your connection and try again.');
     });
   }
 
@@ -113,9 +127,9 @@
       btn.disabled = false;
       err.textContent = d.error || 'We couldn\u2019t redeem the card. Please try again.';
       err.hidden = false;
-    }).catch(function () {
+    }).catch(function (e) {
       btn.disabled = false;
-      err.textContent = 'We couldn\u2019t reach the server. Check your connection and try again.';
+      err.textContent = e && e.message === 'timeout' ? 'This is taking too long. Please try again in a moment.' : 'We couldn\u2019t reach the server. Check your connection and try again.';
       err.hidden = false;
     });
   });
