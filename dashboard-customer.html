@@ -13,10 +13,6 @@
       if (q.get('panel') === 'applications' || window.location.hash === '#applications') {
         window.location.replace('customer-applications.html');
       }
-      /* My Tasks moved to its own page (my-tasks.html). */
-      if (q.get('panel') === 'my-tasks' || window.location.hash === '#my-tasks') {
-        window.location.replace('my-tasks.html');
-      }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -188,173 +184,15 @@
     .msg-mobile-back { display: none; align-items: center; gap: 6px; padding: 0; background: none; border: none; cursor: pointer; color: var(--blue); font-size: var(--text-sm); font-weight: 600; }
   </style>
 
-  <style id="mobile-menu-enhanced">
-    /* ── Enhanced mobile dropdown: profile avatar block ── */
-    .mob-menu-user {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 20px 20px 18px;
-      background: linear-gradient(135deg, var(--blue-light) 0%, transparent 100%);
-      border-bottom: 1px solid var(--blue-border);
-    }
-    .mob-menu-avatar {
-      width: 52px !important;
-      height: 52px !important;
-      border-radius: 50% !important;
-      background: var(--blue) !important;
-      color: #fff !important;
-      font-weight: 800 !important;
-      font-size: var(--text-md) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      flex-shrink: 0 !important;
-      overflow: hidden !important;
-      box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--blue);
-      letter-spacing: -0.02em;
-    }
-    .mob-menu-name {
-      font-weight: 700;
-      font-size: var(--text-base);
-      color: var(--text-primary);
-      line-height: 1.2;
-    }
-    .mob-menu-role {
-      font-size: var(--text-xs);
-      color: var(--blue);
-      margin-top: 3px;
-      font-weight: 600;
-      background: var(--blue-light);
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 99px;
-      border: 1px solid var(--blue-border);
-    }
-
-    /* ── Dropdown: menu items ── */
-    .mobile-nav-dropdown {
-      max-height: calc(100vh - 60px);
-      overflow-y: auto;
-    }
-    .mobile-nav-dropdown button,
-    .mobile-nav-dropdown a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 11px 20px;
-      font-size: var(--text-sm);
-      font-weight: 500;
-      color: var(--text-primary);
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      font-family: var(--font);
-      transition: background 0.12s, color 0.12s;
-      text-decoration: none;
-      border-radius: 0;
-    }
-    .mobile-nav-dropdown button:hover,
-    .mobile-nav-dropdown a:hover { background: var(--bg-subtle); }
-    .mobile-nav-dropdown button.active {
-      color: var(--blue);
-      background: var(--blue-light);
-      font-weight: 600;
-    }
-    .mobile-nav-dropdown button svg,
-    .mobile-nav-dropdown a svg { flex-shrink: 0; color: var(--text-muted); }
-    .mobile-nav-dropdown button.active svg { color: var(--blue); }
-    .mobile-nav-dropdown .nav-divider { height: 1px; background: var(--border); margin: 6px 0; }
-    .mob-menu-section-label {
-      padding: 10px 20px 4px;
-      font-size: var(--text-xs);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    /* Page-specific bottom tab bar removed — this page now gets the
-       shared, global floating pill nav from components/bottom-nav.html
-       (loaded by js/app.js), matching every other mobile page. */
-  </style>
 </head>
 <body class="ds-page cdash-page cdash-overview">
 
   <!-- Shared global top nav — visible on mobile only for this page (its
-       own .ds-topnav below covers desktop, unchanged). The hamburger is
-       rebound in initPage() to open this page's own panel drawer. -->
+       own .ds-topnav below covers desktop, unchanged). Its hamburger opens
+       the shared mobile menu drawer; panel links switch panels in place via
+       window.ST.dashboard (registered at the bottom of this file). -->
   <div id="navbar-placeholder"></div>
 
-  <div class="mobile-nav-dropdown" id="mobileNavDropdown">
-
-    <!-- Profile avatar header -->
-    <div class="mob-menu-user" id="mobMenuUser">
-      <div class="mob-menu-avatar" id="mobMenuAvatar">U</div>
-      <div class="mob-menu-user-info">
-        <div class="mob-menu-name" id="mobMenuName">My Account</div>
-        <div class="mob-menu-role" id="mobMenuRole">Customer</div>
-      </div>
-    </div>
-    <div class="nav-divider" style="height:1px;background:var(--border);margin:0;"></div>
-
-    <!-- PRIMARY NAVIGATION -->
-    <button onclick="mobileSwitchPanel('overview','Overview');closeMobileMenu()" class="active" id="mob-overview">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      My Page
-    </button>
-    <button onclick="mobileSwitchPanel('bookings','Bookings');loadBookings();closeMobileMenu()" id="mob-bookings">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Bookings
-    </button>
-    <button onclick="mobileSwitchPanel('notifications','Notifications');loadCustNotifications();closeMobileMenu()" id="mob-notifications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      Notifications
-      <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
-    </button>
-    <button onclick="window.location.href='messages.html'" id="mob-messages">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Messages
-    </button>
-    <button onclick="window.location.href='wallet.html'" id="mob-wallet">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      My Wallet
-    </button>
-
-    <div class="nav-divider" style="height:1px;background:var(--border);margin:6px 0;"></div>
-
-    <!-- MORE -->
-    <div class="mob-menu-section-label">MORE</div>
-    <button onclick="window.location.href='my-tasks.html'" id="mob-my-tasks">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      My Tasks
-    </button>
-    <button onclick="window.location.href='customer-applications.html'" id="mob-applications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Applications
-    </button>
-    <a href="find-taskers.html" onclick="closeMobileMenu()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Find Services
-    </a>
-    <a href="home-feed.html" onclick="closeMobileMenu()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-      Home
-    </a>
-    <button onclick="mobileSwitchPanel('profile','Edit Profile');loadProfilePanel();closeMobileMenu()" id="mob-profile">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Edit Profile
-    </button>
-
-    <div class="nav-divider" style="height:1px;background:var(--border);margin:6px 0;"></div>
-    <button onclick="if(window.ST&&window.ST.auth)window.ST.auth.logoutUser();else{localStorage.clear();window.location.href='login.html';}" class="mob-logout-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Log Out
-    </button>
-  </div>
-  <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
   <!-- Mobile bottom tab bar now comes from the shared, global
        components/bottom-nav.html (loaded by js/app.js). -->
@@ -381,7 +219,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
               Overview
             </button>
-            <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="my-tasks" onclick="window.location.href='my-tasks.html'">My Tasks</button>
+            <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="my-tasks" onclick="switchPanel('my-tasks',this);loadMyTasks()">My Tasks</button>
             <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="applications" onclick="window.location.href='customer-applications.html'">
               Applications
               <span id="custAppBadge" class="nav-pill-count" hidden></span>
@@ -394,7 +232,7 @@
 
         <div class="nav-icon-bar">
           <!-- Pending Tasks -->
-          <button type="button" class="nav-icon-btn" title="Pending Tasks" aria-label="Pending Tasks" onclick="window.location.href='my-tasks.html'">
+          <button type="button" class="nav-icon-btn" title="Pending Tasks" aria-label="Pending Tasks" onclick="switchPanel('my-tasks',document.querySelector('[data-panel=my-tasks]'));loadMyTasks()">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <span id="custPendingDot" class="nav-icon-dot" hidden></span>
           </button>
@@ -692,6 +530,12 @@
               </div>
             </div>
 
+            <!-- My Tasks Panel -->
+            <div id="panel-my-tasks" class="dashboard-panel">
+              <div class="panel-header"><h2>My Posted Tasks</h2><a href="post-task.html" class="btn btn-primary btn-sm">+ Post New</a></div>
+              <div class="task-row-list" id="allTasksList"><p style="color:var(--text-muted);font-size:var(--text-sm);padding:16px 0;">Loading...</p></div>
+            </div>
+
             <!-- Notifications Panel -->
             <div id="panel-notifications" class="dashboard-panel">
               <div class="panel-header">
@@ -987,6 +831,32 @@
         '</div>' +
       '</div>';
     }
+
+    /* ── My Tasks panel — loads on-demand ───────────────────── */
+    var myTasksLoaded = false;
+    async function loadMyTasks() {
+      if (myTasksLoaded) return;
+      myTasksLoaded = true;
+      var el = document.getElementById('allTasksList');
+      if (!el) return;
+      el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Loading tasks...</div>';
+      try {
+        var s2 = await window.supabase.auth.getSession();
+        var uid2 = s2.data.session && s2.data.session.user.id;
+        if (!uid2) throw new Error('Not logged in');
+        var r2 = await window.supabase.from('tasks').select('*')
+          .or('customer_id.eq.' + uid2 + ',user_id.eq.' + uid2)
+          .order('created_at', { ascending: false });
+        var tasks = r2.data || [];
+        el.innerHTML = tasks.length
+          ? tasks.map(taskCard).join('')
+          : empty('No tasks posted yet. Each task gets matched with local providers.', 'Post a Task', 'post-task.html');
+      } catch(e) {
+        el.innerHTML = '<p style="color:var(--red);font-size:var(--text-sm);padding:16px;">Could not load tasks: ' + e.message + '</p>';
+      }
+    }
+    window.loadMyTasks = loadMyTasks;
+
     /* ── Notifications ───────────────────────────────────────── */
     async function loadCustNotifications() {
       if (custNotifLoaded) return;
@@ -1048,16 +918,6 @@
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initPage() {
-      /* The global top nav's hamburger normally opens the generic marketing
-         menu — on this page it should open this dashboard's own panel
-         drawer instead. Clone-and-replace strips the default listener
-         app.js's initNavbar() already attached. */
-      var navToggleBtn = document.getElementById('navToggle');
-      if (navToggleBtn) {
-        var freshToggle = navToggleBtn.cloneNode(true);
-        navToggleBtn.parentNode.replaceChild(freshToggle, navToggleBtn);
-        freshToggle.addEventListener('click', function() { toggleMobileMenu(); });
-      }
 
       /* Hide spinner immediately — never let it block the UI */
       var loadEl = document.getElementById('dashLoading');
@@ -1095,7 +955,11 @@
       var startPanel = _hasChatCtx ? 'messages' : (urlParams.get('panel') || 'overview');
       var startBtn   = document.querySelector('[data-panel="' + startPanel + '"]') || document.querySelector('[data-panel="overview"]');
       switchPanel(startPanel, startBtn);
+      if (startPanel === 'my-tasks') loadMyTasks();
       if (startPanel === 'messages') setTimeout(initMessagesPanel, 50);
+      if (startPanel === 'applications') loadApplications();
+      if (startPanel === 'notifications') loadCustNotifications();
+      if (startPanel === 'profile') loadProfilePanel();
 
       /* Load notification badge */
       window.supabase.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('is_read',false).then(function(r){var count=r.count||0;
@@ -1160,6 +1024,10 @@
       if (recentEl) recentEl.innerHTML = tasks.slice(0,4).length
         ? tasks.slice(0,4).map(taskCard).join('')
         : empty('Post your first task to get started.', 'Post a Task', 'post-task.html');
+
+      document.getElementById('allTasksList').innerHTML = tasks.length
+        ? tasks.map(taskCard).join('')
+        : empty('No tasks posted yet. Each task gets matched with providers.', 'Post a Task', 'post-task.html');
 
       /* Load bookings into the panel */
       loadBookings();
@@ -1311,65 +1179,31 @@
   </script>
 
   <script>
-    /* Populate mobile menu user header */
-  async function initMobMenuUser() {
-    try {
-      var name     = localStorage.getItem('st_name') || 'My Account';
-      var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '?';
-      var nameEl   = document.getElementById('mobMenuName');
-      var roleEl   = document.getElementById('mobMenuRole');
-      var avatEl   = document.getElementById('mobMenuAvatar');
-      if (nameEl) nameEl.textContent = name;
-      if (roleEl) roleEl.textContent = 'Customer';
-      if (avatEl) avatEl.textContent = initials;
-      try {
-        var sess = await window.supabase.auth.getSession();
-        var user = sess.data.session && sess.data.session.user;
-        if (user) {
-          var photoUrl = user.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture);
-          if (!photoUrl) {
-            var uRes = await window.supabase.from('users').select('name,avatar_url').eq('id', user.id).maybeSingle();
-            if (uRes.data) {
-              if (uRes.data.name) {
-                var fullName = uRes.data.name;
-                if (nameEl) nameEl.textContent = fullName;
-                var ini2 = fullName.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-                if (avatEl) avatEl.textContent = ini2 || initials;
-              }
-              photoUrl = uRes.data.avatar_url;
-            }
-          }
-          if (photoUrl && avatEl) {
-            var img = document.createElement('img');
-            img.src = photoUrl;
-            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
-            img.onerror = function(){ avatEl.textContent = initials; };
-            avatEl.innerHTML = '';
-            avatEl.appendChild(img);
-          }
-        }
-      } catch(_e) {}
-    } catch(e) {}
-  }
-  document.addEventListener('DOMContentLoaded', initMobMenuUser);
-  function toggleMobileMenu() {
-      var d = document.getElementById('mobileNavDropdown');
-      var o = document.getElementById('mobileOverlay');
-      var open = d.classList.contains('open');
-      d.classList.toggle('open', !open);
-      o.classList.toggle('open', !open);
-    }
-    function closeMobileMenu() {
-      document.getElementById('mobileNavDropdown').classList.remove('open');
-      document.getElementById('mobileOverlay').classList.remove('open');
-    }
-    function mobileSwitchPanel(panel, title) {
-      closeMobileMenu();
-      switchPanel(panel, document.querySelector('[data-panel="'+panel+'"]'));
-      document.querySelectorAll('.mobile-nav-dropdown button').forEach(function(b) { b.classList.remove('active'); });
-      var mob = document.getElementById('mob-'+panel);
-      if (mob) mob.classList.add('active');
-    }
+    /* Mobile menu (components/navbar.html #navDrawer): the shared drawer
+     switches this page's panels in place through this hook. */
+  window.ST = window.ST || {};
+  window.ST.dashboard = (function () {
+    var loaders = {
+      'my-tasks':      function () { loadMyTasks(); },
+      'applications':  function () { loadApplications(); },
+      'bookings':      function () { loadBookings(); },
+      'notifications': function () { loadCustNotifications(); },
+      'messages':      function () { initMessagesPanel(); },
+      'profile':       function () { loadProfilePanel(); }
+    };
+    return {
+      openPanel: function (panel) {
+        panel = panel || 'overview';
+        switchPanel(panel, document.querySelector('[data-panel="' + panel + '"]'));
+        if (loaders[panel]) loaders[panel]();
+        window.scrollTo(0, 0);
+      },
+      currentPanel: function () {
+        var p = document.querySelector('.dashboard-panel.active');
+        return p ? p.id.replace(/^panel-/, '') : '';
+      }
+    };
+  })();
   
     /* ── In-platform messaging helpers ─────────────────────── */
     async function openInAppChat(contextType, contextId, taskerId) {

@@ -238,7 +238,6 @@ p  { color: var(--text-secondary); font-weight: 400; }
    initNavbarInstant() and syncNavbarAuthState() update these instantly. */
 #navUserName   { display: none; }
 #navLogout     { display: none; }
-#navMobileLogout { display: none; }
 
 /* ── Navigation ──────────────────────────────────────────────── */
 #navbar {
@@ -302,16 +301,48 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .nav-toggle.open span:nth-child(2) { opacity: 0; width: 0; }
 .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-.nav-mobile {
-  display: none; position: fixed;
-  top: var(--nav-height); left: 0; right: 0;
-  background: var(--white); border-bottom: 1px solid var(--border);
-  padding: 16px 24px 24px; flex-direction: column; gap: 4px;
-  z-index: 999; box-shadow: var(--shadow-lg);
+/* ── Mobile drawer (#navDrawer) — the one mobile menu ───────────
+   Structure and open/close only. Looks (colour, type, rows) are in the
+   "MOBILE DRAWER — look" block at the end of this file. Mobile only. */
+.nav-drawer,
+.nav-drawer-overlay { display: none; }
+@media (max-width: 768px) {
+  .nav-drawer {
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: min(var(--drawer-width), calc(100% - var(--space-6)));
+    z-index: 1200;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform var(--t) var(--ease), visibility 0s linear var(--t);
+  }
+  .nav-drawer.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--t) var(--ease), visibility 0s;
+  }
+  .nav-drawer [hidden] { display: none; }
+
+  .nav-drawer-overlay {
+    display: block;
+    position: fixed; inset: 0; z-index: 1190;
+    background: var(--drawer-overlay);
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--t) var(--ease), visibility 0s linear var(--t);
+  }
+  .nav-drawer-overlay.is-open {
+    opacity: 1; visibility: visible;
+    transition: opacity var(--t) var(--ease), visibility 0s;
+  }
+  /* Page behind the open drawer does not scroll */
+  body.nav-drawer-open { overflow: hidden; }
+
+  .nav-drawer-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; }
+  .nav-drawer-list { list-style: none; margin: 0; padding: 0; }
 }
-.nav-mobile.open { display: flex; }
-.nav-mobile .nav-link { font-size: var(--text-base); padding: 11px 14px; }
-.nav-mobile-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer, .nav-drawer-overlay { transition: none; }
+}
 
 /* ── Icon boxes (service cards) ──────────────────────────────── */
 .icon-box {
@@ -1556,9 +1587,7 @@ input.has-gps-btn { padding-right: inherit !important; }
 
 /* Hidden by default on desktop */
 .mobile-dash-header  { display: none; }
-.mobile-nav-dropdown { display: block; }
 .mobile-bottom-bar   { display: none; }
-.mobile-overlay      { display: block; opacity: 0; pointer-events: none; }
 
 .mobile-dash-title { font-weight: 700; font-size: var(--text-base); color: var(--text-primary); }
 
@@ -1568,45 +1597,8 @@ input.has-gps-btn { padding-right: inherit !important; }
 }
 .mobile-menu-btn:hover { background: var(--bg-subtle); }
 
-/* Slide-down dropdown */
-.mobile-nav-dropdown {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: min(320px, 88vw);
-  background: var(--white);
-  box-shadow: 4px 0 32px rgba(0,0,0,0.18);
-  z-index: 9999;
-  overflow-y: auto;
-  overflow-x: hidden;
-  transform: translateX(-100%);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  display: block !important;
-  -webkit-overflow-scrolling: touch;
-}
-.mobile-nav-dropdown.open { transform: translateX(0); }
 @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 
-.mobile-nav-dropdown a,
-.mobile-nav-dropdown button {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 13px 20px;
-  font-size: var(--text-base); font-weight: 500;
-  color: var(--text-primary); background: none;
-  border: none; text-align: left; cursor: pointer;
-  text-decoration: none; font-family: var(--font);
-}
-.mobile-nav-dropdown a:hover,
-.mobile-nav-dropdown button:hover { background: var(--bg-subtle); }
-.mobile-nav-dropdown button.active { color: var(--blue); background: var(--blue-light); }
-.mobile-nav-dropdown .nav-divider  { height: 1px; background: var(--border); margin: 8px 16px; }
-
-.mobile-nav-badge {
-  background: #dc2626; color: #fff;
-  border-radius: 999px; font-size: var(--text-xs);
-  font-weight: 700; padding: 1px 6px; margin-left: auto;
-}
 
 /* Bottom tab bar — frosted glass floating panel */
 .mobile-bottom-bar {
@@ -1634,16 +1626,6 @@ input.has-gps-btn { padding-right: inherit !important; }
 .mobile-bottom-bar button.active { color: #0F6B46; font-weight: 700; }
 .mobile-bottom-bar button svg    { flex-shrink: 0; }
 
-/* Overlay when dropdown open */
-.mobile-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45); z-index: 9998;
-  backdrop-filter: blur(1px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.28s ease;
-}
-.mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
 /* Mobile breakpoint — show mobile nav, hide desktop sidebar */
 @media (max-width: 768px) {
@@ -1921,113 +1903,6 @@ img { max-width: 100%; height: auto; }
   display: none;
 }
 
-/* ── Side menu: user profile header ───────────────────────── */
-.mob-menu-user {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 20px 20px 18px;
-  background: var(--blue);
-  position: relative;
-  overflow: hidden;
-}
-/* Decorative circle in background */
-.mob-menu-user::before {
-  content: '';
-  position: absolute;
-  top: -30px; right: -30px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.12);
-  pointer-events: none;
-}
-.mob-menu-user::after {
-  content: '';
-  position: absolute;
-  bottom: -40px; right: 30px;
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.07);
-  pointer-events: none;
-}
-.mob-menu-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-  font-weight: 800;
-  font-size: var(--text-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-  border: 2.5px solid rgba(255,255,255,0.6);
-  position: relative;
-  z-index: 1;
-}
-.mob-menu-avatar img {
-  width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
-}
-.mob-menu-name {
-  font-weight: 700;
-  font-size: var(--text-base);
-  color: #fff;
-  position: relative;
-  z-index: 1;
-}
-.mob-menu-role {
-  font-size: var(--text-xs);
-  color: rgba(255,255,255,0.75);
-  margin-top: 2px;
-  position: relative;
-  z-index: 1;
-}
-.mob-menu-user-info { position: relative; z-index: 1; }
-
-/* horizontal divider inside mobile dropdown */
-.mobile-nav-dropdown .nav-divider {
-  display: block !important;
-  width: auto !important;
-  height: 1px !important;
-  background: var(--border) !important;
-  margin: 4px 0 !important;
-}
-
-/* ── Side menu: section labels ─────────────────────────────── */
-.mob-menu-section-label {
-  padding: 6px 20px 2px;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-/* ── Side menu: logout button (red tint) ───────────────────── */
-.mob-logout-btn {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  width: 100% !important;
-  padding: 13px 20px !important;
-  font-size: var(--text-base) !important;
-  font-weight: 600 !important;
-  color: #dc2626 !important;
-  background: none !important;
-  border: none !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  font-family: var(--font) !important;
-}
-.mob-logout-btn:hover {
-  background: #fef2f2 !important;
-}
-.mob-logout-btn svg {
-  stroke: #dc2626;
-}
-
 /* ── Messages panel: fix white space below chat ────────────── */
 @media (max-width: 768px) {
   /* The messages panel must fill viewport height minus header + bottom bar */
@@ -2165,8 +2040,6 @@ img { max-width: 100%; height: auto; }
    ================================================================ */
 @media (max-width: 768px) {
   .has-mobile-header #navbar      { display: none !important; }
-  .has-mobile-header #navMobile   { display: none !important; }
-  .has-mobile-header .nav-mobile  { display: none !important; }
   /* No gap from the hidden navbar */
   .has-mobile-header body         { padding-top: 0 !important; }
   .has-mobile-header .dashboard-page { padding-top: 0 !important; margin-top: 0 !important; }
@@ -4590,4 +4463,128 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   }
   .tom-qc-btn:focus-visible { outline: 2px solid var(--tm-mint); outline-offset: 2px; }
   .tom-star { color: var(--tm-mint); font-size: var(--text-xs); }
+}
+
+/* ============================================================
+   MOBILE DRAWER — look  (components/navbar.html #navDrawer)
+   Structure and open/close are in the "Mobile drawer" block near the
+   top of this file. Colours come from the --drawer-* tokens.
+   ============================================================ */
+@media (max-width: 768px) {
+  .nav-drawer {
+    background: var(--drawer-bg);
+    color: var(--drawer-text);
+    font-family: var(--font-body);
+    box-shadow: var(--shadow-xl);
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Header: who you are, or the brand for guests */
+  .nav-drawer-head {
+    display: flex; align-items: center;
+    margin: 0 var(--space-4);
+    padding: var(--space-5) 0 var(--space-4);
+    border-bottom: 1px solid var(--drawer-border);
+  }
+  .nav-drawer-user {
+    display: flex; align-items: center; gap: var(--space-3);
+    min-width: 0; flex: 1 1 auto;
+    color: inherit; text-decoration: none;
+  }
+  .nav-drawer-avatar {
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--drawer-bg-raised);
+    border: 2px solid var(--drawer-text);
+    overflow: hidden;
+    font-family: var(--font-heading); font-size: var(--text-md); font-weight: 700;
+  }
+  .nav-drawer-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .nav-drawer-id { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .nav-drawer-name {
+    font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 700; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .nav-drawer-email {
+    font-size: var(--text-xs); color: var(--drawer-accent);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .nav-drawer-brand { display: flex; align-items: center; }
+  .nav-drawer-brand img { height: 28px; width: auto; display: block; filter: brightness(0) invert(1); }
+
+  /* Close tab on the drawer's right edge */
+  .nav-drawer-close {
+    position: absolute; top: var(--space-6); right: calc(var(--space-5) * -1);
+    display: grid; place-items: center;
+    width: calc(var(--space-5) + var(--space-1)); height: 56px;
+    padding: 0 0 0 var(--space-1);
+    background: var(--drawer-bg-raised); color: var(--drawer-accent);
+    border: 0; border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .nav-drawer-close:focus-visible { outline: 2px solid var(--drawer-accent); outline-offset: 2px; }
+
+  /* Rows */
+  .nav-drawer-body { padding: var(--space-3) var(--space-4); }
+  .nav-drawer-list { display: flex; flex-direction: column; gap: var(--space-1); }
+  .nav-drawer-list-more {
+    margin-top: var(--space-3); padding-top: var(--space-3);
+    border-top: 1px solid var(--drawer-border);
+  }
+  .nav-drawer-link {
+    position: relative;
+    display: flex; align-items: center; gap: var(--space-4);
+    width: 100%; min-height: 48px;
+    padding: var(--space-3);
+    border: 0; border-radius: var(--radius-md);
+    background: transparent; color: var(--drawer-text);
+    font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; line-height: 1.2;
+    text-align: left; text-decoration: none;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background var(--t) var(--ease);
+  }
+  .nav-drawer-link svg { flex: 0 0 auto; color: var(--drawer-accent); }
+  .nav-drawer-link:hover,
+  .nav-drawer-link:active { background: var(--drawer-hover); }
+  .nav-drawer-link:focus-visible { outline: 2px solid var(--drawer-accent); outline-offset: -2px; }
+  .nav-drawer-link[aria-current="page"] { background: var(--drawer-active); }
+  .nav-drawer-link[aria-current="page"]::before {
+    content: ''; position: absolute; left: 0; top: 50%;
+    width: 3px; height: 24px; transform: translateY(-50%);
+    background: var(--drawer-accent); border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  }
+
+  /* Unread dot and pending count, right-aligned in the row */
+  .nav-drawer-dot {
+    margin-left: auto; flex: 0 0 auto;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--drawer-accent);
+  }
+  .nav-drawer-count {
+    margin-left: auto; flex: 0 0 auto;
+    display: grid; place-items: center;
+    min-width: 20px; height: 20px; padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--drawer-accent); color: var(--drawer-accent-ink);
+    font-size: var(--text-xs); font-weight: 700; line-height: 1;
+  }
+
+  /* Footer pinned to the bottom: Log out, or the guest buttons */
+  .nav-drawer-foot {
+    flex: 0 0 auto;
+    margin: 0 var(--space-4);
+    padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--drawer-border);
+  }
+  .nav-drawer-actions { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) 0; }
+  .nav-drawer .btn-ghost.nav-drawer-btn {
+    background: transparent; color: var(--drawer-text); border-color: var(--drawer-border);
+  }
+  .nav-drawer .btn-ghost.nav-drawer-btn:hover { background: var(--drawer-hover); border-color: var(--drawer-text-muted); }
+  .nav-drawer .btn-mint.nav-drawer-btn {
+    background: var(--drawer-accent); color: var(--drawer-accent-ink); border-color: var(--drawer-accent);
+  }
+  .nav-drawer .btn-mint.nav-drawer-btn:hover { background: var(--tm-mint-soft); border-color: var(--tm-mint-soft); }
+  .nav-drawer .nav-drawer-btn:focus-visible { outline: 2px solid var(--drawer-accent); outline-offset: 2px; }
 }
