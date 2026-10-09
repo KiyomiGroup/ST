@@ -27,11 +27,12 @@
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     </defs>
   </svg>
 
-  <div class="bk-page" id="bookingsPage">
+  <main class="bk-page" id="bookingsPage">
     <div class="bk-container">
 
       <header class="bk-header">
@@ -39,6 +40,9 @@
           <div class="bk-title-row">
             <h1 class="bk-title">Bookings</h1>
             <span class="bk-count" id="bkTotal" hidden></span>
+            <button type="button" class="bk-filter-btn" id="bkFilterBtn" aria-expanded="false" aria-controls="bkToolbar" aria-label="Show filters">
+              <svg class="bk-i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="bk-filter-dot" id="bkFilterDot" hidden></span>
+            </button>
           </div>
           <p class="bk-lede">Track incoming job requests, active work and your escrow payouts.</p>
         </div>
@@ -59,7 +63,7 @@
             <button type="button" class="bk-tab" data-filter="cancelled" aria-pressed="false">Cancelled <span class="bk-tab-n" data-count="cancelled"></span></button>
           </div>
 
-          <div class="bk-toolbar">
+          <div class="bk-toolbar" id="bkToolbar">
             <label class="bk-search">
               <svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>
               <input type="search" class="bk-input" id="bkSearch" placeholder="Search by job, customer or booking ID…" aria-label="Search bookings" />
@@ -78,7 +82,8 @@
             </select>
           </div>
 
-          <div class="bk-list" id="bkList" aria-live="polite" aria-busy="true">
+          <p class="sr-only" id="bkStatus" role="status"></p>
+          <div class="bk-list" id="bkList" aria-busy="true">
             <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>
           </div>
           <button type="button" class="bk-btn bk-more" id="bkMore" hidden>Load More Bookings</button>
@@ -133,7 +138,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <dialog class="bk-dialog" id="bkDeclineDlg" aria-labelledby="bkDeclineTitle">
     <div class="bk-dialog-body">

@@ -9,7 +9,7 @@
             Mark Done now sets status provider_done (waiting on the customer);
             the customer's confirmation sets awaiting_confirmation (enter the code).
    Stage 4: sidebar snapshot (counts and money worked out from the loaded bookings).
-   Stage 5: mobile + accessibility.
+   Stage 5: mobile filter toggle, screen-reader status, focus handling, card labelling.
 
    Data: bookings where tasker_id = the signed-in user. completion_code is
    deliberately NOT selected here: the code belongs to the customer, and
@@ -320,10 +320,10 @@
     if (v.taskId) links += '<a class="bk-btn bk-btn-text" href="find-tasks.html?task=' + encodeURIComponent(v.taskId) + '">View Task Details' + icon('arrow-right') + '</a>';
     if (v.group === 'completed') links += '<a class="bk-btn bk-btn-text" href="wallet.html">' + icon('wallet') + 'View in Wallet</a>';
 
-    return '<article class="bk-card is-' + v.group + (v.disputed ? ' is-disputed' : '') + '" data-id="' + esc(v.id) + '">' +
+    return '<article class="bk-card is-' + v.group + (v.disputed ? ' is-disputed' : '') + '" data-id="' + esc(v.id) + '" tabindex="-1" aria-labelledby="bkt-' + esc(v.id) + '">' +
       '<div class="bk-card-top"><div>' +
         '<div class="bk-card-id"><span class="bk-ref">#' + esc(v.ref) + '</span>' + badge(v) + when + '</div>' +
-        '<h2 class="bk-card-title">' + esc(v.title) + '</h2></div>' +
+        '<h2 class="bk-card-title" id="bkt-' + esc(v.id) + '">' + esc(v.title) + '</h2></div>' +
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +
       '<div class="bk-person">' + avatar(v) + '<div class="bk-person-body"><span class="bk-person-name">' + esc(v.customer) + '</span>' +
         '<div class="bk-person-sub">' + (v.location ? '<span>' + icon('pin') + esc(v.location) + '</span>' : '') +
@@ -333,6 +333,23 @@
       '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' +
       (links ? '<div class="bk-actions">' + links + '</div>' : '') +
     '</article>';
+  }
+
+  /* Screen-reader status line (the list itself is not a live region, so a re-render doesn't re-read every card) */
+  function announce(text) { var el = $('bkStatus'); if (el) el.textContent = text; }
+
+  /* Dot on the phone filter button while any filter other than the defaults is on */
+  function markFilters() {
+    var on = !!(state.query.trim() || state.category || state.range !== 'all' || state.sort !== 'recent');
+    $('bkFilterDot').hidden = !on;
+  }
+
+  /* After a card changes, keep keyboard and screen-reader focus on it (or on the tab it moved out of) */
+  function focusCard(id) {
+    var el = Array.prototype.filter.call($('bkList').children, function (c) { return c.dataset && String(c.dataset.id) === String(id); })[0];
+    if (el) { el.focus(); return; }
+    var tab = document.querySelector('#bkTabs .bk-tab[aria-pressed="true"]');
+    if (tab) tab.focus();
   }
 
   /* Sidebar numbers come from every loaded booking, ignoring the filters */
@@ -367,6 +384,7 @@
     list.setAttribute('aria-busy', 'false');
     updateTabs();
     renderSide();
+    markFilters();
 
     if (!state.rows.length) {
       $('bkMore').hidden = true;
@@ -379,6 +397,7 @@
     var all = visible();
     if (!all.length) {
       $('bkMore').hidden = true;
+      announce('No bookings match your filters');
       list.innerHTML = '<div class="bk-state"><h2 class="bk-state-title">No bookings match</h2>' +
         '<p class="bk-state-text">Try a different tab, search or filter.</p>' +
         '<button type="button" class="bk-btn" id="bkClear">Clear Filters</button></div>';
@@ -386,6 +405,7 @@
     }
     list.innerHTML = all.slice(0, state.shown).map(card).join('');
     $('bkMore').hidden = all.length <= state.shown;
+    announce(all.length + (all.length === 1 ? ' booking' : ' bookings') + ' shown');
   }
 
   function renderError(msg) {
@@ -416,6 +436,7 @@
     Object.assign(v.raw, changes);
     v.group = group(v.raw); v.disputed = isDisputed(v.raw); v.label = label(v.raw);
     render();
+    focusCard(v.id);
   }
 
   async function notify(userId, type, title, message, bookingId) {
@@ -553,6 +574,12 @@
       $('bkList').innerHTML = '<div class="bk-state"><p class="bk-state-text">Loading your bookings\u2026</p></div>';
       start();
     }
+  });
+  $('bkFilterBtn').addEventListener('click', function () {
+    var open = $('bkToolbar').classList.toggle('is-open');
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    this.setAttribute('aria-label', open ? 'Hide filters' : 'Show filters');
+    if (open) $('bkSearch').focus();
   });
   document.querySelectorAll('.bk-dialog').forEach(function (dlg) {
     dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });

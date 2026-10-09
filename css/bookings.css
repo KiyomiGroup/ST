@@ -9,7 +9,7 @@
    2. Tabs, toolbar, full booking cards ..................... done
    3. Card actions + dialogs ................................ done
    4. Sidebar (snapshot, how you get paid, escrow, support) . done
-   5. Mobile pass, accessibility ............................ planned
+   5. Mobile pass, accessibility ............................ done
    ============================================================ */
 
 .bk-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
@@ -160,6 +160,17 @@
 .bk-btn-text { background: transparent; color: var(--pt-green); padding: 0 var(--space-3); }
 .bk-btn-text:hover { background: var(--pt-mint-soft); }
 .bk-more { align-self: center; }
+.bk-card:focus { outline: 0; }
+.bk-card:focus-visible { box-shadow: inset 4px 0 0 var(--bk-accent, var(--pt-field-icon)), var(--shadow-focus); }
+
+/* Filter button: phones only */
+.bk-filter-btn {
+  display: none; position: relative; place-items: center; width: 44px; height: 44px; margin-left: auto; border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--pt-field-strong); color: var(--pt-ink); transition: background var(--t) var(--ease);
+}
+.bk-filter-btn:hover, .bk-filter-btn[aria-expanded="true"] { background: var(--pt-mint); color: var(--pt-green); }
+.bk-filter-btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.bk-filter-dot { position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--pt-green); box-shadow: 0 0 0 2px var(--color-bg); }
 
 
 /* ── Dialogs ─────────────────────────────────────────────── */
@@ -239,7 +250,12 @@
   .bk-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); scrollbar-width: none; }
   .bk-tabs::-webkit-scrollbar { display: none; }
   .bk-tab { flex-shrink: 0; height: 44px; }
-  .bk-toolbar { padding: var(--space-2); gap: var(--space-2); }
+  .bk-title-row { width: 100%; }
+  .bk-filter-btn { display: grid; }
+  .bk-header-actions { display: none; }
+  .bk-toolbar { display: none; padding: var(--space-2); gap: var(--space-2); }
+  .bk-toolbar.is-open { display: flex; }
+  .bk-input, .bk-select { font-size: var(--text-base); } /* 16px stops iOS zooming into the field */
   .bk-search { flex-basis: 100%; }
   .bk-select { flex: 1 1 0; min-width: 0; height: 44px; }
   .bk-card { padding: var(--space-4); border-radius: var(--radius-xl); }
@@ -252,6 +268,18 @@
   .bk-btn-quiet { margin-left: 0; flex-basis: 100%; }
   .bk-dialog-actions .bk-btn { flex: 1 1 0; }
   .bk-more { width: 100%; height: 44px; }
+  .bk-card-title { font-size: var(--text-base); }
+  .bk-amount { font-size: var(--text-lg); }
+  .bk-dialog { margin-bottom: var(--space-4); }
+  .bk-dialog-body { padding: var(--space-5); }
+  /* Phones keep only the green escrow card under the list, like the mobile design */
+  .bk-layout.has-side { gap: var(--space-4); }
+  .bk-side > :not(.bk-escrow) { display: none; }
+}
+
+@media (max-width: 380px) {
+  .bk-figures { grid-template-columns: minmax(0, 1fr); }
+  .bk-stat-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
