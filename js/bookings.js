@@ -8,7 +8,8 @@
    Stage 3: actions: Confirm, Decline, Message Customer, Mark Job Done, Enter Code.
             Mark Done now sets status provider_done (waiting on the customer);
             the customer's confirmation sets awaiting_confirmation (enter the code).
-   Stage 4: sidebar.  Stage 5: mobile + accessibility.
+   Stage 4: sidebar snapshot (counts and money worked out from the loaded bookings).
+   Stage 5: mobile + accessibility.
 
    Data: bookings where tasker_id = the signed-in user. completion_code is
    deliberately NOT selected here: the code belongs to the customer, and
@@ -334,10 +335,38 @@
     '</article>';
   }
 
+  /* Sidebar numbers come from every loaded booking, ignoring the filters */
+  function renderSide() {
+    var pending = 0, active = 0, done = 0, escrow = 0, ready = 0, paid = 0, waiting = 0;
+    state.rows.forEach(function (v) {
+      var net = v.amount ? payout(v.amount).net : 0;
+      if (v.group === 'pending') pending++;
+      else if (v.group === 'completed') { done++; paid += net; }
+      else if (v.group === 'progress' || v.group === 'signoff') {
+        active++;
+        if (v.raw.payment_status === 'paid' && !v.disputed) {
+          escrow += net;
+          if (v.group === 'signoff' && v.raw.status !== 'provider_done' && (Number(v.raw.code_attempts) || 0) < MAX_CODE_TRIES) ready += net;
+        }
+        if (v.group === 'signoff' && v.raw.status === 'provider_done') waiting++;
+      }
+    });
+    $('sPending').textContent = pending;
+    $('sActive').textContent = active;
+    $('sActiveSub').textContent = waiting ? waiting + ' awaiting sign-off' : 'in progress';
+    $('sEscrow').textContent = naira(escrow);
+    $('sReady').textContent = naira(ready);
+    $('sPaid').textContent = naira(paid);
+    var n = pending + active + done, bar = $('sBar').children, pct = function (x) { return (n ? x / n * 100 : 0) + '%'; };
+    bar[0].style.width = pct(pending); bar[1].style.width = pct(active); bar[2].style.width = pct(done);
+    $('sBarText').textContent = n ? pending + ' new \u2022 ' + active + ' active \u2022 ' + done + ' completed' : 'No bookings yet';
+  }
+
   function render() {
     var list = $('bkList');
     list.setAttribute('aria-busy', 'false');
     updateTabs();
+    renderSide();
 
     if (!state.rows.length) {
       $('bkMore').hidden = true;

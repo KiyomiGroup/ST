@@ -26,6 +26,7 @@
       <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     </defs>
   </svg>
@@ -47,7 +48,7 @@
         </div>
       </header>
 
-      <div class="bk-layout" id="bkLayout">
+      <div class="bk-layout has-side" id="bkLayout">
         <div class="bk-main">
           <div class="bk-tabs" role="group" aria-label="Filter by status" id="bkTabs">
             <button type="button" class="bk-tab" data-filter="all" aria-pressed="true">All <span class="bk-tab-n" data-count="all"></span></button>
@@ -82,6 +83,53 @@
           </div>
           <button type="button" class="bk-btn bk-more" id="bkMore" hidden>Load More Bookings</button>
         </div>
+
+        <aside class="bk-side" aria-label="Booking summary and payment protection">
+          <section class="bk-panel">
+            <h2 class="bk-panel-title">Booking Snapshot</h2>
+            <div class="bk-stat-grid">
+              <div class="bk-stat"><span class="bk-stat-label">Needs Your Reply</span><span class="bk-stat-value is-green" id="sPending">&mdash;</span><span class="bk-stat-sub">new requests</span></div>
+              <div class="bk-stat"><span class="bk-stat-label">Active Jobs</span><span class="bk-stat-value" id="sActive">&mdash;</span><span class="bk-stat-sub" id="sActiveSub"></span></div>
+            </div>
+            <div class="bk-stat-wide">
+              <div class="bk-stat-row">
+                <div><span class="bk-stat-label">In Escrow</span><span class="bk-stat-value" id="sEscrow">&mdash;</span></div>
+                <div class="is-end"><span class="bk-stat-label">Ready to Claim</span><span class="bk-stat-value is-green" id="sReady">&mdash;</span></div>
+              </div>
+              <div class="bk-bar" id="sBar" role="img" aria-label="Booking pipeline"><span class="is-pending"></span><span class="is-active"></span><span class="is-done"></span></div>
+              <p class="bk-stat-sub" id="sBarText"></p>
+            </div>
+            <a class="bk-wallet" href="wallet.html">
+              <span class="bk-wallet-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-wallet"/></svg></span>
+              <span class="bk-wallet-body"><span class="bk-stat-label">Paid out from bookings</span><span class="bk-wallet-amt" id="sPaid">&mdash;</span></span>
+              <svg class="bk-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+          </section>
+
+          <section class="bk-panel">
+            <h2 class="bk-panel-title">How You Get Paid</h2>
+            <ol class="bk-steps">
+              <li><strong>Confirm the request</strong><span>Accepting lets you message the customer and agree the details.</span></li>
+              <li><strong>Wait for escrow</strong><span>The customer pays into escrow. Only start work once the booking shows Held in Escrow.</span></li>
+              <li><strong>Mark the job as done</strong><span>The customer is asked to confirm. Once they do, they give you a 6-digit code.</span></li>
+              <li><strong>Enter the code</strong><span>Your payout is released to your wallet straight away.</span></li>
+            </ol>
+          </section>
+
+          <section class="bk-escrow">
+            <h2 class="bk-panel-title"><svg class="bk-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protection</h2>
+            <ul class="bk-checks">
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Customer funds are locked in escrow before you start.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Your payout is released when you enter the customer&rsquo;s code.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>A 12% platform fee is taken from each job&rsquo;s value.</li>
+            </ul>
+          </section>
+
+          <section class="bk-panel bk-help">
+            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Our support team is here to help.</span></div>
+            <a class="bk-btn" href="messages.html">Chat</a>
+          </section>
+        </aside>
       </div>
 
     </div>

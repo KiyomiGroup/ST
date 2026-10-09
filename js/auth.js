@@ -78,7 +78,7 @@ function _applyNavState(loggedIn, role, name) {
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
-    setHref('navIconPending',  panelUrl(isTasker ? 'bookings' : 'my-tasks'));
+    setHref('navIconPending',  isTasker ? 'bookings.html' : panelUrl('my-tasks'));
     setHref('navIconMessages', 'messages.html');
     setHref('navBellBtn',      panelUrl('notifications'));
     setHref('navMenuSettings', panelUrl('profile'));
