@@ -294,9 +294,18 @@
 }
 
 /* ── Mobile drawer tokens (components/navbar.html #navDrawer) ──
-   Width and overlay are set here; the colours are added with the drawer
-   look. Drawer-specific: do not reuse elsewhere without a design decision. */
+   Dark forest drawer with white text and a mint accent. Drawer-specific:
+   do not reuse elsewhere without a design decision. */
 :root {
-  --drawer-width:   320px;
-  --drawer-overlay: rgba(11, 46, 28, 0.55);   /* forest-900 at 55% */
+  --drawer-width:       320px;
+  --drawer-bg:          var(--color-forest-900);   /* panel */
+  --drawer-bg-raised:   var(--color-forest-800);   /* avatar fill, close tab */
+  --drawer-overlay:     rgba(11, 46, 28, 0.55);    /* forest-900 at 55% */
+  --drawer-text:        var(--color-text-on-primary);
+  --drawer-text-muted:  rgba(255, 255, 255, 0.72);
+  --drawer-hover:       rgba(255, 255, 255, 0.08); /* row hover / press */
+  --drawer-active:      rgba(255, 255, 255, 0.14); /* current page row */
+  --drawer-border:      rgba(255, 255, 255, 0.16); /* dividers, outline buttons */
+  --drawer-accent:      var(--tm-mint);            /* icons, active bar, counts */
+  --drawer-accent-ink:  var(--tm-mint-ink);        /* text on the accent */
 }
