@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    /* Messaging moved to its own page. Old ?panel=messages links, bookmarks and
+       pending chat context all land on messages.html. */
+    (function () {
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('panel') === 'messages' || window.location.hash === '#messages' || sessionStorage.getItem('st_chat_context')) {
+        window.location.replace('messages.html');
+      }
+      /* Applications moved to their own page too (applications.html). */
+      if (q.get('panel') === 'applications' || window.location.hash === '#my-applications') {
+        window.location.replace('applications.html');
+      }
+      /* Bookings moved to their own page too (bookings.html). */
+      if (q.get('panel') === 'bookings' || window.location.hash === '#bookings') {
+        window.location.replace('bookings.html');
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tasker Dashboard — Street Taskers</title>
@@ -171,6 +189,103 @@
     .msg-mobile-back { display: none; align-items: center; gap: 6px; padding: 0; background: none; border: none; cursor: pointer; color: var(--blue); font-size: var(--text-sm); font-weight: 600; }
   </style>
 
+  <style id="mobile-menu-enhanced">
+    /* ── Enhanced mobile dropdown: profile avatar block ── */
+    .mob-menu-user {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 20px 18px;
+      background: linear-gradient(135deg, var(--blue-light) 0%, transparent 100%);
+      border-bottom: 1px solid var(--blue-border);
+    }
+    .mob-menu-avatar {
+      width: 52px !important;
+      height: 52px !important;
+      border-radius: 50% !important;
+      background: var(--blue) !important;
+      color: #fff !important;
+      font-weight: 800 !important;
+      font-size: var(--text-md) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--blue);
+      letter-spacing: -0.02em;
+    }
+    .mob-menu-name {
+      font-weight: 700;
+      font-size: var(--text-base);
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .mob-menu-role {
+      font-size: var(--text-xs);
+      color: var(--blue);
+      margin-top: 3px;
+      font-weight: 600;
+      background: var(--blue-light);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      border: 1px solid var(--blue-border);
+    }
+
+    /* ── Dropdown: tighten up menu items ── */
+    .mobile-nav-dropdown {
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    .mobile-nav-dropdown button,
+    .mobile-nav-dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 11px 20px;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-primary);
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.12s, color 0.12s;
+      text-decoration: none;
+      border-radius: 0;
+    }
+    .mobile-nav-dropdown button:hover,
+    .mobile-nav-dropdown a:hover {
+      background: var(--bg-subtle);
+    }
+    .mobile-nav-dropdown button.active {
+      color: var(--blue);
+      background: var(--blue-light);
+      font-weight: 600;
+    }
+    .mobile-nav-dropdown button svg,
+    .mobile-nav-dropdown a svg {
+      flex-shrink: 0;
+      color: var(--text-muted);
+    }
+    .mobile-nav-dropdown button.active svg { color: var(--blue); }
+    .mobile-nav-dropdown .nav-divider { height: 1px; background: var(--border); margin: 6px 0; }
+    .mob-menu-section-label {
+      padding: 10px 20px 4px;
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* Page-specific bottom tab bar removed — this page now gets the
+       shared, global floating pill nav from components/bottom-nav.html
+       (loaded by js/app.js), matching every other mobile page. */
+  </style>
 </head>
 <body class="tdash-page tdash-overview">
 <script>
@@ -191,9 +306,79 @@ function openMessagesPanel() {
 </script>
   <div id="navbar-placeholder"></div>
 
-  <!-- Mobile header and menu come from the shared, global navbar
-       (components/navbar.html). Panel links in its drawer switch panels in
-       place via window.ST.dashboard (registered at the bottom of this file). -->
+  <!-- Mobile header now comes from the shared, global navbar
+       (components/navbar.html). The hamburger there is rebound below
+       to open this page's own panel drawer instead of the generic
+       marketing menu. -->
+
+  <!-- Mobile dropdown nav -->
+  <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+
+    <!-- Profile avatar header -->
+    <div class="mob-menu-user" id="mobMenuUser">
+      <div class="mob-menu-avatar" id="mobMenuAvatar">T</div>
+      <div class="mob-menu-user-info">
+        <div class="mob-menu-name" id="mobMenuName">My Account</div>
+        <div class="mob-menu-role" id="mobMenuRole">Tasker</div>
+      </div>
+    </div>
+    <div class="nav-divider" style="height:1px;background:var(--border);margin:0;"></div>
+
+    <!-- PRIMARY NAVIGATION -->
+    <button onclick="mobileSwitchPanel('mypage','My Page');loadMyPage();closeMobileMenu()" class="active" id="mob-mypage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      My Page
+    </button>
+    <button onclick="mobileSwitchPanel('services','My Services');closeMobileMenu()" id="mob-services">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      My Services
+    </button>
+    <button onclick="mobileSwitchPanel('bookings','Bookings');loadBookings();closeMobileMenu()" id="mob-bookings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Bookings
+    </button>
+    <button onclick="mobileSwitchPanel('notifications','Notifications');loadNotifications();closeMobileMenu()" id="mob-notifications">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="mobNotifBadge" class="mobile-nav-badge" style="display:none;"></span>
+    </button>
+    <button onclick="window.location.href='messages.html'" id="mob-messages">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+    </button>
+    <button onclick="window.location.href='wallet.html'" id="mob-wallet">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      My Wallet
+    </button>
+
+    <div class="nav-divider" style="height:1px;background:var(--border);margin:6px 0;"></div>
+
+    <!-- MORE -->
+    <div class="mob-menu-section-label">MORE</div>
+    <button onclick="mobileSwitchPanel('find-tasks','Find Tasks');loadFindTasks();closeMobileMenu()" id="mob-find-tasks">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Find Tasks
+    </button>
+    <a href="find-taskers.html" onclick="closeMobileMenu()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Find Services
+    </a>
+    <button onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();closeMobileMenu()" id="mob-profile">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Profile
+    </button>
+    <button onclick="switchPanel('verification',document.querySelector('[data-panel=verification]'));loadVerification();closeMobileMenu()" id="mob-verification">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Verification
+    </button>
+
+    <div class="nav-divider" style="height:1px;background:var(--border);margin:6px 0;"></div>
+    <button onclick="if(window.ST&&window.ST.auth)window.ST.auth.logoutUser();else{localStorage.clear();window.location.href='login.html';}" class="mob-logout-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Log Out
+    </button>
+  </div>
+  <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
   <!-- Mobile bottom tab bar now comes from the shared, global
        components/bottom-nav.html (loaded by js/app.js). -->
@@ -234,7 +419,7 @@ function openMessagesPanel() {
                 Notifications
                 <span id="navNotifBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:var(--text-xs);font-weight:700;padding:1px 6px;margin-left:4px;"></span>
               </button>
-              <button class="dashboard-nav-item" data-panel="messages" onclick="switchPanel('messages',this);openMessagesPanel();">
+              <button class="dashboard-nav-item" data-panel="messages" onclick="window.location.href='messages.html'">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Messages
                 <span id="msgNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:var(--text-xs);font-weight:700;padding:1px 6px;margin-left:4px;"></span>
@@ -1295,9 +1480,16 @@ function openMessagesPanel() {
     window.checkProfileCompletion = checkProfileCompletion;
 
     async function initPage() {
-      /* Someone who came here to log in or sign up for something else (like redeeming a gift card) goes straight on to it */
-      var postLoginNext = await window.ST.auth.takePostLoginRedirect();
-      if (postLoginNext) { window.location.replace(postLoginNext); return; }
+      /* The global top nav's hamburger normally opens the generic marketing
+         menu — on this page it should open this dashboard's own panel
+         drawer instead. Clone-and-replace strips the default listener
+         app.js's initNavbar() already attached. */
+      var navToggleBtn = document.getElementById('navToggle');
+      if (navToggleBtn) {
+        var freshToggle = navToggleBtn.cloneNode(true);
+        navToggleBtn.parentNode.replaceChild(freshToggle, navToggleBtn);
+        freshToggle.addEventListener('click', function() { toggleMobileMenu(); });
+      }
 
       /* If arriving from first-time login, go straight to Edit Page */
       var params = new URLSearchParams(window.location.search);
@@ -1351,6 +1543,7 @@ function openMessagesPanel() {
       }
       /* The wallet is its own page now (wallet.html). Old ?panel=wallet links and bookmarks land there. */
       if (startHash === 'wallet') { window.location.replace('wallet.html'); }
+      if (startHash === 'my-applications') { window.location.replace('applications.html'); }
       var validPanels = ['mypage','services','bookings','find-tasks','my-applications','notifications','profile','verification','messages'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
@@ -1498,6 +1691,9 @@ function openMessagesPanel() {
     var _bookingsLoaded = false;
 
     async function loadBookings() {
+      /* The Bookings tab (desktop and mobile menus) now opens the Bookings page */
+      window.location.href = 'bookings.html';
+      return;
       var el = document.getElementById('bookingsList');
       if (!el) return;
       el.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm);padding:20px 0;text-align:center;">Loading bookings...</p>';
@@ -2222,37 +2418,85 @@ function openMessagesPanel() {
   </script>
 
   <script>
-    /* Mobile menu (components/navbar.html #navDrawer): the shared drawer
-     switches this page's panels in place through this hook. The drawer
-     uses the same ?panel= names as the top nav; map them to panel ids. */
-  window.ST = window.ST || {};
-  window.ST.dashboard = (function () {
-    var toId   = { overview: 'mypage', applications: 'my-applications' };
-    var toMenu = { 'mypage': 'overview', 'my-applications': 'applications' };
-    var loaders = {
-      'mypage':          function () { loadMyPage(); },
-      'my-applications': function () { loadMyApplications(); },
-      'bookings':        function () { loadBookings(); },
-      'find-tasks':      function () { loadFindTasks(); },
-      'notifications':   function () { loadNotifications(); },
-      'profile':         function () { loadProfilePanel(); },
-      'verification':    function () { loadVerification(); },
-      'messages':        function () { openMessagesPanel(); }
-    };
-    return {
-      openPanel: function (panel) {
-        var id = toId[panel] || panel || 'mypage';
-        switchPanel(id, document.querySelector('[data-panel="' + id + '"]'));
-        if (loaders[id]) loaders[id]();
-        window.scrollTo(0, 0);
-      },
-      currentPanel: function () {
-        var p = document.querySelector('.dashboard-panel.active');
-        var id = p ? p.id.replace(/^panel-/, '') : '';
-        return toMenu[id] || id;
-      }
-    };
-  })();
+    /* Populate mobile menu user header */
+  async function initMobMenuUser() {
+    try {
+      var name     = localStorage.getItem('st_name') || 'My Account';
+      var initials = name.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() || '?';
+      var nameEl   = document.getElementById('mobMenuName');
+      var roleEl   = document.getElementById('mobMenuRole');
+      var avatEl   = document.getElementById('mobMenuAvatar');
+      if (nameEl) nameEl.textContent = name;
+      if (roleEl) roleEl.textContent = 'Tasker';
+      if (avatEl) avatEl.textContent = initials;
+      /* Try to load profile photo from Supabase */
+      try {
+        var sess = await window.supabase.auth.getSession();
+        var user = sess.data.session && sess.data.session.user;
+        if (user) {
+          var photoUrl = user.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture);
+          if (!photoUrl) {
+            var uRes = await window.supabase.from('users').select('name,avatar_url').eq('id', user.id).maybeSingle();
+            if (uRes.data) {
+              if (uRes.data.name) {
+                var fullName = uRes.data.name;
+                if (nameEl) nameEl.textContent = fullName;
+                var ini2 = fullName.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+                if (avatEl) avatEl.textContent = ini2 || initials;
+              }
+              photoUrl = uRes.data.avatar_url;
+            }
+          }
+          if (photoUrl && avatEl) {
+            var img = document.createElement('img');
+            img.src = photoUrl;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+            img.onerror = function(){ avatEl.textContent = initials; };
+            avatEl.innerHTML = '';
+            avatEl.appendChild(img);
+          }
+        }
+      } catch(_e) {}
+    } catch(e) {}
+  }
+  document.addEventListener('DOMContentLoaded', initMobMenuUser);
+  function toggleMobileMenu() {
+      var d = document.getElementById('mobileNavDropdown');
+      var o = document.getElementById('mobileOverlay');
+      var open = d.classList.contains('open');
+      d.classList.toggle('open', !open);
+      o.classList.toggle('open', !open);
+    }
+    function closeMobileMenu() {
+      document.getElementById('mobileNavDropdown').classList.remove('open');
+      document.getElementById('mobileOverlay').classList.remove('open');
+    }
+    function mobileSwitchPanel(panel, title) {
+      closeMobileMenu();
+      // Switch the actual panel (also updates the global top-nav subtitle)
+      switchPanel(panel, document.querySelector('[data-panel="'+panel+'"]'));
+      // Update dropdown active state
+      document.querySelectorAll('.mobile-nav-dropdown button').forEach(function(b) { b.classList.remove('active'); });
+      var mob = document.getElementById('mob-'+panel);
+      if (mob) mob.classList.add('active');
+    }
+    // Sync notification badge to mobile
+    var _origUpdateBadge = window.updateNotifBadge;
+    function syncMobileBadge(count) {
+      var el = document.getElementById('mobNotifBadge');
+      if (!el) return;
+      if (count > 0) { el.textContent = count; el.style.display = 'inline'; }
+      else { el.style.display = 'none'; }
+    }
+    // Patch badge updates
+    var badgeObs = new MutationObserver(function() {
+      var src = document.getElementById('navNotifBadge');
+      if (src) syncMobileBadge(src.textContent && src.style.display !== 'none' ? src.textContent : 0);
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      var src = document.getElementById('navNotifBadge');
+      if (src) badgeObs.observe(src, { attributes: true, childList: true, characterData: true });
+    });
   
     /* ── In-platform messaging helper ─────────────────────── */
     async function openTaskerChat(contextType, contextId, otherUserId) {
@@ -2267,10 +2511,8 @@ function openMessagesPanel() {
           customerId:  otherUserId,
           senderRole:  'tasker',
         }));
-        /* Open messages panel inline */
-        var msgNavBtn = document.querySelector('[data-panel="messages"]');
-        switchPanel('messages', msgNavBtn);
-        openMessagesPanel();
+        /* Messaging is its own page: context is stored above, go there */
+        window.location.href = 'messages.html';
       } catch(e) { showToast('Could not open messages: ' + e.message); }
     }
     window.openTaskerChat = openTaskerChat;
