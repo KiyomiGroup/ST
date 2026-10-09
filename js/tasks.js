@@ -923,7 +923,7 @@ async function showTaskSuccessModal(payload) {
   const modal = document.getElementById('taskSuccessModal');
   if (!modal) {
     typeof showToast === 'function' && showToast(`Task "${payload.title}" posted!`);
-    setTimeout(() => { window.location.href = 'dashboard-customer.html?panel=my-tasks'; }, 1500);
+    setTimeout(() => { window.location.href = 'my-tasks.html'; }, 1500);
     return;
   }
 
@@ -973,7 +973,7 @@ function saveDraftTask() {
   /* Task is already saved as draft in DB — just redirect to dashboard */
   closeTaskModal();
   showToast && showToast('Task saved as draft. Verify anytime to post it live.');
-  setTimeout(() => { window.location.href = 'dashboard-customer.html?panel=my-tasks'; }, 1400);
+  setTimeout(() => { window.location.href = 'my-tasks.html'; }, 1400);
 }
 window.saveDraftTask = saveDraftTask;
 

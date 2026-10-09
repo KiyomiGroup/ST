@@ -78,7 +78,7 @@
     var role = null;
     try { role = await window.ST.auth.getUserRole(user); } catch (e) { /* use cache */ }
     role = role || localStorage.getItem('st_role');
-    if (role === 'tasker') { window.location.replace('dashboard-tasker.html?panel=bookings'); return; }
+    if (role === 'tasker') { window.location.replace('bookings.html'); return; }
 
     var tr = await window.supabase.from('tasks').select('*')
       .or('customer_id.eq.' + user.id + ',user_id.eq.' + user.id).order('created_at', { ascending: false });
