@@ -10,6 +10,16 @@ Rules: tokens only, no inline styles, no `!important`. `node tools/check-design-
 4. Sidebar ...................................... DONE
 5. Mobile pass, accessibility .................. DONE (this zip)
 
+## Fix: compact cards and "Invalid Date"
+| File | Change |
+|---|---|
+| `css/bookings.css` | Cards are about a third shorter: 16px padding, inline customer row (32px avatar, no pill), one-row payout strip, small hint line, 36px card buttons (44px on phones) |
+| `js/bookings.js` | `parseWhen()` reads every saved time format; no guidance line on Completed / Cancelled cards; note shown as a 2-line clamp; title falls back to the tasker's own service name |
+
+Cause of "Invalid Date": `tasker-profile.html` saves `scheduled_time` as free text (`2026-10-12 — 14:00`), which `new Date()` can't read. `parseWhen()` handles real timestamps, `YYYY-MM-DDTHH:MM`, that free-text form, date-only values, and shows "Requested X ago" when nothing is readable.
+Titles: a booking made from a tasker's profile has no task or service attached, so it used to read "Booking request". It now shows the tasker's own service name (from their `taskers` row), then the customer's note, then "Booking request".
+Rule for the customer Bookings page: keep cards this compact too, and copy `parseWhen()`.
+
 ## Stage 5: what changed
 | File | Change |
 |---|---|

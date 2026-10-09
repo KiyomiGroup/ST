@@ -66,14 +66,30 @@
 
   function startOfDay(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 
-  /* "Today, 10:30 AM" / "Tomorrow, 11:00 AM" / "Mon 12 Oct, 2:00 PM" */
-  function scheduleText(iso) {
-    var d = new Date(iso);
+  /* scheduled_time is saved in more than one format: a real timestamp, "2026-10-12T14:00",
+     or free text like "2026-10-12 \u2014 14:00" from the tasker profile form.
+     Returns { date, hasTime }, or null when nothing readable is in it. */
+  function parseWhen(raw) {
+    if (!raw) return null;
+    var s = String(raw).trim(), d, m;
+    if (/T\d{2}:\d{2}.*(Z|[+-]\d{2}:?\d{2})$/.test(s)) { d = new Date(s); return isNaN(d) ? null : { date: d, hasTime: true }; }
+    m = s.match(/(\d{4})-(\d{2})-(\d{2})(?:\D+(\d{1,2}):(\d{2}))?/);
+    if (m) {
+      d = new Date(+m[1], +m[2] - 1, +m[3], m[4] ? +m[4] : 0, m[5] ? +m[5] : 0);
+      return isNaN(d) ? null : { date: d, hasTime: !!m[4] };
+    }
+    d = new Date(s);
+    return isNaN(d) ? null : { date: d, hasTime: true };
+  }
+
+  /* "Today, 10:30 AM" / "Tomorrow" / "Mon, 12 Oct, 2:00 PM" */
+  function scheduleText(p) {
+    var d = p.date;
     var diff = Math.round((startOfDay(d) - startOfDay(new Date())) / 86400000);
     var day = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday'
       : d.toLocaleDateString('en-NG', { weekday: 'short', day: 'numeric', month: 'short' });
-    var time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: d.getMinutes() ? '2-digit' : undefined });
-    return day + ', ' + time;
+    if (!p.hasTime) return day;
+    return day + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: d.getMinutes() ? '2-digit' : undefined });
   }
 
   function customerName(u) {
@@ -150,14 +166,20 @@
     var people = await lookup('users', ['id,name,first_name,last_name,avatar_url', 'id,name,first_name,last_name'], unique(rows, 'customer_id'));
     var tasks = await lookup('tasks', ['id,title,description,budget,location,category'], unique(rows, 'task_id'));
     var services = await lookup('services', ['*'], unique(rows, 'service_id'));
+    /* The tasker's own service name: a good title for bookings made from their profile (no task or service attached) */
+    var own = {};
+    try {
+      var pr = await window.supabase.from('taskers').select('*').eq('user_id', user.id).maybeSingle();
+      if (pr && pr.data) own = pr.data;
+    } catch (e) { /* optional */ }
 
     state.rows = rows.map(function (b) {
       var t = tasks[b.task_id] || {};
       var s = services[b.service_id] || {};
       var p = people[b.customer_id] || {};
-      var title = t.title || s.service_name || s.service || s.title ||
+      var title = t.title || s.service_name || s.service || s.title || own.service_name || own.service ||
         (b.notes ? String(b.notes).slice(0, 60) : 'Booking request');
-      var when = b.scheduled_time || null;
+      var when = parseWhen(b.scheduled_time);
       return {
         id: b.id,
         raw: b,
@@ -169,14 +191,14 @@
         customer: customerName(p) || 'Customer',
         avatar: p.avatar_url || '',
         location: t.location || s.location || '',
-        category: t.category || s.category || '',
+        category: t.category || s.category || own.category || '',
         amount: Number(b.amount) || 0,
         budget: Number(t.budget) || 0,
         note: b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : '',
         customerId: b.customer_id || '',
         taskId: t.id || '',
         created: b.created_at,
-        scheduled: when,
+        scheduled: when ? when.date.toISOString() : null,
         when: when ? scheduleText(when) : ''
       };
     });
@@ -285,7 +307,7 @@
     var earned = v.group === 'completed';
     return '<div class="bk-figures">' +
       '<div><div class="bk-fig-label">Job Value</div><div class="bk-fig-value">' + naira(amt) + '</div></div>' +
-      '<div><div class="bk-fig-label">Platform Fee (12%)</div><div class="bk-fig-value">' + naira(p.fee) + '</div></div>' +
+      '<div><div class="bk-fig-label">Fee (12%)</div><div class="bk-fig-value">' + naira(p.fee) + '</div></div>' +
       '<div><div class="bk-fig-label">' + (earned ? 'You Earned' : 'You Receive') + '</div><div class="bk-fig-value is-green">' + naira(p.net) + '</div></div></div>';
   }
 
@@ -315,22 +337,23 @@
     var when = v.when
       ? '<span class="bk-meta">' + icon('calendar') + esc(v.when) + '</span>'
       : '<span class="bk-meta">' + icon('clock') + 'Requested ' + esc(ago(v.created)) + '</span>';
-    var h = hint(v);
+    /* Finished bookings need no guidance line: the badge and payout tag already say it */
+    var h = (v.group === 'completed' || v.group === 'cancelled') ? null : hint(v);
     var links = actions(v);
     if (v.taskId) links += '<a class="bk-btn bk-btn-text" href="find-tasks.html?task=' + encodeURIComponent(v.taskId) + '">View Task Details' + icon('arrow-right') + '</a>';
     if (v.group === 'completed') links += '<a class="bk-btn bk-btn-text" href="wallet.html">' + icon('wallet') + 'View in Wallet</a>';
 
     return '<article class="bk-card is-' + v.group + (v.disputed ? ' is-disputed' : '') + '" data-id="' + esc(v.id) + '" tabindex="-1" aria-labelledby="bkt-' + esc(v.id) + '">' +
-      '<div class="bk-card-top"><div>' +
+      '<div class="bk-card-top"><div class="bk-card-head">' +
         '<div class="bk-card-id"><span class="bk-ref">#' + esc(v.ref) + '</span>' + badge(v) + when + '</div>' +
-        '<h2 class="bk-card-title" id="bkt-' + esc(v.id) + '">' + esc(v.title) + '</h2></div>' +
+        '<h2 class="bk-card-title" id="bkt-' + esc(v.id) + '">' + esc(v.title) + '</h2>' +
+        '<div class="bk-person">' + avatar(v) + '<div class="bk-person-body"><span class="bk-person-name">' + esc(v.customer) + '</span>' +
+          '<div class="bk-person-sub">' + (v.location ? '<span>' + icon('pin') + esc(v.location) + '</span>' : '') +
+          (v.category ? '<span>' + esc(v.category) + '</span>' : '') + '</div></div></div></div>' +
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +
-      '<div class="bk-person">' + avatar(v) + '<div class="bk-person-body"><span class="bk-person-name">' + esc(v.customer) + '</span>' +
-        '<div class="bk-person-sub">' + (v.location ? '<span>' + icon('pin') + esc(v.location) + '</span>' : '') +
-        (v.category ? '<span>' + esc(v.category) + '</span>' : '') + '</div></div></div>' +
       figures(v) +
-      (v.note ? '<div><div class="bk-quote-label">Customer Note</div><p class="bk-quote">\u201C' + esc(v.note) + '\u201D</p></div>' : '') +
-      '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' +
+      (v.note ? '<p class="bk-quote"><strong>Note:</strong> \u201C' + esc(v.note) + '\u201D</p>' : '') +
+      (h ? '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' : '') +
       (links ? '<div class="bk-actions">' + links + '</div>' : '') +
     '</article>';
   }
