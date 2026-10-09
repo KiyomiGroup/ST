@@ -15,6 +15,8 @@
     general:      { label: 'General Voucher', icon: '#gc-gift' }
   };
   var LOCKS = { cleaning: 'Cleaning', handyman: 'Handyman & Home Repairs', moving: 'Moving & Heavy Lifting', wardrobe: 'Wardrobe & Tailoring', tech: 'Tech & Inverter Servicing' };
+  var OCCASIONS = { birthday: ' to wish you a happy birthday', thanks: ' to say thank you', housewarming: ' to celebrate your new home',
+    congrats: ' to say congratulations', cleaning: ' to treat you to a cleaner home' };
   var redeemLink = '';
   var REF_RE = /^GC-[A-Z2-9]{20}$/;
   var POLL_MS = 2500;
@@ -74,10 +76,10 @@
       } catch (e) { qrBox.hidden = true; }
     }
 
-    // The shared link opens the redeem page, where the person types the code (they need a free account to redeem)
-    var link = window.location.origin + '/redeem.html';
-    var text = card.senderName + ' sent you a StreetTasker gift card worth ' + naira(card.amount) + '!' +
-      '\n\nYour code: ' + card.code + '\n\nRedeem it here: ' + link + '\n(Open the link, enter your code, and create a free account to add it to your wallet.)';
+    // The link opens the redeem page with this card's code already in it, so the message needs nothing else
+    var link = window.location.origin + '/redeem.html?code=' + encodeURIComponent(card.code);
+    var text = 'From StreetTasker. ' + card.senderName + ' just sent you ' + naira(card.amount) + ' Giftcard' +
+      (OCCASIONS[card.theme] || '') + '. Redeem it here: ' + link;
     redeemLink = link;
     document.getElementById('gcs-share').setAttribute('href', 'https://wa.me/?text=' + encodeURIComponent(text));
 
@@ -130,7 +132,7 @@
   // ── Buttons ──
   var linkBtn = document.getElementById('gcs-copylink');
   linkBtn.addEventListener('click', function () {
-    var link = redeemLink || window.location.origin + '/redeem.html';
+    var link = redeemLink || window.location.origin + '/redeem.html';   // same link as in the WhatsApp message
     function done() {
       var label = linkBtn.querySelector('span');
       label.textContent = 'Link copied';

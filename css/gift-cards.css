@@ -985,3 +985,17 @@
 .gcs-dialog-text { margin: 0 0 var(--space-5); font-size: var(--text-gc-body); line-height: 1.5; color: var(--gc-ink-muted); }
 .gcs-dialog .gcs-actions { margin-top: 0; }
 .gcs-dialog-close { margin-top: var(--space-4); padding: var(--space-2) var(--space-4); border: 0; background: transparent; font: inherit; font-size: var(--text-sm); color: var(--gc-ink-muted); text-decoration: underline; cursor: pointer; }
+
+/* ── Mobile: the Buy bar sits above the site's floating bottom nav (shown when logged in) ──
+   The nav is a pill 77px tall, 10px off the bottom, so the bar goes 10px above that. */
+@media (max-width: 900px) {
+  body.page-gift-cards.st-logged-in { padding-bottom: calc(190px + env(safe-area-inset-bottom, 0px)); }
+  body.page-gift-cards.st-logged-in .gc-buybar {
+    left: var(--space-3); right: var(--space-3);
+    bottom: calc(97px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--space-3);
+    border-radius: var(--radius-gc-tile);
+  }
+  body.page-gift-cards.st-logged-in .gc-cz-input,
+  body.page-gift-cards.st-logged-in .gc-cz-custom-input { scroll-margin-bottom: 220px; }
+}
