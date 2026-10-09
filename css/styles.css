@@ -238,7 +238,6 @@ p  { color: var(--text-secondary); font-weight: 400; }
    initNavbarInstant() and syncNavbarAuthState() update these instantly. */
 #navUserName   { display: none; }
 #navLogout     { display: none; }
-#navMobileLogout { display: none; }
 
 /* ── Navigation ──────────────────────────────────────────────── */
 #navbar {
@@ -302,16 +301,49 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .nav-toggle.open span:nth-child(2) { opacity: 0; width: 0; }
 .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-.nav-mobile {
-  display: none; position: fixed;
-  top: var(--nav-height); left: 0; right: 0;
-  background: var(--white); border-bottom: 1px solid var(--border);
-  padding: 16px 24px 24px; flex-direction: column; gap: 4px;
-  z-index: 999; box-shadow: var(--shadow-lg);
+/* ── Mobile drawer (#navDrawer) — the one mobile menu ───────────
+   Structure and open/close only. Looks (colour, type, rows) are in the
+   "MOBILE DRAWER — look" block at the end of this file. Mobile only. */
+.nav-drawer,
+.nav-drawer-overlay { display: none; }
+@media (max-width: 768px) {
+  .nav-drawer {
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: min(var(--drawer-width), calc(100% - var(--space-6)));
+    z-index: 1200;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform var(--t) var(--ease), visibility 0s linear var(--t);
+    overflow: hidden;
+  }
+  .nav-drawer.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--t) var(--ease), visibility 0s;
+  }
+  .nav-drawer [hidden] { display: none; }
+
+  .nav-drawer-overlay {
+    display: block;
+    position: fixed; inset: 0; z-index: 1190;
+    background: var(--drawer-overlay);
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--t) var(--ease), visibility 0s linear var(--t);
+  }
+  .nav-drawer-overlay.is-open {
+    opacity: 1; visibility: visible;
+    transition: opacity var(--t) var(--ease), visibility 0s;
+  }
+  /* Page behind the open drawer does not scroll */
+  body.nav-drawer-open { overflow: hidden; }
+
+  .nav-drawer-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; }
+  .nav-drawer-list { list-style: none; margin: 0; padding: 0; }
 }
-.nav-mobile.open { display: flex; }
-.nav-mobile .nav-link { font-size: var(--text-base); padding: 11px 14px; }
-.nav-mobile-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer, .nav-drawer-overlay { transition: none; }
+}
 
 /* ── Icon boxes (service cards) ──────────────────────────────── */
 .icon-box {
@@ -2165,8 +2197,6 @@ img { max-width: 100%; height: auto; }
    ================================================================ */
 @media (max-width: 768px) {
   .has-mobile-header #navbar      { display: none !important; }
-  .has-mobile-header #navMobile   { display: none !important; }
-  .has-mobile-header .nav-mobile  { display: none !important; }
   /* No gap from the hidden navbar */
   .has-mobile-header body         { padding-top: 0 !important; }
   .has-mobile-header .dashboard-page { padding-top: 0 !important; margin-top: 0 !important; }

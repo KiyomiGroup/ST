@@ -292,3 +292,11 @@
   --tm-mint-soft:    #D9F8E8;   /* header pills */
   --tm-text-soft:    #A9CDBB;   /* muted text on the green panel */
 }
+
+/* ── Mobile drawer tokens (components/navbar.html #navDrawer) ──
+   Width and overlay are set here; the colours are added with the drawer
+   look. Drawer-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --drawer-width:   320px;
+  --drawer-overlay: rgba(11, 46, 28, 0.55);   /* forest-900 at 55% */
+}

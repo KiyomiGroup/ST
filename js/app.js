@@ -78,7 +78,6 @@ async function loadBottomNav() {
 function initNavbar() {
   const navbar    = document.getElementById('navbar');
   const toggle    = document.getElementById('navToggle');
-  const mobileNav = document.getElementById('navMobile');
 
   if (!navbar) return;
 
@@ -92,25 +91,84 @@ function initNavbar() {
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll(); /* run once on load */
 
-  /* Mobile hamburger toggle */
-  if (toggle && mobileNav) {
-    toggle.addEventListener('click', () => {
-      const isOpen = mobileNav.classList.toggle('open');
-      toggle.classList.toggle('open', isOpen);
-      toggle.setAttribute('aria-expanded', isOpen);
-    });
-
-    /* Close mobile menu when clicking outside */
-    document.addEventListener('click', (e) => {
-      if (!navbar.contains(e.target) && !mobileNav.contains(e.target)) {
-        mobileNav.classList.remove('open');
-        toggle.classList.remove('open');
-      }
-    });
-  }
+  /* Mobile menu: one drawer for guests, customers and taskers */
+  initNavDrawer(navbar, toggle);
 
   /* Highlight active page link */
   setActiveNavLink();
+}
+
+/**
+ * Mobile menu drawer (#navDrawer in components/navbar.html).
+ * Opens from the hamburger, closes on overlay tap, the close tab, Escape,
+ * a link tap, or when the screen grows past the mobile breakpoint.
+ *
+ * Dashboard pages can register window.ST.dashboard.openPanel(panel). When a
+ * menu link has data-panel-link and points at the page we're already on, the
+ * panel switches in place instead of reloading the page.
+ */
+function initNavDrawer(navbar, toggle) {
+  const drawer  = document.getElementById('navDrawer');
+  const overlay = document.getElementById('navDrawerOverlay');
+  const closeBtn = document.getElementById('navDrawerClose');
+  if (!drawer || !toggle) return;
+
+  const desktop = window.matchMedia('(min-width: 769px)');
+  let lastFocus = null;
+
+  function isOpen() { return drawer.classList.contains('is-open'); }
+
+  function setOpen(open) {
+    if (open === isOpen()) return;
+    drawer.classList.toggle('is-open', open);
+    if (overlay) overlay.classList.toggle('is-open', open);
+    toggle.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    drawer.setAttribute('aria-hidden', String(!open));
+    if (open) drawer.removeAttribute('inert'); else drawer.setAttribute('inert', '');
+    document.body.classList.toggle('nav-drawer-open', open);
+
+    if (open) {
+      lastFocus = document.activeElement;
+      const first = Array.from(drawer.querySelectorAll('a[href], button'))
+        .find(el => !el.closest('[hidden]') && !el.hidden && el !== closeBtn);
+      if (first) first.focus({ preventScroll: true });
+    } else if (lastFocus && typeof lastFocus.focus === 'function') {
+      lastFocus.focus({ preventScroll: true });
+    }
+  }
+
+  toggle.addEventListener('click', () => setOpen(!isOpen()));
+  if (overlay)  overlay.addEventListener('click', () => setOpen(false));
+  if (closeBtn) closeBtn.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setOpen(false); });
+  const onBreakpoint = (e) => { if (e.matches) setOpen(false); };
+  if (desktop.addEventListener) desktop.addEventListener('change', onBreakpoint);
+  else if (desktop.addListener) desktop.addListener(onBreakpoint);
+
+  drawer.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link) {
+      if (e.target.closest('[data-nav-logout]')) setOpen(false);
+      return;
+    }
+    const panel = link.dataset.panelLink;
+    const hook  = window.ST && window.ST.dashboard && window.ST.dashboard.openPanel;
+    const samePage = new URL(link.href, window.location.href).pathname === window.location.pathname;
+    if (panel && typeof hook === 'function' && samePage) {
+      e.preventDefault();
+      setOpen(false);
+      hook(panel);
+      drawer.querySelectorAll('.nav-drawer-list a[aria-current]').forEach(a => a.removeAttribute('aria-current'));
+      if (link.classList.contains('nav-drawer-link')) link.setAttribute('aria-current', 'page');
+      return;
+    }
+    setOpen(false); /* normal navigation continues */
+  });
+
+  window.ST = window.ST || {};
+  window.ST.navDrawer = { open: () => setOpen(true), close: () => setOpen(false), toggle: () => setOpen(!isOpen()) };
 }
 
 /**

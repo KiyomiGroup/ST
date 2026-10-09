@@ -99,16 +99,16 @@ function _applyNavState(loggedIn, role, name) {
     if (mAcct) mAcct.style.display = ''; /* shown on mobile by CSS (body.st-logged-in) */
     const mAvInit = $('navMobileAvatarInitial');
     if (mAvInit) mAvInit.textContent = initials;
-    const mDash = $('nav-mobile-dashboard');
-    if (mDash) { mDash.href = dashUrl; mDash.style.display = ''; }
 
     /* Hide logged-out elements */
-    [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
+    [$('nav-login'),$('nav-signup')]
       .forEach(el => el && (el.style.display = 'none'));
-    const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'flex';
 
     /* Highlight active pill item based on current page */
     _highlightActivePillItem();
+
+    /* Mobile drawer: show this role's links, fill in the profile header */
+    _syncNavDrawer(true, role, name, initials);
 
   } else {
     /* Logged out */
@@ -120,14 +120,80 @@ function _applyNavState(loggedIn, role, name) {
     if (iconBar) iconBar.style.display = 'none';
     [$('navRoleBadge'),$('navRoleBadgeCustomer')]
       .forEach(el => el && (el.style.display = 'none'));
-    [$('nav-login'),$('nav-signup'),$('nav-mobile-login'),$('nav-mobile-signup')]
+    [$('nav-login'),$('nav-signup')]
       .forEach(el => el && (el.style.display = ''));
-    const mlo = $('navMobileLogout'); if (mlo) mlo.style.display = 'none';
+    _syncNavDrawer(false, 'customer', '', '');
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
     if (mPlus) mPlus.style.display = '';
     if (mAcct) mAcct.style.display = '';
   }
+}
+
+/* ── Mobile drawer (one menu for guests, customers and taskers) ──
+   Markup: components/navbar.html (#navDrawer). Each element tagged
+   data-drawer-role="guest|member|customer|tasker" (space separated) is shown
+   only when its role applies. Open/close behaviour lives in app.js. */
+function _syncNavDrawer(loggedIn, role, name, initials) {
+  const $ = (i) => document.getElementById(i);
+  const active = loggedIn ? ['member', role === 'tasker' ? 'tasker' : 'customer'] : ['guest'];
+  document.querySelectorAll('#navDrawer [data-drawer-role]').forEach(el => {
+    const roles = el.dataset.drawerRole.split(/\s+/);
+    el.hidden = !roles.some(r => active.indexOf(r) !== -1);
+  });
+
+  if (loggedIn) {
+    const isTasker = role === 'tasker';
+    const dashUrl  = isTasker ? 'dashboard-tasker.html' : 'dashboard-customer.html';
+    const user = $('navDrawerUser');
+    if (user) user.href = dashUrl + '?panel=profile';
+
+    const nameEl = $('navDrawerName');
+    if (nameEl) nameEl.textContent = name || 'My account';
+    const emailEl = $('navDrawerEmail');
+    let email = '';
+    try { email = localStorage.getItem('st_email') || ''; } catch(e) {}
+    if (emailEl) { emailEl.textContent = email; emailEl.hidden = !email; }
+
+    const init = $('navDrawerAvatarInitial');
+    if (init) init.textContent = initials || (isTasker ? 'T' : 'U');
+    let photo = '';
+    try { photo = localStorage.getItem('st_avatar') || ''; } catch(e) {}
+    _setDrawerAvatar(photo);
+  }
+  _highlightDrawerActive();
+}
+
+function _setDrawerAvatar(url) {
+  const img  = document.getElementById('navDrawerAvatarImg');
+  const init = document.getElementById('navDrawerAvatarInitial');
+  if (!img || !init) return;
+  if (url) {
+    img.onerror = () => { img.hidden = true; init.hidden = false; };
+    img.src = url; img.hidden = false; init.hidden = true;
+  } else {
+    img.hidden = true; init.hidden = false;
+  }
+}
+
+/* Marks the drawer link for the current page / dashboard panel with
+   aria-current="page". Tasker panel ids are normalised to the ?panel= names. */
+function _normPanel(p) {
+  p = (p || '').replace(/^#/, '');
+  if (p === 'mypage' || p === 'overview') return '';
+  if (p === 'my-applications') return 'applications';
+  return p;
+}
+function _highlightDrawerActive() {
+  const page  = window.location.pathname.split('/').pop() || 'index.html';
+  const panel = _normPanel(new URLSearchParams(window.location.search).get('panel') || window.location.hash);
+  document.querySelectorAll('#navDrawer .nav-drawer-list a[href]').forEach(a => {
+    a.removeAttribute('aria-current');
+    const u = new URL(a.getAttribute('href'), window.location.href);
+    const linkPage  = u.pathname.split('/').pop();
+    const linkPanel = _normPanel(u.searchParams.get('panel'));
+    if (linkPage === page && linkPanel === panel) a.setAttribute('aria-current', 'page');
+  });
 }
 
 function _highlightActivePillItem() {
@@ -163,16 +229,30 @@ function _getCachedPlan() {
   try { return localStorage.getItem('st_plan') || 'free'; } catch(e) { return 'free'; }
 }
 
+/* Indicators that are mirrored into the mobile drawer */
+const _DRAWER_MIRROR = {
+  navNotifDot: ['navDrawerNotifDot', 'navDrawerNotifDotTasker'],
+  npAppCount:  ['navDrawerAppCountTasker'],
+  npcAppCount: ['navDrawerAppCount'],
+};
+
 function _setNavDot(id, on) {
   const el = document.getElementById(id);
   if (el) el.hidden = !on;
+  (_DRAWER_MIRROR[id] || []).forEach(mid => {
+    const m = document.getElementById(mid);
+    if (m) m.hidden = !on;
+  });
 }
 
 function _setNavCount(id, n) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = n > 0 ? String(n > 9 ? '9+' : n) : '';
-  el.hidden = !(n > 0);
+  const text = n > 0 ? String(n > 9 ? '9+' : n) : '';
+  [id].concat(_DRAWER_MIRROR[id] || []).forEach(tid => {
+    const el = document.getElementById(tid);
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = !(n > 0);
+  });
 }
 
 /* Reads the Pro plan, the pending-applications count and the unread
@@ -297,6 +377,7 @@ async function syncNavbarAuthState() {
       localStorage.setItem('st_role',    role);
       localStorage.setItem('st_name',    name);
       localStorage.setItem('st_session', '1');
+      if (user.email) localStorage.setItem('st_email', user.email);
     } catch(e) {}
 
     /* Ensure public.users row exists (covers Google OAuth) */
@@ -319,6 +400,8 @@ async function syncNavbarAuthState() {
       const uRes = !photoUrl && await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
       const finalPhoto = photoUrl || (uRes?.data?.avatar_url);
       if (finalPhoto) {
+        try { localStorage.setItem('st_avatar', finalPhoto); } catch(e) {}
+        _setDrawerAvatar(finalPhoto);
         const avImg = document.getElementById('navAvatarImg');
         const avInit = document.getElementById('navAvatarInitial');
         if (avImg) {
@@ -336,6 +419,8 @@ async function syncNavbarAuthState() {
       localStorage.removeItem('st_name');
       localStorage.removeItem('st_session');
       localStorage.removeItem('st_plan');
+      localStorage.removeItem('st_email');
+      localStorage.removeItem('st_avatar');
     } catch(e) {}
     _applyNavState(false, 'customer', '');
   }
@@ -390,6 +475,8 @@ async function logoutUser() {
     localStorage.removeItem('st_name');
     localStorage.removeItem('st_session');
     localStorage.removeItem('st_plan');
+    localStorage.removeItem('st_email');
+    localStorage.removeItem('st_avatar');
     /* Also clear any Supabase persisted session keys */
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('sb-') || k.startsWith('supabase')) localStorage.removeItem(k);
