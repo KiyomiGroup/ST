@@ -35,8 +35,8 @@
      everyone else. Read from the design tokens so no colour is written here. */
   function themeColour() {
     var css = getComputedStyle(document.documentElement);
-    /* data-pg-hero-theme on <body>: a page that shows the hero to everyone (My Tasks) */
-    var green = localStorage.getItem('st_role') === 'tasker' || document.body.hasAttribute('data-pg-hero-theme');
+    /* body.pg-hero-nav: a page that shows the green hero to every role (customer Home, My Tasks) */
+    var green = localStorage.getItem('st_role') === 'tasker' || document.body.classList.contains('pg-hero-nav');
     var value = css.getPropertyValue(green ? '--hero-bg-mobile' : '--color-bg').trim();
     if (!value) return;
     var meta = document.querySelector('meta[name="theme-color"]');

@@ -4750,19 +4750,20 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
    ================================================================ */
 @media (max-width: 768px) {
 
-  /* ── Top nav: same green as the hero, white controls ── */
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) #navbar {
+  /* ── Top nav: same green as the hero, white controls ──
+     Taskers on every hero page get it automatically; any other page (customer Home, My Tasks) opts in with body.pg-hero-nav. */
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) #navbar {
     background: var(--hero-bg-mobile);
     -webkit-backdrop-filter: none; backdrop-filter: none;
     border-bottom-color: transparent; box-shadow: none;
     padding-top: env(safe-area-inset-top, 0px);
     height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
   }
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-toggle span { background: var(--white); }
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-logo img { filter: brightness(0) invert(1); }
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-bell { color: var(--white); }
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
-  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-toggle span { background: var(--white); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-logo img { filter: brightness(0) invert(1); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-bell { color: var(--white); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
 
   /* ── Hero shell ── */
   .pg-hero {

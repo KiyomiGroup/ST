@@ -193,9 +193,11 @@ Nav buttons are a fixed exception, defined in section 5.
 
 ---
 
-### 4.6 Tasker page hero (desktop, 769px and up)
+### 4.6 Page hero (desktop and phones)
 
-One dark-green hero for every logged-in tasker page: Home, Find Tasks, Overview, Applications, Bookings, Wallet. Mobile is not covered. Nothing below 769px uses these classes.
+One dark-green hero for the logged-in pages: tasker Home, Find Tasks, Overview, Applications, Bookings, Wallet, and, for customers, Home and My Tasks. It works on desktop and on phones. On a phone it is full width, fixed under the nav (`js/pg-hero-fixed.js`), and the top nav takes the same green.
+
+Taskers get the green phone nav automatically (`body.role-tasker`). A page that shows the hero to customers too adds `pg-hero-nav` to `<body>` (customer Home and My Tasks do). It turns the phone nav and the browser status bar green for any role.
 
 Tokens (`css/tokens.css`, "Page hero tokens"):
 
@@ -223,7 +225,7 @@ Classes (`css/styles.css`, "TASKER PAGE HEROES"):
 | `.pg-hero-chips`, `.pg-hero-chip`, `.pg-hero-chip-n` | status tabs inside the hero's bottom-right |
 | `.pg-hero-bar`, `.pg-hero-search`, `.pg-hero-search-btn`, `.pg-hero-input`, `.pg-hero-select-wrap`, `.pg-hero-select` | floating search pill and selects |
 
-The chips and bar are the page's own tabs and toolbar, restyled. The page JS keeps its ids. Pages keep their phone header and show the hero only at 769px and up.
+The chips and bar are the page's own tabs and toolbar, restyled. The page JS keeps its ids.
 
 ## 5. Logged-out desktop navigation (implemented)
 
