@@ -527,14 +527,14 @@ html.wl-lock { overflow: hidden; }
 /* Desktop / mobile visibility */
 @media (min-width: 769px) { .wl-mob.wl-mob { display: none; } }
 
-/* ── Tasker desktop hero (769px and up) ──────────────────────
-   Taskers get the shared .pg-hero (see styles.css) in place of the header, with the four
-   balance cards floating over its bottom edge. Customers and phones are untouched. */
+/* ── Desktop hero (769px and up) ─────────────────────────────
+   Taskers and customers both get the shared .pg-hero (see styles.css) in place of the header,
+   with the balance cards floating over its bottom edge (four for taskers, the gift card credits card for customers). */
 @media (min-width: 769px) {
-  .wl-page[data-role="tasker"] { padding-top: calc(var(--nav-height) + var(--space-5)); }
-  .wl-page[data-role="tasker"] .wl-container { width: min(1112px, calc(100% - 2 * var(--page-margin))); }
-  .wl-page[data-role="tasker"] .wl-header { display: none; }
-  .wl-page[data-role="tasker"] .wl-balances {
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) { padding-top: calc(var(--nav-height) + var(--space-5)); }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { width: min(1112px, calc(100% - 2 * var(--page-margin))); }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-header { display: none; }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-balances {
     position: relative; z-index: 2;
     margin: calc(-1 * var(--hero-float-gap)) var(--space-6) 0;
   }
@@ -544,26 +544,26 @@ html.wl-lock { overflow: hidden; }
 @media (max-width: 768px) {
   .wl-desk.wl-desk { display: none; }
   .wl-page { padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
-  .wl-page[data-role="tasker"] { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
-  .wl-page[data-role="tasker"]::before { display: none; }
-  .wl-page[data-role="tasker"] .wl-container { padding-top: var(--space-5); }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
+  .wl-page:is([data-role="tasker"], [data-role="customer"])::before { display: none; }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { padding-top: var(--space-5); }
   .wl-page::before { width: 100%; height: 260px; }
-  .wl-page[data-role="tasker"] .wl-container { width: calc(100% - 2 * var(--space-5)); } /* 24px page margin, same as Find Tasks */
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { width: calc(100% - 2 * var(--space-5)); } /* 24px page margin, same as Find Tasks */
   .wl-container { width: calc(100% - 2 * var(--space-4)); }
   .wl-main { gap: var(--space-5); }
 
   .wl-header { display: block; margin-bottom: var(--space-4); }
   .wl-title { font-size: var(--text-h1-sm); }
 
-  /* Tasker mobile opens with the SafePay banner; the title stays for screen readers only */
-  .wl-page[data-role="tasker"] .wl-header-copy {
+  /* Mobile opens with the hero (and the SafePay banner for taskers); the title stays for screen readers only */
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-header-copy {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
   }
-  .wl-page[data-role="tasker"] .wl-header { margin-bottom: 0; }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-header { margin-bottom: 0; }
   .wl-safepay { margin-bottom: var(--space-5); }
 
-  /* Tasker hero (phone): the amount keeps the card's number styling but in white; the compact card is replaced by it */
+  /* Hero (phone): the amount keeps the card's number styling but in white; the compact card is replaced by it */
   .wl-hero-mob .wl-amt, .wl-hero-mob .wl-amt-dec { color: var(--white); }
   .wl-hero-mob .wl-amt { margin-top: 0; flex-wrap: nowrap; font-size: var(--text-lg); letter-spacing: -0.02em; }
   .wl-hero-mob .pg-hero-icon-btn .wl-i { width: 20px; height: 20px; color: var(--color-text); }
@@ -577,7 +577,7 @@ html.wl-lock { overflow: hidden; }
   /* Section 3: compact rows, one per card */
   .wl-sec-head { align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
   .wl-sec-title { font-size: var(--text-md); }
-  .wl-page[data-role="tasker"] .wl-sec-title { font-size: var(--text-xl); } /* section titles match Find Tasks */
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-sec-title { font-size: var(--text-xl); } /* section titles match Find Tasks */
   .wl-sec-title .wl-i { display: none; }
   .wl-sec-sub { margin-top: var(--space-1); font-size: var(--text-xs); }
   .wl-btn-soft { height: 40px; padding: 0 var(--space-3); background: var(--pt-field-strong); box-shadow: none; }

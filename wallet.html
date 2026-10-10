@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/wallet.css" />
 </head>
-<body class="pg-hero-page">
+<body class="pg-hero-page pg-hero-nav">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->
@@ -71,6 +71,29 @@
         </div>
         <div class="pg-hero-side">
           <button type="button" class="pg-hero-btn" data-action="withdraw">Withdraw to Bank</button>
+          <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
+        </div>
+      </section>
+
+      <!-- Customer, desktop (769px and up): the same shared .pg-hero. The gift card credits card below floats over its bottom edge. -->
+      <section class="wl-hero-dt pg-hero wl-customer-only wl-desk" aria-labelledby="wlHeroTitleCust">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="wlHeroTitleCust"><span class="spg-hero-dot"></span>My Wallet</h1>
+          <p class="pg-hero-desc">Manage your service gift cards and keep track of what you top up and spend.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="redeem.html" class="pg-hero-btn">Redeem Gift Card</a>
+        </div>
+      </section>
+
+      <!-- Customer, phone only (768px and below): shared .pg-hero, fixed under the nav like the tasker one. The round button jumps to the gift cards. -->
+      <section class="pg-hero wl-hero-mob wl-customer-only wl-mob" data-pg-fixed aria-label="My wallet">
+        <div class="pg-hero-text">
+          <p class="spg-hero-eyebrow pg-hero-eyebrow"><span class="spg-hero-dot"></span>My Wallet</p>
+          <p class="pg-hero-desc">Manage your gift cards, top-ups and spending.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="redeem.html" class="pg-hero-btn">Redeem Gift Card</a>
           <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
         </div>
       </section>
