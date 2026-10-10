@@ -544,6 +544,7 @@ html.wl-lock { overflow: hidden; }
 @media (max-width: 768px) {
   .wl-desk.wl-desk { display: none; }
   .wl-page { padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
+  .wl-page[data-role="tasker"] { padding-top: var(--nav-height); } /* tasker hero sits flush under the nav */
   .wl-page::before { width: 100%; height: 260px; }
   .wl-container { width: calc(100% - 2 * var(--space-4)); }
   .wl-main { gap: var(--space-5); }
@@ -558,6 +559,14 @@ html.wl-lock { overflow: hidden; }
   }
   .wl-page[data-role="tasker"] .wl-header { margin-bottom: 0; }
   .wl-safepay { margin-bottom: var(--space-5); }
+
+  /* Tasker hero (phone): the amount keeps the card's number styling but in white; the compact card is replaced by it */
+  .wl-hero-mob.pg-hero { margin-bottom: var(--space-5); }
+  .wl-hero-mob .spg-hero-dot { display: none; }
+  .wl-hero-mob .wl-amt, .wl-hero-mob .wl-amt-dec { color: var(--white); }
+  .wl-hero-mob .wl-amt { margin-top: 0; flex-wrap: nowrap; font-size: var(--text-lg); letter-spacing: -0.02em; }
+  .wl-hero-mob .pg-hero-icon-btn .wl-i { width: 20px; height: 20px; color: var(--color-text); }
+  .wl-bal-mob { display: none; }
 
   /* Section 2: tasker gets the compact card; customer keeps the gift card credits card */
   .wl-page[data-role="tasker"] .wl-balances { display: none; }

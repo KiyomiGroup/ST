@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/wallet.css" />
 </head>
-<body>
+<body class="pg-hero-page">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->
@@ -56,6 +56,22 @@
         </div>
         <div class="pg-hero-side">
           <button type="button" class="pg-hero-btn" data-action="withdraw">Initiate Withdrawal</button>
+        </div>
+      </section>
+
+      <!-- Tasker, phone only (768px and below): shared .pg-hero with the live balance. The values
+           are filled by wallet-data.js through the same data-wl-value hooks as the cards below.
+           The round button jumps to the gift cards. -->
+      <section class="pg-hero wl-hero-mob wl-tasker-only wl-mob" aria-label="Available to withdraw">
+        <span class="pg-hero-live"><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
+        <div class="pg-hero-text">
+          <p class="spg-hero-eyebrow pg-hero-eyebrow">Wallet</p>
+          <p class="pg-hero-label">Available to withdraw</p>
+          <p class="wl-amt pg-hero-amount"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+        </div>
+        <div class="pg-hero-side">
+          <button type="button" class="pg-hero-btn" data-action="withdraw">Withdraw to Bank</button>
+          <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
         </div>
       </section>
 
@@ -151,7 +167,7 @@
           </article>
         </section>
 
-        <!-- Tasker, mobile only: compact version of the four cards above -->
+        <!-- Tasker, mobile only: compact version of the four cards above. Hidden on phones now: the hero carries the same figures (see wallet.css) -->
         <section class="wl-bal-mob wl-tasker-only wl-mob" aria-label="Available to withdraw">
           <div class="wl-bal-mob-top">
             <div>

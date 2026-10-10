@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/bookings.css" />
 </head>
-<body>
+<body class="pg-hero-page">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->
@@ -33,18 +33,23 @@
     </defs>
   </svg>
 
-  <main class="bk-page" id="bookingsPage">
+  <!-- a div, not main: styles.css force-pads every main element on phones, which would push the hero away from the nav -->
+  <div class="bk-page" id="bookingsPage" role="main">
     <div class="bk-container pg-hero-page">
 
-      <!-- Desktop hero (769px and up) — shared .pg-hero. The phone header below stays as it was. -->
+      <!-- Hero — shared .pg-hero, desktop and phone. The header below is kept in the page for its title/count but hidden. -->
       <section class="bk-hero-dt pg-hero" aria-labelledby="bkHeroTitle">
         <div class="pg-hero-text">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="bkHeroTitle"><span class="spg-hero-dot"></span>Bookings</h1>
-          <p class="pg-hero-desc">Track incoming job requests, active work and your escrow payouts.</p>
+          <p class="pg-hero-desc pg-hero-desc--strong">Track incoming job requests, active work and your escrow payouts.</p>
         </div>
         <div class="pg-hero-side">
           <a href="post-service.html" class="pg-hero-btn">Post a Service</a>
-          <a href="find-tasks.html" class="pg-hero-btn">Browse Open Tasks</a>
+          <a href="find-tasks.html" class="pg-hero-btn pg-hero-desktop-only">Browse Open Tasks</a>
+          <!-- Phones only: round button that shows / hides the filter panel (bookings.js binds #bkFilterBtn) -->
+          <button type="button" class="bk-filter-btn pg-hero-btn pg-hero-icon-btn" id="bkFilterBtn" aria-expanded="false" aria-controls="bkToolbar" aria-label="Show filters">
+            <svg class="bk-i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="bk-filter-dot" id="bkFilterDot" hidden></span>
+          </button>
         </div>
       </section>
 
@@ -53,9 +58,6 @@
           <div class="bk-title-row">
             <h1 class="bk-title">Bookings</h1>
             <span class="bk-count" id="bkTotal" hidden></span>
-            <button type="button" class="bk-filter-btn" id="bkFilterBtn" aria-expanded="false" aria-controls="bkToolbar" aria-label="Show filters">
-              <svg class="bk-i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="bk-filter-dot" id="bkFilterDot" hidden></span>
-            </button>
           </div>
           <p class="bk-lede">Track incoming job requests, active work and your escrow payouts.</p>
         </div>
@@ -154,7 +156,7 @@
       </div>
 
     </div>
-  </main>
+  </div>
 
   <dialog class="bk-dialog" id="bkDeclineDlg" aria-labelledby="bkDeclineTitle">
     <div class="bk-dialog-body">

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/applications.css" />
 </head>
-<body>
+<body class="pg-hero-page">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->
@@ -34,13 +34,13 @@
   <div class="ap-page" id="applicationsPage">
     <div class="ap-container pg-hero-page">
 
-      <!-- Desktop hero (769px and up) — shared .pg-hero. The phone header below stays as it was. -->
+      <!-- Hero — shared .pg-hero, desktop and phone. On a phone the search + dropdowns (.ap-toolbar) sit directly under it in the same dark block; the old header below is desktop-hidden and phone-hidden. -->
       <section class="ap-hero-dt pg-hero" aria-labelledby="apHeroTitle">
         <div class="pg-hero-text">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="apHeroTitle"><span class="spg-hero-dot"></span>My Applications</h1>
-          <p class="pg-hero-desc">Tasks you've submitted proposals for. You'll be notified immediately when a client responds.</p>
+          <p class="pg-hero-desc pg-hero-desc--strong">Tasks you've submitted proposals for. You'll be notified immediately when a client responds.</p>
         </div>
-        <div class="pg-hero-side">
+        <div class="pg-hero-side pg-hero-desktop-only">
           <a href="find-tasks.html" class="pg-hero-btn">Find More Tasks</a>
         </div>
       </section>
@@ -64,13 +64,13 @@
         <button type="button" class="ap-tab pg-hero-chip" data-filter="completed" aria-pressed="false">Completed <span class="ap-tab-n pg-hero-chip-n" data-count="completed"></span></button>
       </div>
 
-      <div class="ap-toolbar pg-hero-bar">
+      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero">
         <div class="pg-hero-search">
           <label class="ap-search">
             <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
-            <input type="search" class="ap-input pg-hero-input" id="apSearch" placeholder="Search applications by task title or customer name…" aria-label="Search applications" />
+            <input type="search" class="ap-input pg-hero-input" id="apSearch" placeholder="Search applications by task title or…" aria-label="Search applications" />
           </label>
-          <button type="button" class="pg-hero-search-btn" id="apSearchBtn">Search</button>
+          <button type="button" class="pg-hero-search-btn" id="apSearchBtn" aria-label="Search"><span class="pg-hero-search-text">Search</span><svg class="pg-hero-search-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
         </div>
         <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="apCategory" aria-label="Filter by trade category"><option value="">All Trade Categories</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
         <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="apSort" aria-label="Sort applications">

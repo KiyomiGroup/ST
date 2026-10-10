@@ -83,7 +83,15 @@
   .bk-header { display: none; }
   .bk-page { padding-top: calc(var(--nav-height) + var(--space-5)); } /* same gap under the nav as the search pages */
 }
-@media (max-width: 768px) { .bk-hero-dt { display: none; } }
+/* Phones: the hero is shown too and replaces the old header; its round button opens the filter panel */
+@media (max-width: 768px) {
+  .bk-header { display: none; }
+  .bk-hero-dt.pg-hero { margin-bottom: var(--space-4); }
+  .bk-hero-dt .spg-hero-dot { display: none; }
+  .bk-hero-dt .bk-filter-btn { flex: 0 0 48px; width: 48px; height: 48px; margin-left: 0; background: var(--white); color: var(--color-text); }
+  .bk-hero-dt .bk-filter-btn:hover, .bk-hero-dt .bk-filter-btn[aria-expanded="true"] { background: var(--hero-btn-bg-hover); color: var(--color-text); }
+  .bk-hero-dt .bk-filter-dot { box-shadow: 0 0 0 2px var(--white); }
+}
 
 /* ── Tabs ────────────────────────────────────────────────── */
 .bk-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
@@ -258,7 +266,7 @@
 
 /* Basic stacking so the page never breaks on phones (full mobile pass is Stage 5) */
 @media (max-width: 768px) {
-  .bk-page { padding-top: calc(var(--nav-height) + var(--space-4)); }
+  .bk-page { padding-top: var(--nav-height); } /* hero sits flush under the nav */
   .bk-container { width: calc(100% - 2 * var(--space-4)); }
   .bk-header { flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-4); }
   .bk-title { font-size: var(--text-xl); }
