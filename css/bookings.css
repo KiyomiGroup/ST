@@ -86,8 +86,6 @@
 /* Phones: the hero is shown too and replaces the old header; its round button opens the filter panel */
 @media (max-width: 768px) {
   .bk-header { display: none; }
-  .bk-hero-dt.pg-hero { margin-bottom: var(--space-4); }
-  .bk-hero-dt .spg-hero-dot { display: none; }
   .bk-hero-dt .bk-filter-btn { flex: 0 0 48px; width: 48px; height: 48px; margin-left: 0; background: var(--white); color: var(--color-text); }
   .bk-hero-dt .bk-filter-btn:hover, .bk-hero-dt .bk-filter-btn[aria-expanded="true"] { background: var(--hero-btn-bg-hover); color: var(--color-text); }
   .bk-hero-dt .bk-filter-dot { box-shadow: 0 0 0 2px var(--white); }
@@ -266,12 +264,13 @@
 
 /* Basic stacking so the page never breaks on phones (full mobile pass is Stage 5) */
 @media (max-width: 768px) {
-  .bk-page { padding-top: var(--nav-height); } /* hero sits flush under the nav */
-  .bk-container { width: calc(100% - 2 * var(--space-4)); }
+  .bk-page { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
+  .bk-page::before { display: none; }
+  .bk-container { width: calc(100% - 2 * var(--space-5)); padding-top: var(--space-5); } /* 24px page margin, same as Find Tasks */
   .bk-header { flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-4); }
   .bk-title { font-size: var(--text-xl); }
   .bk-lede { font-size: var(--text-sm); line-height: 22px; }
-  .bk-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); scrollbar-width: none; }
+  .bk-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-5)); padding-inline: var(--space-5); scrollbar-width: none; }
   .bk-tabs::-webkit-scrollbar { display: none; }
   .bk-tab { flex-shrink: 0; height: 44px; }
   .bk-title-row { width: 100%; }

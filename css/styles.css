@@ -4778,9 +4778,9 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 
   /* Eyebrow = page name, green like the dot */
   .spg-hero-eyebrow.pg-hero-eyebrow {
-    margin: 0 0 var(--space-3); line-height: 1.2;
+    margin: 0 0 14px; line-height: 1.2;
     font-family: var(--font-body); font-size: var(--text-xs); font-weight: 700;
-    letter-spacing: 0.18em; text-transform: uppercase; color: var(--hero-dot);
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--hero-text-muted);
   }
   .pg-hero-title {
     display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
@@ -4841,7 +4841,11 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   /* !important: the global phone rule `h1 { font-size: var(--text-h1-sm) !important }` would otherwise
      enlarge the page-name label where it is an <h1> (Applications, Bookings) */
   h1.pg-hero-eyebrow { font-size: var(--text-xs) !important; }
-  .pg-hero-desc.pg-hero-desc--strong { font-size: var(--text-sm); font-weight: 600; line-height: 1.5; color: var(--white); }
+  /* Fixed under the nav like Find Tasks: js/pg-hero-fixed.js sets top and pads the page. The top here is the fallback before it runs. */
+  .pg-hero[data-pg-fixed], .pg-hero-bar.pg-hero-bar--in-hero[data-pg-fixed] {
+    position: fixed; top: calc(var(--nav-height) + env(safe-area-inset-top, 0px)); left: 0; right: 0; z-index: 900;
+    width: auto; max-width: none; margin-inline: 0;
+  }
   .pg-hero-label {
     margin: 0 0 var(--space-1); font-family: var(--font-body); font-size: var(--text-xs); font-weight: 700;
     letter-spacing: 0.04em; text-transform: uppercase; color: var(--white);

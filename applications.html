@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>My Applications — Street Taskers</title>
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -31,14 +31,14 @@
     </defs>
   </svg>
 
-  <div class="ap-page" id="applicationsPage">
+  <div class="ap-page" id="applicationsPage" data-pg-fixed-pad>
     <div class="ap-container pg-hero-page">
 
       <!-- Hero — shared .pg-hero, desktop and phone. On a phone the search + dropdowns (.ap-toolbar) sit directly under it in the same dark block; the old header below is desktop-hidden and phone-hidden. -->
-      <section class="ap-hero-dt pg-hero" aria-labelledby="apHeroTitle">
+      <section class="ap-hero-dt pg-hero" data-pg-fixed aria-labelledby="apHeroTitle">
         <div class="pg-hero-text">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="apHeroTitle"><span class="spg-hero-dot"></span>My Applications</h1>
-          <p class="pg-hero-desc pg-hero-desc--strong">Tasks you've submitted proposals for. You'll be notified immediately when a client responds.</p>
+          <p class="pg-hero-desc">Tasks you've submitted proposals for. You'll be notified immediately when a client responds.</p>
         </div>
         <div class="pg-hero-side pg-hero-desktop-only">
           <a href="find-tasks.html" class="pg-hero-btn">Find More Tasks</a>
@@ -64,7 +64,7 @@
         <button type="button" class="ap-tab pg-hero-chip" data-filter="completed" aria-pressed="false">Completed <span class="ap-tab-n pg-hero-chip-n" data-count="completed"></span></button>
       </div>
 
-      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero">
+      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero" data-pg-fixed>
         <div class="pg-hero-search">
           <label class="ap-search">
             <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
@@ -181,5 +181,6 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/applications.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
 </body>
 </html>

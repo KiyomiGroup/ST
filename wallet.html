@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Wallet — Street Taskers</title>
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -44,7 +44,7 @@
   </svg>
 
   <!-- data-role is "tasker" or "customer". wallet-ui.js sets it (see that file). -->
-  <div class="wl-page wl-loading" id="walletPage" data-role="customer">
+  <div class="wl-page wl-loading" id="walletPage" data-role="customer" data-pg-fixed-pad>
     <div class="wl-container pg-hero-page">
 
       <!-- Tasker, desktop (769px and up): shared .pg-hero. The stat cards below float over its bottom edge.
@@ -62,7 +62,7 @@
       <!-- Tasker, phone only (768px and below): shared .pg-hero with the live balance. The values
            are filled by wallet-data.js through the same data-wl-value hooks as the cards below.
            The round button jumps to the gift cards. -->
-      <section class="pg-hero wl-hero-mob wl-tasker-only wl-mob" aria-label="Available to withdraw">
+      <section class="pg-hero wl-hero-mob wl-tasker-only wl-mob" data-pg-fixed aria-label="Available to withdraw">
         <span class="pg-hero-live"><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
         <div class="pg-hero-text">
           <p class="spg-hero-eyebrow pg-hero-eyebrow">Wallet</p>
@@ -518,5 +518,6 @@
   <script src="js/wallet-ui.js"></script>
   <script src="js/wallet-data.js"></script>
   <script src="js/wallet-gift.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
 </body>
 </html>

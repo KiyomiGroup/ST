@@ -67,7 +67,6 @@
   .ap-header { display: none; }
   .ap-container { display: flex; flex-direction: column; }
   .ap-hero-dt.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
-  .ap-hero-dt .spg-hero-dot { display: none; }
   .ap-toolbar { order: 2; margin-bottom: var(--space-4); }
   .ap-tabs { order: 3; }
   .ap-layout { order: 4; }
@@ -224,8 +223,9 @@
 
 /* ── Mobile (matches the mobile design) ──────────────────── */
 @media (max-width: 768px) {
-  .ap-page { padding-top: var(--nav-height); } /* hero sits flush under the nav */
-  .ap-container { width: calc(100% - 2 * var(--space-4)); }
+  .ap-page { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
+  .ap-page::before { display: none; }
+  .ap-container { width: calc(100% - 2 * var(--space-5)); padding-top: var(--space-5); } /* 24px page margin, same as Find Tasks */
   .ap-layout.has-side { grid-template-columns: minmax(0, 1fr); }
   .ap-side { display: none; }
   .ap-mobile-only { display: block; }
@@ -235,7 +235,7 @@
   .ap-lede { font-size: var(--text-sm); line-height: 22px; }
 
   /* Tabs scroll sideways instead of wrapping */
-  .ap-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); scrollbar-width: none; }
+  .ap-tabs { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--space-5)); padding-inline: var(--space-5); scrollbar-width: none; }
   .ap-tabs::-webkit-scrollbar { display: none; }
   .ap-tab { flex-shrink: 0; height: 44px; }
 

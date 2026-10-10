@@ -544,8 +544,11 @@ html.wl-lock { overflow: hidden; }
 @media (max-width: 768px) {
   .wl-desk.wl-desk { display: none; }
   .wl-page { padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
-  .wl-page[data-role="tasker"] { padding-top: var(--nav-height); } /* tasker hero sits flush under the nav */
+  .wl-page[data-role="tasker"] { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
+  .wl-page[data-role="tasker"]::before { display: none; }
+  .wl-page[data-role="tasker"] .wl-container { padding-top: var(--space-5); }
   .wl-page::before { width: 100%; height: 260px; }
+  .wl-page[data-role="tasker"] .wl-container { width: calc(100% - 2 * var(--space-5)); } /* 24px page margin, same as Find Tasks */
   .wl-container { width: calc(100% - 2 * var(--space-4)); }
   .wl-main { gap: var(--space-5); }
 
@@ -561,8 +564,6 @@ html.wl-lock { overflow: hidden; }
   .wl-safepay { margin-bottom: var(--space-5); }
 
   /* Tasker hero (phone): the amount keeps the card's number styling but in white; the compact card is replaced by it */
-  .wl-hero-mob.pg-hero { margin-bottom: var(--space-5); }
-  .wl-hero-mob .spg-hero-dot { display: none; }
   .wl-hero-mob .wl-amt, .wl-hero-mob .wl-amt-dec { color: var(--white); }
   .wl-hero-mob .wl-amt { margin-top: 0; flex-wrap: nowrap; font-size: var(--text-lg); letter-spacing: -0.02em; }
   .wl-hero-mob .pg-hero-icon-btn .wl-i { width: 20px; height: 20px; color: var(--color-text); }
@@ -576,6 +577,7 @@ html.wl-lock { overflow: hidden; }
   /* Section 3: compact rows, one per card */
   .wl-sec-head { align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
   .wl-sec-title { font-size: var(--text-md); }
+  .wl-page[data-role="tasker"] .wl-sec-title { font-size: var(--text-xl); } /* section titles match Find Tasks */
   .wl-sec-title .wl-i { display: none; }
   .wl-sec-sub { margin-top: var(--space-1); font-size: var(--text-xs); }
   .wl-btn-soft { height: 40px; padding: 0 var(--space-3); background: var(--pt-field-strong); box-shadow: none; }
