@@ -17,6 +17,10 @@
       if (q.get('panel') === 'my-tasks' || window.location.hash === '#my-tasks') {
         window.location.replace('my-tasks.html');
       }
+      /* Bookings moved to their own page (customer-bookings.html). */
+      if (q.get('panel') === 'bookings' || window.location.hash === '#bookings') {
+        window.location.replace('customer-bookings.html');
+      }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -228,7 +232,7 @@
               Applications
               <span id="custAppBadge" class="nav-pill-count" hidden></span>
             </button>
-            <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="bookings" onclick="switchPanel('bookings',this);loadBookings()">Bookings</button>
+            <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="bookings" onclick="window.location.href='customer-bookings.html'">Bookings</button>
             <button type="button" class="nav-pill-item dashboard-nav-item" data-panel="messages" onclick="window.location.href='messages.html'">Messages</button>
             <button type="button" class="nav-pill-item dashboard-nav-item" onclick="window.location.href='wallet.html'">Wallet</button>
           </nav>
@@ -360,7 +364,7 @@
                   <div class="tom-panel-head">
                     <h2 id="comPanelTitle">Active Requests</h2>
                     <span class="tom-live" id="comRealtime"><i aria-hidden="true"></i>Real-time</span>
-                    <a href="dashboard-customer.html?panel=bookings" class="tom-history">History
+                    <a href="customer-bookings.html" class="tom-history">History
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
                   </div>
                   <div class="tom-tabs" role="tablist" aria-label="Request status">
@@ -518,7 +522,7 @@
                         </button>
                         <div class="tov-more-menu" id="covMoreMenu" role="menu" hidden>
                           <button type="button" role="menuitem" id="covRefresh">Refresh now</button>
-                          <a href="dashboard-customer.html?panel=bookings" role="menuitem">Open all bookings</a>
+                          <a href="customer-bookings.html" role="menuitem">Open all bookings</a>
                         </div>
                       </div>
                     </div>

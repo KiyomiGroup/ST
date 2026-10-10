@@ -223,6 +223,7 @@ function _highlightActivePillItem() {
     'customer-applications.html': { '': 'npc-applications' },
     'my-tasks.html':           { '': 'npc-tasks' },
     'bookings.html':           { '': 'np-bookings' },
+    'customer-bookings.html':  { '': 'npc-bookings' },
     'find-taskers.html':       { '': 'npc-find-taskers' },
     'wallet.html':             { '': ['np-wallet', 'npc-wallet'] },   /* only the pill for the signed-in role exists */
     'messages.html':           { '': ['np-messages', 'npc-messages'] },

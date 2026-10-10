@@ -1,0 +1,53 @@
+/* ============================================================
+   STREETTASKER — customer-bookings.css
+   Customer "Bookings" page (customer-bookings.html).
+   Loaded AFTER css/bookings.css and reuses its .bk-* components
+   (hero, tabs, toolbar, cards, sidebar, dialogs, badges).
+   Only the customer-specific parts live here. No new tokens.
+
+   1. Pay dialog (price summary, wallet / gift / Paystack options)
+   2. Completion code reveal, issue textarea
+   3. Mobile pass
+   ============================================================ */
+
+/* .bk-btn sets display, which would otherwise beat the hidden attribute (Load More, wallet button) */
+.bk-btn[hidden] { display: none; }
+
+/* ── Pay dialog ──────────────────────────────────────────── */
+.bk-pay-sum { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); font-size: var(--text-sm); }
+.bk-pay-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); color: var(--pt-ink-muted); }
+.bk-pay-row span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.bk-pay-row.is-total { padding-top: var(--space-2); border-top: 1px solid var(--pt-field-icon); color: var(--pt-ink); font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; }
+.bk-pay-row.is-net { color: var(--pt-green); font-size: var(--text-xs); }
+
+.bk-pay-opt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); }
+.bk-pay-opt[hidden] { display: none; }
+.bk-pay-opt-head { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.bk-pay-opt-head strong { display: block; font-family: var(--font-heading); font-size: var(--text-sm); }
+.bk-pay-opt-icon { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--pt-mint); color: var(--pt-green); }
+.bk-pay-opt .bk-btn { flex-shrink: 0; }
+.bk-pay-opt.is-off .bk-pay-opt-icon { background: var(--pt-field-icon); color: var(--pt-ink-muted); }
+#bkGiftBox:empty { display: none; }
+
+/* ── Completion code + issue form ────────────────────────── */
+.bk-code-show {
+  margin: 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); color: var(--pt-green);
+  text-align: center; font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; letter-spacing: 0.2em;
+}
+.bk-textarea {
+  width: 100%; min-height: 112px; padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-lg);
+  background: var(--pt-field); color: var(--pt-ink); font-family: var(--font-body); font-size: var(--text-sm); font-weight: 400; line-height: 20px; resize: vertical;
+}
+.bk-textarea::placeholder { color: var(--pt-ink-muted); }
+.bk-textarea:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
+/* Report Issue sits quietly next to the main action, like Decline on the provider page */
+.bk-btn-quiet.is-danger { color: var(--color-danger); }
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .bk-pay-opt { flex-direction: column; align-items: stretch; }
+  .bk-pay-opt .bk-btn { width: 100%; height: 44px; }
+  .bk-code-show { font-size: var(--text-xl); }
+  .bk-textarea { font-size: var(--text-base); } /* 16px stops iOS zooming into the field */
+}

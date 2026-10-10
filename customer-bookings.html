@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>My Bookings — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/bookings.css" />
+  <link rel="stylesheet" href="css/customer-bookings.css" />
+</head>
+<body class="pg-hero-page pg-hero-nav">
+  <div id="navbar-placeholder"></div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="bk-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+      <symbol id="i-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- a div, not main: styles.css force-pads every main element on phones, which would push the hero away from the nav -->
+  <div class="bk-page" id="bookingsPage" role="main" data-pg-fixed-pad>
+    <div class="bk-container pg-hero-page">
+
+      <!-- Hero: shared .pg-hero, desktop and phone (same as the tasker Bookings page). The header below is kept for its title/count but hidden. -->
+      <section class="bk-hero-dt pg-hero" data-pg-fixed aria-labelledby="bkHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="bkHeroTitle"><span class="spg-hero-dot"></span>Bookings</h1>
+          <p class="pg-hero-desc">Track the services you&rsquo;ve booked, pay safely into escrow and confirm finished jobs.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="find-taskers.html" class="pg-hero-btn pg-hero-desktop-only">Find Services</a>
+          <!-- Phones only: round button that shows / hides the filter panel (customer-bookings.js binds #bkFilterBtn) -->
+          <button type="button" class="bk-filter-btn pg-hero-btn pg-hero-icon-btn" id="bkFilterBtn" aria-expanded="false" aria-controls="bkToolbar" aria-label="Show filters">
+            <svg class="bk-i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="bk-filter-dot" id="bkFilterDot" hidden></span>
+          </button>
+        </div>
+      </section>
+
+      <header class="bk-header">
+        <div>
+          <div class="bk-title-row">
+            <h1 class="bk-title">Bookings</h1>
+            <span class="bk-count" id="bkTotal" hidden></span>
+          </div>
+          <p class="bk-lede">Track the services you&rsquo;ve booked, pay safely into escrow and confirm finished jobs.</p>
+        </div>
+        <div class="bk-header-actions">
+          <a class="bk-btn bk-btn-primary" href="find-taskers.html"><svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>Find Services</a>
+        </div>
+      </header>
+
+      <div class="bk-tabs pg-hero-chips" role="group" aria-label="Filter by status" id="bkTabs">
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="all" aria-pressed="true">All <span class="bk-tab-n pg-hero-chip-n" data-count="all"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="pending" aria-pressed="false">Pending <span class="bk-tab-n pg-hero-chip-n" data-count="pending"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="progress" aria-pressed="false">In Progress <span class="bk-tab-n pg-hero-chip-n" data-count="progress"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="signoff" aria-pressed="false">Sign-Off <span class="bk-tab-n pg-hero-chip-n" data-count="signoff"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="completed" aria-pressed="false">Completed <span class="bk-tab-n pg-hero-chip-n" data-count="completed"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="cancelled" aria-pressed="false">Cancelled <span class="bk-tab-n pg-hero-chip-n" data-count="cancelled"></span></button>
+      </div>
+
+      <div class="bk-toolbar pg-hero-bar" id="bkToolbar">
+        <div class="pg-hero-search">
+          <label class="bk-search">
+            <svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" class="bk-input pg-hero-input" id="bkSearch" placeholder="Search by service, provider or booking ID…" aria-label="Search bookings" />
+          </label>
+          <button type="button" class="pg-hero-search-btn" id="bkSearchBtn">Search</button>
+        </div>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkCategory" aria-label="Filter by service"><option value="">All Services</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkRange" aria-label="Filter by date">
+          <option value="all">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkSort" aria-label="Sort bookings">
+          <option value="recent">Most Recent</option>
+          <option value="oldest">Oldest First</option>
+          <option value="amount">Highest Amount</option>
+          <option value="upcoming">Soonest Scheduled</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
+      <div class="bk-layout has-side" id="bkLayout">
+        <div class="bk-main">
+          <p class="sr-only" id="bkStatus" role="status"></p>
+          <div class="bk-list" id="bkList" aria-busy="true">
+            <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>
+          </div>
+          <button type="button" class="bk-btn bk-more" id="bkMore" hidden>Load More Bookings</button>
+        </div>
+
+        <aside class="bk-side" aria-label="Booking summary and payment protection">
+          <section class="bk-panel">
+            <h2 class="bk-panel-title">Booking Snapshot</h2>
+            <div class="bk-stat-grid">
+              <div class="bk-stat"><span class="bk-stat-label">Needs Your Action</span><span class="bk-stat-value is-green" id="sAction">&mdash;</span><span class="bk-stat-sub" id="sActionSub">to pay or confirm</span></div>
+              <div class="bk-stat"><span class="bk-stat-label">Active Bookings</span><span class="bk-stat-value" id="sActive">&mdash;</span><span class="bk-stat-sub" id="sActiveSub"></span></div>
+            </div>
+            <div class="bk-stat-wide">
+              <div class="bk-stat-row">
+                <div><span class="bk-stat-label">In Escrow</span><span class="bk-stat-value" id="sEscrow">&mdash;</span></div>
+                <div class="is-end"><span class="bk-stat-label">Still to Pay</span><span class="bk-stat-value is-green" id="sToPay">&mdash;</span></div>
+              </div>
+              <div class="bk-bar" id="sBar" role="img" aria-label="Booking pipeline"><span class="is-pending"></span><span class="is-active"></span><span class="is-done"></span></div>
+              <p class="bk-stat-sub" id="sBarText"></p>
+            </div>
+            <a class="bk-wallet" href="wallet.html">
+              <span class="bk-wallet-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-wallet"/></svg></span>
+              <span class="bk-wallet-body"><span class="bk-stat-label">Spent on completed bookings</span><span class="bk-wallet-amt" id="sPaid">&mdash;</span></span>
+              <svg class="bk-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+          </section>
+
+          <section class="bk-panel">
+            <h2 class="bk-panel-title">How Paying Works</h2>
+            <ol class="bk-steps">
+              <li><strong>Provider confirms</strong><span>Once they accept, you can message them and agree the details.</span></li>
+              <li><strong>You pay into escrow</strong><span>Your money is held safely. The provider is paid nothing yet.</span></li>
+              <li><strong>Confirm the job is done</strong><span>When the work is finished, confirm it. You&rsquo;ll get a 6-digit code.</span></li>
+              <li><strong>Give them the code</strong><span>The provider enters it and their payout is released.</span></li>
+            </ol>
+          </section>
+
+          <section class="bk-escrow">
+            <h2 class="bk-panel-title"><svg class="bk-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protection</h2>
+            <ul class="bk-checks">
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Your payment is held until you say the job is done.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Only share your code once you&rsquo;re happy with the work.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Report an issue and the payment is frozen for review.</li>
+            </ul>
+          </section>
+
+          <section class="bk-panel bk-help">
+            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Our support team is here to help.</span></div>
+            <a class="bk-btn" href="messages.html">Chat</a>
+          </section>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Pay: closes before Paystack opens (a modal dialog would sit on top of the Paystack window) -->
+  <dialog class="bk-dialog" id="bkPayDlg" aria-labelledby="bkPayTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkPayTitle">Secure payment</h2>
+      <p class="bk-state-text">Your money is held in escrow and only released after you confirm the job is done.</p>
+      <div class="bk-pay-sum" id="bkPaySum"></div>
+      <div id="bkGiftBox"></div>
+      <div class="bk-pay-opt" id="bkWalletOpt">
+        <div class="bk-pay-opt-head"><span class="bk-pay-opt-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-wallet"/></svg></span>
+          <span><strong>Pay from wallet</strong><span class="bk-stat-sub" id="bkWalletBal"></span></span></div>
+        <button type="button" class="bk-btn bk-btn-primary" id="bkPayWallet">Pay from Wallet</button>
+      </div>
+      <div class="bk-pay-opt">
+        <div class="bk-pay-opt-head"><span class="bk-pay-opt-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-card"/></svg></span>
+          <span><strong>Pay with Paystack</strong><span class="bk-stat-sub">Card, bank transfer or USSD.</span></span></div>
+        <button type="button" class="bk-btn bk-btn-primary" id="bkPayNow">Pay with Paystack</button>
+      </div>
+      <p class="bk-error" id="bkPayError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Cancel</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkPaidDlg" aria-labelledby="bkPaidTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkPaidTitle">Payment confirmed</h2>
+      <p class="bk-state-text">Your payment is held in escrow and the provider has been notified.</p>
+      <ol class="bk-steps">
+        <li><strong>Provider completes the job</strong><span>Then marks it as done.</span></li>
+        <li><strong>You confirm it here</strong><span>You&rsquo;ll get a 6-digit code.</span></li>
+        <li><strong>Give them the code</strong><span>Their payout is released.</span></li>
+      </ol>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn bk-btn-primary" data-close>View Bookings</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkConfirmDlg" aria-labelledby="bkConfirmTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkConfirmTitle">Is the job done?</h2>
+      <p class="bk-state-text" id="bkConfirmText"></p>
+      <p class="bk-error" id="bkConfirmError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Not Yet</button>
+        <button type="button" class="bk-btn bk-btn-primary" id="bkConfirmGo">Yes, Job Is Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkCodeDlg" aria-labelledby="bkCodeTitle">
+    <div class="bk-dialog-body">
+      <h2 class="bk-dialog-title" id="bkCodeTitle">Your completion code</h2>
+      <p class="bk-state-text" id="bkCodeText">Give this code to your provider. They enter it to receive their payment.</p>
+      <p class="bk-code-show" id="bkCodeValue" aria-live="polite">------</p>
+      <p class="bk-stat-sub">Only share it once you&rsquo;re happy with the work. It stops working once it&rsquo;s been used.</p>
+      <p class="bk-error" id="bkCodeError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn bk-btn-primary" data-close>Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="bk-dialog" id="bkIssueDlg" aria-labelledby="bkIssueTitle">
+    <form class="bk-dialog-body" id="bkIssueForm" novalidate>
+      <h2 class="bk-dialog-title" id="bkIssueTitle">Report an issue</h2>
+      <p class="bk-state-text">Payment is frozen until our team has reviewed it, usually within 24 hours.</p>
+      <label class="bk-field"><span>What went wrong?</span>
+        <textarea class="bk-textarea" id="bkIssueText" rows="4" maxlength="1000" placeholder="Briefly describe the issue"></textarea>
+      </label>
+      <p class="bk-error" id="bkIssueError" role="alert" hidden></p>
+      <div class="bk-actions bk-dialog-actions">
+        <button type="button" class="bk-btn" data-close>Cancel</button>
+        <button type="submit" class="bk-btn bk-btn-danger" id="bkIssueGo">Report Issue</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/customer-bookings.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
+</body>
+</html>
