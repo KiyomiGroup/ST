@@ -52,3 +52,25 @@
   .mt-fig-text { font-size: var(--text-base); }
   .mt-fig-range { font-size: var(--text-base); }
 }
+
+/* ── Hero (shared .pg-hero from styles.css, same as Applications and Bookings) ──
+   Desktop needs nothing extra: .pg-hero, .pg-hero-chips and .pg-hero-bar do the work.
+   Phones: the hero comes first, the search bar joins it in one green block, then the tabs. */
+@media (max-width: 768px) {
+  .mt-hero.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
+
+  /* Top nav takes the hero green so the two read as one block.
+     styles.css does this for taskers only (body.role-tasker); My Tasks is a customer page, so it is scoped to .mt-page. */
+  body.st-logged-in.mt-page #navbar {
+    background: var(--hero-bg-mobile);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-bottom-color: transparent; box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+  }
+  body.st-logged-in.mt-page .nav-toggle span { background: var(--white); }
+  body.st-logged-in.mt-page .nav-logo img { filter: brightness(0) invert(1); }
+  body.st-logged-in.mt-page .nav-mobile-bell { color: var(--white); }
+  body.st-logged-in.mt-page .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
+  body.st-logged-in.mt-page .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
+}

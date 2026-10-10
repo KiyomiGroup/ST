@@ -288,7 +288,6 @@
     document.querySelectorAll('[data-count]').forEach(function (el) {
       var n = counts[el.getAttribute('data-count')]; el.textContent = n > 0 ? n : '';
     });
-    var total = $('mtTotal'); total.hidden = !all.length; total.textContent = all.length + ' Total';
     var held = heldTotal(); $('mtHeldWrap').hidden = !held; $('mtHeld').textContent = held ? naira(held) : '';
 
     if (!all.length) {
@@ -319,6 +318,8 @@
     reset();
   });
   $('mtSearch').addEventListener('input', function (e) { state.query = e.target.value.trim(); reset(); });
+  /* The list already filters as you type: the button applies the text and returns focus */
+  $('mtSearchBtn').addEventListener('click', function () { var box = $('mtSearch'); state.query = box.value.trim(); reset(); box.focus(); });
   $('mtCategory').addEventListener('change', function (e) { state.category = e.target.value; reset(); });
   $('mtSort').addEventListener('change', function (e) { state.sort = e.target.value; reset(); });
   $('mtMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });

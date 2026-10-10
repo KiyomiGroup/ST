@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>My Tasks — Street Taskers</title>
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/applications.css" />
   <link rel="stylesheet" href="css/my-tasks.css" />
 </head>
-<body>
+<body class="pg-hero-page mt-page" data-pg-hero-theme>
   <div id="navbar-placeholder"></div>
 
   <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
@@ -24,46 +24,50 @@
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
       <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     </defs>
   </svg>
 
-  <div class="ap-page" id="myTasksPage">
-    <div class="ap-container">
+  <div class="ap-page" id="myTasksPage" data-pg-fixed-pad>
+    <div class="ap-container pg-hero-page">
 
-      <header class="ap-header">
-        <div>
-          <div class="ap-title-row">
-            <h1 class="ap-title">My Tasks</h1>
-            <span class="ap-count" id="mtTotal" hidden></span>
-          </div>
-          <p class="ap-lede">Manage your postings, review offers from taskers, follow active jobs and keep every payment protected by escrow.</p>
+      <!-- Hero: the shared .pg-hero used on the tasker pages (desktop and phone). On a phone the search and dropdowns sit under it in the same green block. -->
+      <section class="mt-hero pg-hero" data-pg-fixed aria-labelledby="mtHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="mtHeroTitle"><span class="spg-hero-dot"></span>My Tasks</h1>
+          <p class="pg-hero-desc">Manage your postings, review offers from taskers, follow active jobs and keep every payment protected by escrow.</p>
         </div>
-        <a href="post-task.html" class="ap-btn ap-btn-primary">Post a New Task</a>
-      </header>
+        <div class="pg-hero-side pg-hero-desktop-only">
+          <a href="post-task.html" class="pg-hero-btn">Post a New Task</a>
+        </div>
+      </section>
+
+      <div class="ap-tabs pg-hero-chips" role="group" aria-label="Filter by status" id="mtTabs">
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="all" aria-pressed="true">All Tasks <span class="ap-tab-n pg-hero-chip-n" data-count="all"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="open" aria-pressed="false">Open for Offers <span class="ap-tab-n pg-hero-chip-n" data-count="open"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="progress" aria-pressed="false">In Progress <span class="ap-tab-n pg-hero-chip-n" data-count="progress"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="completed" aria-pressed="false">Completed <span class="ap-tab-n pg-hero-chip-n" data-count="completed"></span></button>
+      </div>
+
+      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero" data-pg-fixed>
+        <div class="pg-hero-search">
+          <label class="ap-search">
+            <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" class="ap-input pg-hero-input" id="mtSearch" placeholder="Search by title, category or tasker…" aria-label="Search your tasks" />
+          </label>
+          <button type="button" class="pg-hero-search-btn" id="mtSearchBtn" aria-label="Search"><span class="pg-hero-search-text">Search</span><svg class="pg-hero-search-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        </div>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="mtCategory" aria-label="Filter by category"><option value="">All Categories</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="mtSort" aria-label="Sort tasks">
+          <option value="recent">Recently Posted</option>
+          <option value="oldest">Oldest First</option>
+          <option value="budget-high">Budget: High to Low</option>
+          <option value="budget-low">Budget: Low to High</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+      </div>
 
       <div class="ap-layout has-side" id="mtLayout">
         <div class="ap-main">
-          <div class="ap-tabs" role="group" aria-label="Filter by status" id="mtTabs">
-            <button type="button" class="ap-tab" data-filter="all" aria-pressed="true">All Tasks <span class="ap-tab-n" data-count="all"></span></button>
-            <button type="button" class="ap-tab" data-filter="open" aria-pressed="false">Open for Offers <span class="ap-tab-n" data-count="open"></span></button>
-            <button type="button" class="ap-tab" data-filter="progress" aria-pressed="false">In Progress <span class="ap-tab-n" data-count="progress"></span></button>
-            <button type="button" class="ap-tab" data-filter="completed" aria-pressed="false">Completed <span class="ap-tab-n" data-count="completed"></span></button>
-          </div>
-
-          <div class="ap-toolbar">
-            <label class="ap-search">
-              <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
-              <input type="search" class="ap-input" id="mtSearch" placeholder="Search by title, category, location or tasker…" aria-label="Search your tasks" />
-            </label>
-            <select class="ap-select" id="mtCategory" aria-label="Filter by category"><option value="">All Categories</option></select>
-            <select class="ap-select" id="mtSort" aria-label="Sort tasks">
-              <option value="recent">Recently Posted</option>
-              <option value="oldest">Oldest First</option>
-              <option value="budget-high">Budget: High to Low</option>
-              <option value="budget-low">Budget: Low to High</option>
-            </select>
-          </div>
-
           <div class="ap-list" id="mtList" aria-live="polite" aria-busy="true">
             <div class="ap-state"><p class="ap-state-text">Loading your tasks…</p></div>
           </div>
@@ -112,6 +116,7 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
   <script src="js/my-tasks.js"></script>
 </body>
 </html>
