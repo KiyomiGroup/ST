@@ -122,6 +122,32 @@
       body.role-tasker .hf-search .spg-searchbar { margin: calc(-1 * var(--hero-float-gap)) auto 0; max-width: none; }
     }
 
+    /* ── Tasker hero, mobile (768px and below) ──────────────────
+       Same shared .pg-hero as desktop, styled for phones in styles.css. The hero and
+       search bar stay fixed under the nav (like Find Tasks) and only the feed scrolls.
+       Customers keep .hf-hero. */
+    .hf-top-spacer { display: none; }
+    @media (max-width: 768px) {
+      body.role-tasker .hf-hero { display: none; }
+      body.role-tasker .hf-hero-dt { display: block; }
+      body.role-tasker .hf-top {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+        padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+      }
+      body.role-tasker .hf-top-spacer { display: block; }
+      body.role-tasker .hf-hero-dt .pg-hero { padding-bottom: 100px; }
+      body.role-tasker .hf-hero-dt .spg-hero-spark { display: none; }
+      body.role-tasker .hf-hero-dt .pg-hero-title { margin-bottom: var(--space-1); }
+      body.role-tasker .hf-hero-dt .hf-btn-find { order: -1; }   /* Find Work first, Post a Service second */
+      /* Bottom padding = how far the hero extends below the pill, so the fixed block ends exactly at the hero's edge */
+      body.role-tasker .hf-search { padding-bottom: calc(var(--space-5) - var(--space-1)); }   /* 20px: the pill sits 20px above the hero's bottom edge */
+      body.role-tasker .hf-chips { padding-top: var(--space-4); }
+      /* The live pill is positioned against the hero, so its wrapper must not hold a transform from the entrance animation */
+      body.role-tasker .hf-hero-dt .pg-hero-meta.fade-up { animation: none; opacity: 1; transform: none; }
+      /* The search pill floats over the hero's bottom edge, inside its dark area */
+      body.role-tasker .hf-search .spg-searchbar { margin: -76px 4px 0; }
+    }
+
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
     .hf-feed-customer, .hf-feed-tasker { display: none; padding-bottom: var(--space-8); }
     body.role-customer .hf-feed-customer { display: block; }
@@ -294,93 +320,97 @@
     }
   </style>
 </head>
-<body>
+<body class="pg-hero-page">
   <div id="navbar-placeholder"></div>
 
   <div class="feed-root">
 
-    <!-- TASKER HERO (desktop only) — shared .pg-hero; ids end in Dt so the old hero's ids stay unique -->
-    <div class="hf-hero-dt pg-hero-zone">
-      <div class="container">
-        <section class="pg-hero" aria-labelledby="hfTitleDt">
-          <div class="pg-hero-text">
-            <div class="spg-hero-eyebrow pg-hero-eyebrow fade-up"><span class="spg-hero-dot"></span>Homepage</div>
-            <h1 class="pg-hero-title fade-up d1" id="hfTitleDt">
-              <span id="welcomeGreetingDt">Welcome back!</span>
-              <svg class="spg-hero-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            </h1>
-            <p class="pg-hero-lead fade-up d2">Ready for your next job?</p>
-            <div class="pg-hero-meta fade-up d2">
-              <span class="pg-hero-note">New tasks near you, ready for your offer.</span>
-              <span class="pg-hero-live hf-live-dt"><span class="spg-hero-dot"></span><strong id="liveTaskCountDt">…</strong>&nbsp;<span id="hfLiveLabelDt">tasks open now</span></span>
-            </div>
-          </div>
-          <div class="pg-hero-stack fade-up d3">
-            <a href="post-service.html" class="pg-hero-btn">Post a Service</a>
-            <a href="find-tasks.html" class="pg-hero-btn">Find Work</a>
-            <a href="bookings.html" class="pg-hero-btn">My Bookings</a>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- HOME HERO — copy and buttons switch on body.role-customer / body.role-tasker -->
-    <section class="hf-hero" aria-labelledby="hfTitle">
-      <div class="container hf-hero-inner">
-        <div class="hf-hero-copy">
-          <div class="hf-greet-row fade-up">
-            <span class="hf-greeting" id="welcomeGreeting">Good morning 👋</span>
-            <div class="hf-loc-wrap">
-              <span class="hf-loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="liveLocation">Lagos</span> · <button type="button" class="hf-loc-change" id="hfLocChange" aria-expanded="false" aria-controls="hfLocPop">Change</button></span>
-              <div class="hf-loc-pop" id="hfLocPop" hidden>
-                <input type="text" class="hf-loc-input" id="hfLocInput" placeholder="e.g. Lekki Phase 1, Lagos" autocomplete="off" aria-label="Your area" />
-                <div id="hfLocSuggestions" class="location-suggestions"></div>
+    <!-- Hero + search. On a phone, taskers get this block fixed under the nav (like Find Tasks); the spacer below holds its place. -->
+    <div class="hf-top">
+      <!-- TASKER HERO (desktop only) — shared .pg-hero; ids end in Dt so the old hero's ids stay unique -->
+      <div class="hf-hero-dt pg-hero-zone">
+        <div class="container">
+          <section class="pg-hero" aria-labelledby="hfTitleDt">
+            <div class="pg-hero-text">
+              <div class="spg-hero-eyebrow pg-hero-eyebrow fade-up"><span class="spg-hero-dot"></span>Homepage</div>
+              <h1 class="pg-hero-title fade-up d1" id="hfTitleDt">
+                <span id="welcomeGreetingDt">Welcome back!</span>
+                <svg class="spg-hero-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+              </h1>
+              <p class="pg-hero-lead fade-up d2">Ready for your next job?</p>
+              <div class="pg-hero-meta fade-up d2">
+                <span class="pg-hero-note">New tasks near you, ready for your offer.</span>
+                <span class="pg-hero-live hf-live-dt"><span class="spg-hero-dot"></span><strong id="liveTaskCountDt">…</strong>&nbsp;<span id="hfLiveLabelDt">tasks open now</span></span>
               </div>
             </div>
-          </div>
-          <h1 class="hf-title fade-up d1" id="hfTitle">
-            <span data-role-only="customer">What do you need done today?</span>
-            <span data-role-only="tasker">Ready for your next job?</span>
-          </h1>
-          <p class="hf-sub fade-up d2">
-            <span data-role-only="customer">Verified neighborhood professionals ready to help.</span>
-            <span data-role-only="tasker">New tasks near you, ready for your offer.</span>
-          </p>
-          <div class="hf-live fade-up d2"><span class="hf-live-dot"></span><strong id="liveTaskCount">…</strong>&nbsp;<span id="hfLiveLabel">tasks open now</span></div>
-        </div>
-        <div class="hf-cta fade-up d3">
-          <div data-role-only="customer">
-            <a href="post-task.html" class="hf-btn hf-btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Post a Task</a>
-            <a href="find-taskers.html" class="hf-btn hf-btn-secondary">Browse Services</a>
-          </div>
-          <div data-role-only="tasker">
-            <a href="find-tasks.html" class="hf-btn hf-btn-primary">Find Work</a>
-            <a href="post-service.html" class="hf-btn hf-btn-secondary">Post a Service</a>
-            <a href="dashboard-tasker.html?panel=bookings" class="hf-btn hf-btn-secondary">My Bookings</a>
-          </div>
+            <div class="pg-hero-stack fade-up d3">
+              <a href="post-service.html" class="pg-hero-btn hf-btn-post">Post a Service</a>
+              <a href="find-tasks.html" class="pg-hero-btn hf-btn-find">Find Work</a>
+              <a href="bookings.html" class="pg-hero-btn pg-hero-desktop-only">My Bookings</a>
+            </div>
+          </section>
         </div>
       </div>
-    </section>
 
-    <!-- SEARCH — same .spg-searchbar pattern as find-taskers / find-tasks -->
-    <div class="hf-search">
-      <div class="container">
-        <form id="hfSearchForm" class="spg-searchbar spg-searchbar--wide fade-up d3" novalidate>
-          <div class="spg-searchbar-field">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="hfSearchInput" name="q" placeholder="Service or tasker name..." autocomplete="off" aria-label="Search" />
+      <!-- HOME HERO — copy and buttons switch on body.role-customer / body.role-tasker -->
+      <section class="hf-hero" aria-labelledby="hfTitle">
+        <div class="container hf-hero-inner">
+          <div class="hf-hero-copy">
+            <div class="hf-greet-row fade-up">
+              <span class="hf-greeting" id="welcomeGreeting">Good morning 👋</span>
+              <div class="hf-loc-wrap">
+                <span class="hf-loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="liveLocation">Lagos</span> · <button type="button" class="hf-loc-change" id="hfLocChange" aria-expanded="false" aria-controls="hfLocPop">Change</button></span>
+                <div class="hf-loc-pop" id="hfLocPop" hidden>
+                  <input type="text" class="hf-loc-input" id="hfLocInput" placeholder="e.g. Lekki Phase 1, Lagos" autocomplete="off" aria-label="Your area" />
+                  <div id="hfLocSuggestions" class="location-suggestions"></div>
+                </div>
+              </div>
+            </div>
+            <h1 class="hf-title fade-up d1" id="hfTitle">
+              <span data-role-only="customer">What do you need done today?</span>
+              <span data-role-only="tasker">Ready for your next job?</span>
+            </h1>
+            <p class="hf-sub fade-up d2">
+              <span data-role-only="customer">Verified neighborhood professionals ready to help.</span>
+              <span data-role-only="tasker">New tasks near you, ready for your offer.</span>
+            </p>
+            <div class="hf-live fade-up d2"><span class="hf-live-dot"></span><strong id="liveTaskCount">…</strong>&nbsp;<span id="hfLiveLabel">tasks open now</span></div>
           </div>
-          <div class="spg-searchbar-divider spg-searchbar-location-wrap"></div>
-          <div class="spg-searchbar-field spg-searchbar-location-wrap hf-search-loc">
-            <svg class="hf-ico-pin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <svg class="hf-ico-map" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-            <input type="text" id="hfSearchLoc" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" aria-label="Location" />
-            <div id="hfSearchLocSuggestions" class="location-suggestions"></div>
+          <div class="hf-cta fade-up d3">
+            <div data-role-only="customer">
+              <a href="post-task.html" class="hf-btn hf-btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Post a Task</a>
+              <a href="find-taskers.html" class="hf-btn hf-btn-secondary">Browse Services</a>
+            </div>
+            <div data-role-only="tasker">
+              <a href="find-tasks.html" class="hf-btn hf-btn-primary">Find Work</a>
+              <a href="post-service.html" class="hf-btn hf-btn-secondary">Post a Service</a>
+              <a href="dashboard-tasker.html?panel=bookings" class="hf-btn hf-btn-secondary">My Bookings</a>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary" aria-label="Search"><span>Search</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-        </form>
+        </div>
+      </section>
+
+      <!-- SEARCH — same .spg-searchbar pattern as find-taskers / find-tasks -->
+      <div class="hf-search">
+        <div class="container">
+          <form id="hfSearchForm" class="spg-searchbar spg-searchbar--wide fade-up d3" novalidate>
+            <div class="spg-searchbar-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="hfSearchInput" name="q" placeholder="Service or tasker name..." autocomplete="off" aria-label="Search" />
+            </div>
+            <div class="spg-searchbar-divider spg-searchbar-location-wrap"></div>
+            <div class="spg-searchbar-field spg-searchbar-location-wrap hf-search-loc">
+              <svg class="hf-ico-pin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <svg class="hf-ico-map" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+              <input type="text" id="hfSearchLoc" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" aria-label="Location" />
+              <div id="hfSearchLocSuggestions" class="location-suggestions"></div>
+            </div>
+            <button type="submit" class="btn btn-primary" aria-label="Search"><span>Search</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </form>
+        </div>
       </div>
     </div>
+    <div class="hf-top-spacer" aria-hidden="true"></div>
 
     <!-- CATEGORY CHIPS — filter the feed (wired to the sections in Steps 3-5) -->
     <nav class="hf-chips" aria-label="Filter by category">
@@ -734,7 +764,7 @@
       if (!form) return;
       const isTasker = _userRole === 'tasker';
       const q = document.getElementById('hfSearchInput');
-      if (q) q.placeholder = isTasker ? 'Task title or keyword...' : 'Service or tasker name...';
+      if (q) q.placeholder = isTasker ? 'Search tasks or skills...' : 'Service or tasker name...';
       const locIn = document.getElementById('hfSearchLoc');
       if (locIn && isTasker) locIn.placeholder = 'Add location or area (e.g. Lagos, Lekki)';
       if (typeof initLocationInput === 'function') {
@@ -1116,6 +1146,21 @@
       if (h < 24) return h + 'h ago';
       return Math.floor(h / 24) + 'd ago';
     }
+
+    /* ── Phone: keep the feed below the fixed hero + search block ── */
+    (function () {
+      const top = document.querySelector('.hf-top');
+      const spacer = document.querySelector('.hf-top-spacer');
+      if (!top || !spacer) return;
+      const sync = () => {
+        spacer.style.height = getComputedStyle(top).position === 'fixed'
+          ? top.getBoundingClientRect().height + 'px' : '';
+      };
+      if (window.ResizeObserver) new ResizeObserver(sync).observe(top);
+      window.addEventListener('resize', sync);
+      window.addEventListener('load', sync);
+      sync();
+    })();
 
     /* ── Boot ────────────────────────────────────────────────── */
     if (document.readyState === 'loading') {

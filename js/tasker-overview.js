@@ -668,19 +668,8 @@
     });
     $('tomEscrowSub').textContent = ready > 0 ? compact(ready) + ' ready to release' : 'Released after client sign-off';
 
-    /* header chips + welcome */
-    var plan = 'free';
-    try { plan = localStorage.getItem('st_plan') || 'free'; } catch (e) {}
-    $('tomPlan').textContent = plan === 'pro' ? 'TASKER PRO' : 'TASKER';
-    $('tomPlan').classList.toggle('is-pro', plan === 'pro');
-    var jobs = $('tomJobs');
-    jobs.hidden = false;
-    jobs.innerHTML = '<span class="tom-dot" aria-hidden="true"></span>' + c.done + (c.done === 1 ? ' Job' : ' Jobs') +
-      (state.rating ? ' / ★ ' + state.rating.toFixed(1) : '');
-    var live = $('tomLive');
-    if (state.location) { live.hidden = false; $('tomLiveText').textContent = 'Live ' + String(state.location).split(',')[0].trim().slice(0, 14); } else { live.hidden = true; }
-    $('tomTitle').textContent = 'Welcome back' + (state.name ? ', ' + state.name : '');
-    $('tomAvatar').textContent = initials(state.name || 'ST');
+    /* hero greeting */
+    $('tomTitle').textContent = 'Welcome back' + (state.name ? ', ' + state.name : '') + '!';
 
     /* open-task banner: real count and average budget from open tasks */
     var open = state.openTasks || [];
@@ -781,6 +770,10 @@
     if (!$('tom')) return;
     $('tomWithdraw').addEventListener('click', function () { if (typeof window.openTaskerWithdrawModal === 'function') window.openTaskerWithdrawModal(); });
     $('tomPayout').addEventListener('click', function () { if (typeof window.openTaskerWithdrawModal === 'function') window.openTaskerWithdrawModal(); });
+    $('tomFilterToggle').addEventListener('click', function () {
+      var open = $('tomFilters').classList.toggle('is-collapsed') === false;
+      this.setAttribute('aria-expanded', String(open));
+    });
     $('tomSearch').addEventListener('input', function () { mstate.q = this.value; renderMobile(); });
     $('tomCats').addEventListener('click', function (e) {
       var b = e.target.closest('[data-cat]'); if (!b) return;

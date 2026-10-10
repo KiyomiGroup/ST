@@ -303,27 +303,22 @@ function openMessagesPanel() {
             <div id="panel-mypage" class="dashboard-panel active">
               <!-- ═══ OVERVIEW — mobile layout (shown at 768px and below; js/tasker-overview.js fills it) ═══ -->
               <div class="tom" id="tom">
-                <div class="tom-chips" id="tomChips">
-                  <span class="tom-pill tom-pill-plan" id="tomPlan">Tasker</span>
-                  <span class="tom-pill" id="tomJobs" hidden></span>
-                  <span class="tom-pill" id="tomLive" hidden><i aria-hidden="true"></i><span id="tomLiveText"></span></span>
-                </div>
-
-                <div class="tom-welcome">
-                  <h1 class="tom-title" id="tomTitle">Welcome back</h1>
-                  <span class="tom-avatar" id="tomAvatar" aria-hidden="true">ST</span>
-                </div>
-                <p class="tom-sub">Track incoming jobs, escrow &amp; daily earnings.</p>
-
-                <div class="tom-cta">
-                  <a href="find-tasks.html" class="tom-find">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    Find Tasks
-                  </a>
-                  <a href="find-tasks.html" class="tom-round-btn" aria-label="Tasks near me">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
-                  </a>
-                </div>
+                <header class="pg-hero">
+                  <div class="pg-hero-text">
+                    <p class="spg-hero-eyebrow pg-hero-eyebrow"><span class="spg-hero-dot"></span>Overview</p>
+                    <h1 class="pg-hero-title">
+                      <span id="tomTitle">Welcome back!</span>
+                      <svg class="spg-hero-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+                    </h1>
+                    <p class="pg-hero-desc">Track incoming jobs, escrow &amp; daily earnings.</p>
+                  </div>
+                  <div class="pg-hero-side">
+                    <a href="find-tasks.html" class="pg-hero-btn">Find Tasks</a>
+                    <button type="button" class="pg-hero-btn pg-hero-icon-btn" id="tomFilterToggle" aria-label="Show or hide search and filters" aria-expanded="true" aria-controls="tomFilters">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    </button>
+                  </div>
+                </header>
 
                 <div class="tom-stats">
                   <article class="tom-card">
@@ -364,12 +359,14 @@ function openMessagesPanel() {
                   </article>
                 </div>
 
-                <div class="tom-search">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <label class="sr-only" for="tomSearch">Search tasks</label>
-                  <input type="search" id="tomSearch" placeholder="Search tasks by ID, client or street..." autocomplete="off" />
+                <div class="tom-filters" id="tomFilters">
+                  <div class="tom-search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <label class="sr-only" for="tomSearch">Search tasks</label>
+                    <input type="search" id="tomSearch" placeholder="Search tasks by ID, client or street..." autocomplete="off" />
+                  </div>
+                  <div class="tom-cats" id="tomCats" role="group" aria-label="Filter by category"></div>
                 </div>
-                <div class="tom-cats" id="tomCats" role="group" aria-label="Filter by category"></div>
 
                 <section class="tom-panel" aria-labelledby="tomPanelTitle">
                   <div class="tom-panel-head">

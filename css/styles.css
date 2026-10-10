@@ -2694,8 +2694,8 @@ img { max-width: 100%; height: auto; }
   body.spg-page.st-logged-in #navMobileAccount { display: flex; }
   /* Logged in on a search page: use the same light top nav as everywhere
      else instead of the dark green guest treatment above. */
-  body.spg-page.st-logged-in #navbar { background: rgba(255,255,255,0.92); }
-  body.spg-page.st-logged-in .nav-toggle span { background: var(--text-primary); }
+  body.spg-page.st-logged-in:not(.role-tasker) #navbar { background: rgba(255,255,255,0.92); }
+  body.spg-page.st-logged-in:not(.role-tasker) .nav-toggle span { background: var(--text-primary); }
 
   /* ── Top nav (logged-in, mobile): wordmark + role badge + dynamic
      subtitle on the left, bell + avatar on the right. Scoped to
@@ -4148,49 +4148,6 @@ body.tdash-overview .dashboard-page { background: var(--to-page-bg); }
   .tom { display: block; padding-bottom: var(--space-5); }
   .tom [hidden] { display: none; }
 
-  /* Header chips */
-  .tom-chips { display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: var(--space-1); scrollbar-width: none; }
-  .tom-chips::-webkit-scrollbar { display: none; }
-  .tom-pill {
-    flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-2);
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--to-card-border); border-radius: var(--radius-pill);
-    background: var(--color-bg);
-    font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; color: var(--color-text);
-  }
-  .tom-pill-plan { background: var(--tm-mint-soft); border-color: var(--tm-mint-soft); color: var(--tm-mint-ink); letter-spacing: 0.03em; }
-  .tom-dot, .tom-pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-text); }
-  .tom-pill i { background: var(--to-green); }
-
-  /* Welcome */
-  .tom-welcome { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
-  .tom-title {
-    font-size: var(--text-2xl); font-weight: 800; line-height: 1.15; letter-spacing: -0.03em;
-    color: var(--color-text); overflow-wrap: anywhere;
-  }
-  .tom-avatar {
-    flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 50%;
-    background: var(--tm-mint-soft); color: var(--tm-mint-ink);
-    font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 800;
-  }
-  .tom-sub { margin-top: var(--space-2); font-size: var(--text-base); color: var(--color-text-secondary); }
-
-  .tom-cta { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
-  .tom-find {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-    height: 52px; border-radius: var(--radius-pill);
-    background: var(--tm-panel); color: var(--to-dark-text);
-    font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700; text-decoration: none;
-    box-shadow: var(--shadow-primary-md);
-  }
-  .tom-round-btn {
-    flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-    width: 52px; height: 52px; border-radius: 50%;
-    border: 1px solid var(--to-card-border); background: var(--color-bg);
-    color: var(--tm-panel); text-decoration: none;
-  }
-
   /* Stat cards: two across */
   .tom-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-5); }
   .tom-card {
@@ -4779,3 +4736,101 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
     font-weight: 500;
   }
 }
+
+
+/* ================================================================
+   TASKER PAGE HEROES — mobile (768px and below)  [Stage 1]
+   Same look as the Find Tasks hero on a phone (.spg-hero): flat dark
+   green, full-bleed, only the bottom corners rounded. The mobile top nav
+   takes the same colour (--hero-bg-mobile) so the two read as one block.
+   Applies to the shared .pg-hero markup. Desktop is the block above.
+   Stage 1: home-feed.html (tasker) and dashboard-tasker.html (Overview).
+   Stage 2 adds body.pg-hero-page to Applications, Bookings and Wallet.
+   ================================================================ */
+@media (max-width: 768px) {
+
+  /* ── Top nav: same green as the hero, white controls ── */
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) #navbar {
+    background: var(--hero-bg-mobile);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-bottom-color: transparent; box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+  }
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-toggle span { background: var(--white); }
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-logo img { filter: brightness(0) invert(1); }
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-bell { color: var(--white); }
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
+  body.st-logged-in.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview) .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
+
+  /* ── Hero shell ── */
+  .pg-hero {
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4);
+    background: var(--hero-bg-mobile);
+    border-radius: 0 0 32px 32px;
+    padding: 20px 24px 24px;
+    /* Full-bleed: break out of the page container to both screen edges */
+    width: 100vw; max-width: none; margin-inline: calc(50% - 50vw);
+  }
+  .pg-hero-text { min-width: 0; }
+
+  /* Eyebrow = page name, green like the dot */
+  .spg-hero-eyebrow.pg-hero-eyebrow {
+    margin: 0 0 var(--space-3); line-height: 1.2;
+    font-family: var(--font-body); font-size: var(--text-xs); font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--hero-dot);
+  }
+  .pg-hero-title {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-heading); font-weight: 800; color: var(--white);
+    font-size: var(--text-xl); letter-spacing: -0.02em; line-height: 1.15;
+  }
+  .pg-hero-lead, .pg-hero-desc {
+    margin: 0; font-family: var(--font-heading); font-weight: 700;
+    font-size: var(--text-base); line-height: 1.4; color: var(--hero-text-muted);
+  }
+  .pg-hero-desc { font-weight: 400; font-size: var(--text-sm); }
+  .pg-hero-lead { margin-bottom: var(--space-2); }
+
+  .pg-hero-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+  .pg-hero-note { font-size: var(--text-xs); color: var(--white); }
+  /* Live pill: top-right corner, level with the eyebrow */
+  .pg-hero-live {
+    position: absolute; top: 16px; right: 24px;
+    display: inline-flex; align-items: center; gap: 0;
+    padding: 4px 12px; border-radius: var(--radius-pill);
+    background: var(--hero-btn-bg); color: var(--color-text);
+    font-size: var(--text-xs); font-weight: 700;
+  }
+  .pg-hero-live[hidden] { display: none; }
+  .pg-hero-live .spg-hero-dot { margin-right: 6px; }
+
+  /* Buttons: one row, pale pills share the width */
+  .pg-hero-side, .pg-hero-stack { display: flex; flex-direction: row; align-items: center; gap: var(--space-3); width: 100%; }
+  .pg-hero-btn {
+    flex: 1 1 0; min-width: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+    height: 48px; padding: 0 var(--space-4);
+    border: 0; border-radius: var(--radius-pill);
+    background: var(--hero-btn-bg); color: var(--color-text);
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600;
+    text-decoration: none; white-space: nowrap; cursor: pointer;
+  }
+  .pg-hero-btn:active { background: var(--hero-btn-bg-hover); }
+  .pg-hero-btn:focus-visible { outline: 2px solid var(--hero-dot); outline-offset: 2px; }
+  /* Round white icon button beside the main pill */
+  .pg-hero-icon-btn { flex: 0 0 48px; width: 48px; padding: 0; background: var(--white); }
+  .pg-hero-side .pg-hero-icon-btn { order: 2; }
+  .pg-hero-desktop-only { display: none; }
+  /* ── Overview: hero sits flush under the nav; stat cards follow ── */
+  body.tdash-overview .dashboard-body { padding-top: 0; }
+  body.tdash-overview #panel-mypage { padding-top: 0; }
+  /* !important: .dashboard-panel sets overflow-x:hidden !important above, which would clip the full-bleed hero */
+  body.tdash-overview #panel-mypage { overflow-x: visible !important; }
+  .tom > .pg-hero { margin-bottom: var(--space-5); }
+  .tom-stats { margin-top: 0; }
+  .tom-filters.is-collapsed { display: none; }
+}
+

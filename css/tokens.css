@@ -320,6 +320,7 @@
   --hero-chip-bg:       var(--pt-green);            /* idle filter chips on the hero */
   --hero-chip-bg-hover: var(--pt-escrow-icon);
   --hero-dot:           #4ADE80;                    /* live dot (same green as .spg-hero-dot) */
+  --hero-bg-mobile:     #013109;                    /* flat hero fill on mobile; the mobile top nav uses the same value so there is no seam */
   --hero-float-gap:     40px;                       /* how far floating content overlaps the hero's bottom edge */
   --hero-bar-overlap:   24px;                       /* how far the floating search pill overlaps the hero's bottom edge (about half its height) */
   --hero-chip-h:        32px;                       /* filter chip height on the hero */
