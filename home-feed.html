@@ -108,6 +108,20 @@
     .hf-search-loc { position: relative; }
     @media (max-width: 900px) { .hf-search .spg-searchbar { margin: 0; } }
 
+    /* ── Tasker hero, desktop (901px and up) ───────────────────
+       Same hero as the search pages (shared .pg-hero in styles.css). Customers
+       and tablet/mobile keep .hf-hero above; the search bar below is shared. */
+    .hf-hero-dt { display: none; }
+    .hf-ico-map { display: none; }
+    body.role-tasker .hf-ico-pin { display: none; }
+    body.role-tasker .hf-ico-map { display: block; }
+    @media (min-width: 901px) {
+      body.role-tasker .hf-hero-dt { display: block; }
+      body.role-tasker .hf-hero { display: none; }
+      body.role-tasker .hf-search { padding-bottom: var(--space-3); }
+      body.role-tasker .hf-search .spg-searchbar { margin: calc(-1 * var(--hero-float-gap)) auto 0; max-width: none; }
+    }
+
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
     .hf-feed-customer, .hf-feed-tasker { display: none; padding-bottom: var(--space-8); }
     body.role-customer .hf-feed-customer { display: block; }
@@ -285,6 +299,31 @@
 
   <div class="feed-root">
 
+    <!-- TASKER HERO (desktop only) — shared .pg-hero; ids end in Dt so the old hero's ids stay unique -->
+    <div class="hf-hero-dt pg-hero-zone">
+      <div class="container">
+        <section class="pg-hero" aria-labelledby="hfTitleDt">
+          <div class="pg-hero-text">
+            <div class="spg-hero-eyebrow pg-hero-eyebrow fade-up"><span class="spg-hero-dot"></span>Homepage</div>
+            <h1 class="pg-hero-title fade-up d1" id="hfTitleDt">
+              <span id="welcomeGreetingDt">Welcome back!</span>
+              <svg class="spg-hero-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            </h1>
+            <p class="pg-hero-lead fade-up d2">Ready for your next job?</p>
+            <div class="pg-hero-meta fade-up d2">
+              <span class="pg-hero-note">New tasks near you, ready for your offer.</span>
+              <span class="pg-hero-live hf-live-dt"><span class="spg-hero-dot"></span><strong id="liveTaskCountDt">…</strong>&nbsp;<span id="hfLiveLabelDt">tasks open now</span></span>
+            </div>
+          </div>
+          <div class="pg-hero-stack fade-up d3">
+            <a href="post-service.html" class="pg-hero-btn">Post a Service</a>
+            <a href="find-tasks.html" class="pg-hero-btn">Find Work</a>
+            <a href="bookings.html" class="pg-hero-btn">My Bookings</a>
+          </div>
+        </section>
+      </div>
+    </div>
+
     <!-- HOME HERO — copy and buttons switch on body.role-customer / body.role-tasker -->
     <section class="hf-hero" aria-labelledby="hfTitle">
       <div class="container hf-hero-inner">
@@ -326,14 +365,15 @@
     <!-- SEARCH — same .spg-searchbar pattern as find-taskers / find-tasks -->
     <div class="hf-search">
       <div class="container">
-        <form id="hfSearchForm" class="spg-searchbar fade-up d3" novalidate>
+        <form id="hfSearchForm" class="spg-searchbar spg-searchbar--wide fade-up d3" novalidate>
           <div class="spg-searchbar-field">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="hfSearchInput" name="q" placeholder="Service or tasker name..." autocomplete="off" aria-label="Search" />
           </div>
           <div class="spg-searchbar-divider spg-searchbar-location-wrap"></div>
           <div class="spg-searchbar-field spg-searchbar-location-wrap hf-search-loc">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <svg class="hf-ico-pin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <svg class="hf-ico-map" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
             <input type="text" id="hfSearchLoc" name="location" placeholder="Location (e.g. Lekki, Lagos)" autocomplete="off" aria-label="Location" />
             <div id="hfSearchLocSuggestions" class="location-suggestions"></div>
           </div>
@@ -590,16 +630,22 @@
 
     /* Real count of open tasks. If it can't be read, hide the chip rather than guess. */
     async function loadLiveCount() {
-      const chip = document.querySelector('.hf-live');
+      const chips = document.querySelectorAll('.hf-live, .hf-live-dt');
       try {
         const { count, error } = await window.supabase.from('tasks')
           .select('id', { count: 'exact', head: true }).eq('status', 'open');
         if (error || typeof count !== 'number') throw error || new Error('no count');
-        document.getElementById('liveTaskCount').textContent = count.toLocaleString();
-        const lbl = document.getElementById('hfLiveLabel');
-        if (lbl) lbl.textContent = count === 1 ? 'task open now' : 'tasks open now';
+        const label = count === 1 ? 'task open now' : 'tasks open now';
+        ['liveTaskCount', 'liveTaskCountDt'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = count.toLocaleString();
+        });
+        ['hfLiveLabel', 'hfLiveLabelDt'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = label;
+        });
       } catch (e) {
-        if (chip) chip.hidden = true;
+        chips.forEach(chip => { chip.hidden = true; });
       }
     }
 
@@ -612,6 +658,8 @@
         || '';
       const el = document.getElementById('welcomeGreeting');
       if (el) el.textContent = (name ? greet + ', ' + name : greet) + ' 👋';
+      const elDt = document.getElementById('welcomeGreetingDt');   /* tasker desktop hero: no emoji, sparkle sits beside it */
+      if (elDt) elDt.textContent = (name ? greet + ', ' + name : greet) + '!';
 
       /* The verified role is the source of truth for what the hero shows */
       document.body.classList.toggle('role-tasker',   role === 'tasker');
@@ -686,7 +734,9 @@
       if (!form) return;
       const isTasker = _userRole === 'tasker';
       const q = document.getElementById('hfSearchInput');
-      if (q) q.placeholder = isTasker ? 'Search tasks near you...' : 'Service or tasker name...';
+      if (q) q.placeholder = isTasker ? 'Task title or keyword...' : 'Service or tasker name...';
+      const locIn = document.getElementById('hfSearchLoc');
+      if (locIn && isTasker) locIn.placeholder = 'Add location or area (e.g. Lagos, Lekki)';
       if (typeof initLocationInput === 'function') {
         initLocationInput({ inputId: 'hfSearchLoc', dropdownId: 'hfSearchLocSuggestions', gps: true, mode: 'area' });
       }

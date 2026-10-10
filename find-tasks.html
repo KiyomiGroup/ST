@@ -19,7 +19,7 @@
     <div class="container">
       <div class="spg-hero">
         <div class="spg-hero-text">
-          <div class="spg-hero-eyebrow fade-up" id="spgHeroEyebrow">
+          <div class="spg-hero-eyebrow fade-up" id="spgHeroEyebrow" data-logged-in-label="Find Tasks">
             <span class="spg-hero-dot"></span> <span id="spgHeroEyebrowText">Open Tasks</span>
           </div>
           <h1 class="fade-up d1"><span id="spgHeroHeadline">Find your dream task here</span> <svg class="spg-hero-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg></h1>
@@ -30,15 +30,15 @@
           <span id="spgHeroAvatarInitial"></span>
         </div>
       </div>
-      <form id="taskSearchForm" class="spg-searchbar fade-up d3" novalidate>
+      <form id="taskSearchForm" class="spg-searchbar spg-searchbar--wide fade-up d3" novalidate>
         <div class="spg-searchbar-field">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="taskSearchInput" placeholder="Search tasks..." autocomplete="off" />
+          <input type="text" id="taskSearchInput" placeholder="Task title or keyword..." autocomplete="off" />
         </div>
         <div class="spg-searchbar-divider spg-searchbar-location-wrap"></div>
         <div class="spg-searchbar-field spg-searchbar-location-wrap" style="position:relative;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" id="taskLocationInput" placeholder="Location..." autocomplete="off" class="has-gps-btn" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <input type="text" id="taskLocationInput" placeholder="Add location or area (e.g. Lagos, Lekki)" autocomplete="off" class="has-gps-btn" />
           <div id="taskLocationSuggestions" class="location-suggestions"></div>
         </div>
         <button type="submit" class="btn btn-primary">

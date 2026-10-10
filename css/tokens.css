@@ -309,3 +309,16 @@
   --drawer-accent:      var(--tm-mint);            /* icons, active bar, counts */
   --drawer-accent-ink:  var(--tm-mint-ink);        /* text on the accent */
 }
+
+/* ── Page hero tokens (tasker pages: home, overview, applications, bookings, wallet) ──
+   Same dark-green hero as the search pages (.spg-hero). Hero-specific:
+   do not reuse elsewhere without a design decision. */
+:root {
+  --hero-text-muted:    rgba(255, 255, 255, 0.7);   /* eyebrow, description */
+  --hero-btn-bg:        var(--color-primary-soft);  /* pale pill buttons on the hero */
+  --hero-btn-bg-hover:  var(--color-primary-soft-hover);
+  --hero-chip-bg:       var(--pt-green);            /* idle filter chips on the hero */
+  --hero-chip-bg-hover: var(--pt-escrow-icon);
+  --hero-dot:           #4ADE80;                    /* live dot (same green as .spg-hero-dot) */
+  --hero-float-gap:     40px;                       /* how far floating content overlaps the hero's bottom edge */
+}

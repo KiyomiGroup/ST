@@ -403,24 +403,21 @@ function openMessagesPanel() {
               <!-- ═══ OVERVIEW — upper section (js/tasker-overview.js fills the data) ═══ -->
               <div class="tov" id="tov">
 
-                <header class="tov-head">
-                  <div class="tov-head-text">
-                    <h1 class="tov-title">Overview</h1>
-                    <p class="tov-sub">Track your incoming job offers, active assignments, client escrow, and daily earnings.</p>
+                <header class="pg-hero">
+                  <div class="pg-hero-text">
+                    <h1 class="spg-hero-eyebrow pg-hero-eyebrow"><span class="spg-hero-dot"></span>Overview</h1>
+                    <p class="pg-hero-desc">Track your incoming job offers, active assignments, client escrow, and daily earnings.</p>
                   </div>
-                  <div class="tov-head-actions">
-                    <button type="button" class="tov-icon-btn" id="tovFilterToggle" aria-label="Show or hide filters" aria-expanded="true" aria-controls="tovFilters">
+                  <div class="pg-hero-side">
+                    <button type="button" class="pg-hero-btn pg-hero-icon-btn" id="tovFilterToggle" aria-label="Show or hide filters" aria-expanded="true" aria-controls="tovFilters">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
                     </button>
-                    <a href="find-tasks.html" class="btn btn-primary btn-lg tov-browse">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Browse Open Tasks
-                    </a>
+                    <a href="find-tasks.html" class="pg-hero-btn">Browse Open Tasks</a>
                   </div>
                 </header>
 
                 <!-- Stat cards -->
-                <section class="tov-stats" aria-label="Summary">
+                <section class="tov-stats pg-hero-float" aria-label="Summary">
                   <article class="tov-card tov-card-earn">
                     <div class="tov-card-top">
                       <span class="tov-label">Total earnings</span>

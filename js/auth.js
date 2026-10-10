@@ -565,7 +565,10 @@ async function initDashboardWelcome() {
 
   const firstName = (cachedName || 'there').split(' ')[0];
   headline.textContent = `Welcome back, ${firstName}!`;
-  if (eyebrowText) eyebrowText.textContent = 'Your Dashboard';
+  /* Each page names itself: <div id="spgHeroEyebrow" data-logged-in-label="Find Tasks">.
+     Pages without the attribute keep the old label. */
+  const eyebrowEl = document.getElementById('spgHeroEyebrow');
+  if (eyebrowText) eyebrowText.textContent = (eyebrowEl && eyebrowEl.dataset.loggedInLabel) || 'Your Dashboard';
   if (sub) sub.textContent = "Here's what's happening in your neighborhood today.";
   if (heroAvatar) heroAvatar.style.display = 'flex';
   applyAvatar(cachedName, cachedAvatar);
