@@ -675,7 +675,7 @@
 
   function renderMobileStats(c) {
     if (!$('com')) return;
-    $('comTitle').textContent = 'Hello' + (state.name ? ', ' + state.name : '') + ' 👋';
+    $('comTitle').textContent = 'Hello' + (state.name ? ', ' + state.name : '') + '!';
 
     $('comPosted').textContent = c.posted;
     $('comPostedTrend').innerHTML = c.newToday > 0

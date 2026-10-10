@@ -36,7 +36,7 @@
   function themeColour() {
     var css = getComputedStyle(document.documentElement);
     /* body.pg-hero-nav: a page that shows the green hero to every role (customer Home, My Tasks) */
-    var green = localStorage.getItem('st_role') === 'tasker' || document.body.classList.contains('pg-hero-nav');
+    var green = localStorage.getItem('st_role') === 'tasker' || document.body.classList.contains('pg-hero-nav') || document.body.classList.contains('cdash-overview');
     var value = css.getPropertyValue(green ? '--hero-bg-mobile' : '--color-bg').trim();
     if (!value) return;
     var meta = document.querySelector('meta[name="theme-color"]');
@@ -45,6 +45,8 @@
   }
 
   themeColour();
+  /* The customer dashboard switches panels in place (body.cdash-overview toggles): keep the status bar in step */
+  if (window.MutationObserver) new MutationObserver(themeColour).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   window.addEventListener('load', sync);
   window.addEventListener('resize', sync);
   window.addEventListener('orientationchange', sync);

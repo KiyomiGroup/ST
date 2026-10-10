@@ -4368,18 +4368,8 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 .tov a.tov-payout { display: inline-flex; align-items: center; }
 
 /* Mobile additions for the customer Overview (768px and below).
-   Everything else comes from the shared .tom-* rules above. */
+   The hero is the shared .pg-hero; everything else comes from the shared .tom-* rules above. */
 @media (max-width: 768px) {
-  .tom-welcome { align-items: center; }
-  .tom-welcome-text { min-width: 0; }
-  .tom-welcome-text .tom-sub { margin-top: var(--space-1); font-size: var(--text-sm); }
-  .tom-post {
-    flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-1);
-    height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-pill);
-    background: var(--tm-panel); color: var(--to-dark-text);
-    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
-    text-decoration: none; white-space: nowrap; box-shadow: var(--shadow-primary-md);
-  }
   a.tom-btn-dark, a.tom-btn-soft { text-decoration: none; }
   .tom-link {
     display: inline-flex; align-items: center; gap: var(--space-1);
@@ -4635,22 +4625,22 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   .spg-searchbar--wide button svg { display: none; }
 }
 
-/* ── Tasker Overview (dashboard-tasker.html #tov), desktop ────────
+/* ── Tasker Overview (dashboard-tasker.html #tov) and Customer Overview (dashboard-customer.html #cov), desktop ────────
    The hero is the shared .pg-hero above. These rules only place it:
    same distance under the nav as the other hero pages, same width as
    the search pages' hero, and the stat cards inset so they float over
    the hero's bottom edge. (#tov is hidden at 768px and below.) */
 @media (min-width: 769px) {
-  body.tdash-overview .dashboard-body { padding-top: var(--space-5); }
-  body.tdash-overview .tov { max-width: 1112px; margin-inline: auto; }
-  body.tdash-overview .tov-stats { margin-inline: var(--space-6); }
+  :is(body.tdash-overview, body.cdash-overview) .dashboard-body { padding-top: var(--space-5); }
+  :is(body.tdash-overview, body.cdash-overview) .tov { max-width: 1112px; margin-inline: auto; }
+  :is(body.tdash-overview, body.cdash-overview) .tov-stats { margin-inline: var(--space-6); }
   /* Four cards in the inset row are narrower than before: trim the side padding, and tighten the
      Escrow card's top row (label + Secured + arrow) so it still fits on one line at 1440px. */
-  body.tdash-overview .tov-card { padding-inline: var(--space-4); }
-  body.tdash-overview .tov-card-escrow .tov-card-top { gap: var(--space-1); flex-wrap: wrap; }
-  body.tdash-overview .tov-card-escrow .tov-label { letter-spacing: 0; gap: var(--space-1); }
-  body.tdash-overview .tov-card-escrow .tov-secured { padding-inline: var(--space-2); }
-  body.tdash-overview .tov-card-escrow .tov-arrow { width: var(--space-4); }
+  :is(body.tdash-overview, body.cdash-overview) .tov-card { padding-inline: var(--space-4); }
+  :is(body.tdash-overview, body.cdash-overview) .tov-card-escrow .tov-card-top { gap: var(--space-1); flex-wrap: wrap; }
+  :is(body.tdash-overview, body.cdash-overview) .tov-card-escrow .tov-label { letter-spacing: 0; gap: var(--space-1); }
+  :is(body.tdash-overview, body.cdash-overview) .tov-card-escrow .tov-secured { padding-inline: var(--space-2); }
+  :is(body.tdash-overview, body.cdash-overview) .tov-card-escrow .tov-arrow { width: var(--space-4); }
 }
 
 
@@ -4751,19 +4741,19 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 @media (max-width: 768px) {
 
   /* ── Top nav: same green as the hero, white controls ──
-     Taskers on every hero page get it automatically; any other page (customer Home, My Tasks) opts in with body.pg-hero-nav. */
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) #navbar {
+     Taskers on every hero page get it automatically; any other page (customer Home, My Tasks) opts in with body.pg-hero-nav; the customer Overview uses body.cdash-overview. */
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) #navbar {
     background: var(--hero-bg-mobile);
     -webkit-backdrop-filter: none; backdrop-filter: none;
     border-bottom-color: transparent; box-shadow: none;
     padding-top: env(safe-area-inset-top, 0px);
     height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
   }
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-toggle span { background: var(--white); }
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-logo img { filter: brightness(0) invert(1); }
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-bell { color: var(--white); }
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
-  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav) .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) .nav-toggle span { background: var(--white); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) .nav-logo img { filter: brightness(0) invert(1); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) .nav-mobile-bell { color: var(--white); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) .nav-mobile-bell-dot { border-color: var(--hero-bg-mobile); }
+  body.st-logged-in:is(.role-tasker:is(.spg-page, .pg-hero-page, .tdash-overview), .pg-hero-nav, .cdash-overview) .nav-mobile-avatar { background: var(--hero-btn-bg); color: var(--color-text); }
 
   /* ── Hero shell ── */
   .pg-hero {
@@ -4827,12 +4817,15 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   .pg-hero-side .pg-hero-icon-btn { order: 2; }
   .pg-hero-desktop-only { display: none; }
   /* ── Overview: hero sits flush under the nav; stat cards follow ── */
-  body.tdash-overview .dashboard-body { padding-top: 0; }
-  body.tdash-overview #panel-mypage { padding-top: 0; }
+  :is(body.tdash-overview, body.cdash-overview) .dashboard-body { padding-top: 0; }
+  body.tdash-overview #panel-mypage,
+  body.cdash-overview #panel-overview { padding-top: 0; }
   /* !important: .dashboard-panel sets overflow-x:hidden !important above, which would clip the full-bleed hero */
-  body.tdash-overview #panel-mypage { overflow-x: visible !important; }
+  body.tdash-overview #panel-mypage,
+  body.cdash-overview #panel-overview { overflow-x: visible !important; }
   /* !important: the global phone rule `main { padding: 10px 14px 80px !important }` leaves a white strip between the nav and the hero */
-  body.tdash-overview .dashboard-grid > main { padding-top: 0 !important; }
+  body.tdash-overview .dashboard-grid > main,
+  body.cdash-overview .ds-main-full > main { padding-top: 0 !important; }
   .tom > .pg-hero { margin-bottom: var(--space-5); }
   .tom-stats { margin-top: 0; }
   .tom-filters.is-collapsed { display: none; }
