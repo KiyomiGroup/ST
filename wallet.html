@@ -45,7 +45,19 @@
 
   <!-- data-role is "tasker" or "customer". wallet-ui.js sets it (see that file). -->
   <div class="wl-page wl-loading" id="walletPage" data-role="customer">
-    <div class="wl-container">
+    <div class="wl-container pg-hero-page">
+
+      <!-- Tasker, desktop (769px and up): shared .pg-hero. The stat cards below float over its bottom edge.
+           Customers and phones keep the header underneath. -->
+      <section class="wl-hero-dt pg-hero wl-tasker-only wl-desk" aria-labelledby="wlHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="wlHeroTitle"><span class="spg-hero-dot"></span>Wallet &amp; Earnings</h1>
+          <p class="pg-hero-desc">Manage payouts, verified Nigerian bank transfers, and dedicated service gift vouchers.</p>
+        </div>
+        <div class="pg-hero-side">
+          <button type="button" class="pg-hero-btn" data-action="withdraw">Initiate Withdrawal</button>
+        </div>
+      </section>
 
       <!-- ── SECTION 1 · Header ─────────────────────────────────── -->
       <header class="wl-header">

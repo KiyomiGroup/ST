@@ -193,6 +193,38 @@ Nav buttons are a fixed exception, defined in section 5.
 
 ---
 
+### 4.6 Tasker page hero (desktop, 769px and up)
+
+One dark-green hero for every logged-in tasker page: Home, Find Tasks, Overview, Applications, Bookings, Wallet. Mobile is not covered. Nothing below 769px uses these classes.
+
+Tokens (`css/tokens.css`, "Page hero tokens"):
+
+| Token | Use |
+|---|---|
+| `--hero-text-muted` | eyebrow and description text |
+| `--hero-btn-bg`, `--hero-btn-bg-hover` | pale pill buttons, active chip, live pill |
+| `--hero-chip-bg`, `--hero-chip-bg-hover` | idle filter chips on the hero |
+| `--hero-dot` | live dot, focus ring on the hero |
+| `--hero-float-gap` | how far cards (stat cards, balance cards) overlap the hero's bottom edge |
+| `--hero-bar-overlap` | how far the floating search pill overlaps the hero's bottom edge |
+| `--hero-chip-h`, `--hero-chips-lift` | chip height, and how far the chip row sits above the hero's bottom edge |
+
+Classes (`css/styles.css`, "TASKER PAGE HEROES"):
+
+| Class | Use |
+|---|---|
+| `.pg-hero-zone` | clears the fixed nav (pages that do not already pad for it) |
+| `.pg-hero` + `.pg-hero-text`, `.pg-hero-side`, `.pg-hero-stack` | the shell, its text, its buttons |
+| `.pg-hero-eyebrow` (with `.spg-hero-eyebrow`, `.spg-hero-dot`) | page name with the green dot |
+| `.pg-hero-title`, `.pg-hero-lead`, `.pg-hero-desc`, `.pg-hero-meta`, `.pg-hero-note`, `.pg-hero-live` | greeting, lead line, description, live count |
+| `.pg-hero-btn`, `.pg-hero-icon-btn` | pale pill button |
+| `.pg-hero-float` | content that overlaps the bottom edge (cards) |
+| `.pg-hero-page` | on the page container when the page uses chips and the floating bar |
+| `.pg-hero-chips`, `.pg-hero-chip`, `.pg-hero-chip-n` | status tabs inside the hero's bottom-right |
+| `.pg-hero-bar`, `.pg-hero-search`, `.pg-hero-search-btn`, `.pg-hero-input`, `.pg-hero-select-wrap`, `.pg-hero-select` | floating search pill and selects |
+
+The chips and bar are the page's own tabs and toolbar, restyled. The page JS keeps its ids. Pages keep their phone header and show the hero only at 769px and up.
+
 ## 5. Logged-out desktop navigation (implemented)
 
 Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block at the end of `css/styles.css`. Applies at 1044px and wider, to `body:not(.st-logged-in)` only.

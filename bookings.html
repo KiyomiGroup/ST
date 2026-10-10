@@ -27,13 +27,26 @@
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
       <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     </defs>
   </svg>
 
   <main class="bk-page" id="bookingsPage">
-    <div class="bk-container">
+    <div class="bk-container pg-hero-page">
+
+      <!-- Desktop hero (769px and up) — shared .pg-hero. The phone header below stays as it was. -->
+      <section class="bk-hero-dt pg-hero" aria-labelledby="bkHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="bkHeroTitle"><span class="spg-hero-dot"></span>Bookings</h1>
+          <p class="pg-hero-desc">Track incoming job requests, active work and your escrow payouts.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="post-service.html" class="pg-hero-btn">Post a Service</a>
+          <a href="find-tasks.html" class="pg-hero-btn">Browse Open Tasks</a>
+        </div>
+      </section>
 
       <header class="bk-header">
         <div>
@@ -52,36 +65,39 @@
         </div>
       </header>
 
+      <div class="bk-tabs pg-hero-chips" role="group" aria-label="Filter by status" id="bkTabs">
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="all" aria-pressed="true">All <span class="bk-tab-n pg-hero-chip-n" data-count="all"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="pending" aria-pressed="false">Pending <span class="bk-tab-n pg-hero-chip-n" data-count="pending"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="progress" aria-pressed="false">In Progress <span class="bk-tab-n pg-hero-chip-n" data-count="progress"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="signoff" aria-pressed="false">Sign-Off <span class="bk-tab-n pg-hero-chip-n" data-count="signoff"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="completed" aria-pressed="false">Completed <span class="bk-tab-n pg-hero-chip-n" data-count="completed"></span></button>
+        <button type="button" class="bk-tab pg-hero-chip" data-filter="cancelled" aria-pressed="false">Cancelled <span class="bk-tab-n pg-hero-chip-n" data-count="cancelled"></span></button>
+      </div>
+
+      <div class="bk-toolbar pg-hero-bar" id="bkToolbar">
+        <div class="pg-hero-search">
+          <label class="bk-search">
+            <svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" class="bk-input pg-hero-input" id="bkSearch" placeholder="Search by job, customer or booking ID…" aria-label="Search bookings" />
+          </label>
+          <button type="button" class="pg-hero-search-btn" id="bkSearchBtn">Search</button>
+        </div>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkCategory" aria-label="Filter by service"><option value="">All Services</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkRange" aria-label="Filter by date">
+          <option value="all">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="bk-select pg-hero-select" id="bkSort" aria-label="Sort bookings">
+          <option value="recent">Most Recent</option>
+          <option value="oldest">Oldest First</option>
+          <option value="amount">Highest Amount</option>
+          <option value="upcoming">Soonest Scheduled</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
       <div class="bk-layout has-side" id="bkLayout">
         <div class="bk-main">
-          <div class="bk-tabs" role="group" aria-label="Filter by status" id="bkTabs">
-            <button type="button" class="bk-tab" data-filter="all" aria-pressed="true">All <span class="bk-tab-n" data-count="all"></span></button>
-            <button type="button" class="bk-tab" data-filter="pending" aria-pressed="false">Pending <span class="bk-tab-n" data-count="pending"></span></button>
-            <button type="button" class="bk-tab" data-filter="progress" aria-pressed="false">In Progress <span class="bk-tab-n" data-count="progress"></span></button>
-            <button type="button" class="bk-tab" data-filter="signoff" aria-pressed="false">Sign-Off <span class="bk-tab-n" data-count="signoff"></span></button>
-            <button type="button" class="bk-tab" data-filter="completed" aria-pressed="false">Completed <span class="bk-tab-n" data-count="completed"></span></button>
-            <button type="button" class="bk-tab" data-filter="cancelled" aria-pressed="false">Cancelled <span class="bk-tab-n" data-count="cancelled"></span></button>
-          </div>
-
-          <div class="bk-toolbar" id="bkToolbar">
-            <label class="bk-search">
-              <svg class="bk-i" aria-hidden="true"><use href="#i-search"/></svg>
-              <input type="search" class="bk-input" id="bkSearch" placeholder="Search by job, customer or booking ID…" aria-label="Search bookings" />
-            </label>
-            <select class="bk-select" id="bkCategory" aria-label="Filter by service"><option value="">All Services</option></select>
-            <select class="bk-select" id="bkRange" aria-label="Filter by date">
-              <option value="all">All Time</option>
-              <option value="30">Last 30 Days</option>
-              <option value="90">Last 90 Days</option>
-            </select>
-            <select class="bk-select" id="bkSort" aria-label="Sort bookings">
-              <option value="recent">Most Recent</option>
-              <option value="oldest">Oldest First</option>
-              <option value="amount">Highest Amount</option>
-              <option value="upcoming">Soonest Scheduled</option>
-            </select>
-          </div>
-
           <p class="sr-only" id="bkStatus" role="status"></p>
           <div class="bk-list" id="bkList" aria-busy="true">
             <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>

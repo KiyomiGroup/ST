@@ -584,6 +584,13 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(function () { state.query = val; state.shown = PAGE_SIZE; render(); }, 150);
   });
+  // Desktop Search button: applies the current text now instead of waiting for the typing delay
+  var searchBtn = $('bkSearchBtn');
+  if (searchBtn) searchBtn.addEventListener('click', function () {
+    var box = $('bkSearch');
+    clearTimeout(searchTimer);
+    state.query = box.value; state.shown = PAGE_SIZE; render(); box.focus();
+  });
   $('bkCategory').addEventListener('change', function (e) { state.category = e.target.value; state.shown = PAGE_SIZE; render(); });
   $('bkRange').addEventListener('change', function (e) { state.range = e.target.value; state.shown = PAGE_SIZE; render(); });
   $('bkSort').addEventListener('change', function (e) { state.sort = e.target.value; state.shown = PAGE_SIZE; render(); });

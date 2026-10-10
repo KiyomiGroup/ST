@@ -29,7 +29,7 @@
   transform: translateX(-50%); pointer-events: none;
   background: radial-gradient(closest-side, var(--pt-glow), transparent);
 }
-.ap-container { position: relative; width: min(1120px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
+.ap-container { position: relative; width: min(1112px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 .ap-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); align-items: start; }
 .ap-layout.has-side { grid-template-columns: minmax(0, 1fr) 360px; }
 .ap-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
@@ -54,8 +54,17 @@
 }
 .ap-link:hover { text-decoration: underline; }
 
+/* ── Desktop hero (769px and up) ─────────────────────────────
+   The hero, chips and floating bar are the shared .pg-hero-* blocks in styles.css.
+   Desktop shows the hero and hides the phone header; phones do the opposite. */
+@media (min-width: 769px) {
+  .ap-header { display: none; }
+  .ap-page { padding-top: calc(var(--nav-height) + var(--space-5)); } /* same gap under the nav as the search pages */
+}
+@media (max-width: 768px) { .ap-hero-dt { display: none; } }
+
 /* ── Tabs ────────────────────────────────────────────────── */
-.ap-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ap-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
 .ap-tab {
   display: inline-flex; align-items: center; gap: var(--space-2); height: 40px; padding: 0 var(--space-4);
   border: 0; border-radius: var(--radius-pill); cursor: pointer;
@@ -73,7 +82,7 @@
 .ap-tab-n:empty { display: none; }
 
 /* ── Toolbar ─────────────────────────────────────────────── */
-.ap-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-xl); background: var(--pt-field); }
+.ap-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-xl); background: var(--pt-field); margin-bottom: var(--space-4); }
 .ap-search { flex: 1 1 260px; position: relative; display: flex; align-items: center; }
 .ap-search .ap-i { position: absolute; left: var(--space-4); color: var(--pt-ink-muted); pointer-events: none; }
 .ap-input, .ap-select {

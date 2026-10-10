@@ -527,6 +527,19 @@ html.wl-lock { overflow: hidden; }
 /* Desktop / mobile visibility */
 @media (min-width: 769px) { .wl-mob.wl-mob { display: none; } }
 
+/* ── Tasker desktop hero (769px and up) ──────────────────────
+   Taskers get the shared .pg-hero (see styles.css) in place of the header, with the four
+   balance cards floating over its bottom edge. Customers and phones are untouched. */
+@media (min-width: 769px) {
+  .wl-page[data-role="tasker"] { padding-top: calc(var(--nav-height) + var(--space-5)); }
+  .wl-page[data-role="tasker"] .wl-container { width: min(1112px, calc(100% - 2 * var(--page-margin))); }
+  .wl-page[data-role="tasker"] .wl-header { display: none; }
+  .wl-page[data-role="tasker"] .wl-balances {
+    position: relative; z-index: 2;
+    margin: calc(-1 * var(--hero-float-gap)) var(--space-6) 0;
+  }
+}
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .wl-desk.wl-desk { display: none; }

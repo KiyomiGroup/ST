@@ -251,6 +251,9 @@
     reset();
   });
   $('apSearch').addEventListener('input', function (e) { state.query = e.target.value.trim(); reset(); });
+  // Desktop Search button: the list already filters as you type, so this just applies the current text and returns focus
+  var searchBtn = $('apSearchBtn');
+  if (searchBtn) searchBtn.addEventListener('click', function () { var box = $('apSearch'); state.query = box.value.trim(); reset(); box.focus(); });
   $('apCategory').addEventListener('change', function (e) { state.category = e.target.value; reset(); });
   $('apSort').addEventListener('change', function (e) { state.sort = e.target.value; reset(); });
   $('apMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });

@@ -321,4 +321,7 @@
   --hero-chip-bg-hover: var(--pt-escrow-icon);
   --hero-dot:           #4ADE80;                    /* live dot (same green as .spg-hero-dot) */
   --hero-float-gap:     40px;                       /* how far floating content overlaps the hero's bottom edge */
+  --hero-bar-overlap:   24px;                       /* how far the floating search pill overlaps the hero's bottom edge (about half its height) */
+  --hero-chip-h:        32px;                       /* filter chip height on the hero */
+  --hero-chips-lift:    96px;                       /* distance from the hero's bottom edge up to the top of the chip row */
 }
