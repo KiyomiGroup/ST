@@ -4830,6 +4830,8 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   body.tdash-overview #panel-mypage { padding-top: 0; }
   /* !important: .dashboard-panel sets overflow-x:hidden !important above, which would clip the full-bleed hero */
   body.tdash-overview #panel-mypage { overflow-x: visible !important; }
+  /* !important: the global phone rule `main { padding: 10px 14px 80px !important }` leaves a white strip between the nav and the hero */
+  body.tdash-overview .dashboard-grid > main { padding-top: 0 !important; }
   .tom > .pg-hero { margin-bottom: var(--space-5); }
   .tom-stats { margin-top: 0; }
   .tom-filters.is-collapsed { display: none; }
