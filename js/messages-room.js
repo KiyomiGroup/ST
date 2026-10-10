@@ -29,15 +29,15 @@
      The in-work ones (en route, arrived, ...) are read from booking.status
      once step 7 starts writing them; the strings below are the agreed names
      and must match what step 7 stores. */
-  var WORK_STATUS = {
+  /* On-site progress (bookings.work_stage, set by job_progress() in sql/messaging-step7.sql) */
+  var WORK_STAGE = {
     en_route:    'Tasker En Route',
     arrived:     'Arrived',
-    started:     'Work Started',
     in_progress: 'Work In Progress',
-    paused:      'Work Paused',
-    rescheduled: 'Rescheduled',
-    suspended:   'Suspended'
+    paused:      'Work Paused'
   };
+  /* Statuses nothing sets yet (reschedule / suspension come with step 10) */
+  var BOOKING_STATUS_EXTRA = { rescheduled: 'Rescheduled', suspended: 'Suspended' };
 
   var ICON_SHIELD = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>';
   var ICON_PIN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -73,8 +73,12 @@
     var job = (window.JRList && window.JRList.derive) ? (t._job || window.JRList.derive(t, role)) : { key: 'inquiry' };
     var bk = t.booking || null;
 
-    if (bk && WORK_STATUS[bk.status] && job.key !== 'completed' && job.key !== 'disputed' && job.key !== 'cancelled') {
-      return { key: 'work', label: WORK_STATUS[bk.status], job: job };
+    var closed = ['completed', 'disputed', 'cancelled', 'awaiting_confirmation'].indexOf(job.key) !== -1;
+    if (bk && bk.work_stage && WORK_STAGE[bk.work_stage] && !closed) {
+      return { key: 'work', stage: bk.work_stage, label: WORK_STAGE[bk.work_stage], job: job };
+    }
+    if (bk && BOOKING_STATUS_EXTRA[bk.status] && !closed) {
+      return { key: 'work', label: BOOKING_STATUS_EXTRA[bk.status], job: job };
     }
     switch (job.key) {
       case 'payment_pending':       return { key: job.key, label: 'Payment Pending', job: job };
@@ -101,11 +105,15 @@
       case 'secured':
         return (held ? 'SafePay is holding ' + naira(held) + ' ' : (amt ? 'SafePay is holding ' + amt + ' ' : 'SafePay is holding the payment ')) + 'until the work is signed off.';
       case 'awaiting_confirmation':
-        return isCustomer ? 'Review the work, then release payment.' : 'Waiting for the customer to confirm the work is done.';
+        return isCustomer ? 'Review the work, then release payment.' : 'Waiting for the customer to confirm and share the completion code.';
       case 'completed': return 'This task is complete.';
       case 'disputed':  return 'Payment stays protected while this issue is reviewed.';
       case 'cancelled': return 'This task was cancelled.';
-      case 'work':      return 'Work is underway.';
+      case 'work':
+        if (st.stage === 'en_route') return isCustomer ? 'Your tasker is on the way.' : 'You told the customer you are on the way.';
+        if (st.stage === 'arrived')  return isCustomer ? 'Your tasker has arrived.' : 'You have arrived.';
+        if (st.stage === 'paused')   return 'Work is paused.';
+        return 'Work is underway.';
       case 'booked':    return 'Agree the details here, then pay through StreetTasker SafePay.';
       default:          return 'Agree the details here before any payment.';
     }
@@ -327,6 +335,7 @@
     paintHead(ctx, cachedProfile, cachedTask);
     paintBanner(ctx, cachedTask);
     if (window.JRRequests) window.JRRequests.update(ctx);
+    if (window.JRWork) window.JRWork.update(ctx);
 
     /* 2) then fill in profile + task details */
     var results = await Promise.all([getProfile(o.id, o.isCustomer), getTask(t._taskId)]);
@@ -334,6 +343,7 @@
     paintHead(ctx, results[0], results[1]);
     paintBanner(ctx, results[1]);
     if (window.JRRequests) window.JRRequests.update(ctx);
+    if (window.JRWork) window.JRWork.update(ctx);
   }
 
   function refresh() {
@@ -343,6 +353,7 @@
     paintHead(current, cache.profiles[o.id + ':' + (o.isCustomer ? 't' : 'c')] || null, t._taskId ? cache.tasks[t._taskId] || null : null);
     paintBanner(current, t._taskId ? cache.tasks[t._taskId] || null : null);
     if (window.JRRequests) window.JRRequests.update(current);
+    if (window.JRWork) window.JRWork.update(current);
   }
 
   window.JRRoom = { open: open, refresh: refresh, statusFor: statusFor, current: function () { return current; } };

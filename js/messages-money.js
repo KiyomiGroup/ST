@@ -20,9 +20,8 @@
      JRMoney.pay(id)                 customer pays a request (Paystack)
      JRMoney.naira(n)
 
-   NOTE: payments are confirmed by the browser today (see MESSAGING-HANDOFF.md,
-   "Payments: security findings"). This file does not change that; it only adds
-   request kinds on top of the existing flow.
+   Payments are confirmed and recorded by the SERVER (step 6a, see PAYMENTS-HARDENING.md):
+   this file never writes a payment status, an amount or a message about a payment.
 
    No inline styles, no raw colours.
    ============================================================ */
@@ -185,7 +184,7 @@
       var other = me.id === t.customer_id ? t.tasker_id : t.customer_id;
       if (status === 'approved' || status === 'declined') {
         var verb = status === 'approved' ? 'approved' : 'declined';
-        postSystem(t, me, KINDS[kind].short + ' ' + verb + ': ' + naira(row.amount));
+        /* the database posts the "approved / declined" line in the chat itself */
         try {
           await window.supabase.from('notifications').insert({
             user_id: other, type: 'new_message',
@@ -206,19 +205,10 @@
     }
   }
 
-  /* Event line in the conversation (spec 36). Needs type 'system' (step 5 SQL);
-     if the database refuses it the card state is still correct, so ignore errors. */
-  async function postSystem(t, me, text) {
-    try {
-      var r = await window.supabase.from('messages').insert({
-        thread_id: t.id, sender_id: me.id, receiver_id: me.id === t.customer_id ? t.tasker_id : t.customer_id,
-        body: text, type: 'system', flagged: false
-      }).select().single();
-      if (r.data) window.JRThread.append(r.data);
-    } catch (_e) {}
-  }
-
   /* ── pay (customer) ──────────────────────────────────────── */
+  /* HARDENED (step 6a): the browser only starts the payment. The SERVER decides the
+     amount, confirms it with Paystack, marks the request paid, sets the agreed price,
+     holds the money in escrow and posts the confirmation in the chat. */
   async function pay(id) {
     if (S.busy[id]) return false;
     var c = ctx();
@@ -230,69 +220,21 @@
 
     try {
       if (!(window.ST && window.ST.payments)) throw new Error('Payment module not loaded. Please refresh.');
-
-      /* Fresh copy: never trust what is on screen for money */
-      var fr = await sb.from('payment_requests').select('*').eq('id', id).maybeSingle();
-      if (fr.error) throw fr.error;
-      var req = fr.data;
-      if (!req) throw new Error('Payment request not found.');
-      var kind = kindOf(req);
-      if (req.status === 'paid') throw new Error('This has already been paid.');
-      if (req.status === 'declined' || req.status === 'cancelled') throw new Error('This request is no longer active.');
-      if (isAddon(kind) && req.status === 'pending') throw new Error('Approve this request before paying.');
-
-      var contextType = t.context_type || 'booking';
-      var contextId = t.context_id;
-      if (!contextId) throw new Error('No booking/task found for this conversation.');
-
-      var before = summary(t);
-      var firstPayment = before.paid === 0;
-
-      if (req.status === 'pending') {
-        await sb.from('payment_requests').update({ status: 'accepted' }).eq('id', id);
-        window.JRThread.onMoneyChange(Object.assign({}, req, { status: 'accepted', _busy: true }));
-      }
-
       var meta = me.user_metadata || {};
-      var result = await window.ST.payments.initiatePayment({
-        contextType: contextType, contextId: contextId,
-        bookingId: contextType === 'booking' ? contextId : null,
-        taskId: contextType === 'task' ? contextId : null,
-        amountNaira: Number(req.amount),
-        customerEmail: meta.email || me.email, customerName: meta.name || '',
-        taskerUserId: t.tasker_id || req.tasker_id || null
-      });
+      var result = await window.ST.payments.initiatePayment({ requestId: id, customerEmail: meta.email || me.email });
 
-      await sb.from('payment_requests').update({ status: 'paid' }).eq('id', id);
-      var paidRow = Object.assign({}, req, { status: 'paid' });
-      window.JRThread.onMoneyChange(paidRow);
-
-      /* Agreed price is only set by the first main payment, never by add-ons */
-      if (MAIN_KINDS.indexOf(kind) !== -1 && firstPayment) {
-        try { await sb.from('message_threads').update({ agreed_price: req.amount }).eq('id', t.id); } catch (_a) {}
-        t.agreed_price = req.amount;
-      }
-
-      var amt = Number(req.amount);
-      if (firstPayment) {
-        /* Same confirmation card as before. SECURITY: this stores the completion code in
-           the message body; it moves to the booking in step 7 (see handoff). */
-        var fee = Math.round(amt * 0.12), earning = amt - fee;
-        var sysBody = 'PAYMENT_CONFIRMED:' + ((result && result.completionCode) || '') + ':' + amt + ':' + earning + ':' + fee;
-        try {
-          var sm = await sb.from('messages').insert({
-            thread_id: t.id, sender_id: me.id, receiver_id: t.tasker_id || t.customer_id,
-            body: sysBody, type: 'payment_confirmed', flagged: false
-          }).select().single();
-          if (sm.data) window.JRThread.append(sm.data);
-        } catch (_se) {}
-        toast('Payment confirmed. Share the 6-digit code with the tasker when the job is done.');
+      if (result && result.firstPayment) {
+        toast('Payment confirmed. Your completion code is in the chat. Share it with the tasker only when the job is done.');
       } else {
-        var after = summary(t);
-        postSystem(t, me, KINDS[kind].short + ' paid: ' + naira(amt) + '. Total paid: ' + naira(after.paid) + '.');
-        toast('Payment confirmed. ' + naira(amt) + ' added to escrow.');
+        toast('Payment confirmed. ' + naira(result && result.amount) + ' added to escrow.');
       }
 
+      /* Show what the server did: the request is paid, and the confirmation message is in the chat */
+      try {
+        var fr = await sb.from('payment_requests').select('*').eq('id', id).maybeSingle();
+        if (fr.data) window.JRThread.onMoneyChange(fr.data);
+      } catch (_f) {}
+      try { await window.JRThread.reload(); } catch (_r0) {}
       try { if (window.JRList) await window.JRList.refreshOne(t, c.role); } catch (_r) {}
       changed();
       return true;
@@ -300,8 +242,13 @@
       var msg = (e && e.message) || 'Payment failed. Please try again.';
       var closed = /closed|cancelled/i.test(msg);
       toast(msg, closed ? '' : 'error');
-      var cur = window.JRThread.getMoney(id);
-      if (cur) window.JRThread.onMoneyChange(Object.assign({}, cur, { _busy: false }));
+      /* The card may have changed on the server (e.g. already paid): show the truth */
+      try {
+        var cur = await sb.from('payment_requests').select('*').eq('id', id).maybeSingle();
+        window.JRThread.onMoneyChange(Object.assign({}, cur.data || local, { _busy: false }));
+      } catch (_g) {
+        window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
+      }
       return false;
     } finally {
       S.busy[id] = false;

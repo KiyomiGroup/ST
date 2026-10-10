@@ -16,7 +16,18 @@
    4. Provider enters code → earnings credited to provider wallet
    5. Either party withdraws wallet balance to bank anytime
 
-   SUPABASE TABLES NEEDED (run in SQL Editor):
+   *** HARDENED (step 6a) ***
+   The browser NEVER changes money any more. Wallets, escrow, payment status and
+   completion codes are changed only by the server:
+     - Paystack payments: Edge Functions payment-init -> (Paystack pop-up) -> payment-verify
+       (+ paystack-webhook as a safety net). The server decides the amount and checks
+       with Paystack before anything is marked paid.
+     - Wallet payments, mark done, confirm, code entry, disputes: database functions
+       (rpc) in sql/messaging-step6a.sql.
+   See PAYMENTS-HARDENING.md. The table SQL below is the OLD set-up and is kept only
+   for history: do NOT re-create those policies (they let users edit their own wallet).
+
+   SUPABASE TABLES (OLD set-up, superseded by sql/messaging-step6a.sql):
 
    CREATE TABLE IF NOT EXISTS wallets (
      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -57,10 +68,69 @@ function calculateAmounts(totalNaira) {
 }
 
 /* ── Secure 6-digit completion code ─────────────────────────── */
-function generateCompletionCode() {
-  var arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return String(100000 + (arr[0] % 900000));
+/* ── Server calls ────────────────────────────────────────────
+   Edge Functions need the logged-in user's token. The same apikey/Authorization
+   pattern the gift-card functions use. */
+async function _callFn(name, body) {
+  var sess = await window.supabase.auth.getSession();
+  var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+  if (!token) throw new Error('Session expired. Please log in again.');
+  var res = await fetch(SUPABASE_URL + '/functions/v1/' + name, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token },
+    body: JSON.stringify(body || {}),
+  });
+  var data = null;
+  try { data = await res.json(); } catch (_e) {}
+  return { status: res.status, ok: res.ok, data: data || {} };
+}
+
+/* Run a database function as the logged-in user; our own errors are readable */
+async function _rpc(name, args) {
+  var r = await window.supabase.rpc(name, args || {});
+  if (r.error) throw new Error(r.error.message || 'Something went wrong. Please try again.');
+  return r.data;
+}
+
+/* Open the Paystack pop-up with the reference + amount the SERVER gave us.
+   Resolves with Paystack's reference when the customer completes it. */
+function _openPaystack(init, email, meta) {
+  return new Promise(function(resolve, reject) {
+    if (typeof PaystackPop === 'undefined') {
+      reject(new Error('Paystack not loaded. Check your internet connection.')); return;
+    }
+    var done = false;
+    var handler = PaystackPop.setup({
+      key:      PAYSTACK_PUBLIC_KEY,
+      email:    email || init.email,
+      amount:   init.amountKobo,
+      ref:      init.reference,
+      currency: 'NGN',
+      metadata: meta || {},
+      /* Paystack v1 rejects async callbacks: plain function here */
+      callback: function(response) { done = true; resolve(response.reference || init.reference); },
+      onClose:  function() { if (!done) reject(new Error('Payment window closed.')); },
+    });
+    handler.openIframe();
+  });
+}
+
+/* Ask the server to confirm the payment with Paystack. Paystack can take a moment
+   to report a successful charge, so wait and retry briefly before giving up. */
+async function _verifyPayment(reference) {
+  var last = null;
+  for (var attempt = 0; attempt < 6; attempt++) {
+    var r = await _callFn('payment-verify', { reference: reference });
+    if (r.ok && r.data && r.data.ok) return r.data;
+    last = r;
+    if (r.status !== 202) break;                       /* 202 = not confirmed yet: wait and retry */
+    await new Promise(function(res){ setTimeout(res, 2000); });
+  }
+  var msg = (last && last.data && last.data.error) || 'We could not confirm your payment yet.';
+  if (last && last.status === 202) {
+    msg = 'Your payment is being confirmed. If you were charged, it will show here shortly. You do not need to pay again.';
+  }
+  throw new Error(msg);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -119,17 +189,16 @@ async function getWallet(userId) {
       return data;
     }
 
-    /* No wallet row yet — create one */
-    var { data: created, error: ce } = await window.supabase
-      .from('wallets')
-      .insert({ user_id: userId, balance: 0, pending_balance: 0 })
-      .select().single();
-
-    if (ce) {
-      console.warn('[Payments] wallet insert error:', ce.code, ce.message);
-      return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: ce.message };
+    /* No wallet row yet — ask the server to create the user's own wallet */
+    var { data: { user: me } } = await window.supabase.auth.getUser();
+    if (me && me.id === userId) {
+      try {
+        await window.supabase.rpc('ensure_my_wallet');
+        var again = await window.supabase.from('wallets').select('*').eq('user_id', userId).maybeSingle();
+        if (again.data) return again.data;
+      } catch (_w) {}
     }
-    return created;
+    return { user_id: userId, balance: 0, pending_balance: 0, _stub: true, _reason: 'no_wallet' };
 
   } catch(e) {
     console.warn('[Payments] getWallet exception:', e.message);
@@ -168,52 +237,13 @@ async function topUpWallet(amountNaira, userEmail) {
   if (!user) throw new Error('Please log in first.');
   if (!amountNaira || amountNaira < 100) throw new Error('Minimum top-up is ₦100.');
 
-  var reference = 'TOPUP-' + Date.now() + '-' + user.id.slice(0, 8);
+  var init = await _callFn('payment-init', { purpose: 'topup', amount: Math.round(amountNaira) });
+  if (!init.ok) throw new Error(init.data.error || 'Could not start the top-up.');
 
-  return new Promise(function(resolve, reject) {
-    if (typeof PaystackPop === 'undefined') {
-      reject(new Error('Paystack not loaded. Check your internet connection.')); return;
-    }
-    var handler = PaystackPop.setup({
-      key:      PAYSTACK_PUBLIC_KEY,
-      email:    userEmail || user.email,
-      amount:   Math.round(amountNaira) * 100,
-      ref:      reference,
-      currency: 'NGN',
-      metadata: { user_id: user.id, type: 'topup' },
-      /* Bug fix: same async-callback issue as initiatePayment — plain wrapper
-         immediately invokes an async IIFE so Paystack never receives a Promise. */
-      callback: function(response) {
-        /* Paystack v1 rejects async callbacks — wrap in plain function + async IIFE */
-        (async function() {
-          try {
-            var wallet = await getWallet(user.id);
-            if (!wallet._stub) {
-              await window.supabase.from('wallets')
-                .update({
-                  balance: (wallet.balance || 0) + Math.round(amountNaira),
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('user_id', user.id);
-              await window.supabase.from('wallet_transactions').insert({
-                user_id:   user.id,
-                type:      'topup',
-                amount:    amountNaira,
-                reference: response.reference,
-                status:    'completed',
-                note:      'Wallet top-up via Paystack',
-              });
-            }
-            resolve({ reference: response.reference, amount: amountNaira });
-          } catch(e) {
-            reject(e);
-          }
-        })();
-      },
-      onClose: function() { reject(new Error('Payment window closed.')); },
-    });
-    handler.openIframe();
-  });
+  var reference = await _openPaystack(init.data, userEmail || user.email, { type: 'topup' });
+  /* The wallet is credited by the server only after Paystack confirms the payment */
+  await _verifyPayment(reference);
+  return { reference: reference, amount: Math.round(amountNaira) };
 }
 
 /* ── Withdraw from wallet to bank — calls Edge Function ─────── */
@@ -268,345 +298,91 @@ return {
   message: data.message
 };
 }
-/* ── Pay from wallet balance ─────────────────────────────────── */
-async function payFromWallet({ bookingId, taskId, amountNaira, taskerUserId }) {
+/* ── Pay from wallet balance ─────────────────────────────────
+   The server checks the balance, takes the money and holds it in escrow.
+   amountNaira / taskerUserId are ignored: the server knows the price and the tasker. */
+async function payFromWallet({ bookingId, requestId }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
-  var amounts = calculateAmounts(amountNaira);
-
-  var wallet = await getWallet(user.id);
-  if (wallet._stub) throw new Error('Wallet system not set up. Please pay via Paystack.');
-  if ((wallet.balance || 0) < amountNaira) {
-    throw new Error('Insufficient wallet balance (₦' + Number(wallet.balance||0).toLocaleString() + '). Top up or pay via Paystack.');
-  }
-
-  /* Deduct from customer */
-  await window.supabase.from('wallets')
-    .update({ balance: wallet.balance - amountNaira, updated_at: new Date().toISOString() })
-    .eq('user_id', user.id);
-
-  /* Record hold on tasker wallet as pending */
-  var taskerWallet = await getWallet(taskerUserId);
-  if (!taskerWallet._stub) {
-    await window.supabase.from('wallets')
-      .update({ pending_balance: (taskerWallet.pending_balance||0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
-      .eq('user_id', taskerUserId);
-  }
-
-  /* Log transactions */
-  var code = generateCompletionCode();
-  await window.supabase.from('wallet_transactions').insert([
-    { user_id: user.id, type: 'escrow_hold', amount: amountNaira, booking_id: bookingId,
-      status: 'completed', note: 'Payment held in escrow for booking' },
-  ]);
-
-  /* Update booking */
-  await window.supabase.from('bookings')
-    .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira })
-    .eq('id', bookingId);
-
-  return { success: true, completionCode: code };
+  var r = await _rpc('pay_with_wallet', requestId ? { p_request: requestId } : { p_booking: bookingId });
+  return { success: true, firstPayment: !!(r && r.first_payment), amount: r && r.amount, bookingId: r && r.booking_id };
 }
 
-/* ── Initiate Paystack payment ───────────────────────────────── */
-async function initiatePayment({ contextType, contextId, bookingId, taskId, amountNaira, customerEmail, customerName, taskerUserId }) {
+/* ── Initiate Paystack payment ───────────────────────────────
+   Pass requestId (a payment request from Messages) or bookingId (a booking with a price).
+   The amount the customer is charged is decided by the server; amountNaira is only
+   kept so older callers keep working and is NEVER used to charge. */
+async function initiatePayment({ requestId, bookingId, contextType, contextId, customerEmail }) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Please log in to make a payment.');
 
-  var amounts   = calculateAmounts(amountNaira);
-  var lookupId  = contextId || bookingId || taskId;
-  var reference = 'ST-' + Date.now() + '-' + (lookupId || '').slice(0, 8);
-  var code      = generateCompletionCode();
-
-  /* Resolve tasker ID if not passed — look it up from the correct table based on context */
-  var resolvedTaskerId = taskerUserId || null;
-  if (!resolvedTaskerId && lookupId) {
-    try {
-      /* Determine which table to query based on contextType */
-      var lookupTable = (contextType === 'task') ? 'task_applications' : 'bookings';
-      var lookup = await window.supabase.from(lookupTable).select('tasker_id').eq('id', lookupId).maybeSingle();
-      if (lookup.data) resolvedTaskerId = lookup.data.tasker_id;
-    } catch(_e) {}
+  var body = requestId
+    ? { purpose: 'request', requestId: requestId }
+    : { purpose: 'booking', bookingId: bookingId || (contextType === 'booking' ? contextId : null) };
+  if (body.purpose === 'booking' && !body.bookingId) {
+    throw new Error('No booking found for this payment.');
   }
 
-  /* Create payment record */
-  var { data: payment, error: payErr } = await window.supabase
-    .from('payments')
-    .insert({
-      booking_id:    bookingId || (contextType === 'booking' ? contextId : null),
-      task_id:       taskId || (contextType === 'task' ? contextId : null),
-      customer_id:   user.id,
-      amount:        amounts.total,
-      platform_fee:  amounts.platformFee,
-      tasker_amount: amounts.taskerAmount,
-      payment_reference: reference,
-      status:        'pending',
-    })
-    .select('id').single();
+  var init = await _callFn('payment-init', body);
+  if (!init.ok) throw new Error(init.data.error || 'Could not start the payment.');
 
-  /* If payments table missing that column, retry without payment_reference */
-  if (payErr && payErr.message && payErr.message.includes('payment_reference')) {
-    var retry = await window.supabase.from('payments').insert({
-      booking_id: bookingId || (contextType === 'booking' ? contextId : null),
-      task_id: taskId || (contextType === 'task' ? contextId : null),
-      customer_id: user.id, amount: amounts.total,
-      platform_fee: amounts.platformFee, tasker_amount: amounts.taskerAmount,
-      reference: reference, status: 'pending',
-    }).select('id').single();
-    if (retry.error) throw retry.error;
-    payment = retry.data;
-  } else if (payErr) {
-    throw payErr;
-  }
+  var reference = await _openPaystack(init.data, customerEmail || user.email,
+    { user_id: user.id, booking_id: init.data.bookingId, request_id: init.data.requestId });
+  var res = await _verifyPayment(reference);
 
-  return new Promise(function(resolve, reject) {
-    if (typeof PaystackPop === 'undefined') {
-      reject(new Error('Paystack not loaded. Check your internet connection.')); return;
-    }
-    var handler = PaystackPop.setup({
-      key:      PAYSTACK_PUBLIC_KEY,
-      email:    customerEmail || user.email,
-      amount:   Math.round(amountNaira) * 100,
-      ref:      reference,
-      currency: 'NGN',
-      metadata: { booking_id: bookingId || (contextType === 'booking' ? contextId : null), task_id: taskId || (contextType === 'task' ? contextId : null), payment_id: payment.id, user_id: user.id, tasker_id: resolvedTaskerId },
-      /* Bug fix: Paystack inline.js v1 validates typeof callback === 'function'
-         and may call it synchronously in some builds. An async function IS a
-         function, but returning a Promise from the callback confuses Paystack's
-         internal flow-control and can cause it to reject the handler entirely.
-         Fix: use a plain sync wrapper that immediately invokes an async IIFE,
-         keeping resolve/reject reachable via closure without leaking a Promise
-         back to Paystack. */
-      callback: function(response) {
-        (async function() {
-          try {
-            /* 1. Mark payment as paid */
-            await window.supabase.from('payments')
-              .update({ status: 'paid', paid_at: new Date().toISOString() })
-              .eq('id', payment.id);
+  return {
+    reference: reference, amount: res.amount, bookingId: res.booking_id,
+    firstPayment: !!res.first_payment, topUp: !!res.top_up,
+    platformFee: res.platform_fee, taskerAmount: res.tasker_amount,
+  };
+}
 
-            /* 2. Update booking with payment status + completion code.
-                  A booking that is ALREADY paid is a top-up (an extra payment such as
-                  transport or additional cost approved in the conversation): add it to the
-                  total and keep the existing code, attempts and status. Without this an
-                  extra payment would overwrite the amount and issue a new code. */
-            var existingBk = null;
-            if (bookingId) {
-              try {
-                var exRes = await window.supabase.from('bookings')
-                  .select('amount, payment_status, completion_code').eq('id', bookingId).maybeSingle();
-                existingBk = exRes.data || null;
-              } catch(_ex) {}
-            }
-            var isTopUp = !!(existingBk && existingBk.payment_status === 'paid' && existingBk.completion_code);
-            var finalCode = isTopUp ? existingBk.completion_code : code;
-            if (isTopUp) {
-              await window.supabase.from('bookings')
-                .update({ amount: (Number(existingBk.amount) || 0) + Number(amountNaira) })
-                .eq('id', bookingId);
-            } else {
-              await window.supabase.from('bookings')
-                .update({ payment_status: 'paid', completion_code: code, code_attempts: 0, amount: amountNaira, status: 'confirmed' })
-                .eq('id', bookingId);
-            }
-
-            /* 3. Write escrow record readable by TASKER (they own this row) 
-                  RLS NOTE: customer cannot update tasker's wallet directly.
-                  Instead we write to a shared escrow_payments table that tasker can read.
-                  The tasker's wallet shows pending from this table. */
-            if (resolvedTaskerId) {
-              try {
-                /* Upsert escrow entry — tasker_id = owner for RLS purposes on read */
-                await window.supabase.from('escrow_payments').insert({
-                  booking_id:   bookingId,
-                  payment_id:   payment.id,
-                  customer_id:  user.id,
-                  tasker_id:    resolvedTaskerId,
-                  amount:       amounts.total,
-                  tasker_amount: amounts.taskerAmount,
-                  platform_fee: amounts.platformFee,
-                  reference:    response.reference,
-                  status:       'held',
-                  paid_at:      new Date().toISOString(),
-                });
-              } catch(escrowErr) {
-                /* If escrow_payments table not yet created, fall back to direct wallet update */
-                console.warn('[Payments] escrow_payments insert failed, trying direct wallet:', escrowErr.message);
-                try {
-                  /* Try to read tasker wallet (may fail if RLS blocks) */
-                  var twRes = await window.supabase.from('wallets').select('id,pending_balance').eq('user_id', resolvedTaskerId).maybeSingle();
-                  if (twRes.data) {
-                    await window.supabase.from('wallets')
-                      .update({ pending_balance: (twRes.data.pending_balance || 0) + amounts.taskerAmount, updated_at: new Date().toISOString() })
-                      .eq('user_id', resolvedTaskerId);
-                  }
-                } catch(_we) {}
-              }
-            }
-
-            /* 4. Notify tasker that payment was received */
-            if (resolvedTaskerId) {
-              try {
-                var fmtAmt = '₦' + Number(amounts.total).toLocaleString();
-                var fmtEarning = '₦' + Number(amounts.taskerAmount).toLocaleString();
-                await window.supabase.from('notifications').insert({
-                  user_id:  resolvedTaskerId,
-                  type:     'payment_received',
-                  title:    '💰 Payment received! ' + fmtAmt,
-                  message:  'A customer has paid ' + fmtAmt + ' for your service. Your earning (' + fmtEarning + ' after 12% fee) is held in escrow. Complete the job, get the customer to confirm, then enter the code to release payment.',
-                  data:     { booking_id: bookingId, payment_id: payment.id },   /* never include the completion code here: the tasker must not see it */
-                  is_read:  false,
-                });
-              } catch(_ne) {}
-            }
-
-            resolve({ reference: response.reference, paymentId: payment.id, completionCode: finalCode, topUp: isTopUp, taskerUserId: resolvedTaskerId });
-          } catch(e) { reject(e); }
-        })();
-      },
-      onClose: function() { reject(new Error('Payment window closed.')); },
-    });
-    handler.openIframe();
-  });
+/* ── The customer's completion code (only the customer can read it) ─ */
+async function getCompletionCode(bookingId) {
+  return await _rpc('get_completion_code', { p_booking: bookingId });
 }
 
 /* ── Mark job as done (tasker side) ─────────────────────────── */
-async function markJobDone(bookingId) {
+async function markJobDone(bookingId, note) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
-
-  var { data: bk } = await window.supabase.from('bookings')
-    .select('customer_id, status, payment_status').eq('id', bookingId).maybeSingle();
-  if (!bk) throw new Error('Booking not found.');
-  if (bk.payment_status !== 'paid') throw new Error('The customer has not paid into escrow yet.');
-  if (['provider_done', 'awaiting_code', 'awaiting_confirmation', 'completed', 'cancelled', 'disputed'].indexOf(bk.status) !== -1) {
-    throw new Error('This job can\u2019t be marked as done right now.');
-  }
-
-  /* provider_done = tasker says done, waiting for the customer.
-     The customer's confirmation (confirmJobComplete) then sets awaiting_confirmation,
-     which is the tasker's cue to enter the 6-digit code. */
-  var { error: upErr } = await window.supabase.from('bookings')
-    .update({ status: 'provider_done' })
-    .eq('id', bookingId);
-  if (upErr) throw upErr;
-
-  /* Notify customer */
-  if (bk.customer_id) {
-    await window.supabase.from('notifications').insert({
-      user_id: bk.customer_id, type: 'job_done',
-      title: '✅ Job Marked Complete',
-      message: 'The provider says the job is done. If you agree, confirm completion to release payment.',
-      data: { booking_id: bookingId }, is_read: false,
-    });
-  }
+  await _rpc('job_mark_done', note ? { p_booking: bookingId, p_note: note } : { p_booking: bookingId });
   return { success: true };
+}
+
+/* ── Customer sends completed work back (step 7) ─────────────── */
+async function requestJobChanges(bookingId, note) {
+  var { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Not logged in.');
+  await _rpc('job_request_changes', { p_booking: bookingId, p_note: note });
+  return { success: true };
+}
+
+/* ── On-site progress (tasker): on_my_way | arrived | start | pause | resume (step 7) ─ */
+async function jobProgress(bookingId, action, note) {
+  var { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Not logged in.');
+  var args = { p_booking: bookingId, p_action: action };
+  if (note) args.p_note = note;
+  var r = await _rpc('job_progress', args);
+  return { success: true, stage: r && r.stage };
 }
 
 /* ── Confirm job complete (customer side) → returns code ─────── */
 async function confirmJobComplete(bookingId) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
-
-  var { data: bk } = await window.supabase.from('bookings')
-    .select('completion_code, payment_status, status, tasker_id')
-    .eq('id', bookingId).maybeSingle();
-
-  if (!bk) throw new Error('Booking not found.');
-  if (bk.payment_status !== 'paid') throw new Error('Payment not made yet.');
-  if (bk.status === 'completed') throw new Error('This booking is already completed.');
-  if (bk.status === 'disputed') throw new Error('This booking is under dispute.');
-
-  await window.supabase.from('bookings')
-    .update({ status: 'awaiting_confirmation' }).eq('id', bookingId);
-
-  /* Notify tasker */
-  if (bk.tasker_id) {
-    await window.supabase.from('notifications').insert({
-      user_id: bk.tasker_id, type: 'job_completion',
-      title: '🎉 Job Confirmed — Enter Your Code!',
-      message: 'The customer confirmed the job is done. Enter your 6-digit completion code to receive your payment.',
-      data: { booking_id: bookingId }, is_read: false,
-    });
-  }
-  return { code: bk.completion_code };
+  var r = await _rpc('job_confirm_complete', { p_booking: bookingId });
+  return { code: r && r.code };
 }
 
-/* ── Submit completion code (tasker side) → releases payment ─── */
+/* ── Submit completion code (tasker side) → releases payment ───
+   The code is checked on the server. The tasker never has it in their browser. */
 async function submitCompletionCode(bookingId, enteredCode) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
-
-  var { data: bk, error } = await window.supabase.from('bookings')
-    .select('completion_code, status, payment_status, code_attempts, tasker_id, customer_id, amount')
-    .eq('id', bookingId).maybeSingle();
-
-  if (error || !bk) throw new Error('Booking not found.');
-  /* Fix: Accept all non-unpaid payment statuses — 'paid', 'confirmed', 'pending'
-     are all valid states while the Paystack callback may still be processing.
-     Only reject if genuinely unpaid or already fully released. */
-  var unpaidStatuses = ['unpaid', 'failed', null, undefined, ''];
-  if (unpaidStatuses.indexOf(bk.payment_status) !== -1) throw new Error('Payment not made for this booking yet.');
-  if (bk.payment_status === 'released') throw new Error('Payment has already been released for this booking.');
-  if (bk.status === 'completed') throw new Error('This booking is already completed.');
-  if (bk.status === 'disputed') throw new Error('This booking is under dispute.');
-
-  var attempts = (bk.code_attempts || 0) + 1;
-  if (attempts > 3) throw new Error('Too many incorrect attempts. Contact support.');
-
-  if (String(enteredCode).trim() !== String(bk.completion_code).trim()) {
-    await window.supabase.from('bookings').update({ code_attempts: attempts }).eq('id', bookingId);
-    var remaining = 3 - attempts;
-    throw new Error('Incorrect code. ' + (remaining > 0
-      ? remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining.'
-      : 'No attempts left. Contact support.'));
-  }
-
-  /* Code correct — release payment */
-  var amounts = calculateAmounts(bk.amount || 0);
-
-  await window.supabase.from('bookings')
-    .update({ status: 'completed', payment_status: 'released', completed_at: new Date().toISOString() })
-    .eq('id', bookingId);
-
-  /* Credit tasker wallet */
-  try {
-    var taskerWallet = await getWallet(bk.tasker_id);
-    if (!taskerWallet._stub) {
-      await window.supabase.from('wallets').update({
-        balance:         (taskerWallet.balance || 0) + amounts.taskerAmount,
-        pending_balance: Math.max(0, (taskerWallet.pending_balance || 0) - amounts.taskerAmount),
-        updated_at:      new Date().toISOString(),
-      }).eq('user_id', bk.tasker_id);
-
-      await window.supabase.from('wallet_transactions').insert({
-        user_id: bk.tasker_id, type: 'escrow_release',
-        amount:  amounts.taskerAmount, booking_id: bookingId,
-        status:  'completed',
-        note: '₦' + Number(amounts.taskerAmount).toLocaleString() + ' released after job completion (12% fee deducted)',
-      });
-
-      /* Release escrow record */
-      try {
-        await window.supabase.from('escrow_payments')
-          .update({ status: 'released', released_at: new Date().toISOString() })
-          .eq('booking_id', bookingId).eq('status', 'held');
-      } catch(_ee) {}
-    }
-  } catch(we) {
-    console.warn('[Payments] wallet credit error:', we.message);
-  }
-
-  /* Notify customer */
-  try {
-    await window.supabase.from('notifications').insert({
-      user_id: bk.customer_id, type: 'job_completed',
-      title: '✅ Job Completed!',
-      message: 'Great news! The job is complete. Please leave a review.',
-      data: { booking_id: bookingId }, is_read: false,
-    });
-  } catch(ne) { /* non-blocking */ }
-
+  var r = await _rpc('job_submit_code', { p_booking: bookingId, p_code: String(enteredCode || '').trim() });
+  if (!r || !r.ok) throw new Error((r && r.error) || 'Could not release the payment.');
   return { success: true };
 }
 
@@ -614,27 +390,7 @@ async function submitCompletionCode(bookingId, enteredCode) {
 async function raiseDispute(bookingId, reason) {
   var { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Not logged in.');
-
-  await window.supabase.from('bookings')
-    .update({ status: 'disputed', dispute_reason: reason }).eq('id', bookingId);
-
-  try {
-    var { data: bk } = await window.supabase.from('bookings')
-      .select('tasker_id, customer_id').eq('id', bookingId).maybeSingle();
-    if (bk) {
-      var notifys = [
-        { user_id: bk.tasker_id,   title: 'Dispute Raised',  message: 'A dispute has been raised. Payment is frozen pending review.' },
-        { user_id: bk.customer_id, title: 'Dispute Opened',  message: 'Your dispute has been received. Team reviews within 24 hours.' },
-      ].filter(function(n) { return n.user_id && n.user_id !== user.id; });
-      for (var i = 0; i < notifys.length; i++) {
-        await window.supabase.from('notifications').insert({
-          user_id: notifys[i].user_id, type: 'dispute',
-          title: notifys[i].title, message: notifys[i].message,
-          data: { booking_id: bookingId }, is_read: false,
-        });
-      }
-    }
-  } catch(e) { /* non-blocking */ }
+  await _rpc('job_raise_dispute', { p_booking: bookingId, p_reason: reason });
   return { success: true };
 }
 
@@ -722,5 +478,8 @@ window.ST.payments = {
   confirmJobComplete,
   submitCompletionCode,
   raiseDispute,
+  getCompletionCode,
+  requestJobChanges,
+  jobProgress,
   fetchPayment,
 };

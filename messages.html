@@ -72,6 +72,9 @@
         <!-- Task status banner (built by js/messages-room.js) -->
         <div class="jr-banner" id="jrBanner" hidden></div>
 
+        <!-- Completion panel: review / code entry (built by js/messages-work.js) -->
+        <div class="jr-workpanel" id="jrWorkPanel" hidden></div>
+
         <div class="msg-chat-body" id="chatBody" hidden></div>
 
         <button class="jr-jump" id="jrJump" type="button" hidden>
@@ -145,6 +148,7 @@
   <script src="js/messages-thread.js"></script>
   <script src="js/messages-money.js"></script>
   <script src="js/messages-requests.js"></script>
+  <script src="js/messages-work.js"></script>
 
   <script>
   'use strict';
@@ -199,6 +203,7 @@
     JRList.init({ role:_role, onSelect:function(id){ openThread(id); } });
     JRThread.bindComposer();
     JRRequests.init({ onChange:threadChanged });
+    JRWork.init({ onChange:threadChanged });
     JRMoney.init({ onChange:function(){ threadChanged(); JRRoom.refresh(); } });
 
     /* 2. Load conversations */

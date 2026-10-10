@@ -12,6 +12,8 @@
                                      ctx: { thread, user, role } (JRRoom passes it)
      JRRequests.open() / .close()
      JRRequests.whenReady()          promise: is the step 5 table available?
+     JRRequests.register(actions)    add actions to the sheet (used by messages-work.js)
+     JRRequests.openView(title, fn)  open the sheet straight on a custom view; fn(body, {close, back})
      JRRequests.KINDS                labels per request kind (also used by the cards)
 
    Needs the step 5 SQL (sql/messaging-step5.sql) for the customer "ask" actions and
@@ -153,7 +155,11 @@
     if (!S.ctx) return [];
     var pending = (window.JRThread && window.JRThread.pendingKinds) ? window.JRThread.pendingKinds() : [];
     var money = window.JRMoney ? window.JRMoney.summary(S.ctx.thread) : { base: 0, additions: 0, total: 0, paid: 0, outstanding: 0 };
-    var x = { status: statusKey(), role: S.ctx.role, pending: pending, ready: S.ready === true, money: money };
+    var th = S.ctx.thread, bk = th.booking || null;
+    var x = { status: statusKey(), role: S.ctx.role, pending: pending, ready: S.ready === true, money: money,
+              booking: bk, stage: bk ? (bk.work_stage || null) : null,
+              bookingId: (th.context_type === 'booking' && th.context_id) ? th.context_id : null,
+              paid: !!(bk && bk.payment_status === 'paid') };
     return ACTIONS.filter(function (a) {
       if (a.roles.indexOf(x.role) === -1) return false;
       if (a.needsTable && !x.ready) return false;
@@ -161,8 +167,9 @@
       return a.when(x);
     }).map(function (a) {
       var waiting = a.kind && pending.indexOf(a.kind) !== -1;
+      var blocked = a.blocked ? a.blocked(x) : null;
       var hint = typeof a.hint === 'function' ? a.hint(x) : a.hint;
-      return { action: a, disabled: !!waiting, hint: waiting ? 'Waiting for a reply' : hint, x: x };
+      return { action: a, disabled: !!waiting || !!blocked, hint: waiting ? 'Waiting for a reply' : (blocked || hint), x: x };
     });
   }
 
@@ -410,6 +417,36 @@
     body.appendChild(send);
   }
 
+  /* A custom view inside the sheet: fn(body, { close, back, helpers }) fills it */
+  function showView(title, fn) {
+    S.view = 'form';
+    setTitle(title);
+    var body = $('jrSheetBody');
+    body.textContent = '';
+    var back = el('button', 'jr-sheet-back'); back.type = 'button';
+    back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
+    back.addEventListener('click', renderMenu);
+    body.appendChild(back);
+    fn(body, { close: close, back: renderMenu, el: el, naira: naira });
+  }
+
+  function openView(title, fn) {
+    var layer = $('jrSheetLayer');
+    if (!layer || !S.ctx) return;
+    if (layer.hidden) S.opener = document.activeElement;
+    layer.hidden = false;
+    showView(title, fn);
+    var closeBtn = $('jrSheetClose');
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function register(defs) {
+    (Array.isArray(defs) ? defs : [defs]).forEach(function (d) {
+      if (!ACTIONS.some(function (a) { return a.id === d.id; })) ACTIONS.push(d);
+    });
+    update();
+  }
+
   function open() {
     var layer = $('jrSheetLayer');
     if (!layer || !S.ctx) return;
@@ -518,6 +555,6 @@
     probeMoney().then(function () { update(); });
   }
 
-  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, KINDS: KINDS };
+  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, KINDS: KINDS };
 
 })();
