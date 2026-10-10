@@ -242,6 +242,9 @@
     reset();
   });
   $('apSearch').addEventListener('input', function (e) { state.query = e.target.value.trim(); reset(); });
+  // Search button (in the hero bar): the list already filters as you type, so this just applies the current text and returns focus
+  var searchBtn = $('apSearchBtn');
+  if (searchBtn) searchBtn.addEventListener('click', function () { var box = $('apSearch'); state.query = box.value.trim(); reset(); box.focus(); });
   $('apTask').addEventListener('change', function (e) { state.task = e.target.value; reset(); });
   $('apSort').addEventListener('change', function (e) { state.sort = e.target.value; reset(); });
   $('apMore').addEventListener('click', function () { state.shown += PAGE_SIZE; render(); });

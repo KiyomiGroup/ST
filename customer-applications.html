@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Applications — Street Taskers</title>
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/applications.css" />
   <link rel="stylesheet" href="css/customer-applications.css" />
 </head>
-<body>
+<body class="pg-hero-page pg-hero-nav">
   <div id="navbar-placeholder"></div>
 
   <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
@@ -24,12 +24,24 @@
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
       <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
     </defs>
   </svg>
 
-  <div class="ap-page" id="applicationsPage">
-    <div class="ap-container">
+  <div class="ap-page" id="applicationsPage" data-pg-fixed-pad>
+    <div class="ap-container pg-hero-page">
+
+      <!-- Hero — shared .pg-hero, desktop and phone (same as the tasker Applications page). On a phone the search + dropdowns (.ap-toolbar) sit directly under it in the same dark block; the old header below is hidden on desktop and phone. -->
+      <section class="ap-hero-dt pg-hero" data-pg-fixed aria-labelledby="apHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="apHeroTitle"><span class="spg-hero-dot"></span>Applications</h1>
+          <p class="pg-hero-desc">Offers from taskers on your tasks. Compare proposals, check profiles and choose who to hire.</p>
+        </div>
+        <div class="pg-hero-side pg-hero-desktop-only">
+          <a href="post-task.html" class="pg-hero-btn">Post a Task</a>
+        </div>
+      </section>
 
       <header class="ap-header">
         <div>
@@ -42,29 +54,32 @@
         <a href="post-task.html" class="ap-link">Post a Task<svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
       </header>
 
+      <div class="ap-tabs pg-hero-chips" role="group" aria-label="Filter by status" id="apTabs">
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="all" aria-pressed="true">All <span class="ap-tab-n pg-hero-chip-n" data-count="all"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="pending" aria-pressed="false">Needs Review <span class="ap-tab-n pg-hero-chip-n" data-count="pending"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="accepted" aria-pressed="false">Accepted <span class="ap-tab-n pg-hero-chip-n" data-count="accepted"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="declined" aria-pressed="false">Declined <span class="ap-tab-n pg-hero-chip-n" data-count="declined"></span></button>
+      </div>
+
+      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero" data-pg-fixed>
+        <div class="pg-hero-search">
+          <label class="ap-search">
+            <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" class="ap-input pg-hero-input" id="apSearch" placeholder="Search by tasker name or task title…" aria-label="Search applications" />
+          </label>
+          <button type="button" class="pg-hero-search-btn" id="apSearchBtn" aria-label="Search"><span class="pg-hero-search-text">Search</span><svg class="pg-hero-search-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        </div>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="apTask" aria-label="Filter by task"><option value="">All My Tasks</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="apSort" aria-label="Sort applications">
+          <option value="recent">Most Recent</option>
+          <option value="oldest">Oldest First</option>
+          <option value="lowest">Lowest Offer</option>
+          <option value="rating">Highest Rated</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
       <div class="ap-layout has-side" id="apLayout">
         <div class="ap-main">
-          <div class="ap-tabs" role="group" aria-label="Filter by status" id="apTabs">
-            <button type="button" class="ap-tab" data-filter="all" aria-pressed="true">All <span class="ap-tab-n" data-count="all"></span></button>
-            <button type="button" class="ap-tab" data-filter="pending" aria-pressed="false">Needs Review <span class="ap-tab-n" data-count="pending"></span></button>
-            <button type="button" class="ap-tab" data-filter="accepted" aria-pressed="false">Accepted <span class="ap-tab-n" data-count="accepted"></span></button>
-            <button type="button" class="ap-tab" data-filter="declined" aria-pressed="false">Declined <span class="ap-tab-n" data-count="declined"></span></button>
-          </div>
-
-          <div class="ap-toolbar">
-            <label class="ap-search">
-              <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
-              <input type="search" class="ap-input" id="apSearch" placeholder="Search by tasker name or task title…" aria-label="Search applications" />
-            </label>
-            <select class="ap-select" id="apTask" aria-label="Filter by task"><option value="">All My Tasks</option></select>
-            <select class="ap-select" id="apSort" aria-label="Sort applications">
-              <option value="recent">Most Recent</option>
-              <option value="oldest">Oldest First</option>
-              <option value="lowest">Lowest Offer</option>
-              <option value="rating">Highest Rated</option>
-            </select>
-          </div>
-
           <div class="ap-list" id="apList" aria-live="polite" aria-busy="true">
             <div class="ap-state"><p class="ap-state-text">Loading applications…</p></div>
           </div>
@@ -170,5 +185,6 @@
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/customer-applications.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
 </body>
 </html>
