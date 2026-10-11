@@ -99,18 +99,18 @@
 
             <div class="form-group">
               <label class="form-label" for="epBusiness">Business / Trading Name</label>
-              <input type="text" id="epBusiness" class="form-input" placeholder="e.g. Adebayo Electrical Services" autocomplete="organization" />
+              <input type="text" id="epBusiness" class="form-input" placeholder="Your business or trading name" autocomplete="organization" />
               <div class="form-helper">This is shown on your public profile instead of your personal name.</div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="epName">Your Full Name</label>
-                <input type="text" id="epName" class="form-input" placeholder="Your full name" autocomplete="name" required />
+                <input type="text" id="epName" class="form-input" placeholder="Enter your full name" autocomplete="name" required />
               </div>
               <div class="form-group">
                 <label class="form-label" for="epService">Service / Skill</label>
-                <input type="text" id="epService" class="form-input" placeholder="e.g. Electrician, Barber, Cleaner" />
+                <input type="text" id="epService" class="form-input" placeholder="What you do, e.g. Electrician" />
               </div>
             </div>
 
@@ -119,7 +119,7 @@
                 <label class="form-label" for="epRate">Rate (&#8358;)</label>
                 <div class="input-wrap">
                   <span class="ep-prefix" aria-hidden="true">&#8358;</span>
-                  <input type="number" id="epRate" class="form-input" placeholder="e.g. 5000" min="0" step="any" inputmode="decimal" />
+                  <input type="number" id="epRate" class="form-input" placeholder="5,000" min="0" step="any" inputmode="decimal" />
                 </div>
               </div>
               <div class="form-group">
@@ -137,7 +137,7 @@
               <label class="form-label" for="epLocation">Operating Location &amp; Address</label>
               <div class="input-wrap">
                 <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <input type="text" id="epLocation" class="form-input" placeholder="e.g. Lekki, Lagos" autocomplete="off" />
+                <input type="text" id="epLocation" class="form-input" placeholder="Search your area" autocomplete="off" />
                 <div id="epLocationSuggestions" class="location-suggestions"></div>
               </div>
               <div class="form-helper">Customers looking for services near you will see this.</div>
@@ -152,7 +152,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="epBio">About You</label>
-              <textarea id="epBio" class="form-textarea" rows="5" placeholder="Describe your skills, experience, and what makes you the best choice..."></textarea>
+              <textarea id="epBio" class="form-textarea" rows="5" placeholder="Tell customers about your skills and experience"></textarea>
               <div class="form-helper">This appears in the About section on your profile. Mention your qualifications, tools and guarantees.</div>
             </div>
           </section>
@@ -184,7 +184,7 @@
           <!-- Actions -->
           <div class="ep-actions">
             <p class="ep-msg" id="epMsg" role="status" hidden></p>
-            <a href="dashboard-tasker.html" class="btn btn-text ep-cancel">Cancel</a>
+            <a href="dashboard-tasker.html" class="btn btn-outline ep-cancel">Cancel</a>
             <button type="submit" class="btn btn-primary btn-lg" id="epSave">Save Changes</button>
           </div>
         </form>
@@ -254,7 +254,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="epWorkCaption">Job title</label>
-        <input type="text" id="epWorkCaption" class="form-input" maxlength="120" placeholder="e.g. Booster pump installation, Lekki" />
+        <input type="text" id="epWorkCaption" class="form-input" maxlength="120" placeholder="Name this job" />
         <div class="form-helper">Job photos are also shared on your Home feed.</div>
       </div>
       <p class="ap-error" id="epWorkErr" role="alert" hidden></p>

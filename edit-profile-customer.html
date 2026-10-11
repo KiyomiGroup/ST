@@ -79,25 +79,13 @@
 
             <div class="form-group">
               <label class="form-label" for="epName">Full Name</label>
-              <input type="text" id="epName" class="form-input" placeholder="Your full name" autocomplete="name" required />
+              <input type="text" id="epName" class="form-input" placeholder="Enter your full name" autocomplete="name" required />
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="epEmail">Email</label>
-                <div class="input-wrap">
-                  <input type="email" id="epEmail" class="form-input ep-readonly" readonly tabindex="-1" />
-                </div>
-                <div class="form-helper">This is the email you sign in with.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="epPhone">Phone</label>
-                <div class="input-wrap">
-                  <input type="tel" id="epPhone" class="form-input ep-readonly" readonly tabindex="-1" placeholder="Added when you verify your ID" />
-                  <span class="badge badge-green ep-field-tag" id="epPhoneTag" hidden>Verified</span>
-                </div>
-                <div class="form-helper">Taskers see your number only after a booking is confirmed.</div>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="epEmail">Email</label>
+              <input type="email" id="epEmail" class="form-input ep-readonly" readonly tabindex="-1" />
+              <div class="form-helper">This is the email you sign in with.</div>
             </div>
           </section>
 
@@ -113,7 +101,7 @@
               <label class="form-label" for="epLocation">Neighbourhood / City</label>
               <div class="input-wrap">
                 <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <input type="text" id="epLocation" class="form-input" placeholder="e.g. Lekki Phase 1, Lagos" autocomplete="off" />
+                <input type="text" id="epLocation" class="form-input" placeholder="Search your neighbourhood" autocomplete="off" />
                 <div id="epLocationSuggestions" class="location-suggestions"></div>
               </div>
               <div class="form-helper">Helps suggest taskers near you and show how far they are.</div>
@@ -131,7 +119,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="epBio">Short Description</label>
-              <textarea id="epBio" class="form-textarea" rows="4" placeholder="e.g. Homeowner in Lekki. I post home maintenance and errands. Fast and clear communicator."></textarea>
+              <textarea id="epBio" class="form-textarea" rows="4" placeholder="Tell taskers a little about yourself"></textarea>
               <div class="form-helper">Include preferences or directions that help taskers.</div>
             </div>
           </section>
@@ -148,7 +136,7 @@
           <!-- Actions -->
           <div class="ep-actions">
             <p class="ep-msg" id="epMsg" role="status" hidden></p>
-            <a href="dashboard-customer.html" class="btn btn-text ep-cancel">Cancel</a>
+            <a href="dashboard-customer.html" class="btn btn-outline ep-cancel">Cancel</a>
             <button type="submit" class="btn btn-primary btn-lg" id="epSave">Save Changes</button>
           </div>
         </form>

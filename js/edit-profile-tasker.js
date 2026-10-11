@@ -397,7 +397,7 @@
       }).eq('id', uid);
       if (u.error) throw u.error;
 
-      /* Upsert (not update) so a brand-new tasker gets a row. Fields this page does not edit keep their saved values. */
+      /* Upsert (not update) so a brand-new tasker gets a row. Columns not listed here keep their saved values. */
       var t = await window.supabase.from('taskers').upsert({
         user_id:       String(uid),
         name:          name,
@@ -412,8 +412,6 @@
         banner_color:  S.banner.color || ex.banner_color || null,
         banner_img:    bannerImg,
         photo_url:     avatarUrl,
-        whatsapp:      ex.whatsapp || null,
-        phone:         ex.phone || null,
         available:     ex.available === false ? false : true
       }, { onConflict: 'user_id' });
       if (t.error) throw t.error;

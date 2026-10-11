@@ -3,8 +3,7 @@
    Customer "Edit Profile" page (edit-profile-customer.html).
    Same data the dashboard's old Profile panel used:
      users -> name, bio, location, avatar_url
-   Email comes from the sign-in session and the phone number from the
-   verifications table (public.users has neither), so both are read-only here.
+   Email comes from the sign-in session (public.users has no email), so it is read-only here.
    ============================================================ */
 (function () {
   'use strict';
@@ -33,20 +32,17 @@
 
     var res = await Promise.all([
       safe(window.supabase.from('users').select('name, bio, location, avatar_url').eq('id', user.id).maybeSingle()),
-      safe(window.supabase.from('verifications').select('phone').eq('user_id', user.id).maybeSingle()),
       EP.verification()
     ]);
-    var ud = res[0] || {}, vr = res[1] || {}, ver = res[2];
+    var ud = res[0] || {}, ver = res[1];
 
     $('epName').value     = ud.name || (user.user_metadata && user.user_metadata.name) || '';
     $('epEmail').value    = user.email || '';
-    $('epPhone').value    = vr.phone || '';
     $('epLocation').value = ud.location || '';
     $('epBio').value      = ud.bio || '';
     EP.photo.url = ud.avatar_url || '';
 
     S.verified = ver.verified;
-    $('epPhoneTag').hidden = !(ver.verified && vr.phone);
     $('epVerifiedPill').hidden = !ver.verified;
     $('epVerifyCta').hidden = ver.verified;
 
