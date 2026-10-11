@@ -931,6 +931,8 @@ function openMessagesPanel() {
     };
 
     function switchPanel(id, btn) {
+      /* Profile editing has its own page now (edit-profile-tasker.html) */
+      if (id === 'profile') { window.location.href = 'edit-profile-tasker.html'; return; }
       document.querySelectorAll('.dashboard-panel').forEach(function(p) { p.classList.remove('active'); });
       document.querySelectorAll('.dashboard-nav-item').forEach(function(b) { b.classList.remove('active'); });
       var p = document.getElementById('panel-' + id);

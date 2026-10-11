@@ -18,7 +18,7 @@
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span>Messages</span>
   </a>
-  <a href="dashboard-customer.html?panel=profile" class="st-bn-item" id="stBnProfile">
+  <a href="edit-profile-customer.html" class="st-bn-item" id="stBnProfile">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span>Profile</span>
   </a>
@@ -40,7 +40,7 @@
   if (elPlus)     elPlus.href     = isTasker ? 'post-service.html' : 'post-task.html';
   /* Messages is its own page (messages.html) for both roles. */
   if (elMessages) elMessages.href = 'messages.html';
-  if (elProfile)  elProfile.href  = isTasker ? (dashUrl + '#profile')  : (dashUrl + '?panel=profile');
+  if (elProfile)  elProfile.href  = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html';
 
   /* Active tab based on the current page */
   var page = (window.location.pathname.split('/').pop() || 'index.html');
@@ -49,6 +49,8 @@
   });
   if (page === 'home-feed.html') {
     if (elHome) elHome.classList.add('active');
+  } else if (page === 'edit-profile-tasker.html' || page === 'edit-profile-customer.html') {
+    if (elProfile) elProfile.classList.add('active');
   } else if (page === dashUrl) {
     var hash  = window.location.hash.replace('#', '');
     var panel = new URLSearchParams(window.location.search).get('panel');

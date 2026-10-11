@@ -77,11 +77,12 @@ function _applyNavState(loggedIn, role, name) {
        Settings icon -> dropdown (Settings + Log out)
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
+    const profileUrl = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html'; /* own pages, not a dashboard panel */
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
     setHref('navIconPending',  isTasker ? 'bookings.html' : 'my-tasks.html');
     setHref('navIconMessages', 'messages.html');
     setHref('navBellBtn',      panelUrl('notifications'));
-    setHref('navMenuSettings', panelUrl('profile'));
+    setHref('navMenuSettings', profileUrl);
     document.querySelectorAll('.nav-menu-item[data-nav-role]').forEach(el => {
       el.hidden = el.dataset.navRole !== (isTasker ? 'tasker' : 'customer');
     });
@@ -94,7 +95,7 @@ function _applyNavState(loggedIn, role, name) {
     const av = $('navAvatar');
     const avInit = $('navAvatarInitial');
     if (avInit) avInit.textContent = initials;
-    if (av)     av.href = panelUrl('profile');
+    if (av)     av.href = profileUrl;
 
     /* Mobile: hide + / show account icons */
     const mPlus = $('nav-mobile-plus-btn');
@@ -156,7 +157,7 @@ function _syncNavDrawer(loggedIn, role, name, initials) {
     const isTasker = role === 'tasker';
     const dashUrl  = isTasker ? 'dashboard-tasker.html' : 'dashboard-customer.html';
     const user = $('navDrawerUser');
-    if (user) user.href = dashUrl + '?panel=profile';
+    if (user) user.href = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html';
 
     const nameEl = $('navDrawerName');
     if (nameEl) nameEl.textContent = name || 'My account';
