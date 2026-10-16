@@ -76,6 +76,23 @@
     return paint;
   };
 
+  /* ── hero preview: name, tag, location and chips follow the form ──
+     info: { name, tag, tick, location, chips:[text] } */
+  EP.paintHero = function (info) {
+    var n = $('epHeroName'); if (n) n.textContent = info.name || 'Your name';
+    var t = $('epHeroTag'); if (t) { t.textContent = info.tag || ''; t.hidden = !info.tag; }
+    var k = $('epHeroTick'); if (k) k.hidden = !info.tick;
+    var m = $('epHeroMeta'), l = $('epHeroLoc');
+    if (m && l) { l.textContent = info.location || ''; m.hidden = !info.location; }
+    var c = $('epHeroChips');
+    if (c) {
+      c.textContent = '';
+      (info.chips || []).filter(Boolean).forEach(function (txt) {
+        var s = document.createElement('span'); s.className = 'ep-hero-chip'; s.textContent = txt; c.appendChild(s);
+      });
+    }
+  };
+
   /* ── profile strength: ring + checklist ──────────────────── */
   /* items: [{ label, pct, done }]. The first unfinished item with the most weight is highlighted. */
   EP.renderStrength = function (items) {
@@ -134,7 +151,9 @@
 
     var paint = function () {
       var shown = EP.photo.removed ? '' : (EP.photo.objectUrl || EP.photo.url);
-      EP.paintAvatar($('epAvatar'), shown, EP.initials(opts.getName ? opts.getName() : '', 'U'));
+      var init = EP.initials(opts.getName ? opts.getName() : '', 'U');
+      EP.paintAvatar($('epAvatar'), shown, init);
+      EP.paintAvatar($('epHeroAvatar'), shown, init);
       if (rm) rm.hidden = !EP.hasPhoto();
       if (opts.onChange) opts.onChange();
     };
@@ -197,10 +216,12 @@
     m.hidden = false;
   };
   EP.busy = function (on) {
-    var b = $('epSave');
-    if (!b) return;
-    b.disabled = !!on;
-    b.textContent = on ? 'Saving...' : 'Save Changes';
+    ['epSave', 'epHeroSave'].forEach(function (id) {
+      var b = $(id);
+      if (!b) return;
+      b.disabled = !!on;
+      b.textContent = on ? 'Saving...' : 'Save Changes';
+    });
   };
 
   /* ── unsaved-changes guard ───────────────────────────────── */
@@ -242,6 +263,142 @@
     });
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
   };
+
+
+  /* ── repeater: a list of small cards (services, certifications ...) ──
+     opts: { host, addBtn, max, noun, fields:[{key,label,placeholder,maxlength,type,half,prefix}], onChange }
+     get() returns only rows with something filled in. */
+  var uid = 0;
+  EP.repeater = function (opts) {
+    var host = opts.host, items = [];
+    var api = {};
+    function emit() { if (opts.onChange) opts.onChange(); }
+
+    function render() {
+      host.textContent = '';
+      items.forEach(function (it, idx) {
+        var row = document.createElement('div');
+        row.className = 'ep-rep-item';
+        var head = document.createElement('div');
+        head.className = 'ep-rep-head';
+        var t = document.createElement('span');
+        t.className = 'ep-rep-title';
+        t.textContent = opts.noun + ' ' + (idx + 1);
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'btn btn-text btn-sm ep-danger';
+        rm.textContent = 'Remove';
+        rm.addEventListener('click', function () { items.splice(idx, 1); render(); EP.dirty(); emit(); });
+        head.appendChild(t); head.appendChild(rm);
+        row.appendChild(head);
+
+        var pair = null;
+        opts.fields.forEach(function (f) {
+          var id = 'epRep' + (++uid);
+          var g = document.createElement('div');
+          g.className = 'form-group';
+          var lab = document.createElement('label');
+          lab.className = 'form-label'; lab.htmlFor = id; lab.textContent = f.label;
+          var inp;
+          if (f.type === 'textarea') { inp = document.createElement('textarea'); inp.rows = 2; inp.className = 'form-textarea'; }
+          else { inp = document.createElement('input'); inp.type = f.type === 'number' ? 'number' : 'text'; inp.className = 'form-input'; if (f.type === 'number') { inp.min = '0'; inp.step = 'any'; inp.inputMode = 'decimal'; } }
+          inp.id = id; inp.placeholder = f.placeholder || '';
+          if (f.maxlength) inp.maxLength = f.maxlength;
+          inp.value = it[f.key] == null ? '' : it[f.key];
+          inp.addEventListener('input', function () { it[f.key] = inp.value; EP.dirty(); emit(); });
+          g.appendChild(lab);
+          if (f.prefix) {
+            var w = document.createElement('div'); w.className = 'input-wrap';
+            var pf = document.createElement('span'); pf.className = 'ep-prefix'; pf.setAttribute('aria-hidden', 'true'); pf.textContent = f.prefix;
+            w.appendChild(pf); w.appendChild(inp); g.appendChild(w);
+          } else g.appendChild(inp);
+
+          if (f.half) {
+            if (!pair) { pair = document.createElement('div'); pair.className = 'form-row'; row.appendChild(pair); }
+            pair.appendChild(g);
+            if (pair.children.length === 2) pair = null;
+          } else { pair = null; row.appendChild(g); }
+        });
+        host.appendChild(row);
+      });
+      var full = items.length >= opts.max;
+      if (opts.addBtn) { opts.addBtn.hidden = full; }
+    }
+
+    api.set = function (arr) { items = (Array.isArray(arr) ? arr : []).slice(0, opts.max).map(function (o) { return Object.assign({}, o); }); render(); };
+    api.get = function () {
+      return items.filter(function (it) {
+        return opts.fields.some(function (f) { return String(it[f.key] == null ? '' : it[f.key]).trim(); });
+      }).map(function (it) {
+        var out = {};
+        opts.fields.forEach(function (f) { out[f.key] = String(it[f.key] == null ? '' : it[f.key]).trim(); });
+        return out;
+      });
+    };
+    api.count = function () { return api.get().length; };
+    if (opts.addBtn) opts.addBtn.addEventListener('click', function () {
+      if (items.length >= opts.max) return;
+      items.push({}); render(); EP.dirty(); emit();
+      var last = host.querySelector('.ep-rep-item:last-child input, .ep-rep-item:last-child textarea');
+      if (last) last.focus();
+    });
+    render();
+    return api;
+  };
+
+  /* ── chips: pick from suggestions or type your own ───────────
+     opts: { host, max, presets:[], placeholder, onChange } */
+  EP.chips = function (opts) {
+    var host = opts.host, vals = [], api = {};
+    host.textContent = '';
+    host.classList.add('ep-chips');
+    var list = document.createElement('div'); list.className = 'ep-chip-list'; list.setAttribute('aria-live', 'polite');
+    var addRow = document.createElement('div'); addRow.className = 'ep-chip-add';
+    var inp = document.createElement('input'); inp.type = 'text'; inp.className = 'form-input'; inp.maxLength = 40;
+    inp.placeholder = opts.placeholder || 'Type and press Enter'; inp.setAttribute('aria-label', opts.placeholder || 'Add');
+    var add = document.createElement('button'); add.type = 'button'; add.className = 'btn btn-mint btn-sm'; add.textContent = 'Add';
+    addRow.appendChild(inp); addRow.appendChild(add);
+    var sug = document.createElement('div'); sug.className = 'ep-chip-suggest';
+    host.appendChild(list); host.appendChild(addRow); host.appendChild(sug);
+
+    function has(v) { return vals.some(function (x) { return x.toLowerCase() === v.toLowerCase(); }); }
+    function put(v) {
+      v = String(v || '').replace(/\s+/g, ' ').trim();
+      if (!v || has(v) || vals.length >= opts.max) return;
+      vals.push(v); paint(); EP.dirty(); if (opts.onChange) opts.onChange();
+    }
+    function paint() {
+      list.textContent = '';
+      vals.forEach(function (v, i) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'ep-chip is-on';
+        b.setAttribute('aria-label', 'Remove ' + v);
+        b.textContent = v + ' \u00D7';
+        b.addEventListener('click', function () { vals.splice(i, 1); paint(); EP.dirty(); if (opts.onChange) opts.onChange(); });
+        list.appendChild(b);
+      });
+      sug.textContent = '';
+      (opts.presets || []).filter(function (p) { return !has(p); }).forEach(function (p) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'ep-chip';
+        b.textContent = '+ ' + p; b.disabled = vals.length >= opts.max;
+        b.addEventListener('click', function () { put(p); });
+        sug.appendChild(b);
+      });
+      var full = vals.length >= opts.max;
+      inp.disabled = full; add.disabled = full;
+    }
+    function commit() { inp.value.split(',').forEach(put); inp.value = ''; }
+    add.addEventListener('click', commit);
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+
+    api.set = function (arr) { vals = []; (Array.isArray(arr) ? arr : []).forEach(function (v) { if (typeof v === 'string' && v.trim() && !has(v) && vals.length < opts.max) vals.push(v.trim()); }); paint(); };
+    api.get = function () { return vals.slice(); };
+    api.host = host; api.add = commit;
+    paint();
+    return api;
+  };
+
+  /* Pending text in a chip box counts as added when saving */
+  EP.flushChips = function (list) { list.forEach(function (c) { var i = c.host.querySelector('.ep-chip-add input'); if (i && i.value.trim()) c.add(); }); };
 
   /* ── colour from a design token, as #rrggbb (so no colour value lives in this file) ── */
   EP.tokenHex = function (token) {

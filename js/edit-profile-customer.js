@@ -3,24 +3,58 @@
    Customer "Edit Profile" page (edit-profile-customer.html).
    Same data the dashboard's old Profile panel used:
      users -> name, bio, location, avatar_url
+   plus users.profile_details (jsonb, see docs/profile-details-migration.sql):
+     tagline, working preferences, usual hiring categories.
    Email comes from the sign-in session (public.users has no email), so it is read-only here.
    ============================================================ */
 (function () {
   'use strict';
 
   var $ = EP.$;
-  var BIO_MAX = 300;
-  var S = { user: null, verified: false };
+  var BIO_MAX = 600;
+  var S = { user: null, verified: false, details: {} };
+  var prefs, cats;
+  var PREF_PRESETS = ['Clear briefing', 'Instant sign-off', 'Safe community gate access', 'Materials ready on arrival', 'Prompt escrow release', 'Flexible scheduling'];
+  /* Same categories as Post a Task */
+  var CAT_PRESETS = ['Home & Office Cleaning', 'Electrician', 'Plumber', 'Mechanic / Auto', 'Carpentry', 'Barber / Hair', 'Make-up / Beauty', 'Delivery', 'Moving', 'Painting'];
 
   async function safe(p) { try { var r = await p; return (r && r.data) || null; } catch (e) { return null; } }
 
+  /* Hero preview follows the form */
+  function paintHero() {
+    EP.paintHero({
+      name: EP.val('epName'),
+      tag: S.verified ? 'Verified Customer' : '',
+      tick: S.verified,
+      location: EP.val('epLocation'),
+      chips: [
+        EP.val('epTagline'),
+        S.verified ? 'ID Verified' : 'ID not verified yet',
+        'Escrow protected'
+      ]
+    });
+  }
+
+  async function loadStats(user) {
+    var since = user.created_at ? new Date(user.created_at) : null;
+    $('epSince').textContent = since && !isNaN(since) ? since.toLocaleDateString('en-NG', { month: 'short', year: 'numeric' }) : '\u2014';
+    try { $('epTasks').textContent = await window.ST.db.countMyTasks(); } catch (e) { /* leave 0 */ }
+    try {
+      var r = await window.supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('customer_id', user.id);
+      $('epHired').textContent = r.count || 0;
+    } catch (e) { /* leave 0 */ }
+  }
+
   function strength() {
+    if ($('epHeroName')) paintHero();
     EP.renderStrength([
-      { label: 'Account created',    pct: 10, done: true },
-      { label: 'Profile photo',      pct: 15, done: EP.hasPhoto() },
-      { label: 'Personal details',   pct: 15, done: !!EP.val('epName') },
-      { label: 'Location',           pct: 20, done: !!EP.val('epLocation') },
-      { label: 'About you',          pct: 15, done: !!EP.val('epBio') },
+      { label: 'Account created',      pct: 10, done: true },
+      { label: 'Profile photo',        pct: 10, done: EP.hasPhoto() },
+      { label: 'Name & tagline',       pct: 10, done: !!(EP.val('epName') && EP.val('epTagline')) },
+      { label: 'Location',             pct: 15, done: !!EP.val('epLocation') },
+      { label: 'About you',            pct: 15, done: !!EP.val('epBio') },
+      { label: 'How you work',         pct: 10, done: !!(prefs && prefs.get().length) },
+      { label: 'Services you hire for', pct: 5, done: !!(cats && cats.get().length) },
       { label: 'Identity (NIN / BVN)', pct: 25, done: S.verified }
     ]);
   }
@@ -31,24 +65,30 @@
     S.user = user;
 
     var res = await Promise.all([
-      safe(window.supabase.from('users').select('name, bio, location, avatar_url').eq('id', user.id).maybeSingle()),
+      safe(window.supabase.from('users').select('*').eq('id', user.id).maybeSingle()),
       EP.verification()
     ]);
     var ud = res[0] || {}, ver = res[1];
 
     $('epName').value     = ud.name || (user.user_metadata && user.user_metadata.name) || '';
-    $('epEmail').value    = user.email || '';
     $('epLocation').value = ud.location || '';
     $('epBio').value      = ud.bio || '';
+    var d = (ud.profile_details && typeof ud.profile_details === 'object') ? ud.profile_details : {};
+    S.details = d;
+    $('epTagline').value = d.tagline || '';
+    prefs.set(d.preferences);
+    cats.set(d.categories);
     EP.photo.url = ud.avatar_url || '';
 
     S.verified = ver.verified;
-    $('epVerifiedPill').hidden = !ver.verified;
+    $('epIdStat').textContent = ver.verified ? 'Verified' : 'Not yet';
+    $('epIdNote').textContent = ver.verified ? 'NIN / BVN confirmed' : 'Verify to earn a trust badge';
     $('epVerifyCta').hidden = ver.verified;
 
     EP.repaintPhoto();
     paintBio();
     strength();
+    loadStats(user);
   }
 
   async function save(e) {
@@ -57,7 +97,9 @@
     var name = EP.val('epName');
     if (!name) { EP.say('Enter your full name.', 'error'); $('epName').focus(); return; }
 
+    EP.flushChips([prefs, cats]);
     EP.busy(true);
+    var extraFailed = false;
     try {
       var uid = S.user.id;
       var avatarUrl = EP.photo.removed ? null : EP.photo.url;
@@ -71,14 +113,24 @@
       }).eq('id', uid);
       if (r.error) throw r.error;
 
+      /* Extra details go in one jsonb column; if the database has not been updated yet the core profile is still saved. */
+      var details = Object.assign({}, S.details, { tagline: EP.val('epTagline'), preferences: prefs.get(), categories: cats.get() });
+      var x = await window.supabase.from('users').update({ profile_details: details }).eq('id', uid);
+      if (x.error) { extraFailed = true; console.error('[edit-profile-customer] profile_details not saved:', x.error); }
+      else S.details = details;
+
       if (EP.photo.objectUrl) URL.revokeObjectURL(EP.photo.objectUrl);
       EP.photo.url = avatarUrl || ''; EP.photo.file = null; EP.photo.objectUrl = ''; EP.photo.removed = false;
-      EP.clean();
+      if (!extraFailed) EP.clean();
       EP.repaintPhoto();
 
       EP.refreshNav(name, avatarUrl);
-      EP.say('Profile saved.', 'ok');
-      EP.toast('Profile updated!');
+      if (extraFailed) {
+        EP.say('Core details saved, but the extra profile details could not be stored yet. The database needs the profile_details update (docs/profile-details-migration.sql).', 'error');
+      } else {
+        EP.say('Profile saved.', 'ok');
+        EP.toast('Profile updated!');
+      }
     } catch (err) {
       console.error('[edit-profile-customer] save failed:', err);
       EP.say('Save failed: ' + (err && err.message ? err.message : 'please try again.'), 'error');
@@ -91,6 +143,8 @@
 
   function boot() {
     paintBio = EP.bindCounter('epBio', 'epBioCount', BIO_MAX);
+    prefs = EP.chips({ host: $('epPrefs'), max: 6, presets: PREF_PRESETS, placeholder: 'Add your own', onChange: strength });
+    cats  = EP.chips({ host: $('epCats'),  max: 6, presets: CAT_PRESETS,  placeholder: 'Add another service', onChange: strength });
     EP.initPhoto({ getName: function () { return EP.val('epName'); }, onChange: strength });
 
     $('epForm').addEventListener('submit', save);

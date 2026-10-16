@@ -24,25 +24,47 @@
       <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
-      <symbol id="i-drag" viewBox="0 0 24 24"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></symbol>
-    </defs>
+          </defs>
   </svg>
 
   <div class="ap-page ep-page" id="epPage">
     <div class="ap-container pg-hero-page">
 
-      <!-- Hero: the shared .pg-hero used on the other logged-in pages (desktop and phone). -->
+      <!-- Hero: same structure as the Client Profile hero (avatar, name, location, chips, actions on the right).
+           Everything in it follows what you type below, so it previews the public profile. -->
       <section class="ep-hero pg-hero" aria-labelledby="epTitle">
-        <div class="pg-hero-text">
+        <div class="pg-hero-text ep-hero-main">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="epTitle"><span class="spg-hero-dot"></span>Edit Profile</h1>
-          <p class="pg-hero-desc">Changes save to your public profile page immediately. Keep your service, rate and photos up to date so customers can trust and book you.</p>
+          <div class="ep-hero-id">
+            <div class="ep-hero-avatar-wrap">
+              <div class="ep-hero-avatar" id="epHeroAvatar" aria-hidden="true"></div>
+              <span class="ep-hero-tick" id="epHeroTick" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+            </div>
+            <div class="ep-hero-who">
+              <div class="ep-hero-name-row">
+                <p class="ep-hero-name" id="epHeroName">Your name</p>
+                <span class="ep-hero-tag" id="epHeroTag" hidden></span>
+              </div>
+              <p class="ep-hero-meta" id="epHeroMeta" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg><span id="epHeroLoc"></span></p>
+              <div class="ep-hero-chips" id="epHeroChips"></div>
+            </div>
+          </div>
         </div>
-        <div class="pg-hero-side">
+        <div class="pg-hero-stack ep-hero-actions">
+          <button type="submit" form="epForm" class="ep-hero-save" id="epHeroSave">Save Changes</button>
           <a href="tasker-profile.html" class="pg-hero-btn" id="epViewPublic">View Public Page</a>
         </div>
       </section>
 
-      <div class="ep-layout pg-hero-float">
+      <div class="pg-hero-float ep-float">
+        <section class="ap-card ep-stats" aria-label="Profile summary">
+          <div class="ep-stat"><span class="ep-stat-label">Rating</span><span class="ep-stat-value" id="epRating">&mdash;</span><span class="ep-stat-note" id="epRatingNote">No reviews yet</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Jobs done</span><span class="ep-stat-value" id="epJobs">0</span><span class="ep-stat-note">Completed on StreetTasker</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Earned</span><span class="ep-stat-value" id="epEarned">&#8358;0</span><span class="ep-stat-note">After the 12% platform fee</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Experience</span><span class="ep-stat-value" id="epExpStat">&mdash;</span><span class="ep-stat-note" id="epExpStatNote">Add it below</span></div>
+        </section>
+
+        <div class="ep-layout">
 
         <form class="ep-main" id="epForm" novalidate>
 
@@ -53,26 +75,10 @@
           </section>
 
           <!-- Banner and photo -->
-          <section class="ap-card ep-card" aria-labelledby="epBannerTitle">
+          <section class="ap-card ep-card" aria-labelledby="epPhotoTitle">
             <div class="ep-card-head">
-              <h2 class="ep-card-title" id="epBannerTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-image"/></svg>Banner &amp; Profile Picture</h2>
+              <h2 class="ep-card-title" id="epPhotoTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-camera"/></svg>Profile Photo</h2>
             </div>
-
-            <div class="ep-banner" id="epBanner">
-              <span class="ep-banner-chip">Cover photo preview</span>
-              <span class="ep-banner-line" id="epBannerLine">Add your service to see it here</span>
-            </div>
-
-            <div class="ep-banner-tools">
-              <div class="ep-swatches" id="epSwatches" role="group" aria-label="Banner colour"></div>
-              <div class="ep-banner-btns">
-                <input type="file" id="epBannerFile" accept="image/jpeg,image/png,image/webp" hidden />
-                <button type="button" class="btn btn-ghost btn-sm" id="epBannerUpload">Upload Banner</button>
-                <button type="button" class="btn btn-ghost btn-sm" id="epBannerReposition" hidden>Reposition</button>
-                <button type="button" class="btn btn-text btn-sm ep-danger" id="epBannerRemove" hidden>Remove</button>
-              </div>
-            </div>
-            <p class="form-helper">Pick a colour, or upload an image to use as your banner. JPG, PNG or WebP &middot; max 5 MB.</p>
 
             <div class="ep-photo">
               <div class="ep-avatar-wrap">
@@ -114,9 +120,26 @@
               </div>
             </div>
 
+            <div class="form-group">
+              <label class="form-label" for="epHeadline">Professional Headline</label>
+              <input type="text" id="epHeadline" class="form-input" maxlength="80" placeholder="e.g. Licensed Electrical &amp; Solar Systems Specialist" />
+              <div class="form-helper">Shown under your name at the top of your profile.</div>
+            </div>
+
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="epRate">Rate (&#8358;)</label>
+                <label class="form-label" for="epYears">Years of Experience</label>
+                <input type="number" id="epYears" class="form-input" min="0" max="60" step="1" inputmode="numeric" placeholder="8" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="epExpNote">Experience Focus</label>
+                <input type="text" id="epExpNote" class="form-input" maxlength="40" placeholder="e.g. Residential &amp; Commercial" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="epRate">Standard Rate (&#8358;)</label>
                 <div class="input-wrap">
                   <span class="ep-prefix" aria-hidden="true">&#8358;</span>
                   <input type="number" id="epRate" class="form-input" placeholder="5,000" min="0" step="any" inputmode="decimal" />
@@ -134,13 +157,66 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="epLocation">Operating Location &amp; Address</label>
+              <label class="form-label" for="epPriceNote">Pricing Style</label>
+              <select id="epPriceNote" class="form-select">
+                <option value="">Hourly rate only</option>
+                <option value="Or fixed quote">Or fixed quote</option>
+                <option value="Fixed price">Fixed price</option>
+                <option value="Negotiable">Negotiable</option>
+              </select>
+              <div class="form-helper">Shown as a small tag beside your standard rate.</div>
+            </div>
+          </section>
+
+          <!-- Availability -->
+          <section class="ap-card ep-card" aria-labelledby="epAvailTitle">
+            <div class="ep-card-head">
+              <h2 class="ep-card-title" id="epAvailTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg>Availability</h2>
+            </div>
+            <label class="ep-switch">
+              <span class="ep-switch-text"><strong>Available for bookings</strong><span>Turn off when you are fully booked or on break.</span></span>
+              <input type="checkbox" id="epAvailable" />
+              <span class="ep-switch-ui" aria-hidden="true"></span>
+            </label>
+            <div class="form-group ep-sub">
+              <label class="form-label" for="epNextOpening">Next Opening</label>
+              <input type="text" id="epNextOpening" class="form-input" maxlength="60" placeholder="e.g. Today, 2:00 PM onwards" />
+              <div class="form-helper">Tells customers when you can start.</div>
+            </div>
+          </section>
+
+          <!-- Location and coverage -->
+          <section class="ap-card ep-card" aria-labelledby="epCovTitle">
+            <div class="ep-card-head">
+              <h2 class="ep-card-title" id="epCovTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg>Location &amp; Service Coverage</h2>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="epLocation">Operating Base &amp; Address</label>
               <div class="input-wrap">
                 <svg class="input-icon-left" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <input type="text" id="epLocation" class="form-input" placeholder="Search your area" autocomplete="off" />
                 <div id="epLocationSuggestions" class="location-suggestions"></div>
               </div>
               <div class="form-helper">Customers looking for services near you will see this.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="epRadius">Coverage Radius</label>
+              <select id="epRadius" class="form-select">
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+                <option value="15">15 km</option>
+                <option value="20">20 km</option>
+                <option value="30">30 km</option>
+                <option value="50">50 km</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <span class="form-label" id="epAreasLabel">Areas You Cover</span>
+              <div id="epAreas" role="group" aria-labelledby="epAreasLabel"></div>
+              <div class="form-helper">Add up to 12 neighbourhoods, e.g. Lekki Phase 1 &amp; 2, Victoria Island, Ikoyi.</div>
             </div>
           </section>
 
@@ -152,22 +228,72 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="epBio">About You</label>
-              <textarea id="epBio" class="form-textarea" rows="5" placeholder="Tell customers about your skills and experience"></textarea>
-              <div class="form-helper">This appears in the About section on your profile. Mention your qualifications, tools and guarantees.</div>
+              <textarea id="epBio" class="form-textarea" rows="7" placeholder="Tell customers about your skills and experience"></textarea>
+              <div class="form-helper">Shown in the About section of your profile. Use a blank line to start a new paragraph. Mention qualifications, tools and guarantees.</div>
             </div>
+          </section>
+
+          <!-- What you offer -->
+          <section class="ap-card ep-card" aria-labelledby="epOfferTitle">
+            <div class="ep-card-head">
+              <div>
+                <h2 class="ep-card-title" id="epOfferTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg>What You Offer</h2>
+                <p class="ep-card-sub">Up to 4 short highlights shown under your bio, e.g. Itemized Digital Invoices.</p>
+              </div>
+            </div>
+            <div class="ep-rep" id="epOffers"></div>
+            <button type="button" class="btn btn-mint btn-sm ep-rep-add" id="epOfferAdd"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg>Add Highlight</button>
+          </section>
+
+          <!-- Core services -->
+          <section class="ap-card ep-card" aria-labelledby="epSvcTitle">
+            <div class="ep-card-head">
+              <div>
+                <h2 class="ep-card-title" id="epSvcTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-briefcase"/></svg>Core Services &amp; Estimates</h2>
+                <p class="ep-card-sub">List what you do and a starting price for each. Customers see these before they book.</p>
+              </div>
+            </div>
+            <div class="ep-rep" id="epServices"></div>
+            <button type="button" class="btn btn-mint btn-sm ep-rep-add" id="epServiceAdd"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg>Add Service</button>
           </section>
 
           <!-- Work portfolio -->
           <section class="ap-card ep-card" aria-labelledby="epWorkTitle">
             <div class="ep-card-head">
               <div>
-                <h2 class="ep-card-title" id="epWorkTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-image"/></svg>Work Portfolio</h2>
-                <p class="ep-card-sub">Showcase completed jobs to show customers your craftsmanship.</p>
+                <h2 class="ep-card-title" id="epWorkTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-image"/></svg>Completed Projects Portfolio</h2>
+                <p class="ep-card-sub">Showcase completed jobs. Photos are saved when you press Save Changes.</p>
               </div>
               <button type="button" class="btn btn-mint btn-sm" id="epWorkAddTop"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg>Add Job Photos</button>
             </div>
-            <div class="ep-portfolio" id="epPortfolio" aria-live="polite">
-              <p class="ep-portfolio-empty">Loading your work...</p>
+            <div class="ep-portfolio" id="epPortfolio" aria-live="polite"></div>
+          </section>
+
+          <!-- Certifications -->
+          <section class="ap-card ep-card" aria-labelledby="epCertTitle">
+            <div class="ep-card-head">
+              <div>
+                <h2 class="ep-card-title" id="epCertTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>Certifications &amp; Credentials</h2>
+                <p class="ep-card-sub">Degrees, trade licences, training and awards.</p>
+              </div>
+            </div>
+            <div class="ep-rep" id="epCerts"></div>
+            <button type="button" class="btn btn-mint btn-sm ep-rep-add" id="epCertAdd"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg>Add Credential</button>
+          </section>
+
+          <!-- Emergency callout -->
+          <section class="ap-card ep-card" aria-labelledby="epEmgTitle">
+            <div class="ep-card-head">
+              <h2 class="ep-card-title" id="epEmgTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-star"/></svg>Emergency Callouts</h2>
+            </div>
+            <label class="ep-switch">
+              <span class="ep-switch-text"><strong>Offer same-day emergency callouts</strong><span>Adds an Instant Callout Request card to your profile.</span></span>
+              <input type="checkbox" id="epEmergency" />
+              <span class="ep-switch-ui" aria-hidden="true"></span>
+            </label>
+            <div class="form-group ep-sub" id="epEmergencyWrap">
+              <label class="form-label" for="epEmergencyText">Callout Description</label>
+              <textarea id="epEmergencyText" class="form-textarea" rows="2" maxlength="200" placeholder="What kind of emergencies can you respond to?"></textarea>
             </div>
           </section>
 
@@ -208,13 +334,9 @@
             <ul class="ep-checks" id="epChecks"></ul>
           </section>
 
-          <section class="ap-panel" aria-labelledby="epTrackTitle">
-            <h2 class="ep-track-title" id="epTrackTitle">Tasker track record</h2>
-            <div class="ep-track">
-              <div><span class="ep-track-value" id="epRating">&mdash;</span><span class="ep-track-label">Rating</span></div>
-              <div><span class="ep-track-value" id="epJobs">0</span><span class="ep-track-label">Jobs done</span></div>
-              <div><span class="ep-track-value" id="epEarned">&#8358;0</span><span class="ep-track-label">Earned</span></div>
-            </div>
+          <section class="ap-panel" aria-labelledby="epAutoTitle">
+            <h2 class="ep-track-title" id="epAutoTitle">Filled in for you</h2>
+            <p class="ep-auto"><strong>Rating, reviews, completed tasks, response time, repeat clients and your trust badges</strong> update automatically from your bookings and verification. You don&rsquo;t need to enter them.</p>
           </section>
 
           <section class="ap-escrow">
@@ -223,25 +345,10 @@
           </section>
         </aside>
 
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- Position banner image -->
-  <dialog class="ap-dialog" id="epCropDlg" aria-labelledby="epCropTitle">
-    <div class="ap-dialog-body">
-      <h2 class="ap-dialog-title" id="epCropTitle">Position banner image</h2>
-      <p class="form-helper">Drag the image up or down to choose the visible area.</p>
-      <div class="ep-crop" id="epCrop">
-        <img id="epCropImg" alt="Banner preview" />
-        <div class="ep-crop-hint" id="epCropHint"><svg class="ap-i" aria-hidden="true"><use href="#i-drag"/></svg>Drag to reposition</div>
-      </div>
-      <div class="ap-actions ap-dialog-actions">
-        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
-        <button type="button" class="btn btn-primary" id="epCropOk">Use This Position</button>
-      </div>
-    </div>
-  </dialog>
 
   <!-- Add job photo -->
   <dialog class="ap-dialog" id="epWorkDlg" aria-labelledby="epWorkDlgTitle">
@@ -254,8 +361,15 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="epWorkCaption">Job title</label>
-        <input type="text" id="epWorkCaption" class="form-input" maxlength="120" placeholder="Name this job" />
-        <div class="form-helper">Job photos are also shared on your Home feed.</div>
+        <input type="text" id="epWorkCaption" class="form-input" maxlength="80" placeholder="Name this job" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="epWorkPlace">Area</label>
+        <input type="text" id="epWorkPlace" class="form-input" maxlength="40" placeholder="e.g. Victoria Island" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="epWorkDesc">What you did</label>
+        <textarea id="epWorkDesc" class="form-textarea" rows="2" maxlength="160" placeholder="A short description of the job"></textarea>
       </div>
       <p class="ap-error" id="epWorkErr" role="alert" hidden></p>
       <div class="ap-actions ap-dialog-actions">

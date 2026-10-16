@@ -28,21 +28,41 @@
   <div class="ap-page ep-page" id="epPage">
     <div class="ap-container pg-hero-page">
 
-      <!-- Hero: the shared .pg-hero used on the other logged-in pages (desktop and phone). -->
+      <!-- Hero: same structure as the Client Profile hero (avatar, name, location, chips, actions on the right).
+           Everything in it follows what you type below, so it previews the public profile. -->
       <section class="ep-hero pg-hero" aria-labelledby="epTitle">
-        <div class="pg-hero-text">
+        <div class="pg-hero-text ep-hero-main">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="epTitle"><span class="spg-hero-dot"></span>Edit Profile</h1>
-          <p class="pg-hero-desc">Manage your personal details and location so taskers can respond faster. Every payment stays protected by escrow.</p>
-          <div class="pg-hero-meta">
-            <span class="pg-hero-live" id="epVerifiedPill" hidden><span class="spg-hero-dot"></span>Verified Customer</span>
+          <div class="ep-hero-id">
+            <div class="ep-hero-avatar-wrap">
+              <div class="ep-hero-avatar" id="epHeroAvatar" aria-hidden="true"></div>
+              <span class="ep-hero-tick" id="epHeroTick" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+            </div>
+            <div class="ep-hero-who">
+              <div class="ep-hero-name-row">
+                <p class="ep-hero-name" id="epHeroName">Your name</p>
+                <span class="ep-hero-tag" id="epHeroTag" hidden></span>
+              </div>
+              <p class="ep-hero-meta" id="epHeroMeta" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg><span id="epHeroLoc"></span></p>
+              <div class="ep-hero-chips" id="epHeroChips"></div>
+            </div>
           </div>
         </div>
-        <div class="pg-hero-side">
+        <div class="pg-hero-stack ep-hero-actions">
+          <button type="submit" form="epForm" class="ep-hero-save" id="epHeroSave">Save Changes</button>
           <a href="dashboard-customer.html" class="pg-hero-btn">Back to Overview</a>
         </div>
       </section>
 
-      <div class="ep-layout pg-hero-float">
+      <div class="pg-hero-float ep-float">
+        <section class="ap-card ep-stats" aria-label="Profile summary">
+          <div class="ep-stat"><span class="ep-stat-label">Tasks posted</span><span class="ep-stat-value" id="epTasks">0</span><span class="ep-stat-note">On StreetTasker</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Taskers hired</span><span class="ep-stat-value" id="epHired">0</span><span class="ep-stat-note">Bookings made</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Member since</span><span class="ep-stat-value" id="epSince">&mdash;</span><span class="ep-stat-note">Your account</span></div>
+          <div class="ep-stat"><span class="ep-stat-label">Identity</span><span class="ep-stat-value" id="epIdStat">&mdash;</span><span class="ep-stat-note" id="epIdNote">NIN / BVN check</span></div>
+        </section>
+
+        <div class="ep-layout">
 
         <form class="ep-main" id="epForm" novalidate>
 
@@ -83,9 +103,9 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="epEmail">Email</label>
-              <input type="email" id="epEmail" class="form-input ep-readonly" readonly tabindex="-1" />
-              <div class="form-helper">This is the email you sign in with.</div>
+              <label class="form-label" for="epTagline">Profile Tagline</label>
+              <input type="text" id="epTagline" class="form-input" maxlength="60" placeholder="e.g. Neighbourhood client in Lekki" />
+              <div class="form-helper">A short line shown under &ldquo;About&rdquo; on your profile.</div>
             </div>
           </section>
 
@@ -119,9 +139,31 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="epBio">Short Description</label>
-              <textarea id="epBio" class="form-textarea" rows="4" placeholder="Tell taskers a little about yourself"></textarea>
+              <textarea id="epBio" class="form-textarea" rows="5" placeholder="Tell taskers a little about yourself"></textarea>
               <div class="form-helper">Include preferences or directions that help taskers.</div>
             </div>
+          </section>
+
+          <!-- How you work -->
+          <section class="ap-card ep-card" aria-labelledby="epPrefTitle">
+            <div class="ep-card-head">
+              <div>
+                <h2 class="ep-card-title" id="epPrefTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg>How You Work With Taskers</h2>
+                <p class="ep-card-sub">Tick the ones that fit you, or add your own. Taskers see these on your profile.</p>
+              </div>
+            </div>
+            <div id="epPrefs" role="group" aria-label="How you work with taskers"></div>
+          </section>
+
+          <!-- Hiring categories -->
+          <section class="ap-card ep-card" aria-labelledby="epCatTitle">
+            <div class="ep-card-head">
+              <div>
+                <h2 class="ep-card-title" id="epCatTitle"><svg class="ap-i" aria-hidden="true"><use href="#i-user"/></svg>Services You Usually Hire For</h2>
+                <p class="ep-card-sub">Helps taskers see whether your jobs suit them.</p>
+              </div>
+            </div>
+            <div id="epCats" role="group" aria-label="Services you usually hire for"></div>
           </section>
 
           <!-- Escrow, shown here on phones too -->
@@ -163,12 +205,18 @@
             </div>
           </section>
 
+          <section class="ap-panel" aria-labelledby="epAutoTitle">
+            <h2 class="ep-track-title" id="epAutoTitle">Filled in for you</h2>
+            <p class="ep-auto"><strong>Tasks posted, hire rate, rating, response speed, member since and your verification badges</strong> update automatically from your activity. You don&rsquo;t need to enter them.</p>
+          </section>
+
           <section class="ap-escrow ep-desktop-only">
             <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-lock"/></svg>Escrow Protection</h2>
             <p>Your payment is held in escrow and released to the tasker only after you confirm the job is done. Never pay cash upfront outside the app.</p>
           </section>
         </aside>
 
+        </div>
       </div>
     </div>
   </div>
