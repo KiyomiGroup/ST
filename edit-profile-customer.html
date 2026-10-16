@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/applications.css" />
+  <link rel="stylesheet" href="css/profile-pages.css" />
   <link rel="stylesheet" href="css/edit-profile.css" />
 </head>
 <body class="pg-hero-page pg-hero-nav">
@@ -30,21 +31,21 @@
 
       <!-- Hero: same structure as the Client Profile hero (avatar, name, location, chips, actions on the right).
            Everything in it follows what you type below, so it previews the public profile. -->
-      <section class="ep-hero pg-hero" aria-labelledby="epTitle">
-        <div class="pg-hero-text ep-hero-main">
+      <section class="ep-hero pp-hero pg-hero" aria-labelledby="epTitle">
+        <div class="pg-hero-text pp-hero-main">
           <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="epTitle"><span class="spg-hero-dot"></span>Edit Profile</h1>
-          <div class="ep-hero-id">
-            <div class="ep-hero-avatar-wrap">
-              <div class="ep-hero-avatar" id="epHeroAvatar" aria-hidden="true"></div>
-              <span class="ep-hero-tick" id="epHeroTick" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+          <div class="pp-hero-id">
+            <div class="pp-hero-avatar-wrap">
+              <div class="pp-hero-avatar" id="epHeroAvatar" aria-hidden="true"></div>
+              <span class="pp-hero-tick" id="epHeroTick" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
             </div>
-            <div class="ep-hero-who">
-              <div class="ep-hero-name-row">
-                <p class="ep-hero-name" id="epHeroName">Your name</p>
-                <span class="ep-hero-tag" id="epHeroTag" hidden></span>
+            <div class="pp-hero-who">
+              <div class="pp-hero-name-row">
+                <p class="pp-hero-name" id="epHeroName">Your name</p>
+                <span class="pp-hero-tag" id="epHeroTag" hidden></span>
               </div>
-              <p class="ep-hero-meta" id="epHeroMeta" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg><span id="epHeroLoc"></span></p>
-              <div class="ep-hero-chips" id="epHeroChips"></div>
+              <p class="pp-hero-meta" id="epHeroMeta" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg><span id="epHeroLoc"></span></p>
+              <div class="pp-hero-chips" id="epHeroChips"></div>
             </div>
           </div>
         </div>
@@ -54,12 +55,12 @@
         </div>
       </section>
 
-      <div class="pg-hero-float ep-float">
-        <section class="ap-card ep-stats" aria-label="Profile summary">
-          <div class="ep-stat"><span class="ep-stat-label">Tasks posted</span><span class="ep-stat-value" id="epTasks">0</span><span class="ep-stat-note">On StreetTasker</span></div>
-          <div class="ep-stat"><span class="ep-stat-label">Taskers hired</span><span class="ep-stat-value" id="epHired">0</span><span class="ep-stat-note">Bookings made</span></div>
-          <div class="ep-stat"><span class="ep-stat-label">Member since</span><span class="ep-stat-value" id="epSince">&mdash;</span><span class="ep-stat-note">Your account</span></div>
-          <div class="ep-stat"><span class="ep-stat-label">Identity</span><span class="ep-stat-value" id="epIdStat">&mdash;</span><span class="ep-stat-note" id="epIdNote">NIN / BVN check</span></div>
+      <div class="pg-hero-float pp-float">
+        <section class="ap-card pp-stats" aria-label="Profile summary">
+          <div class="pp-stat"><span class="pp-stat-label">Tasks posted</span><span class="pp-stat-value" id="epTasks">0</span><span class="pp-stat-note">On StreetTasker</span></div>
+          <div class="pp-stat"><span class="pp-stat-label">Taskers hired</span><span class="pp-stat-value" id="epHired">0</span><span class="pp-stat-note">Bookings made</span></div>
+          <div class="pp-stat"><span class="pp-stat-label">Member since</span><span class="pp-stat-value" id="epSince">&mdash;</span><span class="pp-stat-note">Your account</span></div>
+          <div class="pp-stat"><span class="pp-stat-label">Identity</span><span class="pp-stat-value" id="epIdStat">&mdash;</span><span class="pp-stat-note" id="epIdNote">NIN / BVN check</span></div>
         </section>
 
         <div class="ep-layout">

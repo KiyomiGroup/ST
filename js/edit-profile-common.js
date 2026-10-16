@@ -88,7 +88,7 @@
     if (c) {
       c.textContent = '';
       (info.chips || []).filter(Boolean).forEach(function (txt) {
-        var s = document.createElement('span'); s.className = 'ep-hero-chip'; s.textContent = txt; c.appendChild(s);
+        var s = document.createElement('span'); s.className = 'pp-hero-chip'; s.textContent = txt; c.appendChild(s);
       });
     }
   };
