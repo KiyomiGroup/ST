@@ -324,7 +324,7 @@
           <div class="spg-card-title">${safeTitle}</div>
           <div class="spg-card-sub">
             <span class="spg-card-cat-icon">${emoji}</span>
-            ${posterName} &middot; ${escapeHtml(t.location || 'Location TBD')}
+            ${(t.customer_id || t.user_id) ? `<a class="spg-card-poster" href="client-profile.html?id=${encodeURIComponent(t.customer_id || t.user_id)}" onclick="event.stopPropagation()">${posterName}</a>` : posterName} &middot; ${escapeHtml(t.location || 'Location TBD')}
           </div>
           <div class="spg-card-tags">
             <span class="spg-tag spg-tag-type">${TYPE_LABEL[type] || 'One-off'}</span>

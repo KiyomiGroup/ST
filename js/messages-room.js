@@ -267,6 +267,9 @@
     if (o.isCustomer && o.id) {
       items.push({ label: 'View tasker profile', href: 'tasker-profile.html?id=' + encodeURIComponent(o.id) });
     }
+    if (!o.isCustomer && o.id) {
+      items.push({ label: 'View client profile', href: 'client-profile.html?id=' + encodeURIComponent(o.id) });
+    }
     if (o.isCustomer && window.JRList && window.JRList.archiveReady()) {
       var archived = window.JRList.isArchived(ctx.thread);
       items.push({

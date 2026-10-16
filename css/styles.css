@@ -4889,3 +4889,7 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   }
 }
 
+
+/* Poster name on task cards links to the Client Profile */
+.spg-card-poster { color: inherit; text-decoration: none; }
+.spg-card-poster:hover { text-decoration: underline; }

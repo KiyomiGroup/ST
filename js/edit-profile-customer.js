@@ -63,6 +63,7 @@
     var user = await EP.guard('customer', 'edit-profile-customer.html', 'edit-profile-tasker.html');
     if (!user) return;
     S.user = user;
+    var vp = $('epViewPublic'); if (vp) vp.href = 'client-profile.html?id=' + encodeURIComponent(user.id);
 
     var res = await Promise.all([
       safe(window.supabase.from('users').select('*').eq('id', user.id).maybeSingle()),

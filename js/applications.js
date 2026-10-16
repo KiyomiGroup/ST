@@ -173,7 +173,7 @@
   function card(a) {
     var t = a.task, g = a.group;
     var loc = t.location ? '<span>' + icon('pin') + esc(t.location) + '</span>' : '';
-    var who = a.customer ? '<strong>' + esc(a.customer) + '</strong>' : '';
+    var who = a.customer ? '<strong>' + (a.ownerId ? '<a href="client-profile.html?id=' + encodeURIComponent(a.ownerId) + '">' + esc(a.customer) + '</a>' : esc(a.customer)) + '</strong>' : '';
     var posted = t.created_at ? '<span>Posted ' + esc(ago(t.created_at)) + '</span>' : '';
     var sub = '<div class="ap-card-sub">' + who + loc + posted + '</div>';
     var when = g === 'pending' || g === 'declined'

@@ -154,6 +154,8 @@
 .bk-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .bk-person-body { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-3); }
 .bk-person-name { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
+a.bk-person-name { color: inherit; text-decoration: none; }
+a.bk-person-name:hover { text-decoration: underline; }
 .bk-person-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-3); font-size: var(--text-xs); color: var(--pt-ink-muted); }
 .bk-person-sub span { display: inline-flex; align-items: center; gap: var(--space-1); }
 
