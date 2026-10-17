@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>My Services — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/applications.css" />
+  <link rel="stylesheet" href="css/my-services.css" />
+</head>
+<body class="pg-hero-page">
+  <div id="navbar-placeholder"></div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+      <symbol id="i-briefcase" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="ap-page" id="myServicesPage" data-pg-fixed-pad>
+    <div class="ap-container pg-hero-page">
+
+      <!-- Hero: the shared .pg-hero used on the other tasker pages (desktop and phone). On a phone the search and dropdowns sit under it in the same green block. -->
+      <section class="sv-hero pg-hero" data-pg-fixed aria-labelledby="svHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="svHeroTitle"><span class="spg-hero-dot"></span>My Services</h1>
+          <p class="pg-hero-desc">Manage the services customers can find and book. Keep your rates, location and availability up to date to win more jobs.</p>
+        </div>
+        <div class="pg-hero-side pg-hero-desktop-only">
+          <a href="post-service.html" class="pg-hero-btn">Post a Service</a>
+        </div>
+      </section>
+
+      <div class="ap-tabs pg-hero-chips" role="group" aria-label="Filter by status" id="svTabs">
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="all" aria-pressed="true">All <span class="ap-tab-n pg-hero-chip-n" data-count="all"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="live" aria-pressed="false">Live <span class="ap-tab-n pg-hero-chip-n" data-count="live"></span></button>
+        <button type="button" class="ap-tab pg-hero-chip" data-filter="draft" aria-pressed="false">Drafts <span class="ap-tab-n pg-hero-chip-n" data-count="draft"></span></button>
+      </div>
+
+      <div class="ap-toolbar pg-hero-bar pg-hero-bar--in-hero" data-pg-fixed>
+        <div class="pg-hero-search">
+          <label class="ap-search">
+            <svg class="ap-i" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" class="ap-input pg-hero-input" id="svSearch" placeholder="Search by service name, category or location…" aria-label="Search your services" />
+          </label>
+          <button type="button" class="pg-hero-search-btn" id="svSearchBtn" aria-label="Search"><span class="pg-hero-search-text">Search</span><svg class="pg-hero-search-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        </div>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="svCategory" aria-label="Filter by category"><option value="">All Categories</option></select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+        <span class="pg-hero-select-wrap"><select class="ap-select pg-hero-select" id="svSort" aria-label="Sort services">
+          <option value="recent">Recently Added</option>
+          <option value="oldest">Oldest First</option>
+          <option value="price-high">Rate: High to Low</option>
+          <option value="price-low">Rate: Low to High</option>
+        </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
+      <div class="ap-layout has-side" id="svLayout">
+        <div class="ap-main">
+          <div class="ap-list" id="svList" aria-live="polite" aria-busy="true">
+            <div class="ap-state"><p class="ap-state-text">Loading your services…</p></div>
+          </div>
+          <button type="button" class="ap-btn ap-more" id="svMore" hidden>Load More Services</button>
+
+          <section class="ap-mobile-only ap-cta">
+            <span class="ap-cta-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+            <h2 class="ap-state-title">Offer something new?</h2>
+            <p class="ap-state-text">Each service you list is another way for customers to find you.</p>
+            <a class="ap-btn ap-btn-block" href="post-service.html">Post a Service</a>
+          </section>
+        </div>
+
+        <aside class="ap-side" aria-label="Service summary">
+          <section class="ap-panel">
+            <h2 class="ap-panel-title">Service Summary</h2>
+            <div class="ap-stat-grid">
+              <div class="ap-stat"><span class="ap-stat-label">Total Services</span><span class="ap-stat-value" id="sTotal">—</span></div>
+              <div class="ap-stat"><span class="ap-stat-label">Live Now</span><span class="ap-stat-value is-green" id="sLive">—</span></div>
+            </div>
+            <div class="ap-stat-wide">
+              <div class="ap-stat-row">
+                <div><span class="ap-stat-label">Drafts</span><span class="ap-stat-value" id="sDraft">—</span></div>
+                <div class="is-end"><span class="ap-stat-label">Total Bookings</span><span class="ap-stat-value is-green" id="sBookings">—</span></div>
+              </div>
+              <div class="ap-bar" id="sBar" role="img" aria-label="Live and draft services"><span class="is-pending"></span><span class="is-done"></span></div>
+              <p class="ap-stat-sub" id="sBarText"></p>
+            </div>
+          </section>
+
+          <section class="ap-panel">
+            <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-bulb"/></svg>Tips for a Better Listing</h2>
+            <ol class="ap-tips">
+              <li><strong>Add a clear photo</strong><span>Listings with a real photo of your work get noticed faster.</span></li>
+              <li><strong>Be specific about price</strong><span>A clear rate and unit saves back-and-forth before a booking.</span></li>
+              <li><strong>Keep availability current</strong><span>Customers filter by who can start now, today or this week.</span></li>
+            </ol>
+          </section>
+
+          <section class="ap-escrow" id="svVerifyCard" hidden>
+            <h2 class="ap-panel-title"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>Verify to Go Live</h2>
+            <p>Your draft services are saved. They publish automatically once your identity is verified.</p>
+            <a class="ap-btn sv-verify-btn" href="verify.html?role=tasker&amp;return=my-services.html">Start Verification</a>
+          </section>
+
+          <section class="ap-panel ap-help">
+            <div><strong>Need help with a listing?</strong><span class="ap-stat-sub">Our support team is here to help.</span></div>
+            <a class="ap-btn" href="messages.html">Chat</a>
+          </section>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <dialog class="ap-dialog" id="svDeleteDlg" aria-labelledby="svDelTitle">
+    <div class="ap-dialog-body">
+      <h2 class="ap-dialog-title" id="svDelTitle">Delete this service?</h2>
+      <p class="ap-state-text" id="svDelText"></p>
+      <p class="ap-error" id="svDelError" role="alert" hidden></p>
+      <div class="ap-actions ap-dialog-actions">
+        <button type="button" class="ap-btn" data-close>Keep Service</button>
+        <button type="button" class="ap-btn ap-btn-danger" id="svDelConfirm">Delete</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
+  <script src="js/my-services.js"></script>
+</body>
+</html>

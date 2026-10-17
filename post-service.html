@@ -464,9 +464,11 @@
 
       /* Pre-fill from existing draft (available=false) */
       try {
-        var draftRes = await window.supabase.from('services')
-          .select('*').eq('user_id', user.id).eq('available', false)
-          .order('created_at', { ascending: false }).limit(1);
+        /* ?id= opens that service for editing (from My Services); otherwise the latest draft */
+        var editId = new URLSearchParams(window.location.search).get('id');
+        var draftQuery = window.supabase.from('services').select('*').eq('user_id', user.id);
+        draftQuery = editId ? draftQuery.eq('id', editId) : draftQuery.eq('available', false);
+        var draftRes = await draftQuery.order('created_at', { ascending: false }).limit(1);
         var draft = draftRes.data && draftRes.data[0];
         if (draft) {
           savedServiceId = draft.id;

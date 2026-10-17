@@ -1,0 +1,49 @@
+/* ============================================================
+   STREETTASKER — my-services.css
+   Tasker "My Services" page (my-services.html).
+   Loaded AFTER css/applications.css and reuses its .ap-* components
+   (shell, tabs, toolbar, cards, badges, buttons, dialogs, sidebar).
+   Only the parts specific to service cards live here. No new tokens.
+   ============================================================ */
+
+/* ── Card ── */
+.sv-head { display: flex; align-items: flex-start; gap: var(--space-4); min-width: 0; }
+.sv-thumb {
+  width: 72px; height: 72px; flex-shrink: 0; overflow: hidden; border-radius: var(--radius-lg);
+  display: grid; place-items: center;
+  background: var(--pt-mint); color: var(--pt-green);
+  font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800;
+}
+.sv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sv-head-body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.sv-desc {
+  font-size: var(--text-sm); line-height: 22px; color: var(--pt-ink-muted);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.sv-fig-text {
+  margin-top: var(--space-1);
+  font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800;
+  letter-spacing: -0.02em; overflow-wrap: anywhere;
+}
+.sv-unit { font-size: var(--text-sm); font-weight: 600; color: var(--pt-ink-muted); }
+
+/* Delete sits at the end of the action row, like Close Post on My Tasks */
+.sv-delete { color: var(--color-danger); }
+
+/* Verify button on the green sidebar card */
+.sv-verify-btn { margin-top: var(--space-4); background: var(--hero-btn-bg); color: var(--color-forest-900); }
+.sv-verify-btn:hover { background: var(--hero-btn-bg-hover); }
+
+/* The sidebar title sits on the green card: keep it the card's white */
+.ap-escrow .ap-panel-title { color: inherit; margin-bottom: var(--space-3); }
+
+@media (max-width: 768px) {
+  .sv-thumb { width: 56px; height: 56px; font-size: var(--text-base); }
+  .sv-fig-text { font-size: var(--text-base); }
+}
+
+/* ── Hero (shared .pg-hero from styles.css, same as Applications and My Tasks) ──
+   Desktop needs nothing extra. Phones: the hero comes first, the search bar joins it in one green block, then the tabs. */
+@media (max-width: 768px) {
+  .sv-hero.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
+}

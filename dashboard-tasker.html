@@ -13,6 +13,10 @@
       if (q.get('panel') === 'applications' || window.location.hash === '#my-applications') {
         window.location.replace('applications.html');
       }
+      /* My Services moved to its own page too (my-services.html). */
+      if (q.get('panel') === 'services') {
+        window.location.replace('my-services.html');
+      }
       /* Bookings moved to their own page too (bookings.html). */
       if (q.get('panel') === 'bookings' || window.location.hash === '#bookings') {
         window.location.replace('bookings.html');
