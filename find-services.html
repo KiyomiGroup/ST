@@ -224,7 +224,7 @@
         var sticky = document.querySelector('.spg-sticky-top');
         var below  = document.querySelector('.spg-content-below');
         if (!sticky || !below) return;
-        if (window.matchMedia('(max-width: 900px)').matches) {
+        if (getComputedStyle(sticky).position === 'fixed') {
           below.style.paddingTop = sticky.getBoundingClientRect().height + 'px';
         } else {
           below.style.paddingTop = '';

@@ -544,9 +544,9 @@ html.wl-lock { overflow: hidden; }
 @media (max-width: 768px) {
   .wl-desk.wl-desk { display: none; }
   .wl-page { padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
-  .wl-page:is([data-role="tasker"], [data-role="customer"]) { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; js/pg-hero-fixed.js replaces the padding with the fixed hero height */
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) { padding-top: var(--nav-height); background: var(--color-bg-subtle); } /* same page colour as Find Tasks; the hero now scrolls with the page */
   .wl-page:is([data-role="tasker"], [data-role="customer"])::before { display: none; }
-  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { padding-top: var(--space-5); }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { padding-top: 0; } /* the hero scrolls in the flow, flush under the nav */
   .wl-page::before { width: 100%; height: 260px; }
   .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { width: calc(100% - 2 * var(--space-5)); } /* 24px page margin, same as Find Tasks */
   .wl-container { width: calc(100% - 2 * var(--space-4)); }
