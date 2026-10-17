@@ -146,8 +146,10 @@
   }
 
   /* ── money request card (step 6) ─────────────────────────── */
+  /* No "approved" state: the customer pays or declines (spec 11, 12, 21). Old rows that the
+     database still marks 'approved' are shown as pending (payable) until Stage 7 removes it. */
   var MONEY_STATUS_LABEL = {
-    pending: 'Payment requested', accepted: 'Payment processing', approved: 'Approved',
+    pending: 'Payment requested', accepted: 'Payment processing',
     paid: 'Paid', declined: 'Declined', cancelled: 'Cancelled'
   };
   var ADDON_BREAKDOWN_LABEL = { work: 'Additional work', materials: 'Materials' };
@@ -167,7 +169,7 @@
     var amount = req ? Number(req.amount) : (parseInt(parts[2], 10) || 0);
     var kind = req ? (req.kind || 'payment') : 'payment';
     var addon = J ? J.isAddon(kind) : false;
-    var status = req ? req.status : 'pending';
+    var status = req ? (req.status === 'approved' ? 'pending' : req.status) : 'pending';
     var busy = !!(req && req._busy);
     var fmt = amount > 0 ? naira(amount) : '—';
     var isCustomer = S.role === 'customer';
@@ -181,7 +183,7 @@
     var icon = el('div', 'prc-icon'); icon.innerHTML = ICON_CARD;
     head.appendChild(icon);
     head.appendChild(el('span', 'prc-label', title));
-    var pillText = (status === 'pending' && addon) ? 'Awaiting approval' : (MONEY_STATUS_LABEL[status] || status);
+    var pillText = MONEY_STATUS_LABEL[status] || status;
     if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, pillText));
     card.appendChild(head);
 
@@ -205,7 +207,7 @@
     }
 
     var actions = el('div', 'prc-actions');
-    var payable = !!req && !busy && isCustomer && (addon ? status === 'approved' : (status === 'pending' || status === 'accepted'));
+    var payable = !!req && !busy && isCustomer && (status === 'pending' || status === 'accepted');
     function button(label, cls, fn) {
       var b = el('button', cls, label); b.type = 'button'; b.disabled = busy;
       b.addEventListener('click', fn);
@@ -214,30 +216,29 @@
 
     if (!req) {
       /* Request row not loaded (older cards / no access): keep the old behaviour */
-      if (isCustomer && !isMine) actions.appendChild(button('Pay ' + fmt + ' securely', 'prc-pay-btn', function () { if (J) J.pay(id); }));
+      if (isCustomer && !isMine) actions.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { if (J) J.pay(id); }));
       else actions.appendChild(el('span', 'prc-status-badge accepted', 'Awaiting customer payment'));
-    } else if (addon && status === 'pending' && isCustomer) {
+    } else if (payable && status === 'pending') {
+      /* Every kind: Pay / Decline Request / Ask a Question (nothing else) */
       actions.classList.add('is-stack');
       var row1 = el('div', 'prc-actions');
-      row1.appendChild(button('Approve ' + fmt, 'prc-pay-btn', function () { J.respond(id, 'approved'); }));
-      row1.appendChild(button('Decline', 'jr-req-btn', function () { J.respond(id, 'declined'); }));
+      row1.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { J.pay(id); }));
+      row1.appendChild(button('Decline Request', 'jr-req-btn', function () { J.respond(id, 'declined'); }));
       actions.appendChild(row1);
-      actions.appendChild(button('Ask a question', 'jr-req-btn', focusComposer));
+      actions.appendChild(button('Ask a Question', 'jr-req-btn', focusComposer));
     } else if (payable) {
-      actions.appendChild(button((busy ? 'Opening payment…' : 'Pay ' + fmt + ' securely'), 'prc-pay-btn', function () { J.pay(id); }));
+      actions.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { J.pay(id); }));
     } else if (busy) {
       actions.appendChild(el('span', 'prc-status-badge accepted', 'Opening payment…'));
     } else if (!isCustomer && (status === 'pending' || status === 'accepted')) {
       if (status === 'pending') actions.appendChild(button('Cancel request', 'jr-req-btn', function () { J.respond(id, 'cancelled'); }));
       else actions.appendChild(el('span', 'prc-status-badge accepted', 'Customer is paying'));
-    } else if (!isCustomer && status === 'approved') {
-      actions.appendChild(el('span', 'prc-status-badge accepted', 'Approved. Waiting for payment'));
     } else if (status === 'paid') {
       actions.appendChild(el('span', 'prc-status-badge paid', '✓ Paid. Funds in escrow'));
     }
     if (actions.childNodes.length) card.appendChild(actions);
 
-    if (req && !addon && (status === 'pending' || status === 'accepted') && isCustomer) {
+    if (req && (status === 'pending' || status === 'accepted') && isCustomer) {
       var notice = el('div', 'prc-notice');
       notice.appendChild(el('strong', null, 'Important: '));
       notice.appendChild(document.createTextNode('Only pay through StreetTasker. Payments made outside are '));

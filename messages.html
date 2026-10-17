@@ -60,6 +60,7 @@
           <div class="msg-chat-head-main">
             <div class="msg-chat-head-name" id="chatHeadName">—</div>
             <div class="msg-chat-head-sub"  id="chatHeadSub">—</div>
+            <div class="msg-chat-head-meta" id="chatHeadMeta" hidden></div>
           </div>
           <div class="jr-menu-wrap">
             <button class="jr-icon-btn" id="chatHeadMore" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="More options" hidden>
@@ -180,7 +181,7 @@
   /* Role-specific shell wording (layout is shared by both roles) */
   function applyRoleShell() {
     var title = document.getElementById('msgListTitle');
-    if (title) title.textContent = (_role === 'tasker') ? 'Client Inquiries' : 'Conversations';
+    if (title) title.textContent = (_role === 'tasker') ? 'Messages' : 'Conversations';
   }
 
   /* ════════════════════════════════════════════════

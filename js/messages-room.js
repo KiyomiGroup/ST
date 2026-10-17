@@ -1,6 +1,6 @@
 /* ============================================================
    STREETTASKER — messages-room.js   (Job Room, step 3)
-   Room header (who + what job) and the task status banner.
+   Room header (task title first, then who) and the task status banner.
 
    Public API (window.JRRoom), used by messages.html:
      JRRoom.open({ thread, user, role })  draw header + banner for a thread
@@ -40,7 +40,6 @@
   var BOOKING_STATUS_EXTRA = { rescheduled: 'Rescheduled', suspended: 'Suspended' };
 
   var ICON_SHIELD = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>';
-  var ICON_PIN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 
   /* ── helpers ─────────────────────────────────────────────── */
@@ -83,7 +82,7 @@
     switch (job.key) {
       case 'payment_pending':       return { key: job.key, label: 'Payment Pending', job: job };
       case 'secured':               return { key: job.key, label: 'Payment Secured', job: job };
-      case 'awaiting_confirmation': return { key: job.key, label: isCustomer ? 'Awaiting Approval' : 'Awaiting Customer Confirmation', job: job };
+      case 'awaiting_confirmation': return { key: job.key, label: isCustomer ? 'Completion Submitted' : 'Awaiting Customer Confirmation', job: job };
       case 'completed':             return { key: job.key, label: 'Completed', job: job };
       case 'disputed':              return { key: job.key, label: 'Disputed', job: job };
       case 'cancelled':             return { key: job.key, label: 'Cancelled', job: job };
@@ -105,7 +104,7 @@
       case 'secured':
         return (held ? 'SafePay is holding ' + naira(held) + ' ' : (amt ? 'SafePay is holding ' + amt + ' ' : 'SafePay is holding the payment ')) + 'until the work is signed off.';
       case 'awaiting_confirmation':
-        return isCustomer ? 'Review the work, then release payment.' : 'Waiting for the customer to confirm and share the completion code.';
+        return isCustomer ? 'Review the work, then get your release code.' : 'Waiting for the customer to confirm and share the completion code.';
       case 'completed': return 'This task is complete.';
       case 'disputed':  return 'Payment stays protected while this issue is reviewed.';
       case 'cancelled': return 'This task was cancelled.';
@@ -190,34 +189,45 @@
       }
     }
 
-    /* name + verified badge */
+    /* PRIMARY heading: the task title (spec 2). The person is secondary. */
+    var title = (task && task.title) || ctx.thread._title || 'Conversation';
     var nm = $('chatHeadName');
     if (nm) {
       nm.textContent = '';
-      nm.appendChild(el('span', 'msg-chat-head-title', name));
-      if (profile && profile.verified) {
+      nm.appendChild(el('span', 'msg-chat-head-title', title));
+    }
+
+    /* sub line: "With <tasker> [verified]" (customer) or "Customer: <name>" (tasker) */
+    var sub = $('chatHeadSub');
+    if (sub) {
+      sub.textContent = '';
+      sub.appendChild(el('span', 'msg-chat-head-lead', o.isCustomer ? 'With ' : 'Customer: '));
+      sub.appendChild(el('span', 'msg-chat-head-person', name));
+      if (o.isCustomer && profile && profile.verified) {
         var vb = svgSpan('jr-verified', ICON_CHECK);
         vb.title = 'Verified';
         vb.setAttribute('aria-label', 'Verified');
-        nm.appendChild(vb);
+        sub.appendChild(vb);
       }
     }
 
-    /* sub line: customer sees service + completed jobs, tasker sees role + job location */
-    var sub = $('chatHeadSub');
-    if (sub) {
+    /* meta line: status pill, then service + completed jobs (customer view) and job location.
+       Rating is not shown: there is no usable ratings table yet (spec 2 asks for it; see handoff). */
+    var meta = $('chatHeadMeta');
+    if (meta) {
+      meta.textContent = '';
+      var st = statusFor(ctx.thread, ctx.role);
+      if (st.label) meta.appendChild(el('span', 'jr-head-pill', st.label));
       var bits = [];
       if (o.isCustomer) {
         if (profile && profile.service) bits.push(profile.service);
         if (profile && typeof profile.completed === 'number' && profile.completed > 0) {
           bits.push(profile.completed + (profile.completed === 1 ? ' completed job' : ' completed jobs'));
         }
-        if (!bits.length) bits.push('Tasker');
-      } else {
-        bits.push('Customer');
-        if (task && task.location) bits.push(task.location);
       }
-      sub.textContent = bits.join(' · ');
+      if (task && task.location) bits.push(task.location);
+      if (bits.length) meta.appendChild(el('span', 'msg-chat-head-bits', bits.join(' · ')));
+      meta.hidden = !meta.childNodes.length;
     }
 
     paintMenu(ctx, o);
@@ -244,19 +254,13 @@
 
     host.appendChild(svgSpan('jr-banner-icon', ICON_SHIELD));
 
+    /* The task title, status pill and job location are in the room header (spec 2),
+       so the banner only explains the state and shows the amount. */
     var main = el('div', 'jr-banner-main');
-    main.appendChild(el('div', 'jr-banner-title', title || 'Task discussion'));
     main.appendChild(el('div', 'jr-banner-text', bannerText(st, ctx.role, amount, held)));
-    if (task && task.location) {
-      var loc = el('div', 'jr-banner-meta');
-      loc.appendChild(svgSpan('jr-banner-pin', ICON_PIN));
-      loc.appendChild(document.createTextNode(task.location));
-      main.appendChild(loc);
-    }
     host.appendChild(main);
 
     var side = el('div', 'jr-banner-side');
-    if (st.label) side.appendChild(el('span', 'jr-banner-pill', st.label));
     if (amount) side.appendChild(el('div', 'jr-banner-amount', naira(amount)));
     host.appendChild(side);
   }

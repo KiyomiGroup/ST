@@ -269,14 +269,14 @@ body.msg-page {
 
 .jr-thread-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
 .jr-thread-time { flex-shrink: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
-.jr-thread-job {
+.jr-thread-person {
   margin-top: var(--space-1);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-text-muted);
 }
 .msg-thread-preview.is-empty { font-style: italic; }
 .jr-thread-foot { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
@@ -351,8 +351,9 @@ body.msg-page {
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font-heading);
-  font-size: var(--text-base);
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  line-height: 1.25;
   color: var(--color-text);
 }
 
@@ -367,11 +368,31 @@ body.msg-page {
   text-overflow: ellipsis;
 }
 .msg-chat-head-sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-top: var(--space-1);
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
+.msg-chat-head-lead { flex-shrink: 0; }
+.msg-chat-head-person {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.msg-chat-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.msg-chat-head-bits { min-width: 0; }
 
 .jr-verified {
   display: inline-flex;
@@ -469,21 +490,7 @@ body.msg-page {
 
 .jr-banner-icon { display: flex; flex-shrink: 0; padding-top: var(--space-1); }
 .jr-banner-main { flex: 1; min-width: 0; }
-.jr-banner-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  line-height: 1.35;
-}
-.jr-banner-text { margin-top: var(--space-1); font-size: var(--text-xs); line-height: 1.5; }
-.jr-banner-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
-  font-size: var(--text-xs);
-}
-.jr-banner-pin { display: inline-flex; }
+.jr-banner-text { font-size: var(--text-sm); font-weight: 600; line-height: 1.5; }
 .jr-banner-side {
   display: flex;
   flex-direction: column;
@@ -492,7 +499,7 @@ body.msg-page {
   flex-shrink: 0;
   text-align: right;
 }
-.jr-banner-pill {
+.jr-head-pill {
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-mint);

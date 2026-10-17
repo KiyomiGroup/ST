@@ -121,7 +121,7 @@
     },
     {
       id: 'request_transport', roles: ['tasker'], group: 'Job costs', icon: I.truck, kind: 'transport', needsMoney: true,
-      label: 'Request transport', hint: 'Ask the customer to approve a transport cost',
+      label: 'Request transport', hint: 'Ask the customer to pay a transport cost',
       when: function (x) { return CLOSED.indexOf(x.status) === -1; },
       run: function () { showForm('transport'); }
     },
@@ -278,7 +278,7 @@
       submit: 'Send payment request'
     },
     transport: {
-      title: 'Request transport', lead: 'The customer approves this before anything is paid.',
+      title: 'Request transport', lead: 'The customer can pay or decline this request.',
       fields: [
         { id: 'amount', label: 'Transport cost (₦)', type: 'money', required: true, placeholder: 'e.g. 3500' },
         { id: 'reason', label: 'What is the transport for?', type: 'text', required: true, placeholder: 'e.g. To bring the replacement pump from the market' }
@@ -286,7 +286,7 @@
       submit: 'Send transport request'
     },
     additional_cost: {
-      title: 'Request additional cost', lead: 'Explain what you found. The customer approves before anything is paid.',
+      title: 'Request additional cost', lead: 'Explain what you found. The customer can pay or decline this request.',
       fields: [
         { id: 'work', label: 'Additional work (₦)', type: 'money', placeholder: 'Optional' },
         { id: 'materials', label: 'Materials (₦)', type: 'money', placeholder: 'Optional' },

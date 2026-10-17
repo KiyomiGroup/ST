@@ -2,8 +2,8 @@
    STREETTASKER — messages-work.js   (Job Room, step 7)
    The work lifecycle inside the conversation:
      Tasker:   I'm on my way > I've arrived > Start work > (Pause / Resume) > Mark work complete
-     Customer: review the completed work > Release payment (completion protection) / Request
-               changes / Report an issue, then share the 6-digit code
+     Customer: review the completed work > Get Release Code / Request Changes /
+               Report an Issue, then share the 6-digit code with the tasker
      Tasker:   enter the code > payment released
    (spec sections 23-28, 15-17)
 
@@ -160,7 +160,7 @@
 
   function viewComplete() {
     window.JRRequests.openView('Mark work complete', function (body) {
-      body.appendChild(el('p', 'jr-sheet-lead', 'The customer will review your work and release payment. Describe what you did so they can check it.'));
+      body.appendChild(el('p', 'jr-sheet-lead', 'The customer will review your work and can then share a release code with you. Describe what you did so they can check it.'));
       body.appendChild(label('jrWk_note', 'What did you do?'));
       var note = textarea('jrWk_note', 'e.g. Replaced the burst pipe and tested it for 15 minutes with no leaks.', 4);
       body.appendChild(note);
@@ -178,7 +178,7 @@
 
   /* ── report an issue (both roles) ─────────────────────────── */
   function viewIssue() {
-    window.JRRequests.openView('Report an issue', function (body) {
+    window.JRRequests.openView('Report an Issue', function (body) {
       body.appendChild(el('p', 'jr-sheet-lead', 'Payment stays protected while the issue is reviewed.'));
       var list = el('div', 'jr-radio-list');
       var chosen = null;
@@ -229,23 +229,23 @@
       if (note) { body.appendChild(el('div', 'jr-req-note', note)); }
       body.appendChild(el('p', 'jr-sheet-lead', 'You will then get a 6-digit code. Give it to the tasker only when you are happy: they enter it to receive the payment.'));
       var err = errBox(); body.appendChild(err);
-      var yes = sendBtn('Yes, release payment');
+      var yes = sendBtn('Get Release Code');
       yes.addEventListener('click', function () {
-        runFromView(yes, err, 'Yes, release payment', function () { return pay().confirmJobComplete(v.bookingId); },
+        runFromView(yes, err, 'Get Release Code', function () { return pay().confirmJobComplete(v.bookingId); },
           'Thank you. Your completion code is shown above the chat.');
       });
       body.appendChild(yes);
       var not = el('button', 'jr-sheet-secondary', 'Not yet'); not.type = 'button';
       not.addEventListener('click', function () { window.JRRequests.close(); });
       body.appendChild(not);
-      var rep = el('button', 'jr-sheet-link', 'Report an issue'); rep.type = 'button';
+      var rep = el('button', 'jr-sheet-link', 'Report an Issue'); rep.type = 'button';
       rep.addEventListener('click', viewIssue);
       body.appendChild(rep);
     });
   }
 
   function viewChanges() {
-    window.JRRequests.openView('Request changes', function (body) {
+    window.JRRequests.openView('Request Changes', function (body) {
       body.appendChild(el('p', 'jr-sheet-lead', 'Tell the tasker what still needs to be done. The job goes back to in progress and your payment stays protected.'));
       body.appendChild(label('jrWk_note', 'What needs to change?'));
       var note = textarea('jrWk_note', 'e.g. There is still a small leak under the sink.', 4);
@@ -286,9 +286,9 @@
       { id: 'work_resume', roles: ['tasker'], group: G, icon: iconPlay(), label: 'Resume work', hint: 'Continue where you stopped',
         when: function (x) { return active(x) && x.stage === 'paused'; },
         run: function () { viewSimple('Resume work', 'Resume this task now?', 'Resume work', 'resume', 'Work resumed', false); } },
-      { id: 'work_complete', roles: ['tasker'], group: G, icon: iconCheck(), label: 'Mark work complete', hint: 'Ask the customer to review and release payment',
+      { id: 'work_complete', roles: ['tasker'], group: G, icon: iconCheck(), label: 'Mark work complete', hint: 'Ask the customer to review the work',
         when: function (x) { return active(x) && x.paid && x.stage !== 'paused'; }, run: viewComplete },
-      { id: 'report_issue', roles: ['customer', 'tasker'], group: 'Issue', icon: iconFlag(), label: 'Report an issue', hint: 'Payment stays protected while it is reviewed',
+      { id: 'report_issue', roles: ['customer', 'tasker'], group: 'Issue', icon: iconFlag(), label: 'Report an Issue', hint: 'Payment stays protected while it is reviewed',
         when: function (x) {
           return !!x.bookingId && !!x.booking && x.paid && ['confirmed', 'awaiting_confirmation'].indexOf(x.booking.status) !== -1;
         }, run: viewIssue }
@@ -327,13 +327,13 @@
 
     if (v.role === 'customer' && phase === 'review') {
       host.appendChild(el('div', 'jr-wp-title', 'Work completed'));
-      host.appendChild(el('div', 'jr-wp-text', 'Review the work before releasing payment.'));
+      host.appendChild(el('div', 'jr-wp-text', 'Review the work. When you are satisfied, get your release code.'));
       var note = completionNote();
       if (note) host.appendChild(el('div', 'jr-wp-note', note));
       var a = el('div', 'jr-wp-actions');
-      a.appendChild(btn('Release payment', 'jr-wp-btn--primary', viewProtection));
-      a.appendChild(btn('Request changes', '', viewChanges));
-      a.appendChild(btn('Report an issue', '', viewIssue));
+      a.appendChild(btn('Get Release Code', 'jr-wp-btn--primary', viewProtection));
+      a.appendChild(btn('Request Changes', '', viewChanges));
+      a.appendChild(btn('Report an Issue', '', viewIssue));
       host.appendChild(a);
       return;
     }
@@ -344,7 +344,7 @@
       host.appendChild(codeEl);
       host.appendChild(el('div', 'jr-wp-text', 'Give this code to the tasker only if you are satisfied with the work. They enter it to receive the payment.'));
       var ca = el('div', 'jr-wp-actions');
-      ca.appendChild(btn('Report an issue', '', viewIssue));
+      ca.appendChild(btn('Report an Issue', '', viewIssue));
       host.appendChild(ca);
       if (S.codeFor === v.bookingId && S.code) { codeEl.textContent = S.code; }
       else if (pay() && pay().getCompletionCode) {

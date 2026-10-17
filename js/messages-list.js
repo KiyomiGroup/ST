@@ -122,7 +122,7 @@
         label = isCustomer ? 'Awaiting your payment' : 'Awaiting customer payment';
         tone = isCustomer ? 'action' : 'muted'; needsAction = isCustomer; break;
       case 'awaiting_confirmation':
-        label = isCustomer ? 'Awaiting your approval' : 'Awaiting customer approval';
+        label = isCustomer ? 'Review completed work' : 'Awaiting customer review';
         tone = isCustomer ? 'action' : 'muted'; needsAction = isCustomer; break;
       case 'secured':
         label = amount ? naira(amount) + (isCustomer ? ' in escrow' : ' escrow funded') : 'Payment secured';
@@ -133,9 +133,9 @@
       default: break;
     }
 
-    /* A transport / extra-cost request waiting for the customer's approval comes first */
+    /* A transport / extra-cost request waiting for the customer to pay or decline comes first */
     if (t.addonPending && ['completed', 'cancelled', 'disputed'].indexOf(key) === -1) {
-      label = isCustomer ? 'Approval needed' : 'Awaiting customer approval';
+      label = isCustomer ? 'Payment needed' : 'Awaiting customer payment';
       tone = isCustomer ? 'action' : 'muted';
       needsAction = isCustomer;
     }
@@ -356,11 +356,11 @@
 
     var info = el('div', 'msg-thread-info');
     var top = el('div', 'jr-thread-top');
-    top.appendChild(el('div', 'msg-thread-name', name));
+    top.appendChild(el('div', 'msg-thread-name', t._title || 'Conversation'));
     top.appendChild(el('div', 'jr-thread-time', relTime(t.last_message_at)));
     info.appendChild(top);
 
-    if (t._title) info.appendChild(el('div', 'jr-thread-job', t._title));
+    info.appendChild(el('div', 'jr-thread-person', name));
 
     var prevText = t.last_message || '';
     var prev = el('div', 'msg-thread-preview' + (prevText ? '' : ' is-empty'), prevText || 'No messages yet');

@@ -157,7 +157,7 @@
         user_id: receiverId, type: 'payment_request',
         title: KINDS[kind].pre + ': ' + naira(amount),
         message: isAddon(kind)
-          ? 'Your tasker sent a ' + KINDS[kind].short.toLowerCase() + ' request that needs your approval.'
+          ? 'Your tasker sent a ' + KINDS[kind].short.toLowerCase() + ' request. Review it, then pay or decline.'
           : 'Your service provider has sent a payment request. Review and pay securely through the platform.',
         data: { thread_id: t.id, payment_request_id: req.id }, is_read: false
       });
