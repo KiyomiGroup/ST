@@ -210,6 +210,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.ST.auth.initDashboardWelcome();
   }
 
+  /* Step 2c: Notification popover (opens from the bell). Loaded once, only for logged-in users. */
+  if (document.body.classList.contains('st-logged-in') && !window.ST?.notifPanel) {
+    const np = document.createElement('script');
+    np.src = 'js/notifications-panel.js';
+    document.body.appendChild(np);
+  }
+
   /* Step 3: Load footer (non-blocking, doesn't affect visible UI) */
   loadComponent('#footer-placeholder', 'components/footer.html');
 
