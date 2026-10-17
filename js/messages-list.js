@@ -50,7 +50,7 @@
   /* Job states derived from payment_requests + bookings (see derive()). */
   var ACTIVE_STATES = ['payment_pending', 'secured', 'awaiting_confirmation', 'disputed'];
 
-  var state = { filter: 'all', query: '', role: 'customer', onSelect: null, lastCtx: null, archiveReady: true };
+  var state = { attnOpen: false, filter: 'all', query: '', role: 'customer', onSelect: null, lastCtx: null, archiveReady: true };
 
   /* ── Small helpers ───────────────────────────────────────── */
   function el(tag, cls, text) {
@@ -398,26 +398,71 @@
     });
   }
 
-  /* "2 things need your attention" strip (spec section 43) */
+  /* "N things need your attention" strip (spec section 43, Stage 5).
+     Lists the conversations that need the person, newest first, each one a
+     button that opens its own room. Shows 3 (2 below 769px); "See all" opens
+     the rest in place and "Show fewer" folds them again.
+       customer: a payment or review is waiting on them, or unread messages
+       tasker:   unread messages from the customer                           */
+  var ATTN_MAX = 3;
+  var ATTN_MAX_MOBILE = 2;
+
+  function attentionReasons(t, ctx) {
+    var unread = unreadFor(t, ctx.user.id);
+    var reasons = [];
+    if (ctx.role === 'customer') {
+      var job = t._job || derive(t, ctx.role);
+      if (job.needsAction && job.label) reasons.push(job.label);
+    }
+    if (unread > 0) reasons.push(unread + (unread === 1 ? ' new message' : ' new messages'));
+    return reasons;
+  }
+
   function renderAttention(ctx) {
     var host = document.getElementById('jrAttention');
     if (!host) return;
-    var n = ctx.role === 'customer'
-      ? ctx.threads.filter(function (t) { return !isArchived(t, ctx.role) && (t._job || derive(t, ctx.role)).needsAction; }).length
-      : ctx.threads.filter(function (t) { return unreadFor(t, ctx.user.id) > 0; }).length;
+    var items = [];
+    ctx.threads.forEach(function (t) {
+      if (isArchived(t, ctx.role)) return;
+      var reasons = attentionReasons(t, ctx);
+      if (reasons.length) items.push({ t: t, reasons: reasons });
+    });
+    var n = items.length;
     host.textContent = '';
     host.hidden = n === 0;
     if (!n) return;
-    var target = ctx.role === 'customer' ? 'awaiting' : 'requests';
-    var btn = el('button', 'jr-attention-btn');
-    btn.type = 'button';
-    btn.appendChild(el('strong', null, n + (n === 1 ? ' thing needs' : ' things need') + ' your attention'));
-    btn.appendChild(el('span', null, ctx.role === 'customer' ? 'Review requests' : 'View new messages'));
-    btn.addEventListener('click', function () {
-      state.filter = target;
-      if (state.lastCtx) render(state.lastCtx);
+    host.setAttribute('role', 'region');
+    host.setAttribute('aria-label', 'Needs your attention');
+
+    host.appendChild(el('strong', 'jr-attn-head', n + (n === 1 ? ' thing needs' : ' things need') + ' your attention'));
+
+    var ul = el('ul', 'jr-attn-list');
+    var shown = state.attnOpen ? items : items.slice(0, ATTN_MAX);
+    shown.forEach(function (it, i) {
+      var li = el('li', 'jr-attn-row' + (!state.attnOpen && i >= ATTN_MAX_MOBILE ? ' jr-attn-row--wide' : ''));
+      var b = el('button', 'jr-attn-item');
+      b.type = 'button';
+      b.dataset.thread = it.t.id;
+      b.appendChild(el('span', 'jr-attn-title', it.t._title || 'Conversation'));
+      b.appendChild(el('span', 'jr-attn-why', it.reasons.join(' \u00b7 ')));
+      b.addEventListener('click', function () { if (state.onSelect) state.onSelect(it.t.id); });
+      li.appendChild(b);
+      ul.appendChild(li);
     });
-    host.appendChild(btn);
+    host.appendChild(ul);
+
+    if (n > ATTN_MAX_MOBILE) {
+      var hiddenOnWide = n > ATTN_MAX;
+      var more = el('button', 'jr-attn-more' + (hiddenOnWide || state.attnOpen ? '' : ' jr-attn-more--mobile'),
+        state.attnOpen ? 'Show fewer' : 'See all ' + n);
+      more.type = 'button';
+      more.setAttribute('aria-expanded', state.attnOpen ? 'true' : 'false');
+      more.addEventListener('click', function () {
+        state.attnOpen = !state.attnOpen;
+        if (state.lastCtx) render(state.lastCtx);
+      });
+      host.appendChild(more);
+    }
   }
 
   function renderChip(ctx) {
@@ -470,6 +515,7 @@
     state.onSelect = opts.onSelect || null;
     state.filter = 'all';
     state.query = '';
+    state.attnOpen = false;
 
     var input = document.getElementById('jrSearch');
     if (input && !input.dataset.bound) {
