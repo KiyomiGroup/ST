@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Job Room card library (dev only) — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/messages.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body class="jr-fixture-page">
+  <main class="jr-fixture jr-cards-page">
+    <header class="jr-fixture-head">
+      <h1>Job Room card library</h1>
+      <p>Developer reference for Stage 2. Every transaction card in every state, for the customer and the Tasker. All data on this page is sample data: nothing is real, no payment is made, and every button only shows a note. Not linked from the site.</p>
+    </header>
+
+    <div class="jr-cards-bar" role="toolbar" aria-label="Viewer">
+      <span class="jr-cards-bar-label">Viewing as</span>
+      <button class="jr-req-btn jr-req-btn--primary" id="roleCustomer" type="button" aria-pressed="true">Customer</button>
+      <button class="jr-req-btn" id="roleTasker" type="button" aria-pressed="false">Tasker</button>
+    </div>
+
+    <nav class="jr-cards-nav" id="cardsNav" aria-label="Card kinds"></nav>
+    <div id="cardsRoot"></div>
+  </main>
+
+  <script src="js/messages-thread.js"></script>
+  <script src="js/messages-cards.js"></script>
+  <script src="js/messages-cards-demo.js"></script>
+</body>
+</html>
