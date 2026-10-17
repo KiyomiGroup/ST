@@ -4904,3 +4904,13 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   body.st-logged-in #footer-placeholder,
   body.st-logged-in #footer { display: none; }
 }
+
+
+/* ── Phones: stop the browser zooming into the page when a field is focused ──
+   iOS Safari zooms in on any field under 16px and never zooms back out.
+   !important: page stylesheets set smaller sizes on their own inputs (search bars, selects, filters). */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea { font-size: var(--text-base) !important; }
+}
