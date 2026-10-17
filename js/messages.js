@@ -225,6 +225,16 @@ function subscribeToThread(threadId, onMessage) {
 
 /* ── Get or create thread ── */
 async function getOrCreateThread(customerId, taskerId, contextType, contextId) {
+  /* Stage 6: one room per task. open_thread (sql/messaging-step6.sql) returns the task's
+     existing room, even after the application became a booking, before it creates one. */
+  const rp = await window.supabase.rpc('open_thread', {
+    p_customer: customerId, p_tasker: taskerId,
+    p_context_type: contextType || 'task_application', p_context_id: contextId || null,
+  });
+  if (!rp.error && rp.data) return rp.data;
+  if (rp.error && !/could not find the function|does not exist|PGRST202|42883/i.test((rp.error.code || '') + ' ' + (rp.error.message || ''))) throw rp.error;
+
+  /* open_thread not installed yet: the original lookup */
   const existing = await safeQuery(() =>
     window.supabase.from('message_threads').select('id')
       .eq('customer_id', customerId).eq('tasker_id', taskerId).eq('context_id', contextId)

@@ -2978,17 +2978,26 @@ function openMessagesPanel() {
   async function openOrCreateThread(ctx) {
     if (!ctx || !ctx.customerId || !ctx.taskerId) { sidebarStatus('⚠ Missing context. <a href="javascript:history.back()" style="color:var(--blue);font-size:var(--text-xs);">← Go back</a>'); return; }
     try {
-      var q = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
-      if (ctx.contextId) q = q.eq('context_id',ctx.contextId);
-      var ex = await q.maybeSingle();
-      var threadId;
-      if (ex.data) { threadId = ex.data.id; }
+      var threadId = null;
+      /* Stage 6: one room per task. The server finds the task's existing room (even after
+         the application became a booking) before it creates one. */
+      var rp = await window.supabase.rpc('open_thread', { p_customer: ctx.customerId, p_tasker: ctx.taskerId,
+        p_context_type: ctx.contextType || 'task_application', p_context_id: ctx.contextId || null });
+      if (!rp.error && rp.data) { threadId = rp.data; }
+      else if (rp.error && !/could not find the function|does not exist|PGRST202|42883/i.test((rp.error.code || '') + ' ' + (rp.error.message || ''))) { throw rp.error; }
       else {
-        var ins = { customer_id:ctx.customerId, tasker_id:ctx.taskerId, context_type:ctx.contextType||'task_application', last_message_at:new Date().toISOString(), customer_unread:0, tasker_unread:0 };
-        if (ctx.contextId) ins.context_id = ctx.contextId;
-        var cr = await window.supabase.from('message_threads').insert(ins).select('id').single();
-        if (cr.error) throw cr.error;
-        threadId = cr.data.id;
+        /* open_thread not installed yet (sql/messaging-step6.sql not run): the original lookup */
+        var q = window.supabase.from('message_threads').select('id').eq('customer_id',ctx.customerId).eq('tasker_id',ctx.taskerId);
+        if (ctx.contextId) q = q.eq('context_id',ctx.contextId);
+        var ex = await q.maybeSingle();
+        if (ex.data) { threadId = ex.data.id; }
+        else {
+          var ins = { customer_id:ctx.customerId, tasker_id:ctx.taskerId, context_type:ctx.contextType||'task_application', last_message_at:new Date().toISOString(), customer_unread:0, tasker_unread:0 };
+          if (ctx.contextId) ins.context_id = ctx.contextId;
+          var cr = await window.supabase.from('message_threads').insert(ins).select('id').single();
+          if (cr.error) throw cr.error;
+          threadId = cr.data.id;
+        }
       }
       await loadThreadList();
       await openThread(threadId);
