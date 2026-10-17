@@ -267,9 +267,11 @@
   /* ── data: real providers ────────────────────────────────── */
   async function loadReal(id) {
     var sb = window.supabase;
-    var t1 = await sb.from('taskers').select('*').eq('user_id', String(id)).maybeSingle();
+    /* Public page: name the columns. phone and whatsapp are private, so select('*') would fail when logged out. */
+    var PUBLIC_COLS = 'id, user_id, services, rating, location, subscription_status, created_at, available, service_name, category, price, description, photo, bio, photo_url, rate, free_limit, subscription_plan, rate_value, service, rate_unit, business_name, is_verified, verified_at, business_lat, business_lon, business_address, banner_color, banner_img, name, specialties, availability_status, verified, profile_details';
+    var t1 = await sb.from('taskers').select(PUBLIC_COLS).eq('user_id', String(id)).maybeSingle();
     var tasker = t1.data;
-    if (!tasker) { var t2 = await sb.from('taskers').select('*').eq('id', String(id)).maybeSingle(); tasker = t2.data; }
+    if (!tasker) { var t2 = await sb.from('taskers').select(PUBLIC_COLS).eq('id', String(id)).maybeSingle(); tasker = t2.data; }
 
     var u = await sb.from('users').select('name, bio, business_name, avatar_url, location').eq('id', id).maybeSingle();
     var userRow = u.data;
