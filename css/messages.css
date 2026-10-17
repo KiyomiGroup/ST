@@ -1280,3 +1280,180 @@ body.msg-page {
   .msg-chat-body { padding: var(--space-4) var(--space-4) var(--space-2); }
   .msg-bubble-wrap { max-width: 88%; }
 }
+
+/* ============================================================
+   Stage 1: composer extras, media / file / location messages,
+   safety notice, message priority. UI only: attachments are not
+   uploaded or sent until Stage 9.
+   ============================================================ */
+
+/* Composer: attach (+) menu opens upward, camera button, compact Request */
+.msg-input-bar .jr-icon-btn,
+.msg-input-bar .jr-menu-wrap { align-self: center; }
+.jr-icon-btn--plus { background: var(--color-bg-muted); color: var(--color-primary); }
+.jr-icon-btn--plus:hover { background: var(--color-primary-soft); }
+.jr-attach-menu { top: auto; bottom: calc(100% + var(--space-2)); left: 0; right: auto; min-width: 180px; }
+.jr-menu-item--icon { display: flex; align-items: center; gap: var(--space-3); }
+.jr-menu-item--icon svg { flex-shrink: 0; color: var(--color-text-secondary); }
+
+/* Preview chip above the composer */
+.jr-attach-preview {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4) 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.jr-attach-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-soft);
+}
+.jr-attach-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+.jr-attach-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.jr-attach-info { flex: 1; min-width: 0; }
+.jr-attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-attach-sub { font-size: var(--text-xs); color: var(--color-text-secondary); }
+.jr-attach-note { margin-top: var(--space-1); font-size: var(--text-xs); line-height: 1.4; color: var(--color-warning); }
+.jr-attach-remove { flex-shrink: 0; }
+
+/* Image / video message */
+.jr-media {
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+}
+.jr-media-img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--color-bg-muted); }
+.jr-media-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
+}
+.jr-media-stage { position: relative; background: var(--color-forest-900); }
+.jr-media-stage .jr-media-img { opacity: 0.85; }
+.jr-media-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+}
+.jr-media-badge {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-forest-900);
+  color: var(--color-text-on-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.jr-media-caption { padding: var(--space-3) var(--space-4); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text); white-space: pre-wrap; word-break: break-word; }
+
+/* File and location messages: neutral cards, not chat bubbles */
+.jr-file,
+.jr-loc {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+}
+.jr-file-icon,
+.jr-loc-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.jr-file-info { flex: 1; min-width: 0; }
+.jr-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-file-sub { font-size: var(--text-xs); color: var(--color-text-secondary); }
+.jr-loc-link { flex-basis: 100%; font-size: var(--text-xs); font-weight: 700; color: var(--color-primary); text-decoration: none; }
+.jr-loc-link:hover { text-decoration: underline; }
+
+/* Give media / file / location cards a readable minimum width inside the shrink-wrapped message row */
+.jr-media,
+.jr-file,
+.jr-loc { min-width: min(260px, 100%); }
+
+/* Safety notice from the platform (spec 34, 35) */
+.jr-safety {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  align-self: center;
+  max-width: 90%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-soft);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.jr-safety-icon { display: inline-flex; flex-shrink: 0; color: var(--color-warning); }
+.jr-safety-text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.jr-safety-text strong { font-family: var(--font-heading); font-size: var(--text-sm); color: var(--color-warning); }
+
+/* Message priority (spec 33). Normal = bubble. Important = accent edge.
+   Transactional = full card (already styled by .payment-request-card / .jr-confirm). */
+.msg-bubble-wrap[data-priority="important"] .jr-req { border-left: 3px solid var(--color-warning); }
+
+@media (max-width: 480px) {
+  .msg-input-bar { gap: var(--space-2); padding: var(--space-3); }
+  .msg-req-label { display: none; }
+  .msg-pay-request-btn { padding: var(--space-2) var(--space-3); }
+  .jr-attach-preview { padding: var(--space-3) var(--space-3) 0; }
+}
+
+/* Dev-only reference page: messages-fixtures.html */
+.jr-fixture-page { background: var(--color-bg-subtle); }
+.jr-fixture { max-width: 1100px; margin: 0 auto; padding: var(--space-5) var(--space-4); }
+.jr-fixture-head h1 { font-family: var(--font-heading); font-size: var(--text-xl); color: var(--color-text); }
+.jr-fixture-head p { margin: var(--space-2) 0 var(--space-3); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); }
+.jr-fixture-legend { margin: 0 0 var(--space-5); padding-left: var(--space-5); font-size: var(--text-sm); line-height: 1.8; color: var(--color-text-secondary); }
+.jr-fixture-cols { display: grid; grid-template-columns: 1fr; gap: var(--space-5); }
+.jr-fixture-col { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-bg); }
+.jr-fixture-col h2 { margin-bottom: var(--space-3); font-family: var(--font-heading); font-size: var(--text-base); color: var(--color-text); }
+.jr-fixture-col .msg-chat-body { flex: none; overflow: visible; padding: 0; }
+@media (min-width: 769px) {
+  .jr-fixture-cols { grid-template-columns: 1fr 1fr; }
+}

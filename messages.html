@@ -92,17 +92,49 @@
           <button class="jr-warn-btn" id="jrWarnEdit" type="button">Edit message</button>
         </div>
 
+        <!-- Attachment preview chip (UI only until Stage 9: nothing is uploaded or sent) -->
+        <div class="jr-attach-preview" id="jrAttachPreview" hidden></div>
+
         <div class="msg-input-bar" id="inputBar" hidden>
-          <button class="msg-pay-request-btn" id="requestBtn" type="button" hidden aria-haspopup="dialog" title="Requests and job actions">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Request
+          <div class="jr-menu-wrap">
+            <button class="jr-icon-btn jr-icon-btn--plus" id="attachBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="attachMenu" aria-label="Attach" title="Attach">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <div class="jr-menu jr-attach-menu" id="attachMenu" role="menu" aria-label="Attach" hidden>
+              <button class="jr-menu-item jr-menu-item--icon" type="button" role="menuitem" data-attach="photo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Photo
+              </button>
+              <button class="jr-menu-item jr-menu-item--icon" type="button" role="menuitem" data-attach="camera">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Camera
+              </button>
+              <button class="jr-menu-item jr-menu-item--icon" type="button" role="menuitem" data-attach="file">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                File
+              </button>
+              <button class="jr-menu-item jr-menu-item--icon" type="button" role="menuitem" data-attach="location">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Location
+              </button>
+            </div>
+          </div>
+          <button class="jr-icon-btn jr-icon-btn--camera" id="cameraBtn" type="button" aria-label="Camera" title="Camera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </button>
           <div class="msg-input-wrap">
             <textarea id="msgInput" class="msg-input" placeholder="Type a message…" rows="1" maxlength="2000" aria-label="Message"></textarea>
           </div>
+          <button class="msg-pay-request-btn" id="requestBtn" type="button" hidden aria-haspopup="dialog" aria-label="Request" title="Requests and job actions">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            <span class="msg-req-label">Request</span>
+          </button>
           <button class="msg-send-btn" id="msgSendBtn" type="button" title="Send" aria-label="Send message" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
+          <input type="file" id="attachPhotoInput" accept="image/*,video/*" hidden />
+          <input type="file" id="attachCameraInput" accept="image/*" capture="environment" hidden />
+          <input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" hidden />
         </div>
 
 

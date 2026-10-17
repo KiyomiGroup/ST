@@ -19,9 +19,27 @@
      JRThread.focusComposer()
 
    Message kinds rendered today:
-     text, payment_request (all money kinds), payment_confirmed, system, job_request.
-   Anything else falls back to a text bubble. Image / file / location /
-   structured request cards arrive in steps 5-8.
+     text, payment_request (all money kinds), payment_confirmed, system, job_request,
+     and (Stage 1, UI only) image, video, file, location, safety.
+   Anything else falls back to a text bubble.
+
+   Stage 1 types are NOT in the database yet: `messages.type` only allows
+   text, system, payment_request, payment_confirmed, job_request. Their data
+   shape is `message.meta`:
+     image    { url, alt, caption }
+     video    { url, poster, duration, caption }   (no url = poster only)
+     file     { name, size, mime }
+     location { label, address, lat, lng }
+     safety   { title }  (text in body)
+   Stage 9 adds the storage bucket and widens the type check. Until then the
+   composer attach menu only shows a preview chip and sends nothing.
+
+   Message priority (spec 33): normal (text, media), important (system, job
+   request, safety), transactional (money cards, payment confirmed). The level
+   is written to data-priority on every rendered message.
+
+   JRThread.preview(m, isMine)           render one message without a thread (dev fixtures only)
+   JRThread.previewSetup(role, userId)   set viewer role for the fixtures page
 
    SAFETY: messages that look like phone numbers, emails or off-platform
    links are NOT sent (terms of use). No "send anyway" option (spec 34/35).
@@ -88,6 +106,12 @@
   var ICON_CARD  = svg('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>');
   var ICON_CHECK = svg('<polyline points="20 6 9 17 4 12"/>');
   var ICON_CLIPBOARD = svg('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>');
+  var ICON_FILE  = svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', 20);
+  var ICON_PIN   = svg('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', 20);
+  var ICON_PLAY  = svg('<polygon points="6 4 20 12 6 20 6 4"/>', 20);
+  var ICON_IMAGE = svg('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>', 20);
+  var ICON_SHIELD = svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 20);
+  var ICON_CLOSE = svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', 14);
   var ICON_SPIN  = '<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
 
   /* ── toast ───────────────────────────────────────────────── */
@@ -142,6 +166,112 @@
     chip.appendChild(document.createTextNode(m.body || ''));
     row.appendChild(chip);
     row.appendChild(el('div', 'jr-system-time', timeLabel(m.created_at)));
+    return row;
+  }
+
+  /* ── media, file, location, safety (Stage 1, UI only) ─────── */
+  /* Only http(s), blob and same-site relative paths are used as a src / href. */
+  function safeUrl(u) {
+    u = String(u || '');
+    return /^(https?:\/\/|blob:|[\w][\w./-]*$)/i.test(u) ? u : '';
+  }
+  function fileSize(n) {
+    n = Number(n) || 0;
+    if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB';
+    if (n >= 1024) return Math.round(n / 1024) + ' KB';
+    return n ? n + ' B' : '';
+  }
+  function mediaWrap(m, isMine) {
+    var wrap = baseWrap(m, isMine);
+    wrap.classList.add('is-card');
+    return wrap;
+  }
+  function withTime(wrap, node, m) {
+    wrap.appendChild(node);
+    wrap.appendChild(el('div', 'msg-time', timeLabel(m.created_at)));
+    return wrap;
+  }
+  function caption(box, text) {
+    if (text) box.appendChild(el('div', 'jr-media-caption', text));
+  }
+
+  function buildImage(m, isMine) {
+    var meta = m.meta || {};
+    var box = el('div', 'jr-media');
+    var url = safeUrl(meta.url);
+    if (url) {
+      var img = el('img', 'jr-media-img');
+      img.src = url; img.alt = meta.alt || 'Photo'; img.loading = 'lazy';
+      box.appendChild(img);
+    } else {
+      var ph = el('div', 'jr-media-ph'); ph.innerHTML = ICON_IMAGE;
+      box.appendChild(ph);
+    }
+    caption(box, meta.caption || m.body);
+    return withTime(mediaWrap(m, isMine), box, m);
+  }
+
+  function buildVideo(m, isMine) {
+    var meta = m.meta || {};
+    var box = el('div', 'jr-media jr-media--video');
+    var url = safeUrl(meta.url), poster = safeUrl(meta.poster);
+    if (url) {
+      var v = el('video', 'jr-media-img');
+      v.src = url; v.controls = true; v.preload = 'none';
+      if (poster) v.poster = poster;
+      box.appendChild(v);
+    } else {
+      var stage = el('div', 'jr-media-stage');
+      if (poster) { var p = el('img', 'jr-media-img'); p.src = poster; p.alt = 'Video preview'; stage.appendChild(p); }
+      var play = el('span', 'jr-media-play'); play.innerHTML = ICON_PLAY;
+      stage.appendChild(play);
+      if (meta.duration) stage.appendChild(el('span', 'jr-media-badge', meta.duration));
+      box.appendChild(stage);
+    }
+    caption(box, meta.caption || m.body);
+    return withTime(mediaWrap(m, isMine), box, m);
+  }
+
+  function buildFileMsg(m, isMine) {
+    var meta = m.meta || {};
+    var box = el('div', 'jr-file');
+    var icon = el('div', 'jr-file-icon'); icon.innerHTML = ICON_FILE;
+    var info = el('div', 'jr-file-info');
+    info.appendChild(el('div', 'jr-file-name', meta.name || 'Document'));
+    var sub = [String(meta.mime || '').split('/').pop().toUpperCase(), fileSize(meta.size)].filter(Boolean).join(' · ');
+    if (sub) info.appendChild(el('div', 'jr-file-sub', sub));
+    box.appendChild(icon); box.appendChild(info);
+    return withTime(mediaWrap(m, isMine), box, m);
+  }
+
+  function buildLocation(m, isMine) {
+    var meta = m.meta || {};
+    var box = el('div', 'jr-loc');
+    var pin = el('div', 'jr-loc-pin'); pin.innerHTML = ICON_PIN;
+    var info = el('div', 'jr-file-info');
+    info.appendChild(el('div', 'jr-file-name', meta.label || 'Shared location'));
+    if (meta.address) info.appendChild(el('div', 'jr-file-sub', meta.address));
+    box.appendChild(pin); box.appendChild(info);
+    var lat = Number(meta.lat), lng = Number(meta.lng);
+    if (isFinite(lat) && isFinite(lng) && meta.lat != null && meta.lng != null) {
+      var a = el('a', 'jr-loc-link', 'Open in Maps');
+      a.href = 'https://www.google.com/maps?q=' + encodeURIComponent(lat + ',' + lng);
+      a.target = '_blank'; a.rel = 'noopener noreferrer';
+      box.appendChild(a);
+    }
+    return withTime(mediaWrap(m, isMine), box, m);
+  }
+
+  /* Platform notice inside the conversation (spec 34/35). Not a user bubble. */
+  function buildSafety(m) {
+    var row = el('div', 'jr-safety');
+    if (m.id) row.dataset.id = String(m.id);
+    row.setAttribute('role', 'note');
+    var icon = el('span', 'jr-safety-icon'); icon.innerHTML = ICON_SHIELD;
+    var text = el('div', 'jr-safety-text');
+    text.appendChild(el('strong', null, (m.meta && m.meta.title) || 'Keep communication on StreetTasker'));
+    text.appendChild(el('span', null, m.body || 'For your safety and protection, follow StreetTasker\u2019s communication policies and avoid sharing prohibited off-platform contact information.'));
+    row.appendChild(icon); row.appendChild(text);
     return row;
   }
 
@@ -479,13 +609,39 @@
 
   function focusComposer() { var i = $('msgInput'); if (i) i.focus(); }
 
+  /* Message priority (spec 33): how much visual weight a message gets. */
+  var PRIORITY = {
+    text: 'normal', image: 'normal', video: 'normal', file: 'normal', location: 'normal',
+    system: 'important', job_request: 'important', safety: 'important',
+    payment_request: 'transactional', payment_confirmed: 'transactional'
+  };
+
   function buildMessage(m) {
-    var isMine = m.sender_id === S.user.id;
-    if (m.type === 'system') return buildSystem(m);
-    if (m.type === 'payment_request') return buildPaymentRequest(m, isMine);
-    if (m.type === 'payment_confirmed') return buildPaymentConfirmed(m, isMine);
-    if (m.type === 'job_request') return buildJobRequest(m, isMine);
-    return buildText(m, isMine);
+    var isMine = !!(S.user && m.sender_id === S.user.id);
+    var node;
+    if (m.type === 'system') node = buildSystem(m);
+    else if (m.type === 'safety') node = buildSafety(m);
+    else if (m.type === 'payment_request') node = buildPaymentRequest(m, isMine);
+    else if (m.type === 'payment_confirmed') node = buildPaymentConfirmed(m, isMine);
+    else if (m.type === 'job_request') node = buildJobRequest(m, isMine);
+    else if (m.type === 'image') node = buildImage(m, isMine);
+    else if (m.type === 'video') node = buildVideo(m, isMine);
+    else if (m.type === 'file') node = buildFileMsg(m, isMine);
+    else if (m.type === 'location') node = buildLocation(m, isMine);
+    else node = buildText(m, isMine);
+    node.dataset.priority = PRIORITY[m.type] || 'normal';
+    return node;
+  }
+
+  /* Dev fixtures only (messages-fixtures.html): render without a thread. */
+  function previewSetup(role, userId) {
+    S.role = role === 'tasker' ? 'tasker' : 'customer';
+    S.user = { id: userId || 'me' };
+  }
+  function preview(m, isMine) {
+    if (!S.user) previewSetup('customer', 'me');
+    var copy = Object.assign({}, m, { sender_id: isMine ? S.user.id : 'them' });
+    return buildMessage(copy);
   }
 
   /* ── list rendering ──────────────────────────────────────── */
@@ -547,6 +703,7 @@
     var input = $('msgInput');
     if (input) input.placeholder = S.role === 'tasker' ? 'Reply to customer…' : 'Type a message…';
     hideWarn();
+    clearAttach();
     var jump = $('jrJump'); if (jump) jump.hidden = true;
 
     placeholder(body, ICON_SPIN + ' Loading…');
@@ -696,15 +853,99 @@
     return true;
   }
 
+  /* ── attachment preview chip (Stage 1: UI only) ──────────── */
+  /* Picking a photo, camera shot, file or location only shows a chip.
+     Nothing is uploaded and nothing is sent until Stage 9 (storage bucket,
+     message types). While a chip is showing, Send is off so no one thinks
+     the attachment went out. */
+  var ATTACH_LABEL = { photo: 'Photo', camera: 'Camera photo', file: 'File', location: 'Location' };
+
+  function clearAttach() {
+    if (S.attach && S.attach.url) { try { URL.revokeObjectURL(S.attach.url); } catch (_e) {} }
+    S.attach = null;
+    var box = $('jrAttachPreview');
+    if (box) { box.textContent = ''; box.hidden = true; }
+    syncSendState();
+  }
+
+  function showAttach(kind, file) {
+    clearAttach();
+    var a = { kind: kind, name: file ? file.name : 'Current location', size: file ? file.size : 0, url: '', isImage: false };
+    if (file && /^image\//.test(file.type)) { a.isImage = true; a.url = URL.createObjectURL(file); }
+    S.attach = a;
+
+    var box = $('jrAttachPreview');
+    if (!box) return;
+    box.textContent = '';
+    var chip = el('div', 'jr-attach-chip');
+    var thumb = el('div', 'jr-attach-thumb');
+    if (a.isImage) {
+      var img = el('img', 'jr-attach-img'); img.src = a.url; img.alt = '';
+      thumb.appendChild(img);
+    } else {
+      thumb.innerHTML = kind === 'location' ? ICON_PIN : (kind === 'photo' || kind === 'camera') ? ICON_IMAGE : ICON_FILE;
+    }
+    var info = el('div', 'jr-attach-info');
+    info.appendChild(el('div', 'jr-attach-name', a.name));
+    var sub = [ATTACH_LABEL[kind], fileSize(a.size)].filter(Boolean).join(' · ');
+    info.appendChild(el('div', 'jr-attach-sub', sub));
+    info.appendChild(el('div', 'jr-attach-note', 'Preview only. Sending attachments is not connected yet. Remove it to send a message.'));
+    var rm = el('button', 'jr-icon-btn jr-attach-remove'); rm.type = 'button';
+    rm.setAttribute('aria-label', 'Remove attachment'); rm.innerHTML = ICON_CLOSE;
+    rm.addEventListener('click', clearAttach);
+    chip.appendChild(thumb); chip.appendChild(info); chip.appendChild(rm);
+    box.appendChild(chip);
+    box.hidden = false;
+    syncSendState();
+  }
+
+  function pickAttach(kind) {
+    if (kind === 'location') { showAttach('location', null); return; }
+    var id = kind === 'photo' ? 'attachPhotoInput' : kind === 'camera' ? 'attachCameraInput' : 'attachFileInput';
+    var input = $(id);
+    if (!input) return;
+    input.value = '';
+    input.click();
+  }
+
+  function bindAttach() {
+    var btn = $('attachBtn'), menu = $('attachMenu'), cam = $('cameraBtn');
+    function closeMenu() { if (menu) menu.hidden = true; if (btn) btn.setAttribute('aria-expanded', 'false'); }
+    if (btn && menu) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = menu.hidden;
+        menu.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.addEventListener('click', function (e) {
+        var item = e.target.closest ? e.target.closest('[data-attach]') : null;
+        if (!item) return;
+        closeMenu();
+        pickAttach(item.getAttribute('data-attach'));
+      });
+      document.addEventListener('click', closeMenu);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    }
+    if (cam) cam.addEventListener('click', function () { pickAttach('camera'); });
+    [['attachPhotoInput', 'photo'], ['attachCameraInput', 'camera'], ['attachFileInput', 'file']].forEach(function (p) {
+      var input = $(p[0]);
+      if (!input) return;
+      input.addEventListener('change', function () {
+        if (input.files && input.files[0]) showAttach(p[1], input.files[0]);
+      });
+    });
+  }
+
   /* ── composer wiring ─────────────────────────────────────── */
   function syncSendState() {
     var input = $('msgInput'), btn = $('msgSendBtn');
-    if (btn && input) btn.disabled = !input.value.trim();
+    if (btn && input) btn.disabled = !input.value.trim() || !!S.attach;
   }
 
   async function submitFromInput() {
     var input = $('msgInput');
-    if (!input) return;
+    if (!input || S.attach) return;
     var ok = await send(input.value);
     if (ok) { input.value = ''; input.style.height = 'auto'; syncSendState(); }
   }
@@ -713,6 +954,7 @@
     if (S.bound) return;
     S.bound = true;
     var input = $('msgInput'), btn = $('msgSendBtn'), edit = $('jrWarnEdit'), body = $('chatBody'), jump = $('jrJump');
+    bindAttach();
 
     if (input) {
       input.addEventListener('keydown', function (e) {
@@ -747,6 +989,8 @@
     pendingKinds: pendingKinds,
     hasContactInfo: hasContactInfo,
     focusComposer: focusComposer,
+    preview: preview,
+    previewSetup: previewSetup,
     registerMoney: registerMoney,
     onMoneyChange: onMoneyChange,
     getMoney: getMoney,

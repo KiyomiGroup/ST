@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Job Room message types (dev only) — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/messages.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body class="jr-fixture-page">
+  <main class="jr-fixture">
+    <header class="jr-fixture-head">
+      <h1>Job Room message types</h1>
+      <p>Developer reference for Stage 1. Every message type from the brief (section 4, 33, 41) rendered for both roles. All data on this page is sample data: nothing is real, nothing is sent, and no payment is made. Not linked from the site.</p>
+      <ul class="jr-fixture-legend">
+        <li><strong>Normal:</strong> text, photo, video, file, location (bubbles and media)</li>
+        <li><strong>Important:</strong> system lines, job requests, safety notices</li>
+        <li><strong>Transactional:</strong> payment and confirmation cards</li>
+      </ul>
+    </header>
+
+    <div class="jr-fixture-cols">
+      <section class="jr-fixture-col" aria-labelledby="fxCustomerTitle">
+        <h2 id="fxCustomerTitle">Customer view</h2>
+        <div class="msg-chat-body" id="fxCustomer"></div>
+      </section>
+      <section class="jr-fixture-col" aria-labelledby="fxTaskerTitle">
+        <h2 id="fxTaskerTitle">Tasker view</h2>
+        <div class="msg-chat-body" id="fxTasker"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/messages-thread.js"></script>
+  <script src="js/messages-fixtures.js"></script>
+</body>
+</html>
