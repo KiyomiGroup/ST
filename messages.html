@@ -181,6 +181,7 @@
   <script src="js/messages-thread.js"></script>
   <script src="js/messages-money.js"></script>
   <script src="js/messages-requests.js"></script>
+  <script src="js/messages-forms.js"></script>
   <script src="js/messages-work.js"></script>
 
   <script>
@@ -237,6 +238,7 @@
     JRThread.bindComposer();
     JRRequests.init({ onChange:threadChanged });
     JRWork.init({ onChange:threadChanged });
+    JRForms.init();     /* after JRWork so working actions list before the not-connected ones */
     JRMoney.init({ onChange:function(){ threadChanged(); JRRoom.refresh(); } });
 
     /* 2. Load conversations */

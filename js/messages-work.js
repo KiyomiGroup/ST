@@ -267,7 +267,7 @@
   function active(x) {
     return S.ready === true && !!x.bookingId && !!x.booking && x.booking.status === 'confirmed' && x.booking.payment_status !== 'released';
   }
-  var G = 'Work';
+  var G = 'Work & Evidence';
 
   function actions() {
     return [
@@ -288,6 +288,11 @@
         run: function () { viewSimple('Resume work', 'Resume this task now?', 'Resume work', 'resume', 'Work resumed', false); } },
       { id: 'work_complete', roles: ['tasker'], group: G, icon: iconCheck(), label: 'Mark work complete', hint: 'Ask the customer to review the work',
         when: function (x) { return active(x) && x.paid && x.stage !== 'paused'; }, run: viewComplete },
+      { id: 'work_release', roles: ['customer'], group: 'Payment', icon: iconCheck(), label: 'Get Release Code', hint: 'Confirm the work is done and get your 6-digit code',
+        rule: function (x) {
+          if (!(S.ready === true && x.bookingId && x.booking && x.paid)) return false;
+          return x.status === 'awaiting_confirmation' ? null : 'Available once the tasker submits the work';
+        }, run: viewProtection },
       { id: 'report_issue', roles: ['customer', 'tasker'], group: 'Issue', icon: iconFlag(), label: 'Report an Issue', hint: 'Payment stays protected while it is reviewed',
         when: function (x) {
           return !!x.bookingId && !!x.booking && x.paid && ['confirmed', 'awaiting_confirmation'].indexOf(x.booking.status) !== -1;

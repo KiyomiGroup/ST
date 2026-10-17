@@ -12,9 +12,18 @@
                                      ctx: { thread, user, role } (JRRoom passes it)
      JRRequests.open() / .close()
      JRRequests.whenReady()          promise: is the step 5 table available?
-     JRRequests.register(actions)    add actions to the sheet (used by messages-work.js)
+     JRRequests.register(actions)    add actions to the sheet (used by messages-work.js, messages-forms.js)
      JRRequests.openView(title, fn)  open the sheet straight on a custom view; fn(body, {close, back})
      JRRequests.KINDS                labels per request kind (also used by the cards)
+
+   Stage 3: the sheet is grouped as in spec section 39 (see GROUP_ORDER). An action says how it
+   behaves with ONE of:
+     rule(x)    false = not shown, 'a reason' = shown greyed with that reason, null = available
+     when(x) / blocked(x)   older pair, same result (when false = not shown, blocked string = greyed)
+   `ui: true` marks an item whose form is finished but NOT connected to the server yet; it gets a
+   "Not connected yet" tag. `group` may be a string or { tasker: '..', customer: '..' }.
+   A disputed task greys every item with a reason unless the action sets allowDisputed.
+   A completed or cancelled task shows nothing to request.
 
    Needs the step 5 SQL (sql/messaging-step5.sql) for the customer "ask" actions and
    the step 6 SQL (sql/messaging-step6.sql) for transport / additional cost / full /
@@ -96,60 +105,124 @@
   /* ── actions registry ────────────────────────────────────────
      when(x)  x = { status, role, pending (array of pending kinds), ready }
      run(x)   called when the item is chosen                         */
-  var CLOSED = ['completed', 'cancelled', 'disputed'];
+  var LOCKED = 'Locked while an issue is under review';
+  var NEEDS_JOB = 'Available once the job is booked';
+  var NEEDS_PAYMENT = 'Available once payment is secured';
+  var WAITING_CONFIRM = 'Waiting for the customer to confirm the work';
+
+  /* Group names and their order, per role (spec section 39) */
+  var GROUP = {
+    MONEY: 'Money', TRANSPORT: 'Transport', COSTS: 'Materials & Job Costs', DOCS: 'Documents',
+    WORK: 'Work & Evidence', SCHEDULE: 'Schedule', ISSUE: 'Issue',
+    PAY: 'Payment', EVIDENCE: 'Evidence', JOB: 'Job'
+  };
+  var GROUP_ORDER = {
+    tasker:   [GROUP.MONEY, GROUP.TRANSPORT, GROUP.COSTS, GROUP.DOCS, GROUP.WORK, GROUP.SCHEDULE, GROUP.ISSUE],
+    customer: [GROUP.PAY, GROUP.DOCS, GROUP.EVIDENCE, GROUP.JOB, GROUP.ISSUE]
+  };
+  var PAYABLE = ['payment', 'full_payment', 'remaining_payment', 'transport', 'additional_cost'];
+
+  function hasJob(x) { return x.status !== 'inquiry'; }
 
   var ACTIONS = [
+    /* ── Tasker: Money ── */
     {
-      id: 'request_payment', roles: ['tasker'], group: 'Payment', icon: I.card, kind: 'payment',
+      id: 'request_payment', roles: ['tasker'], group: GROUP.MONEY, icon: I.card, kind: 'payment',
       label: 'Request payment', hint: 'Ask for a custom amount',
-      when: function (x) { return CLOSED.indexOf(x.status) === -1; },
+      rule: function () { return null; },
       run: function () { showForm('payment'); }
     },
     {
-      id: 'request_full', roles: ['tasker'], group: 'Payment', icon: I.card, kind: 'full_payment', needsMoney: true,
+      id: 'request_full', roles: ['tasker'], group: GROUP.MONEY, icon: I.card, kind: 'full_payment', needsMoney: true,
       label: 'Request full payment',
       hint: function (x) { return 'Agreed amount: ' + naira(x.money.base); },
-      when: function (x) { return CLOSED.indexOf(x.status) === -1 && x.money.base > 0 && x.money.paid === 0; },
+      rule: function (x) {
+        if (x.money.paid > 0 && x.money.outstanding <= 0) return 'This task is already paid in full';
+        if (x.money.paid > 0) return 'Part of this task is paid. Use Request remaining payment';
+        if (!(x.money.base > 0)) return 'No agreed price yet';
+        return null;
+      },
       run: function (x) { showConfirm('full_payment', x.money.base); }
     },
     {
-      id: 'request_remaining', roles: ['tasker'], group: 'Payment', icon: I.card, kind: 'remaining_payment', needsMoney: true,
+      id: 'request_remaining', roles: ['tasker'], group: GROUP.MONEY, icon: I.card, kind: 'remaining_payment', needsMoney: true,
       label: 'Request remaining payment',
       hint: function (x) { return 'Still to pay: ' + naira(x.money.outstanding); },
-      when: function (x) { return CLOSED.indexOf(x.status) === -1 && x.money.paid > 0 && x.money.outstanding > 0; },
+      rule: function (x) {
+        if (!(x.money.paid > 0)) return 'Available once the first payment is paid';
+        if (!(x.money.outstanding > 0)) return 'Nothing is left to pay';
+        return null;
+      },
       run: function (x) { showConfirm('remaining_payment', x.money.outstanding); }
     },
+    /* ── Tasker: Transport, Additional cost ── */
     {
-      id: 'request_transport', roles: ['tasker'], group: 'Job costs', icon: I.truck, kind: 'transport', needsMoney: true,
+      id: 'request_transport', roles: ['tasker'], group: GROUP.TRANSPORT, icon: I.truck, kind: 'transport', needsMoney: true,
       label: 'Request transport', hint: 'Ask the customer to pay a transport cost',
-      when: function (x) { return CLOSED.indexOf(x.status) === -1; },
+      rule: function () { return null; },
       run: function () { showForm('transport'); }
     },
     {
-      id: 'request_additional', roles: ['tasker'], group: 'Job costs', icon: I.tool, kind: 'additional_cost', needsMoney: true,
+      id: 'request_additional', roles: ['tasker'], group: GROUP.COSTS, icon: I.tool, kind: 'additional_cost', needsMoney: true,
       label: 'Request additional cost', hint: 'Extra work or materials found on site',
-      when: function (x) { return ['secured', 'work'].indexOf(x.status) !== -1; },
+      rule: function (x) {
+        if (x.status === 'awaiting_confirmation') return WAITING_CONFIRM;
+        return ['secured', 'work'].indexOf(x.status) !== -1 ? null : NEEDS_PAYMENT;
+      },
       run: function () { showForm('additional_cost'); }
     },
+    /* ── Customer: Payment ── */
     {
-      id: 'ask_update', roles: ['customer'], group: 'Ask the tasker', icon: I.refresh, kind: 'update', needsTable: true,
+      id: 'pay_request', roles: ['customer'], group: GROUP.PAY, icon: I.card, needsMoney: true,
+      label: 'Pay a request', hint: 'Go to the payment waiting in this chat',
+      rule: function (x) {
+        if (!hasJob(x)) return false;
+        var waiting = x.pending.some(function (k) { return PAYABLE.indexOf(k) !== -1; });
+        return waiting ? null : 'No payment has been requested yet';
+      },
+      run: function () { close(); goToPayButton(); }
+    },
+    /* ── Customer: Job and Evidence (asks) ── */
+    {
+      id: 'ask_update', roles: ['customer'], group: GROUP.JOB, icon: I.refresh, kind: 'update', needsTable: true,
       label: 'Request an update', hint: 'Ask how the job is going',
-      when: function (x) { return ['booked', 'secured', 'work', 'awaiting_confirmation'].indexOf(x.status) !== -1; },
+      rule: function (x) {
+        if (!hasJob(x)) return false;
+        if (['booked', 'secured', 'work', 'awaiting_confirmation'].indexOf(x.status) !== -1) return null;
+        return x.status === 'payment_pending' ? NEEDS_PAYMENT : 'Not available right now';
+      },
       run: function () { showAskForm('update'); }
     },
     {
-      id: 'ask_arrival', roles: ['customer'], group: 'Ask the tasker', icon: I.clock, kind: 'arrival', needsTable: true,
+      id: 'ask_arrival', roles: ['customer'], group: GROUP.JOB, icon: I.clock, kind: 'arrival', needsTable: true,
       label: 'Request arrival time', hint: 'Ask when the tasker will get there',
-      when: function (x) { return ['booked', 'secured'].indexOf(x.status) !== -1; },
+      rule: function (x) {
+        if (!hasJob(x)) return false;
+        if (['booked', 'secured'].indexOf(x.status) !== -1) return null;
+        return x.status === 'payment_pending' ? NEEDS_PAYMENT : 'Only before the tasker starts';
+      },
       run: function () { showAskForm('arrival'); }
     },
     {
-      id: 'ask_proof', roles: ['customer'], group: 'Ask the tasker', icon: I.camera, kind: 'proof', needsTable: true,
+      id: 'ask_proof', roles: ['customer'], group: GROUP.EVIDENCE, icon: I.camera, kind: 'proof', needsTable: true,
       label: 'Request proof of work', hint: 'Ask for photos of the work',
-      when: function (x) { return ['secured', 'work', 'awaiting_confirmation'].indexOf(x.status) !== -1; },
+      rule: function (x) {
+        if (!hasJob(x)) return false;
+        return ['secured', 'work', 'awaiting_confirmation'].indexOf(x.status) !== -1 ? null : NEEDS_PAYMENT;
+      },
       run: function () { showAskForm('proof'); }
     }
   ];
+
+  /* "Pay a request": bring the customer to the Pay button of the waiting card (navigation only) */
+  function goToPayButton() {
+    var btn = document.querySelector('.payment-request-card .prc-pay-btn:not(:disabled)');
+    if (!btn) return;
+    btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    try { btn.focus({ preventScroll: true }); } catch (_e) {}
+  }
+
+  function groupOf(a, role) { return (a.group && typeof a.group === 'object') ? a.group[role] : a.group; }
 
   function available() {
     if (!S.ctx) return [];
@@ -159,18 +232,38 @@
     var x = { status: statusKey(), role: S.ctx.role, pending: pending, ready: S.ready === true, money: money,
               booking: bk, stage: bk ? (bk.work_stage || null) : null,
               bookingId: (th.context_type === 'booking' && th.context_id) ? th.context_id : null,
-              paid: !!(bk && bk.payment_status === 'paid') };
-    return ACTIONS.filter(function (a) {
-      if (a.roles.indexOf(x.role) === -1) return false;
-      if (a.needsTable && !x.ready) return false;
-      if (a.needsMoney && S.moneyReady !== true) return false;
-      return a.when(x);
-    }).map(function (a) {
-      var waiting = a.kind && pending.indexOf(a.kind) !== -1;
-      var blocked = a.blocked ? a.blocked(x) : null;
+              paid: !!(bk && bk.payment_status === 'paid'), thread: th };
+    if (x.status === 'completed' || x.status === 'cancelled') return [];
+
+    var order = GROUP_ORDER[x.role] || [];
+    var out = [];
+    ACTIONS.forEach(function (a, i) {
+      if (a.roles.indexOf(x.role) === -1) return;
+      if (a.needsTable && !x.ready) return;
+      if (a.needsMoney && S.moneyReady !== true) return;
+      var reason = null;
+      if (a.rule) {
+        var r = a.rule(x);
+        if (r === false) return;
+        if (typeof r === 'string') reason = r;
+      } else {
+        if (a.when && !a.when(x)) return;
+        if (a.blocked) reason = a.blocked(x);
+      }
+      if (x.status === 'disputed' && !a.allowDisputed) reason = LOCKED;
+      var waiting = !reason && a.kind && pending.indexOf(a.kind) !== -1;
       var hint = typeof a.hint === 'function' ? a.hint(x) : a.hint;
-      return { action: a, disabled: !!waiting || !!blocked, hint: waiting ? 'Waiting for a reply' : (blocked || hint), x: x };
+      var g = groupOf(a, x.role) || 'Other';
+      out.push({
+        action: a, group: g, order: i, ui: a.ui === true, x: x,
+        disabled: !!reason || !!waiting,
+        isReason: !!reason || !!waiting,
+        hint: waiting ? 'Waiting for a reply' : (reason || hint)
+      });
     });
+    function rank(g) { var n = order.indexOf(g); return n === -1 ? order.length : n; }
+    out.sort(function (p, q) { return rank(p.group) - rank(q.group) || p.order - q.order; });
+    return out;
   }
 
   /* ── button ──────────────────────────────────────────────── */
@@ -193,22 +286,27 @@
 
   /* ── sheet ───────────────────────────────────────────────── */
   function setTitle(text) { var t = $('jrSheetTitle'); if (t) t.textContent = text; }
+  /* A new view starts at the top, not where the last one was scrolled to */
+  function toTop() { var b = $('jrSheetBody'); if (b) b.scrollTop = 0; }
 
   function renderMenu() {
+    var fromView = S.view !== 'menu';
     S.view = 'menu';
     setTitle('Request');
     var body = $('jrSheetBody');
     if (!body) return;
     body.textContent = '';
+    if (fromView) toTop();
     var items = available();
     if (!items.length) {
-      body.appendChild(el('div', 'jr-sheet-empty', 'Nothing to request right now.'));
+      var closed = ['completed', 'cancelled'].indexOf(statusKey()) !== -1;
+      body.appendChild(el('div', 'jr-sheet-empty', closed ? 'This task is closed, so there is nothing to request.' : 'Nothing to request right now.'));
       return;
     }
     var groups = [];
     items.forEach(function (it) {
-      var g = groups.filter(function (x) { return x.name === it.action.group; })[0];
-      if (!g) { g = { name: it.action.group, items: [] }; groups.push(g); }
+      var g = groups.filter(function (x) { return x.name === it.group; })[0];
+      if (!g) { g = { name: it.group, items: [] }; groups.push(g); }
       g.items.push(it);
     });
     groups.forEach(function (g) {
@@ -220,8 +318,9 @@
         var ic = el('span', 'jr-sheet-item-icon'); ic.innerHTML = it.action.icon;
         var tx = el('span', 'jr-sheet-item-text');
         tx.appendChild(el('span', 'jr-sheet-item-label', it.action.label));
-        tx.appendChild(el('span', 'jr-sheet-item-hint', it.hint));
+        tx.appendChild(el('span', 'jr-sheet-item-hint' + (it.isReason ? ' is-reason' : ''), it.hint));
         b.appendChild(ic); b.appendChild(tx);
+        if (it.ui) b.appendChild(el('span', 'jr-sheet-tag', 'Not connected yet'));
         b.addEventListener('click', function () { it.action.run(it.x); });
         body.appendChild(b);
       });
@@ -234,6 +333,7 @@
     setTitle(meta.title.replace(' requested', ''));
     var body = $('jrSheetBody');
     body.textContent = '';
+    toTop();
 
     var back = el('button', 'jr-sheet-back'); back.type = 'button';
     back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
@@ -307,6 +407,7 @@
     setTitle(def.title);
     var body = $('jrSheetBody');
     body.textContent = '';
+    toTop();
 
     var back = el('button', 'jr-sheet-back'); back.type = 'button';
     back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
@@ -389,6 +490,7 @@
     setTitle(J.KINDS[kind].title);
     var body = $('jrSheetBody');
     body.textContent = '';
+    toTop();
     var back = el('button', 'jr-sheet-back'); back.type = 'button';
     back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
     back.addEventListener('click', renderMenu);
@@ -423,6 +525,7 @@
     setTitle(title);
     var body = $('jrSheetBody');
     body.textContent = '';
+    toTop();
     var back = el('button', 'jr-sheet-back'); back.type = 'button';
     back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
     back.addEventListener('click', renderMenu);
@@ -451,6 +554,7 @@
     var layer = $('jrSheetLayer');
     if (!layer || !S.ctx) return;
     S.opener = document.activeElement;
+    S.view = 'closed';
     renderMenu();
     layer.hidden = false;
     var closeBtn = $('jrSheetClose');
@@ -555,6 +659,7 @@
     probeMoney().then(function () { update(); });
   }
 
-  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, KINDS: KINDS };
+  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, KINDS: KINDS, context: function () { return S.ctx; },
+                        GROUP: GROUP, LOCKED: LOCKED, NEEDS_JOB: NEEDS_JOB, NEEDS_PAYMENT: NEEDS_PAYMENT, WAITING_CONFIRM: WAITING_CONFIRM };
 
 })();
