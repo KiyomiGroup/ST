@@ -396,6 +396,7 @@
     var nodes = body.querySelectorAll('[data-money-id="' + String(id).replace(/"/g, '') + '"]');
     for (var i = 0; i < nodes.length; i++) fillMoney(nodes[i]);
     if (window.JRRequests && window.JRRequests.update) window.JRRequests.update();
+    if (window.JRDetails && window.JRDetails.update) window.JRDetails.update();
   }
 
   async function loadMoney(threadId) {
@@ -719,6 +720,7 @@
       var msgs = (res.data || []).slice().reverse();
       await Promise.all([loadRequests(msgs), loadMoney(token)]);
       if (S.thread.id !== token) return;
+      if (window.JRDetails) window.JRDetails.update();      /* money rows are in: figures can be drawn */
       body.textContent = '';
       if (!msgs.length) {
         placeholder(body, 'No messages yet. Say hello! 👋');

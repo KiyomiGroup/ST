@@ -14,7 +14,9 @@
      JRMoney.init({ onChange })
      JRMoney.KINDS                   labels + class per kind
      JRMoney.isAddon(kind)           transport / additional_cost
-     JRMoney.summary(thread)         { base, additions, total, paid, outstanding }
+     JRMoney.summary(thread)         { base, additions, addonsPaid, total, paid, outstanding,
+                                       refunded, waiting, processing, payState }
+     JRMoney.history(thread)         every request for the task, newest first (Payment History)
      JRMoney.create(def)             tasker sends a request
      JRMoney.respond(id, status)     approved | declined | cancelled
      JRMoney.pay(id)                 customer pays a request (Paystack)
@@ -55,15 +57,24 @@
   function changed() { if (S.onChange) S.onChange(); }
 
   /* ── financial summary (spec 21, 30) ─────────────────────────
-     base         the originally agreed amount
-     additions    approved (or paid) transport / additional cost
-     total        base + additions
-     paid         everything paid so far
-     outstanding  what is still to pay                                    */
+     The ONE place the Job Details panel and the status banner get their figures.
+     Everything is computed from this task's own payment_requests (never typed in).
+       base         the originally agreed amount
+       additions    approved (or paid) transport / additional cost
+       addonsPaid   additional costs that are actually paid (server confirmed)
+       total        base + additions
+       paid         everything paid so far (status 'paid' only, set by the server)
+       outstanding  what is still to pay
+       refunded     money returned (status 'refunded')
+       waiting      amount in requests the customer has not answered yet
+       processing   true while a payment has started but is not confirmed
+       payState     none | requested | processing | partial | held | released |
+                    refunded | disputed
+     A declined or cancelled request never touches any figure (spec 21).      */
   function summary(thread, rowsArg) {
     var rows = rowsArg || (window.JRThread ? window.JRThread.moneyRows() : []);
     var bk = thread && thread.booking;
-    var base = 0, additions = 0, paid = 0;
+    var base = 0, additions = 0, addonsPaid = 0, paid = 0, refunded = 0, waiting = 0, processing = false;
 
     var mains = rows.filter(function (r) {
       return MAIN_KINDS.indexOf(kindOf(r)) !== -1 && (r.status === 'paid' || r.status === 'accepted');
@@ -75,8 +86,12 @@
 
     rows.forEach(function (r) {
       var amt = Number(r.amount) || 0;
-      if (r.status === 'paid') paid += amt;
-      if (isAddon(kindOf(r)) && (r.status === 'approved' || r.status === 'paid')) additions += amt;
+      var addon = isAddon(kindOf(r));
+      if (r.status === 'paid') { paid += amt; if (addon) addonsPaid += amt; }
+      if (addon && (r.status === 'approved' || r.status === 'paid')) additions += amt;
+      if (r.status === 'refunded') refunded += amt;
+      if (r.status === 'pending' || r.status === 'approved') waiting += amt;   /* 'approved' = legacy rows */
+      if (r.status === 'accepted') processing = true;
     });
 
     /* Paid some other way (dashboard booking flow): trust the booking */
@@ -86,7 +101,50 @@
     }
 
     var total = base + additions;
-    return { base: base, additions: additions, total: total, paid: paid, outstanding: Math.max(0, total - paid) };
+    var outstanding = Math.max(0, total - paid);
+
+    /* Wording for "Paid" / "Released" only appears when the server says so (spec 12, 36) */
+    var payState = 'none';
+    if (bk && bk.status === 'disputed') payState = 'disputed';
+    else if (paid > 0 && bk && bk.status === 'completed') payState = 'released';
+    else if (paid > 0 && outstanding > 0) payState = 'partial';
+    else if (paid > 0) payState = 'held';
+    else if (refunded > 0) payState = 'refunded';
+    else if (processing) payState = 'processing';
+    else if (waiting > 0) payState = 'requested';
+
+    return {
+      base: base, additions: additions, addonsPaid: addonsPaid, total: total, paid: paid,
+      outstanding: outstanding, refunded: refunded, waiting: waiting, processing: processing,
+      payState: payState
+    };
+  }
+
+  /* ── history (Payment History list) ──────────────────────────
+     Every request for this task, newest first. Declined, cancelled and failed
+     requests stay in the list (spec 21) but `counted` is false for them.   */
+  var HISTORY_LABEL = {
+    invoice: 'Invoice', materials: 'Materials', refund: 'Refund'
+  };
+  function history(thread, rowsArg) {
+    var rows = rowsArg || (window.JRThread ? window.JRThread.moneyRows() : []);
+    return rows.slice()
+      .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })
+      .map(function (r) {
+        var kind = kindOf(r);
+        var label = (KINDS[kind] && KINDS[kind].title) || HISTORY_LABEL[kind] || 'Payment request';
+        return {
+          id: r.id, kind: kind, label: label,
+          amount: Number(r.amount) || 0,
+          status: r.status === 'approved' ? 'pending' : (r.status || 'pending'),   /* legacy approved = payable */
+          counted: r.status === 'paid',
+          addon: isAddon(kind),
+          reason: r.reason || '',
+          title: r.title || '',
+          invoiceNo: r.invoice_no || r.invoice_number || '',
+          date: r.paid_at || r.created_at || ''
+        };
+      });
   }
 
   /* ── create (tasker) ─────────────────────────────────────────
@@ -259,7 +317,7 @@
 
   window.JRMoney = {
     init: init, KINDS: KINDS, isAddon: isAddon, kindOf: kindOf, PAY_KINDS: PAY_KINDS,
-    summary: summary, create: create, respond: respond, pay: pay, naira: naira,
+    summary: summary, history: history, create: create, respond: respond, pay: pay, naira: naira,
     MIN_AMOUNT: MIN_AMOUNT, MAX_AMOUNT: MAX_AMOUNT
   };
 
