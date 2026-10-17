@@ -74,7 +74,7 @@
 
     /* ── Hero (shared .pg-hero in styles.css), customers and taskers ───────
        Desktop: the search pill floats over the hero's bottom edge. Phones: the hero and
-       search bar stay fixed under the nav (like Find Tasks) and only the feed scrolls.
+       search bar scroll with the page under the fixed nav.
        769 to 900px keeps the hero as a card with the search bar below it. */
     .hf-ico-map { display: none; }
     body.role-tasker .hf-ico-pin { display: none; }
@@ -90,11 +90,10 @@
       .hf-search .spg-searchbar { margin: calc(-1 * var(--hero-float-gap)) auto 0; max-width: none; }
     }
     @media (max-width: 768px) {
-      .hf-top {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-        padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
-      }
-      .hf-top-spacer { display: block; }
+      /* The hero and search scroll with the page (the nav stays fixed); this only clears the nav */
+      .hf-top { padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px)); }
+      /* Tasker hero: no "New tasks near you…" line on phones */
+      .hf-hero-dt .pg-hero-note > [data-role-only="tasker"] { display: none; }
       .hf-hero-dt .pg-hero { padding-bottom: 100px; }
       .hf-hero-dt .spg-hero-spark { display: none; }
       .hf-hero-dt .pg-hero-title { margin-bottom: var(--space-1); }
@@ -285,7 +284,7 @@
 
   <div class="feed-root">
 
-    <!-- Hero + search. On a phone this block is fixed under the nav (like Find Tasks); the spacer below holds its place. -->
+    <!-- Hero + search. On a phone this block scrolls with the page. -->
     <div class="hf-top">
       <!-- HERO — the shared .pg-hero (same as the tasker pages), for customers and taskers. Copy and buttons switch on body.role-customer / body.role-tasker.
            Ids ending in Dt are the ones the page script fills in. -->
