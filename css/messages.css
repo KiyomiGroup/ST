@@ -922,9 +922,13 @@ body.msg-page {
 .jr-money-lines { margin-bottom: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-bg-subtle); }
 .jr-money-line { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--text-xs); line-height: 1.8; color: var(--color-text-secondary); }
 .jr-req-pill--approved,
+.jr-req-pill--released,
 .jr-req-pill--paid { background: var(--color-mint); color: var(--color-primary); }
+.jr-req-pill--processing,
 .jr-req-pill--accepted { background: var(--color-warning-soft); color: var(--color-warning); }
-.jr-req-pill--cancelled { background: var(--color-bg-muted); color: var(--color-text-muted); }
+.jr-req-pill--cancelled,
+.jr-req-pill--refunded { background: var(--color-bg-muted); color: var(--color-text-muted); }
+.jr-req-pill--failed { background: var(--color-danger-soft); color: var(--color-danger); }
 .jr-money--cancelled,
 .jr-money--declined { opacity: 0.75; }
 

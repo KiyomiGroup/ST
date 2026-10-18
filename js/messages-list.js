@@ -99,7 +99,7 @@
        cancelled             booking cancelled
        awaiting_confirmation booking.status = awaiting_confirmation
        secured               booking paid, or latest payment request paid
-       payment_pending       latest payment request pending / accepted
+       payment_pending       latest payment request pending / processing / failed (old 'accepted' too)
        inquiry               none of the above (just talking)           */
   function derive(t, role) {
     var bk = t.booking || null;
@@ -111,7 +111,7 @@
     else if (bk && bk.status === 'cancelled') key = 'cancelled';
     else if (bk && bk.status === 'awaiting_confirmation') key = 'awaiting_confirmation';
     else if ((bk && bk.payment_status === 'paid') || (pr && pr.status === 'paid')) key = 'secured';
-    else if (pr && (pr.status === 'pending' || pr.status === 'accepted')) key = 'payment_pending';
+    else if (pr && (pr.status === 'pending' || pr.status === 'processing' || pr.status === 'failed' || pr.status === 'accepted')) key = 'payment_pending';
 
     var amount = (pr && pr.amount) || t.agreed_price || (bk && bk.amount) || 0;
     var isCustomer = role === 'customer';

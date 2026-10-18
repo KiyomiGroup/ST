@@ -7,18 +7,28 @@
      payment            custom amount          (what existed before)
      full_payment       the agreed amount, no typing
      remaining_payment  what is still unpaid
-     transport          needs the customer's approval, then is paid
-     additional_cost    needs the customer's approval, then is paid
+     transport          the customer pays or declines (no approve step)
+     additional_cost    the customer pays or declines (no approve step)
+
+   Status of a request (Stage 7, needs sql/messaging-step7.sql):
+     pending -> processing -> paid        the customer pays; 'processing' = started, not confirmed
+     processing -> failed -> processing   a payment attempt failed; the customer can try again
+     pending -> declined                  the customer declines ANY kind
+     pending -> cancelled                 the tasker cancels
+   A paid request is also 'held' (in escrow) until the job is released (settlement 'released').
+   Old rows may still say 'approved' (= pending) or 'accepted' (= processing): normStatus().
 
    Public API (window.JRMoney), used by messages.html / -thread / -requests:
      JRMoney.init({ onChange })
      JRMoney.KINDS                   labels + class per kind
      JRMoney.isAddon(kind)           transport / additional_cost
-     JRMoney.summary(thread)         { base, additions, addonsPaid, total, paid, outstanding,
+     JRMoney.summary(thread)         { base, additions, addonsPaid, total, paid, paidMain, outstanding,
                                        refunded, waiting, processing, payState }
      JRMoney.history(thread)         every request for the task, newest first (Payment History)
-     JRMoney.create(def)             tasker sends a request
-     JRMoney.respond(id, status)     approved | declined | cancelled
+     JRMoney.respond(id, status)     declined (customer) | cancelled (tasker)
+     JRMoney.normStatus(status)      old 'approved' -> 'pending', old 'accepted' -> 'processing'
+     JRMoney.canRevise(row)          tasker, declined, nothing open already revises it
+     JRMoney.create(def)             def.revises = id of a declined request to send a revised one
      JRMoney.pay(id)                 customer pays a request (Paystack)
      JRMoney.naira(n)
 
@@ -55,18 +65,29 @@
   function isAddon(kind) { return ADDON_KINDS.indexOf(kind) !== -1; }
   function kindOf(row) { return (row && row.kind) || 'payment'; }
   function changed() { if (S.onChange) S.onChange(); }
+  /* One name per state. The database may still hold an old 'approved' / 'accepted' row. */
+  function normStatus(st) {
+    if (st === 'approved') return 'pending';
+    if (st === 'accepted') return 'processing';
+    return st || 'pending';
+  }
 
   /* ── financial summary (spec 21, 30) ─────────────────────────
      The ONE place the Job Details panel and the status banner get their figures.
      Everything is computed from this task's own payment_requests (never typed in).
+     The server mirrors it in job_money_snapshot() (sql/messaging-step7.sql) for the
+     checks that must not be trusted to the browser (no second full payment, remaining
+     payment never above what is left). Keep the two in step.
        base         the originally agreed amount
-       additions    approved (or paid) transport / additional cost
-       addonsPaid   additional costs that are actually paid (server confirmed)
+       additions    transport / additional cost that is PAID (a pending, declined or
+                    cancelled add-on never changes the total, spec 21)
+       addonsPaid   same as additions (server confirmed)
        total        base + additions
        paid         everything paid so far (status 'paid' only, set by the server)
-       outstanding  what is still to pay
+       paidMain     paid minus paid add-ons (an add-on may be paid before the main amount)
+       outstanding  what is still to pay (never counts an unpaid add-on)
        refunded     money returned (status 'refunded')
-       waiting      amount in requests the customer has not answered yet
+       waiting      amount in requests still to be paid (pending, or a payment that failed)
        processing   true while a payment has started but is not confirmed
        payState     none | requested | processing | partial | held | released |
                     refunded | disputed
@@ -77,7 +98,8 @@
     var base = 0, additions = 0, addonsPaid = 0, paid = 0, refunded = 0, waiting = 0, processing = false;
 
     var mains = rows.filter(function (r) {
-      return MAIN_KINDS.indexOf(kindOf(r)) !== -1 && (r.status === 'paid' || r.status === 'accepted');
+      var st = normStatus(r.status);
+      return MAIN_KINDS.indexOf(kindOf(r)) !== -1 && (st === 'paid' || st === 'processing');
     }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
 
     if (mains.length) base = Number(mains[0].amount) || 0;
@@ -87,11 +109,11 @@
     rows.forEach(function (r) {
       var amt = Number(r.amount) || 0;
       var addon = isAddon(kindOf(r));
-      if (r.status === 'paid') { paid += amt; if (addon) addonsPaid += amt; }
-      if (addon && (r.status === 'approved' || r.status === 'paid')) additions += amt;
-      if (r.status === 'refunded') refunded += amt;
-      if (r.status === 'pending' || r.status === 'approved') waiting += amt;   /* 'approved' = legacy rows */
-      if (r.status === 'accepted') processing = true;
+      var st = normStatus(r.status);
+      if (st === 'paid') { paid += amt; if (addon) { addonsPaid += amt; additions += amt; } }
+      if (st === 'refunded') refunded += amt;
+      if (st === 'pending' || st === 'failed') waiting += amt;
+      if (st === 'processing') processing = true;
     });
 
     /* Paid some other way (dashboard booking flow): trust the booking */
@@ -102,6 +124,7 @@
 
     var total = base + additions;
     var outstanding = Math.max(0, total - paid);
+    var paidMain = Math.max(0, paid - addonsPaid);
 
     /* Wording for "Paid" / "Released" only appears when the server says so (spec 12, 36) */
     var payState = 'none';
@@ -115,7 +138,7 @@
 
     return {
       base: base, additions: additions, addonsPaid: addonsPaid, total: total, paid: paid,
-      outstanding: outstanding, refunded: refunded, waiting: waiting, processing: processing,
+      paidMain: paidMain, outstanding: outstanding, refunded: refunded, waiting: waiting, processing: processing,
       payState: payState
     };
   }
@@ -136,7 +159,10 @@
         return {
           id: r.id, kind: kind, label: label,
           amount: Number(r.amount) || 0,
-          status: r.status === 'approved' ? 'pending' : (r.status || 'pending'),   /* legacy approved = payable */
+          status: normStatus(r.status),                 /* old approved = pending, old accepted = processing */
+          /* paid -> held in escrow -> released (spec 12). Set by the server only. */
+          stage: normStatus(r.status) === 'paid' ? (r.settlement || 'held') : '',
+          revises: r.revises_id || '',
           counted: r.status === 'paid',
           addon: isAddon(kind),
           reason: r.reason || '',
@@ -165,6 +191,8 @@
       thread_id: t.id, tasker_id: t.tasker_id, customer_id: t.customer_id,
       amount: amount, status: 'pending'
     };
+    /* A revised request points at the declined one. The original is never edited (spec 20). */
+    if (def.revises) { row.revises_id = def.revises; row.kind = kind; }
     if (kind !== 'payment' || def.reason) {
       row.kind = kind;
       if (def.reason) row.reason = def.reason;
@@ -178,7 +206,8 @@
       req = r.data;
     } catch (e) {
       var msg = (e && e.message) || String(e);
-      if (/kind|reason|breakdown/.test(msg)) msg = 'Run sql/messaging-step6.sql first (' + msg + ')';
+      if (/revises_id/.test(msg)) msg = 'Run sql/messaging-step7.sql first (' + msg + ')';
+      else if (/kind|reason|breakdown/.test(msg)) msg = 'Run sql/messaging-step6.sql first (' + msg + ')';
       toast('Could not send the request: ' + msg, 'error');
       return false;
     }
@@ -203,7 +232,7 @@
     window.JRThread.append(msgRow);
 
     var now = new Date().toISOString();
-    var preview = (KINDS[kind].pre + ': ' + naira(amount)).slice(0, 80);
+    var preview = ((def.revises ? 'Revised ' + KINDS[kind].pre.toLowerCase() : KINDS[kind].pre) + ': ' + naira(amount)).slice(0, 80);
     var cur = t.customer_unread || 0;
     try {
       await sb.from('message_threads').update({ last_message: preview, last_message_at: now, customer_unread: cur + 1 }).eq('id', t.id);
@@ -225,9 +254,13 @@
     return true;
   }
 
-  /* ── approve / decline / cancel ──────────────────────────── */
+  /* ── decline / cancel ─────────────────────────────────────────
+     There is no approve step (spec 11, 12, 21): the customer pays or declines ANY kind,
+     the tasker may cancel a request that has not been answered. The database decides
+     (payment_requests_guard); if it refuses we show its message and repaint the card. */
   async function respond(id, status) {
     if (S.busy[id]) return false;
+    if (status !== 'declined' && status !== 'cancelled') return false;
     var c = ctx();
     var row = window.JRThread.getMoney(id);
     if (!c || !row) return false;
@@ -235,19 +268,20 @@
     try {
       var r = await window.supabase.from('payment_requests').update({ status: status }).eq('id', id).select().maybeSingle();
       if (r.error) throw r.error;
-      var next = Object.assign({}, row, r.data || {}, { status: (r.data && r.data.status) || status });
+      /* No row back = the database did not change it (not allowed, or not yours). Never pretend it worked. */
+      if (!r.data || r.data.status !== status) throw new Error('That request could not be ' + status + '. Please refresh and try again.');
+      var next = Object.assign({}, row, r.data);
       window.JRThread.onMoneyChange(next);
 
       var t = c.thread, me = c.user, kind = kindOf(row);
       var other = me.id === t.customer_id ? t.tasker_id : t.customer_id;
-      if (status === 'approved' || status === 'declined') {
-        var verb = status === 'approved' ? 'approved' : 'declined';
-        /* the database posts the "approved / declined" line in the chat itself */
+      if (status === 'declined') {
+        /* the database posts the "declined" line in the chat itself */
         try {
           await window.supabase.from('notifications').insert({
             user_id: other, type: 'new_message',
-            title: KINDS[kind].short + ' ' + verb,
-            message: 'The customer ' + verb + ' ' + naira(row.amount) + '.',
+            title: (KINDS[kind] ? KINDS[kind].short : 'Payment request') + ' declined',
+            message: 'The customer declined ' + naira(row.amount) + '. You can send a revised request.',
             data: { thread_id: t.id, payment_request_id: id }, is_read: false
           });
         } catch (_n) {}
@@ -256,11 +290,26 @@
       return true;
     } catch (e) {
       toast((e && e.message) || 'Could not update the request', 'error');
-      window.JRThread.onMoneyChange(row);                    /* repaint: re-enables the buttons */
+      /* show the truth: the request may have changed on the server (e.g. payment just started) */
+      try {
+        var cur = await window.supabase.from('payment_requests').select('*').eq('id', id).maybeSingle();
+        window.JRThread.onMoneyChange(Object.assign({}, row, cur.data || {}));
+      } catch (_x) { window.JRThread.onMoneyChange(row); }
       return false;
     } finally {
       S.busy[id] = false;
     }
+  }
+
+  /* A declined request can be revised by its tasker, once, while no revision is open (spec 20) */
+  function canRevise(row) {
+    var c = ctx();
+    if (!row || !c || c.role !== 'tasker' || normStatus(row.status) !== 'declined' || !KINDS[kindOf(row)]) return false;
+    var rows = window.JRThread ? window.JRThread.moneyRows() : [];
+    return !rows.some(function (r) {
+      var st = normStatus(r.status);
+      return r.revises_id === row.id && (st === 'pending' || st === 'processing' || st === 'paid');
+    });
   }
 
   /* ── pay (customer) ──────────────────────────────────────── */
@@ -318,6 +367,7 @@
   window.JRMoney = {
     init: init, KINDS: KINDS, isAddon: isAddon, kindOf: kindOf, PAY_KINDS: PAY_KINDS,
     summary: summary, history: history, create: create, respond: respond, pay: pay, naira: naira,
+    normStatus: normStatus, canRevise: canRevise,
     MIN_AMOUNT: MIN_AMOUNT, MAX_AMOUNT: MAX_AMOUNT
   };
 

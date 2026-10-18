@@ -276,11 +276,14 @@
   }
 
   /* ── money request card (step 6) ─────────────────────────── */
-  /* No "approved" state: the customer pays or declines (spec 11, 12, 21). Old rows that the
-     database still marks 'approved' are shown as pending (payable) until Stage 7 removes it. */
+  /* No "approved" state: the customer pays or declines ANY kind (spec 11, 12, 21).
+     States: pending -> processing -> paid (held in escrow -> released), or declined / cancelled.
+     A payment attempt that fails shows 'failed' and the customer can pay again (Stage 7).
+     Old rows may still say 'approved' (= pending) or 'accepted' (= processing): JRMoney.normStatus. */
   var MONEY_STATUS_LABEL = {
-    pending: 'Payment requested', accepted: 'Payment processing',
-    paid: 'Paid', declined: 'Declined', cancelled: 'Cancelled'
+    pending: 'Payment requested', processing: 'Payment processing',
+    paid: 'Paid', released: 'Released', declined: 'Declined', cancelled: 'Cancelled',
+    failed: 'Payment failed', refunded: 'Refunded'
   };
   var ADDON_BREAKDOWN_LABEL = { work: 'Additional work', materials: 'Materials' };
 
@@ -299,7 +302,9 @@
     var amount = req ? Number(req.amount) : (parseInt(parts[2], 10) || 0);
     var kind = req ? (req.kind || 'payment') : 'payment';
     var addon = J ? J.isAddon(kind) : false;
-    var status = req ? (req.status === 'approved' ? 'pending' : req.status) : 'pending';
+    var status = req ? (J ? J.normStatus(req.status) : (req.status === 'approved' ? 'pending' : req.status === 'accepted' ? 'processing' : req.status)) : 'pending';
+    /* paid -> held in escrow -> released: the server sets settlement (spec 12) */
+    var released = status === 'paid' && !!req && req.settlement === 'released';
     var busy = !!(req && req._busy);
     var fmt = amount > 0 ? naira(amount) : '—';
     var isCustomer = S.role === 'customer';
@@ -313,8 +318,9 @@
     var icon = el('div', 'prc-icon'); icon.innerHTML = ICON_CARD;
     head.appendChild(icon);
     head.appendChild(el('span', 'prc-label', title));
-    var pillText = MONEY_STATUS_LABEL[status] || status;
-    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, pillText));
+    var pillKey = released ? 'released' : status;
+    var pillText = MONEY_STATUS_LABEL[pillKey] || status;
+    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + pillKey, pillText));
     card.appendChild(head);
 
     card.appendChild(el('div', 'prc-amount', fmt));
@@ -337,7 +343,7 @@
     }
 
     var actions = el('div', 'prc-actions');
-    var payable = !!req && !busy && isCustomer && (status === 'pending' || status === 'accepted');
+    var payable = !!req && !busy && isCustomer && (status === 'pending' || status === 'processing' || status === 'failed');
     function button(label, cls, fn) {
       var b = el('button', cls, label); b.type = 'button'; b.disabled = busy;
       b.addEventListener('click', fn);
@@ -348,27 +354,44 @@
       /* Request row not loaded (older cards / no access): keep the old behaviour */
       if (isCustomer && !isMine) actions.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { if (J) J.pay(id); }));
       else actions.appendChild(el('span', 'prc-status-badge accepted', 'Awaiting customer payment'));
-    } else if (payable && status === 'pending') {
-      /* Every kind: Pay / Decline Request / Ask a Question (nothing else) */
+    } else if (payable) {
+      /* Every kind, pending or retrying a payment that did not finish:
+         Pay / Decline Request / Ask a Question (nothing else, no approve step) */
       actions.classList.add('is-stack');
       var row1 = el('div', 'prc-actions');
       row1.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { J.pay(id); }));
       row1.appendChild(button('Decline Request', 'jr-req-btn', function () { J.respond(id, 'declined'); }));
       actions.appendChild(row1);
       actions.appendChild(button('Ask a Question', 'jr-req-btn', focusComposer));
-    } else if (payable) {
-      actions.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { J.pay(id); }));
     } else if (busy) {
       actions.appendChild(el('span', 'prc-status-badge accepted', 'Opening payment…'));
-    } else if (!isCustomer && (status === 'pending' || status === 'accepted')) {
-      if (status === 'pending') actions.appendChild(button('Cancel request', 'jr-req-btn', function () { J.respond(id, 'cancelled'); }));
-      else actions.appendChild(el('span', 'prc-status-badge accepted', 'Customer is paying'));
+    } else if (!isCustomer && (status === 'pending' || status === 'failed')) {
+      actions.appendChild(button('Cancel request', 'jr-req-btn', function () { J.respond(id, 'cancelled'); }));
+    } else if (!isCustomer && status === 'processing') {
+      actions.appendChild(el('span', 'prc-status-badge accepted', 'Customer is paying'));
     } else if (status === 'paid') {
-      actions.appendChild(el('span', 'prc-status-badge paid', '✓ Paid. Funds in escrow'));
+      actions.appendChild(el('span', 'prc-status-badge paid',
+        released ? (isCustomer ? '✓ Paid. Released to the Tasker' : '✓ Paid. Released to your wallet')
+                 : '✓ Paid. Funds in escrow'));
+    } else if (status === 'declined' && J && J.canRevise(req)) {
+      /* spec 20: a revised request, the declined one stays in the history */
+      actions.appendChild(button('Send Revised Request', 'jr-req-btn', function () {
+        if (window.JRRequests && window.JRRequests.openRevise) window.JRRequests.openRevise(req);
+      }));
     }
     if (actions.childNodes.length) card.appendChild(actions);
 
-    if (req && (status === 'pending' || status === 'accepted') && isCustomer) {
+    if (req && status === 'processing' && isCustomer) {
+      card.appendChild(el('div', 'jr-req-note', 'A payment was started but not confirmed yet. If you already paid, it will show here shortly.'));
+    }
+    if (req && status === 'failed' && isCustomer) {
+      card.appendChild(el('div', 'jr-req-note', 'The payment did not go through and you have not been charged. You can try again.'));
+    }
+    if (req && req.revises_id) {
+      card.appendChild(el('div', 'jr-req-note', 'Revised request. The earlier one was declined and is kept in the history.'));
+    }
+
+    if (req && (status === 'pending' || status === 'processing' || status === 'failed') && isCustomer) {
       var notice = el('div', 'prc-notice');
       notice.appendChild(el('strong', null, 'Important: '));
       notice.appendChild(document.createTextNode('Only pay through StreetTasker. Payments made outside are '));
