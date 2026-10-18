@@ -86,6 +86,12 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
         </button>
 
+        <!-- Stage 10: shown while a problem report is open on this job (filled by js/messages-details.js) -->
+        <div class="jr-dispute-bar" id="jrDisputeBar" role="status" hidden>
+          <span class="jr-dispute-bar-text" id="jrDisputeBarText"></span>
+          <button class="jr-dispute-bar-btn" id="jrDisputeBarBtn" type="button">View report</button>
+        </div>
+
         <!-- Shown when a message is blocked for containing contact details (no "send anyway") -->
         <div class="jr-warn" id="jrComposeWarn" role="alert" hidden>
           <div class="jr-warn-text">

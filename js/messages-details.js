@@ -28,6 +28,12 @@
      ("View receipt"). They are drawn inside this panel on purpose: on a phone this sheet sits
      above the Request sheet, so a receipt opened in the Request sheet would be hidden behind it.
 
+   Problem reports (Stage 10): job_disputes, job_refunds and dispute_events are read here and shown in
+     the "dispute" view; a report is opened or withdrawn only through the server functions
+     open_job_dispute / withdraw_job_dispute. A decision and a "Refund recorded" line appear only
+     once support has written them. Refunds are made in the Paystack dashboard by the owner; this
+     page never moves money. A bar above the composer (#jrDisputeBar) shows while a report is live.
+
    NOT built here (greyed in the action list with the reason):
      Evidence (Stage 9) has no data yet.
 
@@ -74,17 +80,40 @@
     receipt:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .7V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="14" y2="12"/></svg>',
     history:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
     activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    dispute:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></svg>',
     evidence: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
   };
+
+  var LIVE = ['open', 'under_review'];
+  var DP_STATUS = {
+    open:         { label: 'Open',         tone: 'danger' },
+    under_review: { label: 'Under review', tone: 'action' },
+    resolved:     { label: 'Resolved',     tone: 'success' },
+    withdrawn:    { label: 'Withdrawn',    tone: 'muted' }
+  };
+  var DP_CATEGORY = {
+    not_done: 'The work was not done', poor_quality: 'The work was poor quality',
+    no_show: 'The other person did not show up', wrong_amount: 'The amount is wrong',
+    payment_issue: 'A payment problem', other: 'Something else'
+  };
+  var DP_OUTCOME = {
+    refund_full: 'Full refund', refund_partial: 'Partial refund',
+    release_to_tasker: 'The Tasker is paid, no refund', split: 'Part refunded, the rest to the Tasker',
+    no_action: 'No action needed'
+  };
+  var DP_REASON_MIN = 10, DP_REASON_MAX = 1000;
 
   var S = {
     ctx: null,                 /* { thread, user, role } */
     threadId: null,
-    view: 'main',              /* main | history | activity | receipts | receipt */
+    view: 'main',              /* main | history | activity | receipts | receipt | dispute */
     filter: 'all',             /* history filter: all | invoice */
     extra: {},                 /* per thread: { title, location, deadline, scheduled } */
     ev: { key: '', rows: null, loading: false, failed: false },
     rc: { key: '', rows: null, loading: false, failed: false },   /* receipts of this thread */
+    dp: { key: '', rows: null, refunds: [], events: [], loading: false, failed: false },   /* problem reports */
+    dpDraft: { category: '', reason: '' },     /* kept so a redraw never wipes what the person typed */
+    dpBusy: false, dpError: '',
     rcOpen: null,              /* receipt row shown in the 'receipt' view */
     rcBack: 'receipts',        /* where Back goes from the 'receipt' view */
     eventsReady: null,         /* null = not probed, true / false after */
@@ -208,6 +237,58 @@
     return true;
   }
 
+  /* Problem reports of this thread. Reloaded when the thread changes, a message arrives, the
+     dispute view is opened, or the person sends / withdraws a report (force). */
+  function liveDispute() {
+    var rows = S.dp.rows || [];
+    for (var i = 0; i < rows.length; i++) if (LIVE.indexOf(rows[i].status) !== -1) return rows[i];
+    return null;
+  }
+  async function loadDisputes(force) {
+    var c = S.ctx;
+    if (!c || !window.supabase) return false;
+    var token = c.thread.id;
+    var key = token + '|' + (c.thread.last_message_at || '');
+    if (!force && (key === S.dp.key || S.dp.loading)) return false;
+    S.dp.loading = true;
+    try {
+      var sb = window.supabase;
+      var rs = await Promise.all([
+        sb.from('job_disputes')
+          .select('id,status,category,reason,opened_by,opened_by_role,outcome,resolution_note,opened_at,resolved_at')
+          .eq('thread_id', token).order('opened_at', { ascending: false }).limit(20),
+        sb.from('job_refunds').select('id,dispute_id,amount,paystack_ref,created_at')
+          .eq('thread_id', token).order('created_at', { ascending: true }).limit(50),
+        sb.from('dispute_events').select('id,dispute_id,kind,actor_id,note,created_at')
+          .eq('thread_id', token).order('created_at', { ascending: true }).limit(100)
+      ]);
+      if (!S.ctx || S.ctx.thread.id !== token) { S.dp.loading = false; return false; }
+      var bad = !!rs[0].error;
+      S.dp = {
+        key: key, loading: false, failed: bad,
+        rows: bad ? null : (rs[0].data || []),
+        refunds: rs[1].error ? [] : (rs[1].data || []),
+        events: rs[2].error ? [] : (rs[2].data || [])
+      };
+      return true;
+    } catch (_e) {
+      S.dp = { key: key, loading: false, failed: true, rows: null, refunds: [], events: [] };
+      return true;
+    }
+  }
+
+  function updateBar() {
+    var bar = $('jrDisputeBar');
+    if (!bar) return;
+    var live = S.ctx ? liveDispute() : null;
+    if (!live) { bar.hidden = true; return; }
+    var txt = $('jrDisputeBarText');
+    if (txt) txt.textContent = live.status === 'under_review'
+      ? 'A problem report on this job is being reviewed by StreetTasker support.'
+      : 'A problem report is open on this job. StreetTasker support will review it.';
+    bar.hidden = false;
+  }
+
   /* ── view model: one object both hosts draw from ─────────── */
   function model() {
     var c = S.ctx;
@@ -227,7 +308,7 @@
       sm: sm, hist: hist,
       bookingId: bookingIdOf(t),
       ev: S.ev, eventsReady: S.eventsReady,
-      rc: S.rc
+      rc: S.rc, dp: S.dp
     };
   }
 
@@ -236,7 +317,9 @@
     return JSON.stringify([
       S.view, S.filter, m.t.id, m.title, m.location, m.scheduled, m.deadline, m.status,
       m.sm, m.hist, m.ev.rows, m.ev.loading, m.ev.failed, m.eventsReady, m.me,
-      m.rc.rows && m.rc.rows.map(function (r) { return r.id; }), m.rc.failed, S.rcOpen && S.rcOpen.id
+      m.rc.rows && m.rc.rows.map(function (r) { return r.id; }), m.rc.failed, S.rcOpen && S.rcOpen.id,
+      m.dp.key, m.dp.failed, m.dp.loading, m.dp.rows && m.dp.rows.map(function (d) { return d.id + d.status; }),
+      m.dp.refunds.length, m.dp.events.length, S.dpBusy, S.dpError
     ]);
   }
 
@@ -286,6 +369,7 @@
       probeEvents().then(function () { return loadEvents(); }).then(function () { paint(true); });
     }
     if (view === 'receipts') loadReceipts().then(function (did) { if (did) schedule(); });
+    if (view === 'dispute') { S.dpError = ''; loadDisputes(true).then(function (did) { if (did) { updateBar(); paint(true); } }); }
     paint(true);
     var body = S.sheet.open ? $('jrDetailSheetBody') : $('jrDetailBody');
     if (body) body.scrollTop = 0;
@@ -294,6 +378,19 @@
   /* ── main view ───────────────────────────────────────────── */
   function viewMain(m) {
     var wrap = el('div', 'jr-dt');
+
+    /* A live problem report comes first: both people must see it */
+    var liveDp = m.dp.rows ? (function () { for (var i = 0; i < m.dp.rows.length; i++) if (LIVE.indexOf(m.dp.rows[i].status) !== -1) return m.dp.rows[i]; return null; })() : null;
+    if (liveDp) {
+      var alertBox = el('div', 'jr-dp-card jr-dp-card--live');
+      alertBox.setAttribute('role', 'status');
+      alertBox.appendChild(el('div', 'jr-dp-name', 'A problem report is ' + (liveDp.status === 'under_review' ? 'being reviewed' : 'open')));
+      var seeBtn = el('button', 'jr-req-btn', 'View report');
+      seeBtn.type = 'button';
+      seeBtn.addEventListener('click', function () { goto('dispute'); });
+      alertBox.appendChild(seeBtn);
+      wrap.appendChild(alertBox);
+    }
 
     /* The job */
     var g1 = group('The job');
@@ -381,6 +478,24 @@
     }));
     g3.appendChild(list);
     wrap.appendChild(g3);
+
+    /* Problem reports */
+    var g4 = group('Problem with this job?');
+    var list4 = el('div', 'jr-dt-actions');
+    var pastCount = (m.dp.rows || []).filter(function (d) { return LIVE.indexOf(d.status) === -1; }).length;
+    var dpReason = '';
+    if (m.dp.failed) dpReason = 'Not available yet';
+    else if (m.dp.rows === null) dpReason = 'Loading…';
+    else if (!liveDp && !m.bookingId && !(m.sm.paid > 0)) dpReason = 'Available once a payment or booking exists';   /* UI hint only; the server decides */
+    list4.appendChild(actionItem({
+      icon: 'dispute',
+      label: liveDp ? 'Problem report' : 'Report a problem',
+      hint: liveDp ? DP_STATUS[liveDp.status].label : (pastCount ? (pastCount === 1 ? '1 past report' : pastCount + ' past reports') : ''),
+      reason: dpReason,
+      onClick: function () { goto('dispute'); }
+    }));
+    g4.appendChild(list4);
+    wrap.appendChild(g4);
     return wrap;
   }
 
@@ -551,7 +666,183 @@
     return wrap;
   }
 
+  /* ── Problem report ──────────────────────────────────────── */
+  function naira2(n) {
+    return Number(n || 0).toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  function toast(msg, type) { if (window.JRThread && window.JRThread.toast) window.JRThread.toast(msg, type); }
+
+  function whoOf(m, actorId, d) {
+    if (!actorId) return 'StreetTasker';
+    if (actorId === m.me) return 'You';
+    if (d && actorId === d.opened_by) return d.opened_by_role === 'customer' ? 'The Customer' : 'The Tasker';
+    return 'StreetTasker support';
+  }
+  var EVENT_TEXT = {
+    opened: 'Report opened', under_review: 'Support started reviewing', withdrawn: 'Report withdrawn',
+    resolved: 'Decision recorded', refund_recorded: '', evidence_removed: ''
+  };
+
+  async function sendReport(m) {
+    var cat = S.dpDraft.category, reason = (S.dpDraft.reason || '').trim();
+    if (!cat) { S.dpError = 'Choose what the problem is about.'; paint(true); return; }
+    if (reason.length < DP_REASON_MIN) { S.dpError = 'Please describe the problem in at least ' + DP_REASON_MIN + ' characters.'; paint(true); return; }
+    if (window.JRThread && window.JRThread.hasContactInfo && window.JRThread.hasContactInfo(reason)) {
+      S.dpError = 'Please do not include phone numbers, emails or links. Describe what happened instead.'; paint(true); return;
+    }
+    S.dpBusy = true; S.dpError = ''; paint(true);
+    var token = m.t.id;
+    try {
+      var r = await window.supabase.rpc('open_job_dispute', { p_thread: String(token), p_category: cat, p_reason: reason });
+      var d = r && r.data;
+      if (r.error || !d || !d.ok) {
+        S.dpError = (d && d.error) || 'Could not send your report. Please try again.';
+      } else {
+        S.dpDraft = { category: '', reason: '' };
+        toast('Report sent. Support will review it.');
+      }
+    } catch (_e) { S.dpError = 'Could not send your report. Check your connection and try again.'; }
+    S.dpBusy = false;
+    if (S.ctx && S.ctx.thread.id === token) { await loadDisputes(true); updateBar(); }
+    paint(true);
+  }
+
+  async function withdrawReport(m, d) {
+    if (!window.confirm('Withdraw this report? You can open a new one later if you need to.')) return;
+    S.dpBusy = true; S.dpError = ''; paint(true);
+    var token = m.t.id;
+    try {
+      var r = await window.supabase.rpc('withdraw_job_dispute', { p_dispute: d.id });
+      var res = r && r.data;
+      if (r.error || !res || !res.ok) S.dpError = (res && res.error) || 'Could not withdraw the report. Please try again.';
+      else toast('Report withdrawn.');
+    } catch (_e) { S.dpError = 'Could not withdraw the report. Check your connection and try again.'; }
+    S.dpBusy = false;
+    if (S.ctx && S.ctx.thread.id === token) { await loadDisputes(true); updateBar(); }
+    paint(true);
+  }
+
+  function disputeCard(m, d, live) {
+    var card = el('div', 'jr-dp-card' + (live ? ' jr-dp-card--live' : ''));
+    var top = el('div', 'jr-dp-top');
+    top.appendChild(el('span', 'jr-dp-name', DP_CATEGORY[d.category] || 'Problem report'));
+    var st = DP_STATUS[d.status] || { label: humanise(d.status), tone: 'muted' };
+    top.appendChild(chip(st.label, st.tone));
+    card.appendChild(top);
+    card.appendChild(el('div', 'jr-dp-meta', 'Opened by ' + whoOf(m, d.opened_by, d).toLowerCase() + ' · ' + fmtDateTime(d.opened_at)));
+    card.appendChild(el('p', 'jr-dp-text', d.reason));
+
+    if (d.status === 'resolved') {
+      var head = el('div', 'jr-dp-name', 'Decision: ' + (DP_OUTCOME[d.outcome] || humanise(d.outcome)));
+      card.appendChild(head);
+      if (d.resolution_note) card.appendChild(el('p', 'jr-dp-text', d.resolution_note));
+      if (d.resolved_at) card.appendChild(el('div', 'jr-dp-meta', 'Decided ' + fmtDateTime(d.resolved_at)));
+    }
+
+    var refunds = m.dp.refunds.filter(function (x) { return x.dispute_id === d.id; });
+    if (refunds.length) {
+      card.appendChild(el('div', 'jr-dp-name', 'Refund recorded'));
+      refunds.forEach(function (x) {
+        var line = el('div', 'jr-dp-refund');
+        line.appendChild(el('span', '', naira2(x.amount)));
+        line.appendChild(el('span', 'jr-dp-refund-ref', 'Ref ' + x.paystack_ref + ' · ' + fmtDate(x.created_at)));
+        card.appendChild(line);
+      });
+    }
+
+    if (live) {
+      var evs = m.dp.events.filter(function (x) { return x.dispute_id === d.id; });
+      if (evs.length) {
+        var ol = el('ol', 'jr-dt-timeline');
+        evs.forEach(function (e) {
+          var li = el('li', 'jr-dt-event');
+          li.appendChild(el('span', 'jr-dt-dot'));
+          var b = el('div', 'jr-dt-event-body');
+          var text = EVENT_TEXT[e.kind] || e.note || humanise(e.kind);
+          b.appendChild(el('div', 'jr-dt-event-text', text));
+          b.appendChild(el('div', 'jr-dt-event-meta', whoOf(m, e.actor_id, d) + ' · ' + fmtDateTime(e.created_at)));
+          li.appendChild(b); ol.appendChild(li);
+        });
+        card.appendChild(ol);
+      }
+      card.appendChild(el('p', 'jr-dp-note', 'Keep sharing photos and details in this chat. Support can see them while the report is open.'));
+      if (d.status === 'open' && d.opened_by === m.me) {
+        var wd = el('button', 'jr-req-btn', 'Withdraw report');
+        wd.type = 'button'; wd.disabled = S.dpBusy;
+        wd.addEventListener('click', function () { withdrawReport(m, d); });
+        card.appendChild(wd);
+      }
+    }
+    return card;
+  }
+
+  function disputeForm(m) {
+    var form = el('div', 'jr-dp-form');
+    var l1 = el('label', 'jr-dp-label', 'What is the problem about?');
+    l1.htmlFor = 'jrDpCategory';
+    var sel = el('select', 'jr-dp-select');
+    sel.id = 'jrDpCategory';
+    var ph = el('option', '', 'Choose one'); ph.value = '';
+    sel.appendChild(ph);
+    Object.keys(DP_CATEGORY).forEach(function (k) {
+      var o = el('option', '', DP_CATEGORY[k]); o.value = k; sel.appendChild(o);
+    });
+    sel.value = S.dpDraft.category || '';
+    sel.addEventListener('change', function () { S.dpDraft.category = sel.value; });
+
+    var l2 = el('label', 'jr-dp-label', 'What happened?');
+    l2.htmlFor = 'jrDpReason';
+    var ta = el('textarea', 'jr-dp-textarea');
+    ta.id = 'jrDpReason'; ta.maxLength = DP_REASON_MAX; ta.rows = 5;
+    ta.placeholder = 'Describe the problem and what you would like to happen. The other person and StreetTasker support can read this.';
+    ta.value = S.dpDraft.reason || '';
+    var count = el('span', 'jr-dp-count', ta.value.length + ' / ' + DP_REASON_MAX);
+    ta.addEventListener('input', function () { S.dpDraft.reason = ta.value; count.textContent = ta.value.length + ' / ' + DP_REASON_MAX; });
+
+    var err = el('p', 'jr-dp-error', S.dpError);
+    err.setAttribute('role', 'alert');
+    err.hidden = !S.dpError;
+
+    var go = el('button', 'jr-req-btn jr-req-btn--primary', S.dpBusy ? 'Sending…' : 'Send report');
+    go.type = 'button'; go.disabled = S.dpBusy;
+    go.addEventListener('click', function () { sendReport(m); });
+
+    form.appendChild(l1); form.appendChild(sel);
+    form.appendChild(l2); form.appendChild(ta); form.appendChild(count);
+    form.appendChild(err); form.appendChild(go);
+    form.appendChild(el('p', 'jr-dp-note', 'Reports are for real problems with this job. Your payment stays handled by StreetTasker and refunds, if any, are decided by support.'));
+    return form;
+  }
+
+  function viewDispute(m) {
+    var wrap = frame('Problem report', 'Tell us if something went wrong with this job.', 'main');
+    var dp = m.dp;
+    if (dp.failed) { wrap.appendChild(el('div', 'jr-dt-empty', 'Problem reports are not available right now. Try again later.')); return wrap; }
+    if (dp.rows === null) { wrap.appendChild(el('div', 'jr-dt-empty', 'Loading…')); return wrap; }
+
+    var live = null;
+    for (var i = 0; i < dp.rows.length; i++) if (LIVE.indexOf(dp.rows[i].status) !== -1) { live = dp.rows[i]; break; }
+
+    if (live) {
+      wrap.appendChild(disputeCard(m, live, true));
+      if (S.dpError) { var e1 = el('p', 'jr-dp-error', S.dpError); e1.setAttribute('role', 'alert'); wrap.appendChild(e1); }
+    } else {
+      wrap.appendChild(disputeForm(m));
+    }
+
+    var past = dp.rows.filter(function (d) { return LIVE.indexOf(d.status) === -1; });
+    if (past.length) {
+      var g = group('Past reports');
+      var ul = el('ul', 'jr-dp-list');
+      past.forEach(function (d) { var li = el('li'); li.appendChild(disputeCard(m, d, false)); ul.appendChild(li); });
+      g.appendChild(ul);
+      wrap.appendChild(g);
+    }
+    return wrap;
+  }
+
   function buildView(m) {
+    if (S.view === 'dispute') return viewDispute(m);
     if (S.view === 'history') return viewHistory(m);
     if (S.view === 'activity') return viewActivity(m);
     if (S.view === 'receipts') return viewReceipts(m);
@@ -562,8 +853,13 @@
   /* ── paint into both hosts ───────────────────────────────── */
   function paint(force) {
     var m = model();
+    updateBar();
     var sig = signature(m);
     if (!force && sig === S.sig) return;
+    /* Never redraw under someone who is typing a report */
+    var ae = document.activeElement;
+    if (!force && S.view === 'dispute' && ae && /^(TEXTAREA|SELECT)$/.test(ae.tagName) &&
+        ((($('jrDetailBody') || {}).contains && $('jrDetailBody').contains(ae)) || (($('jrDetailSheetBody') || {}).contains && $('jrDetailSheetBody').contains(ae)))) return;
     S.sig = sig;
 
     var hosts = [$('jrDetailBody'), $('jrDetailSheetBody')];
@@ -601,6 +897,8 @@
         S.ev = { key: '', rows: null, loading: false, failed: false };
         S.rc = { key: '', rows: null, loading: false, failed: false };
         S.rcOpen = null;
+        S.dp = { key: '', rows: null, refunds: [], events: [], loading: false, failed: false };
+        S.dpDraft = { category: '', reason: '' }; S.dpError = ''; S.dpBusy = false;
         if (S.sheet.open) closeSheet(true);
       }
     }
@@ -617,6 +915,7 @@
       probeEvents().then(function () { return loadEvents(); }).then(function (did) { if (did) schedule(); });
     }
     loadReceipts().then(function (did) { if (did) schedule(); });      /* also enables the Receipts link */
+    loadDisputes(false).then(function (did) { if (did) { updateBar(); schedule(); } });
     updateHeaderButton();
   }
 
@@ -737,6 +1036,11 @@
     if (back) back.addEventListener('click', function () { closeSheet(); });
     var handle = $('jrDetailSheetHandle');
     if (handle) bindDrag(handle);
+    var barBtn = $('jrDisputeBarBtn');
+    if (barBtn) barBtn.addEventListener('click', function () {
+      goto('dispute');
+      if (!isDesktop()) openSheet();
+    });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && S.sheet.open) { e.stopPropagation(); closeSheet(); }
       trapTab(e);

@@ -1909,3 +1909,77 @@ body.msg-page {
   .jr-head-details { display: none; }
   .jr-dsheet-layer { display: none; }
 }
+
+/* ── Stage 10: problem reports (disputes) ─────────────────────
+   Bar above the composer, and the report view inside Job details. Tokens only. */
+.jr-dispute-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 var(--space-4) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-lg);
+  background: var(--color-danger-soft);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text);
+}
+.jr-dispute-bar[hidden] { display: none; }
+.jr-dispute-bar-text { min-width: 0; }
+.jr-dispute-bar-btn {
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-danger);
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+.jr-dispute-bar-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.jr-dp-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+}
+.jr-dp-card--live { border-color: var(--color-danger); background: var(--color-danger-soft); }
+.jr-dp-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.jr-dp-name { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-dp-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-dp-text { margin: 0; font-size: var(--text-sm); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--color-text); }
+.jr-dp-note { margin: 0; font-size: var(--text-xs); line-height: 1.6; color: var(--color-text-secondary); }
+.jr-dp-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+.jr-dp-refund { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text); }
+.jr-dp-refund-ref { font-size: var(--text-xs); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.jr-dp-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.jr-dp-label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+.jr-dp-select,
+.jr-dp-textarea {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);   /* 16px: stops iOS zooming into the field */
+}
+.jr-dp-textarea { min-height: calc(var(--space-8) * 2); resize: vertical; }
+.jr-dp-select:focus,
+.jr-dp-textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: var(--shadow-focus); }
+.jr-dp-count { align-self: flex-end; font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-dp-error { margin: 0; font-size: var(--text-sm); color: var(--color-danger); }
+.jr-dp-error[hidden] { display: none; }
+
+.jr-file--removed { color: var(--color-text-muted); }
+.jr-file--removed .jr-file-name { font-weight: 400; color: var(--color-text-muted); }

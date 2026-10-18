@@ -35,6 +35,8 @@
    The composer attach menu uploads first, then writes the attachment row and
    the message row; nothing shows as sent until both succeeded.
 
+   Stage 10: files support removed (table evidence_removals) show as "This file was removed by support".
+
    Message priority (spec 33): normal (text, media), important (system, job
    request, safety), transactional (money cards, payment confirmed). The level
    is written to data-priority on every rendered message.
@@ -58,7 +60,8 @@
     thread: null, user: null, role: 'customer', onChange: null,
     lastDay: null, sending: false, bound: false,
     requests: {}, requestsFailed: false,
-    money: {}, moneyFailed: false
+    money: {}, moneyFailed: false,
+    removed: {}                      /* storage paths support removed (Stage 10) */
   };
 
   /* Extra contact patterns on top of ST.messages.CONTACT_PATTERNS (js/messages.js):
@@ -256,8 +259,20 @@
     if (text) box.appendChild(el('div', 'jr-media-caption', text));
   }
 
+  /* Stage 10: a file support removed stays in the chat as a quiet notice, never a broken image. */
+  function buildRemoved(m, isMine) {
+    var box = el('div', 'jr-file jr-file--removed');
+    var icon = el('div', 'jr-file-icon'); icon.innerHTML = ICON_FILE;
+    var info = el('div', 'jr-file-info');
+    info.appendChild(el('div', 'jr-file-name', 'This file was removed by support'));
+    box.appendChild(icon); box.appendChild(info);
+    return withTime(mediaWrap(m, isMine), box, m);
+  }
+  function isRemoved(meta) { return !!(meta && meta.path && S.removed[meta.path]); }
+
   function buildImage(m, isMine) {
     var meta = m.meta || {};
+    if (isRemoved(meta)) return buildRemoved(m, isMine);
     var box = el('div', 'jr-media');
     var url = safeUrl(meta.url);
     if (meta.path) {
@@ -279,6 +294,7 @@
 
   function buildVideo(m, isMine) {
     var meta = m.meta || {};
+    if (isRemoved(meta)) return buildRemoved(m, isMine);
     var box = el('div', 'jr-media jr-media--video');
     var url = safeUrl(meta.url), poster = safeUrl(meta.poster);
     if (meta.path) {
@@ -305,6 +321,7 @@
 
   function buildFileMsg(m, isMine) {
     var meta = m.meta || {};
+    if (isRemoved(meta)) return buildRemoved(m, isMine);
     var box = el('div', 'jr-file');
     var icon = el('div', 'jr-file-icon'); icon.innerHTML = ICON_FILE;
     var info = el('div', 'jr-file-info');
@@ -826,6 +843,16 @@
     return node;
   }
 
+  /* Paths support removed from this thread. Best effort: if the table is missing nothing is hidden. */
+  async function loadRemovals(threadId) {
+    var out = {};
+    try {
+      var r = await window.supabase.from('evidence_removals').select('storage_path').eq('thread_id', threadId);
+      if (!r.error && r.data) r.data.forEach(function (x) { if (x && x.storage_path) out[x.storage_path] = true; });
+    } catch (_e) {}
+    return out;
+  }
+
   function fetchMessages(threadId, cols) {
     return window.supabase.from('messages').select(cols)
       .eq('thread_id', threadId)
@@ -835,7 +862,7 @@
 
   async function open(ctx) {
     S.thread = ctx.thread; S.user = ctx.user; S.role = ctx.role; S.onChange = ctx.onChange || null;
-    S.lastDay = null; S.requests = {}; S.requestsFailed = false; S.money = {}; S.moneyFailed = false;
+    S.lastDay = null; S.requests = {}; S.requestsFailed = false; S.money = {}; S.moneyFailed = false; S.removed = {};
     var token = ctx.thread.id;
     var body = $('chatBody');
     var input = $('msgInput');
@@ -858,8 +885,9 @@
       if (S.thread.id !== token) return;               /* user switched thread */
       if (res.error) throw res.error;
       var msgs = (res.data || []).slice().reverse();
-      await Promise.all([loadRequests(msgs), loadMoney(token)]);
+      var rem = await Promise.all([loadRequests(msgs), loadMoney(token), loadRemovals(token)]);
       if (S.thread.id !== token) return;
+      S.removed = rem[2] || {};
       if (window.JRDetails) window.JRDetails.update();      /* money rows are in: figures can be drawn */
       body.textContent = '';
       if (!msgs.length) {
