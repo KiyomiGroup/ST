@@ -43,7 +43,7 @@
 
   var MAIN_KINDS  = ['payment', 'full_payment'];          /* set the agreed price */
   var PAY_KINDS   = ['payment', 'full_payment', 'remaining_payment'];
-  var ADDON_KINDS = ['transport', 'additional_cost'];
+  var ADDON_KINDS = ['transport', 'additional_cost', 'materials', 'invoice'];
   var MIN_AMOUNT = 100;
   var MAX_AMOUNT = 10000000;
 
