@@ -929,6 +929,18 @@ body.msg-page {
 .jr-req-pill--cancelled,
 .jr-req-pill--refunded { background: var(--color-bg-muted); color: var(--color-text-muted); }
 .jr-req-pill--failed { background: var(--color-danger-soft); color: var(--color-danger); }
+.jr-req-pill--overdue { background: var(--color-danger-soft); color: var(--color-danger); }
+
+/* Invoice card and receipt (Stage 8) */
+.jr-inv-title { margin-bottom: var(--space-1); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-inv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-receipt { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); }
+.jr-receipt-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.jr-receipt-no { font-family: var(--font-heading); font-size: var(--text-base); color: var(--color-forest-800); }
+.jr-receipt-rows { margin-bottom: var(--space-3); }
+.jr-receipt-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); color: var(--color-text-secondary); }
+.jr-receipt-row span:last-child { text-align: right; color: var(--color-text); font-weight: 600; }
+.jr-receipt-total { display: flex; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; color: var(--color-forest-800); }
 .jr-money--cancelled,
 .jr-money--declined { opacity: 0.75; }
 
@@ -1825,6 +1837,8 @@ body.msg-page {
 .jr-dt-pay-detail { font-size: var(--text-xs); line-height: 1.5; color: var(--color-text-secondary); overflow-wrap: anywhere; }
 .jr-dt-pay-date { font-size: var(--text-xs); color: var(--color-text-muted); }
 .jr-dt-pay-tag { font-size: var(--text-xs); color: var(--color-text-secondary); }
+/* Receipts (Stage 8): the View receipt button inside a history / receipt row */
+.jr-dt-pay .jr-req-btn { flex: none; align-self: flex-start; }
 .jr-dt-pay.is-dead .jr-dt-pay-name,
 .jr-dt-pay.is-dead .jr-dt-pay-amount { color: var(--color-text-muted); }
 .jr-dt-pay.is-dead .jr-dt-pay-amount { text-decoration: line-through; }

@@ -15,6 +15,9 @@
      JRRequests.register(actions)    add actions to the sheet (used by messages-work.js, messages-forms.js)
      JRRequests.openView(title, fn)  open the sheet straight on a custom view; fn(body, {close, back})
      JRRequests.KINDS                labels per request kind (also used by the cards)
+     JRRequests.openInvoice(opts)    Stage 8: the invoice form (opts.revise = declined invoice, opts.answers = job_request id)
+     JRRequests.openReceipt(ref)     Stage 8: a payment receipt in the sheet (ref = request id, or a receipt row)
+     JRRequests.receiptNode(rc, role) Stage 8: the receipt card as a DOM node (Job Details draws it inline)
 
    Stage 3: the sheet is grouped as in spec section 39 (see GROUP_ORDER). An action says how it
    behaves with ONE of:
@@ -42,7 +45,11 @@
   var KINDS = {
     update:  { title: 'Update requested',        byMe: 'You asked for an update on this job.',        byOther: 'The customer would like an update on this job.' },
     arrival: { title: 'Arrival time requested',  byMe: 'You asked when the tasker will arrive.',      byOther: 'The customer would like to know when you will arrive.' },
-    proof:   { title: 'Proof of work requested', byMe: 'You asked for photos or proof of the work.',  byOther: 'The customer would like photos or proof of the work.' }
+    proof:   { title: 'Proof of work requested', byMe: 'You asked for photos or proof of the work.',  byOther: 'The customer would like photos or proof of the work.' },
+    /* Stage 8 custom requests. Their own kind names on purpose: 'invoice' is a payment kind and a
+       pending ask called 'invoice' would grey out the tasker's "Send invoice". */
+    invoice_request: { title: 'Invoice requested', byMe: 'You asked the tasker for an invoice.',                    byOther: 'The customer would like an invoice for this job.' },
+    receipt_request: { title: 'Receipt requested', byMe: 'You asked the tasker for a receipt for what they bought.', byOther: 'The customer would like the receipt for something you bought for this job.' }
   };
 
   var S = { ctx: null, ready: null, probe: null, moneyReady: null, moneyProbe: null, onChange: null, bound: false, opener: null, view: 'menu' };
@@ -66,6 +73,7 @@
     close:   svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
     back:    svg('<polyline points="15 18 9 12 15 6"/>'),
     truck:   svg('<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'),
+    doc:     svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
     tool:    svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>')
   };
 
@@ -121,6 +129,7 @@
     customer: [GROUP.PAY, GROUP.DOCS, GROUP.EVIDENCE, GROUP.JOB, GROUP.ISSUE]
   };
   var PAYABLE = ['payment', 'full_payment', 'remaining_payment', 'transport', 'additional_cost'];
+  var LINE_LABEL = { work: 'Additional work', materials: 'Materials' };   /* breakdown line labels (additional cost form) */
 
   function hasJob(x) { return x.status !== 'inquiry'; }
 
@@ -137,8 +146,9 @@
       label: 'Request full payment',
       hint: function (x) { return 'Agreed amount: ' + naira(x.money.base); },
       rule: function (x) {
-        if (x.money.paid > 0 && x.money.outstanding <= 0) return 'This task is already paid in full';
-        if (x.money.paid > 0) return 'Part of this task is paid. Use Request remaining payment';
+        /* paidMain: a transport / additional cost paid early is not the main payment */
+        if (x.money.paidMain > 0 && x.money.outstanding <= 0) return 'This task is already paid in full';
+        if (x.money.paidMain > 0) return 'Part of this task is paid. Use Request remaining payment';
         if (!(x.money.base > 0)) return 'No agreed price yet';
         return null;
       },
@@ -149,7 +159,7 @@
       label: 'Request remaining payment',
       hint: function (x) { return 'Still to pay: ' + naira(x.money.outstanding); },
       rule: function (x) {
-        if (!(x.money.paid > 0)) return 'Available once the first payment is paid';
+        if (!(x.money.paidMain > 0)) return 'Available once the first payment is paid';
         if (!(x.money.outstanding > 0)) return 'Nothing is left to pay';
         return null;
       },
@@ -170,6 +180,25 @@
         return ['secured', 'work'].indexOf(x.status) !== -1 ? null : NEEDS_PAYMENT;
       },
       run: function () { showForm('additional_cost'); }
+    },
+    /* ── Documents (Stage 8) ── */
+    {
+      id: 'send_invoice', roles: ['tasker'], group: GROUP.DOCS, icon: I.doc, kind: 'invoice', needsMoney: true,
+      label: 'Send invoice', hint: 'Itemised, with a due date. The customer can pay or decline',
+      rule: function (x) { return x.bookingId ? null : NEEDS_JOB; },
+      run: function () { showInvoiceForm(); }
+    },
+    {
+      id: 'request_invoice', roles: ['customer'], group: GROUP.DOCS, icon: I.doc, kind: 'invoice_request', needsTable: true,
+      label: 'Request invoice', hint: 'Ask the tasker for an itemised invoice',
+      rule: function (x) { return hasJob(x) ? null : false; },
+      run: function () { showAskForm('invoice_request'); }
+    },
+    {
+      id: 'request_receipt', roles: ['customer'], group: GROUP.DOCS, icon: I.doc, kind: 'receipt_request', needsTable: true,
+      label: 'Request receipt', hint: 'Ask for the receipt of something bought for the job',
+      rule: function (x) { return hasJob(x) ? null : false; },
+      run: function () { showAskForm('receipt_request'); }
     },
     /* ── Customer: Payment ── */
     {
@@ -385,6 +414,16 @@
       ],
       submit: 'Send transport request'
     },
+    full_payment: {
+      title: 'Request full payment', lead: 'Enter the full amount for this job.',
+      fields: [{ id: 'amount', label: 'Amount (₦)', type: 'money', required: true, placeholder: 'e.g. 15000' }],
+      submit: 'Send full payment request'
+    },
+    remaining_payment: {
+      title: 'Request remaining payment', lead: 'Enter the amount that is still to pay.',
+      fields: [{ id: 'amount', label: 'Amount (₦)', type: 'money', required: true, placeholder: 'e.g. 5000' }],
+      submit: 'Send remaining payment request'
+    },
     additional_cost: {
       title: 'Request additional cost', lead: 'Explain what you found. The customer can pay or decline this request.',
       fields: [
@@ -401,19 +440,24 @@
     return isFinite(n) && n > 0 ? n : 0;
   }
 
-  function showForm(kind) {
+  /* opts.revise = the DECLINED request being revised (spec 20). The form starts with its values;
+     sending creates a NEW request that points at it. The original is never edited or erased. */
+  function showForm(kind, opts) {
     S.view = 'form';
     var def = FORMS[kind];
-    setTitle(def.title);
+    var revise = opts && opts.revise ? opts.revise : null;
+    setTitle(revise ? 'Send revised request' : def.title);
     var body = $('jrSheetBody');
     body.textContent = '';
     toTop();
 
     var back = el('button', 'jr-sheet-back'); back.type = 'button';
     back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
-    back.addEventListener('click', renderMenu);
+    back.addEventListener('click', revise ? close : renderMenu);
     body.appendChild(back);
-    body.appendChild(el('p', 'jr-sheet-lead', def.lead));
+    body.appendChild(el('p', 'jr-sheet-lead', revise
+      ? 'The customer declined ' + naira(revise.amount) + '. Change the amount or the explanation and send it again. The declined request stays in the history.'
+      : def.lead));
 
     var inputs = {};
     def.fields.forEach(function (f) {
@@ -431,6 +475,17 @@
       inputs[f.id] = inp;
       body.appendChild(label); body.appendChild(inp);
     });
+
+    if (revise) {
+      var bd = revise.breakdown && typeof revise.breakdown === 'object' ? revise.breakdown : null;
+      if (bd && Array.isArray(bd)) {        /* [{key, label, amount}] */
+        var byKey = {}; bd.forEach(function (l) { if (l && l.key) byKey[l.key] = l.amount; });
+        bd = byKey;
+      }
+      if (def.sum && bd) def.sum.forEach(function (k) { if (inputs[k] && Number(bd[k]) > 0) inputs[k].value = String(Math.round(Number(bd[k]))); });
+      else if (inputs.amount) inputs.amount.value = String(Math.round(Number(revise.amount)));
+      if (inputs.reason && revise.reason) inputs.reason.value = revise.reason;
+    }
 
     var totalBox = null;
     if (def.sum) { totalBox = el('div', 'jr-sheet-total'); body.appendChild(totalBox); }
@@ -451,16 +506,22 @@
     var err = el('div', 'jr-sheet-error'); err.hidden = true; err.setAttribute('role', 'alert');
     body.appendChild(err);
 
-    var send = el('button', 'jr-sheet-send', def.submit); send.type = 'button';
+    var submitLabel = revise ? 'Send revised request' : def.submit;
+    var send = el('button', 'jr-sheet-send', submitLabel); send.type = 'button';
     send.addEventListener('click', async function () {
       err.hidden = true;
       function fail(msg) { err.textContent = msg; err.hidden = false; }
       var J = window.JRMoney;
       var amount, breakdown = null;
       if (def.sum) {
-        var parts = {};
-        def.sum.forEach(function (k) { var v = moneyOf(inputs[k]); if (v) parts[k] = v; });
-        amount = Object.keys(parts).reduce(function (a, k) { return a + parts[k]; }, 0);
+        /* payment_requests.breakdown must be a JSON ARRAY of lines (table CHECK payment_requests_breakdown_check):
+           [{ key, label, amount }]. An object like {work: 7000} is refused by the database. */
+        var parts = [];
+        def.sum.forEach(function (k) {
+          var v = moneyOf(inputs[k]);
+          if (v) parts.push({ key: k, label: LINE_LABEL[k] || k, amount: v });
+        });
+        amount = parts.reduce(function (a, p) { return a + p.amount; }, 0);
         breakdown = parts;
       } else {
         amount = moneyOf(inputs.amount);
@@ -476,11 +537,247 @@
         }
       }
       send.disabled = true; send.textContent = 'Sending…';
-      var ok = await J.create({ kind: kind, amount: amount, reason: reason || null, breakdown: breakdown });
-      if (ok) close(); else { send.disabled = false; send.textContent = def.submit; }
+      var ok = await J.create({ kind: kind, amount: amount, reason: reason || null, breakdown: breakdown, revises: revise ? revise.id : null });
+      if (ok) close(); else { send.disabled = false; send.textContent = submitLabel; }
     });
     body.appendChild(send);
     var first = body.querySelector('input, textarea'); if (first) first.focus();
+  }
+
+  /* ── invoice (Stage 8) ──────────────────────────────────────
+     An invoice is a payment_request (kind 'invoice'): title, itemised lines, optional due date and note.
+     The customer pays it (Pay Invoice) or declines it, like any request. It is an ADD-ON: it never sets
+     the agreed price and never creates the completion code (owner rule). The SERVER re-checks everything
+     (title, lines above zero, total = sum of lines, due date), so this form only helps the tasker get it right.
+       opts.revise   a DECLINED invoice: the form starts with its values, sending creates a NEW invoice
+       opts.answers  id of the customer's "Request invoice" ask: it is marked done once the invoice is sent   */
+  var LINES_MAX = 8;          /* the server allows 20; eight keeps a chat card readable */
+  var INV_TITLE_MIN = 3, INV_TITLE_MAX = 80, INV_LABEL_MAX = 60;
+
+  function isoDay(offsetDays) {
+    var d = new Date(); d.setDate(d.getDate() + offsetDays);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function showInvoiceForm(opts) {
+    S.view = 'form';
+    var J = window.JRMoney;
+    var revise = opts && opts.revise ? opts.revise : null;
+    var answers = opts && opts.answers ? opts.answers : null;
+    setTitle(revise ? 'Send revised invoice' : 'Send invoice');
+    var body = $('jrSheetBody');
+    body.textContent = '';
+    toTop();
+
+    var back = el('button', 'jr-sheet-back'); back.type = 'button';
+    back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
+    back.addEventListener('click', (revise || answers) ? close : renderMenu);
+    body.appendChild(back);
+    body.appendChild(el('p', 'jr-sheet-lead', revise
+      ? 'The customer declined invoice ' + (revise.invoice_number || '') + ' for ' + naira(revise.amount) + '. Change it and send it again. The declined invoice stays in the history.'
+      : 'List what the customer is paying for. They can pay it or decline it. An invoice is an extra on top of the job price: it does not change the agreed price.'));
+
+    var tl = el('label', 'jr-sheet-label', 'Invoice title'); tl.setAttribute('for', 'jrInvTitle');
+    var title = el('input', 'jr-sheet-input jr-sheet-input--text');
+    title.id = 'jrInvTitle'; title.type = 'text'; title.maxLength = INV_TITLE_MAX;
+    title.placeholder = 'e.g. Materials bought for the bathroom';
+    body.appendChild(tl); body.appendChild(title);
+
+    body.appendChild(el('div', 'jr-sheet-label', 'Items'));
+    var list = el('div', 'jr-lines'); list.id = 'jrInvLines';
+    body.appendChild(list);
+    var add = el('button', 'jr-sheet-add', '+ Add item'); add.type = 'button';
+    body.appendChild(add);
+
+    var totalBox = el('div', 'jr-sheet-total'); body.appendChild(totalBox);
+
+    var dl = el('label', 'jr-sheet-label'); dl.setAttribute('for', 'jrInvDue');
+    dl.appendChild(document.createTextNode('Due date '));
+    dl.appendChild(el('span', 'jr-sheet-optional', '(optional)'));
+    var due = el('input', 'jr-sheet-input jr-sheet-input--text');
+    due.id = 'jrInvDue'; due.type = 'date'; due.min = isoDay(0); due.max = isoDay(365);
+    body.appendChild(dl); body.appendChild(due);
+
+    var nl = el('label', 'jr-sheet-label'); nl.setAttribute('for', 'jrInvNote');
+    nl.appendChild(document.createTextNode('Note for the customer '));
+    nl.appendChild(el('span', 'jr-sheet-optional', '(optional)'));
+    var note = el('textarea', 'jr-sheet-note'); note.id = 'jrInvNote'; note.rows = 2; note.maxLength = 300;
+    note.placeholder = 'e.g. Receipts for the materials are available on request.';
+    body.appendChild(nl); body.appendChild(note);
+
+    var rows = [];
+    function lineTotal() { return rows.reduce(function (a, r) { return a + moneyOf(r.amount); }, 0); }
+    function refresh() {
+      totalBox.textContent = 'Total: ' + naira(lineTotal());
+      add.disabled = rows.length >= LINES_MAX;
+      rows.forEach(function (r) { r.remove.hidden = rows.length === 1; });
+    }
+    function addLine(label, amount) {
+      var wrap = el('div', 'jr-line');
+      var n = rows.length + 1;
+      var lab = el('input', 'jr-sheet-input jr-sheet-input--text');
+      lab.type = 'text'; lab.maxLength = INV_LABEL_MAX; lab.placeholder = 'Item (e.g. Labour)';
+      lab.setAttribute('aria-label', 'Item ' + n + ' name');
+      var amt = el('input', 'jr-sheet-input');
+      amt.type = 'number'; amt.inputMode = 'numeric'; amt.min = '0'; amt.step = '100'; amt.placeholder = '₦';
+      amt.setAttribute('aria-label', 'Item ' + n + ' amount in naira');
+      var rm = el('button', 'jr-sheet-remove', 'Remove'); rm.type = 'button';
+      if (label) lab.value = label;
+      if (amount) amt.value = String(Math.round(Number(amount)));
+      var row = { wrap: wrap, label: lab, amount: amt, remove: rm };
+      rm.addEventListener('click', function () {
+        rows.splice(rows.indexOf(row), 1); wrap.remove(); refresh();
+      });
+      amt.addEventListener('input', refresh);
+      wrap.appendChild(lab); wrap.appendChild(amt); wrap.appendChild(rm);
+      list.appendChild(wrap); rows.push(row); refresh();
+      return row;
+    }
+    add.addEventListener('click', function () { if (rows.length < LINES_MAX) addLine().label.focus(); });
+
+    /* start: a declined invoice's values, or one empty line */
+    if (revise) {
+      title.value = revise.title || '';
+      var bd = Array.isArray(revise.breakdown) ? revise.breakdown : [];
+      bd.slice(0, LINES_MAX).forEach(function (l) { if (l) addLine(l.label, l.amount); });
+      if (revise.reason) note.value = revise.reason;
+      if (revise.due_date && String(revise.due_date).slice(0, 10) >= isoDay(0)) due.value = String(revise.due_date).slice(0, 10);
+    }
+    if (!rows.length) addLine();
+
+    var err = el('div', 'jr-sheet-error'); err.hidden = true; err.setAttribute('role', 'alert');
+    body.appendChild(err);
+
+    var submitLabel = revise ? 'Send revised invoice' : 'Send invoice';
+    var send = el('button', 'jr-sheet-send', submitLabel); send.type = 'button';
+    send.addEventListener('click', async function () {
+      err.hidden = true;
+      function fail(msg) { err.textContent = msg; err.hidden = false; }
+      function contactCheck(text) {
+        if (text && window.JRThread.hasContactInfo(text)) {
+          if (typeof window.handleContactViolation === 'function' && S.ctx) window.handleContactViolation(S.ctx.user.id);
+          fail('Please remove phone numbers, emails or other contact details. They are not allowed on StreetTasker.');
+          return true;
+        }
+        return false;
+      }
+      var t = title.value.trim();
+      if (t.length < INV_TITLE_MIN) return fail('Give the invoice a short title (at least ' + INV_TITLE_MIN + ' letters).');
+      var lines = [];
+      for (var i = 0; i < rows.length; i++) {
+        var name = rows[i].label.value.trim(), amt = moneyOf(rows[i].amount);
+        if (!name && !amt) continue;                              /* an untouched line is ignored */
+        if (!name) return fail('Item ' + (i + 1) + ' needs a name.');
+        if (!amt) return fail('Item ' + (i + 1) + ' needs an amount above zero. Discounts are not supported: leave the item out instead.');
+        lines.push({ key: 'item' + (lines.length + 1), label: name, amount: amt });
+      }
+      if (!lines.length) return fail('Add at least one item with an amount.');
+      var total = lines.reduce(function (a, l) { return a + l.amount; }, 0);
+      if (total < J.MIN_AMOUNT) return fail('The invoice total must be at least ' + naira(J.MIN_AMOUNT) + '.');
+      if (total > J.MAX_AMOUNT) return fail('That total is too large. Check for a typing mistake.');
+      var noteText = note.value.trim();
+      if (contactCheck(t) || contactCheck(noteText) || lines.some(function (l) { return contactCheck(l.label); })) return;
+      var dueDay = due.value || '';
+      if (dueDay && (dueDay < isoDay(-1) || dueDay > isoDay(365))) return fail('Pick a due date from today to a year ahead, or leave it empty.');
+
+      send.disabled = true; send.textContent = 'Sending…';
+      var ok = await J.create({ kind: 'invoice', amount: total, title: t, dueDate: dueDay || null,
+                                reason: noteText || null, breakdown: lines, revises: revise ? revise.id : null });
+      if (ok) {
+        if (answers) await markAsked(answers);
+        close();
+      } else { send.disabled = false; send.textContent = submitLabel; }
+    });
+    body.appendChild(send);
+    title.focus();
+  }
+
+  /* The customer asked for an invoice and the tasker sent one: the ask is done */
+  async function markAsked(id) {
+    try {
+      var r = await window.supabase.from('job_requests').update({ status: 'fulfilled' }).eq('id', id).select().maybeSingle();
+      if (r.data && window.JRThread && window.JRThread.onRequestChange) window.JRThread.onRequestChange(r.data);
+    } catch (_e) {}
+  }
+
+  /* Open the invoice form from a card ("Send invoice" on the customer's ask, or a declined invoice).
+     The same rules as the sheet menu apply (locked while disputed, job must be booked, one open invoice). */
+  function openInvoice(opts) {
+    var layer = $('jrSheetLayer');
+    if (!layer || !S.ctx) return;
+    var toast = (window.JRThread && window.JRThread.toast) || function () {};
+    if (!(opts && opts.revise)) {
+      var me = available().filter(function (it) { return it.action.id === 'send_invoice'; })[0];
+      if (!me) { toast('Invoices are not available here right now.', 'error'); return; }
+      if (me.disabled) { toast(me.hint || 'You cannot send an invoice right now.', 'error'); return; }
+    }
+    if (layer.hidden) S.opener = document.activeElement;
+    layer.hidden = false;
+    showInvoiceForm(opts);
+    var closeBtn = $('jrSheetClose');
+    if (closeBtn) closeBtn.focus();
+  }
+
+  /* ── receipt (Stage 8) ───────────────────────────────────────
+     Read-only. The receipt is written by the server when a payment is confirmed, cannot be edited,
+     and only the customer and the tasker of that payment can read it. The platform fee is not shown. */
+  var RECEIPT_KIND = {
+    payment: 'Payment', full_payment: 'Full payment', remaining_payment: 'Remaining payment', transport: 'Transport',
+    additional_cost: 'Additional cost', materials: 'Materials', invoice: 'Invoice', booking: 'Booking payment'
+  };
+  function whenLabel(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  /* The receipt card as a DOM node. Used by the Request sheet (openReceipt) and by Job Details
+     (messages-details.js draws it inline, because the Details sheet sits above the Request sheet). */
+  function receiptNode(rc, role) {
+    var card = el('div', 'jr-receipt');
+    var head = el('div', 'jr-receipt-head');
+    head.appendChild(el('strong', 'jr-receipt-no', rc.receipt_number));
+    head.appendChild(el('span', 'jr-req-pill jr-req-pill--paid', 'Payment received'));
+    card.appendChild(head);
+
+    var rowsEl = el('div', 'jr-receipt-rows');
+    function row(k, v) {
+      var r = el('div', 'jr-receipt-row');
+      r.appendChild(el('span', null, k)); r.appendChild(el('span', null, v));
+      rowsEl.appendChild(r);
+    }
+    row('Date paid', whenLabel(rc.paid_at));
+    row('For', (RECEIPT_KIND[rc.kind] || 'Payment') + (rc.invoice_number ? ' ' + rc.invoice_number : ''));
+    if (rc.title) row('Title', rc.title);
+    row(role === 'customer' ? 'Paid by' : 'Paid to', role === 'customer' ? 'You' : 'You (from the customer)');
+    card.appendChild(rowsEl);
+
+    var lines = el('div', 'jr-money-lines');
+    (Array.isArray(rc.lines) ? rc.lines : []).forEach(function (l) {
+      var r = el('div', 'jr-money-line');
+      r.appendChild(el('span', null, String(l.label || ''))); r.appendChild(el('span', null, naira(l.amount)));
+      lines.appendChild(r);
+    });
+    card.appendChild(lines);
+
+    var total = el('div', 'jr-receipt-total');
+    total.appendChild(el('span', null, 'Total paid')); total.appendChild(el('strong', null, naira(rc.amount)));
+    card.appendChild(total);
+    card.appendChild(el('p', 'jr-sheet-help', 'This is a record of the payment. It cannot be changed.'));
+    return card;
+  }
+
+  /* ref = a payment request id (the receipt is read from payment_receipts)
+           or a receipt row already loaded (a payment made straight on a booking has no request id) */
+  function openReceipt(ref) {
+    var toast = (window.JRThread && window.JRThread.toast) || function () {};
+    if (!window.JRMoney || !S.ctx) return;
+    var role = S.ctx.role;
+    var got = (ref && typeof ref === 'object') ? Promise.resolve(ref) : window.JRMoney.receiptFor(ref);
+    got.then(function (rc) {
+      if (!rc) { toast('The receipt is not available yet. Please refresh and try again.', 'error'); return; }
+      openView('Receipt', function (body) { body.appendChild(receiptNode(rc, role)); });
+    });
   }
 
   /* One-tap requests where the amount is already known (full / remaining payment) */
@@ -543,9 +840,26 @@
     if (closeBtn) closeBtn.focus();
   }
 
+  /* The tasker taps "Send Revised Request" on a declined card (messages-thread.js) */
+  function openRevise(row) {
+    var layer = $('jrSheetLayer');
+    var kind = row && (row.kind || 'payment');
+    if (kind === 'invoice') { openInvoice({ revise: row }); return; }
+    if (!layer || !S.ctx || !FORMS[kind]) return;
+    if (layer.hidden) S.opener = document.activeElement;
+    layer.hidden = false;
+    showForm(kind, { revise: row });
+    var closeBtn = $('jrSheetClose');
+    if (closeBtn) closeBtn.focus();
+  }
+
   function register(defs) {
     (Array.isArray(defs) ? defs : [defs]).forEach(function (d) {
-      if (!ACTIONS.some(function (a) { return a.id === d.id; })) ACTIONS.push(d);
+      if (ACTIONS.some(function (a) { return a.id === d.id; })) return;
+      /* Stage 8: a "Not connected yet" stub (messages-forms.js) for something that now works is not added twice */
+      var name = String(d.label || '').trim().toLowerCase();
+      if (d.ui === true && name && ACTIONS.some(function (a) { return a.ui !== true && String(a.label || '').trim().toLowerCase() === name; })) return;
+      ACTIONS.push(d);
     });
     update();
   }
@@ -659,7 +973,7 @@
     probeMoney().then(function () { update(); });
   }
 
-  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, KINDS: KINDS, context: function () { return S.ctx; },
+  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, openRevise: openRevise, openInvoice: openInvoice, openReceipt: openReceipt, receiptNode: receiptNode, KINDS: KINDS, context: function () { return S.ctx; },
                         GROUP: GROUP, LOCKED: LOCKED, NEEDS_JOB: NEEDS_JOB, NEEDS_PAYMENT: NEEDS_PAYMENT, WAITING_CONFIRM: WAITING_CONFIRM };
 
 })();

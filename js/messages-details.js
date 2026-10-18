@@ -23,8 +23,13 @@
      bookings     scheduled_time
      job_events   Activity timeline (hidden if the table is missing)
 
+   Receipts (Stage 8): the list and each receipt are read from payment_receipts (written by the
+     server when a payment is confirmed) and drawn inline here, with the same card as the chat
+     ("View receipt"). They are drawn inside this panel on purpose: on a phone this sheet sits
+     above the Request sheet, so a receipt opened in the Request sheet would be hidden behind it.
+
    NOT built here (greyed in the action list with the reason):
-     Receipts (Stage 8) and Evidence (Stage 9) have no data yet.
+     Evidence (Stage 9) has no data yet.
 
    No inline styles in markup, no raw colours: classes live in css/messages.css.
    ============================================================ */
@@ -75,10 +80,13 @@
   var S = {
     ctx: null,                 /* { thread, user, role } */
     threadId: null,
-    view: 'main',              /* main | history | activity */
+    view: 'main',              /* main | history | activity | receipts | receipt */
     filter: 'all',             /* history filter: all | invoice */
     extra: {},                 /* per thread: { title, location, deadline, scheduled } */
     ev: { key: '', rows: null, loading: false, failed: false },
+    rc: { key: '', rows: null, loading: false, failed: false },   /* receipts of this thread */
+    rcOpen: null,              /* receipt row shown in the 'receipt' view */
+    rcBack: 'receipts',        /* where Back goes from the 'receipt' view */
     eventsReady: null,         /* null = not probed, true / false after */
     sig: '',
     raf: 0,
@@ -180,6 +188,26 @@
     }
   }
 
+  /* Receipts: reloaded when the thread changes or another payment was paid (the server writes the
+     receipt in the same transaction that marks the payment paid, so it is there when we look). */
+  function paidCount() {
+    var c = S.ctx;
+    if (!c || !window.JRMoney) return 0;
+    return window.JRMoney.history(c.thread).filter(function (h) { return h.status === 'paid'; }).length;
+  }
+  async function loadReceipts() {
+    var c = S.ctx;
+    if (!c || !window.JRMoney || !window.JRMoney.receiptsForThread) return false;
+    var key = c.thread.id + '|' + paidCount();
+    if (key === S.rc.key || S.rc.loading) return false;
+    S.rc.loading = true;
+    var token = c.thread.id;
+    var rows = await window.JRMoney.receiptsForThread(token);
+    if (!S.ctx || S.ctx.thread.id !== token) { S.rc.loading = false; return false; }
+    S.rc = { key: key, rows: rows, loading: false, failed: rows === null };
+    return true;
+  }
+
   /* ── view model: one object both hosts draw from ─────────── */
   function model() {
     var c = S.ctx;
@@ -198,7 +226,8 @@
       status: st.label || 'Discussing details',
       sm: sm, hist: hist,
       bookingId: bookingIdOf(t),
-      ev: S.ev, eventsReady: S.eventsReady
+      ev: S.ev, eventsReady: S.eventsReady,
+      rc: S.rc
     };
   }
 
@@ -206,7 +235,8 @@
     if (!m) return 'none';
     return JSON.stringify([
       S.view, S.filter, m.t.id, m.title, m.location, m.scheduled, m.deadline, m.status,
-      m.sm, m.hist, m.ev.rows, m.ev.loading, m.ev.failed, m.eventsReady, m.me
+      m.sm, m.hist, m.ev.rows, m.ev.loading, m.ev.failed, m.eventsReady, m.me,
+      m.rc.rows && m.rc.rows.map(function (r) { return r.id; }), m.rc.failed, S.rcOpen && S.rcOpen.id
     ]);
   }
 
@@ -255,6 +285,7 @@
     if (view === 'activity') {
       probeEvents().then(function () { return loadEvents(); }).then(function () { paint(true); });
     }
+    if (view === 'receipts') loadReceipts().then(function (did) { if (did) schedule(); });
     paint(true);
     var body = S.sheet.open ? $('jrDetailSheetBody') : $('jrDetailBody');
     if (body) body.scrollTop = 0;
@@ -322,9 +353,14 @@
       reason: invoices.length ? '' : 'No invoice for this task yet',
       onClick: function () { goto('history', 'invoice'); }
     }));
+    var rcRows = m.rc.rows || [];
     list.appendChild(actionItem({
       icon: 'receipt', label: 'Receipts',
-      reason: 'Not available yet'
+      hint: rcRows.length ? (rcRows.length === 1 ? '1 receipt' : rcRows.length + ' receipts') : '',
+      reason: rcRows.length ? ''
+        : (m.rc.failed ? 'Not available yet'
+          : (m.rc.rows === null ? 'Loading…' : 'No receipts yet. One is issued for every payment')),
+      onClick: function () { goto('receipts'); }
     }));
     list.appendChild(actionItem({
       icon: 'history', label: 'Payment history',
@@ -349,13 +385,13 @@
   }
 
   /* ── sub-view frame ──────────────────────────────────────── */
-  function frame(title, sub) {
+  function frame(title, sub, backTo) {
     var wrap = el('div', 'jr-dt');
     var back = el('button', 'jr-sheet-back');
     back.type = 'button';
     back.appendChild(svgSpan('jr-dt-backicon', ICON_BACK));
-    back.appendChild(document.createTextNode('Job details'));
-    back.addEventListener('click', function () { goto('main'); });
+    back.appendChild(document.createTextNode(backTo === 'receipts' ? 'Receipts' : (backTo === 'history' ? 'Payment history' : 'Job details')));
+    back.addEventListener('click', function () { goto(backTo || 'main'); });
     wrap.appendChild(back);
     wrap.appendChild(el('h3', 'jr-dt-title', title));
     if (sub) wrap.appendChild(el('p', 'jr-dt-sub', sub));
@@ -392,6 +428,12 @@
 
       var det = h.title || h.reason;
       if (det) li.appendChild(el('div', 'jr-dt-pay-detail', det));
+      /* Invoice due date. "Overdue" is display only: the server keeps no such state. */
+      if (h.kind === 'invoice' && h.dueDate) {
+        var dueRow = el('div', 'jr-dt-pay-detail', 'Due ' + fmtDate(String(h.dueDate).slice(0, 10) + 'T00:00:00') + ' ');
+        if (h.overdue) dueRow.appendChild(chip('Overdue', 'danger'));
+        li.appendChild(dueRow);
+      }
 
       var bot = el('div', 'jr-dt-pay-bottom');
       bot.appendChild(el('span', 'jr-dt-pay-date', fmtDateTime(h.date)));
@@ -400,12 +442,76 @@
 
       /* Original price and additional charges stay separate (spec 11 rule 8) */
       if (h.addon) li.appendChild(el('div', 'jr-dt-pay-tag', 'Additional charge, not part of the agreed price'));
+      /* Paid: the receipt, once the server has written it */
+      if (h.status === 'paid') {
+        var rcRow = receiptOfRequest(m, h.id);
+        if (rcRow) {
+          var vb = el('button', 'jr-req-btn', 'View receipt'); vb.type = 'button';
+          vb.addEventListener('click', function () { openReceiptView(rcRow, 'history'); });
+          li.appendChild(vb);
+        }
+      }
       ol.appendChild(li);
     });
     wrap.appendChild(ol);
     if (anyUncounted) {
       wrap.appendChild(el('p', 'jr-dt-note', 'Declined, cancelled and failed requests stay in this list but are not counted in the totals.'));
     }
+    return wrap;
+  }
+
+  /* ── Receipts (Stage 8) ─────────────────────────────────── */
+  var RECEIPT_LABEL = {
+    payment: 'Payment', full_payment: 'Full payment', remaining_payment: 'Remaining payment', transport: 'Transport',
+    additional_cost: 'Additional cost', materials: 'Materials', invoice: 'Invoice', booking: 'Booking payment'
+  };
+  function receiptOfRequest(m, requestId) {
+    var rows = m.rc.rows || [];
+    for (var i = 0; i < rows.length; i++) { if (rows[i].payment_request_id === requestId) return rows[i]; }
+    return null;
+  }
+  function openReceiptView(rc, backTo) {
+    S.rcOpen = rc; S.rcBack = backTo || 'receipts';
+    goto('receipt');
+  }
+
+  function viewReceipts(m) {
+    var rows = m.rc.rows || [];
+    var wrap = frame('Receipts', 'A record of every payment on this task. A receipt cannot be changed.');
+    if (!rows.length) {
+      wrap.appendChild(el('div', 'jr-dt-empty', m.rc.failed
+        ? 'Receipts are not available right now. Try again later.'
+        : 'No receipts yet. One is issued each time a payment is confirmed.'));
+      return wrap;
+    }
+    var ol = el('ol', 'jr-dt-pay-list');
+    rows.forEach(function (rc) {
+      var li = el('li', 'jr-dt-pay');
+      var top = el('div', 'jr-dt-pay-top');
+      top.appendChild(el('span', 'jr-dt-pay-name', (RECEIPT_LABEL[rc.kind] || 'Payment') + (rc.invoice_number ? ' ' + rc.invoice_number : '')));
+      top.appendChild(el('span', 'jr-dt-pay-amount', naira(rc.amount)));
+      li.appendChild(top);
+      if (rc.title) li.appendChild(el('div', 'jr-dt-pay-detail', rc.title));
+      var bot = el('div', 'jr-dt-pay-bottom');
+      bot.appendChild(el('span', 'jr-dt-pay-date', rc.receipt_number + ' · ' + fmtDateTime(rc.paid_at)));
+      li.appendChild(bot);
+      var vb = el('button', 'jr-req-btn', 'View receipt'); vb.type = 'button';
+      vb.addEventListener('click', function () { openReceiptView(rc, 'receipts'); });
+      li.appendChild(vb);
+      ol.appendChild(li);
+    });
+    wrap.appendChild(ol);
+    return wrap;
+  }
+
+  function viewReceipt(m) {
+    var wrap = frame('Receipt', '', S.rcBack);
+    var rc = S.rcOpen;
+    if (!rc || !window.JRRequests || !window.JRRequests.receiptNode) {
+      wrap.appendChild(el('div', 'jr-dt-empty', 'This receipt is not available right now.'));
+      return wrap;
+    }
+    wrap.appendChild(window.JRRequests.receiptNode(rc, m.role));
     return wrap;
   }
 
@@ -448,6 +554,8 @@
   function buildView(m) {
     if (S.view === 'history') return viewHistory(m);
     if (S.view === 'activity') return viewActivity(m);
+    if (S.view === 'receipts') return viewReceipts(m);
+    if (S.view === 'receipt') return viewReceipt(m);
     return viewMain(m);
   }
 
@@ -491,6 +599,8 @@
         S.threadId = ctx.thread.id;
         S.view = 'main'; S.filter = 'all';
         S.ev = { key: '', rows: null, loading: false, failed: false };
+        S.rc = { key: '', rows: null, loading: false, failed: false };
+        S.rcOpen = null;
         if (S.sheet.open) closeSheet(true);
       }
     }
@@ -506,6 +616,7 @@
     if (S.view === 'activity') {
       probeEvents().then(function () { return loadEvents(); }).then(function (did) { if (did) schedule(); });
     }
+    loadReceipts().then(function (did) { if (did) schedule(); });      /* also enables the Receipts link */
     updateHeaderButton();
   }
 

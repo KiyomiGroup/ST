@@ -230,7 +230,7 @@
     var threadIds = threads.map(function (t) { return t.id; });
 
     var prByThread = {}, addonByThread = {};
-    var ADDONS = ['transport', 'additional_cost'];
+    var ADDONS = ['transport', 'additional_cost', 'materials', 'invoice'];   /* mirror of JRMoney.ADDON_KINDS (owner rule D1) */
     try {
       var prCols = 'id,thread_id,amount,status,created_at,kind';
       var pr = await sb.from('payment_requests').select(prCols)

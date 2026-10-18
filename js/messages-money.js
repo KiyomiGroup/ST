@@ -9,6 +9,9 @@
      remaining_payment  what is still unpaid
      transport          the customer pays or declines (no approve step)
      additional_cost    the customer pays or declines (no approve step)
+     invoice            Stage 8: itemised invoice (title, lines, due date). An ADD-ON like transport:
+                        it never sets the price or the code. The server checks title, lines and total.
+     materials          add-on for materials bought (same rules as an invoice add-on)
 
    Status of a request (Stage 7, needs sql/messaging-step7.sql):
      pending -> processing -> paid        the customer pays; 'processing' = started, not confirmed
@@ -28,7 +31,11 @@
      JRMoney.respond(id, status)     declined (customer) | cancelled (tasker)
      JRMoney.normStatus(status)      old 'approved' -> 'pending', old 'accepted' -> 'processing'
      JRMoney.canRevise(row)          tasker, declined, nothing open already revises it
-     JRMoney.create(def)             def.revises = id of a declined request to send a revised one
+     JRMoney.create(def)             def.revises = id of a declined request to send a revised one;
+                                     def.title / def.dueDate ('YYYY-MM-DD') are for invoices
+     JRMoney.isOverdue(row)          invoice past its due date and still unpaid (display only, no server state)
+     JRMoney.receiptFor(requestId)   Promise: the receipt of a paid request (payment_receipts, Stage 8) or null
+     JRMoney.receiptsForThread(id)   Promise: every receipt of a conversation, newest first, or null if unreadable
      JRMoney.pay(id)                 customer pays a request (Paystack)
      JRMoney.naira(n)
 
@@ -52,10 +59,12 @@
     full_payment:      { title: 'Full payment',       short: 'Full payment',       pre: 'Full payment request' },
     remaining_payment: { title: 'Remaining payment',  short: 'Remaining payment',  pre: 'Remaining payment request' },
     transport:         { title: 'Transport request',  short: 'Transport',          pre: 'Transport request' },
-    additional_cost:   { title: 'Additional cost',    short: 'Additional cost',    pre: 'Additional cost request' }
+    additional_cost:   { title: 'Additional cost',    short: 'Additional cost',    pre: 'Additional cost request' },
+    materials:         { title: 'Materials',          short: 'Materials',          pre: 'Materials request' },
+    invoice:           { title: 'Invoice',            short: 'Invoice',            pre: 'Invoice' }
   };
 
-  var S = { onChange: null, busy: {} };
+  var S = { onChange: null, busy: {}, receipts: {} };
 
   function naira(n) {
     return Number(n || 0).toLocaleString('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
@@ -147,7 +156,7 @@
      Every request for this task, newest first. Declined, cancelled and failed
      requests stay in the list (spec 21) but `counted` is false for them.   */
   var HISTORY_LABEL = {
-    invoice: 'Invoice', materials: 'Materials', refund: 'Refund'
+    refund: 'Refund'
   };
   function history(thread, rowsArg) {
     var rows = rowsArg || (window.JRThread ? window.JRThread.moneyRows() : []);
@@ -168,6 +177,8 @@
           reason: r.reason || '',
           title: r.title || '',
           invoiceNo: r.invoice_no || r.invoice_number || '',
+          dueDate: r.due_date || '',
+          overdue: isOverdue(r),
           date: r.paid_at || r.created_at || ''
         };
       });
@@ -197,6 +208,12 @@
       row.kind = kind;
       if (def.reason) row.reason = def.reason;
       if (def.breakdown) row.breakdown = def.breakdown;
+    }
+    /* Invoice (Stage 8): the server checks title, lines, total and due date, and numbers it itself */
+    if (kind === 'invoice') {
+      row.kind = kind;
+      if (def.title) row.title = def.title;
+      if (def.dueDate) row.due_date = def.dueDate;
     }
 
     var req;
@@ -312,6 +329,47 @@
     });
   }
 
+  /* ── overdue (display only, no server state) ─────────────────
+     An invoice is overdue when its due date is before today (the viewer's own date)
+     and it has not been paid. Nothing is written anywhere: pay / decline work as before. */
+  function todayLocal() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function isOverdue(row) {
+    if (!row || kindOf(row) !== 'invoice' || !row.due_date) return false;
+    var st = normStatus(row.status);
+    return (st === 'pending' || st === 'failed' || st === 'processing') && String(row.due_date).slice(0, 10) < todayLocal();
+  }
+
+  /* ── receipts (Stage 8, table payment_receipts) ──────────────
+     One immutable row per successful payment, written by the SERVER. We only read it.
+     null = no receipt (not paid, older than step 8 and not backfilled, or step 8 not run). */
+  async function receiptFor(requestId) {
+    if (!requestId || !window.supabase) return null;
+    if (S.receipts[requestId]) return S.receipts[requestId];
+    try {
+      var r = await window.supabase.from('payment_receipts').select('*').eq('payment_request_id', requestId).maybeSingle();
+      if (r.error) throw r.error;
+      if (r.data) S.receipts[requestId] = r.data;
+      return r.data || null;
+    } catch (_e) { return null; }
+  }
+
+  /* All receipts of one conversation, newest first (Job Details > Receipts).
+     Returns an array, or null when the table cannot be read (step 8 not run yet). */
+  async function receiptsForThread(threadId) {
+    if (!threadId || !window.supabase) return null;
+    try {
+      var r = await window.supabase.from('payment_receipts').select('*')
+        .eq('thread_id', threadId).order('paid_at', { ascending: false }).limit(100);
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      rows.forEach(function (x) { if (x.payment_request_id) S.receipts[x.payment_request_id] = x; });
+      return rows;
+    } catch (_e) { return null; }
+  }
+
   /* ── pay (customer) ──────────────────────────────────────── */
   /* HARDENED (step 6a): the browser only starts the payment. The SERVER decides the
      amount, confirms it with Paystack, marks the request paid, sets the agreed price,
@@ -367,7 +425,7 @@
   window.JRMoney = {
     init: init, KINDS: KINDS, isAddon: isAddon, kindOf: kindOf, PAY_KINDS: PAY_KINDS,
     summary: summary, history: history, create: create, respond: respond, pay: pay, naira: naira,
-    normStatus: normStatus, canRevise: canRevise,
+    normStatus: normStatus, canRevise: canRevise, isOverdue: isOverdue, receiptFor: receiptFor, receiptsForThread: receiptsForThread,
     MIN_AMOUNT: MIN_AMOUNT, MAX_AMOUNT: MAX_AMOUNT
   };
 

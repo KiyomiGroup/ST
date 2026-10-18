@@ -320,26 +320,50 @@
     head.appendChild(el('span', 'prc-label', title));
     var pillKey = released ? 'released' : status;
     var pillText = MONEY_STATUS_LABEL[pillKey] || status;
+    if (kind === 'invoice' && pillKey === 'pending') pillText = 'Awaiting payment';
     if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + pillKey, pillText));
     card.appendChild(head);
 
     card.appendChild(el('div', 'prc-amount', fmt));
 
+    /* Invoice (Stage 8): title, number and due date. "Overdue" is display only: nothing is written. */
+    if (kind === 'invoice' && req) {
+      if (req.title) card.appendChild(el('div', 'jr-inv-title', req.title));
+      var metaBits = [];
+      if (req.invoice_number) metaBits.push(req.invoice_number);
+      if (req.due_date) {
+        var dd = new Date(String(req.due_date).slice(0, 10) + 'T00:00:00');
+        if (!isNaN(dd)) metaBits.push('Due ' + dd.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }));
+      }
+      if (metaBits.length || (J && J.isOverdue(req))) {
+        var meta = el('div', 'jr-inv-meta', metaBits.join(' · '));
+        if (J && J.isOverdue(req)) meta.appendChild(el('span', 'jr-req-pill jr-req-pill--overdue', 'Overdue'));
+        card.appendChild(meta);
+      }
+    }
+
     if (req && req.reason) card.appendChild(el('div', 'jr-req-note', req.reason));
 
+    /* breakdown is a JSON ARRAY of lines [{ label, amount }] (the table requires it); an old
+       {work: n, materials: n} object is still shown if one exists */
     var bd = req && req.breakdown;
-    if (bd && typeof bd === 'object') {
-      var lines = Object.keys(bd).filter(function (k) { return Number(bd[k]) > 0 && ADDON_BREAKDOWN_LABEL[k]; });
-      if (lines.length) {
-        var list = el('div', 'jr-money-lines');
-        lines.forEach(function (k) {
-          var row = el('div', 'jr-money-line');
-          row.appendChild(el('span', null, ADDON_BREAKDOWN_LABEL[k]));
-          row.appendChild(el('span', null, naira(bd[k])));
-          list.appendChild(row);
-        });
-        card.appendChild(list);
-      }
+    var lines = [];
+    if (Array.isArray(bd)) {
+      lines = bd.filter(function (l) { return l && Number(l.amount) > 0 && l.label; })
+                .map(function (l) { return { label: String(l.label), amount: Number(l.amount) }; });
+    } else if (bd && typeof bd === 'object') {
+      lines = Object.keys(bd).filter(function (k) { return Number(bd[k]) > 0 && ADDON_BREAKDOWN_LABEL[k]; })
+                .map(function (k) { return { label: ADDON_BREAKDOWN_LABEL[k], amount: Number(bd[k]) }; });
+    }
+    if (lines.length) {
+      var list = el('div', 'jr-money-lines');
+      lines.forEach(function (l) {
+        var row = el('div', 'jr-money-line');
+        row.appendChild(el('span', null, l.label));
+        row.appendChild(el('span', null, naira(l.amount)));
+        list.appendChild(row);
+      });
+      card.appendChild(list);
     }
 
     var actions = el('div', 'prc-actions');
@@ -359,7 +383,7 @@
          Pay / Decline Request / Ask a Question (nothing else, no approve step) */
       actions.classList.add('is-stack');
       var row1 = el('div', 'prc-actions');
-      row1.appendChild(button('Pay ' + fmt, 'prc-pay-btn', function () { J.pay(id); }));
+      row1.appendChild(button((kind === 'invoice' ? 'Pay Invoice ' : 'Pay ') + fmt, 'prc-pay-btn', function () { J.pay(id); }));
       row1.appendChild(button('Decline Request', 'jr-req-btn', function () { J.respond(id, 'declined'); }));
       actions.appendChild(row1);
       actions.appendChild(button('Ask a Question', 'jr-req-btn', focusComposer));
@@ -373,6 +397,10 @@
       actions.appendChild(el('span', 'prc-status-badge paid',
         released ? (isCustomer ? '✓ Paid. Released to the Tasker' : '✓ Paid. Released to your wallet')
                  : '✓ Paid. Funds in escrow'));
+      /* Stage 8: the receipt is written by the server when the payment is confirmed */
+      actions.appendChild(button('View receipt', 'jr-req-btn', function () {
+        if (window.JRRequests && window.JRRequests.openReceipt) window.JRRequests.openReceipt(id);
+      }));
     } else if (status === 'declined' && J && J.canRevise(req)) {
       /* spec 20: a revised request, the declined one stays in the history */
       actions.appendChild(button('Send Revised Request', 'jr-req-btn', function () {
@@ -552,6 +580,14 @@
     if (req && status === 'pending') {
       var actions = el('div', 'jr-req-actions');
       if (req.requested_by !== S.user.id) {
+        /* Stage 8: the customer asked for an invoice, the tasker answers by sending one */
+        if (kind === 'invoice_request' && S.role === 'tasker') {
+          var inv = el('button', 'jr-req-btn jr-req-btn--primary', 'Send invoice'); inv.type = 'button';
+          inv.addEventListener('click', function () {
+            if (window.JRRequests && window.JRRequests.openInvoice) window.JRRequests.openInvoice({ answers: id });
+          });
+          actions.appendChild(inv);
+        }
         var reply = el('button', 'jr-req-btn', 'Reply'); reply.type = 'button';
         reply.addEventListener('click', focusComposer);
         var done = el('button', 'jr-req-btn jr-req-btn--primary', 'Mark as done'); done.type = 'button';

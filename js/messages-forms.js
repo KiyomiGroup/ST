@@ -3,20 +3,23 @@
    Finished request forms that are NOT connected to the server yet.
 
    Each form is complete (fields, checks, wording) and sits in the Request sheet under its
-   spec section 39 group with a "Not connected yet" tag. Pressing the submit button checks the
+   spec section 39 group with a "Not connected yet" tag.
+   Stage 8 connected Send invoice, Request invoice and Request receipt (messages-requests.js), so
+   their previews were removed from this file. Pressing the submit button checks the
    form, then says plainly that nothing was sent. No row is written, no message is posted, no
    money moves. Connecting a form later = replace its `send` function with the real call.
 
    Forms here (spec section in brackets):
-     Tasker:   Send invoice (10), Custom request (7F), Request materials (7C),
+     Tasker:   Custom request (7F), Request materials (7C),
                Send work update, Submit proof, Reschedule (22), Cancel (28)
-     Customer: Request invoice, Request receipt, Reschedule (22), Cancel (28)
-   Forms that already work are NOT here: payment, full / remaining payment, transport and
-   additional cost (messages-requests.js), pause, report an issue, release code (messages-work.js).
+     Customer: Reschedule (22), Cancel (28)
+   Forms that already work are NOT here: payment, full / remaining payment, transport, additional
+   cost, invoice, request invoice, request receipt and the receipt view (messages-requests.js),
+   pause, report an issue, release code (messages-work.js).
 
    Public API (window.JRForms):
      JRForms.init()      register the actions into the Request sheet (call once)
-     JRForms.open(id)    open one form directly (id = action id, e.g. 'send_invoice')
+     JRForms.open(id)    open one form directly (id = action id, e.g. 'send_update')
      JRForms.ids         list of form ids
 
    No inline styles, no raw colours: classes live in css/messages.css.
@@ -70,14 +73,12 @@
     return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
   }
   var I = {
-    doc:      svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
     box:      svg('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'),
     chat:     svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
     camera:   svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
     calendar: svg('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'),
     cancel:   svg('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'),
-    star:     svg('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'),
-    receipt:  svg('<path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .67V2l-3 2-3-2-3 2-3-2-3 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="14" y2="13"/>')
+    star:     svg('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>')
   };
 
   /* ── small form parts ────────────────────────────────────── */
@@ -147,7 +148,7 @@
     return b;
   }
 
-  /* Line items (invoice, materials): [type] description, amount. Returns { node, items(), total(), error() } */
+  /* Line items (materials): [type] description, amount. Returns { node, items(), total(), error() } */
   function lineItems(opts) {
     var wrap = el('div', 'jr-lines');
     var rows = [];
@@ -209,46 +210,6 @@
   }
 
   /* ── forms ───────────────────────────────────────────────── */
-  function formInvoice(body) {
-    body.appendChild(el('p', 'jr-sheet-lead', 'A bill for this task only. Sending an invoice does not mean it has been paid.'));
-    previewNotice(body);
-
-    var sm = summary();
-    if (sm.base > 0) {
-      var ref = el('div', 'jr-money-lines');
-      var row = el('div', 'jr-money-line');
-      row.appendChild(el('span', null, 'Agreed price')); row.appendChild(el('span', null, naira(sm.base)));
-      ref.appendChild(row);
-      body.appendChild(ref);
-    }
-
-    body.appendChild(label('jrFm_title', 'Invoice title', true));
-    var title = textInput('jrFm_title', 'e.g. Kitchen pipe repair', 60);
-    body.appendChild(title);
-
-    body.appendChild(el('div', 'jr-sheet-label', 'What is being billed'));
-    var lines = lineItems({ types: true, descPlaceholder: 'Description', addLabel: 'Add another line' });
-    body.appendChild(lines.node);
-
-    body.appendChild(label('jrFm_due', 'Due date', true));
-    var due = el('input', 'jr-sheet-input'); due.type = 'date'; due.id = 'jrFm_due'; due.min = todayIso();
-    body.appendChild(due);
-
-    body.appendChild(label('jrFm_note', 'Note to the customer', true));
-    var note = textarea('jrFm_note', 'e.g. Parts bought at the market, receipts will follow.', 3);
-    body.appendChild(note);
-
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Send invoice', function () {
-      var e = lines.error(); if (e) return e;
-      if (due.value && due.value < todayIso()) return 'The due date cannot be in the past.';
-      var texts = [title.value.trim(), note.value.trim()].concat(lines.texts());
-      for (var i = 0; i < texts.length; i++) { if (!contactOk(texts[i], err)) return err.textContent; }
-      return null;
-    }, err, done));
-  }
-
   function formCustom(body) {
     body.appendChild(el('p', 'jr-sheet-lead', 'Use this for anything the other requests do not cover. If you add an amount, the customer can pay or decline it.'));
     previewNotice(body);
@@ -327,25 +288,6 @@
     }, err, done));
   }
 
-  function formAsk(kind) {
-    return function (body) {
-      var invoice = kind === 'invoice';
-      body.appendChild(el('p', 'jr-sheet-lead', invoice
-        ? 'The tasker will see this in the conversation and can send you an invoice.'
-        : 'The tasker will see this in the conversation and can share receipts for materials or purchases.'));
-      previewNotice(body);
-      body.appendChild(label('jrFm_note', 'Add a note', true));
-      var note = textarea('jrFm_note', invoice ? 'e.g. I need it for my records.' : 'e.g. Please send the receipt for the pump.', 3);
-      body.appendChild(note);
-      var err = errBox(), done = doneBox();
-      body.appendChild(err); body.appendChild(done);
-      body.appendChild(submitButton('Send request', function () {
-        if (!contactOk(note.value, err)) return err.textContent;
-        return null;
-      }, err, done));
-    };
-  }
-
   function formReschedule(body) {
     var c = ctx();
     var title = (c && c.thread && c.thread._title) || 'this task';
@@ -419,13 +361,10 @@
   var R, FORMS = {};
 
   function def(id, title, fn) { FORMS[id] = { title: title, fn: fn }; }
-  def('send_invoice',      'Send invoice',      formInvoice);
   def('custom_request',    'Custom request',    formCustom);
   def('request_materials', 'Request materials', formMaterials);
   def('send_update',       'Send work update',  formWorkUpdate);
   def('submit_proof',      'Submit proof',      formProof);
-  def('request_invoice',   'Request an invoice', formAsk('invoice'));
-  def('request_receipt',   'Request a receipt', formAsk('receipt'));
   def('reschedule',        'Reschedule',        formReschedule);
   def('cancel_job',        'Cancel this job',   formCancel);
 
@@ -453,16 +392,6 @@
       { id: 'request_materials', roles: ['tasker'], group: G.COSTS, icon: I.box, ui: true,
         label: 'Request materials', hint: 'List what you need to buy for the job',
         rule: function (x) { return x.status === 'awaiting_confirmation' ? WAIT : needPaid(x); }, run: run('request_materials') },
-
-      { id: 'send_invoice', roles: ['tasker'], group: G.DOCS, icon: I.doc, ui: true,
-        label: 'Send invoice', hint: 'Labour, materials and transport in one bill',
-        rule: needJob, run: run('send_invoice') },
-      { id: 'request_invoice', roles: ['customer'], group: G.DOCS, icon: I.doc, ui: true,
-        label: 'Request invoice', hint: 'Ask the tasker for an invoice',
-        rule: needJob, run: run('request_invoice') },
-      { id: 'request_receipt', roles: ['customer'], group: G.DOCS, icon: I.receipt, ui: true,
-        label: 'Request receipt', hint: 'Ask for receipts for materials or purchases',
-        rule: needPaid, run: run('request_receipt') },
 
       { id: 'send_update', roles: ['tasker'], group: G.WORK, icon: I.chat, ui: true,
         label: 'Send work update', hint: 'Tell the customer how the job is going',
