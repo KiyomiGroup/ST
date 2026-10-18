@@ -23,16 +23,17 @@
      and (Stage 1, UI only) image, video, file, location, safety.
    Anything else falls back to a text bubble.
 
-   Stage 1 types are NOT in the database yet: `messages.type` only allows
-   text, system, payment_request, payment_confirmed, job_request. Their data
-   shape is `message.meta`:
-     image    { url, alt, caption }
-     video    { url, poster, duration, caption }   (no url = poster only)
-     file     { name, size, mime }
+   Stage 9: image, video, file and location are real message types. A row
+   carries `payload` (jsonb); withMeta() turns it into `message.meta`. Files
+   live in the PRIVATE bucket `job-evidence` and are shown through short-lived
+   signed URLs (never stored in the row). Meta shape:
+     image    { path | url, alt, caption }
+     video    { path | url, poster, duration, caption }   (no url = poster only)
+     file     { path, name, size, mime }
      location { label, address, lat, lng }
      safety   { title }  (text in body)
-   Stage 9 adds the storage bucket and widens the type check. Until then the
-   composer attach menu only shows a preview chip and sends nothing.
+   The composer attach menu uploads first, then writes the attachment row and
+   the message row; nothing shows as sent until both succeeded.
 
    Message priority (spec 33): normal (text, media), important (system, job
    request, safety), transactional (money cards, payment confirmed). The level
@@ -175,6 +176,66 @@
     u = String(u || '');
     return /^(https?:\/\/|blob:|[\w][\w./-]*$)/i.test(u) ? u : '';
   }
+  /* ── Stage 9: private evidence files ───────────────────── */
+  var EVID_BUCKET = 'job-evidence';
+  var SIGN_TTL = 3600;                       /* seconds */
+  var MB = 1048576;
+  var LIMITS = { photo: 10 * MB, video: 50 * MB, file: 10 * MB, receipt: 10 * MB };
+  var FILE_MIME = {
+    pdf: 'application/pdf', doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    txt: 'text/plain', csv: 'text/csv'
+  };
+  var VIDEO_MIME = { mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime' };
+  var signedCache = {};
+
+  /* Short-lived signed URL, cached in memory for this page only. */
+  function signedUrl(path, force) {
+    var c = signedCache[path];
+    if (c && !force && c.exp > Date.now()) return c.p;
+    if (!window.supabase || !path) return Promise.resolve('');
+    var p = window.supabase.storage.from(EVID_BUCKET).createSignedUrl(path, SIGN_TTL)
+      .then(function (r) {
+        if (r.error || !r.data) { delete signedCache[path]; return ''; }
+        return r.data.signedUrl || '';
+      })
+      .catch(function () { delete signedCache[path]; return ''; });
+    signedCache[path] = { p: p, exp: Date.now() + (SIGN_TTL - 600) * 1000 };
+    return p;
+  }
+
+  /* Fill node[prop] with a signed URL; one retry if the file fails to load (expired link). */
+  function hydrate(node, prop, path) {
+    signedUrl(path).then(function (u) {
+      if (u) node[prop] = u; else node.setAttribute('data-unavailable', '1');
+    });
+    if (prop === 'src') {
+      var retried = false;
+      node.addEventListener('error', function () {
+        if (retried) return;
+        retried = true;
+        signedUrl(path, true).then(function (u) { if (u) node.src = u; });
+      });
+    } else {
+      node.addEventListener('pointerdown', function () {
+        signedUrl(path).then(function (u) { if (u) node[prop] = u; });
+      });
+    }
+  }
+
+  /* Database rows carry `payload`; the renderers read `meta`. */
+  function withMeta(m) {
+    if (!m || m.meta || !m.payload || typeof m.payload !== 'object') return m;
+    var p = m.payload;
+    return Object.assign({}, m, { meta: {
+      path: p.path || '', name: p.name, size: p.size, mime: p.mime,
+      caption: p.caption || '', label: p.label, address: p.address,
+      lat: p.lat, lng: p.lng, duration: p.duration
+    } });
+  }
+
   function fileSize(n) {
     n = Number(n) || 0;
     if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB';
@@ -199,7 +260,12 @@
     var meta = m.meta || {};
     var box = el('div', 'jr-media');
     var url = safeUrl(meta.url);
-    if (url) {
+    if (meta.path) {
+      var pimg = el('img', 'jr-media-img');
+      pimg.alt = meta.alt || 'Photo'; pimg.loading = 'lazy';
+      box.appendChild(pimg);
+      hydrate(pimg, 'src', meta.path);
+    } else if (url) {
       var img = el('img', 'jr-media-img');
       img.src = url; img.alt = meta.alt || 'Photo'; img.loading = 'lazy';
       box.appendChild(img);
@@ -207,7 +273,7 @@
       var ph = el('div', 'jr-media-ph'); ph.innerHTML = ICON_IMAGE;
       box.appendChild(ph);
     }
-    caption(box, meta.caption || m.body);
+    caption(box, meta.path ? meta.caption : (meta.caption || m.body));
     return withTime(mediaWrap(m, isMine), box, m);
   }
 
@@ -215,7 +281,12 @@
     var meta = m.meta || {};
     var box = el('div', 'jr-media jr-media--video');
     var url = safeUrl(meta.url), poster = safeUrl(meta.poster);
-    if (url) {
+    if (meta.path) {
+      var pv = el('video', 'jr-media-img');
+      pv.controls = true; pv.preload = 'metadata';
+      box.appendChild(pv);
+      hydrate(pv, 'src', meta.path);
+    } else if (url) {
       var v = el('video', 'jr-media-img');
       v.src = url; v.controls = true; v.preload = 'none';
       if (poster) v.poster = poster;
@@ -228,7 +299,7 @@
       if (meta.duration) stage.appendChild(el('span', 'jr-media-badge', meta.duration));
       box.appendChild(stage);
     }
-    caption(box, meta.caption || m.body);
+    caption(box, meta.path ? meta.caption : (meta.caption || m.body));
     return withTime(mediaWrap(m, isMine), box, m);
   }
 
@@ -241,6 +312,12 @@
     var sub = [String(meta.mime || '').split('/').pop().toUpperCase(), fileSize(meta.size)].filter(Boolean).join(' · ');
     if (sub) info.appendChild(el('div', 'jr-file-sub', sub));
     box.appendChild(icon); box.appendChild(info);
+    if (meta.path) {
+      var open = el('a', 'jr-loc-link', 'Open');
+      open.target = '_blank'; open.rel = 'noopener noreferrer';
+      box.appendChild(open);
+      hydrate(open, 'href', meta.path);
+    }
     return withTime(mediaWrap(m, isMine), box, m);
   }
 
@@ -677,6 +754,7 @@
   };
 
   function buildMessage(m) {
+    if (m && (m.type === 'image' || m.type === 'video' || m.type === 'file' || m.type === 'location')) m = withMeta(m);
     var isMine = !!(S.user && m.sender_id === S.user.id);
     var node;
     if (m.type === 'system') node = buildSystem(m);
@@ -768,8 +846,11 @@
 
     placeholder(body, ICON_SPIN + ' Loading…');
     try {
-      var cols = 'id,sender_id,body,created_at,type,payment_request_id,job_request_id';
+      var cols = 'id,sender_id,body,created_at,type,payment_request_id,job_request_id,payload';
       var res = await fetchMessages(token, cols);
+      if (res.error && /payload/.test(String(res.error.message || ''))) {
+        res = await fetchMessages(token, 'id,sender_id,body,created_at,type,payment_request_id,job_request_id');
+      }
       if (res.error && /job_request_id/.test(String(res.error.message || ''))) {
         /* Step 5 SQL not run yet: load without the new column */
         res = await fetchMessages(token, 'id,sender_id,body,created_at,type,payment_request_id');
@@ -825,6 +906,23 @@
     return S.user.id === t.customer_id ? t.tasker_id : t.customer_id;
   }
 
+  /* Last-message preview + the other person's unread counter (same as a text send). */
+  async function bumpThread(t, preview, now) {
+    var sb = window.supabase;
+    now = now || new Date().toISOString();
+    var isCustomer = S.user.id === t.customer_id;
+    var unreadCol = isCustomer ? 'tasker_unread' : 'customer_unread';
+    var curUnread = isCustomer ? (t.tasker_unread || 0) : (t.customer_unread || 0);
+    try {
+      await sb.from('message_threads').update({
+        last_message: preview.slice(0, 80), last_message_at: now, [unreadCol]: curUnread + 1
+      }).eq('id', t.id);
+    } catch (_e) {}
+    t.last_message = preview; t.last_message_at = now;
+    if (isCustomer) t.tasker_unread = curUnread + 1; else t.customer_unread = curUnread + 1;
+    if (S.onChange) S.onChange();
+  }
+
   async function deliver(text, node) {
     var sb = window.supabase;
     var t = S.thread;
@@ -841,17 +939,7 @@
       delete node.dataset.tmp;
     }
 
-    var isCustomer = S.user.id === t.customer_id;
-    var unreadCol = isCustomer ? 'tasker_unread' : 'customer_unread';
-    var curUnread = isCustomer ? (t.tasker_unread || 0) : (t.customer_unread || 0);
-    try {
-      await sb.from('message_threads').update({
-        last_message: text.slice(0, 80), last_message_at: now, [unreadCol]: curUnread + 1
-      }).eq('id', t.id);
-    } catch (_e) {}
-    t.last_message = text; t.last_message_at = now;
-    if (isCustomer) t.tasker_unread = curUnread + 1; else t.customer_unread = curUnread + 1;
-    if (S.onChange) S.onChange();
+    await bumpThread(t, text, now);
 
     try {
       var meta = S.user.user_metadata || {};
@@ -914,12 +1002,124 @@
     return true;
   }
 
-  /* ── attachment preview chip (Stage 1: UI only) ──────────── */
-  /* Picking a photo, camera shot, file or location only shows a chip.
-     Nothing is uploaded and nothing is sent until Stage 9 (storage bucket,
-     message types). While a chip is showing, Send is off so no one thinks
-     the attachment went out. */
+  /* ── attachments (Stage 9) ───────────────────────────────── */
+  /* Order: validate -> (photos: re-encode, which drops GPS/EXIF) -> upload to the
+     private bucket -> job_attachments row -> messages row. Only then does the
+     message appear. A failure keeps the chip so the person can retry; if the
+     upload and row already succeeded, a retry only repeats the message insert. */
   var ATTACH_LABEL = { photo: 'Photo', camera: 'Camera photo', file: 'File', location: 'Location' };
+  var PHOTO_TYPES = /^image\/(jpeg|png|webp|heic|heif)$/i;
+
+  function extOf(name) {
+    var m = /\.([a-z0-9]{1,5})$/i.exec(name || '');
+    return m ? m[1].toLowerCase() : '';
+  }
+
+  /* What is this file? -> { kind, mime, reencode } or { error } */
+  function classify(file, wantKind) {
+    var type = String(file.type || '').toLowerCase(), ext = extOf(file.name);
+    var out;
+    if (/^image\//.test(type) || /^(jpe?g|png|webp|heic|heif)$/.test(ext)) {
+      if (/svg/.test(type) || ext === 'svg') return { error: 'SVG images are not allowed. Use a JPEG, PNG or WebP photo.' };
+      if (type && !PHOTO_TYPES.test(type)) return { error: 'Use a JPEG, PNG or WebP photo.' };
+      out = { kind: wantKind === 'receipt' ? 'receipt' : 'photo', mime: 'image/jpeg', reencode: true };
+    } else if (/^video\//.test(type) || VIDEO_MIME[ext]) {
+      var vm = VIDEO_MIME[ext] || type;
+      if (!/^video\/(mp4|webm|quicktime)$/.test(vm)) return { error: 'Use an MP4, WebM or MOV video.' };
+      if (wantKind === 'receipt') return { error: 'A receipt must be a photo or a PDF.' };
+      out = { kind: 'video', mime: vm, reencode: false };
+    } else if (FILE_MIME[ext]) {
+      if (wantKind === 'receipt' && ext !== 'pdf') return { error: 'A receipt must be a photo or a PDF.' };
+      out = { kind: wantKind === 'receipt' ? 'receipt' : 'file', mime: FILE_MIME[ext], reencode: false };
+    } else {
+      return { error: 'This file type is not allowed. Use a photo, video, PDF, Word, Excel, TXT or CSV file.' };
+    }
+    if (!out.reencode && file.size > LIMITS[out.kind]) {
+      return { error: 'This file is too large (max ' + Math.round(LIMITS[out.kind] / MB) + ' MB).' };
+    }
+    return out;
+  }
+
+  /* Re-draw the photo on a canvas: removes EXIF/GPS and shrinks it (longest side 1600 px). */
+  function reencodeImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      function done(fn, v) { try { URL.revokeObjectURL(url); } catch (_e) {} fn(v); }
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (!w || !h) throw new Error('empty');
+          var k = Math.min(1, 1600 / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
+          var c = document.createElement('canvas');
+          c.width = cw; c.height = ch;
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = 'white'; ctx.fillRect(0, 0, cw, ch);
+          ctx.drawImage(img, 0, 0, cw, ch);
+          c.toBlob(function (b) {
+            if (b) done(resolve, b); else done(reject, new Error('This photo could not be prepared. Try another one.'));
+          }, 'image/jpeg', 0.85);
+        } catch (e) { done(reject, new Error('This photo could not be read. Try a JPEG or PNG.')); }
+      };
+      img.onerror = function () { done(reject, new Error('This photo could not be read. Try a JPEG or PNG.')); };
+      img.src = url;
+    });
+  }
+
+  function newId() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+  function safeName(name, mime) {
+    var base = String(name || 'file').replace(/\.[^.]*$/, '').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'file';
+    var ext = mime === 'image/jpeg' ? 'jpg' : (extOf(name) || 'bin');
+    return base + '.' + ext;
+  }
+
+  /* Upload one file to the private bucket and record it. Reusable by the Submit proof
+     form and receipt answers: opts = { kind: 'receipt', label, jobRequestId, paymentRequestId, thread }.
+     Resolves { attachment, name }. A failed row insert leaves the uploaded object (clients
+     cannot delete from the bucket); it has no row, so nobody can open it. */
+  async function uploadEvidence(file, opts) {
+    opts = opts || {};
+    var sb = window.supabase, t = opts.thread || S.thread;
+    if (!sb || !t || !S.user) throw new Error('Open a conversation first.');
+    var c = classify(file, opts.kind);
+    if (c.error) throw new Error(c.error);
+    var blob = file;
+    if (c.reencode) blob = await reencodeImage(file);
+    if (blob.size > LIMITS[c.kind]) throw new Error('This file is too large (max ' + Math.round(LIMITS[c.kind] / MB) + ' MB).');
+    var name = safeName(file.name, c.mime);
+    var path = t.id + '/' + newId() + '-' + name;
+    var up = await sb.storage.from(EVID_BUCKET).upload(path, blob, { contentType: c.mime, upsert: false, cacheControl: '3600' });
+    if (up.error) throw up.error;
+    var row = {
+      thread_id: t.id, uploader_id: S.user.id, kind: c.kind, storage_path: path,
+      mime: c.mime, size: blob.size, label: (opts.label || '').slice(0, 80) || null
+    };
+    if (opts.jobRequestId) row.job_request_id = opts.jobRequestId;
+    if (opts.paymentRequestId) row.payment_request_id = opts.paymentRequestId;
+    var ins = await sb.from('job_attachments').insert(row)
+      .select('id,kind,storage_path,mime,size,label,created_at').single();
+    if (ins.error) throw ins.error;
+    return { attachment: ins.data, name: name };
+  }
+
+  function getPosition() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) { reject(new Error('Location is not available on this device.')); return; }
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        resolve({ lat: Math.round(pos.coords.latitude * 1e5) / 1e5, lng: Math.round(pos.coords.longitude * 1e5) / 1e5 });
+      }, function () {
+        reject(new Error('Could not get your location. Check that location is allowed for this site.'));
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    });
+  }
+
+  function setChipNote(text) {
+    var n = document.querySelector('#jrAttachPreview .jr-attach-note');
+    if (n) n.textContent = text;
+  }
 
   function clearAttach() {
     if (S.attach && S.attach.url) { try { URL.revokeObjectURL(S.attach.url); } catch (_e) {} }
@@ -930,8 +1130,13 @@
   }
 
   function showAttach(kind, file) {
+    if (S.uploading) return;
+    if (file) {
+      var c = classify(file);
+      if (c.error) { toast(c.error, 'error'); return; }
+    }
     clearAttach();
-    var a = { kind: kind, name: file ? file.name : 'Current location', size: file ? file.size : 0, url: '', isImage: false };
+    var a = { kind: kind, file: file || null, name: file ? file.name : 'Current location', size: file ? file.size : 0, url: '', isImage: false, done: null };
     if (file && /^image\//.test(file.type)) { a.isImage = true; a.url = URL.createObjectURL(file); }
     S.attach = a;
 
@@ -950,14 +1155,68 @@
     info.appendChild(el('div', 'jr-attach-name', a.name));
     var sub = [ATTACH_LABEL[kind], fileSize(a.size)].filter(Boolean).join(' · ');
     info.appendChild(el('div', 'jr-attach-sub', sub));
-    info.appendChild(el('div', 'jr-attach-note', 'Preview only. Sending attachments is not connected yet. Remove it to send a message.'));
+    info.appendChild(el('div', 'jr-attach-note', kind === 'location'
+      ? 'Your current location is shared once, when you tap Send.'
+      : 'Ready to send. Type a caption below if you like.'));
     var rm = el('button', 'jr-icon-btn jr-attach-remove'); rm.type = 'button';
     rm.setAttribute('aria-label', 'Remove attachment'); rm.innerHTML = ICON_CLOSE;
-    rm.addEventListener('click', clearAttach);
+    rm.addEventListener('click', function () { if (!S.uploading) clearAttach(); });
     chip.appendChild(thumb); chip.appendChild(info); chip.appendChild(rm);
     box.appendChild(chip);
     box.hidden = false;
     syncSendState();
+  }
+
+  /* Returns true when the attachment message was sent. */
+  async function sendAttachment() {
+    var a = S.attach, t = S.thread, sb = window.supabase;
+    if (!a || !t || !S.user || S.uploading) return false;
+    var input = $('msgInput');
+    var cap = ((input && input.value) || '').trim();
+    if (cap && hasContactInfo(cap)) {
+      showWarn();
+      if (typeof window.handleContactViolation === 'function') window.handleContactViolation(S.user.id);
+      return false;
+    }
+    hideWarn();
+    S.uploading = true;
+    setChipNote(a.kind === 'location' ? 'Getting your location…' : 'Uploading…');
+    syncSendState();
+    try {
+      var type, payload, body;
+      if (a.kind === 'location') {
+        var pos = await getPosition();
+        type = 'location';
+        payload = { label: (cap || 'Shared location').slice(0, 80), lat: pos.lat, lng: pos.lng };
+        body = cap || 'Shared location';
+      } else {
+        if (!a.done) a.done = await uploadEvidence(a.file, { label: cap, thread: t });
+        var att = a.done.attachment;
+        type = att.kind === 'video' ? 'video' : (att.mime.indexOf('image/') === 0 ? 'image' : 'file');
+        payload = { attachment_id: att.id, path: att.storage_path, name: a.done.name, size: att.size, mime: att.mime };
+        if (cap) payload.caption = cap;
+        body = cap || (type === 'image' ? 'Photo' : type === 'video' ? 'Video' : a.done.name.slice(0, 80));
+      }
+      setChipNote('Sending…');
+      var ins = await sb.from('messages').insert({
+        thread_id: t.id, sender_id: S.user.id, receiver_id: receiverOf(t),
+        body: body, flagged: false, type: type, payload: payload
+      }).select('id,sender_id,body,created_at,type,payload').single();
+      if (ins.error) throw ins.error;
+      await bumpThread(t, body);
+      if (S.thread && S.thread.id === t.id) append(ins.data);
+      if (S.attach === a) clearAttach();
+      if (input) { input.value = ''; input.style.height = 'auto'; }
+      return true;
+    } catch (e) {
+      var msg = (e && e.message) || String(e);
+      if (S.attach === a) setChipNote('Not sent. ' + msg);
+      toast('Not sent: ' + msg, 'error');
+      return false;
+    } finally {
+      S.uploading = false;
+      syncSendState();
+    }
   }
 
   function pickAttach(kind) {
@@ -1001,12 +1260,13 @@
   /* ── composer wiring ─────────────────────────────────────── */
   function syncSendState() {
     var input = $('msgInput'), btn = $('msgSendBtn');
-    if (btn && input) btn.disabled = !input.value.trim() || !!S.attach;
+    if (btn && input) btn.disabled = !!S.uploading || (S.attach ? false : !input.value.trim());
   }
 
   async function submitFromInput() {
     var input = $('msgInput');
-    if (!input || S.attach) return;
+    if (!input) return;
+    if (S.attach) { await sendAttachment(); return; }
     var ok = await send(input.value);
     if (ok) { input.value = ''; input.style.height = 'auto'; syncSendState(); }
   }
@@ -1054,6 +1314,8 @@
     previewSetup: previewSetup,
     registerMoney: registerMoney,
     onMoneyChange: onMoneyChange,
+    uploadEvidence: uploadEvidence,
+    signedUrl: signedUrl,
     getMoney: getMoney,
     moneyRows: moneyRows
   };
