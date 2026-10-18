@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Support console — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/support.css" />
+</head>
+<body class="sp-body">
+  <!-- Internal page. Not linked from the site, not in sitemap.xml. Access is decided by the server:
+       every action is a support_* function that refuses anyone who is not in support_staff. -->
+  <header class="sp-top">
+    <h1 class="sp-title">Support console</h1>
+    <span class="sp-who" id="spWho"></span>
+  </header>
+
+  <main class="sp-main">
+    <p class="sp-state" id="spState">Checking access…</p>
+
+    <div class="sp-app" id="spApp" hidden>
+      <section class="sp-list-col" aria-label="Reports">
+        <div class="sp-filter" role="tablist" id="spFilter">
+          <button type="button" class="btn btn-sm btn-outline" data-f="live">Needs action</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-f="resolved">Closed</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-f="all">All</button>
+        </div>
+        <ul class="sp-list" id="spList"></ul>
+        <details class="sp-orphans" id="spOrphans">
+          <summary>Orphan uploads (files with no record)</summary>
+          <div id="spOrphanBody" class="sp-orphan-body"></div>
+        </details>
+      </section>
+
+      <section class="sp-detail-col" id="spDetail" aria-live="polite">
+        <p class="sp-state">Choose a report on the left.</p>
+      </section>
+    </div>
+  </main>
+
+  <div class="sp-toast" id="spToast" role="status" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/support.js"></script>
+</body>
+</html>
