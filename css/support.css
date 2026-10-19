@@ -49,3 +49,15 @@
 .sp-toast { position: fixed; left: 50%; bottom: var(--space-5); transform: translateX(-50%);
   padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill);
   background: var(--color-text); color: var(--color-text-on-primary); font-size: var(--text-sm); }
+
+/* Stage 12: search, names, overdue, hold notice, conversation, load more */
+.sp-search-label { display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-1); }
+.sp-search { margin-bottom: var(--space-2); }
+.sp-item-people { font-size: var(--text-xs); color: var(--color-text); overflow-wrap: anywhere; }
+.sp-overdue { margin-left: var(--space-1); }
+.sp-more { margin-top: var(--space-3); }
+.sp-more[hidden] { display: none; }
+.sp-hold { margin: 0; padding: var(--space-3); border-radius: var(--radius-lg); font-size: var(--text-sm);
+  background: var(--color-bg-subtle); color: var(--color-text); border: 1px solid var(--color-border); }
+.sp-chat { display: flex; flex-direction: column; gap: var(--space-2); }
+.sp-chat-list li { align-items: flex-start; }

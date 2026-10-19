@@ -39,6 +39,7 @@
     var tasker = role() === 'tasker';
     if (d.url) return d.url;
     if (t.indexOf('message') > -1 || t.indexOf('payment_request') > -1) return 'messages.html';
+    if (t.indexOf('dispute') > -1) return 'messages.html';          /* Stage 12: problem-report updates (opened, review, decision, refund) */
     if (t.indexOf('application') > -1 || t.indexOf('apply') > -1) return tasker ? 'applications.html' : 'customer-applications.html';
     if (t.indexOf('booking') > -1) return tasker ? 'bookings.html' : 'customer-bookings.html';
     if (t.indexOf('payment') > -1 || t.indexOf('payout') > -1 || t.indexOf('wallet') > -1) return 'wallet.html';

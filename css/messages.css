@@ -1983,3 +1983,8 @@ body.msg-page {
 
 .jr-file--removed { color: var(--color-text-muted); }
 .jr-file--removed .jr-file-name { font-weight: 400; color: var(--color-text-muted); }
+
+/* Stage 9: Submit proof form (selected files) */
+.jr-proof-files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.jr-proof-file { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text); }
+.jr-proof-name { overflow-wrap: anywhere; min-width: 0; }

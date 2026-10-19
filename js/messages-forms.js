@@ -19,7 +19,8 @@
 
    Public API (window.JRForms):
      JRForms.init()      register the actions into the Request sheet (call once)
-     JRForms.open(id)    open one form directly (id = action id, e.g. 'send_update')
+     JRForms.open(id, opts)  open one form directly (id = action id, e.g. 'send_update').
+                         Stage 9: Submit proof is CONNECTED (uploads + chat + Evidence); opts = { answers, kind }
      JRForms.ids         list of form ids
 
    No inline styles, no raw colours: classes live in css/messages.css.
@@ -270,22 +271,90 @@
     }, err, done));
   }
 
-  function formProof(body) {
-    body.appendChild(el('p', 'jr-sheet-lead', 'Show the customer what you did. Photos, video and files are always optional.'));
-    previewNotice(body);
-    var attach = el('button', 'jr-sheet-secondary jr-sheet-attach', 'Add photos, video or a file'); attach.type = 'button'; attach.disabled = true;
-    body.appendChild(attach);
-    body.appendChild(el('p', 'jr-sheet-help', 'Uploads are not available yet, so you can only add a note for now.'));
-    body.appendChild(label('jrFm_note', 'Note'));
+  /* Submit proof / answer to a proof or receipt request. CONNECTED (Stage 9): files go to the private
+     job-evidence bucket through JRThread.sendProof, then appear in the conversation and in Evidence.
+     opts = { answers: job_requests.id, kind: 'receipt' } when it answers a customer's ask. */
+  var PROOF_ACCEPT = 'image/*,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv';
+  function fileSizeText(b) { var n = Number(b) || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+
+  function formProof(body, opts) {
+    opts = opts || {};
+    var isReceipt = opts.kind === 'receipt';
+    body.appendChild(el('p', 'jr-sheet-lead', isReceipt
+      ? 'Send the receipt for what you bought. It must be a photo or a PDF.'
+      : 'Show the customer what you did. Photos, video and files are always optional. A note is enough.'));
+    var picked = [];
+    var input = el('input'); input.type = 'file'; input.multiple = true; input.id = 'jrFm_files';
+    input.accept = isReceipt ? 'image/*,.pdf' : PROOF_ACCEPT; input.hidden = true;
+    var attach = el('button', 'jr-sheet-secondary jr-sheet-attach', isReceipt ? 'Choose a photo or PDF' : 'Add photos, video or a file'); attach.type = 'button';
+    attach.addEventListener('click', function () { input.click(); });
+    var list = el('ul', 'jr-proof-files');
+    function paintFiles() {
+      list.textContent = '';
+      picked.forEach(function (f, i) {
+        var li = el('li', 'jr-proof-file');
+        li.appendChild(el('span', 'jr-proof-name', f.name + ' · ' + fileSizeText(f.size)));
+        var rm = el('button', 'jr-sheet-remove', 'Remove'); rm.type = 'button';
+        rm.addEventListener('click', function () { picked.splice(i, 1); paintFiles(); });
+        li.appendChild(rm); list.appendChild(li);
+      });
+      attach.disabled = picked.length >= 5;
+    }
+    input.addEventListener('change', function () {
+      Array.prototype.forEach.call(input.files || [], function (f) { if (picked.length < 5) picked.push(f); });
+      input.value = ''; paintFiles();
+    });
+    body.appendChild(attach); body.appendChild(input); body.appendChild(list);
+    body.appendChild(el('p', 'jr-sheet-help', 'Up to 5 files. They are private: only you, the customer and StreetTasker support can open them.'));
+
+    var payRows = [];
+    if (window.JRMoney && ctx()) {
+      payRows = window.JRMoney.history(ctx().thread).filter(function (h) {
+        return ['materials', 'additional_cost', 'transport', 'invoice'].indexOf(h.kind) !== -1 && h.status !== 'declined' && h.status !== 'cancelled';
+      });
+    }
+    var pay = null;
+    if (payRows.length) {
+      body.appendChild(label('jrFm_pay', 'Attach to a payment', true));
+      pay = el('select', 'jr-sheet-input'); pay.id = 'jrFm_pay';
+      var none = el('option', null, 'Not attached to a payment'); none.value = ''; pay.appendChild(none);
+      payRows.forEach(function (h) { var o = el('option', null, h.label + ' · ' + naira(h.amount)); o.value = h.id; pay.appendChild(o); });
+      body.appendChild(pay);
+    }
+
+    body.appendChild(label('jrFm_note', 'Note', true));
     var note = textarea('jrFm_note', 'e.g. Pipe replaced and tested for 15 minutes, no leaks.', 4);
     body.appendChild(note);
     var err = errBox(), done = doneBox();
     body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Submit proof', function () {
-      if (note.value.trim().length < 3) return 'Please describe what you are showing.';
-      if (!contactOk(note.value, err)) return err.textContent;
-      return null;
-    }, err, done));
+    var go = el('button', 'jr-sheet-send', isReceipt ? 'Send receipt' : 'Submit proof'); go.type = 'button';
+    go.addEventListener('click', async function () {
+      err.hidden = true; done.hidden = true;
+      var text = note.value.trim();
+      if (isReceipt && !picked.length) { err.textContent = 'Choose the receipt photo or PDF.'; err.hidden = false; return; }
+      if (!picked.length && text.length < 3) { err.textContent = 'Add a short note or at least one file.'; err.hidden = false; return; }
+      if (!contactOk(text, err)) return;
+      if (!window.JRThread || !window.JRThread.sendProof) { err.textContent = 'Sending is not available right now.'; err.hidden = false; return; }
+      go.disabled = true; attach.disabled = true; go.textContent = 'Sending…';
+      try {
+        var r = await window.JRThread.sendProof({
+          files: picked, note: text, kind: isReceipt ? 'receipt' : undefined,
+          jobRequestId: opts.answers || undefined, paymentRequestId: (pay && pay.value) || undefined
+        });
+        if (r.failed.length) {
+          done.textContent = 'Sent ' + r.sent + '. Not sent: ' + r.failed.join(' ');
+          done.hidden = false; go.textContent = isReceipt ? 'Send receipt' : 'Submit proof'; go.disabled = false;
+          picked = []; paintFiles();
+        } else {
+          if (window.JRThread.toast) window.JRThread.toast(isReceipt ? 'Receipt sent.' : 'Proof sent to the customer.');
+          if (window.JRRequests && window.JRRequests.close) window.JRRequests.close();
+        }
+      } catch (e) {
+        err.textContent = (e && e.message) || 'Could not send. Please try again.'; err.hidden = false;
+        go.disabled = false; go.textContent = isReceipt ? 'Send receipt' : 'Submit proof'; paintFiles();
+      }
+    });
+    body.appendChild(go);
   }
 
   function formReschedule(body) {
@@ -368,10 +437,10 @@
   def('reschedule',        'Reschedule',        formReschedule);
   def('cancel_job',        'Cancel this job',   formCancel);
 
-  function open(id) {
+  function open(id, opts) {
     var f = FORMS[id];
     if (!f || !window.JRRequests) return;
-    window.JRRequests.openView(f.title, function (body) { f.fn(body); });
+    window.JRRequests.openView(f.title, function (body) { f.fn(body, opts || {}); });
   }
 
   function actions() {
@@ -396,7 +465,7 @@
       { id: 'send_update', roles: ['tasker'], group: G.WORK, icon: I.chat, ui: true,
         label: 'Send work update', hint: 'Tell the customer how the job is going',
         rule: needJob, run: run('send_update') },
-      { id: 'submit_proof', roles: ['tasker'], group: G.WORK, icon: I.camera, ui: true,
+      { id: 'submit_proof', roles: ['tasker'], group: G.WORK, icon: I.camera,
         label: 'Submit proof', hint: 'Photos, video or a note. Always optional',
         rule: needPaid, run: run('submit_proof') },
 

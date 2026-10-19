@@ -35,7 +35,7 @@
      page never moves money. A bar above the composer (#jrDisputeBar) shows while a report is live.
 
    NOT built here (greyed in the action list with the reason):
-     Evidence (Stage 9) has no data yet.
+     (nothing left: Evidence is the \"evidence\" view, read from job_attachments)
 
    No inline styles in markup, no raw colours: classes live in css/messages.css.
    ============================================================ */
@@ -106,12 +106,13 @@
   var S = {
     ctx: null,                 /* { thread, user, role } */
     threadId: null,
-    view: 'main',              /* main | history | activity | receipts | receipt | dispute */
+    view: 'main',              /* main | history | activity | receipts | receipt | evidence | dispute */
     filter: 'all',             /* history filter: all | invoice */
     extra: {},                 /* per thread: { title, location, deadline, scheduled } */
     ev: { key: '', rows: null, loading: false, failed: false },
     rc: { key: '', rows: null, loading: false, failed: false },   /* receipts of this thread */
     dp: { key: '', rows: null, refunds: [], events: [], loading: false, failed: false },   /* problem reports */
+    evd: { key: '', rows: null, removed: 0, loading: false, failed: false },   /* evidence files of this thread (Stage 9) */
     dpDraft: { category: '', reason: '' },     /* kept so a redraw never wipes what the person typed */
     dpBusy: false, dpError: '',
     rcOpen: null,              /* receipt row shown in the 'receipt' view */
@@ -217,6 +218,32 @@
     }
   }
 
+  /* Evidence (Stage 9): every file kept against this task (job_attachments). Files support removed are
+     not returned by the server to the two people, so they simply are not here; we only say how many. */
+  async function loadEvidence(force) {
+    var c = S.ctx;
+    if (!c || !window.supabase) return false;
+    var token = c.thread.id;
+    var key = token + '|' + (c.thread.last_message_at || '');
+    if (!force && (key === S.evd.key || S.evd.loading)) return false;
+    S.evd.loading = true;
+    try {
+      var rs = await Promise.all([
+        window.supabase.from('job_attachments')
+          .select('id,kind,storage_path,mime,size,label,uploader_id,job_request_id,payment_request_id,created_at')
+          .eq('thread_id', token).order('created_at', { ascending: false }).limit(200),
+        window.supabase.from('evidence_removals').select('id', { count: 'exact', head: true }).eq('thread_id', token)
+      ]);
+      if (!S.ctx || S.ctx.thread.id !== token) { S.evd.loading = false; return false; }
+      S.evd = { key: key, rows: rs[0].error ? null : (rs[0].data || []), removed: rs[1].error ? 0 : (rs[1].count || 0),
+                loading: false, failed: !!rs[0].error };
+      return true;
+    } catch (_e) {
+      S.evd = { key: key, rows: null, removed: 0, loading: false, failed: true };
+      return true;
+    }
+  }
+
   /* Receipts: reloaded when the thread changes or another payment was paid (the server writes the
      receipt in the same transaction that marks the payment paid, so it is there when we look). */
   function paidCount() {
@@ -283,9 +310,11 @@
     var live = S.ctx ? liveDispute() : null;
     if (!live) { bar.hidden = true; return; }
     var txt = $('jrDisputeBarText');
+    /* Stage 12: the server now refuses release, the completion code and new payment requests while a report is live
+       (job_booking_frozen), so it is true to say payment is on hold. */
     if (txt) txt.textContent = live.status === 'under_review'
-      ? 'A problem report on this job is being reviewed by StreetTasker support.'
-      : 'A problem report is open on this job. StreetTasker support will review it.';
+      ? 'A problem report on this job is being reviewed by StreetTasker support. Payment is on hold until it is decided.'
+      : 'A problem report is open on this job. Payment is on hold until StreetTasker support has decided it.';
     bar.hidden = false;
   }
 
@@ -308,7 +337,7 @@
       sm: sm, hist: hist,
       bookingId: bookingIdOf(t),
       ev: S.ev, eventsReady: S.eventsReady,
-      rc: S.rc, dp: S.dp
+      rc: S.rc, dp: S.dp, evd: S.evd
     };
   }
 
@@ -319,7 +348,8 @@
       m.sm, m.hist, m.ev.rows, m.ev.loading, m.ev.failed, m.eventsReady, m.me,
       m.rc.rows && m.rc.rows.map(function (r) { return r.id; }), m.rc.failed, S.rcOpen && S.rcOpen.id,
       m.dp.key, m.dp.failed, m.dp.loading, m.dp.rows && m.dp.rows.map(function (d) { return d.id + d.status; }),
-      m.dp.refunds.length, m.dp.events.length, S.dpBusy, S.dpError
+      m.dp.refunds.length, m.dp.events.length, S.dpBusy, S.dpError,
+      m.evd.key, m.evd.failed, m.evd.loading, m.evd.removed, m.evd.rows && m.evd.rows.map(function (a) { return a.id; })
     ]);
   }
 
@@ -369,6 +399,7 @@
       probeEvents().then(function () { return loadEvents(); }).then(function () { paint(true); });
     }
     if (view === 'receipts') loadReceipts().then(function (did) { if (did) schedule(); });
+    if (view === 'evidence') loadEvidence(true).then(function (did) { if (did) paint(true); });
     if (view === 'dispute') { S.dpError = ''; loadDisputes(true).then(function (did) { if (did) { updateBar(); paint(true); } }); }
     paint(true);
     var body = S.sheet.open ? $('jrDetailSheetBody') : $('jrDetailBody');
@@ -472,9 +503,13 @@
       icon: 'activity', label: 'Activity', reason: actReason,
       onClick: function () { goto('activity'); }
     }));
+    var evRows = m.evd.rows || [];
     list.appendChild(actionItem({
       icon: 'evidence', label: 'Evidence',
-      reason: 'Not available yet'
+      hint: evRows.length ? (evRows.length === 1 ? '1 file' : evRows.length + ' files') : '',
+      reason: evRows.length ? ''
+        : (m.evd.failed ? 'Not available yet' : (m.evd.rows === null ? 'Loading…' : 'No photos, videos or files yet')),
+      onClick: function () { goto('evidence'); }
     }));
     g3.appendChild(list);
     wrap.appendChild(g3);
@@ -680,7 +715,7 @@
   }
   var EVENT_TEXT = {
     opened: 'Report opened', under_review: 'Support started reviewing', withdrawn: 'Report withdrawn',
-    resolved: 'Decision recorded', refund_recorded: '', evidence_removed: ''
+    resolved: 'Decision recorded', refund_recorded: '', evidence_removed: '', chat_viewed: 'Support read the conversation'
   };
 
   async function sendReport(m) {
@@ -841,7 +876,59 @@
     return wrap;
   }
 
+  var EVD_GROUPS = [
+    ['Photos and videos', ['photo', 'video']],
+    ['Receipts', ['receipt']],
+    ['Files', ['file']]
+  ];
+  var EVD_KIND = { photo: 'Photo', video: 'Video', file: 'File', receipt: 'Receipt' };
+  function evdSize(b) { var n = Number(b) || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+
+  function viewEvidence(m) {
+    var rows = m.evd.rows || [];
+    var wrap = frame('Evidence', 'Photos, videos and files kept with this task. Only you, the other person and StreetTasker support can open them. Photos are always optional.');
+    if (!rows.length) {
+      wrap.appendChild(el('div', 'jr-dt-empty', m.evd.failed
+        ? 'Evidence is not available right now. Try again later.'
+        : (m.evd.rows === null ? 'Loading…' : 'Nothing has been shared on this task yet.')));
+      return wrap;
+    }
+    EVD_GROUPS.forEach(function (gdef) {
+      var items = rows.filter(function (a) { return gdef[1].indexOf(a.kind) !== -1; });
+      if (!items.length) return;
+      var g = group(gdef[0]);
+      var ol = el('ol', 'jr-dt-pay-list');
+      items.forEach(function (a) {
+        var li = el('li', 'jr-dt-pay');
+        var top = el('div', 'jr-dt-pay-top');
+        top.appendChild(el('span', 'jr-dt-pay-name', a.label || EVD_KIND[a.kind] || 'File'));
+        top.appendChild(el('span', 'jr-dt-pay-amount', evdSize(a.size)));
+        li.appendChild(top);
+        var who = a.uploader_id === m.me ? 'You' : (m.role === 'customer' ? 'Tasker' : 'Customer');
+        var extra = a.job_request_id ? ' · Answer to a request' : (a.payment_request_id ? ' · Attached to a payment' : '');
+        li.appendChild(el('div', 'jr-dt-pay-date', who + ' · ' + (EVD_KIND[a.kind] || 'File') + ' · ' + fmtDateTime(a.created_at) + extra));
+        var ob = el('button', 'jr-req-btn', 'Open'); ob.type = 'button';
+        ob.addEventListener('click', async function () {
+          ob.disabled = true;
+          var url = window.JRThread && window.JRThread.signedUrl ? await window.JRThread.signedUrl(a.storage_path, true) : '';
+          ob.disabled = false;
+          if (!url) { toast('Could not open the file. Try again.', 'error'); return; }
+          window.open(url, '_blank', 'noopener');
+        });
+        li.appendChild(ob);
+        ol.appendChild(li);
+      });
+      g.appendChild(ol);
+      wrap.appendChild(g);
+    });
+    if (m.evd.removed > 0) {
+      wrap.appendChild(el('p', 'jr-dt-sub', (m.evd.removed === 1 ? '1 file was' : m.evd.removed + ' files were') + ' removed by StreetTasker support.'));
+    }
+    return wrap;
+  }
+
   function buildView(m) {
+    if (S.view === 'evidence') return viewEvidence(m);
     if (S.view === 'dispute') return viewDispute(m);
     if (S.view === 'history') return viewHistory(m);
     if (S.view === 'activity') return viewActivity(m);
@@ -916,6 +1003,7 @@
     }
     loadReceipts().then(function (did) { if (did) schedule(); });      /* also enables the Receipts link */
     loadDisputes(false).then(function (did) { if (did) { updateBar(); schedule(); } });
+    loadEvidence(false).then(function (did) { if (did) schedule(); });
     updateHeaderButton();
   }
 

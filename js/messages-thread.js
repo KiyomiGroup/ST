@@ -682,6 +682,14 @@
           });
           actions.appendChild(inv);
         }
+        /* Stage 9: the customer asked for proof or a receipt, the tasker answers with the Submit proof form */
+        if ((kind === 'proof' || kind === 'receipt_request') && S.role === 'tasker') {
+          var pf = el('button', 'jr-req-btn jr-req-btn--primary', kind === 'proof' ? 'Send proof' : 'Send receipt'); pf.type = 'button';
+          pf.addEventListener('click', function () {
+            if (window.JRForms && window.JRForms.open) window.JRForms.open('submit_proof', { answers: id, kind: kind === 'receipt_request' ? 'receipt' : '' });
+          });
+          actions.appendChild(pf);
+        }
         var reply = el('button', 'jr-req-btn', 'Reply'); reply.type = 'button';
         reply.addEventListener('click', focusComposer);
         var done = el('button', 'jr-req-btn jr-req-btn--primary', 'Mark as done'); done.type = 'button';
@@ -1133,6 +1141,61 @@
     return { attachment: ins.data, name: name };
   }
 
+  /* Stage 9 (Submit proof / receipt answers): upload up to 5 files and post each as a chat message, or post a
+     note alone. opts = { files: File[], note, kind: 'receipt'|undefined, jobRequestId, paymentRequestId }.
+     Resolves { sent, failed: [text] }; throws when nothing could be sent. Photos stay optional: a note is enough. */
+  var PROOF_MAX_FILES = 5;
+  async function sendProof(opts) {
+    opts = opts || {};
+    var t = S.thread, sb = window.supabase;
+    if (!sb || !t || !S.user) throw new Error('Open a conversation first.');
+    var files = (opts.files || []).slice(0, PROOF_MAX_FILES), note = String(opts.note || '').trim();
+    if (!files.length && note.length < 3) throw new Error('Add a short note or at least one file.');
+    if (note && hasContactInfo(note)) {
+      showWarn();
+      if (typeof window.handleContactViolation === 'function') window.handleContactViolation(S.user.id);
+      throw new Error('Please remove phone numbers, emails or links from the note.');
+    }
+    var sent = 0, failed = [], lastBody = '';
+    async function post(type, body, payload) {
+      var ins = await sb.from('messages').insert({
+        thread_id: t.id, sender_id: S.user.id, receiver_id: receiverOf(t),
+        body: body, flagged: false, type: type, payload: payload || null
+      }).select('id,sender_id,body,created_at,type,payload').single();
+      if (ins.error) throw ins.error;
+      if (S.thread && S.thread.id === t.id) append(ins.data);
+      lastBody = body; sent++;
+    }
+    if (!files.length) {
+      await post('text', ('Proof of work: ' + note).slice(0, 2000));
+    } else {
+      for (var i = 0; i < files.length; i++) {
+        try {
+          var done = await uploadEvidence(files[i], {
+            label: i === 0 ? note : '', thread: t, kind: opts.kind,
+            jobRequestId: opts.jobRequestId, paymentRequestId: opts.paymentRequestId
+          });
+          var att = done.attachment;
+          var type = att.kind === 'video' ? 'video' : (att.mime.indexOf('image/') === 0 ? 'image' : 'file');
+          var payload = { attachment_id: att.id, path: att.storage_path, name: done.name, size: att.size, mime: att.mime };
+          if (i === 0 && note) payload.caption = note;
+          await post(type, (i === 0 && note) || (opts.kind === 'receipt' ? 'Receipt' : (type === 'image' ? 'Photo' : type === 'video' ? 'Video' : done.name.slice(0, 80))), payload);
+        } catch (e) {
+          failed.push((files[i].name || 'File') + ': ' + ((e && e.message) || 'could not be sent'));
+        }
+      }
+    }
+    if (!sent) throw new Error(failed.join(' ') || 'Nothing could be sent.');
+    try { await bumpThread(t, lastBody); } catch (_e) {}
+    if (opts.jobRequestId) {
+      try {
+        var r = await sb.from('job_requests').update({ status: 'fulfilled' }).eq('id', opts.jobRequestId).select().maybeSingle();
+        if (r.data) { S.requests[opts.jobRequestId] = Object.assign({}, S.requests[opts.jobRequestId] || {}, r.data); repaintRequest(opts.jobRequestId); }
+      } catch (_e2) {}
+    }
+    return { sent: sent, failed: failed };
+  }
+
   function getPosition() {
     return new Promise(function (resolve, reject) {
       if (!navigator.geolocation) { reject(new Error('Location is not available on this device.')); return; }
@@ -1343,6 +1406,7 @@
     registerMoney: registerMoney,
     onMoneyChange: onMoneyChange,
     uploadEvidence: uploadEvidence,
+    sendProof: sendProof,
     signedUrl: signedUrl,
     getMoney: getMoney,
     moneyRows: moneyRows

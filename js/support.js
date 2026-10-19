@@ -21,11 +21,29 @@
   var STATUS = { open: 'Open', under_review: 'Under review', resolved: 'Resolved', withdrawn: 'Withdrawn' };
   var EVENT = {
     opened: 'Report opened', under_review: 'Review started', withdrawn: 'Withdrawn', resolved: 'Decision sent',
-    refund_recorded: 'Refund recorded', evidence_removed: 'File removed'
+    refund_recorded: 'Refund recorded', evidence_removed: 'File removed', chat_viewed: 'Support read the conversation'
   };
+  var SETTLE = {
+    refunded_all: 'The held money was refunded and the booking was cancelled.',
+    partial_then_released: 'The refund was taken out of the held money and the rest was released to the Tasker.',
+    released: 'The held money was released to the Tasker.',
+    unfrozen: 'The report is closed. Payment can continue normally.',
+    nothing_held: 'No money is held on this job (it was already released or paid another way). Settle it by hand.',
+    booking_not_paid: 'The booking was not paid, so nothing was released.',
+    no_booking: 'This conversation has no booking, so no held money was changed.'
+  };
+  var OUTCOME_HINT = {
+    refund_full: 'Everything held goes back to the customer (refund it in Paystack first) and the booking is cancelled.',
+    refund_partial: 'The refund is taken out of the held money, the platform fee is reduced in proportion, and the rest is released to the Tasker now.',
+    split: 'Same as a partial refund: refund part, the rest is released to the Tasker now.',
+    release_to_tasker: 'All held money is released to the Tasker now.',
+    no_action: 'Nothing changes. Payment is no longer on hold and the job continues.'
+  };
+  var PAGE = 50;
   var REFUND_OUTCOMES = ['refund_full', 'refund_partial', 'split'];
 
-  var state = { filter: 'live', list: [], selected: null };
+  var state = { filter: 'live', list: [], total: 0, selected: null, search: '' };
+  var FILTER_ARG = { live: 'needs_action', resolved: 'closed', all: 'all' };
 
   /* ---------- small helpers ---------- */
   function h(tag, cls, text) {
@@ -70,30 +88,39 @@
   }
 
   /* ---------- list ---------- */
-  async function loadList() {
-    var q = await sb.from('job_disputes')
-      .select('id,thread_id,status,category,outcome,opened_by_role,opened_at,reason')
-      .order('opened_at', { ascending: false }).limit(200);
-    if (q.error) { setState('Could not load reports: ' + q.error.message); return; }
-    state.list = q.data || [];
+  async function loadList(more) {
+    var offset = more ? state.list.length : 0;
+    var r = await call('support_list_disputes', {
+      p_filter: FILTER_ARG[state.filter] || 'needs_action', p_search: state.search || null, p_limit: PAGE, p_offset: offset
+    });
+    if (!r.ok) { setState('Could not load reports: ' + r.error); $('spState').hidden = false; return; }
+    $('spState').hidden = true;
+    state.total = Number(r.total) || 0;
+    state.list = more ? state.list.concat(r.items || []) : (r.items || []);
     renderList();
   }
   function renderList() {
     var ul = $('spList'); ul.textContent = '';
-    var rows = state.list.filter(function (d) {
-      return state.filter === 'all' ? true : state.filter === 'live' ? isLive(d) : !isLive(d);
-    });
+    var rows = state.list;
     if (!rows.length) { add(ul, add(h('li'), h('p', 'sp-state', 'Nothing here.'))); }
     rows.forEach(function (d) {
       var b = h('button', 'sp-item'); b.type = 'button'; b.setAttribute('data-id', d.id);
       if (state.selected === d.id) b.setAttribute('aria-current', 'true');
-      add(b,
-        add(h('span', 'sp-item-top'), h('span', 'sp-item-cat', CATEGORY[d.category] || d.category), badge(d.status)),
+      var top = add(h('span', 'sp-item-top'), h('span', 'sp-item-cat', CATEGORY[d.category] || d.category), badge(d.status));
+      if (d.overdue) add(top, h('span', 'badge badge-amber sp-overdue', 'Overdue'));
+      add(b, top,
+        h('span', 'sp-item-people', (d.customer_name || 'Customer') + ' · ' + (d.tasker_name || 'Tasker')),
         h('span', 'sp-item-meta', 'By the ' + d.opened_by_role + ' · ' + when(d.opened_at)),
         h('span', 'sp-item-text', d.reason));
       b.addEventListener('click', function () { select(d.id); });
       add(ul, add(h('li'), b));
     });
+    var more = $('spMore');
+    if (more) {
+      more.hidden = state.list.length >= state.total;
+      more.textContent = 'Show more (' + (state.total - state.list.length) + ' left)';
+    }
+    var cnt = $('spCount'); if (cnt) cnt.textContent = state.total + (state.total === 1 ? ' report' : ' reports');
     Array.prototype.forEach.call($('spFilter').querySelectorAll('button'), function (btn) {
       var on = btn.getAttribute('data-f') === state.filter;
       btn.className = 'btn btn-sm ' + (on ? 'btn-outline' : 'btn-ghost');
@@ -105,7 +132,7 @@
     state.selected = id; renderList();
     var box = $('spDetail'); box.textContent = ''; add(box, h('p', 'sp-state', 'Loading…'));
     var d = state.list.filter(function (x) { return x.id === id; })[0];
-    if (!d) return;
+    if (!d) { box.textContent = ''; add(box, h('p', 'sp-state', 'This report is not in the current list. Change the filter or search.')); return; }
     var res = await Promise.all([
       call('support_dispute_context', { p_dispute: id }),
       sb.from('dispute_events').select('id,kind,note,actor_id,created_at').eq('dispute_id', id).order('created_at', { ascending: true }),
@@ -140,7 +167,8 @@
       add(h('div', 'sp-row'), h('strong', null, CATEGORY[d.category] || d.category), badge(d.status)),
       h('p', 'sp-text', d.reason),
       kv([['Opened by', 'The ' + d.opened_by_role + ' · ' + when(d.opened_at)],
-          ['Customer', short(ctx.customer_id)], ['Tasker', short(ctx.tasker_id)],
+          ['Customer', (ctx.customer_name || '') + ' (' + short(ctx.customer_id) + ')'],
+          ['Tasker', (ctx.tasker_name || '') + ' (' + short(ctx.tasker_id) + ')'],
           ['Thread', short(d.thread_id)],
           ['Linked payment', d.payment_request_id ? short(d.payment_request_id) : 'None']]));
     if (d.status === 'resolved') {
@@ -153,7 +181,8 @@
     var p2 = panel('Money on this job (records, not a live balance)');
     add(p2, kv([['Paid', naira(ctx.paid)], ['Refund records', naira(ctx.refunded)], ['Still refundable', naira(ctx.refundable)]]));
     if (!(Number(ctx.paid) > 0)) add(p2, h('p', 'sp-warn', 'No paid payment is recorded on this job, so no refund can be recorded.'));
-    add(p2, h('p', 'sp-hint', 'A dispute does not freeze release yet. Check the booking in the Paystack dashboard before deciding.'));
+    if (isLive(d)) add(p2, h('p', 'sp-hold', 'Payment is on hold. Nothing can be released, no code can be used and no new payment request can be sent until this report is decided or withdrawn.'));
+    if (d.overdue) add(p2, h('p', 'sp-warn', 'This report has been open for more than 7 days.'));
     add(box, p2);
 
     // 3. actions
@@ -175,6 +204,8 @@
     // 5. evidence
     add(box, evidencePanel(d, ctx, files));
 
+    add(box, chatPanel(d));
+
     // 6. history
     var p6 = panel('History');
     var ev = h('ul', 'sp-sub');
@@ -182,6 +213,30 @@
       add(ev, add(h('li'), h('span', null, (EVENT[e.kind] || e.kind) + (e.note ? ' · ' + e.note : '')), h('span', 'sp-meta', when(e.created_at))));
     });
     add(p6, ev); add(box, p6);
+  }
+
+  /* ---------- conversation (read-only, logged) ---------- */
+  function chatPanel(d) {
+    var p = panel('Conversation');
+    var body = h('div', 'sp-chat'); body.id = 'spChat';
+    var btn = h('button', 'btn btn-sm btn-outline', 'Read the conversation'); btn.type = 'button'; btn.id = 'spReadChat';
+    add(p, h('p', 'sp-hint', 'Reading is logged in the report history and both people can see that support read it.'), add(h('div', 'sp-actions'), btn), body);
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      var r = await call('support_dispute_messages', { p_dispute: d.id, p_limit: 200 });
+      btn.disabled = false;
+      body.textContent = '';
+      if (!r.ok) { add(body, h('p', 'sp-error', r.error)); return; }
+      var msgs = r.messages || [];
+      if (!msgs.length) { add(body, h('p', 'sp-meta', 'No messages.')); return; }
+      var ul = h('ul', 'sp-sub sp-chat-list');
+      msgs.forEach(function (m) {
+        add(ul, add(h('li'), h('span', null, (m.sender_name || 'User') + ': ' + (m.body || '')), h('span', 'sp-meta', when(m.created_at))));
+      });
+      add(body, ul);
+      btn.textContent = 'Refresh the conversation';
+    });
+    return p;
   }
 
   /* ---------- decision ---------- */
@@ -222,11 +277,12 @@
     add(refundBox,
       h('p', 'sp-hint', 'Refund in the Paystack dashboard first. This only records it. Most you can record: ' + naira(ctx.refundable) + '.'),
       field('Refunded amount (NGN)', amt), field('Paystack refund reference', ref), field('Internal note (optional)', rnote));
-    function syncRefund() { refundBox.hidden = REFUND_OUTCOMES.indexOf(sel.value) === -1; }
+    var hint = h('p', 'sp-hint'); hint.id = 'spOutcomeHint';
+    function syncRefund() { refundBox.hidden = REFUND_OUTCOMES.indexOf(sel.value) === -1; hint.textContent = OUTCOME_HINT[sel.value] || ''; }
     sel.addEventListener('change', syncRefund); syncRefund();
     var err = errBox();
     var go = h('button', 'btn btn-primary', 'Send decision'); go.type = 'submit';
-    add(f, field('Outcome', sel), field('Decision note (both people will read this)', note), refundBox, err, go);
+    add(f, field('Outcome', sel), hint, field('Decision note (both people will read this)', note), refundBox, err, go);
     f.addEventListener('submit', async function (e) {
       e.preventDefault(); showErr(err, '');
       var outcome = sel.value, needs = REFUND_OUTCOMES.indexOf(outcome) !== -1;
@@ -240,12 +296,13 @@
         args.p_refund_amount = n; args.p_refund_ref = ref.value.trim();
         if (rnote.value.trim()) args.p_refund_note = rnote.value.trim();
       }
-      if (!window.confirm('Send this decision to both people? It cannot be undone.')) return;
+      if (!window.confirm('Send this decision to both people? ' + (OUTCOME_HINT[outcome] || '') + ' It cannot be undone.')) return;
       go.disabled = true;
       var r = await call('support_resolve_dispute', args);
       go.disabled = false;
       if (!r.ok) { showErr(err, r.error); return; }
-      toast('Decision sent.');
+      var act = r.settlement && r.settlement.action;
+      toast('Decision sent. ' + (SETTLE[act] || ''));
       await refresh(d.id);
     });
     return add(p, f);
@@ -338,7 +395,23 @@
     add(body, h('p', 'sp-hint', 'Delete these in the Storage dashboard (bucket job-evidence).'), ul);
   }
 
-  async function refresh(id) { await loadList(); await select(id); }
+  async function refresh(id) { await loadList(false); await select(id); }
+
+  /* new or changed reports appear without reloading the page (Realtime respects the support-only read rules) */
+  function watchLive() {
+    if (!sb.channel) return;
+    var t = null;
+    function soon() {
+      clearTimeout(t);
+      t = setTimeout(function () { loadList(false); if (state.selected) select(state.selected); }, 800);
+    }
+    try {
+      sb.channel('support-console')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_disputes' }, soon)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dispute_events' }, soon)
+        .subscribe();
+    } catch (e) { /* the list still works, it just will not refresh by itself */ }
+  }
 
   /* ---------- start ---------- */
   async function init() {
@@ -351,8 +424,14 @@
     if (r.error || r.data !== true) { setState('This page is for support staff only.'); return; }
     $('spState').hidden = true; $('spApp').hidden = false;
     Array.prototype.forEach.call($('spFilter').querySelectorAll('button'), function (b) {
-      b.addEventListener('click', function () { state.filter = b.getAttribute('data-f'); renderList(); });
+      b.addEventListener('click', function () { state.filter = b.getAttribute('data-f'); loadList(false); });
     });
+    var q = $('spSearch'), qt = null;
+    if (q) q.addEventListener('input', function () {
+      clearTimeout(qt); qt = setTimeout(function () { state.search = q.value.trim(); loadList(false); }, 300);
+    });
+    var mb = $('spMore'); if (mb) mb.addEventListener('click', function () { loadList(true); });
+    watchLive();
     $('spOrphans').addEventListener('toggle', function () { if (this.open) loadOrphans(); });
     await loadList();
   }

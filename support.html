@@ -22,12 +22,16 @@
 
     <div class="sp-app" id="spApp" hidden>
       <section class="sp-list-col" aria-label="Reports">
+        <label class="sp-search-label" for="spSearch">Search reports</label>
+        <input type="search" class="form-input sp-search" id="spSearch" placeholder="Name, thread id or words in the report" maxlength="100" autocomplete="off" />
+        <p class="sp-meta" id="spCount" aria-live="polite"></p>
         <div class="sp-filter" role="tablist" id="spFilter">
           <button type="button" class="btn btn-sm btn-outline" data-f="live">Needs action</button>
           <button type="button" class="btn btn-sm btn-ghost" data-f="resolved">Closed</button>
           <button type="button" class="btn btn-sm btn-ghost" data-f="all">All</button>
         </div>
         <ul class="sp-list" id="spList"></ul>
+        <button type="button" class="btn btn-sm btn-outline sp-more" id="spMore" hidden>Show more</button>
         <details class="sp-orphans" id="spOrphans">
           <summary>Orphan uploads (files with no record)</summary>
           <div id="spOrphanBody" class="sp-orphan-body"></div>
