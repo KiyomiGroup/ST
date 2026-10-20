@@ -594,6 +594,11 @@ p  { color: var(--text-secondary); font-weight: 400; }
 @media (max-width: 560px) {
   .popular-grid { grid-template-columns: 1fr; }
 }
+/* Mobile landing page: show only the first two popular tasks, then Explore More */
+@media (max-width: 640px) {
+  .popular-grid .pop-card--extra { display: none; }
+  .popular-grid .pop-more { grid-column: 1 / -1; }
+}
 @media (max-width: 640px) {
   .task-showcase-grid {
     display: flex; grid-template-columns: none; overflow-x: auto;
@@ -4971,4 +4976,58 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
     top: calc(var(--nav-height) + env(safe-area-inset-top, 0px) + var(--space-2)); left: var(--space-3); right: var(--space-3);
     width: auto; max-width: none; max-height: calc(100vh - var(--nav-height) - var(--space-8));
   }
+}
+
+
+/* ── Mobile landing page refresh (<= 640px only; desktop untouched) ───────── */
+.pgtd-cat, .pgtd-offers, .lt-tasker-tags { display: none; }
+
+@media (max-width: 640px) {
+  /* "Getting help is simple" and "Help from people you can trust": 3 across */
+  .how-it-works-grid, .trust-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  .how-it-works-card, .trust-card { padding: var(--space-3); }
+  .how-it-works-top { margin-bottom: var(--space-4); }
+  .trust-icon { width: var(--space-6); height: var(--space-6); margin-bottom: var(--space-3); }
+  .how-it-works-card h3, .trust-card h3 { font-size: var(--text-sm); margin-bottom: var(--space-1); }
+  .how-it-works-card p, .trust-card p { font-size: var(--text-xs); line-height: 1.4; }
+
+  /* "People are getting things done": swipe sideways, edge to edge */
+  .pgtd-grid {
+    display: flex; gap: var(--space-4); overflow-x: auto; scroll-snap-type: x mandatory;
+    margin-inline: calc(50% - 50vw); padding-inline: calc(50vw - 50%); scroll-padding-inline: calc(50vw - 50%);
+    padding-bottom: var(--space-1); scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .pgtd-grid::-webkit-scrollbar { display: none; }
+  .pgtd-card { flex: 0 0 78%; scroll-snap-align: start; }
+  .pgtd-desc, .pgtd-actions, .pgtd-posted,
+  .pgtd-meta-row .pgtd-icon, .pgtd-meta-time > span:nth-child(2) { display: none; }
+  .pgtd-cat, .pgtd-offers {
+    display: block; margin-top: var(--space-3); font-size: var(--text-xs); font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .pgtd-offers { margin-top: var(--space-1); font-weight: 400; letter-spacing: 0; text-transform: none; }
+  .pgtd-head { margin-top: var(--space-1); }
+  .pgtd-title { font-size: var(--text-base); font-weight: 700; line-height: 1.4; }
+  .pgtd-meta { margin-top: var(--space-1); }
+  .pgtd-price { margin-left: 0; padding-right: 0; font-size: var(--text-base); color: var(--color-primary); }
+
+  /* "Meet Local Taskers": avatar + details, tag row underneath */
+  .lt-tasker-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .lt-tasker-card {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "photo body" "tags tags";
+    column-gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-lg);
+  }
+  .lt-tasker-card:hover { transform: none; box-shadow: none; }
+  .lt-tasker-photo { grid-area: photo; width: var(--space-8); height: var(--space-8); border-radius: 50%; }
+  .lt-tasker-photo .lt-tasker-badge-phone, .lt-tasker-body .lt-verified-pill, .lt-tasker-body .btn { display: none; }
+  .lt-tasker-body { grid-area: body; padding: 0; }
+  .lt-tasker-spec { color: var(--color-primary); font-weight: 600; margin-bottom: var(--space-1); }
+  .lt-tasker-rating { margin-bottom: 0; }
+  .lt-tasker-tags { grid-area: tags; display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+  .lt-tasker-tags .lt-verified-pill { margin-bottom: 0; }
+  .lt-tag-phone {
+    background: var(--gray-100); color: var(--text-secondary);
+    font-size: var(--text-xs); font-weight: 700; padding: 3px 9px; border-radius: 9999px;
+  }
+  .lt-tag-link { margin-left: auto; font-size: var(--text-xs); font-weight: 700; color: var(--color-primary); text-decoration: none; white-space: nowrap; }
 }
