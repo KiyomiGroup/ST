@@ -593,3 +593,129 @@
   .pt-after { display: flex; }
   .pt-desk.pt-desk { display: none; }
 }
+
+
+/* ============================================================
+   SITE-STYLE ALIGNMENT — post-task.html only (body.pt-task)
+   Brings the page onto the shared look: white page, bordered
+   cards (--radius-lg), bordered inputs (--radius-md), primary green,
+   the same 60px page margin / 1160px container as the other pages.
+   post-service.html does not carry .pt-task, so it is unchanged.
+   ============================================================ */
+body.pt-task {
+  --pt-page: var(--color-bg);
+  --pt-field: var(--color-bg-subtle);
+  --pt-field-strong: var(--color-bg-muted);
+  --pt-field-icon: var(--color-border);
+  --pt-toggle-off: var(--color-border-strong);
+  --pt-mint: var(--color-mint);
+  --pt-mint-soft: var(--color-mint);
+  --pt-green: var(--color-primary);
+  --pt-ink: var(--color-text);
+  --pt-ink-muted: var(--color-text-secondary);
+  --pt-danger: var(--color-danger);
+  --pt-danger-soft: var(--color-danger-soft);
+  --pt-escrow-icon: var(--color-forest-700);
+  --pt-escrow-deco: var(--color-forest-800);
+  --pt-escrow-text: var(--color-mint-border);
+  --shadow-pt-card: none;
+  --shadow-pt-pill: none;
+  --shadow-pt-bar: var(--shadow-md);
+}
+
+/* Page shell + margins (same container as the rest of the site) */
+.pt-task .pt-page { padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-9); }
+.pt-task .pt-page::before { display: none; }
+.pt-task .pt-container { width: min(1160px, calc(100% - 2 * var(--page-margin))); }
+@media (max-width: 1164px) { .pt-task .pt-container { width: calc(100% - 2 * var(--space-5)); } }
+
+/* Top bar + header */
+.pt-task .pt-topbar { margin-bottom: var(--space-5); }
+.pt-task .pt-back, .pt-task .pt-step-pill { background: var(--color-bg); border: 1.5px solid var(--color-border); }
+.pt-task .pt-back:hover { background: var(--color-bg-subtle); border-color: var(--color-border-strong); }
+.pt-task .pt-header { padding-bottom: var(--space-5); margin-bottom: var(--space-5); border-bottom: 1px solid var(--color-border); }
+.pt-task .pt-title { font-size: var(--text-2xl); }
+.pt-task .pt-lede { font-size: var(--text-base); line-height: 1.6; }
+.pt-task .pt-draft { border: 1px solid var(--color-border); }
+
+/* Cards: white, 1px border, --radius-lg, no custom shadow */
+.pt-task .pt-section, .pt-task .pt-submit, .pt-task .pt-card {
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: none;
+}
+.pt-task .pt-section, .pt-task .pt-submit { padding: var(--space-5); }
+.pt-task .pt-form { gap: var(--space-4); }
+.pt-task .pt-section-title { font-size: var(--text-md); font-weight: 700; }
+.pt-task .pt-section-sub { font-size: var(--text-sm); }
+.pt-task .pt-escrow { background: var(--color-forest-900); border-radius: var(--radius-lg); }
+.pt-task .pt-verified { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.pt-task .pt-aside { gap: var(--space-4); }
+.pt-task .pt-layout { gap: var(--space-5); }
+
+/* Inputs: same as .form-input (white, 1.5px border, --radius-md, primary focus) */
+.pt-task .pt-field, .pt-task .pt-textarea {
+  background: var(--color-bg); border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.pt-task .pt-field { min-height: 48px; padding: 0 var(--space-3); }
+.pt-task .pt-textarea { padding: var(--space-3); }
+.pt-task .pt-field:hover, .pt-task .pt-textarea:hover { border-color: var(--color-border-strong); }
+.pt-task .pt-field:focus-within, .pt-task .pt-textarea:focus { border-color: var(--color-primary); box-shadow: var(--shadow-focus); }
+.pt-task .pt-field.has-error, .pt-task .pt-textarea.has-error { border-color: var(--color-danger); box-shadow: none; }
+.pt-task .pt-select-chevron { right: var(--space-3); }
+
+/* Chips, presets, option tiles: bordered, mint when selected */
+.pt-task .pt-chip, .pt-task .pt-preset, .pt-task .pt-when {
+  background: var(--color-bg); border: 1.5px solid var(--color-border);
+}
+.pt-task .pt-chip:hover, .pt-task .pt-preset:hover { background: var(--color-bg-subtle); border-color: var(--color-border-strong); }
+.pt-task .pt-chip.is-active, .pt-task .pt-preset.is-active, .pt-task .pt-when:has(input:checked) {
+  background: var(--pt-mint); border-color: var(--color-primary); color: var(--color-primary);
+}
+.pt-task .pt-when { min-height: calc(var(--space-7) + var(--space-3)); border-radius: var(--radius-lg); }
+.pt-task .pt-segment { padding: var(--space-1); min-height: 48px; border-radius: var(--radius-md); background: var(--color-bg-muted); }
+.pt-task .pt-segment-opt > span { border-radius: var(--radius-sm); }
+.pt-task .pt-segment-opt input:checked + span { box-shadow: var(--shadow-xs); }
+.pt-task .pt-schedule { border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.pt-task .pt-date { border: 1.5px solid var(--color-border); border-radius: var(--radius-md); }
+.pt-task .pt-date.has-error { border-color: var(--color-danger); box-shadow: none; }
+.pt-task .pt-tod { background: var(--color-bg); border: 1.5px solid var(--color-border); border-radius: var(--radius-md); }
+.pt-task .pt-tod-opt > span { border-radius: var(--radius-sm); }
+.pt-task .pt-tod-opt input:checked + span { background: var(--pt-mint); }
+.pt-task .pt-urgent { border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.pt-task .pt-dropzone { border-radius: var(--radius-lg); }
+
+/* Buttons: same look as .btn-primary / .btn-outline */
+.pt-task .pt-post-btn { height: 48px; font-size: var(--text-base); font-weight: 600; background: var(--color-primary); }
+.pt-task .pt-post-btn:hover { background: var(--color-primary-hover); }
+.pt-task .pt-draft-btn { height: 48px; background: transparent; border: 1.5px solid var(--color-border-strong); }
+.pt-task .pt-draft-btn:hover { background: var(--color-bg-subtle); }
+
+/* Desktop only: location mode tiles */
+@media (min-width: 769px) {
+  .pt-task .pt-mode { background: var(--color-bg); border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); min-height: 0; padding: var(--space-4); }
+  .pt-task .pt-mode:has(input:checked) { background: var(--pt-mint); border-color: var(--color-primary); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .pt-task .pt-page { padding: calc(var(--nav-height) + var(--space-4)) 0 140px; }
+  .pt-task .pt-container { width: calc(100% - 2 * var(--gutter)); }
+  .pt-task .pt-title { font-size: var(--text-h1-sm); }
+  .pt-task .pt-group { border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: none; }
+  .pt-task .pt-group-chips { border: 0; }
+  .pt-task .pt-group-mode { border-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .pt-task .pt-group-location { border-top: 0; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .pt-task .pt-form[data-mode="remote"] .pt-group-mode { border-bottom: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+  .pt-task .pt-section > .pt-group.pt-group-when { border-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .pt-task .pt-group-urgent { border-top: 0; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .pt-task .pt-urgent { border: 0; }
+  .pt-task .pt-field { padding: 0 var(--space-3); }
+  .pt-task .pt-note { border-radius: var(--radius-md); }
+  .pt-task .pt-modes { background: var(--color-bg-muted); border-radius: var(--radius-md); }
+  .pt-task .pt-mode { border: 0; border-radius: var(--radius-sm); }
+  .pt-task .pt-mode:has(input:checked) { background: var(--color-primary); }
+  .pt-task .pt-thumb, .pt-task .pt-add-photo { border-radius: var(--radius-lg); }
+  .pt-task .pt-next-m, .pt-task .pt-tips-m { border-radius: var(--radius-lg); }
+  .pt-task .pt-escrow-m { border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+  .pt-task .pt-submit { padding: var(--space-4) var(--space-4) var(--space-3); border: 0; border-top: 1px solid var(--color-border); border-radius: 0; }
+}
