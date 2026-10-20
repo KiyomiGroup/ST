@@ -2796,6 +2796,13 @@ img { max-width: 100%; height: auto; }
   .st-bn-plus:active { transform: scale(0.92); box-shadow: 0 3px 10px rgba(11, 46, 28, 0.3); }
 }
 
+/* Pages with their own button pinned to the bottom of the screen (Post a Task,
+   gift card buy bar, profile action bars, Save bars) opt out of the floating tab
+   bar by adding class "st-no-bottom-nav" to <body>. Mobile only. */
+@media (max-width: 900px) {
+  body.st-no-bottom-nav.st-logged-in .st-bottom-nav { display: none; }
+}
+
 
 /* Hero CTAs stack vertically on mobile instead of sitting side by side —
    fixed 300x40 per the mobile design spec */

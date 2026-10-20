@@ -580,6 +580,9 @@
   .pt-add-photo .pt-i { width: 24px; height: 24px; padding: 10px; box-sizing: content-box; border-radius: 50%; background: var(--pt-field-strong); color: var(--pt-green); }
   .pt-group-photos .pt-help { margin-top: var(--space-3); }
 
+  /* Room above the sticky bar so the last card is never hidden behind it (no bottom tab bar on this page) */
+  body.pt-task, body.pt-task.st-logged-in { padding-bottom: calc(var(--space-9) + var(--space-7)); }
+
   /* Sticky submit bar */
   .pt-submit {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
