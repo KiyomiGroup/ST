@@ -124,11 +124,12 @@
       P.amount = amt;
       if (customer) {
         P.title = 'Pay ' + naira(amt);
-        P.text = 'The tasker requested this payment. It is held safely until the job is done.';
+        P.text = 'This is the price for the job. Pay here with your wallet, gift cards or Paystack. It is held safely until the work is done. Want a different price? Say so in the chat.';
         P.primary = { label: 'Pay ' + naira(amt), pay: v.waiting.id };
       } else {
         P.title = 'Waiting for the customer to pay';
-        P.text = naira(amt) + ' requested. You will be told as soon as it is paid.';
+        P.text = naira(amt) + ' was requested automatically. You will be told as soon as it is paid. Need a different price? Propose one and the old request is cancelled.';
+        P.secondary = { label: 'Change price', id: 'propose_price' };
       }
       return P;
     }

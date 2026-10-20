@@ -984,51 +984,21 @@ function openMessagesPanel() {
         contactHtml = '<div style="margin-top:8px;font-size:var(--text-xs);color:var(--text-muted);">Confirm this booking to start messaging the customer.</div>';
       }
 
-      /* Payment status UI for tasker */
+      /* Payment status UI for tasker. One flow: marking the work done and entering the release code happen in the job room. */
       var tPayHtml = '';
-      if (b.payment_status === 'paid' && b.status === 'in_progress') {
-        /* Payment received, job in progress — show Mark as Done */
-        tPayHtml =
-          '<div style="margin-top:10px;padding:12px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);">' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-            '<span style="font-size:var(--text-sm);font-weight:700;color:var(--green);">Payment secured — complete the job then mark as done</span>' +
-          '</div>' +
-          '<button onclick="doMarkJobDone(&quot;' + b.id + '&quot;)" style="width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">✓ Mark Job as Done</button>' +
-          '</div>';
-      } else if (b.payment_status === 'paid' && b.status === 'provider_done') {
-        /* Marked done, waiting for customer to confirm */
-        tPayHtml =
-          '<div style="margin-top:10px;padding:10px 14px;background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius-md);">' +
-          '<span style="font-size:var(--text-sm);font-weight:700;color:#b45309;">⏳ Waiting for customer to confirm job completion...</span>' +
-          '</div>';
-      } else if (b.payment_status === 'paid' && (b.status === 'awaiting_code' || b.status === 'awaiting_confirmation')) {
-        tPayHtml =
-          '<div style="margin-top:10px;padding:12px 14px;background:var(--blue-light);border:1.5px solid var(--blue);border-radius:var(--radius-md);">' +
-          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">' +
-            '<span style="font-size:var(--text-sm);font-weight:700;color:var(--blue);">🎉 Customer confirmed! Enter your 6-digit code to receive payment.</span>' +
-          '</div>' +
-          '<div style="display:flex;gap:8px;">' +
-            '<input id="inlineCode_' + b.id + '" type="text" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit code" ' +
-              'style="flex:1;padding:10px 13px;border:1.5px solid var(--blue);border-radius:var(--radius-md);font-size:var(--text-base);font-weight:700;letter-spacing:0.12em;font-family:var(--font);outline:none;" />' +
-            '<button onclick="submitInlineCode(\''+b.id+'\')" style="padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;white-space:nowrap;">Claim →</button>' +
-          '</div>' +
-          '<div id="inlineCodeErr_' + b.id + '" style="display:none;margin-top:6px;font-size:var(--text-xs);color:var(--red);"></div>' +
-          '</div>';
-      } else if (b.payment_status === 'paid') {
-        /* paid but status not yet in_progress (e.g. still confirmed) */
-        tPayHtml =
-          '<div style="margin-top:10px;padding:10px 14px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '<span style="font-size:var(--text-sm);font-weight:700;color:var(--green);">Payment in escrow</span>' +
-          '<button onclick="doMarkJobDone(&quot;' + b.id + '&quot;)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-xs);font-weight:700;cursor:pointer;margin-left:auto;">Mark as Done</button>' +
-          '</div>';
-      } else if (b.payment_status === 'released') {
-        tPayHtml = '<div style="margin-top:8px;font-size:var(--text-xs);color:var(--green);font-weight:600;">✓ Payment released to your wallet</div>';
+      var roomBtn = function (label, primary) {
+        return '<button type="button" class="btn btn-sm ' + (primary ? 'btn-primary' : 'btn-ghost') + '" onclick="openTaskerChat(&quot;booking&quot;,&quot;' + b.id + '&quot;,&quot;' + (b.customer_id || '') + '&quot;)">' + label + '</button>';
+      };
+      if (b.payment_status === 'released') {
+        tPayHtml = '<div class="booking-row-note">Payment released to your wallet.</div>';
       } else if (b.payment_status === 'disputed') {
-        tPayHtml = '<div style="margin-top:8px;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:var(--text-xs);color:var(--red);">⚠ Dispute open — payment frozen pending review.</div>';
-      } else if (!b.payment_status || b.payment_status === 'unpaid') {
-        tPayHtml = '<div style="margin-top:8px;font-size:var(--text-xs);color:var(--text-muted);">⏳ Awaiting customer payment.</div>';
+        tPayHtml = '<div class="booking-row-note">A problem report is open. Payment is on hold. ' + roomBtn('Open Job Room', false) + '</div>';
+      } else if (b.payment_status === 'paid' && (b.status === 'awaiting_code' || b.status === 'awaiting_confirmation' || b.status === 'provider_done')) {
+        tPayHtml = '<div class="booking-row-note"><strong>Work submitted.</strong> When the customer is happy they give you a 6-digit release code. Enter it in the job room to get paid. ' + roomBtn('Enter Code in Job Room', true) + '</div>';
+      } else if (b.payment_status === 'paid') {
+        tPayHtml = '<div class="booking-row-note"><strong>Payment secured in escrow.</strong> Do the job, then mark it done in the job room. ' + roomBtn('Open Job Room', true) + '</div>';
+      } else if (isActive && b.status !== 'completed') {
+        tPayHtml = '<div class="booking-row-note">Waiting for the customer to pay in the job room.</div>';
       }
 
       return '<div class="booking-row-card" id="bk-' + b.id + '">' +
@@ -1039,7 +1009,6 @@ function openMessagesPanel() {
             '<div class="booking-row-meta">' + escapeHtml(task) + ' &middot; ' + (b.scheduled_time ? fmtDate(b.scheduled_time) : 'No date set') + '</div></div>' +
             '<div class="booking-row-actions">' + badge(b.status) +
               (actions && b.status === 'pending'   ? '<button class="btn btn-sm btn-primary" data-booking-action="confirmed" data-booking-id="' + b.id + '">Confirm</button>' : '') +
-              (actions && (b.status === 'in_progress' || b.status === 'confirmed') && b.payment_status === 'paid' ? '<button class="btn btn-sm btn-primary" style="background:var(--green);border-color:var(--green);" onclick="doMarkJobDone(&quot;' + b.id + '&quot;)">Mark as Done</button>' : '') +
             '</div>' +
           '</div>' +
           contactHtml +
@@ -1048,8 +1017,8 @@ function openMessagesPanel() {
     }
 
     async function doBooking(id, status) {
-      /* 'completed' now goes through doMarkJobDone → markJobDone flow */
-      if (status === 'completed') { doMarkJobDone(id); return; }
+      /* Marking a job done happens in the job room (messages.html), not here. */
+      if (status === 'completed') { showToast('Mark the job done in the job room.'); return; }
       try {
         await window.supabase.from('bookings').update({ status: status }).eq('id', id);
         if (status === 'confirmed') {
@@ -2212,101 +2181,7 @@ function openMessagesPanel() {
     }
     window.openTaskerChat = openTaskerChat;
 
-    /* ── Sprint 4: Completion code entry ──────────────────── */
-    function openCodeEntry(bookingId) {
-      var modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-      modal.innerHTML =
-        '<div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,0.12);text-align:center;">' +
-        '<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
-          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
-        '</div>' +
-        '<h2 style="font-size:var(--text-lg);font-weight:800;margin-bottom:6px;">Enter Completion Code</h2>' +
-        '<p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:20px;">The customer gives you this 6-digit code after confirming the job is done. Enter it to receive your payment.</p>' +
-        '<input id="codeInput" type="text" maxlength="6" inputmode="numeric" placeholder="000000" ' +
-          'style="width:100%;padding:14px;text-align:center;font-size:var(--text-2xl);font-weight:900;letter-spacing:0.15em;border:2px solid var(--border);border-radius:var(--radius-md);font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:14px;" ' +
-          'onfocus="this.style.borderColor=&quot;var(--blue)&quot;" onblur="this.style.borderColor=&quot;var(--border)&quot;" />' +
-        '<div id="codeErr" style="display:none;padding:8px 12px;background:var(--red-light);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--red);margin-bottom:14px;"></div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button id="codeSubmit" onclick="submitCode(&quot;' + bookingId + '&quot;)" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:var(--text-sm);cursor:pointer;">Claim Payment</button>' +
-          '<button onclick="this.closest(&quot;div[style]&quot;).remove()" style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;cursor:pointer;">Cancel</button>' +
-        '</div>' +
-        '</div>';
-      document.body.appendChild(modal);
-      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
-      setTimeout(function() { var ci = document.getElementById('codeInput'); if(ci) ci.focus(); }, 100);
-    }
-    window.openCodeEntry = openCodeEntry;
-
-    /* ── Inline code entry directly in bookings card ─────── */
-    async function submitInlineCode(bookingId) {
-      var input = document.getElementById('inlineCode_' + bookingId);
-      var errEl = document.getElementById('inlineCodeErr_' + bookingId);
-      var btn   = input && input.nextElementSibling;
-      if (!input) return;
-      var code = input.value.trim();
-      if (!code || code.length < 4) {
-        if (errEl) { errEl.textContent = 'Please enter the 6-digit code.'; errEl.style.display = 'block'; }
-        return;
-      }
-      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
-      if (errEl) errEl.style.display = 'none';
-      try {
-        await window.ST.payments.submitCompletionCode(bookingId, code);
-        /* Success! */
-        if (btn) btn.textContent = '✓ Claimed!';
-        showToast('Payment released to your wallet! 🎉');
-        setTimeout(function(){ _bookingsLoaded = false; loadBookings(); }, 800);
-      } catch(e) {
-        if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
-        if (btn) { btn.disabled = false; btn.textContent = 'Claim →'; }
-      }
-    }
-    window.submitInlineCode = submitInlineCode;
-    function closeCodeModal() { var m = document.getElementById("codeEntryModal"); if(m) m.remove(); }
-    window.closeCodeModal = closeCodeModal;
-
-    async function submitCode(bookingId) {
-      var code = (document.getElementById('codeInput')?.value || '').trim();
-      var btn  = document.getElementById('codeSubmit');
-      var err  = document.getElementById('codeErr');
-      if (!code || code.length < 4) { err.textContent = 'Please enter the 6-digit code.'; err.style.display='block'; return; }
-      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
-      try {
-        await window.ST.payments.submitCompletionCode(bookingId, code);
-        /* Success! */
-        var overlay = document.querySelector('[style*="backdrop-filter"]');
-        if (overlay) overlay.remove();
-        var success = document.createElement('div');
-        success.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-        success.innerHTML =
-          '<div style="background:#fff;border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,0.12);">' +
-          '<div style="width:60px;height:60px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
-            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-          '</div>' +
-          '<h2 style="font-size:var(--text-md);font-weight:800;margin-bottom:8px;">Payment Released!</h2>' +
-          '<p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:20px;">Your payment is on its way. Well done on completing the job!</p>' +
-          '<button onclick="this.closest(&quot;div[style]&quot;).remove();location.reload();" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;">Great!</button>' +
-          '</div>';
-        document.body.appendChild(success);
-        success.onclick = function(e) { if (e.target === success) { success.remove(); location.reload(); } };
-      } catch(e) {
-        if (err) { err.textContent = e.message; err.style.display = 'block'; }
-        if (btn) { btn.disabled = false; btn.textContent = 'Claim Payment'; }
-      }
-    }
-    window.submitCode = submitCode;
-
-    /* ====== MARK JOB DONE (Service Provider) ====== */
-    async function doMarkJobDone(bookingId) {
-      if (!confirm('Mark this job as done? The customer will be notified to confirm and release payment.')) return;
-      try {
-        await window.ST.payments.markJobDone(bookingId);
-        showToast('Job marked as done! Customer has been notified to confirm. ✅');
-        setTimeout(function(){ location.reload(); }, 1200);
-      } catch(e) { showToast('Error: ' + e.message); }
-    }
-    window.doMarkJobDone = doMarkJobDone;
+    /* Marking the work done and entering the release code are in the job room (messages.html). */
 
 </script>
 
@@ -2962,13 +2837,9 @@ function openMessagesPanel() {
           '<strong>Next steps:</strong><br>' +
           '1. Complete the job<br>' +
           '2. Ask the customer for their 6-digit code<br>' +
-          '3. Enter the code below to release your payment' +
+          '3. Enter the code in the job room to release your payment' +
         '</div>' +
-        (bookingId ? (
-          '<button onclick="openCodeEntry(\'' + esc(bookingId) + '\')" style="width:100%;padding:11px;background:#d97706;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:var(--text-sm);cursor:pointer;">Enter 6-digit code → Claim Payment</button>'
-        ) : (
-          '<p style="font-size:var(--text-xs);color:#6b7280;text-align:center;">Go to Bookings to enter the code</p>'
-        )) +
+        '<p style="font-size:var(--text-xs);color:#6b7280;text-align:center;">Mark the job done and enter the code in the job room (Messages).</p>' +
       '</div>' +
       '<div class="msg-time" style="margin-top:4px;">' + timeStr + '</div>';
     return wrap;

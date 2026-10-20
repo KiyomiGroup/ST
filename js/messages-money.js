@@ -375,9 +375,11 @@
      transport, additional costs or invoices. The SERVER works out what the cards can cover (gift-card-pay);
      this only shows the choice. Resolves 'gift', 'paystack', or null when the customer closes the sheet. */
   var ICON_GIFT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
+  var ICON_WALLET = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>';
   var ICON_CARD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>';
 
-  function chooseMethod(row, q) {
+  function chooseMethod(row, q, wallet) {
+    q = q || { giftAmount: 0, remainder: 0, price: 0 };
     return new Promise(function (resolve) {
       var R = window.JRRequests, layer = document.getElementById('jrSheetLayer');
       var settled = false, obs = null;
@@ -387,7 +389,7 @@
         if (obs) obs.disconnect();
         resolve(v);
       }
-      var total = Number(q.price) || Number(row.amount) || 0;
+      var total = Number(row.amount) || Number(q.price) || 0;
       var title = ((KINDS[kindOf(row)] || KINDS.payment).title || 'payment').toLowerCase();
 
       R.openView('Choose how to pay', function (body, h) {
@@ -405,11 +407,16 @@
           b.addEventListener('click', function () { finish(value); h.close(); });
           body.appendChild(b);
         }
-        option(ICON_GIFT, 'Use gift cards',
-          q.remainder > 0 ? naira(q.giftAmount) + ' from your gift cards, then ' + naira(q.remainder) + ' with Paystack.'
-                          : 'Your gift cards cover the full ' + naira(total) + '.', 'gift');
-        option(ICON_CARD, 'Pay with Paystack',
-          'Pay ' + naira(total) + ' with Paystack. Your gift cards are not used.', 'paystack');
+        if (wallet && wallet.enough) {
+          option(ICON_WALLET, 'Pay from wallet', 'Your wallet has ' + naira(wallet.balance) + '. ' + naira(total) + ' is taken and held safely until the job is done.', 'wallet');
+        }
+        if (q.giftAmount > 0) {
+          option(ICON_GIFT, 'Use gift cards',
+            q.remainder > 0 ? naira(q.giftAmount) + ' from your gift cards, then ' + naira(q.remainder) + ' with Paystack.'
+                            : 'Your gift cards cover the full ' + naira(total) + '.', 'gift');
+        }
+        option(ICON_CARD, 'Pay with card or bank (Paystack)',
+          'Pay ' + naira(total) + ' with Paystack.' + (q.giftAmount > 0 ? ' Your gift cards are not used.' : ''), 'paystack');
       });
 
       if (!layer || layer.hidden) { finish('paystack'); return; }   /* the sheet could not open: carry on as before */
@@ -438,22 +445,31 @@
       var meta = me.user_metadata || {};
       var P = window.ST.payments;
       var method = 'paystack';
-      /* Main service payments only: offer gift cards when the customer has some that can pay for this */
-      if (PAY_KINDS.indexOf(kindOf(local)) !== -1 && P.getGiftQuote && P.payWithGiftCards && window.JRRequests && window.JRRequests.openView) {
-        var q = await P.getGiftQuote({ requestId: id });
-        if (q && q.giftAmount > 0) {
-          method = await chooseMethod(local, q);
-          if (!method) {   /* the customer closed the sheet: nothing was started */
-            window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
-            return false;
-          }
+      /* How to pay: wallet (if it covers the amount), gift cards (main service payments only), Paystack. Ask only when there is a real choice. */
+      var wallet = null, q = null;
+      try {
+        var wr = await sb.from('wallets').select('balance').eq('user_id', me.id).maybeSingle();
+        var bal = Number(wr && wr.data && wr.data.balance) || 0;
+        wallet = { balance: bal, enough: bal >= Number(local.amount) && bal > 0 };
+      } catch (_w) { wallet = null; }
+      if (PAY_KINDS.indexOf(kindOf(local)) !== -1 && P.getGiftQuote && P.payWithGiftCards) {
+        try { q = await P.getGiftQuote({ requestId: id }); } catch (_q) { q = null; }
+      }
+      var hasGift = !!(q && q.giftAmount > 0), hasWallet = !!(wallet && wallet.enough);
+      if ((hasGift || hasWallet) && window.JRRequests && window.JRRequests.openView) {
+        method = await chooseMethod(local, hasGift ? q : null, wallet);
+        if (!method) {   /* the customer closed the sheet: nothing was started */
+          window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
+          return false;
         }
       }
       var payOpts = { requestId: id, customerEmail: meta.email || me.email };
-      var result = method === 'gift' ? await P.payWithGiftCards(payOpts) : await P.initiatePayment(payOpts);
+      var result = method === 'gift' ? await P.payWithGiftCards(payOpts)
+        : method === 'wallet' ? await P.payFromWallet({ requestId: id })
+        : await P.initiatePayment(payOpts);
 
       if (result && result.firstPayment) {
-        toast('Payment confirmed. Your completion code is in the chat. Share it with the tasker only when the job is done.');
+        toast('Payment confirmed. Your money is held safely. When the job is done, review the work in this chat to release it.');
       } else {
         toast('Payment confirmed. ' + naira(result && result.amount) + ' added to escrow.');
       }

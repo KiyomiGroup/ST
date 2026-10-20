@@ -5,15 +5,15 @@
             service details, map each booking onto a tab group and a label.
    Stage 2: tabs with counts, search, service / date / sort filters, load more,
             full booking cards.
-   Stage 3: actions: Confirm, Decline, Message Customer, Mark Job Done, Enter Code.
-            Mark Done now sets status provider_done (waiting on the customer);
-            the customer's confirmation sets awaiting_confirmation (enter the code).
+   Stage 3: actions: Confirm and Decline a new request, then ONE button, "Open job room".
+            Marking the work done, entering the release code, payment and problem reports all happen in
+            the chat. This page never moves money or job status after the booking is confirmed.
+            Confirming a booking makes the server post the payment request to the customer in the chat.
    Stage 4: sidebar snapshot (counts and money worked out from the loaded bookings).
    Stage 5: mobile filter toggle, screen-reader status, focus handling, card labelling.
 
    Data: bookings where tasker_id = the signed-in user. completion_code is
-   deliberately NOT selected here: the code belongs to the customer, and
-   ST.payments.submitCompletionCode (Stage 3) checks it.
+   deliberately NOT selected here: the code belongs to the customer.
    ============================================================ */
 (function () {
   'use strict';
@@ -28,7 +28,7 @@
   var naira = function (n) { return '\u20A6' + Number(n || 0).toLocaleString('en-NG'); };
 
   var MAX_CODE_TRIES = 3; /* mirrors the limit in ST.payments.submitCompletionCode */
-  var SIGNOFF = ['provider_done', 'awaiting_code', 'awaiting_confirmation'];
+  var SIGNOFF = ['awaiting_confirmation', 'awaiting_code', 'provider_done']; /* provider_done: old rows only, the server no longer writes it */
 
   /* Which tab a booking belongs to:
      pending | progress | signoff | completed | cancelled */
@@ -49,10 +49,10 @@
     if (isDisputed(b)) return { text: 'Under Review', tone: 'danger' };
     switch (group(b)) {
       case 'pending':   return { text: 'New Request', tone: 'warn' };
-      case 'signoff':   return { text: 'Sign-Off Pending', tone: 'warn' };
+      case 'signoff':   return { text: 'Awaiting Release Code', tone: 'warn' };
       case 'completed': return { text: 'Completed', tone: 'done' };
       case 'cancelled': return { text: 'Cancelled', tone: 'done' };
-      default:          return paid ? { text: 'In Progress', tone: 'progress' } : { text: 'Awaiting Payment', tone: 'warn' };
+      default:          return paid ? { text: 'In Progress', tone: 'progress' } : { text: 'Awaiting Customer Payment', tone: 'warn' };
     }
   }
 
@@ -282,15 +282,13 @@
     var paid = v.raw.payment_status === 'paid';
     if (v.disputed) return { tone: 'danger', text: 'A dispute is open. Payment stays frozen while our team reviews it.' };
     switch (v.group) {
-      case 'pending':   return { tone: '', text: 'Confirm this request to start messaging the customer. They then pay into escrow before you start.' };
+      case 'pending':   return { tone: '', text: 'Confirm this request. The customer then gets a payment request in the job room and pays into escrow before you start.' };
       case 'progress':  return paid
-        ? { tone: '', text: 'Payment is secured in escrow. Complete the job, then mark it as done.' }
-        : { tone: 'warn', text: 'Waiting for the customer to pay into escrow. Don\u2019t start work until payment is secured.' };
-      case 'signoff':   return (v.raw.status !== 'provider_done' && (Number(v.raw.code_attempts) || 0) >= MAX_CODE_TRIES)
-        ? { tone: 'danger', text: 'Too many incorrect code attempts. Please contact support to release this payment.' }
-        : v.raw.status === 'provider_done'
-        ? { tone: 'warn', text: 'You marked this job as done. Waiting for the customer to confirm it.' }
-        : { tone: '', text: 'The customer confirmed the job. Ask them for their 6-digit code and enter it to receive your payment.' };
+        ? { tone: '', text: 'Payment is secured in escrow. Do the job, then mark it done in the job room.' }
+        : { tone: 'warn', text: 'Waiting for the customer to pay in the job room. Don\u2019t start work until payment is secured.' };
+      case 'signoff':   return (Number(v.raw.code_attempts) || 0) >= MAX_CODE_TRIES
+        ? { tone: 'danger', text: 'Too many wrong code attempts. Please contact support to release this payment.' }
+        : { tone: 'warn', text: 'Work submitted. When the customer is happy they give you a 6-digit release code. Enter it in the job room to get paid.' };
       case 'completed': return { tone: 'muted', text: 'Job complete. Your payout has been released to your wallet.' };
       default:          return { tone: 'muted', text: 'This booking was cancelled.' };
     }
@@ -311,25 +309,17 @@
       '<div><div class="bk-fig-label">' + (earned ? 'You Earned' : 'You Receive') + '</div><div class="bk-fig-value is-green">' + naira(p.net) + '</div></div></div>';
   }
 
-  /* Buttons for a booking, depending on where it is in the job */
+  /* A new request: Confirm or Decline. After that, ONE button: everything else happens in the job room. */
   function actions(v) {
-    var id = esc(v.id), st = v.raw.status || 'pending', paid = v.raw.payment_status === 'paid';
-    var msg = '<button type="button" class="bk-btn" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Customer</button>';
+    var id = esc(v.id), paid = v.raw.payment_status === 'paid';
     if (v.group === 'pending') {
       return '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Confirm Booking</button>' +
         (paid ? '' : '<button type="button" class="bk-btn bk-btn-quiet" data-act="decline" data-id="' + id + '">Decline</button>');
     }
-    if (v.disputed) return msg;
-    if (v.group === 'progress') {
-      return (paid ? '<button type="button" class="bk-btn bk-btn-primary" data-act="done" data-id="' + id + '">' + icon('check') + 'Mark Job as Done</button>' : '') + msg;
-    }
-    if (v.group === 'signoff') {
-      if (st === 'provider_done') return '<button type="button" class="bk-btn bk-btn-primary" disabled>Awaiting Customer Sign-Off</button>' + msg;
-      var left = Math.max(0, MAX_CODE_TRIES - (Number(v.raw.code_attempts) || 0));
-      if (!left) return '<button type="button" class="bk-btn bk-btn-primary" disabled>Code Locked</button>' + msg;
-      return '<button type="button" class="bk-btn bk-btn-primary" data-act="code" data-id="' + id + '">' + icon('lock') + 'Enter Completion Code</button>' + msg;
-    }
-    return '';
+    if (v.group === 'cancelled') return '';
+    var primary = v.group === 'signoff' && !v.disputed;
+    return '<button type="button" class="bk-btn' + (primary ? ' bk-btn-primary' : '') + '" data-act="room" data-id="' + id + '">' + icon('chat') +
+      (primary ? 'Enter Code in Job Room' : 'Open Job Room') + '</button>';
   }
 
   function card(v) {
@@ -386,9 +376,8 @@
         active++;
         if (v.raw.payment_status === 'paid' && !v.disputed) {
           escrow += net;
-          if (v.group === 'signoff' && v.raw.status !== 'provider_done' && (Number(v.raw.code_attempts) || 0) < MAX_CODE_TRIES) ready += net;
+          if (v.group === 'signoff' && (Number(v.raw.code_attempts) || 0) < MAX_CODE_TRIES) ready += net;
         }
-        if (v.group === 'signoff' && v.raw.status === 'provider_done') waiting++;
       }
     });
     $('sPending').textContent = pending;
@@ -485,7 +474,7 @@
       await setStatus(v, 'pending', 'confirmed');
       await notify(v.customerId, 'booking_confirmed', 'Booking Confirmed \u2705', 'Your booking has been confirmed by the service provider.', v.id);
       patch(v, { status: 'confirmed' });
-      toast('Booking confirmed. The customer has been notified.');
+      toast('Booking confirmed. The customer now has a payment request in the job room.');
     } catch (e) { btn.disabled = false; toast(e.message || 'Could not confirm this booking.'); }
   }
 
@@ -508,47 +497,6 @@
     btn.disabled = false;
   }
 
-  async function doDone() {
-    var v = current, btn = $('bkDoneGo'); if (!v) return;
-    btn.disabled = true; showError($('bkDoneError'), '');
-    try {
-      await window.ST.payments.markJobDone(v.id);
-      $('bkDoneDlg').close();
-      patch(v, { status: 'provider_done' });
-      toast('Job marked as done. The customer has been asked to confirm.');
-    } catch (e) { showError($('bkDoneError'), e.message || 'Could not mark this job as done.'); }
-    btn.disabled = false;
-  }
-
-  function openCode(v) {
-    current = v;
-    var left = Math.max(0, MAX_CODE_TRIES - (Number(v.raw.code_attempts) || 0));
-    $('bkCodeInput').value = ''; showError($('bkCodeError'), '');
-    $('bkCodeText').textContent = 'The customer gives you a 6-digit code after confirming the job is done. Enter it to release your payment to your wallet. ' +
-      left + (left === 1 ? ' attempt' : ' attempts') + ' left.';
-    $('bkCodeDlg').showModal();
-    $('bkCodeInput').focus();
-  }
-
-  async function doCode(e) {
-    e.preventDefault();
-    var v = current, btn = $('bkCodeGo'), input = $('bkCodeInput'); if (!v) return;
-    var code = input.value.replace(/\s/g, '');
-    if (!/^\d{6}$/.test(code)) { showError($('bkCodeError'), 'Enter the 6-digit code.'); return; }
-    btn.disabled = true; btn.textContent = 'Verifying\u2026'; showError($('bkCodeError'), '');
-    try {
-      await window.ST.payments.submitCompletionCode(v.id, code);
-      $('bkCodeDlg').close();
-      patch(v, { status: 'completed', payment_status: 'released' });
-      toast('Payment released to your wallet.');
-    } catch (err) {
-      var m = err && err.message ? err.message : 'Could not verify the code.';
-      showError($('bkCodeError'), m);
-      if (/^Incorrect code/.test(m)) { v.raw.code_attempts = (Number(v.raw.code_attempts) || 0) + 1; render(); }
-    }
-    btn.disabled = false; btn.textContent = 'Claim Payment';
-  }
-
   /* Open the booking's chat on the Messages page */
   function openChat(v) {
     try {
@@ -565,10 +513,7 @@
       case 'confirm': doConfirm(v, btn); break;
       case 'decline': showError($('bkDeclineError'), ''); openDialog('bkDeclineDlg', v, 'bkDeclineText',
         'Decline \u201C' + v.title + '\u201D from ' + v.customer + '? They will be told you can\u2019t take it, and they have not been charged.'); break;
-      case 'done':    showError($('bkDoneError'), ''); openDialog('bkDoneDlg', v, 'bkDoneText',
-        'The customer will be asked to confirm the job is complete. Once they do, you enter their 6-digit code to receive ' + naira(payout(v.amount).net) + ' in your wallet.'); break;
-      case 'code':    openCode(v); break;
-      case 'message': openChat(v); break;
+      case 'room': case 'message': openChat(v); break;
     }
   }
 
@@ -615,9 +560,6 @@
     dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
   });
   $('bkDeclineGo').addEventListener('click', doDecline);
-  $('bkDoneGo').addEventListener('click', doDone);
-  $('bkCodeForm').addEventListener('submit', doCode);
-  $('bkCodeInput').addEventListener('input', function (e) { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
   /* A customer photo that fails to load falls back to initials */
   $('bkList').addEventListener('error', function (e) {
     var img = e.target;

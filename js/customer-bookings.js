@@ -5,15 +5,13 @@
 
    - Sign-in + role guard, loads the customer's bookings with provider, task and service details.
    - Tabs with counts, search, service / date / sort filters, load more, compact cards.
-   - Actions: Pay Now (wallet, gift cards, Paystack), Confirm Job Done (returns the 6-digit code),
-     Show My Code, Report an Issue, Message Provider.
+   - ONE action per booking: "Open job room" (or "Pay in chat" when payment is due). Payment, work review, the
+     release code and problem reports all happen in the chat, so this page never moves money or job status.
    - Sidebar snapshot worked out from all loaded bookings, ignoring the filters.
 
-   Job flow (same as the provider page, seen from the customer's side):
-   pending -> confirmed (provider accepts) -> paid (you pay into escrow) -> provider_done (provider says done)
-   -> awaiting_confirmation (you confirm, get the code) -> completed (provider enters the code, payout released).
-
-   completion_code is NOT selected with the list. It is only read when the customer asks to see it.
+   Job flow (one flow, in the chat): pending -> confirmed (tasker accepts; the server posts the payment request
+   in the chat) -> paid (you pay in the chat, money held in escrow) -> awaiting_confirmation (tasker marked it
+   done; you review and get your release code in the chat) -> completed (tasker enters the code, payout released).
    ============================================================ */
 (function () {
   'use strict';
@@ -21,7 +19,7 @@
   var PAGE_SIZE = 10;
   var FEE_RATE = 0.12; /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
   var MAX_CODE_TRIES = 3; /* mirrors the limit in ST.payments.submitCompletionCode */
-  var SIGNOFF = ['provider_done', 'awaiting_code', 'awaiting_confirmation'];
+  var SIGNOFF = ['awaiting_confirmation', 'awaiting_code', 'provider_done']; /* provider_done: old rows only, the server no longer writes it */
   var state = { user: null, rows: [], filter: 'all', query: '', category: '', range: 'all', sort: 'recent', shown: PAGE_SIZE };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -48,8 +46,8 @@
   function label(b) {
     if (isDisputed(b)) return { text: 'Under Review', tone: 'danger' };
     switch (group(b)) {
-      case 'pending':   return { text: 'Awaiting Provider', tone: 'warn' };
-      case 'signoff':   return b.status === 'provider_done' ? { text: 'Please Confirm', tone: 'warn' } : { text: 'Code Ready', tone: 'progress' };
+      case 'pending':   return { text: 'Awaiting Tasker', tone: 'warn' };
+      case 'signoff':   return { text: 'Review the Work', tone: 'warn' };
       case 'completed': return { text: 'Completed', tone: 'done' };
       case 'cancelled': return { text: 'Cancelled', tone: 'done' };
       default:          return isPaid(b) ? { text: 'In Progress', tone: 'progress' } : { text: 'Payment Needed', tone: 'warn' };
@@ -290,17 +288,15 @@
   /* One plain-language line telling the customer what happens next */
   function hint(v) {
     var b = v.raw;
-    if (v.disputed) return { tone: 'danger', text: 'A dispute is open. Payment stays frozen while our team reviews it.' };
+    if (v.disputed) return { tone: 'danger', text: 'A problem report is open. Payment stays on hold while our team reviews it. Follow it in the job room.' };
     switch (v.group) {
-      case 'pending':  return { tone: '', text: 'Waiting for the provider to confirm. You won\u2019t be charged until you pay.' };
+      case 'pending':  return { tone: '', text: 'Waiting for the tasker to confirm. You won\u2019t be charged until you pay.' };
       case 'progress': return isPaid(b)
-        ? { tone: '', text: 'Your payment is safe in escrow. Once the work is finished, confirm it here.' }
-        : { tone: 'warn', text: 'Confirmed by the provider. Pay into escrow to lock it in. They only get paid when you confirm the job is done.' };
-      case 'signoff':  return b.status === 'provider_done'
-        ? { tone: 'warn', text: 'Your provider says the job is done. Confirm it to get your 6-digit code, or report an issue.' }
-        : codeLocked(b)
-        ? { tone: 'danger', text: 'Too many incorrect code attempts. Please contact support to release this payment.' }
-        : { tone: 'warn', text: 'You confirmed the job. Give your provider the 6-digit code so they can receive their payment.' };
+        ? { tone: '', text: 'Your payment is held safely. When the work is finished, review it in the job room.' }
+        : { tone: 'warn', text: 'Confirmed by the tasker. Pay in the job room to lock it in. They only get paid when you release the money.' };
+      case 'signoff':  return codeLocked(b)
+        ? { tone: 'danger', text: 'Too many wrong code attempts. Please contact support to release this payment.' }
+        : { tone: 'warn', text: 'The tasker says the work is done. Open the job room to check it and get your release code.' };
       default: return null;
     }
   }
@@ -320,24 +316,12 @@
       '<div><div class="bk-fig-label">Provider Receives</div><div class="bk-fig-value is-green">' + naira(p.net) + '</div></div></div>';
   }
 
-  /* Buttons for a booking, depending on where it is in the job */
+  /* ONE button. Everything else (pay, review, release code, report a problem) lives in the job room. */
   function actions(v) {
-    var id = esc(v.id), b = v.raw, paid = isPaid(b);
-    var msg = '<button type="button" class="bk-btn" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Provider</button>';
-    var issue = '<button type="button" class="bk-btn bk-btn-quiet is-danger" data-act="issue" data-id="' + id + '">Report Issue</button>';
-    if (v.disputed) return msg;
-    switch (v.group) {
-      case 'pending': return '';
-      case 'progress':
-        return paid
-          ? '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Confirm Job Done</button>' + msg + issue
-          : '<button type="button" class="bk-btn bk-btn-primary" data-act="pay" data-id="' + id + '">' + icon('lock') + 'Pay Now</button>' + msg;
-      case 'signoff':
-        if (b.status === 'provider_done') return '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Yes, Confirm Done</button>' + msg + issue;
-        return (codeLocked(b) ? '' : '<button type="button" class="bk-btn bk-btn-primary" data-act="code" data-id="' + id + '">' + icon('lock') + 'Show My Code</button>') + msg + issue;
-      case 'completed': return msg;
-      default: return '';
-    }
+    var id = esc(v.id), needsPay = v.group === 'progress' && !isPaid(v.raw) && !v.disputed;
+    var primary = needsPay || (v.group === 'signoff' && !v.disputed);
+    return '<button type="button" class="bk-btn' + (primary ? ' bk-btn-primary' : '') + '" data-act="room" data-id="' + id + '">' + icon(needsPay ? 'lock' : 'chat') +
+      (needsPay ? 'Pay in Chat' : v.group === 'signoff' && !v.disputed ? 'Review in Job Room' : 'Open Job Room') + '</button>';
   }
 
   function card(v) {
@@ -395,12 +379,12 @@
         if (isPaid(v.raw)) escrow += v.amount;
         /* Your move: pay a confirmed booking, confirm a finished job, or hand over your code */
         if (v.group === 'progress' && !isPaid(v.raw)) { toPay += price; toPayN++; }
-        else if (v.group === 'signoff' && (v.raw.status === 'provider_done' || !codeLocked(v.raw))) toFinishN++;
+        else if (v.group === 'signoff' && !codeLocked(v.raw)) toFinishN++;
       }
     });
     var action = toPayN + toFinishN;
     $('sAction').textContent = action;
-    $('sActionSub').textContent = action ? (toPayN ? toPayN + ' to pay' : '') + (toPayN && toFinishN ? ' \u2022 ' : '') + (toFinishN ? toFinishN + ' to finish' : '') : 'all caught up';
+    $('sActionSub').textContent = action ? (toPayN ? toPayN + ' to pay' : '') + (toPayN && toFinishN ? ' \u2022 ' : '') + (toFinishN ? toFinishN + ' to review' : '') : 'all caught up';
     $('sActive').textContent = active;
     $('sActiveSub').textContent = pending ? pending + ' awaiting provider' : 'in progress';
     $('sEscrow').textContent = naira(escrow);
@@ -459,19 +443,8 @@
   }
 
   /* ── Actions ──────────────────────────────────────────── */
-  var current = null; /* the booking an open dialog is about */
   var toast = function (m) { if (window.showToast) window.showToast(m); };
   var find = function (id) { return state.rows.filter(function (v) { return String(v.id) === String(id); })[0]; };
-  function showError(el, msg) { el.textContent = msg; el.hidden = !msg; }
-  var priceOf = function (v) { return v.amount || v.budget || 0; };
-
-  /* Apply a change to a booking and redraw its tab, counts and card */
-  function patch(v, changes) {
-    Object.assign(v.raw, changes);
-    v.group = group(v.raw); v.disputed = isDisputed(v.raw); v.label = label(v.raw);
-    render();
-    focusCard(v.id);
-  }
 
   /* Open the booking's chat on the Messages page */
   function openChat(v) {
@@ -483,157 +456,9 @@
     window.location.href = 'messages.html';
   }
 
-  /* ── Pay ──
-     The dialog closes before Paystack opens: a modal <dialog> sits above everything else on the page,
-     which would hide the Paystack window. If the payment fails or is cancelled the dialog opens again. */
-  function payRow(text, value, cls) { return '<div class="bk-pay-row' + (cls ? ' ' + cls : '') + '"><span>' + text + '</span><span>' + value + '</span></div>'; }
-
-  async function openPay(v) {
-    current = v;
-    var price = priceOf(v);
-    showError($('bkPayError'), '');
-    if (!price) {
-      $('bkPaySum').innerHTML = '<div class="bk-pay-row"><span>The provider hasn\u2019t set a price for this booking yet. Message them to agree one, then come back to pay.</span></div>';
-      $('bkWalletOpt').hidden = true; $('bkPayNow').closest('.bk-pay-opt').hidden = true; $('bkGiftBox').innerHTML = '';
-      $('bkPayDlg').showModal();
-      return;
-    }
-    var p = payout(price);
-    $('bkPaySum').innerHTML = payRow(esc(v.title), naira(price)) + payRow('Platform fee (12%, paid by the provider)', naira(p.fee)) +
-      payRow('Total to pay', naira(price), 'is-total') + payRow('Provider receives', naira(p.net), 'is-net');
-    $('bkPayNow').closest('.bk-pay-opt').hidden = false;
-    $('bkPayNow').textContent = 'Pay ' + naira(price) + ' with Paystack';
-    $('bkWalletOpt').hidden = false; $('bkWalletOpt').classList.add('is-off');
-    $('bkWalletBal').textContent = 'Checking balance\u2026';
-    $('bkPayWallet').hidden = true; $('bkGiftBox').innerHTML = '';
-    $('bkPayDlg').showModal();
-
-    /* Wallet balance and gift cards fill in after the dialog is open */
-    try {
-      var w = await window.ST.payments.getWallet(state.user.id);
-      var bal = (w && w.balance) || 0, can = bal >= price;
-      $('bkWalletBal').textContent = 'Balance: ' + naira(bal) + (can ? '' : ' (not enough)');
-      $('bkWalletOpt').classList.toggle('is-off', !can);
-      $('bkPayWallet').hidden = !can;
-      $('bkPayWallet').textContent = 'Pay ' + naira(price) + ' from Wallet';
-    } catch (e) { $('bkWalletBal').textContent = 'Balance unavailable'; }
-    if (window.ST.payments.getGiftQuote) {
-      var q = await window.ST.payments.getGiftQuote(v.id);
-      if (q && q.giftAmount && current === v && $('bkPayDlg').open) {
-        var rest = q.remainder, text = rest > 0 ? 'Use gift cards + pay ' + naira(rest) : 'Pay with gift cards';
-        $('bkGiftBox').innerHTML = '<div class="bk-pay-opt"><div class="bk-pay-opt-head"><span class="bk-pay-opt-icon">' + icon('gift') + '</span>' +
-          '<span><strong>Use gift cards</strong><span class="bk-stat-sub">' + naira(q.giftAmount) + ' of your gift cards can pay for this booking.' +
-          (rest > 0 ? ' You pay the remaining ' + naira(rest) + ' with Paystack.' : '') + '</span></span></div>' +
-          '<button type="button" class="bk-btn bk-btn-primary" id="bkPayGift">' + esc(text) + '</button></div>';
-      }
-    }
-  }
-
-  async function paid(v) {
-    $('bkPayDlg').close();
-    await refresh(v.id);
-    $('bkPaidDlg').showModal();
-  }
-
-  async function doPay(kind, btn) {
-    var v = current; if (!v) return;
-    var price = priceOf(v), label0 = btn.textContent, reopen = false;
-    btn.disabled = true; showError($('bkPayError'), '');
-    var pay = window.ST.payments;
-    try {
-      if (kind === 'wallet') {
-        btn.textContent = 'Processing\u2026';
-        await pay.payFromWallet({ bookingId: v.id, amountNaira: price, taskerUserId: v.taskerId || null });
-      } else {
-        $('bkPayDlg').close(); reopen = true; /* Paystack's window must be able to show */
-        if (kind === 'gift') await pay.payWithGiftCards({ bookingId: v.id, customerEmail: state.user.email });
-        else await pay.initiatePayment({
-          bookingId: v.id, amountNaira: price, customerEmail: state.user.email,
-          customerName: localStorage.getItem('st_name') || '', taskerUserId: v.taskerId || null
-        });
-      }
-      btn.disabled = false; btn.textContent = label0;
-      await paid(v);
-    } catch (e) {
-      btn.disabled = false; btn.textContent = label0;
-      var m = e && e.message ? e.message : 'Payment failed.';
-      var quiet = m === 'Payment cancelled.' || m === 'Payment window closed. Click pay again to retry.';
-      if (reopen && !$('bkPayDlg').open) $('bkPayDlg').showModal();
-      showError($('bkPayError'), quiet ? '' : 'Payment error: ' + m);
-    }
-  }
-
-  /* ── Confirm the job is done (returns the 6-digit code) ── */
-  function openConfirm(v) {
-    current = v; showError($('bkConfirmError'), '');
-    $('bkConfirmText').textContent = (v.raw.status === 'provider_done' ? v.provider + ' says the job is done. ' : '') +
-      'Only confirm once the work is finished to your satisfaction. You\u2019ll get a 6-digit code to give ' + v.provider +
-      ', so they can receive ' + naira(payout(priceOf(v)).net) + ' from escrow.';
-    $('bkConfirmDlg').showModal();
-  }
-
-  function showCodeDialog(code, intro) {
-    $('bkCodeValue').textContent = code || '------';
-    $('bkCodeText').textContent = intro;
-    showError($('bkCodeError'), '');
-    $('bkCodeDlg').showModal();
-  }
-
-  async function doConfirm() {
-    var v = current, btn = $('bkConfirmGo'); if (!v) return;
-    btn.disabled = true; showError($('bkConfirmError'), '');
-    try {
-      var r = await window.ST.payments.confirmJobComplete(v.id);
-      $('bkConfirmDlg').close();
-      patch(v, { status: 'awaiting_confirmation' });
-      showCodeDialog(r && r.code, 'Give this code to ' + v.provider + '. They enter it to receive their payment.');
-    } catch (e) { showError($('bkConfirmError'), e.message || 'Could not confirm this job.'); }
-    btn.disabled = false;
-  }
-
-  /* Show the code again later: read it straight from the booking (no status change, no new notification) */
-  async function showCode(v, btn) {
-    btn.disabled = true;
-    try {
-      var r = await window.supabase.from('bookings').select('completion_code').eq('id', v.id).eq('customer_id', state.user.id).maybeSingle();
-      if (r.error) throw r.error;
-      if (!r.data || !r.data.completion_code) throw new Error('Your code isn\u2019t available. Please contact support.');
-      showCodeDialog(String(r.data.completion_code), 'Give this code to ' + v.provider + '. They enter it to receive their payment.');
-    } catch (e) { toast(e.message || 'Could not load your code.'); }
-    btn.disabled = false;
-  }
-
-  /* ── Report an issue ── */
-  function openIssue(v) {
-    current = v; $('bkIssueText').value = ''; showError($('bkIssueError'), '');
-    $('bkIssueDlg').showModal();
-    $('bkIssueText').focus();
-  }
-
-  async function doIssue(e) {
-    e.preventDefault();
-    var v = current, btn = $('bkIssueGo'); if (!v) return;
-    var reason = $('bkIssueText').value.trim();
-    if (!reason) { showError($('bkIssueError'), 'Please describe the issue.'); return; }
-    btn.disabled = true; showError($('bkIssueError'), '');
-    try {
-      await window.ST.payments.raiseDispute(v.id, reason);
-      $('bkIssueDlg').close();
-      patch(v, { status: 'disputed' });
-      toast('Issue reported. Payment is frozen and our team will review it within 24 hours.');
-    } catch (err) { showError($('bkIssueError'), err.message || 'Could not report this issue.'); }
-    btn.disabled = false;
-  }
-
   function onAction(btn) {
     var v = find(btn.dataset.id); if (!v) return;
-    switch (btn.dataset.act) {
-      case 'pay':     openPay(v); break;
-      case 'confirm': openConfirm(v); break;
-      case 'code':    showCode(v, btn); break;
-      case 'issue':   openIssue(v); break;
-      case 'message': openChat(v); break;
-    }
+    openChat(v);
   }
 
   /* ── Events ───────────────────────────────────────────── */
@@ -675,14 +500,6 @@
     this.setAttribute('aria-label', open ? 'Hide filters' : 'Show filters');
     if (open) $('bkSearch').focus();
   });
-  document.querySelectorAll('.bk-dialog').forEach(function (dlg) {
-    dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
-  });
-  $('bkPayWallet').addEventListener('click', function () { doPay('wallet', this); });
-  $('bkPayNow').addEventListener('click', function () { doPay('paystack', this); });
-  $('bkGiftBox').addEventListener('click', function (e) { var b = e.target.closest('#bkPayGift'); if (b) doPay('gift', b); });
-  $('bkConfirmGo').addEventListener('click', doConfirm);
-  $('bkIssueForm').addEventListener('submit', doIssue);
   /* A provider photo that fails to load falls back to initials */
   $('bkList').addEventListener('error', function (e) {
     var img = e.target;

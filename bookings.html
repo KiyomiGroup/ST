@@ -132,10 +132,10 @@
           <section class="bk-panel">
             <h2 class="bk-panel-title">How You Get Paid</h2>
             <ol class="bk-steps">
-              <li><strong>Confirm the request</strong><span>Accepting lets you message the customer and agree the details.</span></li>
-              <li><strong>Wait for escrow</strong><span>The customer pays into escrow. Only start work once the booking shows Held in Escrow.</span></li>
-              <li><strong>Mark the job as done</strong><span>The customer is asked to confirm. Once they do, they give you a 6-digit code.</span></li>
-              <li><strong>Enter the code</strong><span>Your payout is released to your wallet straight away.</span></li>
+              <li><strong>Confirm the request</strong><span>The customer gets a payment request in the job room straight away.</span></li>
+              <li><strong>Wait for escrow</strong><span>The customer pays in the chat. Only start work once the booking shows Held in Escrow.</span></li>
+              <li><strong>Mark the job as done</strong><span>Do this in the job room. The customer reviews the work there.</span></li>
+              <li><strong>Enter the code</strong><span>The customer gives you a 6-digit code. Enter it in the job room and your payout is released.</span></li>
             </ol>
           </section>
 
@@ -149,7 +149,7 @@
           </section>
 
           <section class="bk-panel bk-help">
-            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Our support team is here to help.</span></div>
+            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Open the job room and tap Report a problem.</span></div>
             <a class="bk-btn" href="messages.html">Chat</a>
           </section>
         </aside>
@@ -168,33 +168,6 @@
         <button type="button" class="bk-btn bk-btn-danger" id="bkDeclineGo">Decline Booking</button>
       </div>
     </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkDoneDlg" aria-labelledby="bkDoneTitle">
-    <div class="bk-dialog-body">
-      <h2 class="bk-dialog-title" id="bkDoneTitle">Mark this job as done?</h2>
-      <p class="bk-state-text" id="bkDoneText"></p>
-      <p class="bk-error" id="bkDoneError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn" data-close>Not Yet</button>
-        <button type="button" class="bk-btn bk-btn-primary" id="bkDoneGo">Yes, Job Is Done</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkCodeDlg" aria-labelledby="bkCodeTitle">
-    <form class="bk-dialog-body" id="bkCodeForm" novalidate>
-      <h2 class="bk-dialog-title" id="bkCodeTitle">Enter completion code</h2>
-      <p class="bk-state-text" id="bkCodeText">The customer gives you a 6-digit code after confirming the job is done. Enter it to release your payment to your wallet.</p>
-      <label class="bk-field"><span>6-digit code</span>
-        <input class="bk-code-input" type="text" id="bkCodeInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" />
-      </label>
-      <p class="bk-error" id="bkCodeError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn" data-close>Cancel</button>
-        <button type="submit" class="bk-btn bk-btn-primary" id="bkCodeGo">Claim Payment</button>
-      </div>
-    </form>
   </dialog>
 
   <div id="footer-placeholder"></div>

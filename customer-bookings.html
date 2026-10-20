@@ -132,26 +132,26 @@
           </section>
 
           <section class="bk-panel">
-            <h2 class="bk-panel-title">How Paying Works</h2>
+            <h2 class="bk-panel-title">How It Works</h2><p class="bk-stat-sub">Everything happens in the job room. This page shows where each job is.</p>
             <ol class="bk-steps">
-              <li><strong>Provider confirms</strong><span>Once they accept, you can message them and agree the details.</span></li>
-              <li><strong>You pay into escrow</strong><span>Your money is held safely. The provider is paid nothing yet.</span></li>
-              <li><strong>Confirm the job is done</strong><span>When the work is finished, confirm it. You&rsquo;ll get a 6-digit code.</span></li>
-              <li><strong>Give them the code</strong><span>The provider enters it and their payout is released.</span></li>
+              <li><strong>Tasker confirms</strong><span>A payment request appears in your job room straight away.</span></li>
+              <li><strong>You pay in the chat</strong><span>Use your wallet, gift cards or Paystack. The money is held safely.</span></li>
+              <li><strong>Tasker does the work</strong><span>They mark it done in the chat and you review it there.</span></li>
+              <li><strong>You release the money</strong><span>Get your release code in the chat and give it to the tasker.</span></li>
             </ol>
           </section>
 
           <section class="bk-escrow">
             <h2 class="bk-panel-title"><svg class="bk-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protection</h2>
             <ul class="bk-checks">
-              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Your payment is held until you say the job is done.</li>
-              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Only share your code once you&rsquo;re happy with the work.</li>
-              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Report an issue and the payment is frozen for review.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Your payment is held until you release it.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Only share your release code once you&rsquo;re happy with the work.</li>
+              <li><svg class="bk-i" aria-hidden="true"><use href="#i-circle-check"/></svg>Report a problem in the job room and the payment is frozen for review.</li>
             </ul>
           </section>
 
           <section class="bk-panel bk-help">
-            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Our support team is here to help.</span></div>
+            <div><strong>Problem with a booking?</strong><span class="bk-stat-sub">Open the job room and tap Report a problem.</span></div>
             <a class="bk-btn" href="messages.html">Chat</a>
           </section>
         </aside>
@@ -159,85 +159,6 @@
 
     </div>
   </div>
-
-  <!-- Pay: closes before Paystack opens (a modal dialog would sit on top of the Paystack window) -->
-  <dialog class="bk-dialog" id="bkPayDlg" aria-labelledby="bkPayTitle">
-    <div class="bk-dialog-body">
-      <h2 class="bk-dialog-title" id="bkPayTitle">Secure payment</h2>
-      <p class="bk-state-text">Your money is held in escrow and only released after you confirm the job is done.</p>
-      <div class="bk-pay-sum" id="bkPaySum"></div>
-      <div id="bkGiftBox"></div>
-      <div class="bk-pay-opt" id="bkWalletOpt">
-        <div class="bk-pay-opt-head"><span class="bk-pay-opt-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-wallet"/></svg></span>
-          <span><strong>Pay from wallet</strong><span class="bk-stat-sub" id="bkWalletBal"></span></span></div>
-        <button type="button" class="bk-btn bk-btn-primary" id="bkPayWallet">Pay from Wallet</button>
-      </div>
-      <div class="bk-pay-opt">
-        <div class="bk-pay-opt-head"><span class="bk-pay-opt-icon"><svg class="bk-i" aria-hidden="true"><use href="#i-card"/></svg></span>
-          <span><strong>Pay with Paystack</strong><span class="bk-stat-sub">Card, bank transfer or USSD.</span></span></div>
-        <button type="button" class="bk-btn bk-btn-primary" id="bkPayNow">Pay with Paystack</button>
-      </div>
-      <p class="bk-error" id="bkPayError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn" data-close>Cancel</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkPaidDlg" aria-labelledby="bkPaidTitle">
-    <div class="bk-dialog-body">
-      <h2 class="bk-dialog-title" id="bkPaidTitle">Payment confirmed</h2>
-      <p class="bk-state-text">Your payment is held in escrow and the provider has been notified.</p>
-      <ol class="bk-steps">
-        <li><strong>Provider completes the job</strong><span>Then marks it as done.</span></li>
-        <li><strong>You confirm it here</strong><span>You&rsquo;ll get a 6-digit code.</span></li>
-        <li><strong>Give them the code</strong><span>Their payout is released.</span></li>
-      </ol>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn bk-btn-primary" data-close>View Bookings</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkConfirmDlg" aria-labelledby="bkConfirmTitle">
-    <div class="bk-dialog-body">
-      <h2 class="bk-dialog-title" id="bkConfirmTitle">Is the job done?</h2>
-      <p class="bk-state-text" id="bkConfirmText"></p>
-      <p class="bk-error" id="bkConfirmError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn" data-close>Not Yet</button>
-        <button type="button" class="bk-btn bk-btn-primary" id="bkConfirmGo">Yes, Job Is Done</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkCodeDlg" aria-labelledby="bkCodeTitle">
-    <div class="bk-dialog-body">
-      <h2 class="bk-dialog-title" id="bkCodeTitle">Your completion code</h2>
-      <p class="bk-state-text" id="bkCodeText">Give this code to your provider. They enter it to receive their payment.</p>
-      <p class="bk-code-show" id="bkCodeValue" aria-live="polite">------</p>
-      <p class="bk-stat-sub">Only share it once you&rsquo;re happy with the work. It stops working once it&rsquo;s been used.</p>
-      <p class="bk-error" id="bkCodeError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn bk-btn-primary" data-close>Done</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="bk-dialog" id="bkIssueDlg" aria-labelledby="bkIssueTitle">
-    <form class="bk-dialog-body" id="bkIssueForm" novalidate>
-      <h2 class="bk-dialog-title" id="bkIssueTitle">Report an issue</h2>
-      <p class="bk-state-text">Payment is frozen until our team has reviewed it, usually within 24 hours.</p>
-      <label class="bk-field"><span>What went wrong?</span>
-        <textarea class="bk-textarea" id="bkIssueText" rows="4" maxlength="1000" placeholder="Briefly describe the issue"></textarea>
-      </label>
-      <p class="bk-error" id="bkIssueError" role="alert" hidden></p>
-      <div class="bk-actions bk-dialog-actions">
-        <button type="button" class="bk-btn" data-close>Cancel</button>
-        <button type="submit" class="bk-btn bk-btn-danger" id="bkIssueGo">Report Issue</button>
-      </div>
-    </form>
-  </dialog>
 
   <div id="footer-placeholder"></div>
 
