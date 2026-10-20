@@ -36,7 +36,7 @@
      JRMoney.isOverdue(row)          invoice past its due date and still unpaid (display only, no server state)
      JRMoney.receiptFor(requestId)   Promise: the receipt of a paid request (payment_receipts, Stage 8) or null
      JRMoney.receiptsForThread(id)   Promise: every receipt of a conversation, newest first, or null if unreadable
-     JRMoney.pay(id)                 customer pays a request (Paystack)
+     JRMoney.pay(id)                 customer pays a request (Paystack, or gift cards on main service payments)
      JRMoney.naira(n)
 
    Payments are confirmed and recorded by the SERVER (step 6a, see PAYMENTS-HARDENING.md):
@@ -370,6 +370,56 @@
     } catch (_e) { return null; }
   }
 
+  /* ── how to pay (main service payments only) ─────────────────
+     Gift cards are offered only for the main amount (payment, full payment, remaining payment), never for
+     transport, additional costs or invoices. The SERVER works out what the cards can cover (gift-card-pay);
+     this only shows the choice. Resolves 'gift', 'paystack', or null when the customer closes the sheet. */
+  var ICON_GIFT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
+  var ICON_CARD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>';
+
+  function chooseMethod(row, q) {
+    return new Promise(function (resolve) {
+      var R = window.JRRequests, layer = document.getElementById('jrSheetLayer');
+      var settled = false, obs = null;
+      function finish(v) {
+        if (settled) return;
+        settled = true;
+        if (obs) obs.disconnect();
+        resolve(v);
+      }
+      var total = Number(q.price) || Number(row.amount) || 0;
+      var title = ((KINDS[kindOf(row)] || KINDS.payment).title || 'payment').toLowerCase();
+
+      R.openView('Choose how to pay', function (body, h) {
+        var back = body.querySelector('.jr-sheet-back');   /* this is not a step inside the request menu */
+        if (back && back.parentNode) back.parentNode.removeChild(back);
+        body.appendChild(h.el('p', 'jr-sheet-lead', 'Paying ' + naira(total) + ' for the ' + title + '.'));
+
+        function option(icon, label, hint, value) {
+          var b = h.el('button', 'jr-sheet-item'); b.type = 'button';
+          var ic = h.el('span', 'jr-sheet-item-icon'); ic.innerHTML = icon;
+          var tx = h.el('span', 'jr-sheet-item-text');
+          tx.appendChild(h.el('span', 'jr-sheet-item-label', label));
+          tx.appendChild(h.el('span', 'jr-sheet-item-hint', hint));
+          b.appendChild(ic); b.appendChild(tx);
+          b.addEventListener('click', function () { finish(value); h.close(); });
+          body.appendChild(b);
+        }
+        option(ICON_GIFT, 'Use gift cards',
+          q.remainder > 0 ? naira(q.giftAmount) + ' from your gift cards, then ' + naira(q.remainder) + ' with Paystack.'
+                          : 'Your gift cards cover the full ' + naira(total) + '.', 'gift');
+        option(ICON_CARD, 'Pay with Paystack',
+          'Pay ' + naira(total) + ' with Paystack. Your gift cards are not used.', 'paystack');
+      });
+
+      if (!layer || layer.hidden) { finish('paystack'); return; }   /* the sheet could not open: carry on as before */
+      if (window.MutationObserver) {
+        obs = new MutationObserver(function () { if (layer.hidden) finish(null); });
+        obs.observe(layer, { attributes: true, attributeFilter: ['hidden'] });
+      }
+    });
+  }
+
   /* ── pay (customer) ──────────────────────────────────────── */
   /* HARDENED (step 6a): the browser only starts the payment. The SERVER decides the
      amount, confirms it with Paystack, marks the request paid, sets the agreed price,
@@ -386,7 +436,21 @@
     try {
       if (!(window.ST && window.ST.payments)) throw new Error('Payment module not loaded. Please refresh.');
       var meta = me.user_metadata || {};
-      var result = await window.ST.payments.initiatePayment({ requestId: id, customerEmail: meta.email || me.email });
+      var P = window.ST.payments;
+      var method = 'paystack';
+      /* Main service payments only: offer gift cards when the customer has some that can pay for this */
+      if (PAY_KINDS.indexOf(kindOf(local)) !== -1 && P.getGiftQuote && P.payWithGiftCards && window.JRRequests && window.JRRequests.openView) {
+        var q = await P.getGiftQuote({ requestId: id });
+        if (q && q.giftAmount > 0) {
+          method = await chooseMethod(local, q);
+          if (!method) {   /* the customer closed the sheet: nothing was started */
+            window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
+            return false;
+          }
+        }
+      }
+      var payOpts = { requestId: id, customerEmail: meta.email || me.email };
+      var result = method === 'gift' ? await P.payWithGiftCards(payOpts) : await P.initiatePayment(payOpts);
 
       if (result && result.firstPayment) {
         toast('Payment confirmed. Your completion code is in the chat. Share it with the tasker only when the job is done.');

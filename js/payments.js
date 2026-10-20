@@ -424,14 +424,17 @@ function giftCall(action, payload) {
   });
 }
 
-/* How much of this booking the customer's gift cards can cover (null if none or on any error) */
-function getGiftQuote(bookingId) {
-  return giftCall('quote', { bookingId: bookingId }).catch(function () { return null; });
+/* How much of this booking, or of this chat payment request, the customer's gift cards can cover
+   (null if none or on any error).  getGiftQuote(bookingId)  or  getGiftQuote({ requestId }) */
+function getGiftQuote(target) {
+  var payload = (target && typeof target === 'object') ? { requestId: target.requestId } : { bookingId: target };
+  return giftCall('quote', payload).catch(function () { return null; });
 }
 
-/* Pay a booking with gift cards, and Paystack for whatever the cards cannot cover */
+/* Pay a booking (opts.bookingId) or a chat payment request (opts.requestId) with gift cards,
+   and Paystack for whatever the cards cannot cover */
 async function payWithGiftCards(opts) {
-  var d = await giftCall('pay', { bookingId: opts.bookingId });
+  var d = await giftCall('pay', opts.requestId ? { requestId: opts.requestId } : { bookingId: opts.bookingId });
   if (d.done) return d;
 
   if (typeof PaystackPop === 'undefined') {
@@ -451,7 +454,7 @@ async function payWithGiftCards(opts) {
     }
     PaystackPop.setup({
       key: PAYSTACK_PUBLIC_KEY, email: email, amount: d.remainder * 100, ref: d.reference, currency: 'NGN',
-      metadata: { booking_id: opts.bookingId, gift_hold_id: d.holdId },
+      metadata: { booking_id: opts.bookingId, request_id: opts.requestId, gift_hold_id: d.holdId },
       callback: function () { paid = true; finish(3); },
       onClose: function () {
         if (paid) return;
