@@ -58,7 +58,7 @@
     receipt_request: { title: 'Receipt requested', byMe: 'You asked the tasker for a receipt for what they bought.', byOther: 'The customer would like the receipt for something you bought for this job.' }
   };
 
-  var S = { ctx: null, ready: null, probe: null, moneyReady: null, moneyProbe: null, onChange: null, bound: false, opener: null, view: 'menu' };
+  var S = { moreOpen: false, ctx: null, ready: null, probe: null, moneyReady: null, moneyProbe: null, onChange: null, bound: false, opener: null, view: 'menu' };
 
   /* ── helpers ─────────────────────────────────────────────── */
   function $(id) { return document.getElementById(id); }
@@ -78,6 +78,7 @@
     camera:  svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
     close:   svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
     back:    svg('<polyline points="15 18 9 12 15 6"/>'),
+    chevron: svg('<polyline points="6 9 12 15 18 9"/>'),
     tag:     svg('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'),
     truck:   svg('<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'),
     doc:     svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
@@ -137,6 +138,10 @@
   };
   var PAYABLE = ['payment', 'full_payment', 'remaining_payment', 'transport', 'additional_cost', 'materials', 'invoice'];
   var LINE_LABEL = { work: 'Additional work', materials: 'Materials' };   /* breakdown line labels (additional cost form) */
+
+  /* Actions that belong to the normal booking > pay > work > release path. Shown first, enabled ones only. */
+  var MAIN_IDS = ['propose_price', 'request_full', 'request_remaining', 'pay_request',
+                  'work_on_my_way', 'work_arrived', 'work_start', 'work_resume', 'work_complete', 'work_release'];
 
   function hasJob(x) { return x.status !== 'inquiry'; }
 
@@ -338,7 +343,7 @@
   function renderMenu() {
     var fromView = S.view !== 'menu';
     S.view = 'menu';
-    setTitle('Request');
+    setTitle('Job actions');
     var body = $('jrSheetBody');
     if (!body) return;
     body.textContent = '';
@@ -349,27 +354,58 @@
       body.appendChild(el('div', 'jr-sheet-empty', closed ? 'This task is closed, so there is nothing to request.' : 'Nothing to request right now.'));
       return;
     }
+    /* Fast pay, fast work first: the everyday steps sit at the top. Everything else (transport, extra costs,
+       invoices, receipts, asks, problem reports) waits under "More options", so nobody has to read a long list. */
+    var main = items.filter(function (it) { return MAIN_IDS.indexOf(it.action.id) !== -1 && !it.disabled; });
+    var more = items.filter(function (it) { return main.indexOf(it) === -1; });
+
+    function drawItem(host, it) {
+      var b = el('button', 'jr-sheet-item');
+      b.type = 'button';
+      b.disabled = it.disabled;
+      var ic = el('span', 'jr-sheet-item-icon'); ic.innerHTML = it.action.icon;
+      var tx = el('span', 'jr-sheet-item-text');
+      tx.appendChild(el('span', 'jr-sheet-item-label', it.action.label));
+      tx.appendChild(el('span', 'jr-sheet-item-hint' + (it.isReason ? ' is-reason' : ''), it.hint));
+      b.appendChild(ic); b.appendChild(tx);
+      if (it.ui) b.appendChild(el('span', 'jr-sheet-tag', 'Not connected yet'));
+      b.addEventListener('click', function () { it.action.run(it.x); });
+      host.appendChild(b);
+    }
+
+    if (main.length) {
+      body.appendChild(el('div', 'jr-sheet-group', 'Next step'));
+      main.forEach(function (it) { drawItem(body, it); });
+    }
+    if (!more.length) return;
+
+    var toggle = el('button', 'jr-sheet-more');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded', S.moreOpen ? 'true' : 'false');
+    var tl = el('span', 'jr-sheet-more-label', main.length ? 'More options' : 'Job options');
+    toggle.appendChild(tl);
+    toggle.appendChild(el('span', 'jr-sheet-more-count', String(more.length)));
+    var chev = el('span', 'jr-sheet-more-chev'); chev.innerHTML = I.chevron; toggle.appendChild(chev);
+    body.appendChild(toggle);
+
+    var panel = el('div', 'jr-sheet-morepanel');
+    panel.hidden = !S.moreOpen && main.length > 0;
+    if (panel.hidden === false) toggle.setAttribute('aria-expanded', 'true');
     var groups = [];
-    items.forEach(function (it) {
+    more.forEach(function (it) {
       var g = groups.filter(function (x) { return x.name === it.group; })[0];
       if (!g) { g = { name: it.group, items: [] }; groups.push(g); }
       g.items.push(it);
     });
     groups.forEach(function (g) {
-      body.appendChild(el('div', 'jr-sheet-group', g.name));
-      g.items.forEach(function (it) {
-        var b = el('button', 'jr-sheet-item');
-        b.type = 'button';
-        b.disabled = it.disabled;
-        var ic = el('span', 'jr-sheet-item-icon'); ic.innerHTML = it.action.icon;
-        var tx = el('span', 'jr-sheet-item-text');
-        tx.appendChild(el('span', 'jr-sheet-item-label', it.action.label));
-        tx.appendChild(el('span', 'jr-sheet-item-hint' + (it.isReason ? ' is-reason' : ''), it.hint));
-        b.appendChild(ic); b.appendChild(tx);
-        if (it.ui) b.appendChild(el('span', 'jr-sheet-tag', 'Not connected yet'));
-        b.addEventListener('click', function () { it.action.run(it.x); });
-        body.appendChild(b);
-      });
+      panel.appendChild(el('div', 'jr-sheet-group', g.name));
+      g.items.forEach(function (it) { drawItem(panel, it); });
+    });
+    body.appendChild(panel);
+    toggle.addEventListener('click', function () {
+      S.moreOpen = panel.hidden;               /* remembered while the sheet stays on this job */
+      panel.hidden = !panel.hidden;
+      toggle.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
     });
   }
 
@@ -954,6 +990,20 @@
     if (closeBtn) closeBtn.focus();
   }
 
+  /* The pinned "next step" card (messages-flow.js) starts an action by its id without the person opening the menu.
+     Returns false when that action is not available right now. */
+  function run(id) {
+    var it = available().filter(function (a) { return a.action.id === id; })[0];
+    if (!it || it.disabled) return false;
+    var layer = $('jrSheetLayer');
+    if (layer && layer.hidden) { S.opener = document.activeElement; layer.hidden = false; }
+    it.action.run(it.x);
+    return true;
+  }
+  function can(id) {
+    return available().some(function (a) { return a.action.id === id && !a.disabled; });
+  }
+
   function close() {
     var layer = $('jrSheetLayer');
     if (!layer) return;
@@ -1052,7 +1102,7 @@
     probeMoney().then(function () { update(); });
   }
 
-  window.JRRequests = { init: init, update: update, open: open, close: close, whenReady: probe, register: register, openView: openView, openRevise: openRevise, openInvoice: openInvoice, openReceipt: openReceipt, receiptNode: receiptNode, KINDS: KINDS, context: function () { return S.ctx; },
+  window.JRRequests = { init: init, update: update, open: open, run: run, can: can, close: close, whenReady: probe, register: register, openView: openView, openRevise: openRevise, openInvoice: openInvoice, openReceipt: openReceipt, receiptNode: receiptNode, KINDS: KINDS, context: function () { return S.ctx; },
                         GROUP: GROUP, LOCKED: LOCKED, NEEDS_JOB: NEEDS_JOB, NEEDS_PAYMENT: NEEDS_PAYMENT, WAITING_CONFIRM: WAITING_CONFIRM };
 
 })();

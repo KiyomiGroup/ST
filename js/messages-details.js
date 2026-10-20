@@ -423,6 +423,21 @@
       wrap.appendChild(alertBox);
     }
 
+    /* At a glance: the few things people open this panel for (price, state, release code) */
+    var gl = el('div', 'jr-glance');
+    var glTop = el('div', 'jr-glance-top');
+    var glPrice = el('div', 'jr-glance-price');
+    glPrice.appendChild(el('span', 'jr-glance-label', m.sm.paid > 0 ? 'Paid' : 'Agreed price'));
+    glPrice.appendChild(el('strong', 'jr-glance-amount', m.sm.paid > 0 ? naira(m.sm.paid) : (m.sm.base > 0 ? naira(m.sm.base) : 'Not agreed yet')));
+    glTop.appendChild(glPrice);
+    glTop.appendChild(chip(m.status, m.t._job && m.t._job.key === 'disputed' ? 'danger' : 'success'));
+    gl.appendChild(glTop);
+    if (m.sm.paid > 0 && m.sm.outstanding > 0) gl.appendChild(el('p', 'jr-glance-note', naira(m.sm.outstanding) + ' still to pay.'));
+    if (m.role === 'customer' && m.bookingId && m.sm.paid > 0 && m.t._job && ['completed', 'cancelled'].indexOf(m.t._job.key) === -1 && window.JRFlow && window.JRFlow.codeNode) {
+      gl.appendChild(window.JRFlow.codeNode(m.bookingId));
+    }
+    wrap.appendChild(gl);
+
     /* The job */
     var g1 = group('The job');
     var dl1 = el('dl', 'jr-dt-list');
@@ -431,7 +446,6 @@
     var when = m.scheduled ? fmtDateTime(m.scheduled)
              : (m.deadline ? 'Needed by ' + fmtDate(m.deadline) : '');
     dl1.appendChild(row('Scheduled', when || muted('Not scheduled yet')));
-    dl1.appendChild(row('Task status', chip(m.status, m.t._job && m.t._job.key === 'disputed' ? 'danger' : 'success')));
     g1.appendChild(dl1);
     wrap.appendChild(g1);
 
@@ -463,7 +477,10 @@
     wrap.appendChild(g2);
 
     /* Links */
-    var g3 = group('Records');
+    var g3 = el('details', 'jr-dt-fold');
+    g3.open = !!S.recOpen;
+    g3.addEventListener('toggle', function () { S.recOpen = g3.open; });
+    g3.appendChild(el('summary', 'jr-dt-fold-sum', 'Records and more'));
     var list = el('div', 'jr-dt-actions');
     var invoices = m.hist.filter(function (h) { return h.kind === 'invoice'; });
     var isCustomer = m.role === 'customer';

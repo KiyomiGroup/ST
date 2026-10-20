@@ -1991,3 +1991,110 @@ body.msg-page {
 .jr-proof-files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .jr-proof-file { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text); }
 .jr-proof-name { overflow-wrap: anywhere; min-width: 0; }
+
+/* ============================================================
+   Next step card (js/messages-flow.js): price > pay > work > release code
+   ============================================================ */
+.jr-flow {
+  flex-shrink: 0;
+  margin: var(--space-3) var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1.5px solid var(--color-mint-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+}
+.jr-flow[hidden] { display: none; }
+.jr-flow--closed { background: var(--color-bg-subtle); border-color: var(--color-border); }
+.jr-flow--compact { padding: var(--space-3) var(--space-4); }
+.jr-flow-steps { display: flex; gap: var(--space-2); margin: 0 0 var(--space-3); padding: 0; list-style: none; }
+.jr-flow--compact .jr-flow-steps { display: none; }
+.jr-flow-step { display: flex; flex: 1; align-items: center; gap: var(--space-2); min-width: 0; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); }
+.jr-flow-step + .jr-flow-step::before { content: ''; flex: 1; min-width: var(--space-2); height: 2px; margin-right: var(--space-2); background: var(--color-border-strong); }
+.jr-flow-step.is-done + .jr-flow-step::before,
+.jr-flow-step.is-now::before { background: var(--color-primary); }
+.jr-flow-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border-strong);
+  font-family: var(--font-heading);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+}
+.jr-flow-step.is-done .jr-flow-dot { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-on-primary); }
+.jr-flow-step.is-now .jr-flow-dot { border-color: var(--color-primary); color: var(--color-primary); }
+.jr-flow-step.is-now .jr-flow-step-name { color: var(--color-forest-800); font-weight: 800; }
+.jr-flow-step-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jr-flow-title { font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; color: var(--color-forest-800); }
+.jr-flow-text { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+.jr-flow-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.jr-flow-btn {
+  flex: 1 1 auto;
+  min-height: 44px;                  /* comfortable thumb target */
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.jr-flow-btn--primary { flex: 2 1 14rem; border-color: var(--color-primary); background: var(--color-primary); color: var(--color-text-on-primary); }
+.jr-flow-btn--primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+.jr-flow-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.jr-flow-btn:focus-visible,
+.jr-flow-link:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* Release code box (also used in Job details) */
+.jr-flow-code { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border: 1.5px dashed var(--color-primary); border-radius: var(--radius-md); background: var(--color-bg); }
+.jr-flow-code-label { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary); }
+.jr-flow-code-line { display: flex; align-items: center; gap: var(--space-4); margin: var(--space-1) 0; }
+.jr-flow-code-digits { flex: 1; font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; letter-spacing: 0.2em; color: var(--color-forest-800); }
+.jr-flow-link { padding: var(--space-2) var(--space-1); border: 0; background: none; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-primary); cursor: pointer; }
+.jr-flow-code-note { font-size: var(--text-xs); line-height: 1.5; color: var(--color-text-muted); }
+
+/* Request sheet: "More options" fold */
+.jr-sheet-more {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.jr-sheet-more-label { flex: 1; text-align: left; }
+.jr-sheet-more-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-sheet-more-chev { display: flex; transition: transform var(--t) var(--ease); }
+.jr-sheet-more[aria-expanded="true"] .jr-sheet-more-chev { transform: rotate(180deg); }
+.jr-sheet-morepanel[hidden] { display: none; }
+
+/* Job details: at a glance + folded records */
+.jr-glance { margin-bottom: var(--space-4); padding: var(--space-4); border: 1.5px solid var(--color-mint-border); border-radius: var(--radius-lg); background: var(--color-primary-soft); }
+.jr-glance-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.jr-glance-price { display: flex; flex-direction: column; gap: var(--space-1); }
+.jr-glance-label { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary); }
+.jr-glance-amount { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 800; color: var(--color-forest-800); }
+.jr-glance-note { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-text-secondary); }
+.jr-dt-fold { margin-top: var(--space-4); }
+.jr-dt-fold-sum { padding: var(--space-3) 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-text); cursor: pointer; }
+
+@media (max-width: 480px) {
+  .jr-flow { margin: var(--space-2) var(--space-3) 0; padding: var(--space-3); }
+  .jr-flow-step-name { display: none; }
+  .jr-flow-step.is-now .jr-flow-step-name { display: inline; }
+}

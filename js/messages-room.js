@@ -343,6 +343,7 @@
     paintBanner(ctx, cachedTask);
     if (window.JRRequests) window.JRRequests.update(ctx);
     if (window.JRWork) window.JRWork.update(ctx);
+    if (window.JRFlow) window.JRFlow.update(ctx);
     if (window.JRDetails) window.JRDetails.update(ctx);
 
     /* 2) then fill in profile + task details */
@@ -352,6 +353,7 @@
     paintBanner(ctx, results[1]);
     if (window.JRRequests) window.JRRequests.update(ctx);
     if (window.JRWork) window.JRWork.update(ctx);
+    if (window.JRFlow) window.JRFlow.update(ctx);
     if (window.JRDetails) window.JRDetails.update(ctx);
   }
 
@@ -363,6 +365,7 @@
     paintBanner(current, t._taskId ? cache.tasks[t._taskId] || null : null);
     if (window.JRRequests) window.JRRequests.update(current);
     if (window.JRWork) window.JRWork.update(current);
+    if (window.JRFlow) window.JRFlow.update(current);
     if (window.JRDetails) window.JRDetails.update(current);
   }
 

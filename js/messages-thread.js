@@ -825,6 +825,18 @@
 
   function focusComposer() { var i = $('msgInput'); if (i) i.focus(); }
 
+  /* A price (or reschedule) proposal waiting for an answer, for the pinned "next step" card (messages-flow.js).
+     mine = I sent it, so I am the one waiting. Read only; answering goes through answerDecision (the same server call as the chat card). */
+  function pendingDecision() {
+    var ids = Object.keys(S.requests || {}).filter(function (k) {
+      var r = S.requests[k];
+      return r.status === 'pending' && DECISION[r.kind];
+    });
+    if (!ids.length) return null;
+    var r = S.requests[ids[ids.length - 1]];
+    return { id: r.id, kind: r.kind, amount: Number(r.payload && r.payload.amount) || 0, note: r.note || '', mine: !!(S.user && r.requested_by === S.user.id) };
+  }
+
   /* Message priority (spec 33): how much visual weight a message gets. */
   var PRIORITY = {
     text: 'normal', image: 'normal', video: 'normal', file: 'normal', location: 'normal',
@@ -1470,6 +1482,8 @@
     signedUrl: signedUrl,
     getMoney: getMoney,
     moneyRows: moneyRows,
+    pendingDecision: pendingDecision,
+    answerDecision: function (id, accept) { return respondToDecision(id, accept); },
     /* Stage 15: messages-work.js and messages-forms.js call reload() after an action; it was never exported, so they silently did nothing */
     reload: function () {
       return S.thread ? open({ thread: S.thread, user: S.user, role: S.role, onChange: S.onChange }) : Promise.resolve();

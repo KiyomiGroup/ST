@@ -76,6 +76,9 @@
         <!-- Task status banner (built by js/messages-room.js) -->
         <div class="jr-banner" id="jrBanner" hidden></div>
 
+        <!-- Next step card: price > pay > work > release code (built by js/messages-flow.js) -->
+        <div class="jr-flow" id="jrFlow" hidden></div>
+
         <!-- Completion panel: review / code entry (built by js/messages-work.js) -->
         <div class="jr-workpanel" id="jrWorkPanel" hidden></div>
 
@@ -134,9 +137,9 @@
           <div class="msg-input-wrap">
             <textarea id="msgInput" class="msg-input" placeholder="Type a message…" rows="1" maxlength="2000" aria-label="Message"></textarea>
           </div>
-          <button class="msg-pay-request-btn" id="requestBtn" type="button" hidden aria-haspopup="dialog" aria-label="Request" title="Requests and job actions">
+          <button class="msg-pay-request-btn" id="requestBtn" type="button" hidden aria-haspopup="dialog" aria-label="Job actions" title="Job actions">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-            <span class="msg-req-label">Request</span>
+            <span class="msg-req-label">Actions</span>
           </button>
           <button class="msg-send-btn" id="msgSendBtn" type="button" title="Send" aria-label="Send message" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -153,7 +156,7 @@
           <div class="jr-sheet" role="dialog" aria-modal="true" aria-labelledby="jrSheetTitle">
             <div class="jr-sheet-grab" aria-hidden="true"></div>
             <div class="jr-sheet-head">
-              <h2 class="jr-sheet-title" id="jrSheetTitle">Request</h2>
+              <h2 class="jr-sheet-title" id="jrSheetTitle">Job actions</h2>
               <button class="jr-icon-btn" id="jrSheetClose" type="button" aria-label="Close"><span id="jrSheetCloseIcon"></span></button>
             </div>
             <div class="jr-sheet-body" id="jrSheetBody"></div>
@@ -209,6 +212,7 @@
   <script src="js/messages-requests.js"></script>
   <script src="js/messages-forms.js"></script>
   <script src="js/messages-work.js"></script>
+  <script src="js/messages-flow.js"></script>
   <script src="js/messages-details.js"></script>
 
   <script>
