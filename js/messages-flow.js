@@ -85,23 +85,12 @@
       P.amount = v.sm.paid;
       if (customer) {
         P.title = 'Payment secured';
-        P.text = 'StreetTasker is holding ' + naira(v.sm.paid) + ' until the job is done. Give the tasker your code only when you are happy with the work.';
+        P.text = 'StreetTasker is holding ' + naira(v.sm.paid) + ' safely. When the job is done and you are happy, give the tasker the code below. They enter it and get paid.';
         P.code = true;
         return P;
       }
       P.title = 'Customer has paid';
-      var map = {
-        none:        ['work_on_my_way', "I'm on my way", 'work_start', 'Start work', 'Payment is secured. Head to the job.'],
-        en_route:    ['work_arrived', "I've arrived", 'work_start', 'Start work', 'The customer knows you are on the way.'],
-        arrived:     ['work_start', 'Start work', null, '', 'You are there. Start when you are ready.'],
-        in_progress: ['work_complete', 'Mark work complete', 'work_pause', 'Pause', 'Work is underway. Mark it complete when you finish.'],
-        paused:      ['work_resume', 'Resume work', 'work_complete', 'Mark work complete', 'Work is paused.']
-      };
-      var m = map[v.stage || 'none'] || map.none;
-      P.text = m[4];
-      if (v.stage === 'in_progress' || v.stage === 'paused') P.text += ' After that the customer gets a code. Ask them for it to be paid.';
-      P.primary = { label: m[1], id: m[0] };
-      if (m[2]) P.secondary = { label: m[3], id: m[2] };
+      P.text = naira(v.sm.paid) + ' is held safely. Do the job. When it is done, ask the customer for their 6-digit release code and enter it in the box below to get paid. Updates like "on my way" are in Actions, if the customer asks.';
       return P;
     }
 

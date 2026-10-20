@@ -288,10 +288,10 @@
         run: function () { viewSimple('Resume work', 'Resume this task now?', 'Resume work', 'resume', 'Work resumed', false); } },
       { id: 'work_complete', roles: ['tasker'], group: G, icon: iconCheck(), label: 'Mark work complete', hint: 'Ask the customer to review the work',
         when: function (x) { return active(x) && x.paid && x.stage !== 'paused'; }, run: viewComplete },
-      { id: 'work_release', roles: ['customer'], group: 'Payment', icon: iconCheck(), label: 'Get Release Code', hint: 'Confirm the work is done and get your 6-digit code',
+      { id: 'work_release', roles: ['customer'], group: 'Payment', icon: iconCheck(), label: 'Get Release Code', hint: 'Show your 6-digit code and confirm the work is done',
         rule: function (x) {
           if (!(S.ready === true && x.bookingId && x.booking && x.paid)) return false;
-          return x.status === 'awaiting_confirmation' ? null : 'Available once the tasker submits the work';
+          return null;
         }, run: viewProtection },
       { id: 'report_issue', roles: ['customer', 'tasker'], group: 'Issue', icon: iconFlag(), label: 'Report an Issue', hint: 'Payment stays protected while it is reviewed',
         when: function (x) {
@@ -326,7 +326,12 @@
     if (!host) return;
     var v = view();
     host.textContent = '';
-    if (!v.bookingId || !v.booking || !v.paid || v.status !== 'awaiting_confirmation') { host.hidden = true; return; }
+    /* One simple flow: pay > the customer holds the code > the tasker enters it > paid.
+       The tasker's code box is there as soon as the customer has paid. "On my way", "arrived" and "start work"
+       stay optional in the Actions menu. The customer's code is on the pinned card (messages-flow.js). */
+    var LIVE = ['confirmed', 'in_progress', 'awaiting_code', 'awaiting_confirmation'];
+    if (!v.bookingId || !v.booking || !v.paid || LIVE.indexOf(v.status) === -1) { host.hidden = true; return; }
+    if (v.role === 'customer' && v.status !== 'awaiting_confirmation') { host.hidden = true; return; }   /* the pinned card shows the code */
     host.hidden = false;
     var phase = lifecyclePhase(v.role);
 
@@ -362,14 +367,9 @@
       return;
     }
 
-    /* tasker */
-    if (phase === 'review') {
-      host.appendChild(el('div', 'jr-wp-title', 'Waiting for the customer'));
-      host.appendChild(el('div', 'jr-wp-text', 'The customer is reviewing your work. You will be asked for a completion code once they confirm.'));
-      return;
-    }
-    host.appendChild(el('div', 'jr-wp-title', 'Enter the completion code'));
-    host.appendChild(el('div', 'jr-wp-text', 'The customer confirmed the work. Ask them for their 6-digit code to receive your payment.'));
+    /* tasker: the code box, from the moment the customer has paid */
+    host.appendChild(el('div', 'jr-wp-title', 'Enter the release code'));
+    host.appendChild(el('div', 'jr-wp-text', 'The customer has paid and holds a 6-digit release code. When the job is done, ask them for it and enter it here to get paid.'));
     var form = el('div', 'jr-wp-form');
     var input = el('input', 'jr-code-input');
     input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'one-time-code';
