@@ -243,36 +243,57 @@
           banner.style.color = 'var(--blue)';
           banner.style.display = 'block';
         }
-        window.supabase.auth.onAuthStateChange(async (event, session) => {
-          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-            const role = await window.ST.auth.getUserRole(session.user);
-            const { data: existingRow } = await window.supabase.from('users').select('id').eq('id', session.user.id).maybeSingle();
-            let dest;
-            if (!existingRow) {
-              dest = role === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html';
-            } else {
-              dest = window.ST.auth.getHomeUrl();
+        /* They clicked the link in the confirmation email. Make sure their profile
+           rows exist, then sign them out and send them to Log In to sign in. */
+        let confirmDone = false;
+        async function finishConfirmation(session) {
+          if (confirmDone || !session?.user) return;
+          confirmDone = true;
+          const u = session.user;
+          const role = u.user_metadata?.role || 'customer';
+          const name = u.user_metadata?.name || u.email.split('@')[0];
+          try {
+            await window.supabase.from('users').upsert({ id: u.id, name, email: u.email, role }, { onConflict: 'id' });
+            if (role === 'tasker') {
+              await window.supabase.from('taskers').upsert(
+                { id: u.id, user_id: u.id, name, email: u.email, service: '', location: '', rating: 0, task_count: 0 },
+                { onConflict: 'id' }
+              );
             }
-            window.location.replace(dest);
-          }
+          } catch (e) { /* rows are re-checked at login */ }
+          try { await window.supabase.auth.signOut(); } catch (e) {}
+          try { ['st_role', 'st_name', 'st_session', 'st_email', 'st_avatar'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+          window.location.replace('login.html?confirmed=1&email=' + encodeURIComponent(u.email));
+        }
+        window.supabase.auth.onAuthStateChange((event, session) => {
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) finishConfirmation(session);
         });
         setTimeout(async () => {
           const session = await window.ST.auth.getSession();
-          if (session) {
-            const role = await window.ST.auth.getUserRole(session.user);
-            window.location.replace(window.ST.auth.getHomeUrl());
-          }
+          if (session) finishConfirmation(session);
         }, 1500);
         return;
       }
 
+      /* ── Expired or invalid confirmation link ── */
+      if (window.location.hash.includes('error_description')) {
+        const h = new URLSearchParams(window.location.hash.slice(1));
+        const e = document.getElementById('loginErr');
+        e.textContent = (h.get('error_code') === 'otp_expired')
+          ? 'That confirmation link has expired or was already used. Try logging in below. If it says your email isn\'t verified, sign up again to get a new link.'
+          : (h.get('error_description') || 'That link is not valid.').replace(/\+/g, ' ');
+        e.style.display = 'block';
+      }
+
       /* ── Just signed up: show the "verify your email" notice ── */
       const qs = new URLSearchParams(window.location.search);
-      if (qs.get('verify') === '1' || qs.get('created') === '1') {
+      if (qs.get('verify') === '1' || qs.get('created') === '1' || qs.get('confirmed') === '1') {
         const note = document.getElementById('loginErr');
         const mail = qs.get('email') || '';
         if (mail) document.getElementById('loginEmail').value = mail;
-        note.textContent = qs.get('verify') === '1'
+        note.textContent = qs.get('confirmed') === '1'
+          ? 'Email confirmed! Your account is ready. Log in below to continue.'
+          : qs.get('verify') === '1'
           ? 'Account created! We sent a verification link to ' + (mail || 'your email') + '. Please verify your email, then log in below.'
           : 'Account created! Log in below to continue.';
         note.style.background = 'var(--blue-light)';
