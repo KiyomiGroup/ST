@@ -217,8 +217,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.body.appendChild(np);
   }
 
-  /* Step 3: Load footer (non-blocking, doesn't affect visible UI) */
-  loadComponent('#footer-placeholder', 'components/footer.html');
+  /* Step 3: Load footer — landing page only (non-blocking, doesn't affect visible UI).
+     Every other page keeps an empty #footer-placeholder, so nothing renders there. */
+  const _p = window.location.pathname.replace(/\/+$/, '');
+  const _isLanding = _p === '' || /\/index(\.html)?$/.test(_p);
+  if (_isLanding) loadComponent('#footer-placeholder', 'components/footer.html');
 
   /* Step 3b: Load the global mobile bottom nav (non-blocking). CSS keeps
      it hidden until body.st-logged-in is set, so guests never see it. */
