@@ -6,6 +6,7 @@
   <title>StreetTasker Design System</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 </head>
@@ -121,7 +122,66 @@
       <div class="form-group"><label class="form-label" for="ds-ta">Details</label><textarea class="form-textarea" id="ds-ta" placeholder="Describe the task"></textarea></div>
     </div>
   </section>
+
+  <section class="ds-section" id="cards-v2">
+    <h2>Cards: task, service, tasker</h2>
+    <p class="ds-note">Built by <code>stTaskCard</code>, <code>stServiceCard</code> and <code>stTaskerCard</code> in <code>js/ui.js</code>. Sample data only. Rating, distance, turnaround and portfolio render only when the data has them.</p>
+    <div class="ds-cards" id="dsCards"></div>
+  </section>
+
+  <section class="ds-section" id="toasts">
+    <h2>Toasts</h2>
+    <p class="ds-note"><code>showToast(message, { type, title, tonal, duration })</code>. Pauses on hover, Esc closes the newest, errors use <code>role="alert"</code>.</p>
+    <div class="ds-row">
+      <button type="button" class="btn btn-primary btn-sm" data-toast="success">Success</button>
+      <button type="button" class="btn btn-outline btn-sm" data-toast="info">Info</button>
+      <button type="button" class="btn btn-outline btn-sm" data-toast="warning">Warning</button>
+      <button type="button" class="btn btn-outline btn-sm" data-toast="error">Error</button>
+      <label class="ds-note"><input type="checkbox" id="dsTonal" /> Tonal (pastel) style</label>
+    </div>
+    <div class="ds-toasts">
+      <div>
+        <h3>Elevated white</h3>
+        <div class="st-toast st-toast--success"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Payment Escrow Funded</span><span class="st-toast-desc">Transaction ID: #ST-88402 • ₦45,000 locked</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--warning"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 7v6"/><path d="M12 17h.01"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Weak Network Signal</span><span class="st-toast-desc">Check your mobile data or Wi-Fi to sync incoming bids</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--info"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Update Available</span><span class="st-toast-desc">StreetTasker has a new version ready</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--error"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Escrow Transfer Incomplete</span><span class="st-toast-desc">Please verify your account or retry in a few moments</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+      </div>
+      <div>
+        <h3>Tonal (<code>st-toast--tonal</code>)</h3>
+        <div class="st-toast st-toast--tonal st-toast--success"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Payment Escrow Funded</span><span class="st-toast-desc">Transaction ID: #ST-88402 • ₦45,000 held safely in SafePay</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--tonal st-toast--warning"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 7v6"/><path d="M12 17h.01"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Connection Interrupted</span><span class="st-toast-desc">Reconnecting to Lagos task broadcast network…</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--tonal st-toast--info"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">New Quote Received</span><span class="st-toast-desc">Chidi Okonkwo (Master Plumber) submitted an offer • ₦7,500/hr</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+        <div class="st-toast st-toast--tonal st-toast--error"><span class="st-toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div class="st-toast-copy"><span class="st-toast-title">Card Authorization Failed</span><span class="st-toast-desc">Insufficient funds or 3D Secure timeout. Try USSD or bank transfer</span></div><button type="button" class="st-toast-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-section" id="notices">
+    <h2>Notification boxes</h2>
+    <p class="ds-note">Class <code>st-notice</code> with a tone modifier: none (live), <code>--success</code>, <code>--warning</code>, <code>--danger</code>, <code>--info</code>.</p>
+    <div class="ds-notices" id="dsNotices"></div>
+  </section>
+
+  <section class="ds-section" id="profile-prompt">
+    <h2>Profile prompt</h2>
+    <p class="ds-note">One component, two skins. Under 768px it is the dark compact card with "Boost Now"; from 768px up it is the light banner with the TIP badge. Resize the window to see both.</p>
+    <aside class="st-pp" aria-label="Complete your profile">
+      <span class="st-pp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+      <div class="st-pp-main">
+        <h3 class="st-pp-title"><span class="st-pp-long">Complete your profile — boost your chances of getting hired</span><span class="st-pp-short">Complete profile (75%)</span><span class="st-pp-tip">TIP</span></h3>
+        <p class="st-pp-desc"><span class="st-pp-long">Customers check detailed profiles before accepting offers. Taskers with full credential verification and work samples receive up to <strong>3x more bookings</strong>.</span><span class="st-pp-short">Get 3x more bookings from clients</span></p>
+      </div>
+      <div class="st-pp-progress">
+        <div class="st-pp-track" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"><div class="st-pp-fill"></div></div>
+        <span class="st-pp-pct">75% Complete</span><span class="st-pp-next">• Add 2 past project photos</span>
+      </div>
+      <a href="dashboard-tasker.html" class="st-pp-cta"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></a>
+    </aside>
+  </section>
 </main>
+<script src="js/sanitize.js"></script>
+<script src="js/ui.js"></script>
 <script>
   document.querySelectorAll('.ds-swatch').forEach(function (el) {
     var token = el.getAttribute('data-token');
@@ -130,6 +190,37 @@
     meta.innerHTML = '<b></b><span></span>';
     meta.querySelector('b').textContent = token;
     meta.querySelector('span').textContent = value || 'not defined';
+  });
+
+  /* Live demos: cards and notification boxes are built from the real components */
+  var demoTask = { id: 'demo-task', title: 'Emergency Burst Overhead Tank Water Pipe Repair', description: 'Main PPR feed pipe from the roof reservoir ruptured near the pressure regulator valve.', category: 'plumbing', urgency: 'immediate', task_type: 'in_person', location: 'Lekki Phase 1', budget: 22000, created_at: new Date(Date.now() - 20 * 60000).toISOString(), photo_urls: [], offers_count: 4, distance_km: 1.8 };
+  var demoService = { service_name: 'Bespoke Tailoring & Express Alteration', categoryLabel: 'Fashion & Alterations', emoji: '🧵', description: 'Hem shortening, waist tapering, zipper substitution, or complete traditional dress styling with precision fit assurance.', provider: 'Baba Musa Alabi', location: 'Lekki Phase 1', price: 12500, unit: 'job', rating: 4.95, reviews_count: 230, turnaround: '48h Turnaround', perk: 'Includes Doorstep Pickup', href: '#' };
+  var demoTasker = { id: 'demo', provider_name: 'Babajide Adeleke', service_name: 'Solar & Electrical Engineer', location: 'Lekki Phase 1, Lagos', rating: 4.9, reviews: 142, verified: true, availability_status: 'available_now', specialties: ['Solar Inverters', 'Circuit Wiring', 'Troubleshooting', 'Panel Install', 'Generators', 'CCTV', 'Lighting'], price: 7500, rate_unit: '/job', href: '#' };
+  document.getElementById('dsCards').innerHTML = stTaskCard(demoTask) + stServiceCard(demoService) + stTaskerCard(demoTasker);
+
+  document.querySelector('#profile-prompt .st-pp').style.setProperty('--pp-value', '75%');
+
+  var I = ST_ICON;
+  function notice(tone, icon, title, badge, meta, body, actions, points) {
+    return '<section class="st-notice' + (tone ? ' st-notice--' + tone : '') + '" role="' + (tone === 'danger' ? 'alert' : 'status') + '">' +
+      '<span class="st-notice-icon">' + icon + '</span><div class="st-notice-main">' +
+      '<div class="st-notice-head"><h3 class="st-notice-title">' + title + '</h3><span class="st-notice-badge">' + badge + '</span></div>' +
+      (meta ? '<p class="st-notice-meta">' + meta + '</p>' : '') + '<p class="st-notice-body">' + body + '</p>' +
+      (points ? '<ul class="st-notice-points">' + points.map(function (p) { return '<li>' + I.check + p + '</li>'; }).join('') + '</ul>' : '') +
+      (actions ? '<div class="st-notice-actions">' + actions + '</div>' : '') + '</div></section>';
+  }
+  document.getElementById('dsNotices').innerHTML =
+    notice('', I.bolt, 'Task Broadcasted Across Lekki Phase 1', 'Live Alert', 'Posted 2 minutes ago • Active in your neighborhood', 'Your request for “Generator Inverter Circuit Repair” has been matched and dispatched to 14 verified electricians within 3.5km. Customer service confirmed.', '<a href="#" class="btn btn-primary btn-sm">View Live Offers (3)</a><a href="#" class="btn btn-outline btn-sm">Share Link</a>') +
+    notice('success', I.shield, 'SafePay™ Escrow Protection Active', 'Escrow Locked', 'Regulated Payment Facility #CBN-ST-991', 'Your funds remain safe in a segregated CBN-licensed custody account. Money is only transferred to your artisan after you inspect and sign off the completed task.', '', ['Dispute mediation guarantee', 'Instant 100% refund policy']) +
+    notice('warning', I.alert, 'Identity Verification Pending (NIN)', 'Action Required', 'Tier 2 Artisan Access Restricted', 'To quote on high-value domestic tasks exceeding ₦100,000 in Victoria Island and Ikoyi, federal regulations require verified National Identification Number (NIN) verification.', '<a href="#" class="btn btn-tone btn-sm">Upload NIN Slip</a><a href="#" class="btn btn-outline btn-sm">Learn Tier Requirements</a>') +
+    notice('danger', I.alert, 'Payout Account Name Mismatch', 'Blocked', 'Disbursement suspended: #PAY-33910', 'The recipient bank account name on your profile does not match your registered BVN name. Funds cannot be settled until the bank credentials match StreetTasker KYC records.', '<a href="#" class="btn btn-tone btn-sm">Update Bank Details</a><a href="#" class="btn btn-outline btn-sm">Contact Concierge</a>');
+
+  var DEMO_MSG = { success: ['Offer accepted', '₦12,500 held in SafePay'], info: ['New Tasker Assigned', 'Babatunde is en route with verified tools • 12 mins'], warning: ['Weak Network Signal', 'Check your mobile data or Wi-Fi to sync incoming bids'], error: ['Card Authorization Failed', 'Insufficient funds or 3D Secure timeout. Try USSD or bank transfer'] };
+  document.querySelectorAll('[data-toast]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var m = DEMO_MSG[b.dataset.toast];
+      showToast(m[1], { type: b.dataset.toast, title: m[0], tonal: document.getElementById('dsTonal').checked });
+    });
   });
 </script>
 </body>

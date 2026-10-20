@@ -52,3 +52,10 @@
 /* Component demos */
 .ds-card-body { padding: var(--space-5); }
 .ds-form { max-width: 360px; }
+
+/* Demos for cards, toasts, notification boxes */
+.ds-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-5); align-items: start; }
+.ds-toasts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5); margin-top: var(--space-4); }
+.ds-toasts > div { display: flex; flex-direction: column; gap: var(--space-3); }
+.ds-toasts .st-toast { animation: none; }
+.ds-notices { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--space-4); }

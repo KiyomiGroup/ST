@@ -211,18 +211,8 @@
     }
 
     /* ── Tasker feed (Step 4) ─────────────────────────────────── */
-    .hf-profile {
-      display: none; align-items: center; flex-wrap: wrap; gap: var(--space-4);
-      padding: var(--space-4) var(--space-5);
-      background: var(--pt-mint-soft); border: 1px solid var(--pt-mint); border-radius: var(--radius-2xl);
-    }
-    .hf-profile.show { display: flex; }
-    .hf-profile-ic { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--white); color: var(--pt-green); }
-    .hf-profile-copy { flex: 1; min-width: 200px; }
-    .hf-profile-copy h2 { font-size: var(--text-base); font-weight: 800; color: var(--pt-green); }
-    .hf-profile-copy p { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--pt-ink-muted); }
-    .hf-profile-btn { display: inline-flex; align-items: center; height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--pt-green); color: var(--white); font-size: var(--text-sm); font-weight: 700; white-space: nowrap; }
-    .hf-profile-btn:hover { background: var(--color-forest-800); }
+
+    .hf-feed-tasker .st-pp { margin-bottom: var(--space-5); }
 
     .hf-tgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
     .hf-tcard {
@@ -459,13 +449,25 @@
     <main class="hf-feed hf-feed-tasker" aria-label="Tasker home feed">
       <div class="container">
 
-        <aside class="hf-profile" id="hfProfileCard" aria-labelledby="hfProfileTitle">
-          <span class="hf-profile-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-          <div class="hf-profile-copy">
-            <h2 id="hfProfileTitle">Complete your profile</h2>
-            <p>Add your service and area so customers can find you and we can match you to the right tasks.</p>
+        <aside class="st-pp" id="hfProfileCard" aria-labelledby="hfProfileTitle" hidden>
+          <span class="st-pp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <div class="st-pp-main">
+            <h2 class="st-pp-title" id="hfProfileTitle">
+              <span class="st-pp-long">Complete your profile — boost your chances of getting hired</span>
+              <span class="st-pp-short">Complete profile (<span class="js-pp-pct">0</span>%)</span>
+              <span class="st-pp-tip">TIP</span>
+            </h2>
+            <p class="st-pp-desc">
+              <span class="st-pp-long">Add your service and area so customers can find you and we can match you to the right tasks. Taskers with a full profile receive up to <strong>3x more bookings</strong>.</span>
+              <span class="st-pp-short">Get 3x more bookings from clients</span>
+            </p>
           </div>
-          <a href="dashboard-tasker.html?setup=1" class="hf-profile-btn">Complete profile</a>
+          <div class="st-pp-progress">
+            <div class="st-pp-track" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="st-pp-fill"></div></div>
+            <span class="st-pp-pct"><span class="js-pp-pct">0</span>% Complete</span>
+            <span class="st-pp-next js-pp-next"></span>
+          </div>
+          <a href="dashboard-tasker.html?setup=1" class="st-pp-cta"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></a>
         </aside>
 
         <section class="hf-sec" aria-labelledby="hfTNearbyTitle">
@@ -1004,7 +1006,23 @@
         _tkProfile = row || {};
         /* Same completeness check as login.html: a service and a location */
         const complete = !!((_tkProfile.service || _tkProfile.service_name) && _tkProfile.location);
-        if (card) card.classList.toggle('show', !complete);
+        if (card) {
+          /* Same five checks as the dashboard banner (dashboard-tasker.html) */
+          const steps = [
+            ['profile photo', !!(_tkProfile.photo_url || _tkProfile.photo)],
+            ['about / bio',   !!_tkProfile.bio],
+            ['location',      !!_tkProfile.location],
+            ['service type',  !!(_tkProfile.service || _tkProfile.service_name)],
+            ['hourly rate',   Number(_tkProfile.rate_value) > 0],
+          ];
+          const pct = Math.round(steps.filter(x => x[1]).length / steps.length * 100);
+          const nextStep = steps.find(x => !x[1]);
+          card.style.setProperty('--pp-value', pct + '%');
+          card.querySelectorAll('.js-pp-pct').forEach(n => { n.textContent = pct; });
+          card.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', pct);
+          card.querySelector('.js-pp-next').textContent = nextStep ? '• Next: add your ' + nextStep[0] : '';
+          card.hidden = complete;
+        }
       } catch (e) {
         _tkProfile = false;   /* unknown: don't nag */
       }

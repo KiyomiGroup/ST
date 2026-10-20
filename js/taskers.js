@@ -143,6 +143,18 @@ async function loadServices() {
         specialties:   s.specialties, availability_status: s.availability_status, verified: s.verified,
         is_live:       true,
       }));
+      /* Work samples (taskers.profile_details.portfolio) for the card's portfolio strip.
+         Optional: if the query fails the cards simply have no strip. */
+      try {
+        const ids = [...new Set(liveMapped.map(m => m.user_id).filter(Boolean))];
+        const { data: tk } = await window.supabase.from('taskers').select('user_id, profile_details').in('user_id', ids);
+        const byUser = {};
+        (tk || []).forEach(r => {
+          const d = (r.profile_details && typeof r.profile_details === 'object') ? r.profile_details : {};
+          if (Array.isArray(d.portfolio)) byUser[String(r.user_id)] = d.portfolio;
+        });
+        liveMapped.forEach(m => { m.portfolio = byUser[m.user_id] || []; });
+      } catch (_pe) { /* portfolio is optional */ }
       /* Append dummies — mark them so Book button is hidden */
       ALL = [...liveMapped.map(normalizeServiceCard), ...DUMMY_SERVICES.map(normalizeServiceCard)];
       console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);
@@ -258,59 +270,13 @@ function render(page = 1) {
   if (loadMore) loadMore.style.display = slice.length < all.length ? 'block' : 'none';
 }
 
-const SPECIALTY_TAG_LIMIT = 2;
-const AVAILABILITY_LABEL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
 
 function buildCard(s) {
-  const safeName    = escapeHtml(s.provider_name || 'Provider');
-  const safeService = escapeHtml(s.service_name || '');
-  const safeLoc      = escapeHtml(s.location || 'Lagos');
-  const safeDesc     = escapeHtml((s.description || '').slice(0, 100)) + ((s.description||'').length > 100 ? '&hellip;' : '');
-  const safePhoto    = escapeHtml(s.photo || '');
-  const safeId        = escapeHtml(s.id || '');
-  const safeUserId    = escapeHtml(s.user_id || '');
-  const initials    = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-  const avIdx       = (['s1','s2','s3','s4','s5','s6'].indexOf(s.id) + 1) || ((s.id.charCodeAt(0) % 6) + 1);
-  const avClass     = `av-${avIdx}`;
-
-  const profileUrl = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
-
-  const avatar = safePhoto
-    ? `<img src="${safePhoto}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.textContent='${initials}'" />`
-    : initials;
-
-  const TAG_COLORS = ['spg-tag-c1', 'spg-tag-c2', 'spg-tag-c3', 'spg-tag-c4'];
-  const specialtyTags = (s.specialties || []).slice(0, SPECIALTY_TAG_LIMIT)
-    .map((sp, i) => `<span class="spg-tag ${TAG_COLORS[i % TAG_COLORS.length]}">${escapeHtml(sp)}</span>`).join('');
-
-  /* Rating/verification badge row (like Figma's "Verified Pro"/"Top Rated"/"Elite Tasker") */
-  const ratingBadge = s.verified
-    ? '<span class="spg-tag spg-tag-verified">Verified Pro</span>'
-    : (s.rating >= 4.8 ? '<span class="spg-tag" style="background:#FEF3C7;color:#92400E;">Top Rated</span>' : '');
-
-  return `<div class="spg-card fade-up" id="svc-${safeId}" style="padding:20px;">
-    <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:10px;">
-      <div class="tasker-avatar ${avClass}" style="overflow:hidden; flex-shrink:0;">${avatar}</div>
-      <div style="min-width:0; flex-grow:1;">
-        <div class="spg-card-title">${safeName}</div>
-        <div class="spg-card-sub" style="margin-bottom:0;">${safeService} &middot; ${safeLoc}</div>
-      </div>
-      <button class="spg-card-fav" style="position:static;" aria-label="Save tasker" onclick="this.classList.toggle('active');this.style.color=this.classList.contains('active')?'var(--red)':''">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-      </button>
-    </div>
-    <div class="spg-card-stars" style="margin-bottom:8px;">★ <span>${s.rating.toFixed(1)}</span> <span style="color:var(--text-muted);">(${s.reviews||0} reviews)</span></div>
-    <div class="spg-card-tags">
-      ${ratingBadge}
-      <span class="spg-tag spg-tag-flexible">${AVAILABILITY_LABEL[s.availability_status] || 'Available this week'}</span>
-      ${specialtyTags}
-    </div>
-    ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
-    <div class="spg-card-footer">
-      <div class="spg-card-price">₦${Number(s.price).toLocaleString()}<span> ${s.rate_unit || '/hour'}</span></div>
-      <a href="${profileUrl}" class="btn btn-primary btn-sm" style="text-decoration:none;">Book Tasker</a>
-    </div>
-  </div>`;
+  const safeId     = escapeHtml(s.id || '');
+  const safeUserId = escapeHtml(s.user_id || '');
+  const href = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
+  /* Card markup lives in js/ui.js (stTaskerCard). */
+  return stTaskerCard({ ...s, href });
 }
 
 /* ── Wiring ──────────────────────────────────────────────────── */

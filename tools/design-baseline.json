@@ -1,11 +1,11 @@
 {
   "components/navbar.html": {
-    "inline": 15
+    "inline": 7
   },
   "css/styles.css": {
-    "hex": 100,
-    "rgb": 109,
-    "important": 88
+    "hex": 87,
+    "rgb": 101,
+    "important": 77
   },
   "css/subscription.css": {
     "hex": 1,
@@ -17,16 +17,16 @@
     "rgb": 6
   },
   "dashboard-customer.html": {
-    "hex": 128,
-    "rgb": 20,
-    "inline": 243,
-    "important": 13
+    "hex": 53,
+    "rgb": 5,
+    "inline": 70,
+    "important": 1
   },
   "dashboard-tasker.html": {
-    "hex": 196,
-    "rgb": 24,
-    "inline": 328,
-    "important": 13
+    "hex": 115,
+    "rgb": 11,
+    "inline": 168,
+    "important": 1
   },
   "explore-tasks.html": {
     "hex": 5,
@@ -39,16 +39,14 @@
   },
   "find-tasks.html": {
     "hex": 1,
-    "inline": 22
+    "inline": 20
   },
   "home-feed.html": {
-    "hex": 12,
-    "rgb": 14,
-    "inline": 64
+    "hex": 6
   },
   "index.html": {
     "rgb": 5,
-    "inline": 41
+    "inline": 38
   },
   "js/future-features.js": {
     "hex": 1
@@ -63,8 +61,7 @@
     "inline": 5
   },
   "js/taskers.js": {
-    "hex": 2,
-    "inline": 12
+    "inline": 1
   },
   "local-taskers.html": {
     "inline": 30
@@ -73,23 +70,20 @@
     "hex": 8
   },
   "messages.html": {
-    "hex": 55,
-    "rgb": 6,
-    "inline": 27,
-    "important": 1
+    "hex": 1,
+    "inline": 3
   },
   "onboarding-customer.html": {
     "hex": 1,
     "inline": 13
   },
   "onboarding-tasker.html": {
-    "hex": 10,
+    "hex": 8,
     "inline": 1
   },
   "post-service.html": {
-    "hex": 6,
-    "rgb": 2,
-    "inline": 32
+    "hex": 2,
+    "inline": 5
   },
   "post-task.html": {
     "hex": 4,
@@ -99,18 +93,13 @@
     "inline": 2
   },
   "signup.html": {
-    "hex": 20,
+    "hex": 16,
     "inline": 3
   },
   "subscription.html": {
     "hex": 3,
     "rgb": 8,
     "inline": 21
-  },
-  "tasker-profile.html": {
-    "hex": 45,
-    "rgb": 14,
-    "inline": 88
   },
   "terms.html": {
     "inline": 2

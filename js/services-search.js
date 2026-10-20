@@ -69,6 +69,10 @@ function svcNormalize(row, user) {
     availability: row.availability_status || 'available_this_week',
     created_at: row.created_at || null,
     provider: (user && (user.business_name || user.name)) || 'Provider',
+    rating: Number(row.rating) || 0,
+    reviews_count: Number(row.reviews_count) || 0,
+    turnaround: row.turnaround || '',
+    perk: row.perk || '',
   };
 }
 
@@ -197,44 +201,16 @@ function svcRender(page = 1) {
 }
 
 function svcBuildCard(s) {
-  const cat   = svcCategoryMeta(s.category);
-  const name  = escapeHtml(s.service_name);
-  const prov  = escapeHtml(s.provider);
-  const loc   = escapeHtml(s.location || 'Location not set');
-  const desc  = escapeHtml(s.description.slice(0, 100)) + (s.description.length > 100 ? '&hellip;' : '');
-  const href  = s.user_id ? `tasker-profile.html?id=${encodeURIComponent(s.user_id)}` : 'find-services.html';
-
-  const media = s.photo
-    ? `<img src="${escapeHtml(s.photo)}" alt="${name}" loading="lazy" data-emoji="${cat.emoji}" />`
-    : `<div class="spg-card-badge spg-card-badge--static">${cat.emoji}</div>`;
-
-  const TAG_COLORS = ['spg-tag-c1', 'spg-tag-c3', 'spg-tag-c4'];
-  const specTags = s.specialties.slice(0, 2)
-    .map((sp, i) => `<span class="spg-tag ${TAG_COLORS[i % TAG_COLORS.length]}">${escapeHtml(sp)}</span>`).join('');
-
-  const price = s.price > 0
-    ? `₦${s.price.toLocaleString()}<span> /${s.unit}</span>`
-    : '<span class="svc-card-price-note">Ask for a quote</span>';
-
-  return `<article class="spg-card svc-card fade-up" data-href="${href}">
-    <div class="spg-card-media">
-      ${media}
-      <span class="svc-card-cat">${escapeHtml(cat.label)}</span>
-    </div>
-    <div class="spg-card-body">
-      <div class="spg-card-title">${name}</div>
-      <div class="spg-card-sub"><span class="spg-card-cat-icon">${cat.emoji}</span>${prov} &middot; ${loc}</div>
-      <div class="spg-card-tags">
-        <span class="spg-tag spg-tag-flexible">${SVC_AVAIL_LABEL[s.availability] || 'Available this week'}</span>
-        ${specTags}
-      </div>
-      ${desc ? `<p class="spg-card-desc">${desc}</p>` : ''}
-      <div class="spg-card-footer">
-        <div class="spg-card-price">${price}</div>
-        <a href="${href}" class="btn btn-primary btn-sm">View Service</a>
-      </div>
-    </div>
-  </article>`;
+  const cat  = svcCategoryMeta(s.category);
+  const desc = s.description.length > 100 ? s.description.slice(0, 100) + '…' : s.description;
+  const href = s.user_id ? `tasker-profile.html?id=${encodeURIComponent(s.user_id)}` : 'find-services.html';
+  /* Card markup lives in js/ui.js (stServiceCard). Rating, turnaround and perk only show when the row has them. */
+  return stServiceCard({
+    service_name: s.service_name, categoryLabel: cat.label, emoji: cat.emoji,
+    description: desc, photo: s.photo, provider: s.provider, location: s.location,
+    price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
+    turnaround: s.turnaround, perk: s.perk, href,
+  });
 }
 
 /* ── Wiring ──────────────────────────────────────────────────── */
@@ -328,7 +304,7 @@ function svcWire() {
       const img = e.target;
       if (!img || img.tagName !== 'IMG') return;
       const badge = document.createElement('div');
-      badge.className = 'spg-card-badge spg-card-badge--static';
+      badge.className = 'st-card-media-fallback';
       badge.textContent = img.dataset.emoji || '🛠️';
       img.replaceWith(badge);
     }, true);

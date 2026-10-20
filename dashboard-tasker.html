@@ -286,24 +286,27 @@ function openMessagesPanel() {
             <!-- My Page -->
                           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
 
-            <!-- Profile Completion Banner -->
-            <div id="profileCompleteBanner" style="display:none;flex-direction:column;gap:10px;padding:16px 20px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1px solid #bfdbfe;border-radius:var(--radius-lg);margin-bottom:20px;">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                <div style="flex:1;">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <strong style="font-size:var(--text-sm);color:#1e3a5f;">Complete your profile — boost your chances of getting hired</strong>
-                  </div>
-                  <p style="font-size:var(--text-xs);color:#4A4A4A;margin-bottom:8px;">Customers check profiles before hiring. A complete profile gets <strong>3x more bookings</strong>.</p>
-                  <div style="font-size:var(--text-xs);color:#6b7280;" id="profileMissingItems"></div>
-                  <div style="margin-top:8px;background:#dbeafe;border-radius:999px;height:6px;overflow:hidden;max-width:220px;">
-                    <div id="profileCompleteBar" style="height:100%;background:#2563eb;border-radius:999px;transition:width 0.4s;width:0%"></div>
-                  </div>
-                  <div style="font-size:var(--text-xs);color:#2563eb;font-weight:700;margin-top:4px;"><span id="profileCompletePct">0</span>% complete</div>
-                </div>
-                <button onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();" class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0;">Complete Profile</button>
+            <!-- Profile Completion Banner (component: .st-pp, css/styles.css) -->
+            <aside class="st-pp mb-24" id="profileCompleteBanner" aria-labelledby="profileCompleteTitle" hidden>
+              <span class="st-pp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+              <div class="st-pp-main">
+                <h3 class="st-pp-title" id="profileCompleteTitle">
+                  <span class="st-pp-long">Complete your profile — boost your chances of getting hired</span>
+                  <span class="st-pp-short">Complete profile (<span class="js-pp-pct">0</span>%)</span>
+                  <span class="st-pp-tip">TIP</span>
+                </h3>
+                <p class="st-pp-desc">
+                  <span class="st-pp-long">Customers check detailed profiles before accepting offers. Taskers with full credential verification and work samples receive up to <strong>3x more bookings</strong>.</span>
+                  <span class="st-pp-short">Get 3x more bookings from clients</span>
+                </p>
               </div>
-            </div>
+              <div class="st-pp-progress">
+                <div class="st-pp-track" id="profileCompleteTrack" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="st-pp-fill" id="profileCompleteBar"></div></div>
+                <span class="st-pp-pct"><span id="profileCompletePct">0</span>% Complete</span>
+                <span class="st-pp-next" id="profileMissingItems"></span>
+              </div>
+              <button type="button" class="st-pp-cta" onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></button>
+            </aside>
             <div id="panel-mypage" class="dashboard-panel active">
               <!-- ═══ OVERVIEW — mobile layout (shown at 768px and below; js/tasker-overview.js fills it) ═══ -->
               <div class="tom" id="tom">
@@ -1184,20 +1187,21 @@ function openMessagesPanel() {
 
       var profileBanner  = document.getElementById('profileCompleteBanner');
       var profileBar     = document.getElementById('profileCompleteBar');
+      var profileTrack   = document.getElementById('profileCompleteTrack');
       var profilePct     = document.getElementById('profileCompletePct');
       var profileMissing = document.getElementById('profileMissingItems');
 
       if (completionPct >= 100) {
-        if (profileBanner) profileBanner.style.display = 'none';
+        if (profileBanner) profileBanner.hidden = true;
       } else {
-        if (profileBanner) profileBanner.style.display = 'flex';
-        if (profileBar)    profileBar.style.width = completionPct + '%';
-        if (profilePct)    profilePct.textContent = completionPct + '%';
-        if (profileMissing && missing.length) {
-          profileMissing.innerHTML = '<strong>Still needed:</strong> ' + missing.map(function(m){
-            return '<span style="display:inline-block;padding:1px 8px;background:rgba(37,99,235,0.1);border-radius:99px;font-size:var(--text-xs);margin:2px;">'+m+'</span>';
-          }).join('');
+        if (profileBanner) {
+          profileBanner.hidden = false;
+          profileBanner.style.setProperty('--pp-value', completionPct + '%');
+          profileBanner.querySelectorAll('.js-pp-pct').forEach(function(n){ n.textContent = completionPct; });
         }
+        if (profileTrack) profileTrack.setAttribute('aria-valuenow', completionPct);
+        if (profilePct)   profilePct.textContent = completionPct;
+        if (profileMissing) profileMissing.textContent = missing.length ? '• Next: add your ' + missing[0] : '';
       }
     }
     window.checkProfileCompletion = checkProfileCompletion;
@@ -2281,20 +2285,10 @@ function openMessagesPanel() {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ── Toast ── */
+  /* ── Toast ── shared pill toast from js/ui.js (window.stToast) */
   function showToast(msg, type) {
-    var c = document.getElementById('msgToastContainer');
-    if (!c) {
-      c = document.createElement('div');
-      c.id = 'msgToastContainer';
-      c.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;';
-      document.body.appendChild(c);
-    }
-    var t = document.createElement('div');
-    t.style.cssText = 'background:'+(type==='error'?'#dc2626':'#1e293b')+';color:#fff;padding:10px 18px;border-radius:9999px;font-size:var(--text-sm);font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);opacity:1;transition:opacity 0.3s;max-width:340px;text-align:center;';
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(function() { t.style.opacity='0'; setTimeout(function(){ t.remove(); },350); }, 3500);
+    var o = (type && typeof type === 'object') ? type : (typeof type === 'number' ? { duration: type } : (type ? { type: type } : {}));
+    return window.stToast(msg, o);
   }
 
   /* ── Nav badge ── */

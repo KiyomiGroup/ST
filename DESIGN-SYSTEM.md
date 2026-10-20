@@ -227,6 +227,54 @@ Classes (`css/styles.css`, "TASKER PAGE HEROES"):
 
 The chips and bar are the page's own tabs and toolbar, restyled. The page JS keeps its ids.
 
+### 4.7 Cards v2: task, service, tasker
+
+Built from the card references. Markup comes from three builders in `js/ui.js`; styles are in `css/tasks.css` ("CARDS v2"). Do not hand-write card HTML in a page.
+
+| Builder | Class | Used by | Shows |
+|---|---|---|---|
+| `stTaskCard(task)` | `.st-card--task` | `find-tasks.html` | Urgency + category chips, save, client photo (or category emoji), title, description, location, distance, In-Person/Remote, **Client Budget**, offers, **Make an Offer** |
+| `stServiceCard(service)` | `.st-card--service` | `js/services-search.js` | Category chip, turnaround chip, perk line, rating, title, description, **Starting From** price, **Book Service** |
+| `stTaskerCard(tasker)` | `.st-card--tasker` | `js/taskers.js` | Availability, rating, name + verified tick, role, location, avatar, skills (+N), portfolio strip, price pill, **View Profile** |
+
+Optional fields (rating, distance, offers, turnaround, perk, portfolio) render **only when the data has them**. A card never shows an invented number. Shared parts: `.st-chip` (`--urgent`, `--soon`, `--category`, `--available`, `--glass`, `--dark`, `--skill`, `--mode`), `.st-card-save`, `.st-card-media`, `.st-card-foot`, `.st-card-cta`, `.st-rating`. Tokens: `--card-*`, `--color-card-*`, `--radius-card`.
+
+The static marketing cards (`.lt-tasker-card` on the homepage and Local Taskers) and the owner-side `.task-row-card` rows on the dashboards are not part of v2.
+
+### 4.8 Toasts
+
+`showToast(message, options)` in `js/ui.js`. A bare `showToast('text')` still works: the tone is guessed from the wording.
+
+| Option | Values |
+|---|---|
+| `type` | `success`, `info`, `warning`, `error` (shortcuts: `showToast.error(msg)`) |
+| `title` | bold first line; `message` becomes the small second line |
+| `tonal` | `true` for the pastel pill (`.st-toast--tonal`) |
+| `duration` | ms. Default 4500, errors 6000 |
+
+Max three on screen, pauses on hover/focus, Esc closes the newest, errors use `role="alert"`, and the close button has a 44px tap zone. Pages that define their own `showToast` (both dashboards) delegate to `window.stToast`. The Messages page keeps its own toast (`JRThread.toast`) and is unchanged.
+
+### 4.9 Notification boxes
+
+`.st-notice` for dashboards, checkout and compliance states. Tone modifiers: none (live, white), `--success`, `--warning`, `--danger`, `--info`. Parts: `.st-notice-icon`, `-title`, `-badge`, `-meta`, `-body`, `-points`, `-actions`. Filled action button: `.btn .btn-tone`. Live examples are on `design-system.html`.
+
+### 4.10 Profile prompt ("Complete your profile")
+
+`.st-pp`: one component, two skins. Under 768px it is the dark compact card ("Complete profile (75%)", **Boost Now**); from 768px up it is the light banner with the TIP badge, "75% Complete", the next step and **Complete Profile**. Set the fill with `el.style.setProperty('--pp-value', '75%')`, toggle with the `hidden` attribute. Used on `dashboard-tasker.html` (`#profileCompleteBanner`) and `home-feed.html` (`#hfProfileCard`).
+
+### 4.11 New tokens (added for 4.7 to 4.10)
+
+All in `css/tokens.css`.
+
+| Group | Tokens |
+|---|---|
+| Status tones | `--tone-{success,info,warning,danger}-{bg,border,ink,icon}`. **Decision needed:** the success tone uses `--color-primary` for its icon; the blue `--tone-info-*` is new to the system. |
+| Toast | `--shadow-toast`, `--shadow-notice`, `--toast-max-width`, `--toast-badge-size`, `--toast-close-size`, `--toast-hit-size` |
+| Cards | `--card-surface`, `--card-surface-tint`, `--card-chip-glass`, `--card-chip-dark`, `--card-cta-bg(-hover)`, `--card-skill-bg`, `--card-media-ratio`, `--card-avatar-size`, `--card-thumb-size`, `--shadow-card-hover` |
+| Profile prompt | `--pp-dark-*`, `--pp-accent(-hover/-ink)`, `--pp-light-*`, `--pp-fill`, `--pp-icon-size`, `--pp-track-height`, `--pp-track-width` (most alias existing greens) |
+
+---
+
 ## 5. Logged-out desktop navigation (implemented)
 
 Component: `components/navbar.html`. Styles: the "LOGGED-OUT DESKTOP NAV" block at the end of `css/styles.css`. Applies at 1044px and wider, to `body:not(.st-logged-in)` only.

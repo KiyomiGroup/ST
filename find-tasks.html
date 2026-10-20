@@ -9,8 +9,8 @@
   <meta name="description" content="Browse open tasks posted by customers and apply to earn with your skills on StreetTasker." />
   <title>Find Tasks Near You — StreetTasker</title>
   <link rel="canonical" href="https://streettasker.com/find-tasks.html" />
-  <link rel="stylesheet" href="css/styles.css?v=21" />
-  <link rel="stylesheet" href="css/tasks.css" />
+  <link rel="stylesheet" href="css/styles.css?v=22" />
+  <link rel="stylesheet" href="css/tasks.css?v=22" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 </head>
 <body class="spg-page">
@@ -289,65 +289,17 @@
       grid.innerHTML = f.map(buildTaskCard).join('');
     }
 
-    const CATEGORY_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechanic:'🔧', plumber:'🚰', beauty:'💄', other:'🛠️' };
-    const URGENCY_TAG = {
-      immediate: '<span class="spg-tag spg-tag-urgent">Urgent</span>',
-      flexible:  '<span class="spg-tag spg-tag-flexible">Flexible</span>',
-      scheduled: '<span class="spg-tag spg-tag-scheduled">Scheduled</span>',
-    };
-    const TYPE_LABEL = { full_time:'Full time', part_time:'Part time', one_off:'One-off', remote:'Remote', in_person:'In person' };
-
-    function buildTaskCard(t) {
-      const dead  = t.deadline ? new Date(t.deadline).toLocaleDateString('en-NG', {day:'numeric',month:'short'}) : 'Open-ended';
-      const cat   = t.category || 'other';
-      const emoji = CATEGORY_EMOJI[cat] || '🛠️';
-      const desc  = t.description || '';
-      const since = tAgo(t.created_at);
-      const photo = (t.photo_urls && t.photo_urls[0]) || null;
-      const type  = t.task_type || 'one_off';
-      const urg   = t.urgency || 'flexible';
-      const safeTitle = escapeHtml(t.title || 'Untitled Task');
-      const safeDesc  = escapeHtml(desc.slice(0,90)) + (desc.length > 90 ? '&hellip;' : '');
-
-      const mediaHtml = photo
-        ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.outerHTML='<div class=&quot;spg-card-badge&quot; style=&quot;position:static;margin:55px auto 0;&quot;>${emoji}</div>'" />`
-        : `<div class="spg-card-badge" style="position:static;margin:55px auto 0;">${emoji}</div>`;
-      const posterName = escapeHtml((t.users && (t.users.business_name || t.users.name)) || 'StreetTasker user');
-
-      return `<div class="spg-card fade-up" style="cursor:pointer;" onclick="if(!event.target.closest('.spg-card-fav'))openApply('${t.id}','${safeTitle.replace(/'/g,"\\'")}','${safeDesc.replace(/'/g,"\\'")}')">
-        <div class="spg-card-media">
-          ${mediaHtml}
-          <button class="spg-card-fav" aria-label="Save task" onclick="this.classList.toggle('active');this.style.color=this.classList.contains('active')?'var(--red)':''">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="${'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-          </button>
-        </div>
-        <div class="spg-card-body">
-          <div class="spg-card-title">${safeTitle}</div>
-          <div class="spg-card-sub">
-            <span class="spg-card-cat-icon">${emoji}</span>
-            ${(t.customer_id || t.user_id) ? `<a class="spg-card-poster" href="client-profile.html?id=${encodeURIComponent(t.customer_id || t.user_id)}" onclick="event.stopPropagation()">${posterName}</a>` : posterName} &middot; ${escapeHtml(t.location || 'Location TBD')}
-          </div>
-          <div class="spg-card-tags">
-            <span class="spg-tag spg-tag-type">${TYPE_LABEL[type] || 'One-off'}</span>
-            ${URGENCY_TAG[urg] || ''}
-            <span class="spg-tag spg-tag-specialty">Due ${dead}</span>
-          </div>
-          ${safeDesc ? `<p class="spg-card-desc">${safeDesc}</p>` : ''}
-          <div class="spg-card-footer">
-            <div class="spg-card-price">₦${Number(t.budget||0).toLocaleString()}<span> budget</span></div>
-            <div class="spg-card-posted">Posted ${since}</div>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    function tAgo(iso) {
-      if (!iso) return '—';
-      const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
-      if (h < 1) return 'just now';
-      if (h < 24) return h + 'h ago';
-      return Math.floor(h/24) + 'd ago';
-    }
+    /* Card markup lives in js/ui.js (stTaskCard). One delegated handler opens the apply modal. */
+    function buildTaskCard(t) { return stTaskCard(t); }
+    document.getElementById('tasksGrid').addEventListener('click', function (ev) {
+      if (ev.target.closest('.st-card-save')) return;
+      const card = ev.target.closest('.st-card--task');
+      if (!card) return;
+      const t = ALL_TASKS.find(x => String(x.id) === card.dataset.taskId);
+      if (!t) return;
+      const d = (t.description || '').slice(0, 90);
+      openApply(t.id, t.title || 'Untitled Task', d);
+    });
 
     function openApply(id, title, desc) {
       ACTIVE_TASK_ID = id;
