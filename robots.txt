@@ -9,6 +9,11 @@ Allow: /explore-tasks.html
 Allow: /signup.html
 Allow: /login.html
 Allow: /gift-cards.html
+Allow: /find-services.html
+Allow: /find-tasks.html
+Allow: /local-taskers.html
+Allow: /privacy.html
+Allow: /terms.html
 Allow: /404.html
 
 # Private dashboard pages — no need to index
