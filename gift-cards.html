@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Give the gift of free time. StreetTasker gift cards pay for trusted local help: cleaning, repairs, moving, furniture assembly and more. Sent by email or WhatsApp." />
+  <script>
+  /* Logged-in phones: tint the browser bar the same green as the nav and hero.
+     The colour is read from the site token --hero-bg-mobile once the styles have loaded. */
+  window.addEventListener('load', function () {
+    try {
+      if (!localStorage.getItem('st_session')) return;
+      var c = getComputedStyle(document.documentElement).getPropertyValue('--hero-bg-mobile').trim();
+      if (!c) return;
+      var m = document.createElement('meta'); m.name = 'theme-color'; m.content = c; document.head.appendChild(m);
+    } catch (e) {}
+  });
+  </script>
   <title>StreetTasker Gift Cards — Give the Gift of Free Time</title>
   <link rel="canonical" href="https://streettasker.com/gift-cards.html" />
   <meta property="og:type" content="website" />
@@ -18,7 +30,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/gift-cards.css" />
 </head>
-<body class="page-gift-cards st-no-bottom-nav">
+<body class="page-gift-cards st-no-bottom-nav pg-hero-nav">
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: every icon on this page is a <use> of one of these -->

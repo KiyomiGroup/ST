@@ -142,6 +142,11 @@
 
   .gc-page { padding-top: calc(var(--nav-height) + var(--space-4)); }
   .gc-hero { margin: 0; border-radius: 0 0 var(--radius-gc-hero) var(--radius-gc-hero); }
+  /* Logged in: the top nav is the same green as the hero (shared rule, body.pg-hero-nav in styles.css),
+     so the hero sits flush under it and uses one flat colour, with no gap and no seam. */
+  body.st-logged-in .gc-page { padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px)); }
+  body.st-logged-in .gc-hero { background: var(--gc-hero-bg); }
+  body.st-logged-in .gc-hero-inner { padding-top: var(--space-5); }
   .gc-hero-inner { display: block; padding: var(--space-4) var(--space-4) var(--space-5); }
   .gc-voucher { display: none; }
 
