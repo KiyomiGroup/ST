@@ -1007,6 +1007,12 @@
     updateHeaderButton();
   }
 
+  /* The schedule is read once per thread; call this after a reschedule was accepted so the new time shows */
+  function refreshExtra() {
+    if (S.ctx && S.ctx.thread) delete S.extra[S.ctx.thread.id];
+    update();
+  }
+
   function updateHeaderButton() {
     var b = $('chatHeadDetails');
     if (b) b.hidden = !S.ctx;
@@ -1141,6 +1147,6 @@
     paint(true);
   }
 
-  window.JRDetails = { init: init, update: update, openSheet: openSheet, closeSheet: closeSheet };
+  window.JRDetails = { init: init, update: update, refreshExtra: refreshExtra, openSheet: openSheet, closeSheet: closeSheet };
 
 })();

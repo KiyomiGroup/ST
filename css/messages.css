@@ -786,6 +786,9 @@ body.msg-page {
   white-space: pre-wrap;
   color: var(--color-text);
 }
+.jr-req-when { margin-top: var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+.jr-req-subject { margin-top: var(--space-2); font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-req-amount { margin-top: var(--space-2); font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: var(--color-forest-800); }
 .jr-req-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .jr-req-btn {
   flex: 1;

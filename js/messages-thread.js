@@ -633,6 +633,35 @@
     return K[kind] || { title: 'Request', byOther: 'sent you a request.', byMe: 'You sent a request.' };
   }
 
+  /* Decision cards: the other person accepts or declines, and the SERVER does the work.
+     price_proposal -> price_respond (sets the agreed price); reschedule -> job_reschedule_respond (moves the booking time). */
+  var DECISION = {
+    price_proposal: { fn: 'price_respond', arg: 'p_request', yes: 'Accept price', no: 'Decline',
+                      done: 'Agreed', okMsg: 'Price agreed. The tasker can now request payment.', noMsg: 'Price declined.' },
+    reschedule:     { fn: 'job_reschedule_respond', arg: 'p_request', yes: 'Accept new time', no: 'Decline',
+                      done: 'Accepted', okMsg: 'New time accepted. The job has been rescheduled.', noMsg: 'Reschedule declined.' }
+  };
+  async function respondToDecision(id, accept) {
+    var req = S.requests[id];
+    var d = req && DECISION[req.kind];
+    if (!d) return;
+    try {
+      var args = {}; args[d.arg] = id; args.p_accept = !!accept;
+      var r = await window.supabase.rpc(d.fn, args);
+      if (r.error) throw r.error;
+      S.requests[id] = Object.assign({}, req, { status: accept ? 'fulfilled' : 'declined' });
+      repaintRequest(id);
+      toast(accept ? d.okMsg : d.noMsg);
+      if (accept && req.kind === 'reschedule' && window.JRDetails && window.JRDetails.refreshExtra) window.JRDetails.refreshExtra();
+      if (window.JRRequests && window.JRRequests.update) window.JRRequests.update();
+      if (window.JRDetails && window.JRDetails.update) window.JRDetails.update();
+      if (window.JRRoom && window.JRRoom.refresh) window.JRRoom.refresh();
+    } catch (e) {
+      toast((e && e.message) || 'Could not answer the price proposal', 'error');
+      repaintRequest(id);
+    }
+  }
+
   async function respondToRequest(id, status) {
     var req = S.requests[id];
     if (!req) return;
@@ -662,10 +691,23 @@
     var icon = el('div', 'jr-req-icon'); icon.innerHTML = ICON_CLIPBOARD;
     head.appendChild(icon);
     head.appendChild(el('span', 'jr-req-title', meta.title));
-    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, REQ_STATUS_LABEL[status] || status));
+    var isPrice = kind === 'price_proposal';
+    var decision = DECISION[kind] || null;
+    var pillText = (decision && status === 'fulfilled') ? decision.done : (REQ_STATUS_LABEL[status] || status);
+    if (req) head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + status, pillText));
     card.appendChild(head);
 
     card.appendChild(el('div', 'jr-req-text', isMine ? meta.byMe : meta.byOther));
+    if (kind === 'custom' && req && req.payload && req.payload.title) card.appendChild(el('div', 'jr-req-subject', String(req.payload.title)));
+    if (isPrice && req && req.payload && Number(req.payload.amount) > 0) {
+      card.appendChild(el('div', 'jr-req-amount', naira(Number(req.payload.amount))));
+    }
+    if (kind === 'reschedule' && req && req.payload && req.payload.when) {
+      var wd = new Date(req.payload.when);
+      if (!isNaN(wd.getTime())) {
+        card.appendChild(el('div', 'jr-req-when', 'New time: ' + wd.toLocaleString('en-NG', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })));
+      }
+    }
     if (req && req.note) {
       var note = el('div', 'jr-req-note', req.note);
       card.appendChild(note);
@@ -673,7 +715,15 @@
 
     if (req && status === 'pending') {
       var actions = el('div', 'jr-req-actions');
-      if (req.requested_by !== S.user.id) {
+      if (decision && req.requested_by !== S.user.id) {
+        /* the other person answers: Accept or Decline, nothing else */
+        var acc = el('button', 'jr-req-btn jr-req-btn--primary', decision.yes); acc.type = 'button';
+        var dec = el('button', 'jr-req-btn', decision.no); dec.type = 'button';
+        function lock() { acc.disabled = true; dec.disabled = true; }
+        acc.addEventListener('click', function () { lock(); respondToDecision(id, true); });
+        dec.addEventListener('click', function () { lock(); respondToDecision(id, false); });
+        actions.appendChild(acc); actions.appendChild(dec);
+      } else if (req.requested_by !== S.user.id) {
         /* Stage 8: the customer asked for an invoice, the tasker answers by sending one */
         if (kind === 'invoice_request' && S.role === 'tasker') {
           var inv = el('button', 'jr-req-btn jr-req-btn--primary', 'Send invoice'); inv.type = 'button';
@@ -754,8 +804,12 @@
 
   function onRequestChange(row) {
     if (!row || !row.id) return;
+    var was = S.requests[row.id] && S.requests[row.id].status;
     S.requests[row.id] = Object.assign({}, S.requests[row.id] || {}, row);
     repaintRequest(row.id);
+    if (S.requests[row.id].kind === 'reschedule' && was === 'pending' && row.status === 'fulfilled' && window.JRDetails && window.JRDetails.refreshExtra) {
+      window.JRDetails.refreshExtra();
+    }
   }
 
   function pendingKinds() {
@@ -866,6 +920,11 @@
       .eq('thread_id', threadId)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE);
+  }
+
+  /* Reload the open conversation (cards the server wrote for me, e.g. after an RPC). messages-work.js / messages-forms.js call this. */
+  function reload() {
+    return S.thread ? open({ thread: S.thread, user: S.user, role: S.role, onChange: S.onChange }) : Promise.resolve();
   }
 
   async function open(ctx) {
@@ -1392,6 +1451,7 @@
   window.JRThread = {
     bindComposer: bindComposer,
     open: open,
+    reload: reload,
     append: append,
     onRealtimeInsert: onRealtimeInsert,
     send: send,
@@ -1409,7 +1469,11 @@
     sendProof: sendProof,
     signedUrl: signedUrl,
     getMoney: getMoney,
-    moneyRows: moneyRows
+    moneyRows: moneyRows,
+    /* Stage 15: messages-work.js and messages-forms.js call reload() after an action; it was never exported, so they silently did nothing */
+    reload: function () {
+      return S.thread ? open({ thread: S.thread, user: S.user, role: S.role, onChange: S.onChange }) : Promise.resolve();
+    }
   };
 
 })();

@@ -38,7 +38,9 @@
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = {}; } }
     var tasker = role() === 'tasker';
     if (d.url) return d.url;
-    if (t.indexOf('message') > -1 || t.indexOf('payment_request') > -1) return 'messages.html';
+    /* Stage 15: anything that belongs to a conversation opens THAT conversation (messages.html reads ?thread=) */
+    if (d.thread_id) return 'messages.html?thread=' + encodeURIComponent(d.thread_id);
+    if (t.indexOf('message') > -1 || t.indexOf('payment_request') > -1 || t.indexOf('job_update') > -1) return 'messages.html';
     if (t.indexOf('dispute') > -1) return 'messages.html';          /* Stage 12: problem-report updates (opened, review, decision, refund) */
     if (t.indexOf('application') > -1 || t.indexOf('apply') > -1) return tasker ? 'applications.html' : 'customer-applications.html';
     if (t.indexOf('booking') > -1) return tasker ? 'bookings.html' : 'customer-bookings.html';

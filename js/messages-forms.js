@@ -1,21 +1,14 @@
 /* ============================================================
-   STREETTASKER — messages-forms.js   (Job Room, Stage 3)
-   Finished request forms that are NOT connected to the server yet.
-
-   Each form is complete (fields, checks, wording) and sits in the Request sheet under its
-   spec section 39 group with a "Not connected yet" tag.
-   Stage 8 connected Send invoice, Request invoice and Request receipt (messages-requests.js), so
-   their previews were removed from this file. Pressing the submit button checks the
-   form, then says plainly that nothing was sent. No row is written, no message is posted, no
-   money moves. Connecting a form later = replace its `send` function with the real call.
-
-   Forms here (spec section in brackets):
-     Tasker:   Custom request (7F), Request materials (7C),
-               Send work update, Submit proof, Reschedule (22), Cancel (28)
-     Customer: Reschedule (22), Cancel (28)
-   Forms that already work are NOT here: payment, full / remaining payment, transport, additional
-   cost, invoice, request invoice, request receipt and the receipt view (messages-requests.js),
-   pause, report an issue, release code (messages-work.js).
+   STREETTASKER — messages-forms.js   (Job Room, Stages 3 to 15)
+   The request forms of the Request sheet. As of Stage 15 EVERY form here is connected to the server:
+     Custom request    no amount: job_custom_request (card for the customer). With an amount: an "additional cost" payment request.
+     Request materials itemised payment request (kind 'materials')
+     Send work update  job_work_update (chat line + activity + notice)
+     Submit proof      private upload + chat message + Evidence (Stage 9)
+     Reschedule        job_reschedule_propose / job_reschedule_respond (Stage 14)
+     Cancel            job_cancel when nothing is paid; otherwise a report to support (open_job_dispute)
+   Payment, full / remaining payment, transport, additional cost, invoice, request invoice, request receipt and the
+   receipt view live in messages-requests.js; pause, report an issue and the release code in messages-work.js.
 
    Public API (window.JRForms):
      JRForms.init()      register the actions into the Request sheet (call once)
@@ -104,13 +97,6 @@
   function errBox() { var e = el('div', 'jr-sheet-error'); e.hidden = true; e.setAttribute('role', 'alert'); return e; }
   function doneBox() { var d = el('div', 'jr-sheet-done'); d.hidden = true; d.setAttribute('role', 'status'); return d; }
 
-  function previewNotice(body) {
-    var n = el('div', 'jr-sheet-preview');
-    n.appendChild(el('strong', null, 'Not connected yet. '));
-    n.appendChild(document.createTextNode('You can fill this in to see how it will work, but nothing is sent and nothing changes on this task.'));
-    body.appendChild(n);
-  }
-
   function radios(name, list) {
     var wrap = el('div', 'jr-radio-list');
     var state = { value: null };
@@ -135,18 +121,29 @@
     return true;
   }
 
-  /* Submit: check the form, then say plainly that nothing was sent.
-     check() returns an error message or null. */
-  function submitButton(text, check, err, done, extraClass) {
+  var KEEP = '__keep__';
+  function actionButton(text, run, err, extraClass) {
     var b = el('button', 'jr-sheet-send' + (extraClass ? ' ' + extraClass : ''), text); b.type = 'button';
-    b.addEventListener('click', function () {
-      err.hidden = true; done.hidden = true;
-      var msg = check();
-      if (msg) { err.textContent = msg; err.hidden = false; return; }
-      done.textContent = 'Form checked. Nothing was sent, because this request is not connected yet.';
-      done.hidden = false;
+    b.addEventListener('click', async function () {
+      err.hidden = true;
+      b.disabled = true; b.textContent = 'Please wait…';
+      var msg;
+      try { msg = await run(); } catch (e) { msg = (e && e.message) || 'Something went wrong. Please try again.'; }
+      if (msg === null || msg === undefined) { return; }          /* success: the caller closed the sheet */
+      if (msg !== KEEP) { err.textContent = msg; err.hidden = false; }
+      b.disabled = false; b.textContent = text;
     });
     return b;
+  }
+  function toast(m, t) { if (window.JRThread) window.JRThread.toast(m, t); }
+  /* put the new card on screen for the sender, refresh the rest */
+  async function afterSend(message) {
+    if (window.JRRequests) window.JRRequests.close();
+    if (message) toast(message);
+    try { if (window.JRThread && window.JRThread.reload) await window.JRThread.reload(); } catch (_e) {}
+    try { if (window.JRDetails) window.JRDetails.update(); } catch (_e2) {}
+    try { if (window.JRRoom) window.JRRoom.refresh(); } catch (_e3) {}
+    try { if (window.JRRequests) window.JRRequests.update(); } catch (_e4) {}
   }
 
   /* Line items (materials): [type] description, amount. Returns { node, items(), total(), error() } */
@@ -195,6 +192,10 @@
       node: node,
       total: total,
       texts: function () { return rows.map(function (r) { return r.desc.value.trim(); }); },
+      entries: function () {
+        return rows.map(function (r) { return { label: r.desc.value.trim(), amount: money(r.amount) }; })
+                   .filter(function (e) { return e.label && e.amount; });
+      },
       error: function () {
         var used = rows.filter(function (r) { return r.desc.value.trim() || money(r.amount); });
         if (!used.length) return 'Add at least one line.';
@@ -213,7 +214,6 @@
   /* ── forms ───────────────────────────────────────────────── */
   function formCustom(body) {
     body.appendChild(el('p', 'jr-sheet-lead', 'Use this for anything the other requests do not cover. If you add an amount, the customer can pay or decline it.'));
-    previewNotice(body);
     body.appendChild(label('jrFm_title', 'What is this request?'));
     var title = textInput('jrFm_title', 'e.g. Access to the water meter', 60);
     body.appendChild(title);
@@ -223,52 +223,73 @@
     body.appendChild(label('jrFm_amount', 'Amount (₦)', true));
     var amount = moneyInput('jrFm_amount', 'Leave empty if no payment is needed');
     body.appendChild(amount);
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Send custom request', function () {
-      if (title.value.trim().length < 3) return 'Please give the request a short title.';
-      if (details.value.trim().length < 5) return 'Please add some details for the customer.';
-      var J = window.JRMoney, a = money(amount);
+    var err = errBox();
+    body.appendChild(err);
+    body.appendChild(actionButton('Send custom request', async function () {
+      var c = ctx(), J = window.JRMoney, a = money(amount);
+      var t = title.value.trim(), d = details.value.trim();
+      if (t.length < 3) return 'Please give the request a short title.';
+      if (d.length < 5) return 'Please add some details for the customer.';
       if (amount.value && !a) return 'Enter a valid amount, or leave it empty.';
       if (a && J && a < J.MIN_AMOUNT) return 'Enter an amount of at least ' + naira(J.MIN_AMOUNT) + '.';
       if (a && J && a > J.MAX_AMOUNT) return 'That amount is too large. Check for a typing mistake.';
-      if (!contactOk(title.value, err) || !contactOk(details.value, err)) return err.textContent;
+      if (!contactOk(t, err) || !contactOk(d, err)) return err.textContent;
+      if (a) {
+        /* with an amount it is a payment request the customer can pay or decline: an "additional cost" with ONE line named after the request */
+        if (!J) return 'Payments are not available right now. Please refresh the page.';
+        var ok = await J.create({ kind: 'additional_cost', amount: a, reason: (t + ': ' + d).slice(0, 300), breakdown: [{ key: 'work', label: t, amount: a }] });
+        if (!ok) return KEEP;
+        if (window.JRRequests) window.JRRequests.close();
+        return null;
+      }
+      var r = await window.supabase.rpc('job_custom_request', { p_thread: c.thread.id, p_title: t, p_details: d });
+      if (r.error) return r.error.message || 'Could not send the request.';
+      await afterSend('Request sent to the customer');
       return null;
-    }, err, done));
+    }, err));
   }
 
   function formMaterials(body) {
     body.appendChild(el('p', 'jr-sheet-lead', 'List the materials you need to buy. The customer can pay or decline. The agreed price stays as it is; materials are shown separately.'));
-    previewNotice(body);
     body.appendChild(el('div', 'jr-sheet-label', 'Materials'));
     var lines = lineItems({ types: false, descPlaceholder: 'Item, e.g. 2 x 20mm elbow joint', addLabel: 'Add another item' });
     body.appendChild(lines.node);
     body.appendChild(label('jrFm_note', 'Note to the customer', true));
     var note = textarea('jrFm_note', 'e.g. Bought at the market. I will send the receipt.', 3);
     body.appendChild(note);
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Send materials request', function () {
+    var err = errBox();
+    body.appendChild(err);
+    body.appendChild(actionButton('Send materials request', async function () {
+      var J = window.JRMoney;
+      if (!J) return 'Payments are not available right now. Please refresh the page.';
       var e = lines.error(); if (e) return e;
       var texts = [note.value.trim()].concat(lines.texts());
       for (var i = 0; i < texts.length; i++) { if (!contactOk(texts[i], err)) return err.textContent; }
+      var items = lines.entries().map(function (l, i) { return { key: 'item' + (i + 1), label: l.label, amount: l.amount }; });
+      var total = items.reduce(function (a, l) { return a + l.amount; }, 0);
+      var ok = await J.create({ kind: 'materials', amount: total, reason: note.value.trim() || null, breakdown: items });
+      if (!ok) return KEEP;
+      if (window.JRRequests) window.JRRequests.close();
       return null;
-    }, err, done));
+    }, err));
   }
 
   function formWorkUpdate(body) {
     body.appendChild(el('p', 'jr-sheet-lead', 'Tell the customer how the job is going. They see it in the conversation.'));
-    previewNotice(body);
     body.appendChild(label('jrFm_note', 'Update'));
     var note = textarea('jrFm_note', 'e.g. Old pipe removed. New one goes in this afternoon.', 4);
     body.appendChild(note);
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Send update', function () {
-      if (note.value.trim().length < 3) return 'Please write a short update.';
-      if (!contactOk(note.value, err)) return err.textContent;
+    var err = errBox();
+    body.appendChild(err);
+    body.appendChild(actionButton('Send update', async function () {
+      var c = ctx(), text = note.value.trim();
+      if (text.length < 3) return 'Please write a short update.';
+      if (!contactOk(text, err)) return err.textContent;
+      var r = await window.supabase.rpc('job_work_update', { p_thread: c.thread.id, p_note: text });
+      if (r.error) return r.error.message || 'Could not send the update.';
+      await afterSend('Update sent to the customer');
       return null;
-    }, err, done));
+    }, err));
   }
 
   /* Submit proof / answer to a proof or receipt request. CONNECTED (Stage 9): files go to the private
@@ -357,11 +378,11 @@
     body.appendChild(go);
   }
 
+  /* Stage 14: connected. The other person accepts or declines the card in the chat (job_reschedule_respond). */
   function formReschedule(body) {
     var c = ctx();
     var title = (c && c.thread && c.thread._title) || 'this task';
-    body.appendChild(el('p', 'jr-sheet-lead', 'Propose a new date and time for ' + title + '. The other person can accept, decline or suggest another time.'));
-    previewNotice(body);
+    body.appendChild(el('p', 'jr-sheet-lead', 'Propose a new date and time for ' + title + '. The other person can accept or decline. The job keeps its current time until they accept.'));
     body.appendChild(label('jrFm_date', 'New date'));
     var date = el('input', 'jr-sheet-input'); date.type = 'date'; date.id = 'jrFm_date'; date.min = todayIso();
     body.appendChild(date);
@@ -374,28 +395,42 @@
     body.appendChild(label('jrFm_note', 'Add a note', true));
     var note = textarea('jrFm_note', 'e.g. The materials arrive on Friday.', 2);
     body.appendChild(note);
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Send reschedule request', function () {
+    var err = errBox();
+    body.appendChild(err);
+    body.appendChild(actionButton('Send reschedule request', async function () {
       if (!date.value) return 'Please choose a new date.';
       if (date.value < todayIso()) return 'The new date cannot be in the past.';
       if (!time.value) return 'Please choose a time.';
+      var when = new Date(date.value + 'T' + time.value);
+      if (isNaN(when.getTime()) || when.getTime() <= Date.now()) return 'Please choose a time in the future.';
       if (!reasons.state.value) return 'Please choose a reason.';
       if (!contactOk(note.value, err)) return err.textContent;
+      var extra = note.value.trim();
+      var reason = reasons.state.value + (extra ? ' - ' + extra : '');
+      var r = await window.supabase.rpc('job_reschedule_propose', { p_thread: c.thread.id, p_when: when.toISOString(), p_reason: reason.slice(0, 300) });
+      if (r.error) return r.error.message || 'Could not send the request.';
+      await afterSend('Reschedule request sent');
       return null;
-    }, err, done));
+    }, err));
   }
 
+  /* Stage 14: connected.
+     Nothing paid: the job is cancelled at once (job_cancel).
+     Money held: the database refuses a direct cancel (bookings_guard), so this opens a problem report that asks support
+     to cancel and settle the money (open_job_dispute); nothing moves until support decides. */
   function formCancel(body) {
     var sm = summary();
-    body.appendChild(el('p', 'jr-sheet-lead', 'Cancelling ends this task. Read what it means for the money before you continue.'));
-    previewNotice(body);
+    var c = ctx();
+    var held = !!(sm.paid > 0 || (c && c.thread && c.thread.booking && ['paid', 'released'].indexOf(c.thread.booking.payment_status) !== -1));
+    body.appendChild(el('p', 'jr-sheet-lead', held
+      ? 'Money is already held for this job, so it cannot be cancelled directly. This asks StreetTasker support to cancel it and settle the money fairly.'
+      : 'Cancelling ends this task. Read what it means for the money before you continue.'));
 
     body.appendChild(el('div', 'jr-sheet-label', 'Why are you cancelling?'));
     var reasons = radios('jrCancel', REASONS.cancel[role()]);
     body.appendChild(reasons.node);
-    body.appendChild(label('jrFm_note', 'Add a note', true));
-    var note = textarea('jrFm_note', 'Anything the other person should know.', 2);
+    body.appendChild(label('jrFm_note', held ? 'Tell support what happened' : 'Add a note', !held));
+    var note = textarea('jrFm_note', 'Anything the other person should know.', held ? 3 : 2);
     body.appendChild(note);
 
     var box = el('div', 'jr-sheet-consequence');
@@ -406,24 +441,40 @@
       lines.appendChild(row);
     });
     box.appendChild(lines);
-    box.appendChild(el('p', 'jr-sheet-help', sm.paid > 0
-      ? 'How much is refunded or paid out depends on the cancellation policy and how far the work has gone. The exact amounts will be shown here before you confirm once cancellation is connected.'
-      : 'Nothing has been paid on this task, so no money moves.'));
+    box.appendChild(el('p', 'jr-sheet-help', held
+      ? 'The held money stays protected and is frozen while support reviews your request. Support decides how much is refunded or paid out. You can follow it in Job details.'
+      : 'Nothing has been paid on this task, so no money moves. Any open payment requests are closed.'));
     body.appendChild(box);
 
-    var ack = el('label', 'jr-radio');
-    var chk = el('input'); chk.type = 'checkbox';
-    ack.appendChild(chk); ack.appendChild(el('span', null, 'I understand this cannot be undone.'));
-    body.appendChild(ack);
+    var chk = null;
+    if (!held) {
+      var ack = el('label', 'jr-radio');
+      chk = el('input'); chk.type = 'checkbox';
+      ack.appendChild(chk); ack.appendChild(el('span', null, 'I understand this cannot be undone.'));
+      body.appendChild(ack);
+    }
 
-    var err = errBox(), done = doneBox();
-    body.appendChild(err); body.appendChild(done);
-    body.appendChild(submitButton('Cancel this job', function () {
+    var err = errBox();
+    body.appendChild(err);
+    body.appendChild(actionButton(held ? 'Ask support to cancel' : 'Cancel this job', async function () {
       if (!reasons.state.value) return 'Please choose a reason.';
-      if (!chk.checked) return 'Please confirm that you understand.';
+      if (chk && !chk.checked) return 'Please confirm that you understand.';
       if (!contactOk(note.value, err)) return err.textContent;
+      var extra = note.value.trim();
+      if (held) {
+        if (extra.length < 5) return 'Please tell support a little about what happened.';
+        var d = await window.supabase.rpc('open_job_dispute', { p_thread: c.thread.id, p_category: 'other',
+          p_reason: ('Cancellation requested (' + role() + '): ' + reasons.state.value + ' - ' + extra).slice(0, 1000) });
+        if (d.error) return d.error.message || 'Could not send the request.';
+        if (!d.data || d.data.ok === false) return (d.data && d.data.error) || 'Could not send the request.';
+        await afterSend('Sent to support. The money stays protected until they decide.');
+        return null;
+      }
+      var r = await window.supabase.rpc('job_cancel', { p_thread: c.thread.id, p_reason: reasons.state.value, p_note: extra || null });
+      if (r.error) return r.error.message || 'Could not cancel the job.';
+      await afterSend('This job has been cancelled.');
       return null;
-    }, err, done, 'jr-sheet-send--danger'));
+    }, err, held ? '' : 'jr-sheet-send--danger'));
   }
 
   /* ── registry ────────────────────────────────────────────── */
@@ -454,27 +505,27 @@
     function run(id) { return function () { open(id); }; }
 
     return [
-      { id: 'custom_request', roles: ['tasker'], group: G.MONEY, icon: I.chat, ui: true,
+      { id: 'custom_request', roles: ['tasker'], group: G.MONEY, icon: I.chat, kind: 'custom',
         label: 'Custom request', hint: 'Ask for anything else, with or without an amount',
         rule: needJob, run: run('custom_request') },
 
-      { id: 'request_materials', roles: ['tasker'], group: G.COSTS, icon: I.box, ui: true,
+      { id: 'request_materials', roles: ['tasker'], group: G.COSTS, icon: I.box,
         label: 'Request materials', hint: 'List what you need to buy for the job',
         rule: function (x) { return x.status === 'awaiting_confirmation' ? WAIT : needPaid(x); }, run: run('request_materials') },
 
-      { id: 'send_update', roles: ['tasker'], group: G.WORK, icon: I.chat, ui: true,
+      { id: 'send_update', roles: ['tasker'], group: G.WORK, icon: I.chat,
         label: 'Send work update', hint: 'Tell the customer how the job is going',
         rule: needJob, run: run('send_update') },
       { id: 'submit_proof', roles: ['tasker'], group: G.WORK, icon: I.camera,
         label: 'Submit proof', hint: 'Photos, video or a note. Always optional',
         rule: needPaid, run: run('submit_proof') },
 
-      { id: 'reschedule', roles: ['customer', 'tasker'], group: { tasker: G.SCHEDULE, customer: G.JOB }, icon: I.calendar, ui: true,
+      { id: 'reschedule', roles: ['customer', 'tasker'], group: { tasker: G.SCHEDULE, customer: G.JOB }, icon: I.calendar, kind: 'reschedule',
         label: 'Reschedule', hint: 'Propose a new date or time',
         rule: function (x) { return x.status === 'awaiting_confirmation' ? 'Not available while the work awaits confirmation' : needJob(x); },
         run: run('reschedule') },
 
-      { id: 'cancel_job', roles: ['customer', 'tasker'], group: { tasker: G.ISSUE, customer: G.JOB }, icon: I.cancel, ui: true,
+      { id: 'cancel_job', roles: ['customer', 'tasker'], group: { tasker: G.ISSUE, customer: G.JOB }, icon: I.cancel,
         label: 'Cancel this job', hint: 'Choose a reason and see what it means for the money',
         rule: needJob, run: run('cancel_job') }
     ];

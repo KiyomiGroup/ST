@@ -275,6 +275,14 @@
     /* 3. Start realtime */
     startGlobalSubscriptions();
 
+    /* 3b. Stage 15: a notification link (messages.html?thread=ID) opens that conversation */
+    var wantThread = null;
+    try { wantThread = new URLSearchParams(window.location.search).get('thread'); } catch(e) {}
+    if (wantThread && _threads.some(function(t){ return t.id === wantThread; })) {
+      await openThread(wantThread);
+      try { window.history.replaceState(null, '', window.location.pathname); } catch(e) {}
+    }
+
     /* 4. Auto-open thread from "Message Provider" button context */
     var rawCtx = sessionStorage.getItem('st_chat_context');
     if (rawCtx) {

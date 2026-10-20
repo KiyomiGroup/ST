@@ -49,6 +49,12 @@
     /* Stage 8 custom requests. Their own kind names on purpose: 'invoice' is a payment kind and a
        pending ask called 'invoice' would grey out the tasker's "Send invoice". */
     invoice_request: { title: 'Invoice requested', byMe: 'You asked the tasker for an invoice.',                    byOther: 'The customer would like an invoice for this job.' },
+    /* Stage 13: the tasker proposes the agreed price, the customer accepts or declines (server: price_propose / price_respond) */
+    /* Stage 15: a custom request without money (server: job_custom_request). With an amount it is an additional-cost payment request. */
+    custom: { title: 'Custom request', byMe: 'You sent a request to the customer.', byOther: 'The tasker has a request for you.' },
+    /* Stage 14: a new date and time, proposed by either person, answered by the other (server: job_reschedule_propose / _respond) */
+    reschedule: { title: 'Reschedule requested', byMe: 'You asked to change the date and time.', byOther: 'The other person would like to change the date and time.' },
+    price_proposal: { title: 'Price proposed', byMe: 'You proposed a price for this job.', byOther: 'The tasker proposed a price for this job.' },
     receipt_request: { title: 'Receipt requested', byMe: 'You asked the tasker for a receipt for what they bought.', byOther: 'The customer would like the receipt for something you bought for this job.' }
   };
 
@@ -72,6 +78,7 @@
     camera:  svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
     close:   svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
     back:    svg('<polyline points="15 18 9 12 15 6"/>'),
+    tag:     svg('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'),
     truck:   svg('<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'),
     doc:     svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
     tool:    svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>')
@@ -128,13 +135,23 @@
     tasker:   [GROUP.MONEY, GROUP.TRANSPORT, GROUP.COSTS, GROUP.DOCS, GROUP.WORK, GROUP.SCHEDULE, GROUP.ISSUE],
     customer: [GROUP.PAY, GROUP.DOCS, GROUP.EVIDENCE, GROUP.JOB, GROUP.ISSUE]
   };
-  var PAYABLE = ['payment', 'full_payment', 'remaining_payment', 'transport', 'additional_cost'];
+  var PAYABLE = ['payment', 'full_payment', 'remaining_payment', 'transport', 'additional_cost', 'materials', 'invoice'];
   var LINE_LABEL = { work: 'Additional work', materials: 'Materials' };   /* breakdown line labels (additional cost form) */
 
   function hasJob(x) { return x.status !== 'inquiry'; }
 
   var ACTIONS = [
     /* ── Tasker: Money ── */
+    {
+      id: 'propose_price', roles: ['tasker'], group: GROUP.MONEY, icon: I.tag, kind: 'price_proposal', needsTable: true,
+      label: 'Propose agreed price',
+      hint: function (x) { return x.money.base > 0 ? 'Agreed price: ' + naira(x.money.base) + '. Propose a new one' : 'Set the price for this job. The customer accepts or declines'; },
+      rule: function (x) {
+        if (x.money.paidMain > 0) return 'The price cannot change after the first payment';
+        return null;
+      },
+      run: function () { showPriceForm(); }
+    },
     {
       id: 'request_payment', roles: ['tasker'], group: GROUP.MONEY, icon: I.card, kind: 'payment',
       label: 'Request payment', hint: 'Ask for a custom amount',
@@ -149,7 +166,7 @@
         /* paidMain: a transport / additional cost paid early is not the main payment */
         if (x.money.paidMain > 0 && x.money.outstanding <= 0) return 'This task is already paid in full';
         if (x.money.paidMain > 0) return 'Part of this task is paid. Use Request remaining payment';
-        if (!(x.money.base > 0)) return 'No agreed price yet';
+        if (!(x.money.base > 0)) return 'Propose and agree a price first';
         return null;
       },
       run: function (x) { showConfirm('full_payment', x.money.base); }
@@ -542,6 +559,68 @@
     });
     body.appendChild(send);
     var first = body.querySelector('input, textarea'); if (first) first.focus();
+  }
+
+  /* ── agreed price (Stage 13) ─────────────────────────────────
+     The tasker proposes ONE price for the job. The customer sees a card with Accept / Decline. Only the server
+     (price_respond) writes message_threads.agreed_price. Extras (transport, materials, additional cost, invoice) stay separate. */
+  function showPriceForm() {
+    S.view = 'form';
+    setTitle('Propose agreed price');
+    var body = $('jrSheetBody');
+    body.textContent = '';
+    toTop();
+    var back = el('button', 'jr-sheet-back'); back.type = 'button';
+    back.innerHTML = I.back; back.appendChild(document.createTextNode(' Back'));
+    back.addEventListener('click', renderMenu);
+    body.appendChild(back);
+    body.appendChild(el('p', 'jr-sheet-lead', 'Enter the price for the whole job. The customer can accept or decline it. Once they accept, it is the agreed price and your payment requests must match it. Transport, materials and extra costs are asked for separately.'));
+
+    var al = el('label', 'jr-sheet-label', 'Agreed price (₦)'); al.setAttribute('for', 'jrPriceAmount');
+    var amount = el('input', 'jr-sheet-input');
+    amount.id = 'jrPriceAmount'; amount.type = 'number'; amount.inputMode = 'numeric'; amount.min = '0'; amount.step = '100'; amount.placeholder = 'e.g. 15000';
+    body.appendChild(al); body.appendChild(amount);
+
+    var nl = el('label', 'jr-sheet-label'); nl.setAttribute('for', 'jrPriceNote');
+    nl.appendChild(document.createTextNode('What the price covers '));
+    nl.appendChild(el('span', 'jr-sheet-optional', '(optional)'));
+    var note = el('textarea', 'jr-sheet-note'); note.id = 'jrPriceNote'; note.rows = 2; note.maxLength = NOTE_MAX;
+    note.placeholder = 'e.g. Labour for replacing the kitchen tap. Materials are separate.';
+    body.appendChild(nl); body.appendChild(note);
+
+    var n = el('div', 'jr-sheet-policy');
+    n.appendChild(el('strong', null, 'Platform policy: '));
+    n.appendChild(document.createTextNode('all payments must go through StreetTasker. Payments made outside are not covered by dispute protection and may lead to account suspension.'));
+    body.appendChild(n);
+
+    var err = el('div', 'jr-sheet-error'); err.hidden = true; err.setAttribute('role', 'alert');
+    body.appendChild(err);
+    var send = el('button', 'jr-sheet-send', 'Send price to customer'); send.type = 'button';
+    send.addEventListener('click', async function () {
+      err.hidden = true;
+      function fail(msg) { err.textContent = msg; err.hidden = false; }
+      var J = window.JRMoney, a = moneyOf(amount), text = note.value.trim();
+      if (!a || (J && a < J.MIN_AMOUNT)) return fail('Enter a price of at least ' + naira(J ? J.MIN_AMOUNT : 100) + '.');
+      if (J && a > J.MAX_AMOUNT) return fail('That amount is too large. Check for a typing mistake.');
+      if (text && window.JRThread.hasContactInfo(text)) {
+        if (typeof window.handleContactViolation === 'function' && S.ctx) window.handleContactViolation(S.ctx.user.id);
+        return fail('Please remove phone numbers, emails or other contact details. They are not allowed on StreetTasker.');
+      }
+      send.disabled = true; send.textContent = 'Sending…';
+      try {
+        var r = await window.supabase.rpc('price_propose', { p_thread: S.ctx.thread.id, p_amount: a, p_note: text || null });
+        if (r.error) throw r.error;
+        if (window.JRThread && window.JRThread.reload) { try { await window.JRThread.reload(); } catch (_e) {} }
+        close();
+        update();
+        if (S.onChange) S.onChange();
+      } catch (e) {
+        fail((e && e.message) || 'Could not send the price. Please try again.');
+        send.disabled = false; send.textContent = 'Send price to customer';
+      }
+    });
+    body.appendChild(send);
+    amount.focus();
   }
 
   /* ── invoice (Stage 8) ──────────────────────────────────────
