@@ -266,6 +266,34 @@
         return;
       }
 
+      /* ── Just signed up: show the "verify your email" notice ── */
+      const qs = new URLSearchParams(window.location.search);
+      if (qs.get('verify') === '1' || qs.get('created') === '1') {
+        const note = document.getElementById('loginErr');
+        const mail = qs.get('email') || '';
+        if (mail) document.getElementById('loginEmail').value = mail;
+        note.textContent = qs.get('verify') === '1'
+          ? 'Account created! We sent a verification link to ' + (mail || 'your email') + '. Please verify your email, then log in below.'
+          : 'Account created! Log in below to continue.';
+        note.style.background = 'var(--blue-light)';
+        note.style.color      = 'var(--blue)';
+        note.style.display    = 'block';
+        if (qs.get('verify') === '1' && mail) {
+          const resend = document.createElement('button');
+          resend.type = 'button';
+          resend.className = 'lg2-forgot';
+          resend.textContent = ' Resend email';
+          resend.addEventListener('click', async () => {
+            const { error } = await window.supabase.auth.resend({
+              type: 'signup', email: mail,
+              options: { emailRedirectTo: window.location.origin + '/login.html' }
+            });
+            showToast(error ? 'Could not resend: ' + error.message : 'Verification email sent to ' + mail + '.');
+          });
+          note.appendChild(resend);
+        }
+      }
+
       /* ── Password toggle ── */
       const toggle = document.getElementById('pwdToggle');
       const input  = document.getElementById('loginPwd');
@@ -342,12 +370,12 @@
         }
       });
 
-      function showErr(msg) { err.textContent = msg; err.style.display = 'block'; }
+      function showErr(msg) { err.textContent = msg; err.style.background = ''; err.style.color = ''; err.style.display = 'block'; }
 
       function friendlyAuthError(msg) {
         if (!msg) return 'Login failed. Please try again.';
         if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) return 'Incorrect email or password.';
-        if (msg.includes('Email not confirmed')) return 'Please check your inbox and confirm your email first.';
+        if (msg.includes('Email not confirmed')) return 'Your email isn\'t verified yet. Please click the link we emailed you, then log in.';
         if (msg.includes('Too many requests')) return 'Too many attempts. Please wait a moment and try again.';
         return msg;
       }

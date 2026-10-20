@@ -339,8 +339,9 @@
       btn.innerHTML = '<span>Creating account…</span>';
 
       try {
-        await window.ST.auth.signUpUser({ name, email, password, role: 'customer' });
-        window.location.href = 'home-feed.html';
+        const res = await window.ST.auth.signUpUser({ name, email, password, role: 'customer' });
+        /* Send them to Log In with a "check your email" notice */
+        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email);
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
@@ -373,8 +374,9 @@
       btn.innerHTML = '<span>Creating account…</span>';
 
       try {
-        await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
-        window.location.href = 'home-feed.html';
+        const res = await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
+        /* Send them to Log In with a "check your email" notice */
+        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email);
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
