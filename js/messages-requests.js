@@ -1000,6 +1000,13 @@
     it.action.run(it.x);
     return true;
   }
+  /* The same list the Actions sheet draws, for the job bar dropdown (messages-flow.js) */
+  function list() {
+    return available().map(function (it) {
+      return { id: it.action.id, label: it.action.label, hint: it.hint, disabled: it.disabled, isReason: it.isReason,
+               group: it.group, main: MAIN_IDS.indexOf(it.action.id) !== -1 && !it.disabled };
+    });
+  }
   function can(id) {
     return available().some(function (a) { return a.action.id === id && !a.disabled; });
   }
@@ -1102,7 +1109,7 @@
     probeMoney().then(function () { update(); });
   }
 
-  window.JRRequests = { init: init, update: update, open: open, run: run, can: can, close: close, whenReady: probe, register: register, openView: openView, openRevise: openRevise, openInvoice: openInvoice, openReceipt: openReceipt, receiptNode: receiptNode, KINDS: KINDS, context: function () { return S.ctx; },
+  window.JRRequests = { init: init, update: update, open: open, run: run, can: can, list: list, close: close, whenReady: probe, register: register, openView: openView, openRevise: openRevise, openInvoice: openInvoice, openReceipt: openReceipt, receiptNode: receiptNode, KINDS: KINDS, context: function () { return S.ctx; },
                         GROUP: GROUP, LOCKED: LOCKED, NEEDS_JOB: NEEDS_JOB, NEEDS_PAYMENT: NEEDS_PAYMENT, WAITING_CONFIRM: WAITING_CONFIRM };
 
 })();

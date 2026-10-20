@@ -76,11 +76,26 @@
         <!-- Task status banner (built by js/messages-room.js) -->
         <div class="jr-banner" id="jrBanner" hidden></div>
 
-        <!-- Next step card: price > pay > work > release code (built by js/messages-flow.js) -->
-        <div class="jr-flow" id="jrFlow" hidden></div>
-
-        <!-- Completion panel: review / code entry (built by js/messages-work.js) -->
-        <div class="jr-workpanel" id="jrWorkPanel" hidden></div>
+        <!-- Job bar: ONE slim row. It opens a dropdown over the chat (next step, release code, review panel, job actions).
+             Built by js/messages-flow.js; the completion panel (js/messages-work.js) lives inside the dropdown. -->
+        <div class="jr-jobbar" id="jrJobBar" hidden>
+          <div class="jr-jobbar-row">
+            <button class="jr-jobbar-toggle" id="jrJobToggle" type="button" aria-expanded="false" aria-controls="jrJobDrop">
+              <span class="jr-jobbar-text">
+                <span class="jr-jobbar-title" id="jrJobTitle"></span>
+                <span class="jr-jobbar-amount" id="jrJobAmount"></span>
+              </span>
+              <span class="jr-jobbar-chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </button>
+            <span class="jr-jobbar-quick" id="jrJobQuick"></span>
+          </div>
+          <div class="jr-jobdrop" id="jrJobDrop" hidden>
+            <div class="jr-flow" id="jrFlow" hidden></div>
+            <div class="jr-workpanel" id="jrWorkPanel" hidden></div>
+            <div class="jr-jobacts" id="jrJobActions"></div>
+            <button class="jr-jobdrop-full" id="jrJobFull" type="button">Full job details</button>
+          </div>
+        </div>
 
         <div class="msg-chat-body" id="chatBody" hidden></div>
 

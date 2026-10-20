@@ -2098,3 +2098,96 @@ body.msg-page {
   .jr-flow-step-name { display: none; }
   .jr-flow-step.is-now .jr-flow-step-name { display: inline; }
 }
+
+/* ============================================================
+   Job bar: one slim row above the chat. Everything else opens as a dropdown OVER the chat,
+   so the conversation keeps the screen. (The old dark banner is replaced by this bar.)
+   ============================================================ */
+.jr-banner { display: none; }
+.jr-jobbar { position: relative; flex-shrink: 0; z-index: 5; border-bottom: 1px solid var(--color-border); background: var(--color-bg); }
+.jr-jobbar-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); }
+.jr-jobbar-toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.jr-jobbar-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.jr-jobbar-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 800; color: var(--color-forest-800); }
+.jr-jobbar-amount { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); }
+.jr-jobbar-amount:empty { display: none; }
+.jr-jobbar-chev { display: flex; flex-shrink: 0; color: var(--color-text-secondary); transition: transform var(--t) var(--ease); }
+.jr-jobbar.is-open .jr-jobbar-chev { transform: rotate(180deg); }
+.jr-jobbar-quick { flex-shrink: 0; }
+.jr-jobbar-btn { flex: none; min-height: 40px; padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
+.jr-jobbar-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.jr-jobdrop {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-primary-md);
+}
+.jr-jobdrop .jr-flow,
+.jr-jobdrop .jr-workpanel { margin: 0 0 var(--space-3); }
+.jr-jobdrop .jr-flow--compact .jr-flow-text { margin-top: var(--space-1); }
+.jr-jobacts-title { margin: var(--space-3) 0 var(--space-1); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary); }
+.jr-jobact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.jr-jobact:hover:not(:disabled) { background: var(--color-bg-subtle); }
+.jr-jobact:disabled { opacity: 0.55; cursor: not-allowed; }
+.jr-jobact-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.jr-jobact-hint { font-size: var(--text-xs); color: var(--color-text-muted); }
+.jr-jobact-more {
+  width: 100%;
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  text-align: left;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.jr-jobact-panel[hidden] { display: none; }
+.jr-jobdrop-full {
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 0;
+  background: none;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+@media (min-width: 1045px) { .jr-jobdrop-full { display: none; } }   /* the details column is already open there */

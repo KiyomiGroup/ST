@@ -24,7 +24,7 @@
 
   var STEPS = ['Price', 'Pay', 'Work', 'Release'];
   var MAIN_KINDS = ['payment', 'full_payment', 'remaining_payment'];
-  var S = { ctx: null, code: null, codeFor: '', shown: false, shownFor: '', busy: false, copied: false };
+  var S = { open: false, moreOpen: false, bound: false, ctx: null, code: null, codeFor: '', shown: false, shownFor: '', busy: false, copied: false };
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) {
@@ -141,7 +141,7 @@
       } else {
         P.title = 'Customer price: ' + naira(v.sm.base);
         P.text = 'Agree and the customer is asked to pay straight away, or suggest another price.';
-        P.primary = { label: 'Agree ' + naira(v.sm.base) + ' and request payment', agree: v.sm.base };
+        P.primary = { label: 'Agree ' + naira(v.sm.base) + ' and request payment', short: 'Agree', agree: v.sm.base };
         P.secondary = { label: 'Change price', id: 'propose_price' };
       }
       return P;
@@ -232,33 +232,99 @@
       act(b, def.label, function () {
         return window.JRMoney.create({ kind: 'full_payment', amount: def.agree }).then(function (ok) { if (ok) toast('Payment requested. The customer can pay now.'); });
       });
+    } else if (def.open) {
+      b.addEventListener('click', function () { setOpen(true); });
     } else if (def.id) {
-      b.addEventListener('click', function () { if (!window.JRRequests.run(def.id)) toast('That is not available right now.', 'error'); });
+      b.addEventListener('click', function () { setOpen(false); if (!window.JRRequests.run(def.id)) toast('That is not available right now.', 'error'); });
     }
     return b;
   }
 
-  /* ── draw ─────────────────────────────────────────────────── */
-  function paint() {
-    var host = $('jrFlow');
+  /* ── dropdown (the job bar) ───────────────────────────────── */
+  function setOpen(on) {
+    S.open = !!on;
+    var drop = $('jrJobDrop'), t = $('jrJobToggle');
+    if (drop) drop.hidden = !S.open;
+    if (t) t.setAttribute('aria-expanded', S.open ? 'true' : 'false');
+    var bar = $('jrJobBar'); if (bar) bar.classList.toggle('is-open', S.open);
+    if (S.open) paintActions();
+  }
+
+  function bind() {
+    if (S.bound) return;
+    var t = $('jrJobToggle'); if (!t) return;
+    S.bound = true;
+    t.addEventListener('click', function () { setOpen(!S.open); });
+    var full = $('jrJobFull');
+    if (full) full.addEventListener('click', function () {
+      setOpen(false);
+      if (window.JRDetails && window.JRDetails.openSheet) window.JRDetails.openSheet();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.open) { setOpen(false); t.focus(); } });
+    /* a tap on the conversation closes the dropdown, so it never gets in the way of chatting */
+    document.addEventListener('click', function (e) {
+      if (!S.open) return;
+      var bar = $('jrJobBar');
+      if (bar && !bar.contains(e.target) && !e.target.closest('#jrSheetLayer')) setOpen(false);
+    });
+  }
+
+  /* Job actions as a short dropdown list: the everyday ones first, the rest behind "More options" */
+  function paintActions() {
+    var host = $('jrJobActions');
     if (!host) return;
     host.textContent = '';
-    if (!S.ctx || !S.ctx.thread) { host.hidden = true; return; }
+    var items = (window.JRRequests && window.JRRequests.list) ? window.JRRequests.list() : [];
+    if (!items.length) return;
+    function row(it) {
+      var b = el('button', 'jr-jobact'); b.type = 'button'; b.disabled = it.disabled;
+      b.appendChild(el('span', 'jr-jobact-label', it.label));
+      b.appendChild(el('span', 'jr-jobact-hint' + (it.isReason ? ' is-reason' : ''), it.hint || ''));
+      b.addEventListener('click', function () { setOpen(false); window.JRRequests.run(it.id); });
+      return b;
+    }
+    var main = items.filter(function (i) { return i.main; });
+    var more = items.filter(function (i) { return !i.main; });
+    host.appendChild(el('div', 'jr-jobacts-title', 'Job actions'));
+    main.forEach(function (i) { host.appendChild(row(i)); });
+    if (more.length) {
+      var tg = el('button', 'jr-jobact-more', (main.length ? 'More options' : 'Options') + ' (' + more.length + ')'); tg.type = 'button';
+      tg.setAttribute('aria-expanded', S.moreOpen ? 'true' : 'false');
+      var panel = el('div', 'jr-jobact-panel'); panel.hidden = !S.moreOpen;
+      more.forEach(function (i) { panel.appendChild(row(i)); });
+      tg.addEventListener('click', function () { S.moreOpen = panel.hidden; panel.hidden = !panel.hidden; tg.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true'); });
+      host.appendChild(tg); host.appendChild(panel);
+    }
+  }
+
+  /* ── draw ─────────────────────────────────────────────────── */
+  function paint() {
+    var host = $('jrFlow'), bar = $('jrJobBar');
+    if (!host || !bar) return;
+    bind();
+    host.textContent = '';
+    if (!S.ctx || !S.ctx.thread) { bar.hidden = true; host.hidden = true; return; }
     var v = read();
     var p = plan(v);
-    if (!p) { host.hidden = true; return; }
-    host.hidden = false;
+    if (!p) { bar.hidden = true; host.hidden = true; setOpen(false); return; }
+    bar.hidden = false; host.hidden = false;
     host.className = 'jr-flow' + (p.closed ? ' jr-flow--closed' : '') + (p.compact ? ' jr-flow--compact' : '');
 
-    if (!p.closed) host.appendChild(stepper(stepIndex(v)));
+    /* the slim row: what is happening, the amount, and ONE quick button */
+    $('jrJobTitle').textContent = p.title;
+    $('jrJobAmount').textContent = p.amount ? naira(p.amount) : '';
+    var quick = $('jrJobQuick'); quick.textContent = '';
+    var qdef = p.primary || (p.compact ? { label: v.role === 'customer' ? 'Review work' : 'Details', open: true } : null);
+    if (qdef) quick.appendChild(button(Object.assign({}, qdef, { label: qdef.short || qdef.label }), 'jr-flow-btn--primary jr-jobbar-btn'));
 
+    /* the dropdown: stepper, explanation, code, the same buttons */
+    if (!p.closed) host.appendChild(stepper(stepIndex(v)));
     var head = el('div', 'jr-flow-head');
     var txt = el('div', 'jr-flow-main');
     txt.appendChild(el('div', 'jr-flow-title', p.title));
     if (p.text) txt.appendChild(el('div', 'jr-flow-text', p.text));
     head.appendChild(txt);
     host.appendChild(head);
-
     if (p.code) host.appendChild(codeBox(v));
     if (p.primary || p.secondary) {
       var row = el('div', 'jr-flow-actions');
@@ -266,13 +332,14 @@
       if (p.secondary) row.appendChild(button(p.secondary, ''));
       host.appendChild(row);
     }
+    if (S.open) paintActions();
   }
 
   function update(ctx) {
     if (ctx) {
       var changed = !S.ctx || S.ctx.thread.id !== ctx.thread.id;
       S.ctx = ctx;
-      if (changed) { S.shown = false; S.code = null; S.codeFor = ''; }
+      if (changed) { S.shown = false; S.code = null; S.codeFor = ''; setOpen(false); }
     }
     paint();
   }
