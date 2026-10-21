@@ -840,7 +840,10 @@
       const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
       const posted = escapeHtml(t.ago || pgtdAgo(t.created_at) || 'recently');
       const when   = escapeHtml(t.when || pgtdWhen(t.deadline));
-      return '<div class="pgtd-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'explore-tasks.html\'">'
+      /* A real task opens its own details page; the sample cards (no id) keep the old link */
+      const _safeId = t.id ? String(t.id).replace(/[^\w-]/g, '') : '';
+      const detailsHref = _safeId ? 'task-details.html?id=' + _safeId : 'explore-tasks.html';
+      return '<div class="pgtd-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'' + detailsHref + '\'">'
         + '<div class="pgtd-thumb ' + thumbClass + '" style="' + thumbStyle + '"></div>'
         + '<span class="pgtd-cat">' + escapeHtml(t.category || 'Task') + '</span>'
         + '<div class="pgtd-head"><h3 class="pgtd-title">' + safeTitle + '</h3>'
@@ -853,7 +856,7 @@
         + '</div>'
         + (t.offers ? '<span class="pgtd-offers">' + Number(t.offers) + (Number(t.offers) === 1 ? ' offer' : ' offers') + '</span>' : '')
         + '<div class="pgtd-actions">'
-        + '<a class="pgtd-btn pgtd-btn-secondary" href="explore-tasks.html" onclick="event.stopPropagation()">View Task</a>'
+        + '<a class="pgtd-btn pgtd-btn-secondary" href="' + detailsHref + '" onclick="event.stopPropagation()">View Task</a>'
         + '<a class="pgtd-btn pgtd-btn-primary" href="explore-tasks.html" onclick="event.stopPropagation()">Apply</a>'
         + '</div>'
         + '</div>';

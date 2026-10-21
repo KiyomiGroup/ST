@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Task Details — StreetTasker</title>
+  <meta name="description" content="See the full details of a task on StreetTasker: scope, budget, location and offers." />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/applications.css" />
+  <link rel="stylesheet" href="css/profile-pages.css" />
+  <link rel="stylesheet" href="css/task-details.css" />
+</head>
+<body class="st-no-bottom-nav">
+  <div id="navbar-placeholder"></div>
+
+  <svg class="ap-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></symbol>
+      <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M19 21 12 16 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+      <symbol id="i-id" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M13 10h5"/><path d="M13 14h4"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4-4L5 21"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="M9 21H3v-6"/><path d="m3 21 7-7"/></symbol>
+      <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9Z"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="ap-page td-page" id="tdPage">
+    <div class="ap-container">
+
+      <!-- Loading -->
+      <div class="tp-loading" id="tdLoading" role="status" aria-live="polite">
+        <div class="tp-skel tp-skel-line td-skel-bar"></div>
+        <div class="tp-skel tp-skel-hero"></div>
+        <div class="tp-skel tp-skel-line"></div>
+        <div class="tp-skel tp-skel-line tp-skel-short"></div>
+      </div>
+
+      <!-- Not found / unavailable -->
+      <section class="ap-state" id="tdError" hidden>
+        <h1 class="ap-state-title" id="tdErrorTitle">Task unavailable</h1>
+        <p class="ap-state-text" id="tdErrorText">This task may have been removed, or you may not have access to it.</p>
+        <a href="find-tasks.html" class="btn btn-primary" id="tdErrorCta">Browse Tasks</a>
+      </section>
+
+      <div id="tdContent" hidden>
+
+        <!-- Top bar: back, share, save -->
+        <div class="td-topbar">
+          <a class="td-back" id="tdBack" href="find-tasks.html"><svg class="ap-i" aria-hidden="true"><use href="#i-arrow-left"/></svg><span>Back to tasks</span></a>
+          <div class="td-topbar-actions">
+            <button type="button" class="td-icon-btn" id="tdShare" aria-label="Share this task"><svg class="ap-i" aria-hidden="true"><use href="#i-share"/></svg></button>
+            <button type="button" class="td-icon-btn" id="tdSave" aria-label="Save this task" aria-pressed="false"><svg class="ap-i" aria-hidden="true"><use href="#i-bookmark"/></svg></button>
+          </div>
+        </div>
+
+        <div class="td-layout">
+
+          <div class="td-main">
+
+            <!-- Title block -->
+            <section class="ap-card td-head" id="secHead" aria-labelledby="tdTitle">
+              <div class="td-badges" id="tdBadges"></div>
+              <h1 class="td-title" id="tdTitle"></h1>
+              <dl class="td-facts" id="tdFacts"></dl>
+            </section>
+
+            <!-- Photos -->
+            <section class="ap-card td-card td-photos" id="secPhotos" aria-labelledby="hPhotos" hidden>
+              <div class="td-card-head">
+                <h2 class="td-h2" id="hPhotos">Photos from the client</h2>
+                <span class="td-hint" id="tdPhotoHint"></span>
+              </div>
+              <div class="td-gallery">
+                <div class="td-stage">
+                  <button type="button" class="td-stage-btn" id="tdStage" aria-label="Open photo full screen"><img id="tdStageImg" alt="" /></button>
+                  <span class="td-stage-count" id="tdStageCount"><svg class="ap-i" aria-hidden="true"><use href="#i-image"/></svg><span></span></span>
+                  <span class="td-stage-label" id="tdStageLabel" hidden></span>
+                  <span class="td-stage-expand" aria-hidden="true"><svg class="ap-i"><use href="#i-expand"/></svg></span>
+                </div>
+                <div class="td-thumbs" id="tdThumbs" role="list"></div>
+              </div>
+            </section>
+
+            <!-- Scope -->
+            <section class="ap-card td-card" id="secScope" aria-labelledby="hScope">
+              <div class="td-card-head">
+                <h2 class="td-h2 td-h2-icon" id="hScope"><svg class="ap-i" aria-hidden="true"><use href="#i-file"/></svg>Task Description &amp; Scope</h2>
+              </div>
+              <div class="td-prose" id="tdProse"></div>
+              <div id="tdChecklistWrap" hidden>
+                <h3 class="td-h3">Key Requirements</h3>
+                <ul class="td-checks" id="tdChecks"></ul>
+              </div>
+              <div class="td-logistics" id="tdLogistics" hidden></div>
+            </section>
+
+            <!-- Payment milestones (only when the task has them) -->
+            <section class="ap-card td-card" id="secMilestones" aria-labelledby="hMilestones" hidden>
+              <div class="td-card-head">
+                <div>
+                  <h2 class="td-h2" id="hMilestones">Payment Milestones</h2>
+                  <p class="td-sub">Each part of the payment is released only after the customer signs it off.</p>
+                </div>
+                <span class="td-hint" id="tdMilestoneCount"></span>
+              </div>
+              <ol class="td-steps" id="tdMilestones"></ol>
+            </section>
+
+            <!-- Location -->
+            <section class="ap-card td-card" id="secLocation" aria-labelledby="hLocation">
+              <div class="td-card-head">
+                <div>
+                  <h2 class="td-h2" id="hLocation">Neighbourhood &amp; Approximate Area</h2>
+                  <p class="td-sub">The exact address is shared once an offer is accepted.</p>
+                </div>
+                <span class="td-hint" id="tdDistance" hidden></span>
+              </div>
+              <div class="td-area" aria-hidden="true">
+                <span class="td-area-ring"><span class="td-area-pin"><svg class="ap-i"><use href="#i-pin"/></svg></span></span>
+              </div>
+              <p class="td-area-label"><svg class="ap-i" aria-hidden="true"><use href="#i-pin"/></svg><span id="tdAreaText"></span></p>
+            </section>
+
+            <!-- Offers -->
+            <section class="ap-card td-card" id="secOffers" aria-labelledby="hOffers" hidden>
+              <div class="td-card-head">
+                <h2 class="td-h2" id="hOffers">Submitted Offers <span class="td-count" id="tdOfferCount"></span></h2>
+              </div>
+              <div class="td-offers" id="tdOffers"></div>
+              <p class="td-empty" id="tdOffersEmpty" hidden></p>
+              <button type="button" class="btn btn-ghost td-more" id="tdOffersMore" hidden></button>
+            </section>
+
+          </div>
+
+          <aside class="td-side" aria-label="Budget, customer and protection">
+
+            <!-- Budget and actions -->
+            <section class="ap-panel td-budget" id="secBudget" aria-labelledby="hBudget">
+              <div class="td-budget-top">
+                <span class="td-eyebrow" id="hBudget">Client Budget</span>
+                <span class="td-escrow-chip"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>Escrow Protected</span>
+              </div>
+              <p class="td-price" id="tdPrice"></p>
+              <p class="td-price-note">Payment is held in StreetTasker Escrow and released only after the customer approves the finished work.</p>
+              <div class="td-cta" id="tdCta">
+                <button type="button" class="btn btn-primary btn-lg btn-full td-cta-offer" id="tdOfferBtn"><span id="tdOfferLabel">Make an Offer</span><svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                <button type="button" class="btn btn-mint btn-full td-cta-msg" id="tdMessageBtn" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-chat"/></svg>Message Poster</button>
+                <a href="my-tasks.html" class="btn btn-primary btn-lg btn-full" id="tdManageBtn" hidden>Manage this Task</a>
+                <a href="post-task.html" class="btn btn-outline btn-full" id="tdPostBtn" hidden>Post a Similar Task</a>
+              </div>
+              <p class="td-cta-note" id="tdCtaNote" hidden></p>
+            </section>
+
+            <!-- Poster -->
+            <section class="ap-panel td-poster" id="secPoster" aria-labelledby="hPoster">
+              <h2 class="td-h2 td-h2-sm" id="hPoster">About the Customer</h2>
+              <div class="td-poster-id">
+                <div class="td-avatar-wrap">
+                  <div class="td-avatar" id="tdAvatar" aria-hidden="true"></div>
+                  <span class="td-avatar-tick" id="tdAvatarTick" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+                </div>
+                <div class="td-poster-who">
+                  <p class="td-poster-name"><span id="tdPosterName"></span><span class="td-tag">Poster</span></p>
+                  <p class="td-poster-meta" id="tdPosterMeta"></p>
+                </div>
+              </div>
+              <div class="td-stats" id="tdPosterStats"></div>
+              <ul class="td-verify" id="tdPosterVerify"></ul>
+              <a href="client-profile.html" class="btn btn-ghost btn-full" id="tdProfileLink">View Profile</a>
+            </section>
+
+            <!-- Escrow -->
+            <section class="td-escrow" aria-labelledby="hEscrow">
+              <span class="td-escrow-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
+              <h2 class="td-escrow-title" id="hEscrow">StreetTasker Escrow Shield</h2>
+              <p class="td-escrow-text">Work with confidence. Task funds are held securely in escrow and released only after the job is signed off.</p>
+            </section>
+
+            <!-- Share -->
+            <section class="ap-panel td-share" aria-labelledby="hShare">
+              <h2 class="td-h3" id="hShare">Share this task</h2>
+              <div class="td-share-row">
+                <input type="text" class="td-share-input" id="tdShareUrl" readonly aria-label="Task link" />
+                <button type="button" class="btn btn-mint btn-sm" id="tdCopy"><svg class="ap-i" aria-hidden="true"><use href="#i-copy"/></svg>Copy</button>
+              </div>
+            </section>
+
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone action bar -->
+    <div class="td-actionbar" id="tdActionbar" hidden>
+      <button type="button" class="td-bar-msg" id="tdBarMsg" aria-label="Message the poster" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-chat"/></svg></button>
+      <button type="button" class="btn btn-primary td-bar-offer" id="tdBarOffer"><span id="tdBarLabel">Make an Offer</span></button>
+    </div>
+  </div>
+
+  <!-- Make an offer (taskers only) -->
+  <dialog class="ap-dialog tp-dialog cp-dialog td-dialog" id="tdOfferDialog" aria-labelledby="tdOfferTitle">
+    <div class="tp-dialog-body" id="tdOfferBody"></div>
+  </dialog>
+
+  <!-- Photo viewer -->
+  <dialog class="ap-dialog tp-dialog tp-lightbox td-dialog" id="tdLightbox" aria-label="Task photos">
+    <button type="button" class="tp-lightbox-close" data-close aria-label="Close"><svg class="ap-i" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <img class="tp-lightbox-img" id="tdLbImg" alt="" />
+    <div class="td-lb-bar">
+      <button type="button" class="td-icon-btn" id="tdLbPrev" aria-label="Previous photo"><svg class="ap-i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+      <div class="td-lb-text">
+        <p class="tp-lightbox-title" id="tdLbTitle"></p>
+        <p class="tp-lightbox-meta" id="tdLbMeta"></p>
+      </div>
+      <button type="button" class="td-icon-btn" id="tdLbNext" aria-label="Next photo"><svg class="ap-i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+    </div>
+  </dialog>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/task-details.js"></script>
+</body>
+</html>
