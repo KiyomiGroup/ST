@@ -1,0 +1,72 @@
+/* ============================================================
+   STREETTASKER — make-offer.css
+   Make an Offer page (make-offer.html). Prefix: mo-
+   Loaded AFTER css/applications.css, css/profile-pages.css and
+   css/task-details.css. It reuses .ap-page, .ap-card, .ap-panel,
+   .td-topbar, .td-badge, .td-escrow, .td-avatar and the .btn family.
+   Tokens only: no raw colours, font sizes or radii.
+   Stage 1: top bar, title block, task summary side panel.
+   ============================================================ */
+
+.mo-page [hidden] { display: none; }
+
+/* ── Top bar ─────────────────────────────────────────────── */
+.mo-topbar-chip, .mo-close { display: none; }
+
+/* ── Title block ─────────────────────────────────────────── */
+.mo-title { font-size: var(--text-h1-sm); }
+.mo-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.mo-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill); background: var(--pt-field); color: var(--pt-ink);
+  font-size: var(--text-sm); font-weight: 600;
+}
+.mo-chip .ap-i { width: 16px; height: 16px; color: var(--pt-green); }
+.mo-chip--primary { background: var(--pt-mint); color: var(--pt-green); font-family: var(--font-heading); font-weight: 700; }
+
+/* ── Customer row (phone: inside the title block, desktop: inside the summary) ── */
+.mo-who { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.mo-who:empty { display: none; }
+.mo-who-text { min-width: 0; }
+.mo-who-name { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; overflow-wrap: anywhere; }
+.mo-who-meta { margin-top: var(--space-1); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.mo-who-meta .ap-i { width: 14px; height: 14px; color: var(--color-warning); fill: currentColor; }
+.mo-who-meta b { color: var(--pt-ink); font-weight: 700; }
+.mo-who--phone { display: none; }
+
+/* ── Task summary (side) ─────────────────────────────────── */
+.mo-summary { display: flex; flex-direction: column; gap: var(--space-4); }
+.mo-photo { overflow: hidden; border-radius: var(--radius-xl); background: var(--pt-field-strong); }
+.mo-photo img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.mo-loc { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.mo-loc .ap-i { width: 16px; height: 16px; flex-shrink: 0; color: var(--pt-green); }
+.mo-summary .mo-who { padding: var(--space-3) var(--space-4); border-radius: var(--radius-xl); background: var(--pt-field); }
+.mo-specs { display: flex; flex-direction: column; gap: var(--space-3); }
+.mo-spec-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.mo-spec-list li { display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--text-sm); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.mo-spec-list .ap-i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; color: var(--pt-green); }
+
+/* ── Form area (filled in the next stages) ───────────────── */
+.mo-form { display: flex; flex-direction: column; gap: var(--space-5); }
+.mo-form:empty { display: none; }
+
+/* ── Phone ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mo-layout { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); }
+  .mo-layout .td-main { display: flex; flex-direction: column; gap: var(--space-4); }
+  .mo-layout .td-side { display: flex; flex-direction: column; gap: var(--space-4); }
+
+  /* Back arrow, "Make an Offer" chip, close button, as in the phone reference */
+  .mo-topbar { justify-content: space-between; }
+  .mo-topbar-chip {
+    display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill); background: var(--pt-mint); color: var(--pt-green);
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
+  }
+  .mo-close { display: inline-grid; }
+
+  /* Customer lives in the title block on phones, so the side summary drops its copy and photo */
+  .mo-who--phone { display: flex; }
+  .mo-who--phone:empty { display: none; }
+  .mo-summary .mo-who--card, .mo-summary .mo-photo { display: none; }
+}
