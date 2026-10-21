@@ -5,6 +5,8 @@
 
    Stage 1: load the task, check the viewer may make an offer, fill the title block and the task summary.
    Stage 2: offer amount, quick-amount chips, 12% fee + "You will receive".
+   Stage 3: pitch (counter, quick phrases) and availability (date + arrival window); the message builder.
+   Stage 4: terms checkbox, Submit Offer (saves through applyToTask), error handling, "Offer sent" state.
    Later stages add, in order: pitch + availability, proof + submit, edit mode, and the links
    from the task page and client profile. See MAKE-OFFER-HANDOFF.md.
 
@@ -25,10 +27,15 @@
   var MAX_OFFER = 10000000;    /* guards against a mistyped extra zero */
   var STEP = 500;              /* quick amounts round to the nearest N500 */
   var PRESET_PCT = 0.10;       /* quick amounts: budget, 10% above, 10% below */
+  var PITCH_MAX = 600;
+  var PITCH_MIN = 20;
+  var WINDOWS = { morning: 'Morning (8am-11am)', afternoon: 'Afternoon (12pm-3pm)', flexible: 'Flexible (anytime)' };
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var FEE_RATE = 0.12;         /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
 
   var state = { id: null, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
-    amount: null };   /* the offer in naira (whole number) or null while empty or invalid */
+    amount: null, pitch: '', date: '', window: '', sending: false };   /* the offer in naira (whole number) or null while empty or invalid */
 
   /* ── helpers ─────────────────────────────────────────────── */
   function icon(name) { return '<svg class="ap-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
@@ -168,6 +175,8 @@
       '<div class="mo-who-text"><p class="mo-who-name">' + esc(shortName(name)) + '<span class="td-tag">Customer</span></p>' +
       (meta.length ? '<p class="mo-who-meta">' + meta.join('<span aria-hidden="true">\u2022</span>') + '</p>' : '') + '</div>';
     $('moWhoPhone').innerHTML = html; $('moWhoCard').innerHTML = html;
+    var first = text(u && (u.name || u.business_name)).split(/\s+/)[0];
+    if (first) setText('moPitchWho', first);
   }
 
   /* ── Stage 2: offer amount ───────────────────────────────── */
@@ -213,6 +222,7 @@
       b.setAttribute('aria-pressed', n && Number(b.getAttribute('data-amount')) === n ? 'true' : 'false');
     });
     renderFee();
+    paintSubmit();
   }
   function setAmount(n) {
     $('moAmount').value = n ? String(n) : '';
@@ -262,6 +272,180 @@
     setAmount(budget >= MIN_OFFER ? budget : null);
   }
 
+  /* ── Stage 3: pitch + availability ───────────────────────── */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function todayYmd() { return ymd(new Date()); }
+  function parseYmd(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+    if (!m) return null;
+    var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d) ? null : d;
+  }
+  function pitchError(v) {
+    var t = text(v);
+    if (!t) return 'Write a short pitch for the customer.';
+    if (t.length < PITCH_MIN) return 'Tell the customer a little more (at least ' + PITCH_MIN + ' characters).';
+    return '';
+  }
+  function dateError(v) {
+    if (!v) return 'Choose the date you can do the job.';
+    if (!parseYmd(v)) return 'Choose a valid date.';
+    if (v < todayYmd()) return 'Choose today or a later date.';
+    return '';
+  }
+  function showFieldError(inputId, errId, wrapEl, msg) {
+    var err = $(errId);
+    err.textContent = msg; err.hidden = !msg;
+    $(inputId).setAttribute('aria-invalid', msg ? 'true' : 'false');
+    if (wrapEl) wrapEl.classList.toggle('is-invalid', !!msg);
+  }
+  function paintPitchCount() {
+    setText('moPitchCount', $('moPitch').value.length + ' / ' + PITCH_MAX);
+    var phrases = $('moSuggest').querySelectorAll('[data-phrase]'), v = $('moPitch').value;
+    Array.prototype.forEach.call(phrases, function (b) { b.disabled = v.indexOf(b.getAttribute('data-phrase')) !== -1; });
+  }
+  function paintWindow() {
+    Array.prototype.forEach.call($('moWindows').children, function (b) {
+      var on = b.getAttribute('data-window') === state.window;
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.tabIndex = on || (!state.window && b === $('moWindows').firstElementChild) ? 0 : -1;
+    });
+  }
+  function setWindow(w) { state.window = WINDOWS[w] ? w : ''; paintWindow(); }
+
+  /* "Sat 15 Nov" (the year is added when it is not this year) */
+  function arrivalDate(v) {
+    var d = parseYmd(v);
+    if (!d) return '';
+    var out = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    return d.getFullYear() !== new Date().getFullYear() ? out + ' ' + d.getFullYear() : out;
+  }
+  /* The message saved with the offer (see MAKE-OFFER-HANDOFF.md, "Message format").
+     "|" is the separator, so it is removed from the pitch. The rate comes before the arrival on purpose. */
+  function buildMessage() {
+    var pitch = text($('moPitch').value).replace(/\|/g, '/');
+    var msg = pitch + ' | Proposed rate: ' + NAIRA + Number(state.amount).toLocaleString('en-NG');
+    var when = arrivalDate(state.date);
+    if (when) msg += ' | Arrival: ' + when + ', ' + (WINDOWS[state.window] || WINDOWS.flexible);
+    return msg;
+  }
+  /* Checks every field, shows the errors, focuses the first bad one. Used by Submit in Stage 4. */
+  function validateAll() {
+    var aErr = amountError(readAmount()), pErr = pitchError($('moPitch').value), dErr = dateError($('moDate').value);
+    showAmountError(aErr);
+    showFieldError('moPitch', 'moPitchErr', null, pErr);
+    showFieldError('moDate', 'moDateErr', $('moDate').parentNode, dErr);
+    var first = aErr ? 'moAmount' : pErr ? 'moPitch' : dErr ? 'moDate' : '';
+    if (first) $(first).focus();
+    return !first;
+  }
+
+  function wirePitch() {
+    var box = $('moPitch');
+    box.addEventListener('input', function () {
+      state.pitch = box.value; paintPitchCount();
+      if (!pitchError(box.value)) showFieldError('moPitch', 'moPitchErr', null, '');
+    });
+    box.addEventListener('blur', function () { if (box.value !== '') showFieldError('moPitch', 'moPitchErr', null, pitchError(box.value)); });
+    $('moSuggest').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-phrase]');
+      if (!b) return;
+      var cur = box.value.replace(/\s+$/, ''), add = b.getAttribute('data-phrase');
+      var next = cur ? cur + ' ' + add : add;
+      if (next.length > PITCH_MAX) { showFieldError('moPitch', 'moPitchErr', null, 'There is no room left for that phrase. The pitch can be ' + PITCH_MAX + ' characters.'); return; }
+      box.value = next; state.pitch = next; paintPitchCount();
+      showFieldError('moPitch', 'moPitchErr', null, pitchError(next));
+      box.focus();
+    });
+
+    var date = $('moDate');
+    date.min = todayYmd();
+    date.addEventListener('change', function () {
+      state.date = date.value;
+      showFieldError('moDate', 'moDateErr', date.parentNode, dateError(date.value));
+    });
+    $('moWindows').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-window]');
+      if (b) setWindow(b.getAttribute('data-window'));
+    });
+    /* Arrow keys move through the three windows, as a radio group does */
+    $('moWindows').addEventListener('keydown', function (e) {
+      var keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+      if (!keys[e.key]) return;
+      e.preventDefault();
+      var items = Array.prototype.slice.call($('moWindows').children);
+      var at = items.indexOf(document.activeElement); if (at < 0) at = 0;
+      var next = items[(at + keys[e.key] + items.length) % items.length];
+      setWindow(next.getAttribute('data-window')); next.focus();
+    });
+  }
+  /* Starting values: the task's due date (if it is not in the past) and its time of day, otherwise flexible */
+  function initAvailability(t) {
+    var due = '';
+    if (t.deadline) { var d = new Date(t.deadline); if (!isNaN(d)) due = ymd(d); }
+    if (due && due >= todayYmd()) { $('moDate').value = due; state.date = due; }
+    var tod = String(t.time_of_day || '').toLowerCase();
+    setWindow(tod === 'morning' || tod === 'afternoon' ? tod : 'flexible');
+    paintPitchCount();
+  }
+
+  /* ── Stage 4: terms + submit ─────────────────────────────── */
+  function paintSubmit() {
+    if (state.sending) return;
+    setText('moSubmitLabel', state.amount ? 'Submit Offer for ' + money(state.amount) : 'Submit Offer');
+  }
+  function showSubmitError(msg, linkHref, linkText) {
+    var el = $('moSubmitErr');
+    el.textContent = msg;
+    if (msg && linkHref) {
+      el.appendChild(document.createTextNode(' '));
+      var a = document.createElement('a'); a.href = linkHref; a.textContent = linkText; el.appendChild(a);
+    }
+    el.hidden = !msg;
+  }
+  function showDone() {
+    $('moForm').hidden = true;
+    $('moDoneBack').href = taskUrl();
+    var done = $('moDone'); done.hidden = false;
+    document.querySelector('.mo-topbar-chip').textContent = 'Offer sent';
+    window.scrollTo(0, 0);
+    done.focus();
+  }
+  async function submitOffer() {
+    if (state.sending) return;
+    showSubmitError('');
+    var ok = validateAll();
+    var agreed = $('moTerms').checked;
+    var tErr = $('moTermsErr');
+    tErr.textContent = agreed ? '' : 'Tick the box to confirm you agree.'; tErr.hidden = agreed;
+    $('moTerms').setAttribute('aria-invalid', agreed ? 'false' : 'true');
+    if (!ok) return;
+    if (!agreed) { $('moTerms').focus(); return; }
+
+    state.sending = true;
+    var btn = $('moSubmit'); btn.disabled = true; setText('moSubmitLabel', 'Sending\u2026');
+    try {
+      var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
+      await apply({ taskId: state.task.id, message: buildMessage() });
+      state.myApplication = { status: 'pending' };
+      state.sending = false;
+      showDone();
+    } catch (e) {
+      var msg = (e && e.message) || '';
+      state.sending = false; btn.disabled = false; paintSubmit();
+      if (/already applied/i.test(msg)) showSubmitError('You have already applied for this task.', 'applications.html', 'View My Applications');
+      else if (/log in/i.test(msg)) showSubmitError('Your session has ended. Please log in again.', 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search), 'Log in');
+      else showSubmitError('We could not send your offer. Check your connection and try again.');
+    }
+  }
+  function wireSubmit() {
+    $('moSubmit').addEventListener('click', submitOffer);
+    $('moTerms').addEventListener('change', function () {
+      if ($('moTerms').checked) { $('moTermsErr').hidden = true; $('moTerms').setAttribute('aria-invalid', 'false'); }
+    });
+  }
+
   /* ── load ────────────────────────────────────────────────── */
   async function load() {
     var sb = window.supabase;
@@ -294,14 +478,14 @@
       return showError('You have already sent an offer', 'Your offer for this task is waiting for the customer. You can follow it from My Applications.', 'applications.html', 'View My Applications');
     }
 
-    renderHead(t); renderSummary(t); renderWho(state.poster); initAmount(t);
+    renderHead(t); renderSummary(t); renderWho(state.poster); initAmount(t); initAvailability(t);
 
     $('moLoading').hidden = true;
     $('moContent').hidden = false;
   }
 
   async function init() {
-    wireAmount();
+    wireAmount(); wirePitch(); wireSubmit();
     try {
       var q = new URLSearchParams(window.location.search);
       state.id = text(q.get('task') || q.get('id'));

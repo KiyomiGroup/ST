@@ -31,6 +31,8 @@
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
       <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
       <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+      <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M12 2v6"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></symbol>
       <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol>
     </defs>
   </svg>
@@ -100,9 +102,73 @@
                 </div>
               </section>
 
-              <!-- 2. Pitch + 3. Availability (Stage 3), 4. Proof + submit (Stage 4) go here -->
+              <!-- 2. Pitch (Stage 3) -->
+              <section class="ap-card td-card mo-sec" aria-labelledby="moPitchTitle">
+                <div class="td-card-head">
+                  <h2 class="td-h2 mo-h2" id="moPitchTitle"><span class="mo-step">2</span>Your Pitch to <span id="moPitchWho">the customer</span></h2>
+                  <span class="td-hint" id="moPitchCount" aria-live="polite">0 / 600</span>
+                </div>
+                <div class="mo-field">
+                  <label class="form-label" for="moPitch">Explain why you are the best fit for this job, your equipment and your availability:</label>
+                  <textarea id="moPitch" class="mo-pitch" rows="6" maxlength="600" aria-describedby="moPitchErr"></textarea>
+                  <p class="ap-error" id="moPitchErr" role="alert" hidden></p>
+                </div>
+                <div class="mo-suggest" id="moSuggest" role="group" aria-label="Quick suggestions">
+                  <span class="mo-suggest-label">Quick suggestions:</span>
+                  <button type="button" class="mo-chip-btn" data-phrase="I can start promptly.">+ Start promptly</button>
+                  <button type="button" class="mo-chip-btn" data-phrase="I bring my own equipment and supplies.">+ Own equipment</button>
+                  <button type="button" class="mo-chip-btn" data-phrase="Happy to answer any questions before we start.">+ Happy to answer questions</button>
+                </div>
+              </section>
+
+              <!-- 3. Availability (Stage 3) -->
+              <section class="ap-card td-card mo-sec" aria-labelledby="moAvailTitle">
+                <div class="td-card-head">
+                  <h2 class="td-h2 mo-h2" id="moAvailTitle"><span class="mo-step">3</span>Availability &amp; Arrival Time</h2>
+                </div>
+                <div class="mo-avail">
+                  <div class="mo-field">
+                    <label class="form-label" for="moDate">Scheduled date</label>
+                    <div class="mo-date">
+                      <svg class="ap-i" aria-hidden="true"><use href="#i-calendar"/></svg>
+                      <input type="date" id="moDate" class="mo-date-input" aria-describedby="moDateErr" />
+                    </div>
+                    <p class="ap-error" id="moDateErr" role="alert" hidden></p>
+                  </div>
+                  <div class="mo-field">
+                    <span class="form-label" id="moWindowLabel">Target arrival window</span>
+                    <div class="mo-windows" id="moWindows" role="radiogroup" aria-labelledby="moWindowLabel">
+                      <button type="button" class="mo-window" role="radio" aria-checked="false" data-window="morning"><svg class="ap-i" aria-hidden="true"><use href="#i-sunrise"/></svg><strong>Morning</strong><span>8am - 11am</span></button>
+                      <button type="button" class="mo-window" role="radio" aria-checked="false" data-window="afternoon"><svg class="ap-i" aria-hidden="true"><use href="#i-sun"/></svg><strong>Afternoon</strong><span>12pm - 3pm</span></button>
+                      <button type="button" class="mo-window" role="radio" aria-checked="false" data-window="flexible"><svg class="ap-i" aria-hidden="true"><use href="#i-clock"/></svg><strong>Flexible</strong><span>Anytime</span></button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 4. Terms + submit (Stage 4). Proof photos are not part of this page yet. -->
+              <section class="ap-card td-card mo-sec mo-submit-sec" aria-label="Submit your offer">
+                <label class="mo-terms">
+                  <input type="checkbox" id="moTerms" aria-describedby="moTermsErr" />
+                  <span>I agree to the StreetTasker <a href="terms.html" target="_blank" rel="noopener">Terms</a> and understand that payments must be made through the platform.</span>
+                </label>
+                <p class="ap-error" id="moTermsErr" role="alert" hidden></p>
+                <p class="ap-error" id="moSubmitErr" role="alert" hidden></p>
+                <button type="button" class="btn btn-primary btn-lg mo-submit" id="moSubmit"><span id="moSubmitLabel">Submit Offer</span><svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+              </section>
 
             </div>
+
+            <!-- Shown instead of the form once the offer is sent -->
+            <section class="ap-card td-card mo-done" id="moDone" aria-labelledby="moDoneTitle" tabindex="-1" hidden>
+              <span class="mo-done-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+              <h2 class="td-h2" id="moDoneTitle">Offer sent</h2>
+              <p class="mo-done-text">The customer has been notified and will review your offer. You will be told when they respond.</p>
+              <div class="mo-done-actions">
+                <a href="applications.html" class="btn btn-primary btn-lg">View My Applications</a>
+                <a href="find-tasks.html" class="btn btn-ghost btn-lg" id="moDoneBack">Back to the task</a>
+              </div>
+            </section>
 
           </div>
 
