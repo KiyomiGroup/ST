@@ -127,29 +127,6 @@
     </div>
   </div>
 
-  <!-- Apply modal -->
-  <div class="modal-overlay" id="applyModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width:480px;text-align:left;">
-      <button class="modal-close-x" onclick="closeApply()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      <h2 style="margin-bottom:6px;" id="applyTitle">Apply to Task</h2>
-      <p style="font-size:var(--text-sm);margin-bottom:20px;" id="applyDesc"></p>
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;">Your message *</label>
-        <textarea id="applyMsg" rows="4" placeholder="Describe your experience and why you're the right fit..."
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:var(--font);resize:vertical;outline:none;"
-          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-      </div>
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;">Your proposed price (₦) <span style="font-weight:400;color:var(--text-muted);">optional</span></label>
-        <input id="applyPrice" type="number" min="0" placeholder="e.g. 5000"
-          style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:var(--font);outline:none;"
-          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" />
-      </div>
-      <div id="applyErr" style="display:none;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--red);margin-bottom:14px;"></div>
-      <button class="btn btn-primary btn-full" id="applyBtn" onclick="submitApply()">Send Application</button>
-    </div>
-  </div>
-
   <div id="footer-placeholder"></div>
 
   <!-- Mobile bottom tab bar now comes from the shared, global
@@ -171,10 +148,12 @@
   <script src="js/location.js"></script>
   <script>
     let ALL_TASKS = [];
-    let ACTIVE_TASK_ID = null;
     let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0, types: [], urgencies: [] };
 
     async function initPage() {
+      /* Older links (?task=ID, labelled "View Task Details") go straight to the task page */
+      const _tid = (new URLSearchParams(window.location.search).get('task') || '').trim();
+      if (_tid) { window.location.replace('task-details.html?id=' + encodeURIComponent(_tid)); return; }
       try {
         ALL_TASKS = await window.ST.db.fetchTasks({ limit: 100 });
       } catch (e) {
@@ -209,11 +188,6 @@
       if (_q0 && si) { si.value = _q0; TASK_FILTERS.search = _q0; }
       if (_l0 && _li) { _li.value = _l0; TASK_FILTERS.location = _l0; }
       if (_q0 || _l0) renderTasks();
-
-      /* Deep link from Home (?task=ID): open the apply modal for that task */
-      const _tid = (_qs.get('task') || '').trim();
-      const _tk  = _tid && ALL_TASKS.find(t => String(t.id) === _tid);
-      if (_tk) openApply(_tk.id, _tk.title || 'Task', String(_tk.description || '').slice(0, 80));
 
       /* Task Type checkboxes */
       document.querySelectorAll('[name="ttype"]').forEach(cb => cb.addEventListener('change', () => {
@@ -289,66 +263,15 @@
       grid.innerHTML = f.map(buildTaskCard).join('');
     }
 
-    /* Card markup lives in js/ui.js (stTaskCard). One delegated handler opens the apply modal. */
+    /* Card markup lives in js/ui.js (stTaskCard). Clicking a card opens the Make an Offer page
+       (login and tasker checks happen there); "View Details" is a real link to the task page. */
     function buildTaskCard(t) { return stTaskCard(t); }
     document.getElementById('tasksGrid').addEventListener('click', function (ev) {
-      if (ev.target.closest('.st-card-save') || ev.target.closest('a')) return; /* View Details is a real link */
+      if (ev.target.closest('.st-card-save') || ev.target.closest('a')) return;
       const card = ev.target.closest('.st-card--task');
-      if (!card) return;
-      const t = ALL_TASKS.find(x => String(x.id) === card.dataset.taskId);
-      if (!t) return;
-      const d = (t.description || '').slice(0, 90);
-      openApply(t.id, t.title || 'Untitled Task', d);
+      if (!card || !card.dataset.taskId) return;
+      window.location.href = 'make-offer.html?task=' + encodeURIComponent(card.dataset.taskId);
     });
-
-    function openApply(id, title, desc) {
-      ACTIVE_TASK_ID = id;
-      document.getElementById('applyTitle').textContent = 'Apply: ' + title;
-      document.getElementById('applyDesc').textContent  = desc + (desc.length >= 80 ? '…' : '');
-      document.getElementById('applyMsg').value   = '';
-      document.getElementById('applyPrice').value = '';
-      document.getElementById('applyErr').style.display = 'none';
-      document.getElementById('applyModal').classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
-    }
-    window.openApply = openApply;
-
-    function closeApply() {
-      document.getElementById('applyModal').classList.remove('modal-open');
-      document.body.style.overflow = '';
-    }
-    window.closeApply = closeApply;
-
-    async function submitApply() {
-      const user = await window.ST.auth.getCurrentUser();
-      if (!user) {
-        closeApply();
-        showToast('Please log in to apply to tasks.');
-        setTimeout(() => { window.location.href = 'login.html?redirect=find-tasks.html'; }, 1200);
-        return;
-      }
-      const msg  = document.getElementById('applyMsg').value.trim();
-      const price= document.getElementById('applyPrice').value.trim();
-      const err  = document.getElementById('applyErr');
-      const btn  = document.getElementById('applyBtn');
-      if (!msg) { err.textContent = 'Please write a message.'; err.style.display = 'block'; return; }
-
-      btn.disabled = true; btn.textContent = 'Sending...';
-      try {
-        const fullMsg = msg + (price ? ` | Proposed rate: ₦${price}` : '');
-        await window.ST.db.applyToTask({ taskId: ACTIVE_TASK_ID, message: fullMsg });
-        closeApply();
-        showToast('Application sent! The task owner has been notified.');
-      } catch(e) {
-        err.textContent = e.message.includes('already applied')
-          ? '⚠ You have already applied for this task.'
-          : 'Failed: ' + e.message;
-        err.style.display = 'block';
-      } finally {
-        btn.disabled = false; btn.textContent = 'Send Application';
-      }
-    }
-    window.submitApply = submitApply;
   </script>
   <script>
     /* Keep the fixed nav+hero+search block (mobile only) from overlapping
