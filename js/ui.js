@@ -327,7 +327,10 @@ function stTaskCard(t) {
     </div>
     <div class="st-card-foot">
       <div class="st-card-foot-info"><span class="st-card-foot-label">Client Budget</span><span class="st-card-price">${ST_NGN(t.budget)}</span>${offersNote}</div>
-      <button type="button" class="st-card-cta">Make an Offer ${ST_ICON.arrow}</button>
+      <div class="st-card-actions">
+        <a class="st-card-cta st-card-cta--ghost" href="task-details.html?id=${encodeURIComponent(t.id)}">View Details</a>
+        <button type="button" class="st-card-cta">Make an Offer ${ST_ICON.arrow}</button>
+      </div>
     </div>
   </article>`;
 }

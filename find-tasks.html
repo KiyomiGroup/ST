@@ -292,7 +292,7 @@
     /* Card markup lives in js/ui.js (stTaskCard). One delegated handler opens the apply modal. */
     function buildTaskCard(t) { return stTaskCard(t); }
     document.getElementById('tasksGrid').addEventListener('click', function (ev) {
-      if (ev.target.closest('.st-card-save')) return;
+      if (ev.target.closest('.st-card-save') || ev.target.closest('a')) return; /* View Details is a real link */
       const card = ev.target.closest('.st-card--task');
       if (!card) return;
       const t = ALL_TASKS.find(x => String(x.id) === card.dataset.taskId);

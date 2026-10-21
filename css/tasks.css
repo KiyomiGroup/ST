@@ -727,6 +727,10 @@
   transition: background var(--t) var(--ease);
 }
 .st-card-cta:hover { background: var(--card-cta-bg-hover); }
+.st-card-actions { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.st-card-actions .st-card-cta { flex: 1 1 auto; }
+.st-card-cta--ghost { background: var(--color-bg); color: var(--color-text); box-shadow: inset 0 0 0 1.5px var(--color-border-strong); }
+.st-card-cta--ghost:hover { background: var(--color-primary-soft); }
 .st-card-cta svg { width: var(--text-base); height: var(--text-base); }
 
 /* tasker */
@@ -775,6 +779,7 @@
 @media (max-width: 480px) {
   .st-card-foot { flex-wrap: wrap; }
   .st-card-foot .st-card-cta { flex: 1 1 auto; }
+  .st-card-foot .st-card-actions { flex: 1 1 100%; }
   .st-tasker-avatar { --card-avatar-size: 72px; }
 }
 @media (prefers-reduced-motion: reduce) { .st-card, .st-card:hover { transition: none; transform: none; } }
