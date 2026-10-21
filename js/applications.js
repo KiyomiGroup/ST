@@ -4,6 +4,7 @@
    Stage 1: load the signed-in tasker's applications, filter, search, sort, render.
    Stage 2: sidebar metrics, escrow lookup, Edit Offer, Withdraw, Message Customer.
    Stage 3: aria-busy while loading (mobile layout lives in applications.css).
+   Edit Offer opens make-offer.html?task=<id>&edit=1 (the full page); Withdraw stays a small dialog here.
    Data: task_applications joined to tasks. The proposed rate is stored inside
    the message text ("| Proposed rate: ...") so it is parsed out here.
    ============================================================ */
@@ -199,7 +200,7 @@
     var id = esc(a.id), taskHref = 'find-tasks.html?task=' + encodeURIComponent(t.id || '');
     var actions = '<div class="ap-actions"><a class="ap-btn" href="' + taskHref + '">View Task Details</a>';
     if (g === 'pending') {
-      actions += '<button type="button" class="ap-btn ap-btn-text" data-act="edit" data-id="' + id + '">Edit Offer</button>' +
+      actions += '<a class="ap-btn ap-btn-text" href="make-offer.html?task=' + encodeURIComponent(t.id || '') + '&amp;edit=1">Edit Offer</a>' +
         '<button type="button" class="ap-btn ap-btn-quiet" data-act="withdraw" data-id="' + id + '">Withdraw Application</button>';
     } else if (g === 'accepted') {
       actions = '<div class="ap-actions">' + (a.ownerId ? '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Customer</button>' : '') +
@@ -262,20 +263,14 @@
   var current = null;
   function findApp(id) { return state.apps.filter(function (a) { return String(a.id) === String(id); })[0]; }
   function wire(dlg) { dlg.addEventListener('click', function (e) { if (e.target === dlg || e.target.hasAttribute('data-close')) dlg.close(); }); }
-  wire($('apEditDlg')); wire($('apWithdrawDlg'));
+  wire($('apWithdrawDlg'));
 
   $('apList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]'); if (!b) return;
     var a = findApp(b.getAttribute('data-id')); if (!a) return;
     current = a;
     var act = b.getAttribute('data-act');
-    if (act === 'edit') {
-      $('apEditTask').textContent = a.task.title || '';
-      $('apEditRate').value = a.offer || '';
-      $('apEditPitch').value = a.pitch || '';
-      $('apEditError').hidden = true;
-      $('apEditDlg').showModal();
-    } else if (act === 'withdraw') {
+    if (act === 'withdraw') {
       $('apWdText').textContent = 'Your offer for \u201C' + (a.task.title || 'this task') + '\u201D will be removed and the client will be told. You can apply again later if the task is still open.';
       $('apWithdrawDlg').showModal();
     } else if (act === 'message') {
@@ -283,20 +278,6 @@
         contextType: 'task_application', contextId: a.id, taskerId: state.user.id, customerId: a.ownerId, senderRole: 'tasker' }));
       window.location.href = 'messages.html';
     }
-  });
-
-  $('apEditForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    var save = $('apEditSave'), err = $('apEditError');
-    save.disabled = true; err.hidden = true;
-    try {
-      var rate = Number($('apEditRate').value), pitch = $('apEditPitch').value.trim();
-      await window.updateMyApplication(current.id, { message: pitch, rate: rate });
-      current.offer = Math.round(rate); current.pitch = pitch;
-      $('apEditDlg').close(); render();
-      if (window.showToast) window.showToast('Offer updated');
-    } catch (x) { err.textContent = x.message || 'Could not save changes.'; err.hidden = false; }
-    save.disabled = false;
   });
 
   $('apWdConfirm').addEventListener('click', async function () {

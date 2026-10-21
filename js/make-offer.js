@@ -7,8 +7,9 @@
    Stage 2: offer amount, quick-amount chips, 12% fee + "You will receive".
    Stage 3: pitch (counter, quick phrases) and availability (date + arrival window); the message builder.
    Stage 4: terms checkbox, Submit Offer (saves through applyToTask), error handling, "Offer sent" state.
-   Later stages add, in order: pitch + availability, proof + submit, edit mode, and the links
-   from the task page and client profile. See MAKE-OFFER-HANDOFF.md.
+   Stage 5: edit mode (make-offer.html?task=<id>&edit=1: loads the pending offer, pre-fills, saves through
+   updateMyApplication), sticky submit bar on phones, and the links from the task page, client profile and
+   My Applications. See MAKE-OFFER-HANDOFF.md.
 
    Reads:  tasks (the row), users (the customer), reviews (their rating, if the table exists),
            task_applications (has this tasker already made an offer?).
@@ -34,7 +35,7 @@
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var FEE_RATE = 0.12;         /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
 
-  var state = { id: null, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
+  var state = { id: null, edit: false, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
     amount: null, pitch: '', date: '', window: '', sending: false };   /* the offer in naira (whole number) or null while empty or invalid */
 
   /* ── helpers ─────────────────────────────────────────────── */
@@ -70,6 +71,7 @@
   }
   function toLogin() { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search); }
   function taskUrl() { return 'task-details.html?id=' + encodeURIComponent(state.id); }
+  function backUrl() { return state.edit ? 'applications.html' : taskUrl(); }
 
   async function currentUser() {
     if (state.viewer) return state.viewer;
@@ -95,7 +97,7 @@
   /* ── data ────────────────────────────────────────────────── */
   async function loadMyApplication(sb, taskId, user) {
     try {
-      var r = await sb.from('task_applications').select('id, status, message').eq('task_id', taskId).eq('tasker_id', user.id).limit(1);
+      var r = await sb.from('task_applications').select('id, status, message, created_at').eq('task_id', taskId).eq('tasker_id', user.id).limit(1);
       return (r.data && r.data[0]) || null;
     } catch (e) { return null; }
   }
@@ -135,8 +137,17 @@
     }
     $('moChips').innerHTML = chips.join('');
 
-    var back = taskUrl();
+    var back = backUrl();
     $('moBack').href = back; $('moClose').href = back;
+    if (state.edit) {
+      setText('moBackText', 'Back to My Applications');
+      setText('moTitle', 'Edit Offer: ' + title);
+      document.title = 'Edit Offer: ' + title + ' \u2014 StreetTasker';
+      document.querySelector('.mo-topbar-chip').lastChild.textContent = 'Edit Offer';
+      $('moClose').setAttribute('aria-label', 'Close and go back to My Applications');
+      setText('moSubmitLabel', 'Save Changes');
+      $('moDoneBack').href = taskUrl();
+    }
   }
 
   function renderSummary(t) {
@@ -323,12 +334,40 @@
   }
   /* The message saved with the offer (see MAKE-OFFER-HANDOFF.md, "Message format").
      "|" is the separator, so it is removed from the pitch. The rate comes before the arrival on purpose. */
-  function buildMessage() {
-    var pitch = text($('moPitch').value).replace(/\|/g, '/');
-    var msg = pitch + ' | Proposed rate: ' + NAIRA + Number(state.amount).toLocaleString('en-NG');
+  function pitchText() { return text($('moPitch').value).replace(/\|/g, '/'); }
+  /* "Sat 15 Nov, Morning (8am-11am)", or '' when no date is chosen */
+  function buildArrival() {
     var when = arrivalDate(state.date);
-    if (when) msg += ' | Arrival: ' + when + ', ' + (WINDOWS[state.window] || WINDOWS.flexible);
-    return msg;
+    return when ? when + ', ' + (WINDOWS[state.window] || WINDOWS.flexible) : '';
+  }
+  function buildMessage() {
+    var msg = pitchText() + ' | Proposed rate: ' + NAIRA + Number(state.amount).toLocaleString('en-NG');
+    var arrival = buildArrival();
+    return arrival ? msg + ' | Arrival: ' + arrival : msg;
+  }
+  /* The reverse of buildMessage(), used by edit mode. Anything missing comes back empty. */
+  function parseMessage(msg, createdAt) {
+    var s = String(msg || '');
+    var rate = s.match(/\|\s*Proposed rate:\s*([^|]+)/i);
+    var arr = s.match(/\|\s*Arrival:\s*([^|]+)/i);
+    var out = { pitch: s.replace(/\|\s*(?:Proposed rate|Arrival):.*$/i, '').trim(), rate: null, date: '', window: '' };
+    if (rate) { var n = parseInt(rate[1].replace(/[^\d]/g, ''), 10); if (n > 0) out.rate = n; }
+    if (arr) {
+      var a = arr[1].trim(), d = /^(?:\w{3}\s+)?(\d{1,2})\s+(\w{3})(?:\s+(\d{4}))?/.exec(a);
+      if (d) {
+        var mi = MONTHS.indexOf(d[2]);
+        if (mi !== -1) {
+          /* No year saved means "this year or the next": the first date that is not before the day the offer was sent */
+          var sent = new Date(createdAt), year = d[3] ? Number(d[3]) : (isNaN(sent) ? new Date().getFullYear() : sent.getFullYear());
+          var day = new Date(year, mi, Number(d[1]));
+          if (!d[3] && !isNaN(sent) && day < new Date(sent.getFullYear(), sent.getMonth(), sent.getDate())) day = new Date(year + 1, mi, Number(d[1]));
+          if (!isNaN(day) && day.getMonth() === mi) out.date = ymd(day);
+        }
+      }
+      var low = a.toLowerCase();
+      out.window = low.indexOf('morning') !== -1 ? 'morning' : low.indexOf('afternoon') !== -1 ? 'afternoon' : low.indexOf('flexible') !== -1 ? 'flexible' : '';
+    }
+    return out;
   }
   /* Checks every field, shows the errors, focuses the first bad one. Used by Submit in Stage 4. */
   function validateAll() {
@@ -390,10 +429,23 @@
     paintPitchCount();
   }
 
+  /* ── Stage 5: edit mode ──────────────────────────────────── */
+  /* Fills the form from the saved offer. A date in the past is left empty so the tasker must pick a new one. */
+  function prefillFromOffer(app) {
+    var p = parseMessage(app.message, app.created_at);
+    if (p.rate) setAmount(p.rate);
+    $('moPitch').value = p.pitch.slice(0, PITCH_MAX); state.pitch = $('moPitch').value;
+    if (p.date && p.date >= todayYmd()) { $('moDate').value = p.date; state.date = p.date; }
+    else { $('moDate').value = ''; state.date = ''; }
+    setWindow(p.window || 'flexible');
+    paintPitchCount();
+  }
+
   /* ── Stage 4: terms + submit ─────────────────────────────── */
   function paintSubmit() {
     if (state.sending) return;
-    setText('moSubmitLabel', state.amount ? 'Submit Offer for ' + money(state.amount) : 'Submit Offer');
+    var verb = state.edit ? 'Save Changes' : 'Submit Offer';
+    setText('moSubmitLabel', state.amount ? verb + ' for ' + money(state.amount) : verb);
   }
   function showSubmitError(msg, linkHref, linkText) {
     var el = $('moSubmitErr');
@@ -407,8 +459,9 @@
   function showDone() {
     $('moForm').hidden = true;
     $('moDoneBack').href = taskUrl();
+    if (state.edit) { setText('moDoneTitle', 'Offer updated'); setText('moDoneText', 'The customer has been told that your offer changed.'); }
     var done = $('moDone'); done.hidden = false;
-    document.querySelector('.mo-topbar-chip').textContent = 'Offer sent';
+    document.querySelector('.mo-topbar-chip').lastChild.textContent = state.edit ? 'Offer updated' : 'Offer sent';
     window.scrollTo(0, 0);
     done.focus();
   }
@@ -424,19 +477,25 @@
     if (!agreed) { $('moTerms').focus(); return; }
 
     state.sending = true;
-    var btn = $('moSubmit'); btn.disabled = true; setText('moSubmitLabel', 'Sending\u2026');
+    var btn = $('moSubmit'); btn.disabled = true; setText('moSubmitLabel', state.edit ? 'Saving\u2026' : 'Sending\u2026');
     try {
-      var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
-      await apply({ taskId: state.task.id, message: buildMessage() });
-      state.myApplication = { status: 'pending' };
+      if (state.edit) {
+        /* The arrival is passed as a string so it replaces the one saved before */
+        await window.updateMyApplication(state.myApplication.id, { message: pitchText(), rate: state.amount, arrival: buildArrival() });
+      } else {
+        var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
+        var saved = await apply({ taskId: state.task.id, message: buildMessage() });
+        state.myApplication = { id: saved && saved.id, status: 'pending' };
+      }
       state.sending = false;
       showDone();
     } catch (e) {
       var msg = (e && e.message) || '';
       state.sending = false; btn.disabled = false; paintSubmit();
-      if (/already applied/i.test(msg)) showSubmitError('You have already applied for this task.', 'applications.html', 'View My Applications');
+      if (state.edit && /no longer be edited/i.test(msg)) showSubmitError('This offer can no longer be edited. It may have been answered or withdrawn.', 'applications.html', 'View My Applications');
+      else if (/already applied/i.test(msg)) showSubmitError('You have already applied for this task.', 'applications.html', 'View My Applications');
       else if (/log in/i.test(msg)) showSubmitError('Your session has ended. Please log in again.', 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search), 'Log in');
-      else showSubmitError('We could not send your offer. Check your connection and try again.');
+      else showSubmitError(state.edit ? 'We could not save your changes. Check your connection and try again.' : 'We could not send your offer. Check your connection and try again.');
     }
   }
   function wireSubmit() {
@@ -454,7 +513,7 @@
     if (r.error || !t) return showError('Task not found', 'This task may have been removed, or the link is incomplete.', 'find-tasks.html', 'Browse Tasks');
     state.task = t;
     state.posterId = t.customer_id || t.user_id || null;
-    var back = taskUrl();
+    var back = backUrl();
 
     if (state.posterId && String(state.viewer.id) === String(state.posterId)) {
       return showError('This is your task', 'Offers are made by taskers. You can review the offers you receive from My Tasks.', 'my-tasks.html', 'Go to My Tasks');
@@ -473,12 +532,17 @@
     ]);
     state.poster = results[0]; state.rating = results[1]; state.myApplication = results[2];
 
-    /* Already offered: the edit mode for this arrives in a later stage */
-    if (state.myApplication) {
-      return showError('You have already sent an offer', 'Your offer for this task is waiting for the customer. You can follow it from My Applications.', 'applications.html', 'View My Applications');
+    var mine = state.myApplication;
+    if (state.edit && !mine) state.edit = false;   /* nothing to edit: treat the link as a new offer */
+    if (mine && !state.edit) {
+      return showError('You have already sent an offer', 'Your offer for this task is waiting for the customer. You can follow it, change it or withdraw it from My Applications.', 'applications.html', 'View My Applications');
+    }
+    if (mine && String(mine.status || '').toLowerCase() !== 'pending') {
+      return showError('This offer can no longer be edited', 'The customer has already answered it, so it is locked. You can see it in My Applications.', 'applications.html', 'View My Applications');
     }
 
     renderHead(t); renderSummary(t); renderWho(state.poster); initAmount(t); initAvailability(t);
+    if (state.edit) prefillFromOffer(mine);
 
     $('moLoading').hidden = true;
     $('moContent').hidden = false;
@@ -489,6 +553,7 @@
     try {
       var q = new URLSearchParams(window.location.search);
       state.id = text(q.get('task') || q.get('id'));
+      state.edit = q.get('edit') === '1';
       if (!state.id) return showError('Task not found', 'This offer link is incomplete.', 'find-tasks.html', 'Browse Tasks');
       var user = await currentUser();
       if (!user) return toLogin();

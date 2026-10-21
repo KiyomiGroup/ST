@@ -16,7 +16,7 @@
                       (started = not pending, declined, cancelled or rejected).
      Dispute Rate   = disputed started bookings divided by started bookings.
      Customer rating= average of reviews written about this user (reviews.reviewee_id), when that table has rows.
-   Needs:  supabaseClient.js, sanitize.js (escapeHtml), auth.js, db.js (ST.db.applyToTask), ui.js (showToast).
+   Needs:  supabaseClient.js, sanitize.js (escapeHtml), auth.js, db.js, ui.js (showToast). "Make an Offer" opens make-offer.html?task=<id>.
    ============================================================ */
 (function () {
   'use strict';
@@ -393,47 +393,6 @@
     catch (e) { toast(url); }
   }
 
-  /* Make an offer: same fields and call as the Find Tasks apply form */
-  function openOffer(taskId) {
-    var t = state.openTasks.filter(function (x) { return String(x.id) === String(taskId); })[0];
-    if (!t) return;
-    var dlg = $('cpOfferDialog'), body = $('cpOfferBody');
-    body.innerHTML =
-      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
-      '<h2 class="tp-dialog-title" id="cpOfferTitle">Make an offer</h2>' +
-      '<p class="tp-dialog-lead">' + esc(t.title || 'this task') + '</p>' +
-      '<div class="form-group"><label class="form-label" for="cpOfferMsg">Your message *</label>' +
-        '<textarea id="cpOfferMsg" class="form-textarea" rows="4" maxlength="800" placeholder="Introduce yourself and explain how you would do the job\u2026"></textarea></div>' +
-      '<div class="form-group"><label class="form-label" for="cpOfferPrice">Proposed rate (' + NAIRA + ', optional)</label>' +
-        '<input type="number" id="cpOfferPrice" class="form-input" min="0" inputmode="numeric" placeholder="e.g. 30000" /></div>' +
-      '<p class="ap-error" id="cpOfferErr" role="alert" hidden></p>' +
-      '<button type="button" class="btn btn-primary tp-dialog-submit" id="cpOfferSend" data-task="' + esc(t.id) + '">Send Offer</button>' +
-      '<p class="tp-dialog-foot">All communication stays on StreetTasker. No phone numbers shared.</p>';
-    if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
-  }
-
-  async function sendOffer(taskId) {
-    var msg = text($('cpOfferMsg').value), price = text($('cpOfferPrice').value);
-    var err = $('cpOfferErr'), btn = $('cpOfferSend');
-    if (!msg) { err.textContent = 'Please write a message.'; err.hidden = false; return; }
-    err.hidden = true; btn.disabled = true; btn.textContent = 'Sending\u2026';
-    try {
-      var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
-      await apply({ taskId: taskId, message: msg + (price ? ' | Proposed rate: ' + NAIRA + price : '') });
-      state.appliedIds[taskId] = true;
-      var b = document.querySelector('[data-offer="' + String(taskId).replace(/"/g, '') + '"]');
-      if (b) { b.disabled = true; b.textContent = 'Offer Sent'; }
-      $('cpOfferBody').innerHTML =
-        '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
-        '<h2 class="tp-dialog-title">Offer sent</h2><p class="tp-dialog-lead">' + esc(state.first) + ' has been notified and will review your offer.</p>' +
-        '<a href="applications.html" class="btn btn-primary tp-dialog-submit">View My Applications</a>' +
-        '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
-    } catch (e) {
-      err.textContent = /already applied/i.test((e && e.message) || '') ? 'You have already applied for this task.' : ((e && e.message) || 'Could not send your offer. Please try again.');
-      err.hidden = false; btn.disabled = false; btn.textContent = 'Send Offer';
-    }
-  }
-
   function wire() {
     $('cpShare').addEventListener('click', shareProfile);
     $('cpContact').addEventListener('click', contactClient);
@@ -450,13 +409,7 @@
       var b = e.target.closest('[data-offer]'); if (!b || b.disabled) return;
       var user = await currentUser();
       if (!user) return toLogin();
-      openOffer(b.getAttribute('data-offer'));
-    });
-
-    var dlg = $('cpOfferDialog');
-    dlg.addEventListener('click', function (e) {
-      if (e.target === dlg || e.target.closest('[data-close]')) { if (dlg.open) dlg.close(); return; }
-      var s = e.target.closest('#cpOfferSend'); if (s) sendOffer(s.getAttribute('data-task'));
+      window.location.href = 'make-offer.html?task=' + encodeURIComponent(b.getAttribute('data-offer'));
     });
   }
 

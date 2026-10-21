@@ -243,15 +243,26 @@ async function updateApplicationStatus(applicationId, status) {
   return data;
 }
 
-/* Tasker edits a still-pending proposal (pitch text and proposed rate).
-   Stored in the same "<pitch> | Proposed rate: ₦N" format the customer views parse. */
-async function updateMyApplication(applicationId, { message, rate }) {
+/* Tasker edits a still-pending proposal (pitch text, proposed rate and, optionally, arrival).
+   Stored in the same "<pitch> | Proposed rate: ₦N | Arrival: <date>, <window>" format the customer views parse.
+   arrival: undefined keeps the arrival already saved, a string replaces it, null or '' removes it. */
+async function updateMyApplication(applicationId, { message, rate, arrival }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to edit your offer.');
   const amount = Math.round(Number(rate));
   if (!amount || amount <= 0) throw new Error('Enter a valid offer amount.');
-  const pitch = String(message || '').replace(/\|\s*Proposed rate:.*$/i, '').trim();
-  const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG');
+  /* The pitch ends where "Proposed rate" (or a stray "Arrival") starts; "|" is the separator, so none is kept inside it */
+  const pitch = String(message || '').replace(/\|\s*(?:Proposed rate|Arrival):.*$/i, '').replace(/\|/g, '/').trim();
+  let when = '';
+  if (arrival === undefined) {
+    const { data: current } = await window.supabase.from('task_applications')
+      .select('message').eq('id', applicationId).eq('tasker_id', user.id).maybeSingle();
+    const m = String(current?.message || '').match(/\|\s*Arrival:\s*([^|]+)/i);
+    when = m ? m[1].trim() : '';
+  } else {
+    when = String(arrival || '').replace(/\|/g, '/').trim();
+  }
+  const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG') + (when ? ' | Arrival: ' + when : '');
   const { data, error } = await window.supabase.from('task_applications')
     .update({ message: stored })
     .eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending')

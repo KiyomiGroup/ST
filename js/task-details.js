@@ -377,50 +377,12 @@
   }
 
   /* ── actions ─────────────────────────────────────────────── */
+  /* Making an offer is a full page now: make-offer.html?task=<id> */
   async function startOffer() {
     var user = await currentUser();
     if (!user) return toLogin();
     if (!state.isTasker) return toast('Switch to a tasker account to make offers.');
-    openOffer();
-  }
-
-  function openOffer() {
-    var t = state.task, dlg = $('tdOfferDialog'), body = $('tdOfferBody');
-    body.innerHTML =
-      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
-      '<h2 class="tp-dialog-title" id="tdOfferTitle">Make an offer</h2>' +
-      '<p class="tp-dialog-lead">' + esc(text(t.title) || 'this task') + '</p>' +
-      '<div class="form-group"><label class="form-label" for="tdOfferMsg">Your message *</label>' +
-        '<textarea id="tdOfferMsg" class="form-textarea" rows="4" maxlength="800" placeholder="Introduce yourself and explain how you would do the job\u2026"></textarea></div>' +
-      '<div class="form-group"><label class="form-label" for="tdOfferPrice">Proposed rate (' + NAIRA + ', optional)</label>' +
-        '<input type="number" id="tdOfferPrice" class="form-input" min="0" inputmode="numeric" placeholder="' + (Number(t.budget) > 0 ? 'e.g. ' + Number(t.budget) : 'e.g. 30000') + '" /></div>' +
-      '<p class="ap-error" id="tdOfferErr" role="alert" hidden></p>' +
-      '<button type="button" class="btn btn-primary tp-dialog-submit" id="tdOfferSend">Send Offer</button>' +
-      '<p class="tp-dialog-foot">All communication stays on StreetTasker. No phone numbers shared.</p>';
-    if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
-  }
-
-  async function sendOffer() {
-    var msg = text($('tdOfferMsg').value), price = text($('tdOfferPrice').value);
-    var err = $('tdOfferErr'), btn = $('tdOfferSend');
-    if (!msg) { err.textContent = 'Please write a message.'; err.hidden = false; return; }
-    err.hidden = true; btn.disabled = true; btn.textContent = 'Sending\u2026';
-    try {
-      var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
-      await apply({ taskId: state.task.id, message: msg + (price ? ' | Proposed rate: ' + NAIRA + price : '') });
-      state.myApplication = { status: 'pending' };
-      renderActions();
-      $('tdOfferBody').innerHTML =
-        '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
-        '<h2 class="tp-dialog-title">Offer sent</h2><p class="tp-dialog-lead">The customer has been notified and will review your offer.</p>' +
-        '<a href="applications.html" class="btn btn-primary tp-dialog-submit">View My Applications</a>' +
-        '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
-      var o = await loadOffers(window.supabase, state.task.id);
-      if (o.readable) { state.offers = o.rows; state.offersReadable = true; renderOffers(); }
-    } catch (e) {
-      err.textContent = /already applied/i.test((e && e.message) || '') ? 'You have already applied for this task.' : ((e && e.message) || 'Could not send your offer. Please try again.');
-      err.hidden = false; btn.disabled = false; btn.textContent = 'Send Offer';
-    }
+    window.location.href = 'make-offer.html?task=' + encodeURIComponent(state.task.id);
   }
 
   /* Messages hang off a task application, so a tasker can message once they have made an offer */
@@ -488,11 +450,9 @@
     $('tdLbPrev').addEventListener('click', function () { openLightbox(state.lbIdx - 1); });
     $('tdLbNext').addEventListener('click', function () { openLightbox(state.lbIdx + 1); });
 
-    [$('tdOfferDialog'), $('tdLightbox')].forEach(function (dlg) {
-      dlg.addEventListener('click', function (e) {
-        if (e.target === dlg || e.target.closest('[data-close]')) { if (dlg.open) dlg.close(); return; }
-        if (dlg.id === 'tdOfferDialog' && e.target.closest('#tdOfferSend')) sendOffer();
-      });
+    var lb = $('tdLightbox');
+    lb.addEventListener('click', function (e) {
+      if (e.target === lb || e.target.closest('[data-close]')) { if (lb.open) lb.close(); }
     });
     $('tdLightbox').addEventListener('close', function () { showPhoto(state.lbIdx); });
   }
