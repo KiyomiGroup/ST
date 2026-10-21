@@ -155,7 +155,6 @@
       $('moClose').setAttribute('aria-label', 'Close and go back to My Applications');
       setText('moSubmitLabel', 'Save Changes');
       $('moSaveDraft').hidden = true;
-      $('moDoneBack').href = taskUrl();
     }
   }
 
@@ -615,11 +614,66 @@
     }
     el.hidden = !msg;
   }
+  /* ── Offer sent ──────────────────────────────────────────── */
+  function renderMilestonesDone(t) {
+    var ms = parseList(t.milestones).map(function (m) {
+      return { title: text(m && (m.title || m.name)), desc: text(m && (m.description || m.desc)), amount: Number(m && m.amount) };
+    }).filter(function (m) { return m.title; });
+    $('moDoneMilestones').hidden = !ms.length;
+    if (!ms.length) return;
+    setText('moDoneMsCount', ms.length + (ms.length === 1 ? ' step' : ' steps'));
+    $('moDoneMsList').innerHTML = ms.map(function (m, i) {
+      return '<li class="td-step"><span class="td-step-n">' + (i + 1) + '</span><div class="td-step-body"><strong>' + esc(m.title) + '</strong>' +
+        (m.desc ? '<span>' + esc(m.desc) + '</span>' : '') + '</div>' + (m.amount > 0 ? '<span class="td-step-amt">' + esc(money(m.amount)) + '</span>' : '') + '</li>';
+    }).join('');
+  }
+  /* Other open tasks, so the tasker can keep going. Hidden when there are none. */
+  async function renderMatches() {
+    try {
+      var r = await window.supabase.from('tasks').select('id, title, budget, location, status').eq('status', 'open').neq('id', state.id).order('created_at', { ascending: false }).limit(2);
+      var rows = (r.error ? [] : (r.data || [])).filter(function (x) { return text(x.title) && taskGroup(x.status) === 'open'; }).slice(0, 2);
+      if (!rows.length) return;
+      $('moMatchList').innerHTML = rows.map(function (x) {
+        return '<a class="mo-match" href="task-details.html?id=' + encodeURIComponent(x.id) + '">' +
+          (text(x.location) ? '<span class="mo-match-loc">' + icon('pin') + esc(text(x.location)) + '</span>' : '') +
+          '<strong>' + esc(text(x.title)) + '</strong>' +
+          '<span class="mo-match-foot"><b>' + esc(money(x.budget) || 'Budget to be agreed') + '</b><span>View task' + icon('arrow-right') + '</span></span></a>';
+      }).join('');
+      $('moMatches').hidden = false;
+    } catch (e) { /* hidden */ }
+  }
   function showDone() {
     state.done = true; clearDraft();
+    var t = state.task || {}, who = text(state.poster && (state.poster.name || state.poster.business_name));
+    var first = who.split(/\s+/)[0] || 'the customer';
+    var title = text(t.title) || 'this task';
+    var out = state.amount ? payout(state.amount) : null;
+    var appId = String((state.myApplication && state.myApplication.id) || '').replace(/-/g, '');
+
     $('moForm').hidden = true;
+    $('moPage').classList.add('is-done');
+    if (state.edit) {
+      setText('moDoneTitle', 'Offer updated');
+      $('moDoneText').textContent = 'The customer has been told that your offer for ' + title + ' changed.';
+    } else {
+      $('moDoneText').innerHTML = 'Your proposal was sent to <strong>' + esc(shortName(who) || first) + '</strong> for <strong>' + esc(title) + '</strong>.';
+    }
+    $('moDoneRef').lastChild.textContent = appId ? 'Ref #' + appId.slice(0, 8).toUpperCase() : (state.edit ? 'Offer updated' : 'Offer sent');
+    setText('moDoneTaskId', 'Task #' + String(t.id || state.id).replace(/-/g, '').slice(0, 8).toUpperCase());
+    $('moWhoDone').innerHTML = $('moWhoPhone').innerHTML;
+    setText('moDoneQuote', money(state.amount));
+    setText('moDoneNet', out ? money(out.net) : '');
+    setText('moDoneFee', out ? 'After the ' + money(out.fee) + ' platform fee' : '');
+    setText('moDoneWhen', buildArrival() || 'Not set');
+    setText('moDonePitch', pitchText());
+    var n = proofUrls().length;
+    $('moDonePhotos').hidden = !n;
+    if (n) $('moDonePhotos').lastChild.textContent = n + (n === 1 ? ' photo attached' : ' photos attached');
+    renderMilestonesDone(t);
     $('moDoneBack').href = taskUrl();
-    if (state.edit) { setText('moDoneTitle', 'Offer updated'); setText('moDoneText', 'The customer has been told that your offer changed.'); }
+    $('moActions').hidden = false;
+    renderMatches();
+
     var done = $('moDone'); done.hidden = false;
     document.querySelector('.mo-topbar-chip').lastChild.textContent = state.edit ? 'Offer updated' : 'Offer sent';
     window.scrollTo(0, 0);

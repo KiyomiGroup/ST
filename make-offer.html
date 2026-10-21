@@ -115,7 +115,7 @@
               <!-- 2. Pitch (Stage 3) -->
               <section class="ap-card td-card mo-sec" aria-labelledby="moPitchTitle">
                 <div class="td-card-head">
-                  <h2 class="td-h2 mo-h2" id="moPitchTitle"><span class="mo-step">2</span>Your Pitch to <span id="moPitchWho">the customer</span></h2>
+                  <h2 class="td-h2 mo-h2" id="moPitchTitle"><span class="mo-step">2</span><span class="mo-h2-text">Your Pitch to <span id="moPitchWho">the customer</span></span></h2>
                   <span class="td-hint" id="moPitchCount" aria-live="polite">0 / 600</span>
                 </div>
                 <div class="mo-field">
@@ -186,15 +186,66 @@
             </div>
 
             <!-- Shown instead of the form once the offer is sent -->
-            <section class="ap-card td-card mo-done" id="moDone" aria-labelledby="moDoneTitle" tabindex="-1" hidden>
-              <span class="mo-done-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
-              <h2 class="td-h2" id="moDoneTitle">Offer sent</h2>
-              <p class="mo-done-text" id="moDoneText">The customer has been notified and will review your offer. You will be told when they respond.</p>
-              <div class="mo-done-actions">
-                <a href="applications.html" class="btn btn-primary btn-lg">View My Applications</a>
-                <a href="find-tasks.html" class="btn btn-ghost btn-lg" id="moDoneBack">Back to the task</a>
-              </div>
-            </section>
+            <div class="mo-done" id="moDone" tabindex="-1" hidden>
+
+              <section class="ap-card td-card mo-done-hero" aria-labelledby="moDoneTitle">
+                <span class="mo-done-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-check"/></svg></span>
+                <div class="mo-done-copy">
+                  <div class="td-badges">
+                    <span class="td-badge td-badge--open" id="moDoneRef"><span class="td-dot"></span>Offer sent</span>
+                    <span class="td-posted"><svg class="ap-i" aria-hidden="true"><use href="#i-clock"/></svg>Just now</span>
+                  </div>
+                  <h2 class="td-title mo-done-title" id="moDoneTitle">Offer submitted!</h2>
+                  <p class="mo-done-text" id="moDoneText"></p>
+                </div>
+              </section>
+
+              <section class="ap-card td-card" aria-labelledby="moDoneOfferTitle">
+                <div class="td-card-head">
+                  <h2 class="td-h2" id="moDoneOfferTitle">Your Offer</h2>
+                  <span class="td-hint" id="moDoneTaskId"></span>
+                </div>
+                <div class="mo-who mo-who--done" id="moWhoDone"></div>
+                <dl class="mo-figs">
+                  <div><dt>Your quote</dt><dd id="moDoneQuote"></dd></div>
+                  <div><dt>You will receive</dt><dd id="moDoneNet"></dd><span id="moDoneFee"></span></div>
+                  <div><dt>Arrival window</dt><dd id="moDoneWhen"></dd></div>
+                </dl>
+                <div class="mo-recap">
+                  <h3 class="td-eyebrow">Your pitch</h3>
+                  <p class="mo-recap-text" id="moDonePitch"></p>
+                  <span class="mo-chip" id="moDonePhotos" hidden><svg class="ap-i" aria-hidden="true"><use href="#i-camera-plus"/></svg><span></span></span>
+                </div>
+              </section>
+
+              <section class="ap-card td-card" id="moDoneMilestones" aria-labelledby="moDoneMsTitle" hidden>
+                <div class="td-card-head">
+                  <div>
+                    <h2 class="td-h2" id="moDoneMsTitle">Payment Milestones</h2>
+                    <p class="td-sub">Set by the customer. Each part is released only after they sign it off.</p>
+                  </div>
+                  <span class="td-hint" id="moDoneMsCount"></span>
+                </div>
+                <ol class="td-steps" id="moDoneMsList"></ol>
+              </section>
+
+              <section class="ap-card td-card mo-next" aria-labelledby="moNextTitle">
+                <div class="td-card-head">
+                  <div>
+                    <h2 class="td-h2" id="moNextTitle">What Happens Next?</h2>
+                    <p class="td-sub">How your job moves from offer to payout.</p>
+                  </div>
+                  <span class="td-badge td-badge--open"><span class="td-dot"></span>Live status</span>
+                </div>
+                <ol class="td-steps">
+                  <li class="td-step is-current"><span class="td-step-n">1</span><div class="td-step-body"><strong>The customer reviews your offer</strong><span>They get a notification now. You will be told as soon as they respond.</span></div><span class="td-badge td-badge--open">In progress</span></li>
+                  <li class="td-step"><span class="td-step-n">2</span><div class="td-step-body"><strong>Offer accepted and escrow funded</strong><span>The payment is secured in StreetTasker Escrow before you start.</span></div></li>
+                  <li class="td-step"><span class="td-step-n">3</span><div class="td-step-body"><strong>Chat and exact address unlock</strong><span>Message the customer and get the full address once your offer is accepted.</span></div></li>
+                  <li class="td-step"><span class="td-step-n">4</span><div class="td-step-body"><strong>Finish the job and get paid</strong><span>Once the customer signs off, your payout is released to your wallet.</span></div></li>
+                </ol>
+              </section>
+
+            </div>
 
           </div>
 
@@ -217,6 +268,19 @@
               <span class="td-escrow-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
               <h2 class="td-escrow-title" id="moEscrowTitle">StreetTasker Escrow Shield</h2>
               <p class="td-escrow-text">Work with confidence. Task funds are held securely in escrow and released only after the customer signs off the finished job.</p>
+            </section>
+
+            <!-- Shown after the offer is sent -->
+            <section class="ap-panel mo-actions" id="moActions" aria-label="What to do next" hidden>
+              <h2 class="td-eyebrow">Quick access</h2>
+              <a href="applications.html" class="btn btn-primary btn-lg btn-full" id="moDoneTrack">Track my offer<svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+              <a href="find-tasks.html" class="btn btn-mint btn-full">Browse more tasks</a>
+              <a href="find-tasks.html" class="mo-link" id="moDoneBack">View the original task</a>
+            </section>
+
+            <section class="ap-panel mo-matches" id="moMatches" aria-labelledby="moMatchTitle" hidden>
+              <h2 class="td-eyebrow" id="moMatchTitle">More tasks to explore</h2>
+              <div class="mo-match-list" id="moMatchList"></div>
             </section>
 
           </aside>
