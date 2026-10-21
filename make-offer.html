@@ -74,8 +74,35 @@
               <div class="mo-chips" id="moChips"></div>
             </section>
 
-            <!-- The offer form sections (amount, pitch, availability, proof, submit) are added here in the next stages -->
-            <div class="mo-form" id="moForm"></div>
+            <div class="mo-form" id="moForm">
+
+              <!-- 1. Offer amount (Stage 2) -->
+              <section class="ap-card td-card mo-sec" aria-labelledby="moAmountTitle">
+                <div class="td-card-head">
+                  <h2 class="td-h2 mo-h2" id="moAmountTitle"><span class="mo-step">1</span>Your Offer Amount</h2>
+                  <span class="mo-note-tag">No hidden charges</span>
+                </div>
+                <div class="mo-field">
+                  <label class="form-label" for="moAmount">Proposed compensation (NGN)</label>
+                  <div class="mo-amount">
+                    <span class="mo-amount-cur" aria-hidden="true">&#8358;</span>
+                    <input type="text" id="moAmount" class="mo-amount-input" inputmode="numeric" autocomplete="off" maxlength="9" aria-describedby="moAmountErr" />
+                    <span class="mo-amount-tag" id="moAmountTag">Custom</span>
+                  </div>
+                  <p class="ap-error" id="moAmountErr" role="alert" hidden></p>
+                </div>
+                <div class="mo-presets" id="moPresets" role="group" aria-label="Quick amounts" hidden></div>
+                <div class="mo-fee" aria-live="polite">
+                  <div class="mo-fee-row"><span>Your total offer</span><strong id="moFeeTotal">&mdash;</strong></div>
+                  <div class="mo-fee-row"><span>StreetTasker platform fee <span class="mo-fee-pct" id="moFeePct">12%</span></span><span id="moFeeAmt">&mdash;</span></div>
+                  <div class="mo-fee-net"><span>You will receive</span><strong id="moFeeNet">&mdash;</strong></div>
+                  <p class="mo-fee-note">Paid out once the customer signs off the finished work.</p>
+                </div>
+              </section>
+
+              <!-- 2. Pitch + 3. Availability (Stage 3), 4. Proof + submit (Stage 4) go here -->
+
+            </div>
 
           </div>
 
@@ -113,6 +140,7 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/make-offer.js"></script>

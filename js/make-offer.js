@@ -3,10 +3,10 @@
    Make an Offer page: make-offer.html?task=<task id>
    (?id=<task id> also works). Replaces the small offer pop-up.
 
-   Stage 1 (this file): load the task, check the viewer may make an offer,
-   fill the title block and the task summary.
-   Later stages add, in order: amount + fee, pitch, availability, proof,
-   submit, edit mode, and the links from the task page and client profile.
+   Stage 1: load the task, check the viewer may make an offer, fill the title block and the task summary.
+   Stage 2: offer amount, quick-amount chips, 12% fee + "You will receive".
+   Later stages add, in order: pitch + availability, proof + submit, edit mode, and the links
+   from the task page and client profile. See MAKE-OFFER-HANDOFF.md.
 
    Reads:  tasks (the row), users (the customer), reviews (their rating, if the table exists),
            task_applications (has this tasker already made an offer?).
@@ -21,8 +21,14 @@
   var NAIRA = '\u20a6';
   var ENDED = ['cancelled', 'canceled', 'closed', 'done', 'expired'];
   var MAX_SPECS = 5;
+  var MIN_OFFER = 1000;        /* lowest offer a tasker can send */
+  var MAX_OFFER = 10000000;    /* guards against a mistyped extra zero */
+  var STEP = 500;              /* quick amounts round to the nearest N500 */
+  var PRESET_PCT = 0.10;       /* quick amounts: budget, 10% above, 10% below */
+  var FEE_RATE = 0.12;         /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
 
-  var state = { id: null, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null };
+  var state = { id: null, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
+    amount: null };   /* the offer in naira (whole number) or null while empty or invalid */
 
   /* ── helpers ─────────────────────────────────────────────── */
   function icon(name) { return '<svg class="ap-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
@@ -164,6 +170,98 @@
     $('moWhoPhone').innerHTML = html; $('moWhoCard').innerHTML = html;
   }
 
+  /* ── Stage 2: offer amount ───────────────────────────────── */
+  function payout(amount) {
+    try {
+      var a = window.ST.payments.calculateAmounts(amount);
+      return { fee: a.platformFee, net: a.taskerAmount };
+    } catch (e) {
+      var fee = Math.round(amount * FEE_RATE);
+      return { fee: fee, net: amount - fee };
+    }
+  }
+  function readAmount() {
+    var digits = $('moAmount').value.replace(/\D/g, '');
+    return digits ? parseInt(digits, 10) : NaN;
+  }
+  /* Returns an error message, or '' when the amount can be sent */
+  function amountError(n) {
+    if (isNaN(n)) return 'Enter the amount you want to be paid.';
+    if (n < MIN_OFFER) return 'The lowest offer is ' + money(MIN_OFFER) + '.';
+    if (n > MAX_OFFER) return 'The highest offer is ' + money(MAX_OFFER) + '.';
+    return '';
+  }
+  function showAmountError(msg) {
+    var err = $('moAmountErr');
+    err.textContent = msg; err.hidden = !msg;
+    $('moAmount').parentNode.classList.toggle('is-invalid', !!msg);
+    $('moAmount').setAttribute('aria-invalid', msg ? 'true' : 'false');
+  }
+  function renderFee() {
+    var n = state.amount;
+    var out = n ? payout(n) : null;
+    setText('moFeeTotal', n ? money(n) : '\u2014');
+    setText('moFeeAmt', out ? '- ' + money(out.fee) : '\u2014');
+    setText('moFeeNet', out ? money(out.net) : '\u2014');
+  }
+  function paintAmount() {
+    var n = state.amount, budget = Number(state.task && state.task.budget);
+    var tag = $('moAmountTag'), match = !!n && budget > 0 && n === budget;
+    tag.textContent = match ? 'Client budget' : 'Custom';
+    tag.classList.toggle('is-match', match);
+    Array.prototype.forEach.call($('moPresets').children, function (b) {
+      b.setAttribute('aria-pressed', n && Number(b.getAttribute('data-amount')) === n ? 'true' : 'false');
+    });
+    renderFee();
+  }
+  function setAmount(n) {
+    $('moAmount').value = n ? String(n) : '';
+    state.amount = n && !amountError(n) ? n : null;
+    showAmountError('');
+    paintAmount();
+  }
+  /* Budget, then 10% above and below it (rounded to N500). Dropped when too low or the same as another. */
+  function renderPresets(t) {
+    var budget = Number(t.budget), box = $('moPresets');
+    if (!(budget >= MIN_OFFER)) { box.hidden = true; box.innerHTML = ''; return; }
+    var round = function (v) { return Math.round(v / STEP) * STEP; };
+    var seen = {}, opts = [{ n: budget, text: 'Match client (' + money(budget) + ')', first: true }];
+    seen[budget] = true;
+    [round(budget * (1 + PRESET_PCT)), round(budget * (1 - PRESET_PCT))].forEach(function (v) {
+      if (v >= MIN_OFFER && v <= MAX_OFFER && !seen[v]) { seen[v] = true; opts.push({ n: v, text: money(v) }); }
+    });
+    box.innerHTML = opts.map(function (o) {
+      return '<button type="button" class="mo-preset" data-amount="' + o.n + '" aria-pressed="false">' + (o.first ? icon('circle-check') : '') + esc(o.text) + '</button>';
+    }).join('');
+    box.hidden = false;
+  }
+  function wireAmount() {
+    var input = $('moAmount');
+    input.addEventListener('input', function () {
+      var digits = input.value.replace(/\D/g, '');
+      if (input.value !== digits) input.value = digits;
+      var n = readAmount();
+      state.amount = amountError(n) ? null : n;
+      if (!amountError(n) || isNaN(n)) showAmountError('');
+      else if (n > MAX_OFFER) showAmountError(amountError(n));
+      paintAmount();
+    });
+    input.addEventListener('blur', function () {
+      var n = readAmount();
+      if (input.value !== '') showAmountError(amountError(n));
+    });
+    $('moPresets').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-amount]');
+      if (b) setAmount(Number(b.getAttribute('data-amount')));
+    });
+  }
+  function initAmount(t) {
+    $('moFeePct').textContent = Math.round(FEE_RATE * 100) + '%';
+    renderPresets(t);
+    var budget = Number(t.budget);
+    setAmount(budget >= MIN_OFFER ? budget : null);
+  }
+
   /* ── load ────────────────────────────────────────────────── */
   async function load() {
     var sb = window.supabase;
@@ -196,13 +294,14 @@
       return showError('You have already sent an offer', 'Your offer for this task is waiting for the customer. You can follow it from My Applications.', 'applications.html', 'View My Applications');
     }
 
-    renderHead(t); renderSummary(t); renderWho(state.poster);
+    renderHead(t); renderSummary(t); renderWho(state.poster); initAmount(t);
 
     $('moLoading').hidden = true;
     $('moContent').hidden = false;
   }
 
   async function init() {
+    wireAmount();
     try {
       var q = new URLSearchParams(window.location.search);
       state.id = text(q.get('task') || q.get('id'));
