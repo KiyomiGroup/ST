@@ -375,7 +375,7 @@
   --card-cta-bg-hover:   var(--color-forest-800);
   --card-skill-bg:       #F1F1ED;
   --card-media-ratio:    16 / 10;
-  --card-avatar-size:    104px;
+  --card-avatar-size:    80px;
   --card-thumb-size:     72px;
   --shadow-card-hover:   0 14px 32px rgba(15, 61, 38, 0.10), 0 2px 6px rgba(15, 61, 38, 0.05);
 }
