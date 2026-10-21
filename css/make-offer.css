@@ -7,6 +7,7 @@
    Tokens only: no raw colours, font sizes or radii.
    Stage 1: top bar, title block, task summary side panel.
    Stage 5: submit bar fixed to the bottom on phones.
+   Stage 7: draft banner, proof photo grid, Save as Draft button.
    ============================================================ */
 
 .mo-page [hidden] { display: none; }
@@ -211,4 +212,49 @@
   .mo-done { padding: var(--space-6) var(--space-4); }
   .mo-done-actions { width: 100%; flex-direction: column; }
   .mo-done-actions .btn { width: 100%; justify-content: center; }
+}
+
+/* ── Draft banner, proof photos, Save as Draft (Stage 7) ─── */
+.mo-draft {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-xl); background: var(--pt-mint-soft); color: var(--pt-green); font-size: var(--text-sm); font-weight: 600;
+}
+.mo-draft .ap-i { width: 18px; height: 18px; flex-shrink: 0; }
+.mo-draft-text { flex: 1; min-width: 0; }
+.mo-draft-discard {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: 0; cursor: pointer; border: 0; background: transparent;
+  color: var(--pt-green); font-size: var(--text-sm); font-weight: 700; text-decoration: underline;
+}
+.mo-draft-discard:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.mo-draft-discard .ap-i { width: 14px; height: 14px; }
+
+.mo-help { font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.mo-file { display: none; }
+.mo-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-9) + var(--space-6)), 1fr)); gap: var(--space-3); }
+.mo-thumb { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: var(--radius-xl); background: var(--pt-field); }
+.mo-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mo-thumb-remove {
+  position: absolute; top: var(--space-2); right: var(--space-2); display: grid; place-items: center; width: var(--space-5); height: var(--space-5);
+  padding: 0; cursor: pointer; border: 0; border-radius: 50%; background: var(--pt-ink); color: var(--color-text-on-primary);
+}
+.mo-thumb-remove .ap-i { width: var(--space-3); height: var(--space-3); stroke-width: 3; }
+.mo-thumb-remove:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.mo-add-photo {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); aspect-ratio: 1 / 1; padding: var(--space-2);
+  cursor: pointer; border: 0; border-radius: var(--radius-xl); background: var(--pt-field); color: var(--pt-ink-muted);
+  font-size: var(--text-sm); font-weight: 600;
+}
+.mo-add-photo .ap-i { width: 24px; height: 24px; color: var(--pt-green); }
+.mo-add-photo:hover { background: var(--pt-field-strong); }
+.mo-add-photo:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
+.mo-submit-row { display: flex; align-items: center; gap: var(--space-3); }
+.mo-submit-row .mo-submit { flex: 1; width: auto; }
+.mo-draft-btn { flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .mo-submit-row { display: block; }
+  .mo-submit-row .mo-submit { width: 100%; }
+  .mo-draft-btn { display: none; }   /* phones auto-save instead, as Post a Task does */
+  .mo-photos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
 }

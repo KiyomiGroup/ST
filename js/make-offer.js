@@ -9,7 +9,10 @@
    Stage 4: terms checkbox, Submit Offer (saves through applyToTask), error handling, "Offer sent" state.
    Stage 5: edit mode (make-offer.html?task=<id>&edit=1: loads the pending offer, pre-fills, saves through
    updateMyApplication), sticky submit bar on phones, and the links from the task page, client profile and
-   My Applications. See MAKE-OFFER-HANDOFF.md.
+   My Applications.
+   Stage 7: proof photos (same rules and bucket as Post a Task: JPG/PNG/WebP, 5 MB, up to 5, "task-images")
+   and Save as Draft (same approach as Post a Task: saved on this device in localStorage, restored with a banner,
+   auto-saved as you type). See MAKE-OFFER-HANDOFF.md.
 
    Reads:  tasks (the row), users (the customer), reviews (their rating, if the table exists),
            task_applications (has this tasker already made an offer?).
@@ -33,10 +36,15 @@
   var WINDOWS = { morning: 'Morning (8am-11am)', afternoon: 'Afternoon (12pm-3pm)', flexible: 'Flexible (anytime)' };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var MAX_PHOTOS = 5;
+  var MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  var PHOTO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  var PHOTO_BUCKET = 'task-images';   /* the bucket Post a Task uses; files go under tasks/ like its photos */
   var FEE_RATE = 0.12;         /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
 
   var state = { id: null, edit: false, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
-    amount: null, pitch: '', date: '', window: '', sending: false };   /* the offer in naira (whole number) or null while empty or invalid */
+    amount: null, pitch: '', date: '', window: '', sending: false,
+    photos: [], draftKey: '', draftSavedAt: 0, done: false };   /* photos: { file, objectUrl, url } */   /* the offer in naira (whole number) or null while empty or invalid */
 
   /* ── helpers ─────────────────────────────────────────────── */
   function icon(name) { return '<svg class="ap-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
@@ -146,6 +154,7 @@
       document.querySelector('.mo-topbar-chip').lastChild.textContent = 'Edit Offer';
       $('moClose').setAttribute('aria-label', 'Close and go back to My Applications');
       setText('moSubmitLabel', 'Save Changes');
+      $('moSaveDraft').hidden = true;
       $('moDoneBack').href = taskUrl();
     }
   }
@@ -334,6 +343,8 @@
   }
   /* The message saved with the offer (see MAKE-OFFER-HANDOFF.md, "Message format").
      "|" is the separator, so it is removed from the pitch. The rate comes before the arrival on purpose. */
+  /* Proof links must be public files in our own storage (what uploadPhotos() makes), nothing from other sites */
+  function isHttps(u) { return /^https:\/\/[^\s\/]+\/storage\/v1\/object\/public\/\S+$/.test(u || ''); }
   function pitchText() { return text($('moPitch').value).replace(/\|/g, '/'); }
   /* "Sat 15 Nov, Morning (8am-11am)", or '' when no date is chosen */
   function buildArrival() {
@@ -343,14 +354,19 @@
   function buildMessage() {
     var msg = pitchText() + ' | Proposed rate: ' + NAIRA + Number(state.amount).toLocaleString('en-NG');
     var arrival = buildArrival();
-    return arrival ? msg + ' | Arrival: ' + arrival : msg;
+    if (arrival) msg += ' | Arrival: ' + arrival;
+    var proofs = proofUrls();
+    if (proofs.length) msg += ' | Proof: ' + proofs.join(' ');
+    return msg;
   }
   /* The reverse of buildMessage(), used by edit mode. Anything missing comes back empty. */
   function parseMessage(msg, createdAt) {
     var s = String(msg || '');
     var rate = s.match(/\|\s*Proposed rate:\s*([^|]+)/i);
     var arr = s.match(/\|\s*Arrival:\s*([^|]+)/i);
-    var out = { pitch: s.replace(/\|\s*(?:Proposed rate|Arrival):.*$/i, '').trim(), rate: null, date: '', window: '' };
+    var out = { pitch: s.replace(/\|\s*(?:Proposed rate|Arrival|Proof):.*$/i, '').trim(), rate: null, date: '', window: '', proofs: [] };
+    var pr = s.match(/\|\s*Proof:\s*([^|]+)/i);
+    if (pr) out.proofs = pr[1].trim().split(/\s+/).filter(isHttps).slice(0, MAX_PHOTOS);
     if (rate) { var n = parseInt(rate[1].replace(/[^\d]/g, ''), 10); if (n > 0) out.rate = n; }
     if (arr) {
       var a = arr[1].trim(), d = /^(?:\w{3}\s+)?(\d{1,2})\s+(\w{3})(?:\s+(\d{4}))?/.exec(a);
@@ -429,6 +445,147 @@
     paintPitchCount();
   }
 
+  /* ── Stage 7: proof photos ───────────────────────────────── */
+  function photoError(msg) { var e = $('moPhotoErr'); e.textContent = msg; e.hidden = !msg; }
+  function proofUrls() { return state.photos.filter(function (p) { return p.url; }).map(function (p) { return p.url; }); }
+  function renderPhotos() {
+    var box = $('moPhotos'); box.textContent = '';
+    state.photos.forEach(function (p, i) {
+      var item = document.createElement('div'); item.className = 'mo-thumb';
+      var img = document.createElement('img'); img.src = p.objectUrl || p.url; img.alt = 'Proof photo ' + (i + 1); item.appendChild(img);
+      var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'mo-thumb-remove';
+      rm.setAttribute('aria-label', 'Remove photo ' + (i + 1)); rm.setAttribute('data-remove', String(i)); rm.innerHTML = icon('close');
+      item.appendChild(rm); box.appendChild(item);
+    });
+    if (state.photos.length < MAX_PHOTOS) {
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'mo-add-photo'; add.setAttribute('data-add', '1');
+      add.innerHTML = icon('camera-plus') + '<span>Add Photo</span>';
+      box.appendChild(add);
+    }
+    setText('moPhotoCount', state.photos.length ? state.photos.length + ' of ' + MAX_PHOTOS : 'Optional');
+  }
+  /* Same checks as Post a Task: JPG, PNG or WebP, 5 MB each, up to 5 photos */
+  function addFiles(files) {
+    if (!files.length) return;
+    var ok = files.filter(function (f) { return PHOTO_EXT[f.type]; });
+    var msg = '';
+    if (!ok.length) { photoError('Please choose image files (JPG, PNG or WebP only).'); return; }
+    if (ok.length < files.length) msg = 'Only JPG, PNG and WebP photos can be added.';
+    var small = ok.filter(function (f) { return f.size <= MAX_PHOTO_BYTES; });
+    if (small.length < ok.length) msg = (ok.length - small.length) + ' photo(s) over 5 MB were skipped.';
+    var room = MAX_PHOTOS - state.photos.length;
+    if (small.length > room) msg = 'You can add up to ' + MAX_PHOTOS + ' photos.';
+    small.slice(0, room).forEach(function (f) { state.photos.push({ file: f, objectUrl: URL.createObjectURL(f), url: null }); });
+    photoError(msg);
+    renderPhotos(); saveDraft();
+  }
+  function removePhoto(i) {
+    var gone = state.photos.splice(i, 1)[0];
+    if (gone && gone.objectUrl) URL.revokeObjectURL(gone.objectUrl);
+    photoError(''); renderPhotos(); saveDraft();
+  }
+  /* Uploads the photos that are not uploaded yet. Resolves true when every photo has a URL. */
+  async function uploadPhotos() {
+    var pending = state.photos.filter(function (p) { return p.file && !p.url; });
+    if (!pending.length) return true;
+    var failed = 0, prog = $('moPhotoProgress');
+    prog.hidden = false;
+    try {
+      var user = await currentUser(), sb = window.supabase;
+      await Promise.all(pending.map(async function (p, i) {
+        try {
+          var name = 'tasks/' + user.id + '-offer-' + Date.now() + '-' + i + '.' + PHOTO_EXT[p.file.type];
+          var up = await sb.storage.from(PHOTO_BUCKET).upload(name, p.file, { cacheControl: '3600', upsert: true });
+          if (up.error) throw up.error;
+          p.url = sb.storage.from(PHOTO_BUCKET).getPublicUrl(name).data.publicUrl;
+        } catch (e) { failed++; console.warn('[make-offer] photo upload failed:', e && e.message); }
+      }));
+    } catch (e) { failed = pending.length; }
+    prog.hidden = true;
+    if (failed) { photoError(failed === 1 ? 'One photo could not be uploaded. Remove it or try again.' : failed + ' photos could not be uploaded. Remove them or try again.'); return false; }
+    photoError('');
+    return true;
+  }
+
+  /* ── Stage 7: draft (saved on this device, like Post a Task) ─ */
+  function toast(msg) { if (window.showToast) window.showToast(msg); }
+  function readDraft() {
+    try { var d = JSON.parse(localStorage.getItem(state.draftKey) || 'null'); return d && typeof d === 'object' ? d : null; }
+    catch (e) { return null; }
+  }
+  /* Writes the draft, or removes it when there is nothing worth keeping. Returns true when a draft is stored.
+     Only photos that are already uploaded are kept (a file cannot live in localStorage). */
+  function saveDraft() {
+    if (state.edit || state.done || !state.draftKey || !state.task) return false;
+    var d = { amount: state.amount, pitch: $('moPitch').value, date: state.date, window: state.window, photos: proofUrls(), savedAt: Date.now() };
+    var has = !!(text(d.pitch) || d.photos.length || (d.amount && d.amount !== Number(state.task.budget)));
+    try { if (has) localStorage.setItem(state.draftKey, JSON.stringify(d)); else localStorage.removeItem(state.draftKey); } catch (e) { return false; }
+    state.draftSavedAt = has ? d.savedAt : 0;
+    paintDraftAgo();
+    return has;
+  }
+  function clearDraft() {
+    try { if (state.draftKey) localStorage.removeItem(state.draftKey); } catch (e) { /* storage blocked */ }
+    state.draftSavedAt = 0; $('moDraft').hidden = true;
+  }
+  function paintDraftAgo() {
+    var el = $('moDraftAgo'); if (!el || !state.draftSavedAt) return;
+    var mins = Math.floor((Date.now() - state.draftSavedAt) / 60000);
+    el.textContent = mins < 1 ? 'just now' : mins < 60 ? mins + 'm ago' : Math.floor(mins / 60) + 'h ago';
+  }
+  function showDraftBanner() { $('moDraft').hidden = false; paintDraftAgo(); }
+  function restoreDraft() {
+    var d = readDraft();
+    if (!d) return;
+    var photos = list(d.photos).filter(isHttps).slice(0, MAX_PHOTOS);
+    var amount = Number(d.amount), pitch = typeof d.pitch === 'string' ? d.pitch.slice(0, PITCH_MAX) : '';
+    var has = !!(text(pitch) || photos.length || (amount && amount !== Number(state.task.budget)));
+    if (!has) return;
+    if (amount >= MIN_OFFER && amount <= MAX_OFFER) setAmount(Math.round(amount));
+    $('moPitch').value = pitch; state.pitch = pitch;
+    if (d.date && !dateError(d.date)) { $('moDate').value = d.date; state.date = d.date; }   /* a date that has passed falls back to the starting date */
+    if (WINDOWS[d.window]) setWindow(d.window);
+    state.photos = photos.map(function (u) { return { url: u }; });
+    paintPitchCount(); renderPhotos();
+    state.draftSavedAt = Number(d.savedAt) || Date.now();
+    showDraftBanner();
+  }
+  function discardDraft() {
+    if (!window.confirm('Discard this draft? The pitch, amount and photos on this page will be cleared.')) return;
+    clearDraft();
+    state.photos.forEach(function (p) { if (p.objectUrl) URL.revokeObjectURL(p.objectUrl); });
+    state.photos = []; renderPhotos(); photoError('');
+    $('moPitch').value = ''; state.pitch = ''; showFieldError('moPitch', 'moPitchErr', null, '');
+    $('moDate').value = ''; state.date = ''; showFieldError('moDate', 'moDateErr', $('moDate').parentNode, '');
+    $('moTerms').checked = false;
+    initAmount(state.task); initAvailability(state.task);
+    toast('Draft discarded.');
+  }
+  async function saveDraftClick() {
+    var btn = $('moSaveDraft'); if (btn.disabled || state.sending) return;
+    btn.disabled = true; btn.textContent = 'Saving\u2026';
+    var uploaded = await uploadPhotos();
+    var has = saveDraft();
+    btn.disabled = false; btn.textContent = 'Save as Draft';
+    if (!has) return toast('Nothing to save yet. Add your pitch or a photo first.');
+    showDraftBanner();
+    toast(uploaded ? 'Draft saved on this device. It will be here when you come back.' : 'Draft saved, without the photo that could not be uploaded.');
+  }
+  function wireProof() {
+    var input = $('moPhotoFiles');
+    input.addEventListener('change', function () { addFiles(Array.prototype.slice.call(input.files)); input.value = ''; });
+    $('moPhotos').addEventListener('click', function (e) {
+      var rm = e.target.closest('[data-remove]');
+      if (rm) return removePhoto(Number(rm.getAttribute('data-remove')));
+      if (e.target.closest('[data-add]')) input.click();
+    });
+    $('moSaveDraft').addEventListener('click', saveDraftClick);
+    $('moDraftDiscard').addEventListener('click', discardDraft);
+    /* Auto-save as the tasker types or taps a quick amount, window or phrase */
+    ['input', 'change', 'click'].forEach(function (ev) { $('moForm').addEventListener(ev, function () { if (!state.sending) saveDraft(); }); });
+    setInterval(paintDraftAgo, 30000);
+  }
+
   /* ── Stage 5: edit mode ──────────────────────────────────── */
   /* Fills the form from the saved offer. A date in the past is left empty so the tasker must pick a new one. */
   function prefillFromOffer(app) {
@@ -439,6 +596,8 @@
     else { $('moDate').value = ''; state.date = ''; }
     setWindow(p.window || 'flexible');
     paintPitchCount();
+    state.photos = p.proofs.map(function (u) { return { url: u }; });
+    renderPhotos();
   }
 
   /* ── Stage 4: terms + submit ─────────────────────────────── */
@@ -457,6 +616,7 @@
     el.hidden = !msg;
   }
   function showDone() {
+    state.done = true; clearDraft();
     $('moForm').hidden = true;
     $('moDoneBack').href = taskUrl();
     if (state.edit) { setText('moDoneTitle', 'Offer updated'); setText('moDoneText', 'The customer has been told that your offer changed.'); }
@@ -478,10 +638,15 @@
 
     state.sending = true;
     var btn = $('moSubmit'); btn.disabled = true; setText('moSubmitLabel', state.edit ? 'Saving\u2026' : 'Sending\u2026');
+    if (!(await uploadPhotos())) {
+      state.sending = false; btn.disabled = false; paintSubmit();
+      showSubmitError('A photo could not be uploaded, so the offer was not sent. Remove the photo or try again.');
+      return;
+    }
     try {
       if (state.edit) {
         /* The arrival is passed as a string so it replaces the one saved before */
-        await window.updateMyApplication(state.myApplication.id, { message: pitchText(), rate: state.amount, arrival: buildArrival() });
+        await window.updateMyApplication(state.myApplication.id, { message: pitchText(), rate: state.amount, arrival: buildArrival(), proofs: proofUrls() });
       } else {
         var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
         var saved = await apply({ taskId: state.task.id, message: buildMessage() });
@@ -542,14 +707,16 @@
     }
 
     renderHead(t); renderSummary(t); renderWho(state.poster); initAmount(t); initAvailability(t);
+    renderPhotos();
     if (state.edit) prefillFromOffer(mine);
+    else { state.draftKey = 'st_offer_draft_' + state.viewer.id + '_' + state.id; restoreDraft(); }
 
     $('moLoading').hidden = true;
     $('moContent').hidden = false;
   }
 
   async function init() {
-    wireAmount(); wirePitch(); wireSubmit();
+    wireAmount(); wirePitch(); wireSubmit(); wireProof();
     try {
       var q = new URLSearchParams(window.location.search);
       state.id = text(q.get('task') || q.get('id'));

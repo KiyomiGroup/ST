@@ -38,7 +38,12 @@
     var m = text.match(/\|\s*Proposed rate:\s*([^|]+)/i);
     var rate = m ? parseInt(m[1].replace(/[^\d]/g, ''), 10) : NaN;
     var w = text.match(/\|\s*Arrival:\s*([^|]+)/i);
-    return { pitch: text.replace(/\|\s*Proposed rate:.*$/i, '').trim(), rate: isNaN(rate) ? null : rate, arrival: w ? w[1].trim() : '' };
+    return { pitch: text.replace(/\|\s*Proposed rate:.*$/i, '').trim(), rate: isNaN(rate) ? null : rate, arrival: w ? w[1].trim() : '', proofs: proofLinks(text) };
+  }
+  /* Proof photos the tasker attached: " | Proof: https://... https://..." (only public files from our own storage) */
+  function proofLinks(text) {
+    var m = String(text || '').match(/\|\s*Proof:\s*([^|]+)/i);
+    return m ? m[1].trim().split(/\s+/).filter(function (u) { return /^https:\/\/[^\s\/]+\/storage\/v1\/object\/public\/\S+$/.test(u); }).slice(0, 5) : [];
   }
   function initials(name) {
     return String(name).replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean)
@@ -95,7 +100,7 @@
         id: a.id, taskerId: a.tasker_id, task: task, status: a.status, group: group(a.status), created: a.created_at,
         name: name, service: p.service || p.service_name || '', location: p.location || '',
         rating: p.rating ? parseFloat(p.rating) : null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
-        pitch: msg.pitch, arrival: msg.arrival, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
+        pitch: msg.pitch, arrival: msg.arrival, proofs: msg.proofs, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
       };
     });
     buildTaskOptions();
@@ -165,6 +170,9 @@
 
     var pitch = a.pitch ? '<div><div class="ap-proposal-head"><span class="ap-fig-label">Their Proposal</span></div><p class="ap-quote">\u201C' + esc(a.pitch) + '\u201D</p></div>' : '';
     var arrival = a.arrival ? '<div><span class="ap-fig-label">Can start</span><p class="ap-meta">' + icon('clock') + esc(a.arrival) + '</p></div>' : '';
+    var proofs = a.proofs && a.proofs.length ? '<div><span class="ap-fig-label">Previous work</span><div class="ap-proofs">' + a.proofs.map(function (u, i) {
+      return '<a class="ap-proof" href="' + esc(u) + '" target="_blank" rel="noopener"><img src="' + esc(u) + '" alt="Previous work photo ' + (i + 1) + '" loading="lazy" /></a>';
+    }).join('') + '</div></div>' : '';
     var profile = 'tasker-profile.html?id=' + encodeURIComponent(a.taskerId || '') + '&task=' + encodeURIComponent(t.id || '') + '&app=' + encodeURIComponent(a.id);
     var id = esc(a.id);
     var actions = '<div class="ap-actions">';
@@ -183,7 +191,7 @@
     return '<article class="ap-card" data-id="' + esc(a.id) + '"><div class="ap-card-top">' + badge(a) +
       '<span class="ap-meta">' + icon('clock') + 'Applied ' + esc(ago(a.created)) + '</span></div>' +
       '<div class="ap-person">' + avatar + '<div><h2 class="ap-person-name">' + esc(a.name) + '</h2><div class="ap-card-sub">' + sub.join('') + '</div></div></div>' +
-      '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + arrival + actions + '</article>';
+      '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + arrival + proofs + actions + '</article>';
   }
 
   function renderMetrics() {

@@ -33,6 +33,9 @@
       <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h2"/></symbol>
       <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
       <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M12 2v6"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></symbol>
+      <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+      <symbol id="i-camera-plus" viewBox="0 0 24 24"><path d="M19 2v4"/><path d="M17 4h4"/><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></symbol>
       <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol>
     </defs>
   </svg>
@@ -77,6 +80,13 @@
             </section>
 
             <div class="mo-form" id="moForm">
+
+              <!-- Shown when a saved draft was put back on the page (Stage 7) -->
+              <div class="mo-draft" id="moDraft" role="status" hidden>
+                <svg class="ap-i" aria-hidden="true"><use href="#i-history"/></svg>
+                <span class="mo-draft-text">Draft restored &bull; Saved <span id="moDraftAgo">just now</span></span>
+                <button type="button" class="mo-draft-discard" id="moDraftDiscard"><svg class="ap-i" aria-hidden="true"><use href="#i-trash"/></svg>Discard</button>
+              </div>
 
               <!-- 1. Offer amount (Stage 2) -->
               <section class="ap-card td-card mo-sec" aria-labelledby="moAmountTitle">
@@ -146,7 +156,20 @@
                 </div>
               </section>
 
-              <!-- 4. Terms + submit (Stage 4). On phones this card is a bar fixed to the bottom of the screen (Stage 5). Proof photos are not part of this page yet. -->
+              <!-- 4. Proof of previous work (Stage 7) -->
+              <section class="ap-card td-card mo-sec" aria-labelledby="moProofTitle">
+                <div class="td-card-head">
+                  <h2 class="td-h2 mo-h2" id="moProofTitle"><span class="mo-step">4</span>Attach Proof of Previous Work</h2>
+                  <span class="td-hint" id="moPhotoCount" aria-live="polite">Optional</span>
+                </div>
+                <p class="mo-help">Show your best results. JPG, PNG or WebP, up to 5 MB each, up to 5 photos.</p>
+                <input type="file" id="moPhotoFiles" class="mo-file" accept="image/jpeg,image/png,image/webp" multiple />
+                <div class="mo-photos" id="moPhotos"></div>
+                <p class="ap-error" id="moPhotoErr" role="alert" hidden></p>
+                <p class="mo-help" id="moPhotoProgress" role="status" hidden>Uploading photos&hellip;</p>
+              </section>
+
+              <!-- 5. Terms + submit (Stage 4). On phones this card is a bar fixed to the bottom of the screen (Stage 5). -->
               <section class="ap-card td-card mo-sec mo-submit-sec" aria-label="Submit your offer">
                 <label class="mo-terms">
                   <input type="checkbox" id="moTerms" aria-describedby="moTermsErr" />
@@ -154,7 +177,10 @@
                 </label>
                 <p class="ap-error" id="moTermsErr" role="alert" hidden></p>
                 <p class="ap-error" id="moSubmitErr" role="alert" hidden></p>
-                <button type="button" class="btn btn-primary btn-lg mo-submit" id="moSubmit"><span id="moSubmitLabel">Submit Offer</span><svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                <div class="mo-submit-row">
+                  <button type="button" class="btn btn-primary btn-lg mo-submit" id="moSubmit"><span id="moSubmitLabel">Submit Offer</span><svg class="ap-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                  <button type="button" class="btn btn-ghost btn-lg mo-draft-btn" id="moSaveDraft">Save as Draft</button>
+                </div>
               </section>
 
             </div>

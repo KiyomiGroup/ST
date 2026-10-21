@@ -245,24 +245,30 @@ async function updateApplicationStatus(applicationId, status) {
 
 /* Tasker edits a still-pending proposal (pitch text, proposed rate and, optionally, arrival).
    Stored in the same "<pitch> | Proposed rate: ₦N | Arrival: <date>, <window>" format the customer views parse.
-   arrival: undefined keeps the arrival already saved, a string replaces it, null or '' removes it. */
-async function updateMyApplication(applicationId, { message, rate, arrival }) {
+   arrival: undefined keeps the arrival already saved, a string replaces it, null or '' removes it.
+   proofs (proof-photo links, saved as " | Proof: url url" after the arrival): same rule, with an array (empty array removes). */
+async function updateMyApplication(applicationId, { message, rate, arrival, proofs }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to edit your offer.');
   const amount = Math.round(Number(rate));
   if (!amount || amount <= 0) throw new Error('Enter a valid offer amount.');
   /* The pitch ends where "Proposed rate" (or a stray "Arrival") starts; "|" is the separator, so none is kept inside it */
-  const pitch = String(message || '').replace(/\|\s*(?:Proposed rate|Arrival):.*$/i, '').replace(/\|/g, '/').trim();
-  let when = '';
-  if (arrival === undefined) {
+  const pitch = String(message || '').replace(/\|\s*(?:Proposed rate|Arrival|Proof):.*$/i, '').replace(/\|/g, '/').trim();
+  /* Arrival and proof are kept from the saved message unless the caller sends new ones */
+  let when = '', links = [];
+  if (arrival === undefined || proofs === undefined) {
     const { data: current } = await window.supabase.from('task_applications')
       .select('message').eq('id', applicationId).eq('tasker_id', user.id).maybeSingle();
-    const m = String(current?.message || '').match(/\|\s*Arrival:\s*([^|]+)/i);
-    when = m ? m[1].trim() : '';
-  } else {
-    when = String(arrival || '').replace(/\|/g, '/').trim();
+    const old = String(current?.message || '');
+    const a = old.match(/\|\s*Arrival:\s*([^|]+)/i), p = old.match(/\|\s*Proof:\s*([^|]+)/i);
+    if (arrival === undefined) when = a ? a[1].trim() : '';
+    if (proofs === undefined) links = p ? p[1].trim().split(/\s+/) : [];
   }
-  const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG') + (when ? ' | Arrival: ' + when : '');
+  if (arrival !== undefined) when = String(arrival || '').replace(/\|/g, '/').trim();
+  if (proofs !== undefined) links = Array.isArray(proofs) ? proofs : [];
+  links = links.map(u => String(u || '').trim()).filter(u => /^https:\/\/[^\s\/]+\/storage\/v1\/object\/public\/\S+$/.test(u) && u.indexOf('|') === -1).slice(0, 5);
+  const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG') +
+    (when ? ' | Arrival: ' + when : '') + (links.length ? ' | Proof: ' + links.join(' ') : '');
   const { data, error } = await window.supabase.from('task_applications')
     .update({ message: stored })
     .eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending')
