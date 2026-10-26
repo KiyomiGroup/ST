@@ -345,3 +345,10 @@ Existing 900, 700, 640, 600 and 560px queries should be moved to the nearest of 
 | Inline `style=""` attributes in HTML | about 1,100 |
 | `!important` in `styles.css` | 88 |
 | Distinct breakpoints | 12 |
+
+
+---
+
+## Coordinator portal tokens (Stage 3A, added 2026-10-26)
+
+`css/tokens.css` now has a `--co-*` block (colours, `--radius-co-*`, `--shadow-co-*`, header and bottom-nav heights) used only by `coordinator-login.html`, `coordinator-dashboard.html`, `css/coordinator.css` and the coordinator components. Values were sampled from the owner's coordinator design screens (no Figma values), so they are approximations; replace them in `tokens.css` if exact Figma values exist. Same rule as the Post a Task and Gift Cards blocks: page-specific, do not reuse elsewhere without a design decision.

@@ -400,3 +400,39 @@
   --pp-track-height:     8px;
   --pp-track-width:      256px;
 }
+
+/* ── Coordinator portal tokens (coordinator-login.html, coordinator-dashboard.html) ──
+   Sampled from the owner's coordinator design screens (desktop + mobile, no Figma
+   values supplied). Several equal --pt-* / --gc-* values (same designer palette) but
+   are kept separate so the portal can diverge. Marked "derived" = not in the screens.
+   Page-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --co-page:          #F1F5F1;   /* page background, top */
+  --co-page-end:      #F9F9F7;   /* page background, bottom */
+  --co-ink:           #1A1C1B;   /* headings, body on light */
+  --co-ink-muted:     #3F4942;   /* secondary text on light */
+  --co-field:         #F4F4F1;   /* inputs, notes, tiles */
+  --co-green:         #004F31;   /* deep green: sign-in button, headings accents */
+  --co-green-hover:   #003D26;   /* derived: darker step of --co-green */
+  --co-green-mid:     #006A43;   /* active nav item */
+  --co-green-bright:  #1A8D61;   /* secondary actions, links */
+  --co-mint:          #9EF1C2;   /* chips, eyebrow dot, accent text on dark */
+  --co-mint-soft:     #D5F3E0;   /* sign-in illustration panel */
+  --co-hero-start:    #0F3D26;   /* hero gradient start (= --color-forest-800) */
+  --co-hero-end:      #135332;   /* hero gradient end */
+  --co-hero-text-soft:#C8D9D3;   /* hero paragraph (= --pt-escrow-text) */
+  --co-dark:          #0E1713;   /* workspace panel */
+  --co-dark-raised:   #15271E;   /* raised row on the dark panel */
+  --co-dark-active:   #183125;   /* selected row on the dark panel */
+  --co-nav-dark:      #111E17;   /* desktop nav pill, avatar */
+  --co-danger:        #BA1A1A;   /* error text */
+  --co-danger-soft:   #FFDAD6;   /* error banner */
+  --co-notice-soft:   #E8F6EF;   /* info banner */
+
+  --radius-co-hero:   40px;
+  --radius-co-card:   28px;
+  --shadow-co-card:   0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);   /* = --shadow-pt-card */
+  --shadow-co-panel:  0 24px 48px -16px rgba(0, 0, 0, 0.35);   /* = --shadow-gc-card */
+  --co-header-height: 72px;
+  --co-bottom-nav-height: 72px;
+}
