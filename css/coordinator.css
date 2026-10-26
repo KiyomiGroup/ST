@@ -24,6 +24,7 @@
 }
 .co-banner[hidden] { display: none; }
 .co-banner--info { background: var(--co-notice-soft); color: var(--co-green); }
+.co-banner a { color: inherit; font-weight: 700; text-decoration: underline; }
 
 /* ── Sign-in (coordinator-login.html) ──────────────────────── */
 /* Re-point the shared login colours to the coordinator greens, this page only. */
@@ -247,6 +248,34 @@ body.co-drawer-open { overflow: hidden; }
 .co-empty-text { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--co-ink-muted); }
 .co-empty--dark .co-empty-text { color: var(--co-hero-text-soft); }
 
+/* Overview: banner retry, loading, Local Tasker cards */
+.co-banner-retry { margin-left: var(--space-3); color: inherit; font-weight: 700; text-decoration: underline; font-size: inherit; }
+.co-loading { padding: var(--space-5) 0; color: var(--co-ink-muted); font-size: var(--text-sm); }
+.co-loading[hidden], .co-tasker-grid[hidden], .co-empty[hidden] { display: none; }
+.co-tasker-grid { list-style: none; display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+.co-tasker-card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-5); background: var(--color-bg);
+  border-radius: var(--radius-co-card); box-shadow: var(--shadow-co-card);
+}
+.co-tasker-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.co-tasker-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--co-mint-soft); color: var(--co-green);
+  font-family: var(--font-heading); font-weight: 800; font-size: var(--text-base);
+}
+.co-tasker-name { font-size: var(--text-md); }
+.co-tasker-skills { font-family: var(--font-heading); font-weight: 600; font-size: var(--text-sm); color: var(--co-green-bright); }
+.co-tasker-area { font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-status {
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); font-weight: 700;
+  background: var(--co-field); color: var(--co-ink-muted);
+}
+.co-status--published { background: var(--co-mint); color: var(--co-green); }
+.co-status--draft { background: var(--co-field); color: var(--co-ink-muted); }
+
 /* Mobile bottom bar */
 .co-bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
@@ -263,6 +292,7 @@ body.co-drawer-open { overflow: hidden; }
 
 /* Tablet up: wider stat grid */
 @media (min-width: 768px) {
+  .co-tasker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .co-main { padding-left: var(--space-5); padding-right: var(--space-5); }
   .co-hero { padding: var(--space-7) var(--space-7) calc(var(--space-7) + var(--space-6)); }
   .co-hero h1 { font-size: var(--text-h2); max-width: 24ch; }
@@ -274,4 +304,5 @@ body.co-drawer-open { overflow: hidden; }
   .co-nav { display: flex; }
   .co-main { padding-bottom: var(--space-8); }
   .co-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0 var(--space-7); }
+  .co-tasker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

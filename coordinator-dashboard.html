@@ -35,37 +35,43 @@
         <p class="co-hero-sub">Your assigned Local Taskers, bookings and messages, all in one place.</p>
       </section>
 
-      <!-- Numbers arrive in Stage 3B. Until then the cards show a dash, never an invented figure. -->
+      <!-- Real numbers from the database (js/coordinator-overview.js). They show a dash until
+           loaded, and stay a dash with a message if loading fails: never an invented figure. -->
       <section class="co-stats" aria-label="Summary">
         <article class="co-stat">
-          <p class="co-stat-label">Pending requests</p>
-          <p class="co-stat-value" data-co-stat="pending">—</p>
-          <p class="co-stat-note">Waiting for your response</p>
+          <p class="co-stat-label">Assigned Local Taskers</p>
+          <p class="co-stat-value" data-co-stat="assigned">—</p>
+          <p class="co-stat-note" id="coCapNote">Active assignments</p>
         </article>
         <article class="co-stat">
-          <p class="co-stat-label">Awaiting relay</p>
-          <p class="co-stat-value" data-co-stat="relay">—</p>
-          <p class="co-stat-note">Waiting for a Local Tasker's answer</p>
+          <p class="co-stat-label">Published</p>
+          <p class="co-stat-value" data-co-stat="published">—</p>
+          <p class="co-stat-note">Visible to customers</p>
         </article>
         <article class="co-stat">
-          <p class="co-stat-label">Confirmed bookings</p>
-          <p class="co-stat-value" data-co-stat="confirmed">—</p>
-          <p class="co-stat-note">Scheduled and in progress</p>
+          <p class="co-stat-label">Drafts</p>
+          <p class="co-stat-value" data-co-stat="draft">—</p>
+          <p class="co-stat-note">Not yet published</p>
         </article>
         <article class="co-stat">
-          <p class="co-stat-label">My Local Taskers</p>
-          <p class="co-stat-value" data-co-stat="taskers">—</p>
-          <p class="co-stat-note">Active, up to 10</p>
+          <p class="co-stat-label">Open places</p>
+          <p class="co-stat-value" data-co-stat="open">—</p>
+          <p class="co-stat-note">Before you reach the limit</p>
         </article>
       </section>
+
+      <div class="co-banner" id="coOverviewError" role="alert" hidden>
+        <span>We couldn't load your overview just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coOverviewRetry">Try again</button>
+      </div>
 
       <section class="co-panel" aria-labelledby="coRequestsTitle">
         <div class="co-panel-head">
           <h2 id="coRequestsTitle">Active Requests</h2>
         </div>
         <div class="co-empty co-empty--dark" id="coRequestsEmpty">
-          <p class="co-empty-title">No bookings yet</p>
-          <p class="co-empty-text">Bookings for your Local Taskers will appear here once they are enabled.</p>
+          <p class="co-empty-title">Booking requests aren't switched on yet</p>
+          <p class="co-empty-text">When customers can book your Local Taskers, new requests, quotes waiting for approval, active jobs and issues will be listed here.</p>
         </div>
       </section>
 
@@ -76,9 +82,11 @@
             <p class="co-section-sub">Neighbourhood taskers under your coordination.</p>
           </div>
         </div>
-        <div class="co-empty" id="coTaskersEmpty">
-          <p class="co-empty-title">No Local Taskers to show yet</p>
-          <p class="co-empty-text">You will add and manage them from My Local Taskers.</p>
+        <p class="co-loading" id="coTaskersLoading">Loading your Local Taskers…</p>
+        <ul class="co-tasker-grid" id="coTaskerGrid" hidden></ul>
+        <div class="co-empty" id="coTaskersEmpty" hidden>
+          <p class="co-empty-title">No Local Taskers assigned to you yet</p>
+          <p class="co-empty-text">Local Taskers assigned to you will appear here. Ask a StreetTasker administrator if you were expecting some.</p>
         </div>
       </section>
 
@@ -89,5 +97,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-overview.js"></script>
 </body>
 </html>

@@ -16,13 +16,26 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function showMsg(text, kind) {
+  /* links: optional [{ text, href }] appended after the message (static links only). */
+  function showMsg(text, kind, links) {
     var el = $('coLoginMsg');
     if (!el) return;
     el.textContent = text;
+    (links || []).forEach(function (l) {
+      el.appendChild(document.createTextNode(' '));
+      var a = document.createElement('a');
+      a.href = l.href;
+      a.textContent = l.text;
+      el.appendChild(a);
+    });
     el.classList.toggle('co-banner--info', kind === 'info');
     el.hidden = false;
   }
+  var NOT_COORDINATOR_LINKS = [
+    { text: 'Log in', href: 'login.html' },
+    { text: 'or sign up', href: 'signup.html' }
+  ];
+  function showNotCoordinator() { showMsg(DENIED_TEXT.no, null, NOT_COORDINATOR_LINKS); }
   function hideMsg() { var el = $('coLoginMsg'); if (el) el.hidden = true; }
 
   /* Only coordinator pages on this site are accepted as a destination. */
@@ -43,7 +56,6 @@
   function friendlyError(err) {
     var msg = (err && err.message) || '';
     if (/invalid login|invalid_credentials/i.test(msg)) return 'Incorrect email or password.';
-    if (/email not confirmed/i.test(msg)) return "This account's email isn't verified yet. Check your inbox for the link we sent.";
     if (/too many|rate limit/i.test(msg)) return 'Too many attempts. Please wait a moment and try again.';
     if (/banned|user is banned/i.test(msg)) return 'This account cannot sign in.';
     if (/failed to fetch|network/i.test(msg)) return "Couldn't reach the server. Check your connection and try again.";
@@ -51,7 +63,7 @@
   }
 
   var DENIED_TEXT = {
-    no: "This account doesn't have coordinator access. For customer or tasker accounts, use the main login.",
+    no: "This account is not a coordinator account. Coordinator access is by approval only. Customer or tasker?",
     inactive: "Your coordinator account isn't active. Please contact StreetTasker Coordinator Support."
   };
 
@@ -76,7 +88,8 @@
   function initNotices() {
     var qs = new URLSearchParams(window.location.search);
     var denied = qs.get('denied');
-    if (denied && DENIED_TEXT[denied]) showMsg(DENIED_TEXT[denied]);
+    if (denied === 'no') showNotCoordinator();
+    else if (denied && DENIED_TEXT[denied]) showMsg(DENIED_TEXT[denied]);
     else if (qs.get('signedout') === '1') showMsg('You have been signed out.', 'info');
   }
 
@@ -155,7 +168,7 @@
 
         if (status !== 'active') {
           try { await window.supabase.auth.signOut(); } catch (x) {}
-          showMsg(DENIED_TEXT[status]);
+          if (status === 'no') showNotCoordinator(); else showMsg(DENIED_TEXT[status]);
           form.password.value = '';
           return;
         }
@@ -163,7 +176,10 @@
         rememberChoice($('coRemember').checked);
         window.location.replace(destination());
       } catch (err) {
-        showMsg(friendlyError(err));
+        /* An account whose email was never confirmed cannot be a coordinator (coordinator
+           accounts are approved and verified), so say that instead of the raw Auth wording. */
+        if (err && /email not confirmed/i.test(err.message || '')) showNotCoordinator();
+        else showMsg(friendlyError(err));
       } finally {
         submitting = false;
         btn.disabled = false;

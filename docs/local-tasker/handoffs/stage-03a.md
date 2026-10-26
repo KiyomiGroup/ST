@@ -68,7 +68,7 @@ This is the first real test, and it also gives 4A a signed-in coordinator to wor
 1. Find the test coordinator's email: Supabase dashboard, Authentication, Users, and look for the user whose UID is `6d9390b4-5106-451e-a464-d5e4ac4a2c77` (the "ST2D TEST COORDINATOR" row in `coordinators`, status `active`). Or in the SQL editor: `select email from auth.users where id = '6d9390b4-5106-451e-a464-d5e4ac4a2c77';`
 2. If you do not know its password: on that user in the dashboard choose "Send password recovery", or set a new password for the user (Authentication, Users, the user's menu). Do not use a real customer's account.
 3. Deploy the changed site files as you normally do, open `/coordinator-login.html`, sign in. Expected: you land on "Coordinator Overview" with the name "ST2D" in the welcome line and "ST" in the round avatar. Choose the avatar, then Sign out: you return to the sign-in page with "You have been signed out."
-4. Optional: sign in on `/coordinator-login.html` with an ordinary customer account. Expected: "This account doesn't have coordinator access..." and you are not let in.
+4. Optional: sign in on `/coordinator-login.html` with an ordinary customer account. Expected: "This account is not a coordinator account... Customer or tasker? Log in or sign up" and you are not let in. (Changed after owner feedback, see stage-03b.md.)
 Report only problems. If sign-in works but the page shows "We couldn't check your access just now", tell the next session: that points at the rpc or grants and the next AI fixes it (the introspect export says the grants are correct).
 
 ## 9. Exact next steps
