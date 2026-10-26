@@ -44,6 +44,10 @@
         <p class="co-empty-text">This profile doesn't exist, or it isn't assigned to you.</p>
       </div>
 
+      <div class="co-banner co-banner--info" id="coCreatedBanner" role="status" hidden>
+        <span id="coCreatedText"></span>
+      </div>
+
       <article class="co-detail" id="coDetail" hidden>
         <header class="co-detail-head">
           <span class="co-tasker-avatar co-tasker-avatar--lg" id="coDetailAvatar">LT</span>
@@ -72,6 +76,14 @@
         <section class="co-card" aria-labelledby="coDetailVerifyTitle">
           <h2 class="co-card-title" id="coDetailVerifyTitle">Verification</h2>
           <dl class="co-facts" id="coFactsVerify"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailConsentTitle">
+          <h2 class="co-card-title" id="coDetailConsentTitle">Agreement on record</h2>
+          <p class="co-loading" id="coConsentLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coConsentError" role="alert" hidden>We couldn't load the agreement record just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coConsentEmpty" hidden>No agreement has been recorded for this person.</p>
+          <ul class="co-consent-list" id="coConsentList" hidden></ul>
         </section>
       </article>
 

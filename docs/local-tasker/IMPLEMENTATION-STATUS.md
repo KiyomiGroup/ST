@@ -14,7 +14,8 @@ Update this file at the end of every stage. Status values: Not started, In progr
 | 3A | Coordinator sign-in, route guard, dashboard shell | M | Yes | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-03a.md; no SQL; owner check in section 8 of the handoff |
 | 3B | Coordinator overview (real data) | S | Yes | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-03b.md; no SQL; booking metrics wait for 5A/5B (coordinators have no booking access yet) |
 | 4A-1 | My Local Taskers: read-only list and profile | M | Yes (owner: follow the design system) | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-04a-1.md; no SQL |
-| 4A-2 | My Local Taskers: create form (first real Edge Function call) with consent, and audited edit | L | Yes (owner: follow the design system) | Not started; BLOCKED on 3 inputs | handoffs/stage-04a-1.md section 8 |
+| 4A-2 | My Local Taskers: add form (first real Edge Function call) with consent, and consent record on the profile | M | Yes (owner: follow the design system) | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only (143 checks) | handoffs/stage-04a-2.md; no new SQL; owner check in section 7 |
+| 4A-3 | My Local Taskers: audited edit (new SQL function + edit form) | M | Yes (owner: follow the design system) | Not started; no inputs needed | handoffs/stage-04a-2.md section 9 |
 | 4B | Service listings and portfolio photos | L, split if needed | Yes | Not started | |
 | 4C | Preview, publish, Local Tasker badge, marketplace, application block | M | Yes | Not started | |
 | 5A | Booking assignment and Local Tasker booking state machine (SQL) | L (SQL only), split if needed | No | Not started | |
@@ -34,14 +35,15 @@ Update this file at the end of every stage. Status values: Not started, In progr
 | 10 | Final handoff and deployment readiness | S (documents) | No | Not started | |
 
 ## Blockers
-- Stage 4A-2 needs inputs from the owner (handoffs/stage-04a-1.md section 8): the `local-tasker-create` source, `stage-2d-core.sql`, and the output of `stage-4a-introspect.sql`.
-- The owner has said later stages follow the brief and the existing design system; no reference screen is needed unless something cannot be decided from them.
-- Carry-forward: the 2D Edge Function has never completed a real create (first attempt failed `identity_not_locked`; fix deployed, unexercised). 4A must prove it (see handoffs/stage-02d.md section 16).
+- None for 4A-3. Owner check for 4A-2 (add one test Local Tasker through the form, then run BLOCK 2 of `stage-2d-edge-test-helpers.sql`) is the first real proof of the 2D Edge Function; if it fails, fix that before 4A-3 (handoffs/stage-04a-2.md sections 6 and 7).
+- Carry-forward: the 2D Edge Function has never completed a real create (first attempt failed `identity_not_locked`; fix deployed, unexercised).
 
 ## Decisions pending
 Only defaults the owner may overrule: O3 (verification record location), customer-contact visibility, D13 (coordinator must be active to receive Local Taskers). See `DECISIONS.md`.
 
 ## Last session
+Update 2026-10-26 (Stage 4A-2): built the Add a Local Tasker form (retry-safe request id, error code shown on screen, cap handling) calling the 2D Edge Function, and an \"Agreement on record\" card on the profile. 143 browser checks pass with a MOCKED Supabase; nothing run against the real project. Edit split off as 4A-3 (needs new SQL). Console and curl steps stay removed (standing instruction 14). Earlier notes follow.
+
 Update 2026-10-26 (Stage 4A-1): built My Local Taskers list (search, status filter) and read-only profile page, real data under RLS; nav link live; Overview cards link to profiles. 68 browser checks pass with a MOCKED Supabase; nothing run against the real project. Create/edit (4A-2) is blocked on three inputs listed in handoffs/stage-04a-1.md section 8. Earlier notes follow.
 
 Update 2026-10-26 (Stage 3B): Overview now reads real data (own active assignments, profiles of managed taskers): tiles, cards, loading/empty/error states. Booking metrics deliberately absent (no coordinator booking access until Stage 5). Fixed the coordinator sign-in message: a normal or unverified account is told it is not a coordinator and pointed to login/sign up. 47 browser checks pass with a MOCKED Supabase; nothing run against the real project. Next: owner signs in once (stage-03b.md section 8), then Stage 4A. Earlier notes follow.

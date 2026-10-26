@@ -37,6 +37,61 @@
     });
   }
 
+  var PURPOSE = { profile: 'Profile created', publish_info: 'Publishing their information', photos: 'Photos', payout: 'Payout details', price_change: 'Price changes', booking_confirmation: 'Booking confirmations' };
+  var METHOD = { in_person: 'In person', phone: 'By phone call', written: 'In writing' };
+
+  function showCreated() {
+    var q = new URLSearchParams(window.location.search).get('created');
+    var box = $('coCreatedBanner'), text = $('coCreatedText');
+    if (!box || !text || (q !== '1' && q !== '0')) return;
+    text.textContent = q === '1'
+      ? 'Local Tasker created. They are a draft: nothing is shown to customers until you publish. Their agreement is recorded below.'
+      : 'This Local Tasker was already created by an earlier attempt, so nothing new was added.';
+    box.hidden = false;
+  }
+
+  function consentItem(c) {
+    var li = C.el('li', 'co-consent-item');
+    var head = C.el('div', 'co-consent-head');
+    head.appendChild(C.el('span', 'co-consent-purpose', PURPOSE[c.purpose] || C.statusLabel(c.purpose)));
+    var withdrawn = !!c.revoked_at;
+    head.appendChild(C.el('span', withdrawn ? 'co-status co-status--withdrawn' : 'co-status co-status--published', withdrawn ? 'Withdrawn' : 'Active'));
+    li.appendChild(head);
+    var when = C.formatDate(c.recorded_at);
+    li.appendChild(C.el('p', 'co-consent-meta', (METHOD[c.method] || C.statusLabel(c.method)) + (when ? ' · recorded ' + when : '')));
+    if (c.evidence_ref) li.appendChild(C.el('p', 'co-consent-note', 'Reference: ' + c.evidence_ref));
+    if (c.details) li.appendChild(C.el('p', 'co-consent-note', c.details));
+    if (withdrawn) {
+      var w = 'Withdrawn ' + C.formatDate(c.revoked_at) + (c.revoke_reason ? ': ' + c.revoke_reason : '');
+      li.appendChild(C.el('p', 'co-consent-note', w));
+    }
+    return li;
+  }
+
+  /* The agreement record is read-only and must never block the profile itself. */
+  async function loadConsents(id) {
+    var list = $('coConsentList');
+    ['coConsentLoading', 'coConsentError', 'coConsentEmpty'].forEach(function (x) { $(x).hidden = true; });
+    list.hidden = true; list.textContent = '';
+    $('coConsentLoading').hidden = false;
+    try {
+      var res = await window.supabase.from('local_tasker_consents')
+        .select('id, purpose, method, recorded_at, evidence_ref, details, revoked_at, revoke_reason')
+        .eq('tasker_user_id', id)
+        .order('recorded_at', { ascending: false });
+      if (res.error) throw res.error;
+      $('coConsentLoading').hidden = true;
+      var rows = res.data || [];
+      if (!rows.length) { $('coConsentEmpty').hidden = false; return; }
+      rows.forEach(function (c) { list.appendChild(consentItem(c)); });
+      list.hidden = false;
+    } catch (e) {
+      console.error('[coordinator tasker consents]', e);
+      $('coConsentLoading').hidden = true;
+      $('coConsentError').hidden = false;
+    }
+  }
+
   function paint(p) {
     var name = p.full_name || 'Local Tasker';
     document.title = name + ' — StreetTasker';
@@ -62,12 +117,15 @@
     fact(v, 'Verified on', C.formatDate(p.verified_at), { empty: 'Not verified yet' });
     fact(v, 'Notes', p.verification_notes);
     show('coDetail');
+    showCreated();
+    loadConsents(p.tasker_user_id);
   }
 
   async function load(detail) {
     var id = new URLSearchParams(window.location.search).get('id');
     if (!C.isUuid(id)) { show('coDetailMissing'); return; }
     show('coDetailLoading');
+    var cb = $('coCreatedBanner'); if (cb) cb.hidden = true;
     try {
       var res = await window.supabase.from('local_tasker_profiles')
         .select('tasker_user_id, full_name, phone, areas_served, skills, availability_notes, status, published_at, verification_method, verified_at, verification_notes, created_at')

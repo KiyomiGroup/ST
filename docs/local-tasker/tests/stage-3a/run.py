@@ -215,6 +215,156 @@ async def main():
         await p.screenshot(path=OUT+'/detail-mobile.png',full_page=True)
         sw=await p.evaluate('document.documentElement.scrollWidth'); check('detail mobile no horizontal scroll',sw<=391,sw)
         await ctx.close()
+
+        # ---- Stage 4A-2: Add a Local Tasker form + consent record ----
+        NEW='44444444-4444-4444-8444-444444444444'
+        async def fill_valid(p, **o):
+            vals=dict(pub='Baba A.',full='Baba Alabi Adebayo',phone='+234 801 234 5678',skills='Carpentry, Tiling ,, Painting',areas='Sabo, Yaba',notes='Weekdays after 2pm',method='in_person',ev='Form 12',det='Agreed at the shop');vals.update(o)
+            await p.fill('#coFPublicName',vals['pub']); await p.fill('#coFFullName',vals['full']); await p.fill('#coFPhone',vals['phone'])
+            await p.fill('#coFSkills',vals['skills']); await p.fill('#coFAreas',vals['areas']); await p.fill('#coFNotes',vals['notes'])
+            if vals['method']: await p.select_option('#coFMethod',vals['method'])
+            await p.fill('#coFEvidence',vals['ev']); await p.fill('#coFDetails',vals['det'])
+            if o.get('confirm',True): await p.check('#coFConfirm')
+        scn={'role':'active','assignments':[U1,NEW],'profiles':[P(U1,'Baba Alabi','published',['Carpentry'],'Yaba'),P(NEW,'Baba Alabi Adebayo','draft',['Carpentry','Tiling','Painting'],'Sabo, Yaba')],
+             'consents':[{'tasker_user_id':NEW,'purpose':'profile','method':'in_person','recorded_at':'2026-10-26T10:00:00Z','evidence_ref':'Form 12','details':'<img src=x onerror=window.__xss2=1>','revoked_at':None,'revoke_reason':None},
+                         {'tasker_user_id':NEW,'purpose':'photos','method':'phone','recorded_at':'2026-10-27T10:00:00Z','evidence_ref':None,'details':None,'revoked_at':'2026-10-28T10:00:00Z','revoke_reason':'Changed mind'}],
+             'fn':{'mode':'ok','id':NEW}}
+        ctx,p,errs=await newpage(b,copy.deepcopy(scn),session=True)
+        await p.goto(BASE+'coordinator-taskers.html'); await p.wait_for_selector('#coListGrid',state='visible',timeout=5000)
+        check('add: list page has an Add Local Tasker button',await p.is_visible('#coAddLink'))
+        await p.click('#coAddLink'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        check('add: form opens at coordinator-tasker-new.html','coordinator-tasker-new.html' in p.url)
+        check('add: nav still marks My Local Taskers','My Local Taskers' in (await p.inner_text('.co-nav a[aria-current=page]')))
+        await p.wait_for_timeout(300)
+        await p.screenshot(path=OUT+'/add-desktop.png',full_page=True)
+        await p.click('#coFSubmit')
+        check('add: empty submit sends nothing',(await p.evaluate('(window.__fnCalls||[]).length'))==0)
+        check('add: empty submit shows the field messages',await p.is_visible('#coFPublicNameErr') and await p.is_visible('#coFPhoneErr') and await p.is_visible('#coFMethodErr') and await p.is_visible('#coFConfirmErr'))
+        check('add: focus moves to the first invalid field',await p.evaluate("document.activeElement.id")=='coFPublicName')
+        await p.screenshot(path=OUT+'/add-errors-desktop.png',full_page=True)
+        await p.fill('#coFPublicName','Baba A.'); await p.fill('#coFFullName','Baba Alabi Adebayo'); await p.fill('#coFPhone','abc'); await p.select_option('#coFMethod','phone'); await p.check('#coFConfirm')
+        await p.click('#coFSubmit')
+        check('add: bad phone is refused locally',await p.is_visible('#coFPhoneErr') and (await p.evaluate('(window.__fnCalls||[]).length'))==0)
+        await fill_valid(p)
+        await p.click('#coFSubmit')
+        await p.wait_for_url('**/coordinator-tasker.html**',timeout=5000)
+        calls=await p.evaluate('window.__fnCalls')
+        check('add: exactly one function call',len(calls)==1,len(calls))
+        body=calls[0]['body'] if calls else {}
+        check('add: calls local-tasker-create',calls and calls[0]['name']=='local-tasker-create')
+        check('add: body has only the contract fields',sorted(body.keys())==['areas_served','availability_notes','consent','full_name','phone','public_name','request_id','skills'],sorted(body.keys()))
+        check('add: request_id is a valid v4 uuid',__import__('re').match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',body.get('request_id','')) is not None,body.get('request_id'))
+        check('add: skills split and trimmed',body.get('skills')==['Carpentry','Tiling','Painting'],body.get('skills'))
+        check('add: consent sent with confirmed true and chosen method',body.get('consent')=={'confirmed':True,'method':'in_person','evidence_ref':'Form 12','details':'Agreed at the shop'},body.get('consent'))
+        check('add: names and phone sent as typed',body.get('public_name')=='Baba A.' and body.get('full_name')=='Baba Alabi Adebayo' and body.get('phone')=='+234 801 234 5678')
+        check('add: no role, user id or coordinator id is sent',not any(k in body for k in ('role','user_id','coordinator_id','status','p_coordinator')))
+        check('add: success lands on the new profile with created=1','id='+NEW in p.url and 'created=1' in p.url,p.url)
+        await p.wait_for_selector('#coDetail',state='visible',timeout=5000); await p.wait_for_selector('#coConsentList',state='visible',timeout=5000)
+        check('profile: created notice shown',await p.is_visible('#coCreatedBanner') and 'draft' in await p.inner_text('#coCreatedText'))
+        check('profile: consent card lists both records',await p.locator('.co-consent-item').count()==2)
+        ct=await p.inner_text('#coConsentList')
+        check('profile: consent shows method, reference and the withdrawn one','In person' in ct and 'Reference: Form 12' in ct and 'Withdrawn' in ct and 'Changed mind' in ct,ct)
+        check('profile: markup in consent notes shown as text',await p.evaluate('window.__xss2')is None and await p.locator('.co-consent-item img').count()==0)
+        stored=await p.evaluate("sessionStorage.getItem('st_co_new_request')"); check('add: request id forgotten after success',stored is None,stored)
+        await p.screenshot(path=OUT+'/profile-created-desktop.png',full_page=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_url('**/coordinator-tasker.html**',timeout=5000)
+        calls=await p.evaluate('window.__fnCalls'); check('add: a fresh form gets a fresh request id',len(calls)==2 and calls[1]['body']['request_id']!=body['request_id'])
+        check('errors none (add success)',not errs,errs)
+        await ctx.close()
+        # failure then retry keeps the SAME request id
+        for code,status,expect,rotate in [('coordinator_cap',409,'maximum of 10',False),('identity_not_locked',500,"safe account",False),('not_active_coordinator',403,"isn't active",False),('identity_failed',500,"Nothing was created",False),('bad_input',400,'Name too short',False),('request_mismatch',409,'already used for a different',True)]:
+            sc2=copy.deepcopy(scn); sc2['fn']={'mode':'error','status':status,'code':code,'message':'Name too short','id':NEW}
+            ctx,p,errs=await newpage(b,sc2,session=True)
+            await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+            await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_selector('#coFormError',state='visible',timeout=5000)
+            et=await p.inner_text('#coFormError')
+            check('fail %s: plain message shown'%code,expect in et,et)
+            check('fail %s: error code shown on screen'%code,('Error code: '+code) in et,et)
+            check('fail %s: form kept and button usable again'%code,await p.is_enabled('#coFSubmit') and await p.input_value('#coFFullName')=='Baba Alabi Adebayo')
+            check('fail %s: error box has focus'%code,await p.evaluate("document.activeElement.id")=='coFormError')
+            if code=='coordinator_cap': await p.screenshot(path=OUT+'/add-cap-error-desktop.png',full_page=True)
+            await p.evaluate("window.__SC.fn={mode:'ok',id:'%s'}"%NEW)
+            await p.click('#coFSubmit'); await p.wait_for_url('**/coordinator-tasker.html**',timeout=5000)
+            calls=await p.evaluate('window.__fnCalls'); same=calls[0]['body']['request_id']==calls[1]['body']['request_id']
+            check('fail %s: retry %s'%(code,'uses a NEW request id' if rotate else 'reuses the SAME request id'), (not same) if rotate else same)
+            check('errors none (fail %s)'%code,not errs,errs)
+            await ctx.close()
+        # raw gateway rejection (not our JSON)
+        sc2=copy.deepcopy(scn); sc2['fn']={'mode':'error','status':401,'rawBody':{'code':'UNAUTHORIZED_INVALID_JWT_FORMAT','message':'Invalid JWT'}}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_selector('#coFormError',state='visible',timeout=5000)
+        et=await p.inner_text('#coFormError'); check('gateway 401: sign-in expired message with its code','sign-in has expired' in et and 'unauthenticated (UNAUTHORIZED_INVALID_JWT_FORMAT)' in et,et)
+        await ctx.close()
+        # unknown error code and unusable success
+        sc2=copy.deepcopy(scn); sc2['fn']={'mode':'error','status':500,'code':'something_new'}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_selector('#coFormError',state='visible',timeout=5000)
+        et=await p.inner_text('#coFormError'); check('unknown code still shows a message and the code','nothing was created' in et and 'something_new' in et,et)
+        await p.evaluate("window.__SC.fn={mode:'badjson'}"); await p.click('#coFSubmit'); await p.wait_for_function("document.getElementById('coFormErrorCode').textContent.indexOf('bad_response')>-1",timeout=5000)
+        check('success without a usable id is not treated as success','coordinator-tasker-new' in p.url)
+        await p.evaluate("window.__SC.fn={mode:'network'}"); await p.click('#coFSubmit'); await p.wait_for_function("document.getElementById('coFormErrorCode').textContent.indexOf('network')>-1",timeout=5000)
+        et=await p.inner_text('#coFormError'); check('network failure: says it will not duplicate','will not create a duplicate' in et,et)
+        calls=await p.evaluate('window.__fnCalls'); check('network failure: same request id kept across all 3 attempts',len(set(c['body']['request_id'] for c in calls))==1,len(calls))
+        await ctx.close()
+        # double click sends once
+        sc2=copy.deepcopy(scn); sc2['fn']={'mode':'ok','id':NEW,'delay':600}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await fill_valid(p); await p.dblclick('#coFSubmit',force=True); await p.wait_for_url('**/coordinator-tasker.html**',timeout=5000)
+        check('double click sends one call',(await p.evaluate('window.__fnCalls.length'))==1)
+        await ctx.close()
+        # already created earlier -> created=0 notice
+        sc2=copy.deepcopy(scn); sc2['fn']={'mode':'ok','id':NEW,'created':False}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_url('**created=0',timeout=5000); await p.wait_for_selector('#coCreatedBanner',state='visible',timeout=5000)
+        check('retry that finds the earlier create says nothing new was added','nothing new was added' in await p.inner_text('#coCreatedText'))
+        await ctx.close()
+        # at the cap: 10 active
+        ids=['%08d-0000-4000-8000-000000000000'%i for i in range(1,11)]
+        sc2=copy.deepcopy(scn); sc2['assignments']=ids
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coFormCap',state='visible',timeout=5000)
+        check('at the cap: notice shown and Create disabled',not await p.is_enabled('#coFSubmit'))
+        await p.screenshot(path=OUT+'/add-at-cap-desktop.png',full_page=True)
+        await ctx.close()
+        # cap check fails: form still usable
+        sc2=copy.deepcopy(scn); sc2['overviewError']=True
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coFormCheckError',state='visible',timeout=5000)
+        check('cap check failed: warning shown, Create still enabled',await p.is_enabled('#coFSubmit'))
+        await ctx.close()
+        # profile consent states
+        sc2=copy.deepcopy(scn); sc2['consents']=[]
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coConsentEmpty',state='visible',timeout=5000)
+        check('profile: no consent rows says so',True)
+        await ctx.close()
+        sc2=copy.deepcopy(scn); sc2['consentsError']=True
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coConsentError',state='visible',timeout=5000)
+        check('profile: consent error does not hide the profile',await p.is_visible('#coDetail') and not await p.is_visible('#coCreatedBanner'))
+        await ctx.close()
+        # guard
+        ctx,p,errs=await newpage(b,{'role':'none'},session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_url('**/coordinator-login.html**',timeout=5000)
+        check('add form is guarded like the other pages','denied=no' in p.url)
+        await ctx.close()
+        # mobile
+        ctx,p,errs=await newpage(b,scn,w=390,h=844,session=True)
+        await p.goto(BASE+'coordinator-tasker-new.html'); await p.wait_for_selector('#coForm',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        await p.screenshot(path=OUT+'/add-mobile.png',full_page=True)
+        sw=await p.evaluate('document.documentElement.scrollWidth'); check('add form mobile no horizontal scroll',sw<=391,sw)
+        small=await p.evaluate("Array.from(document.querySelectorAll('#coForm input:not([type=checkbox]), #coForm select, #coForm textarea, #coForm .btn, #coForm .co-check')).filter(e=>e.offsetParent&&e.getBoundingClientRect().height<40).map(e=>e.id||e.className)")
+        check('add form mobile: inputs and buttons are at least 40px tall',not small,small)
+        await fill_valid(p); await p.click('#coFSubmit'); await p.wait_for_url('**/coordinator-tasker.html**',timeout=5000); await p.wait_for_selector('#coConsentList',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        await p.screenshot(path=OUT+'/profile-created-mobile.png',full_page=True)
+        sw=await p.evaluate('document.documentElement.scrollWidth'); check('profile with consent mobile no horizontal scroll',sw<=391,sw)
+        check('errors none (add mobile)',not errs,errs)
+        await ctx.close()
         await b.close()
     bad=[r for r in results if not r[1]]
     print('\nTOTAL',len(results),'FAILED',len(bad))

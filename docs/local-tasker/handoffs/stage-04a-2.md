@@ -1,0 +1,75 @@
+# Stage 4A-2 handoff: Add a Local Tasker form (first real call to the 2D Edge Function) and the consent record on the profile (WRITTEN; browser-tested with a MOCKED Supabase only)
+
+Status: Stage 4A is SPLIT three ways. 4A-1 = read-only list and profile (done). 4A-2 (this handoff) = create form that calls `local-tasker-create`, plus the read-only consent record on the profile page. 4A-3 = audited EDIT (new SQL function + edit form), NOT started (size guard: a second SQL migration and a second form would have taken this stage past about 8 files / 1,200 lines). 143 browser checks pass against a fake Supabase client; nothing has been run against the real project, and the Edge Function has still never completed a real create.
+
+## OWNER STANDING INSTRUCTIONS (every AI session must follow these; the owner should never have to repeat them)
+1. Read this handoff, `00-PROJECT-CONTEXT.md` and `IMPLEMENTATION-STATUS.md` first. The next stage is the first one not marked Done / Applied (see section 14).
+2. Ask the owner for what the stage needs ONCE, in ONE short batch, BEFORE generating. Ask only for what the stage file lists and what is not already filed. If nothing is needed, generate straight away.
+3. Supabase's SQL editor shows at most 100 rows. Prefer one compact aggregated query (one row per section) over many pastes.
+4. At the end of every stage, REDO the handoff in `handoffs/` (what was done, what was not, what the next AI must note) and update `IMPLEMENTATION-STATUS.md`.
+5. Deliver a zip with ONLY the files created or changed in this stage, in their proper folders, including the handoff and status files. Never the full project. Repeat these instructions in the new handoff.
+6. Never claim a test passed, a migration was applied or a payment worked unless it was actually run and observed.
+7. Hard safety rules: no production deploys, no live payments, no secrets in the browser, no destructive migrations, no coordinator control over payout destination or payment records. One Supabase project, no staging, no real users yet: NO backup, test copy or dry-run is needed; run SQL directly (additive, re-runnable, with a rollback file).
+8. ASSUME THE OWNER FOLLOWED YOUR PREVIOUS INSTRUCTIONS CORRECTLY. If the last handoff said "owner runs X", treat X as run and correct (the owner reports only problems). Do not ask the owner to confirm or re-paste a past stage's results unless you genuinely need that output to proceed.
+9. WHEN YOU MUST ASK FOR A FILE OR OUTPUT, ALWAYS SAY EXACTLY HOW TO GET IT: the repo folder path, or a ready-to-run SQL file (one query, one row per section) plus the clicks (run in the Supabase SQL editor, then Export > Download CSV, and upload it). Never just name a file.
+10. The zips the owner uploads may not include `inputs/`, `sql/` or earlier handoffs. If a file is missing, do not guess: ask once, with how to get it (rule 9).
+11. If the owner uploads the introspect CSV or schema again, regenerate `architecture/schema-2a-2b-2c.md` from it. A scratch Postgres can be built to RUN SQL before handing it over: see section 9 item 6.
+12. OWNER PREFERENCE (2026-10-26): NEVER ask the owner to use the browser console, curl, a terminal, or any developer tooling. The owner is a designer who only uses the Supabase SQL editor and dashboard function deploy. Optional tests are left out; anything that cannot be proven with SQL or a dashboard deploy is verified later through the real app flow (the stage that builds the UI) and recorded as UNVERIFIED until then.
+13. OWNER INSTRUCTION (2026-10-26): follow the existing website design system and tokens (`DESIGN-SYSTEM.md`, `css/tokens.css`, `css/styles.css`, shared `.btn` / `.form-*` / `.card` classes) and stay consistent with the screens already built (coordinator pages, `css/coordinator.css`), irrespective of any reference screen. Run `node tools/check-design-system.js` before finishing UI work.
+14. CONSOLE AND CURL STEPS WERE REMOVED at the owner's request (see item 12 and handoffs/stage-02d.md section 16). The owner must NOT be asked for them again by any later session: they were dropped on purpose, and the first live call of the 2D Edge Function now happens through the real Add Local Tasker form (this stage), with the error code shown on screen.
+
+## 1. What this stage did
+- `coordinator-tasker-new.html` + `js/coordinator-tasker-new.js`: "Add a Local Tasker". Fields: public name, private full name, private phone, skills (comma separated), areas served, availability notes, and the agreement record (how they agreed: in person / phone / written; optional reference; optional notes; a required confirmation tick).
+- It calls the Edge Function with `window.supabase.functions.invoke('local-tasker-create', { body })`, which sends the coordinator's own sign-in token. Body (exactly the 2D contract, nothing else): `request_id, public_name, full_name, phone, areas_served, skills[], availability_notes, consent { confirmed:true, method, evidence_ref, details }`. No coordinator id, role or status is ever sent; the function takes the caller from the verified token.
+- RETRY SAFETY: ONE `request_id` (uuid v4) is made when the form first opens and kept in `sessionStorage` (`st_co_new_request`). Every submit sends the same id, so a double click, a slow connection or a retry cannot create a second Local Tasker. It is dropped after a success, and replaced if the server answers `request_mismatch` / `identity_in_use`. A fresh visit to the form gets a fresh id. Double click is also blocked in the page (busy flag).
+- ERRORS ARE VISIBLE: every failure shows a plain sentence AND `Error code: <code>` in a red box that takes focus. Mapped: `coordinator_cap`, `not_active_coordinator`, `consent_required`, `request_mismatch`, `identity_in_use`, `identity_not_locked`, `identity_failed`, `unauthenticated`, `too_large`, `server_error`, `bad_input` (shows the server's message), network failure (says retrying will not duplicate), unknown codes (generic text plus the code), a gateway rejection such as `UNAUTHORIZED_INVALID_JWT_FORMAT` (shown as `unauthenticated (UNAUTHORIZED_INVALID_JWT_FORMAT)`). A "success" without a usable id is not treated as success (`bad_response`).
+- Validation in the browser mirrors the function and database limits (names 2-80 / 2-120, phone pattern, up to 20 skills of 60 characters, areas 300, notes 500, reference 500, agreement notes 1000); the function re-checks everything. Messages appear under the field and focus moves to the first bad one.
+- The 10-place cap: on opening, the form counts the coordinator's active assignments (a display check only; the 2A trigger is the authority). At 10 it shows a notice and disables Create. If that count cannot be read, it warns and still lets the coordinator try.
+- On success the browser goes to the new profile: `coordinator-tasker.html?id=<uuid>&created=1` (or `created=0` when the function says the request already existed). The profile shows a notice ("a draft: nothing is shown to customers until you publish").
+- Profile page now has an "Agreement on record" card reading `local_tasker_consents` (allowed for coordinators by policy `lt_consents_read`, confirmed in the owner's export): purpose, method, date, reference, notes, and "Withdrawn" with date and reason. A failure to load it never hides the profile. All text is rendered with `textContent`.
+- Entry points: "Add Local Tasker" button in the list header and in the empty state; the nav item "My Local Taskers" stays highlighted on the new page.
+
+## 2. Files created or modified
+NEW: `coordinator-tasker-new.html`, `js/coordinator-tasker-new.js`, `docs/local-tasker/handoffs/stage-04a-2.md`.
+MODIFIED: `coordinator-taskers.html` (Add buttons), `coordinator-tasker.html` and `js/coordinator-tasker.js` (created notice, consent card), `components/coordinator-nav.html` (highlight on the new page), `css/coordinator.css` (form, field errors, checkbox row, consent list; tokens only), `docs/local-tasker/IMPLEMENTATION-STATUS.md`, `docs/local-tasker/tests/stage-3a/` (`fake-supabase.js`, `run.py`, README: 143 checks).
+SYNCED (not new work): `supabase/functions/local-tasker-create/index.ts` and `sql/local-tasker/stage-2d-core.sql` are the FIXED 2D versions. The `stage-2d.zip` the owner re-uploaded contained the FIRST (broken) versions; the owner already ran/deployed the fixed ones in Supabase. Replace the repo copies with these. Do not deploy anything from the old zip.
+No existing site-wide file changed. Design-system check: passed, baseline untouched.
+
+## 3. Decisions and things the next AI must know
+- D30: The browser never writes `local_tasker_profiles`, `users`, `taskers`, assignments or consents. Creation goes only through the Edge Function; the function is the only caller of `create_local_tasker`.
+- D31: The public name is a separate field from the private full name (2D decision D27); the form tells the coordinator the public name is what customers see after publishing.
+- D32: Consent purpose written at creation is `profile` only (by the SQL function). Other purposes (`publish_info`, `photos`, `payout`, `price_change`, `booking_confirmation`) are for the stages that need them (4B/4C/7B/5C). The consent card already displays any purpose.
+- D33: CORS in the function allows `https://streettasker.com` and `https://www.streettasker.com`. On any other address (a preview URL) the call fails as a network error. For a preview, set the Edge secret `ALLOWED_ORIGINS` (comma separated).
+- The profile page loads the agreement record separately so a consent read problem cannot hide the profile.
+
+## 4. Tests executed and ACTUAL results
+- `node tools/check-design-system.js`: passed.
+- 143 browser checks (Playwright, Chromium, MOCKED Supabase and a mocked `functions.invoke`; `docs/local-tasker/tests/stage-3a/`), all pass: the 68 earlier ones plus 75 new ones covering: Add button and navigation; empty and bad-phone submits send nothing, messages and focus; one call with exactly the contract fields, valid v4 request id, skills split, consent object, no role/user id; success redirect and created notice; consent card contents including a withdrawn record and markup shown as text; request id forgotten after success and fresh on a new form; for each of `coordinator_cap`, `identity_not_locked`, `not_active_coordinator`, `identity_failed`, `bad_input`, `request_mismatch`: message, code on screen, form kept, error box focused, and the retry reusing the SAME request id (a NEW one after `request_mismatch`); gateway 401; unknown code; unusable success; network failure keeps one id across three attempts; double click sends one call; `created=0` notice; cap at 10 disables Create; cap-read failure warning; consent empty/error states; guard; mobile (390px) no horizontal scroll and inputs, buttons and the checkbox row at least 40px tall; no page errors. Result: TOTAL 143, FAILED 0.
+- Screenshots were looked at (desktop and 390px): form, validation errors, cap error, created profile with consent card.
+- NOT run: anything against the real Supabase project or the deployed Edge Function; `supabase-js` `functions.invoke` against the real function (the error-body handling assumes `error.context` is the HTTP Response, as in supabase-js v2: UNVERIFIED); keyboard/screen-reader pass; real phones.
+
+## 5. Security notes
+Reads and the one function call run under the coordinator's own session. Authority is decided by the function (verified token + `is_active_coordinator`) and the database (RLS, triggers), never by this page. The phone and full name are sent only to the function over HTTPS and shown only on the private coordinator pages; they are not logged or put in the address bar (the profile id in the URL is a uuid only). All user text is rendered with `textContent`. Pages carry `noindex`.
+
+## 6. Known limitations
+- The first real create has NOT happened. Carry-forward from 2D: the earlier real attempt returned 500 `identity_not_locked`; fixes are deployed but unexercised. If the first real create fails, the red box shows the code; the function's `message` for 500s is generic, so the Edge Function logs line starting `placeholder` and the SQL error (which names `found`, `email_ok`, `banned_until`) are where to look (the owner can open the function's Logs page in the dashboard; no console needed).
+- No edit yet (4A-3). A typo in a name or phone cannot be fixed from the portal until then. No publish, services or photos (4B/4C).
+- "Forgot password" and "Contact Coordinator Support" remain unverified/placeholder (earlier carry-forwards).
+- A retry after a lost response that changed the form fields is answered with the original data (same request id); the notice `created=0` says nothing new was added.
+
+## 7. Manual owner actions (dashboard and SQL editor only; no console, no curl)
+1. Deploy the new and changed files (list in section 2). Replace the repo copies of `index.ts` and `stage-2d-core.sql` with the fixed ones in this zip (the deployed function in Supabase is already the fixed one).
+2. Sign in as the test coordinator, open My Local Taskers, press Add Local Tasker, fill the form with a test person, press Create.
+   - Expected: you land on the new profile with the green "Local Tasker created" notice and one agreement record.
+   - If a red box appears: send me its text and the "Error code".
+3. After the first success, SQL editor: run BLOCK 2 of `sql/local-tasker/stage-2d-edge-test-helpers.sql` and send the result. Expect `banned_until` about 100 years ahead, `wallets: 0`, one row each, `taskers_phone_or_whatsapp_set: 0`. This is also the proof that the placeholder is locked (no sign-in attempt needed).
+4. Do NOT run Part A of `stage-2d-rollback.sql`. Test people are retired with Part B of that file, never deleted.
+
+## 8. INPUTS NEEDED for 4A-3
+None from the owner. The needed facts are in `architecture/schema-2a-2b-2c.md` (2D zip). 4A-3 will write NEW SQL on the scratch Postgres first (see handoffs/stage-02d.md section 9 item 6).
+
+## 9. Exact next steps
+4A-3: SQL function `update_local_tasker_profile` (SECURITY DEFINER, server-callable by the signed-in coordinator through RPC only if you add an explicit `is_active_coordinator()` + `coordinator_manages_tasker` check inside it, or via an Edge Function like creation: choose and record; audited with `local_tasker_audit`; may change full_name, phone, areas, skills, availability notes and the public name in `users`/`taskers`; must NOT touch status, assignment, consent or verification; never copies phone/whatsapp into `users`/`taskers`), tests on the scratch Postgres, an edit mode for this form (reuse `coordinator-tasker-new` styles, `?id=`), an Edit button on the profile. Then 4B and 4C. If the owner reports the first create failing, fix that first.
+
+## 10. Dependencies to preserve
+Everything in handoffs 3A/3B/4A-1 section 10, plus: one `request_id` per form open reused on retry; show the error code on screen for every function failure; send only the contract fields; keep phone and full name private; the browser never writes the Local Tasker tables directly; keep the fixed 2D function and SQL as the source in the repo.

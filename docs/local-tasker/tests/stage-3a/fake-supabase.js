@@ -5,6 +5,7 @@
   var session = null;
   try { var s=localStorage.getItem('fake_session'); if(s) session=JSON.parse(s); } catch(e){}
   window.__calls=[];
+  try { window.__fnCalls=JSON.parse(sessionStorage.getItem('fake_fn_calls')||'[]'); } catch(e){ window.__fnCalls=[]; }
   window.supabase = { createClient: function(){ return {
     auth: {
       getSession: async function(){ window.__calls.push('getSession'); if(sc().sessionError) return {data:{session:null},error:{message:'boom'}}; return {data:{session:session},error:null}; },
@@ -16,6 +17,15 @@
       onAuthStateChange: function(f){ listeners.push(f); return {data:{subscription:{unsubscribe:function(){}}}}; },
       resetPasswordForEmail: async function(){ window.__calls.push('reset'); return {error:null}; }
     },
+    functions: { invoke: async function(name, opts){
+      window.__fnCalls.push({name:name, body:opts&&opts.body}); try{ sessionStorage.setItem('fake_fn_calls',JSON.stringify(window.__fnCalls)); }catch(e){}
+      var f=sc().fn||{mode:'ok'};
+      if(f.delay) await new Promise(function(r){setTimeout(r,f.delay);});
+      if(f.mode==='network') return {data:null,error:{name:'FunctionsFetchError',message:'Failed to send a request to the Edge Function'}};
+      if(f.mode==='error') return {data:null,error:{name:'FunctionsHttpError',message:'Edge Function returned a non-2xx status code',context:{status:f.status||500,json:async function(){return f.rawBody||{ok:false,error:f.code,message:f.message||'x'};}}}};
+      if(f.mode==='badjson') return {data:{unexpected:true},error:null};
+      return {data:{ok:true,created:f.created!==false,tasker_user_id:f.id||'44444444-4444-4444-8444-444444444444'},error:null};
+    } },
     rpc: async function(n){ window.__calls.push('rpc:'+n);
       if(sc().rpcError) return {data:null,error:{message:'server down'}};
       if(n==='is_active_coordinator') return {data: sc().role==='active', error:null};
@@ -39,6 +49,7 @@
           var out;
           if(sc().overviewError) out={data:null,error:{message:'rls'}};
           else if(t==='coordinator_assignments') out={data:(sc().assignments||[]).map(function(id){return {tasker_user_id:id,assigned_at:'2026-10-01'};}),error:null};
+          else if(t==='local_tasker_consents'){ out = sc().consentsError ? {data:null,error:{message:'rls'}} : {data:(sc().consents||[]).filter(function(c){return c.tasker_user_id===q.filters.tasker_user_id;}),error:null}; }
           else if(t==='local_tasker_profiles') out={data:(sc().profiles||[]).filter(function(p){return !q.inList||q.inList.indexOf(p.tasker_user_id)>-1;}),error:null};
           else out={data:[],error:null};
           return Promise.resolve(out).then(res,rej);

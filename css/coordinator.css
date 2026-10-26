@@ -360,3 +360,38 @@ body.co-drawer-open { overflow: hidden; }
   .co-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0 var(--space-7); }
   .co-tasker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* ── Add a Local Tasker form (Stage 4A-2) ───────────────────── */
+/* Inputs, selects, labels and buttons are the shared .form-* and .btn components. */
+.co-form { display: flex; flex-direction: column; gap: var(--space-4); }
+.co-card-lead { margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--co-ink-muted); line-height: 1.5; }
+.co-form .form-group:last-child { margin-bottom: 0; }
+.co-form .form-input[aria-invalid="true"],
+.co-form .form-select[aria-invalid="true"],
+.co-form .form-textarea[aria-invalid="true"] { border-color: var(--co-danger); }
+.co-field-error { margin-top: var(--space-1); font-size: var(--text-xs); font-weight: 600; color: var(--co-danger); }
+.co-field-error[hidden] { display: none; }
+.co-check { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; cursor: pointer; font-size: var(--text-sm); line-height: 1.5; color: var(--co-ink); }
+.co-check input { flex-shrink: 0; margin-top: var(--space-1); accent-color: var(--co-green); }
+.co-banner:focus { outline: none; box-shadow: var(--shadow-focus); }
+.co-banner-code { display: block; margin-top: var(--space-1); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.02em; }
+.co-form-actions { display: flex; flex-direction: column-reverse; gap: var(--space-3); }
+.co-form-actions .btn { width: 100%; }
+.co-head-action { flex-shrink: 0; }
+.co-empty .btn { margin-top: var(--space-4); }
+
+/* Consent records on the profile page */
+.co-consent-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+.co-consent-item { padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); }
+.co-consent-item:last-child { padding-bottom: 0; border-bottom: none; }
+.co-consent-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.co-consent-purpose { font-family: var(--font-heading); font-weight: 700; font-size: var(--text-base); }
+.co-consent-meta { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-consent-note { margin-top: var(--space-2); font-size: var(--text-sm); color: var(--co-ink); overflow-wrap: anywhere; }
+.co-status--withdrawn { background: var(--co-danger-soft); color: var(--co-danger); }
+
+@media (min-width: 768px) {
+  .co-form { max-width: 720px; }
+  .co-form-actions { flex-direction: row; justify-content: flex-end; }
+  .co-form-actions .btn { width: auto; }
+}
