@@ -1,7 +1,7 @@
 <!-- StreetTasker — coordinator portal navigation (header, mobile drawer, mobile bottom bar).
      Loaded by js/coordinator.js into #coNavRoot on coordinator-*.html pages only.
      Links to pages that do not exist yet are plain <span class="is-soon"> items:
-     Stage 4A turns My Local Taskers into a link, 5B Bookings, 6B Messages. -->
+     4A-1 made My Local Taskers a link; 5B turns Bookings into one, 6B Messages. -->
 <header class="co-header" id="coHeader">
   <div class="co-header-inner">
     <button type="button" class="co-icon-btn co-menu-btn" id="coMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="coDrawer">
@@ -15,7 +15,7 @@
 
     <nav class="co-nav" aria-label="Coordinator">
       <a class="co-nav-link" href="coordinator-dashboard.html" data-co-page="coordinator-dashboard.html">Overview</a>
-      <span class="co-nav-link is-soon" aria-disabled="true" title="Coming soon">My Local Taskers</span>
+      <a class="co-nav-link" href="coordinator-taskers.html" data-co-page="coordinator-taskers.html coordinator-tasker.html">My Local Taskers</a>
       <span class="co-nav-link is-soon" aria-disabled="true" title="Coming soon">Bookings</span>
       <span class="co-nav-link is-soon" aria-disabled="true" title="Coming soon">Messages</span>
       <span class="co-nav-link is-soon" aria-disabled="true" title="Coming soon">Help &amp; Support</span>
@@ -39,7 +39,7 @@
   <nav class="co-drawer-panel" aria-label="Coordinator menu">
     <p class="co-drawer-name" id="coDrawerName"></p>
     <a class="co-drawer-link" href="coordinator-dashboard.html" data-co-page="coordinator-dashboard.html">Overview</a>
-    <span class="co-drawer-link is-soon" aria-disabled="true">My Local Taskers</span>
+    <a class="co-drawer-link" href="coordinator-taskers.html" data-co-page="coordinator-taskers.html coordinator-tasker.html">My Local Taskers</a>
     <span class="co-drawer-link is-soon" aria-disabled="true">Bookings</span>
     <span class="co-drawer-link is-soon" aria-disabled="true">Messages</span>
     <span class="co-drawer-link is-soon" aria-disabled="true">Help &amp; Support</span>
@@ -52,10 +52,10 @@
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span>Overview</span>
   </a>
-  <span class="co-bn-item is-soon" aria-disabled="true">
+  <a class="co-bn-item" href="coordinator-taskers.html" data-co-page="coordinator-taskers.html coordinator-tasker.html">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Taskers</span>
-  </span>
+  </a>
   <span class="co-bn-item is-soon" aria-disabled="true">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span>Bookings</span>

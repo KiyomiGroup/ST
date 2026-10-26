@@ -14,9 +14,8 @@
 'use strict';
 
 (function () {
-  /* Display mirror of the database cap (local_tasker_max_active(), enforced by the
-     assignment trigger). The database is the authority; this only labels the tiles. */
-  var CAP = 10;
+  var C = window.STCo;
+  var CAP = C.CAP;   /* display mirror of the database cap; the assignment trigger is the authority */
 
   function $(id) { return document.getElementById(id); }
   function setStat(key, text) {
@@ -24,41 +23,26 @@
     if (el) el.textContent = text;
   }
 
-  var STATUS_LABEL = { draft: 'Draft', published: 'Published', inactive: 'Inactive' };
-  function statusLabel(s) {
-    if (STATUS_LABEL[s]) return STATUS_LABEL[s];
-    var t = String(s || 'unknown').replace(/_/g, ' ');
-    return t.charAt(0).toUpperCase() + t.slice(1);
-  }
-
-  function initialsOf(name) {
-    var parts = String(name || '').replace(/[^a-zA-Z ]/g, ' ').split(' ').filter(Boolean);
-    if (!parts.length) return 'LT';
-    return parts.slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase();
-  }
-
-  function el(tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text != null) n.textContent = text;
-    return n;
-  }
+  var el = C.el, initialsOf = C.initialsOf, statusLabel = C.statusLabel;
 
   function card(profile) {
     var name = profile.full_name || 'Local Tasker';
     var li = el('li', 'co-tasker-card');
+    var link = el('a', 'co-tasker-link');
+    link.href = 'coordinator-tasker.html?id=' + encodeURIComponent(profile.tasker_user_id || '');
+    link.setAttribute('aria-label', name + ', ' + statusLabel(profile.status));
 
     var top = el('div', 'co-tasker-top');
     top.appendChild(el('span', 'co-tasker-avatar', initialsOf(name)));
-    var chip = el('span', 'co-status co-status--' + (STATUS_LABEL[profile.status] ? profile.status : 'other'), statusLabel(profile.status));
-    top.appendChild(chip);
-    li.appendChild(top);
+    top.appendChild(el('span', C.statusClass(profile.status), statusLabel(profile.status)));
+    link.appendChild(top);
 
-    li.appendChild(el('h3', 'co-tasker-name', name));
+    link.appendChild(el('h3', 'co-tasker-name', name));
 
     var skills = Array.isArray(profile.skills) ? profile.skills.filter(Boolean) : [];
-    li.appendChild(el('p', 'co-tasker-skills', skills.length ? skills.join(', ') : 'No skills recorded yet'));
-    li.appendChild(el('p', 'co-tasker-area', profile.areas_served ? profile.areas_served : 'No service area recorded yet'));
+    link.appendChild(el('p', 'co-tasker-skills', skills.length ? skills.join(', ') : 'No skills recorded yet'));
+    link.appendChild(el('p', 'co-tasker-area', profile.areas_served ? profile.areas_served : 'No service area recorded yet'));
+    li.appendChild(link);
     return li;
   }
 
@@ -117,7 +101,7 @@
       }
       grid.textContent = '';
       ids.forEach(function (id) {
-        grid.appendChild(card(byId[id] || { full_name: '', status: 'unknown', skills: [], areas_served: '' }));
+        grid.appendChild(card(byId[id] || { tasker_user_id: id, full_name: '', status: 'unknown', skills: [], areas_served: '' }));
       });
       grid.hidden = false;
     } catch (e) {

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Local Tasker — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        My Local Taskers
+      </a>
+
+      <p class="co-loading" id="coDetailLoading">Loading…</p>
+
+      <div class="co-banner" id="coDetailError" role="alert" hidden>
+        <span>We couldn't load this Local Tasker just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coDetailRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coDetailMissing" hidden>
+        <p class="co-empty-title">Local Tasker not found</p>
+        <p class="co-empty-text">This profile doesn't exist, or it isn't assigned to you.</p>
+      </div>
+
+      <article class="co-detail" id="coDetail" hidden>
+        <header class="co-detail-head">
+          <span class="co-tasker-avatar co-tasker-avatar--lg" id="coDetailAvatar">LT</span>
+          <div class="co-detail-headtext">
+            <h1 class="co-page-title" id="coDetailName">Local Tasker</h1>
+            <p class="co-page-sub" id="coDetailSkills"></p>
+          </div>
+          <span id="coDetailStatus"></span>
+        </header>
+
+        <p class="co-note co-note--private">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Private to you and StreetTasker administrators. Customers never see the phone number or the full name here.</span>
+        </p>
+
+        <section class="co-card" aria-labelledby="coDetailContactTitle">
+          <h2 class="co-card-title" id="coDetailContactTitle">Contact and area</h2>
+          <dl class="co-facts" id="coFactsContact"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailProfileTitle">
+          <h2 class="co-card-title" id="coDetailProfileTitle">Profile</h2>
+          <dl class="co-facts" id="coFactsProfile"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailVerifyTitle">
+          <h2 class="co-card-title" id="coDetailVerifyTitle">Verification</h2>
+          <dl class="co-facts" id="coFactsVerify"></dl>
+        </section>
+      </article>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-tasker.js"></script>
+</body>
+</html>

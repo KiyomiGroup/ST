@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>My Local Taskers — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <header class="co-page-head">
+        <div>
+          <h1 class="co-page-title">My Local Taskers</h1>
+          <p class="co-page-sub" id="coListSummary">Neighbourhood taskers under your coordination.</p>
+        </div>
+      </header>
+
+      <div class="co-banner" id="coListError" role="alert" hidden>
+        <span>We couldn't load your Local Taskers just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coListRetry">Try again</button>
+      </div>
+
+      <div class="co-toolbar" id="coToolbar" hidden>
+        <label class="co-search">
+          <span class="co-visually-hidden">Search your Local Taskers</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="coSearch" placeholder="Search by name, skill or area" autocomplete="off" />
+        </label>
+        <div class="co-filters" role="group" aria-label="Filter by status">
+          <button type="button" class="co-filter is-active" data-co-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="co-filter" data-co-filter="published" aria-pressed="false">Published</button>
+          <button type="button" class="co-filter" data-co-filter="draft" aria-pressed="false">Draft</button>
+          <button type="button" class="co-filter" data-co-filter="inactive" aria-pressed="false">Inactive</button>
+        </div>
+      </div>
+
+      <p class="co-loading" id="coListLoading">Loading your Local Taskers…</p>
+      <ul class="co-tasker-grid" id="coListGrid" hidden></ul>
+
+      <div class="co-empty" id="coListEmpty" hidden>
+        <p class="co-empty-title">No Local Taskers assigned to you yet</p>
+        <p class="co-empty-text">Local Taskers assigned to you will appear here. Ask a StreetTasker administrator if you were expecting some.</p>
+      </div>
+      <div class="co-empty" id="coListNoMatch" hidden>
+        <p class="co-empty-title">No match</p>
+        <p class="co-empty-text">None of your Local Taskers match that search or filter.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-taskers.js"></script>
+</body>
+</html>

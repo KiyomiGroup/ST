@@ -26,7 +26,14 @@
       var chain={
         select:function(){return chain;}, eq:function(k,v){q.filters[k]=v;return chain;}, is:function(){return chain;},
         order:function(){return chain;}, in:function(k,v){q.inList=v;return chain;},
-        maybeSingle: async function(){ window.__calls.push('from:'+t); return {data:{display_name:'Chidi Okafor',status:'active'},error:null}; },
+        maybeSingle: async function(){ window.__calls.push('from:'+t);
+          if(t==='local_tasker_profiles'){
+            if(sc().overviewError) return {data:null,error:{message:'rls'}};
+            var id=q.filters.tasker_user_id; var mine=(sc().assignments||[]).indexOf(id)>-1; /* simulates RLS */
+            var row=(sc().profiles||[]).filter(function(p){return p.tasker_user_id===id;})[0];
+            return {data:(mine&&row)?row:null,error:null};
+          }
+          return {data:{display_name:'Chidi Okafor',status:'active'},error:null}; },
         then:function(res,rej){
           window.__calls.push('from:'+t);
           var out;

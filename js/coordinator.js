@@ -90,7 +90,7 @@
 
     var page = currentPage();
     root.querySelectorAll('[data-co-page]').forEach(function (el) {
-      if (el.getAttribute('data-co-page') === page) el.setAttribute('aria-current', 'page');
+      if (el.getAttribute('data-co-page').split(' ').indexOf(page) > -1) el.setAttribute('aria-current', 'page');
     });
 
     var so = $('coSignOut'); if (so) so.addEventListener('click', signOut);
