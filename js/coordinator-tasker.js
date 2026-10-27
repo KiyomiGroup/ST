@@ -111,6 +111,52 @@
     }
   }
 
+  /* Photos load separately too (private bucket, short-lived signed links). A problem here never hides the profile. */
+  async function loadPhotos(id) {
+    var strip = $('coPhotoStrip');
+    ['coPhotoLoading', 'coPhotoError', 'coPhotoEmpty', 'coPhotoCount'].forEach(function (x) { $(x).hidden = true; });
+    strip.hidden = true; strip.textContent = '';
+    $('coPhotoLoading').hidden = false;
+    $('coPhotoManage').href = 'coordinator-photos.html?id=' + encodeURIComponent(id);
+    try {
+      var res = await window.supabase.from('local_tasker_photos')
+        .select('id, storage_path, caption, is_cover, created_at')
+        .eq('tasker_user_id', id).is('removed_at', null)
+        .order('is_cover', { ascending: false }).order('created_at', { ascending: true });
+      if (res.error) throw res.error;
+      $('coPhotoLoading').hidden = true;
+      var rows = (res.data || []).slice().sort(function (a, b) {
+        if (!!a.is_cover !== !!b.is_cover) return a.is_cover ? -1 : 1;
+        return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+      });
+      if (!rows.length) { $('coPhotoEmpty').hidden = false; return; }
+      $('coPhotoManage').textContent = 'Manage photos';
+      var shown = rows.slice(0, 4), map = {};
+      try {
+        var s = await window.supabase.storage.from('local-tasker-photos').createSignedUrls(shown.map(function (r) { return r.storage_path; }), 3600);
+        if (!s.error) (s.data || []).forEach(function (d) { if (d && d.signedUrl && !d.error) map[d.path] = d.signedUrl; });
+      } catch (e) { console.error('[coordinator tasker photo links]', e); }
+      shown.forEach(function (p, i) {
+        var li = C.el('li', 'co-photo-thumb');
+        if (map[p.storage_path]) {
+          var img = C.el('img'); img.src = map[p.storage_path]; img.alt = p.caption || ('Photo ' + (i + 1)); img.loading = 'lazy'; li.appendChild(img);
+        } else {
+          li.appendChild(C.el('span', 'co-photo-missing', 'Unavailable'));
+        }
+        if (p.is_cover) li.appendChild(C.el('span', 'co-status co-status--published co-photo-cover', 'Cover'));
+        strip.appendChild(li);
+      });
+      strip.hidden = false;
+      var cnt = $('coPhotoCount');
+      cnt.textContent = rows.length + (rows.length === 1 ? ' photo' : ' photos') + ' of 8. Private until you publish.';
+      cnt.hidden = false;
+    } catch (e) {
+      console.error('[coordinator tasker photos]', e);
+      $('coPhotoLoading').hidden = true;
+      $('coPhotoError').hidden = false;
+    }
+  }
+
   function consentItem(c) {
     var li = C.el('li', 'co-consent-item');
     var head = C.el('div', 'co-consent-head');
@@ -184,6 +230,7 @@
     $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
     loadConsents(p.tasker_user_id);
     loadServices(p.tasker_user_id);
+    loadPhotos(p.tasker_user_id);
   }
 
   async function load(detail) {

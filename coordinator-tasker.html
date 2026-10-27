@@ -88,6 +88,19 @@
           <ul class="co-svc-list" id="coSvcList" hidden></ul>
         </section>
 
+        <section class="co-card" aria-labelledby="coDetailPhotoTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+            <h2 class="co-card-title" id="coDetailPhotoTitle">Photos</h2>
+            <a class="btn btn-outline btn-sm" id="coPhotoManage" href="coordinator-photos.html">Add photos</a>
+          </div>
+          <p class="co-loading" id="coPhotoLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coPhotoError" role="alert" hidden>We couldn't load the photos just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coPhotoEmpty" hidden>No photos yet. Add photos of this person's work. They stay private until you publish.</p>
+          <ul class="co-photo-strip" id="coPhotoStrip" hidden></ul>
+          <p class="co-consent-meta" id="coPhotoCount" hidden></p>
+        </section>
+
         <section class="co-card" aria-labelledby="coDetailVerifyTitle">
           <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><h2 class="co-card-title" id="coDetailVerifyTitle">Verification</h2></div>
           <dl class="co-facts" id="coFactsVerify"></dl>

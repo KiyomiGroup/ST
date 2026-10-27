@@ -602,6 +602,230 @@ async def main():
         sw=await p.evaluate('document.documentElement.scrollWidth'); check('profile with services mobile no horizontal scroll',sw<=391,sw)
         check('errors none (services)',not errs,errs)
         await ctx.close()
+
+        # ---- Stage 4B-2: photos ----
+        import io, re as _re
+        from PIL import Image
+        def png(w,h):
+            im=Image.new('RGB',(w,h)); px=im.load()
+            for x in range(0,w,7):
+                for y in range(0,h,7): px[x,y]=((x*3)%256,(y*5)%256,((x+y))%256)
+            bio=io.BytesIO(); im.save(bio,'PNG'); return bio.getvalue()
+        BIG={'name':'big.png','mimeType':'image/png','buffer':png(3000,2000)}
+        SMALL={'name':'small.png','mimeType':'image/png','buffer':png(400,300)}
+        BADIMG={'name':'broken.png','mimeType':'image/png','buffer':b'this is not a picture'}
+        TXT={'name':'note.txt','mimeType':'text/plain','buffer':b'hello'}
+        PHB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb0'
+        def PH(i,cap=None,cover=False,uid=None):
+            return {'id':PHB+str(i),'tasker_user_id':uid or NEW,'storage_path':(uid or NEW)+'/cccccccc-cccc-4ccc-8ccc-cccccccccc0'+str(i)+'.jpg','caption':cap,'is_cover':cover,'created_at':'2026-10-26T10:0'+str(i)+':00Z','removed_at':None}
+        PHOTOS3=[PH(1,'Wardrobe',True),PH(2,'Door'),PH(3)]
+        CONS_PH={'tasker_user_id':NEW,'purpose':'photos','method':'in_person','recorded_at':'2026-10-26T11:00:00Z','evidence_ref':None,'details':None,'revoked_at':None,'revoke_reason':None}
+        scp=copy.deepcopy(scn); scp['photos']=copy.deepcopy(PHOTOS3); scp['consents']=scp['consents']+[CONS_PH]
+        PURL=BASE+'coordinator-photos.html?id='+NEW
+        async def rpcs(p): return await p.evaluate("JSON.parse(sessionStorage.getItem('fake_rpc_calls')||'[]')")
+        async def ups(p): return await p.evaluate("JSON.parse(sessionStorage.getItem('fake_uploads')||'[]')")
+        async def sign(p): return await p.evaluate("JSON.parse(sessionStorage.getItem('fake_signed')||'[]')")
+
+        # profile card
+        sc5=copy.deepcopy(scp); sc5['photos']=copy.deepcopy(PHOTOS3)+[PH(4),PH(5)]
+        ctx,p,errs=await newpage(b,sc5,session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coPhotoStrip',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        check('photos card: shows 4 of 5 thumbnails',await p.locator('.co-photo-thumb').count()==4)
+        check('photos card: cover tag on the first',await p.locator('.co-photo-thumb').first.locator('.co-photo-cover').count()==1 and await p.locator('.co-photo-cover').count()==1)
+        check('photos card: count text',('5 photos of 8' in await p.inner_text('#coPhotoCount')),await p.inner_text('#coPhotoCount'))
+        check('photos card: manage link carries the id and says Manage',(await p.get_attribute('#coPhotoManage','href'))=='coordinator-photos.html?id='+NEW and (await p.inner_text('#coPhotoManage'))=='Manage photos')
+        sg=await sign(p); check('photos card: signed links asked for the private bucket, 1 hour, 4 paths only',len(sg)==1 and sg[0]['bucket']=='local-tasker-photos' and sg[0]['secs']==3600 and len(sg[0]['paths'])==4,sg)
+        check('photos card: images really loaded',await p.evaluate("Array.from(document.querySelectorAll('.co-photo-thumb img')).every(i=>i.complete&&i.naturalWidth>0)"))
+        await p.screenshot(path=OUT+'/profile-photos-desktop.png',full_page=True)
+        await ctx.close()
+        ctx,p,errs=await newpage(b,copy.deepcopy(scn),session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coPhotoEmpty',state='visible',timeout=5000)
+        check('photos card: empty state says private until publish, button says Add photos','private until you publish' in await p.inner_text('#coPhotoEmpty') and (await p.inner_text('#coPhotoManage'))=='Add photos')
+        await ctx.close()
+        sc2=copy.deepcopy(scp); sc2['photosError']=True
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coPhotoError',state='visible',timeout=5000)
+        check('photos card: read error does not hide the profile',await p.is_visible('#coDetail') and await p.is_visible('#coFactsContact'))
+        await ctx.close()
+        sc2=copy.deepcopy(scp); sc2['signed']={'mode':'error'}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coPhotoStrip',state='visible',timeout=5000)
+        check('photos card: when links fail, tiles say Unavailable and the profile stays',await p.locator('.co-photo-missing').count()==3 and await p.is_visible('#coDetail'))
+        await ctx.close()
+        ctx,p,errs=await newpage(b,copy.deepcopy(scp),session=True)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coConsentList',state='visible',timeout=5000)
+        check('agreement card names the photos purpose','Photos' in await p.inner_text('#coConsentList'))
+        check('errors none (photos card)',not errs,errs)
+        await ctx.close()
+
+        # photos page: list
+        ctx,p,errs=await newpage(b,copy.deepcopy(scp),session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coPhotoGrid',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        check('photos page: three photos listed, cover first',await p.locator('.co-photo-item').count()==3 and await p.locator('.co-photo-item').first.locator('.co-photo-cover').count()==1)
+        check('photos page: captions pre-filled',(await p.input_value('#coCap0'))=='Wardrobe' and (await p.input_value('#coCap1'))=='Door' and (await p.input_value('#coCap2'))=='')
+        check('photos page: agreement already on record, no agreement fields',not await p.is_visible('#coAgreeFields') and await p.is_visible('#coAgreeDone'))
+        check('photos page: Make cover only on non-cover photos',await p.locator('.co-photo-item button:text-is("Make cover")').count()==2)
+        check('photos page: nav marks My Local Taskers current','My Local Taskers' in (await p.inner_text('.co-nav a[aria-current=page]')))
+        check('photos page: back link goes to the profile',(await p.get_attribute('#coBackLink','href'))=='coordinator-tasker.html?id='+NEW)
+        check('photos page: cover-photo checkbox offered when photos exist',await p.is_visible('#coPCoverGroup'))
+        await p.screenshot(path=OUT+'/photos-desktop.png',full_page=True)
+        # caption save
+        await p.fill('#coCap1','Front door'); await p.locator('.co-photo-item').nth(1).locator('button:text-is("Save caption")').click(); await p.wait_for_selector('#coPhotoNotice',state='visible',timeout=5000)
+        c=await rpcs(p); check('caption: rpc has exactly the arguments',len(c)==1 and c[0]['name']=='update_local_tasker_photo' and c[0]['args']=={'p_tasker':NEW,'p_photo':PHB+'2','p_caption':'Front door','p_make_cover':False},c)
+        check('caption: notice and list refreshed','Photo saved' in await p.inner_text('#coPhotoNoticeText') and (await p.input_value('#coCap1'))=='Front door')
+        await p.locator('.co-photo-item').nth(1).locator('button:text-is("Save caption")').click(); await p.wait_for_timeout(400)
+        check('caption: saving again with no change says nothing was saved','Nothing was changed' in await p.inner_text('#coPhotoNoticeText'))
+        # make cover
+        await p.locator('.co-photo-item').nth(2).locator('button:text-is("Make cover")').click(); await p.wait_for_timeout(500)
+        c=await rpcs(p); check('cover: rpc asked to make the third photo the cover',c[-1]['args']['p_photo']==PHB+'3' and c[-1]['args']['p_make_cover']==True,c[-1])
+        check('cover: list shows the new cover first, exactly one Cover tag','Cover photo changed' in await p.inner_text('#coPhotoNoticeText') and await p.locator('.co-photo-cover').count()==1 and await p.locator('.co-photo-item').first.get_attribute('data-photo-id')==PHB+'3')
+        # remove: two steps
+        n0=len(await rpcs(p))
+        await p.locator('.co-photo-item').nth(2).locator('button:text-is("Remove")').click()
+        check('remove: first click only asks, sends nothing',await p.locator('.co-photo-item').nth(2).locator('.co-photo-confirm').is_visible() and len(await rpcs(p))==n0)
+        await p.locator('.co-photo-item').nth(2).locator('button:text-is("Keep it")').click()
+        check('remove: Keep it closes the question and sends nothing',not await p.locator('.co-photo-item').nth(2).locator('.co-photo-confirm').is_visible() and len(await rpcs(p))==n0)
+        await p.locator('.co-photo-item').nth(2).locator('button:text-is("Remove")').click(); await p.locator('.co-photo-item').nth(2).locator('button:text-is("Yes, remove")').click(); await p.wait_for_timeout(500)
+        c=await rpcs(p); check('remove: rpc with the ids, photo gone, notice',c[-1]['name']=='remove_local_tasker_photo' and c[-1]['args']=={'p_tasker':NEW,'p_photo':PHB+'2'} and await p.locator('.co-photo-item').count()==2 and 'Photo removed' in await p.inner_text('#coPhotoNoticeText'),c[-1])
+        check('errors none (photos list)',not errs,errs)
+        await ctx.close()
+
+        # failure codes on update/remove
+        for fn,hint,code in [('update_local_tasker_photo','not_found','not_found'),('remove_local_tasker_photo','not_found','not_found'),('update_local_tasker_photo','bad_input','bad_input'),('remove_local_tasker_photo',None,'server_error')]:
+            sc2=copy.deepcopy(scp); sc2['phrpc']={fn:{'mode':'error','hint':hint,'sqlcode':'XX000' if hint is None else 'P0001','message':'Invalid photo details.'}}
+            ctx,p,errs=await newpage(b,sc2,session=True)
+            await p.goto(PURL); await p.wait_for_selector('#coPhotoGrid',state='visible',timeout=5000)
+            if fn.startswith('update'): await p.locator('.co-photo-item').first.locator('button:text-is("Save caption")').click()
+            else:
+                await p.locator('.co-photo-item').first.locator('button:text-is("Remove")').click(); await p.locator('.co-photo-item').first.locator('button:text-is("Yes, remove")').click()
+            await p.wait_for_selector('#coPhotoError',state='visible',timeout=5000)
+            check('failure '+fn.split('_')[0]+' '+code+': error code on screen','Error code: '+code in await p.inner_text('#coPhotoErrorCode'),await p.inner_text('#coPhotoErrorCode'))
+            await ctx.close()
+
+        # add: validation and the real image path
+        ctx,p,errs=await newpage(b,copy.deepcopy(scn),session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        check('add (first photo): empty list message, agreement fields shown, no cover checkbox',await p.is_visible('#coPhotosEmpty') and await p.is_visible('#coAgreeFields') and not await p.is_visible('#coPCoverGroup'))
+        await p.click('#coFSubmit')
+        check('add: empty submit shows photo, agreement messages; nothing uploaded or sent',await p.is_visible('#coPFileErr') and await p.is_visible('#coFMethodErr') and await p.is_visible('#coFConfirmErr') and len(await ups(p))==0 and len(await rpcs(p))==0)
+        await p.set_input_files('#coPFile',TXT); await p.wait_for_timeout(300)
+        check('add: a text file is refused on the spot','JPEG, PNG or WebP' in await p.inner_text('#coPFileErr') and await p.input_value('#coPFile')=='')
+        await p.set_input_files('#coPFile',BADIMG); await p.wait_for_timeout(500)
+        check('add: a broken picture is refused on the spot',"couldn't be read" in await p.inner_text('#coPFileErr'))
+        await p.set_input_files('#coPFile',BIG); await p.wait_for_selector('#coPPreviewBox',state='visible',timeout=8000); await p.wait_for_timeout(300)
+        nw=await p.evaluate("document.getElementById('coPPreview').naturalWidth"); nh=await p.evaluate("document.getElementById('coPPreview').naturalHeight")
+        check('add: a 3000x2000 picture is shrunk to 1600 wide, same shape',nw==1600 and abs(nh-1067)<=1 and not await p.is_visible('#coPFileErr'),(nw,nh))
+        await p.fill('#coPCaption','  Built-in wardrobe  ')
+        await p.select_option('#coFMethod','in_person'); await p.fill('#coFEvidence','Form 9')
+        await p.click('#coFSubmit')
+        check('add: agreement confirmation still required',await p.is_visible('#coFConfirmErr') and len(await ups(p))==0)
+        await p.check('#coFConfirm'); await p.click('#coFSubmit'); await p.wait_for_selector('#coPhotoNotice',state='visible',timeout=8000); await p.wait_for_timeout(300)
+        u=await ups(p); c=await rpcs(p)
+        check('add: one upload to the private bucket, JPEG, no overwrite, under 5 MB, path in the person\'s folder',len(u)==1 and u[0]['bucket']=='local-tasker-photos' and u[0]['type']=='image/jpeg' and u[0]['upsert']==False and u[0]['size']<5*1024*1024 and _re.match('^'+NEW+'/[0-9a-f-]{36}\\.jpg$',u[0]['path']),u)
+        check('add: one rpc with exactly the function arguments and the same path',len(c)==1 and c[0]['args']=={'p_tasker':NEW,'p_path':u[0]['path'],'p_caption':'Built-in wardrobe','p_make_cover':False,'p_consent_method':'in_person','p_consent_evidence':'Form 9','p_consent_details':''},c)
+        check('add: notice says it is the cover, list shows it, form cleared, agreement fields gone','cover photo' in await p.inner_text('#coPhotoNoticeText') and await p.locator('.co-photo-item').count()==1 and await p.input_value('#coPFile')=='' and not await p.is_visible('#coPPreviewBox') and not await p.is_visible('#coAgreeFields') and await p.is_visible('#coAgreeDone'))
+        await p.screenshot(path=OUT+'/photos-after-add-desktop.png',full_page=True)
+        # second add: no agreement sent, make cover
+        await p.set_input_files('#coPFile',SMALL); await p.wait_for_selector('#coPPreviewBox',state='visible',timeout=8000); await p.wait_for_timeout(200)
+        small_w=await p.evaluate("document.getElementById('coPPreview').naturalWidth")
+        await p.check('#coPCover'); await p.click('#coFSubmit'); await p.wait_for_function("document.querySelectorAll('.co-photo-item').length===2",timeout=8000); await p.wait_for_timeout(300)
+        c=await rpcs(p); u=await ups(p)
+        check('add 2: no agreement sent, cover requested, caption empty',c[-1]['args']['p_consent_method'] is None and c[-1]['args']['p_consent_evidence'] is None and c[-1]['args']['p_make_cover']==True and c[-1]['args']['p_caption']=='' and c[-1]['args']['p_path']==u[-1]['path'] and u[0]['path']!=u[1]['path'],c[-1])
+        check('add 2: a small picture is not enlarged',small_w==400,small_w)
+        check('add 2: new photo is the cover, first in the list',await p.locator('.co-photo-cover').count()==1 and await p.locator('.co-photo-item').first.get_attribute('data-photo-id') is not None and (await p.locator('.co-photo-item').first.locator('.co-photo-cover').count())==1)
+        check('errors none (photos add)',not errs,errs)
+        await ctx.close()
+
+        # add: failures
+        async def add_flow(sc,label,expect_code,check_extra=None,need_consent=True):
+            ctx,p,errs=await newpage(b,sc,session=True)
+            await p.goto(PURL); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+            await p.set_input_files('#coPFile',SMALL); await p.wait_for_selector('#coPPreviewBox',state='visible',timeout=8000)
+            if need_consent: await p.select_option('#coFMethod','phone'); await p.check('#coFConfirm')
+            await p.click('#coFSubmit'); await p.wait_for_selector('#coPhotoError',state='visible',timeout=8000)
+            t=await p.inner_text('#coPhotoErrorCode')
+            check('add failure '+label+': error code on screen',('Error code: '+expect_code) in t,t)
+            if check_extra: await check_extra(p)
+            return ctx,p,errs
+        for lab,rp,code in [('not_found',{'add_local_tasker_photo':{'mode':'error','hint':'not_found'}},'not_found'),('consent_required',{'add_local_tasker_photo':{'mode':'error','hint':'consent_required'}},'consent_required'),('photo_limit',{'add_local_tasker_photo':{'mode':'error','hint':'photo_limit'}},'photo_limit'),('upload_missing',{'add_local_tasker_photo':{'mode':'error','hint':'upload_missing'}},'upload_missing'),('bad_input',{'add_local_tasker_photo':{'mode':'error','hint':'bad_input','message':'Invalid photo details.'}},'bad_input'),('unauthenticated',{'add_local_tasker_photo':{'mode':'error','sqlcode':'42501'}},'unauthenticated'),('server_error',{'add_local_tasker_photo':{'mode':'error','sqlcode':'XX000'}},'server_error'),('network',{'add_local_tasker_photo':{'mode':'network'}},'network'),('bad_response',{'add_local_tasker_photo':{'mode':'badjson'}},'bad_response')]:
+            sc2=copy.deepcopy(scn); sc2['phrpc']=rp
+            ctx,p,errs=await add_flow(sc2,lab,code)
+            await ctx.close()
+        sc2=copy.deepcopy(scn); sc2['upl']={'mode':'forbidden'}
+        async def nr(p): check('add failure upload refused: nothing was registered',len(await rpcs(p))==0)
+        ctx,p,errs=await add_flow(sc2,'upload_not_allowed','upload_not_allowed',nr); await ctx.close()
+        sc2=copy.deepcopy(scn); sc2['upl']={'mode':'error'}
+        ctx,p,errs=await add_flow(sc2,'upload_failed','upload_failed',nr); await ctx.close()
+        sc2=copy.deepcopy(scn); sc2['upl']={'mode':'network'}
+        ctx,p,errs=await add_flow(sc2,'upload network','network',nr); await ctx.close()
+        # retry after a lost response: same path reused, "already exists" is treated as success of the earlier upload
+        sc2=copy.deepcopy(scn); sc2['phrpc']={'add_local_tasker_photo':{'mode':'network','times':1}}; sc2['upl']={'mode':'exists','times':0}
+        ctx,p,errs=await add_flow(sc2,'lost response','network')
+        sc2k=None
+        await p.evaluate("window.__SC.upl={mode:'exists'}")
+        await p.click('#coFSubmit'); await p.wait_for_selector('#coPhotoNotice',state='visible',timeout=8000)
+        u=await ups(p); c=await rpcs(p)
+        check('retry after a lost response: same path both times, picture still chosen, then success',len(u)==2 and u[0]['path']==u[1]['path'] and len(c)==2 and c[0]['args']['p_path']==c[1]['args']['p_path'] and 'Photo added' in await p.inner_text('#coPhotoNoticeText'),(u,c))
+        check('retry: no duplicate in the list',await p.locator('.co-photo-item').count()==1)
+        await ctx.close()
+        # double click
+        sc2=copy.deepcopy(scn); sc2['upl']={'mode':'ok','delay':400}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        await p.set_input_files('#coPFile',SMALL); await p.wait_for_selector('#coPPreviewBox',state='visible',timeout=8000)
+        await p.select_option('#coFMethod','written'); await p.check('#coFConfirm')
+        await p.evaluate("(()=>{const b=document.getElementById('coFSubmit'); b.click(); b.click(); document.getElementById('coForm').requestSubmit();})()")
+        await p.wait_for_selector('#coPhotoNotice',state='visible',timeout=8000)
+        check('double click: one upload and one rpc',len(await ups(p))==1 and len(await rpcs(p))==1)
+        await ctx.close()
+        # unreadable agreement read: fields shown, database decides
+        sc2=copy.deepcopy(scn); sc2['consentsError']=True
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coForm',state='visible',timeout=5000)
+        check('agreement unreadable: fields still shown',await p.is_visible('#coAgreeFields'))
+        await ctx.close()
+        # 8 photos: add form hidden
+        sc8=copy.deepcopy(scp); sc8['photos']=[PH(i,None,i==1) for i in range(1,9)]
+        ctx,p,errs=await newpage(b,sc8,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coPhotoGrid',state='visible',timeout=5000)
+        check('8 photos: add form and agreement hidden, limit message shown',await p.locator('.co-photo-item').count()==8 and not await p.is_visible('#coAddFields') and await p.is_visible('#coAddFull') and not await p.is_visible('#coFSubmit'))
+        await ctx.close()
+        # signed links failing on the page
+        sc2=copy.deepcopy(scp); sc2['signed']={'mode':'error'}
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coPhotoGrid',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        check('photos page: when links fail, list and captions still work, message shown',await p.is_visible('#coPhotosLinkError') and await p.locator('.co-photo-item').count()==3)
+        await ctx.close()
+        # not found / invalid / load error / guard
+        ctx,p,errs=await newpage(b,copy.deepcopy(scn),session=True)
+        await p.goto(BASE+'coordinator-photos.html?id='+U9); await p.wait_for_selector('#coEditMissing',state='visible',timeout=5000)
+        check('photos page: someone else\'s tasker shows not found, no form',not await p.is_visible('#coForm'))
+        await p.goto(BASE+'coordinator-photos.html?id=nope'); await p.wait_for_selector('#coEditMissing',state='visible',timeout=5000)
+        check('photos page: invalid id shows not found',not await p.is_visible('#coForm'))
+        await p.goto(BASE+'coordinator-photos.html'); await p.wait_for_selector('#coEditMissing',state='visible',timeout=5000)
+        check('photos page: no id shows not found',not await p.is_visible('#coForm'))
+        await ctx.close()
+        sc2=copy.deepcopy(scp); sc2['photosError']=True
+        ctx,p,errs=await newpage(b,sc2,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coEditLoadError',state='visible',timeout=5000)
+        check('photos page: load failure shows retry, no form',await p.is_visible('#coEditRetry') and not await p.is_visible('#coForm'))
+        await ctx.close()
+        ctx,p,errs=await newpage(b,{'role':'none'},session=True)
+        await p.goto(PURL); await p.wait_for_url('**/coordinator-login.html**',timeout=5000)
+        check('photos page is guarded like the other pages','denied=no' in p.url)
+        await ctx.close()
+        # mobile
+        ctx,p,errs=await newpage(b,copy.deepcopy(scp),w=390,h=844,session=True)
+        await p.goto(PURL); await p.wait_for_selector('#coPhotoGrid',state='visible',timeout=5000); await p.wait_for_timeout(400)
+        await p.screenshot(path=OUT+'/photos-mobile.png',full_page=True)
+        sw=await p.evaluate('document.documentElement.scrollWidth'); check('photos page mobile no horizontal scroll',sw<=391,sw)
+        small=await p.evaluate("Array.from(document.querySelectorAll('#coPhotoGrid input, #coPhotoGrid button, #coForm input:not([type=checkbox]):not([type=file]), #coForm select, #coForm .btn')).filter(e=>e.offsetParent&&e.getBoundingClientRect().height<40).map(e=>e.id||e.textContent)")
+        check('photos page mobile: inputs and buttons at least 40px tall',not small,small)
+        await p.goto(BASE+'coordinator-tasker.html?id='+NEW); await p.wait_for_selector('#coPhotoStrip',state='visible',timeout=5000); await p.wait_for_timeout(300)
+        await p.screenshot(path=OUT+'/profile-photos-mobile.png',full_page=True)
+        sw=await p.evaluate('document.documentElement.scrollWidth'); check('profile with photos mobile no horizontal scroll',sw<=391,sw)
+        check('errors none (photos mobile)',not errs,errs)
+        await ctx.close()
         await b.close()
     bad=[r for r in results if not r[1]]
     print('\nTOTAL',len(results),'FAILED',len(bad))

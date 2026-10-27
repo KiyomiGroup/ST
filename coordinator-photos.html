@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Photos — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" id="coBackLink" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span id="coBackText">My Local Taskers</span>
+      </a>
+
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Portfolio photos</p>
+        <h1 id="coHeroTitle">Photos</h1>
+        <p class="co-hero-sub" id="coHeroSub">Add photos of this person's work. Only you can see them until you publish. Up to 8 photos.</p>
+        <div class="co-hero-chips">
+          <span class="co-chip">Local Tasker</span>
+          <span class="co-chip co-chip--light">Assisted mode</span>
+        </div>
+      </section>
+
+      <p class="co-loading" id="coEditLoading">Loading…</p>
+
+      <div class="co-banner" id="coEditLoadError" role="alert" hidden>
+        <span>We couldn't load this just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coEditRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coEditMissing" hidden>
+        <p class="co-empty-title">Not found</p>
+        <p class="co-empty-text">This Local Tasker doesn't exist, or it isn't assigned to you.</p>
+      </div>
+
+      <div class="co-edit-layout co-edit-layout--single" id="coEditLayout" hidden>
+        <div class="co-edit-main">
+          <div class="co-proxy" role="note">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+            <p>Assisted mode: you are adding photos for <strong id="coProxyName">this Local Tasker</strong>. Only use photos they have agreed to share. Every change is permanently logged. Photos are stored privately and are not shown to customers until you publish.</p>
+          </div>
+
+          <div class="co-banner co-banner--info" id="coPhotoNotice" role="status" tabindex="-1" hidden>
+            <span id="coPhotoNoticeText"></span>
+          </div>
+          <div class="co-banner" id="coPhotoError" role="alert" tabindex="-1" hidden>
+            <span id="coPhotoErrorText"></span>
+            <span class="co-banner-code" id="coPhotoErrorCode"></span>
+          </div>
+
+          <section class="co-card" aria-labelledby="coPhotosTitle">
+            <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><h2 class="co-card-title" id="coPhotosTitle">Photos on this profile</h2></div>
+            <p class="co-fact-value is-empty" id="coPhotosEmpty" hidden>No photos yet. Add the first one below. It becomes the cover photo.</p>
+            <p class="co-fact-value is-empty" id="coPhotosLinkError" hidden>The photos are listed but the pictures could not be loaded. Reload the page to try again.</p>
+            <ul class="co-photo-grid" id="coPhotoGrid" hidden></ul>
+          </section>
+
+          <form class="co-form" id="coForm" novalidate>
+            <section class="co-card" aria-labelledby="coAddTitle" id="coAddCard">
+              <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><h2 class="co-card-title" id="coAddTitle">Add a photo</h2></div>
+              <p class="co-card-lead" id="coAddFull" hidden>This person already has 8 photos. Remove one to add another.</p>
+              <div id="coAddFields">
+                <div class="form-group">
+                  <label class="form-label" for="coPFile">Photo</label>
+                  <input class="form-input" type="file" id="coPFile" accept="image/jpeg,image/png,image/webp" aria-describedby="coPFileHelp coPFileErr" />
+                  <p class="form-helper" id="coPFileHelp">JPEG, PNG or WebP. Large photos are shrunk to fit and location data is removed.</p>
+                  <p class="co-field-error" id="coPFileErr" hidden></p>
+                  <div class="co-photo-preview" id="coPPreviewBox" hidden><img id="coPPreview" alt="Preview of the photo you chose" /></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="coPCaption">Caption (optional)</label>
+                  <input class="form-input" type="text" id="coPCaption" maxlength="120" autocomplete="off" aria-describedby="coPCaptionHelp coPCaptionErr" />
+                  <p class="form-helper" id="coPCaptionHelp">What the photo shows, up to 120 characters.</p>
+                  <p class="co-field-error" id="coPCaptionErr" hidden></p>
+                </div>
+                <div class="form-group" id="coPCoverGroup" hidden>
+                  <label class="co-check" for="coPCover">
+                    <input type="checkbox" id="coPCover" />
+                    <span>Make this the cover photo.</span>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section class="co-card" aria-labelledby="coAgreeTitle" id="coAgreeCard">
+              <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><h2 class="co-card-title" id="coAgreeTitle">Their agreement</h2></div>
+              <p class="co-card-lead" id="coAgreeDone" hidden>Their agreement to have their photos used is already on record. Nothing more to add.</p>
+              <div id="coAgreeFields">
+                <p class="co-card-lead">Record how this person agreed to have their photos used. The record is kept permanently and cannot be edited.</p>
+                <div class="form-group">
+                  <label class="form-label" for="coFMethod">How did they agree?</label>
+                  <select class="form-select" id="coFMethod" aria-describedby="coFMethodErr">
+                    <option value="">Choose one</option>
+                    <option value="in_person">In person</option>
+                    <option value="phone">By phone call</option>
+                    <option value="written">In writing</option>
+                  </select>
+                  <p class="co-field-error" id="coFMethodErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="coFEvidence">Reference (optional)</label>
+                  <input class="form-input" type="text" id="coFEvidence" maxlength="500" autocomplete="off" aria-describedby="coFEvidenceErr" />
+                  <p class="co-field-error" id="coFEvidenceErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="coFDetails">Notes (optional)</label>
+                  <textarea class="form-textarea" id="coFDetails" maxlength="1000" aria-describedby="coFDetailsErr"></textarea>
+                  <p class="co-field-error" id="coFDetailsErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="co-check" for="coFConfirm">
+                    <input type="checkbox" id="coFConfirm" aria-describedby="coFConfirmErr" />
+                    <span>I confirm this person agreed to have their photos used on their StreetTasker profile.</span>
+                  </label>
+                  <p class="co-field-error" id="coFConfirmErr" hidden></p>
+                </div>
+              </div>
+            </section>
+
+            <div class="co-form-actions" id="coFormActions">
+              <a class="btn btn-ghost" id="coCancel" href="coordinator-taskers.html">Back to profile</a>
+              <button type="submit" class="btn btn-primary btn-lg" id="coFSubmit">Upload photo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-photos.js"></script>
+</body>
+</html>
