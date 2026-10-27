@@ -68,10 +68,43 @@
     return first;
   }
 
+  /* Live preview and completeness: display only, built from what is typed. Nothing here is sent. */
+  var CHECKS = [
+    ['publicName', function (v) { return v.publicName.length >= LIMITS.publicName[0]; }],
+    ['fullName', function (v) { return v.fullName.length >= LIMITS.fullName[0]; }],
+    ['phone', function (v) { return PHONE_RE.test(v.phone); }],
+    ['skills', function (v) { return v.skills.length > 0; }],
+    ['areas', function (v) { return v.areas.length > 0; }],
+    ['notes', function (v) { return v.notes.length > 0; }]
+  ];
+  function refresh() {
+    var v = read();
+    $('coPvName').textContent = v.publicName || 'Public name';
+    $('coPvAvatar').textContent = C.initialsOf(v.publicName || 'Local Tasker');
+    $('coPvAreaText').textContent = v.areas || 'Area not set';
+    $('coPvNotes').textContent = v.notes;
+    $('coPvNotes').hidden = !v.notes;
+    var list = $('coPvSkills'); list.textContent = '';
+    v.skills.slice(0, 20).forEach(function (sk) { list.appendChild(C.el('li', 'co-chip', sk)); });
+    list.hidden = !v.skills.length;
+    var done = 0;
+    CHECKS.forEach(function (c) {
+      var ok = c[1](v); if (ok) done++;
+      var li = document.querySelector('[data-check="' + c[0] + '"]'); if (li) li.classList.toggle('is-done', ok);
+    });
+    var pct = Math.round(done * 100 / CHECKS.length);
+    $('coCompletePct').textContent = pct + '%';
+    $('coCompleteFill').style.width = pct + '%';
+    $('coCompleteNote').textContent = done === CHECKS.length
+      ? 'Everything is filled in.'
+      : (CHECKS.length - done) + ' of ' + CHECKS.length + ' still to fill in. A full profile helps customers trust it.';
+  }
+
   function show(which) {
-    ['coEditLoading', 'coEditLoadError', 'coEditMissing', 'coForm'].forEach(function (id) {
+    ['coEditLoading', 'coEditLoadError', 'coEditMissing', 'coEditLayout'].forEach(function (id) {
       var n = $(id); if (n) n.hidden = (id !== which);
     });
+    $('coHeroActions').hidden = (which !== 'coEditLayout');
   }
 
   function profileUrl(extra) {
@@ -81,7 +114,7 @@
   async function load() {
     taskerId = new URLSearchParams(window.location.search).get('id');
     if (!C.isUuid(taskerId)) { show('coEditMissing'); return; }
-    $('coBackLink').href = profileUrl(); $('coCancel').href = profileUrl();
+    $('coBackLink').href = profileUrl(); $('coCancel').href = profileUrl(); $('coCancelTop').href = profileUrl();
     show('coEditLoading'); $('coPublicNameNote').hidden = true;
     try {
       var res = await window.supabase.from('local_tasker_profiles')
@@ -104,7 +137,9 @@
       } catch (e) { pub = ''; }
       $('coFPublicName').value = pub;
       if (!pub) $('coPublicNameNote').hidden = false;
-      show('coForm');
+      show('coEditLayout');
+      refresh();
+      $('coProxyName').textContent = p.full_name || 'this Local Tasker';
     } catch (e) {
       console.error('[coordinator edit tasker]', e);
       show('coEditLoadError');
@@ -129,8 +164,8 @@
     if (firstBad) { var f = $(firstBad); if (f) f.focus(); return; }
 
     busy = true;
-    var btn = $('coFSubmit'); var label = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Saving…';
+    var btns = [$('coFSubmit'), $('coFSubmitTop')]; var label = btns[0].textContent;
+    btns.forEach(function (b) { b.disabled = true; b.textContent = 'Saving…'; });
     try {
       var res = await window.supabase.rpc('update_local_tasker_profile', {
         p_tasker: taskerId,
@@ -155,13 +190,13 @@
       showError('network');
     } finally {
       busy = false;
-      if (!leaving) { btn.disabled = false; btn.textContent = label; }
+      if (!leaving) { btns.forEach(function (b) { b.disabled = false; b.textContent = label; }); }
     }
   }
 
   document.addEventListener('coordinator:ready', function (e) { last = e.detail; load(); });
   document.addEventListener('DOMContentLoaded', function () {
-    var form = $('coForm'); if (form) form.addEventListener('submit', submit);
+    var form = $('coForm'); if (form) { form.addEventListener('submit', submit); form.addEventListener('input', refresh); }
     var retry = $('coEditRetry'); if (retry) retry.addEventListener('click', function () { if (last) load(); });
   });
 })();

@@ -401,3 +401,53 @@ body.co-drawer-open { overflow: hidden; }
 .co-detail-actions .btn { width: 100%; }
 @media (min-width: 640px) { .co-detail-actions .btn { width: auto; } }
 .co-form[hidden], .co-detail-actions[hidden] { display: none; }
+
+/* ── Edit page layout (Stage 4A-3 redesign) ─────────────────── */
+.co-edit-layout[hidden], .co-hero-actions[hidden], .co-preview-notes[hidden], .co-preview-skills[hidden] { display: none; }
+.co-hero--edit { padding-bottom: var(--space-6); }
+.co-hero--edit h1 { max-width: none; }
+.co-hero-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.co-hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+.co-btn-onhero { background: transparent; color: var(--color-text-on-primary); border: 1.5px solid var(--co-hero-text-soft); }
+.co-btn-onhero:hover { background: var(--co-dark-raised); }
+.co-edit-layout { display: flex; flex-direction: column; gap: var(--space-4); }
+.co-edit-main, .co-edit-aside { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.co-edit-layout .co-form { max-width: none; }
+.co-proxy {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-4); background: var(--co-notice-soft); color: var(--co-green);
+  border-radius: var(--radius-co-card); font-size: var(--text-sm); line-height: 1.5;
+}
+.co-icon-badge {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--co-mint); color: var(--co-green);
+}
+.co-card-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.co-card-head .co-card-title { margin-bottom: 0; flex: 1; min-width: 140px; }
+.co-card-pill { flex-shrink: 0; }
+.co-preview { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-lg); }
+.co-preview-name { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-md); overflow-wrap: anywhere; }
+.co-preview-area { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-preview-area svg { flex-shrink: 0; }
+.co-preview-skills { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.co-preview-notes { font-size: var(--text-sm); color: var(--co-ink); overflow-wrap: anywhere; }
+.co-preview-foot { margin: var(--space-3) 0 0; }
+.co-complete-pct { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-md); color: var(--co-green); }
+.co-progress { height: 8px; margin-bottom: var(--space-4); background: var(--co-field); border-radius: var(--radius-pill); overflow: hidden; }
+.co-progress-fill { display: block; height: 100%; width: 0; background: var(--co-green-bright); border-radius: var(--radius-pill); transition: width var(--t) var(--ease); }
+.co-check-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-bottom: var(--space-3); }
+.co-check-item { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--co-field); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-check-mark { flex-shrink: 0; width: 16px; height: 16px; border: 2px solid var(--color-border-strong); border-radius: 50%; }
+.co-check-item.is-done { color: var(--co-ink); }
+.co-check-item.is-done .co-check-mark { background: var(--co-green-bright); border-color: var(--co-green-bright); }
+.co-edit-aside .co-card-lead:last-child { margin-bottom: 0; }
+
+@media (min-width: 768px) {
+  .co-hero--edit { padding: var(--space-6) var(--space-7); }
+  .co-hero-actions { position: absolute; top: var(--space-6); right: var(--space-7); margin-top: 0; }
+  .co-hero--edit { position: relative; }
+}
+@media (min-width: 1044px) {
+  .co-edit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: start; gap: var(--space-5); }
+  .co-edit-aside { position: sticky; top: calc(var(--co-header-height) + var(--space-4)); }
+}
