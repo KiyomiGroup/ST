@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Preview and publish — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" id="coBackLink" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span id="coBackText">My Local Taskers</span>
+      </a>
+
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Preview and publish</p>
+        <h1 id="coHeroTitle">Publish</h1>
+        <p class="co-hero-sub" id="coHeroSub">Check how customers will see this person, then publish. Until you publish, nothing is shown to customers.</p>
+        <div class="co-hero-chips" id="coHeroChips">
+          <span class="co-chip">Local Tasker</span>
+          <span class="co-chip co-chip--light">Phone Assisted</span>
+        </div>
+      </section>
+
+      <p class="co-loading" id="coEditLoading">Loading…</p>
+
+      <div class="co-banner" id="coEditLoadError" role="alert" hidden>
+        <span>We couldn't load this just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coEditRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coEditMissing" hidden>
+        <p class="co-empty-title">Not found</p>
+        <p class="co-empty-text">This Local Tasker doesn't exist, or it isn't assigned to you.</p>
+      </div>
+
+      <div class="co-edit-layout" id="coEditLayout" hidden>
+        <div class="co-edit-main">
+          <div class="co-proxy" role="note">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+            <p>Assisted mode: you are publishing <strong id="coProxyName">this Local Tasker</strong>'s profile on their behalf. Only publish once they have seen or heard what customers will read and agreed. Publishing and unpublishing are permanently logged.</p>
+          </div>
+
+          <div class="co-banner co-banner--info" id="coPubNotice" role="status" tabindex="-1" hidden>
+            <span id="coPubNoticeText"></span>
+          </div>
+          <div class="co-banner" id="coPubError" role="alert" tabindex="-1" hidden>
+            <span id="coPubErrorText"></span>
+            <span class="co-banner-code" id="coPubErrorCode"></span>
+          </div>
+
+          <section class="co-card" aria-labelledby="coPubChecksTitle">
+            <div class="co-card-head">
+              <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+              <h2 class="co-card-title" id="coPubChecksTitle">Ready to publish?</h2>
+              <span id="coPubStatus"></span>
+            </div>
+            <p class="co-loading" id="coPubChecksLoading">Loading…</p>
+            <p class="co-fact-value is-empty" id="coPubChecksError" role="alert" hidden>We couldn't load the checklist just now. Reload the page to try again.</p>
+            <ul class="co-check-list co-check-list--stack" id="coPubChecks" hidden></ul>
+            <p class="co-card-lead" id="coPubChecksHint" hidden></p>
+          </section>
+
+          <section class="co-card" aria-labelledby="coPubActionsTitle" id="coPubActionsCard" hidden>
+            <div class="co-card-head">
+              <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+              <h2 class="co-card-title" id="coPubActionsTitle">Publish</h2>
+            </div>
+
+            <div id="coPubDraftBox" hidden>
+              <p class="co-card-lead">Publishing makes this profile, the services and rates, and the photos visible to every customer, with the Local Tasker and Phone Assisted labels. You can unpublish at any time.</p>
+              <div class="form-group">
+                <label class="co-check" for="coPubConfirm">
+                  <input type="checkbox" id="coPubConfirm" aria-describedby="coPubConfirmErr" />
+                  <span>I have shown or read the preview to this person and they agreed to publish.</span>
+                </label>
+                <p class="co-field-error" id="coPubConfirmErr" hidden></p>
+              </div>
+              <div class="co-pub-actions">
+                <button type="button" class="btn btn-primary" id="coPubPublish">Publish</button>
+              </div>
+            </div>
+
+            <div id="coPubLiveBox" hidden>
+              <p class="co-card-lead" id="coPubLiveText">This person is live. Customers can find them now.</p>
+              <div class="co-pub-actions">
+                <button type="button" class="btn btn-primary" id="coPubRefresh">Update public listing</button>
+                <button type="button" class="btn btn-outline" id="coPubUnpublishOpen">Unpublish…</button>
+              </div>
+              <p class="form-helper">If you change a service or its rate after publishing, press Update public listing so customers see the change on every page.</p>
+              <div class="co-pub-reason" id="coPubUnpublishBox" hidden>
+                <div class="form-group">
+                  <label class="form-label" for="coPubReason">Reason (optional)</label>
+                  <input class="form-input" type="text" id="coPubReason" maxlength="300" autocomplete="off" aria-describedby="coPubReasonErr" />
+                  <p class="co-field-error" id="coPubReasonErr" hidden></p>
+                </div>
+                <div class="co-pub-actions">
+                  <button type="button" class="btn btn-outline" id="coPubUnpublishConfirm">Confirm unpublish</button>
+                  <button type="button" class="btn btn-outline" id="coPubUnpublishCancel">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="co-card-lead" id="coPubRetired" hidden>This profile has been retired, so it cannot be published.</p>
+          </section>
+        </div>
+
+        <aside class="co-edit-aside" aria-label="Customer view">
+          <section class="co-card" aria-labelledby="coPvTitle">
+            <div class="co-card-head">
+              <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <h2 class="co-card-title" id="coPvTitle">Customer view</h2>
+            </div>
+            <div class="co-preview">
+              <div class="co-hero-chips co-preview-chips">
+                <span class="co-chip">Local Tasker</span>
+                <span class="co-chip co-chip--light">Phone Assisted</span>
+              </div>
+              <p class="co-preview-name" id="coPvName">Public name</p>
+              <p class="co-preview-area" id="coPvArea"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="coPvAreaText"></span></p>
+              <p class="co-preview-service" id="coPvService"></p>
+              <p class="co-preview-rate" id="coPvRate"></p>
+              <p class="co-preview-notes" id="coPvDesc"></p>
+              <ul class="co-preview-skills" id="coPvSkills" hidden></ul>
+              <ul class="co-preview-photos" id="coPvPhotos" hidden></ul>
+              <p class="co-preview-notes" id="coPvEmpty" hidden>Add a service with an agreed rate to see the listing.</p>
+            </div>
+            <p class="co-card-lead co-preview-foot">Booking a Local Tasker supports an inclusive economy. Phone number and full name are never shown to customers.</p>
+          </section>
+        </aside>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-publish.js"></script>
+</body>
+</html>

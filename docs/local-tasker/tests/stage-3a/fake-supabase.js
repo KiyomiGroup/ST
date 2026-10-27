@@ -95,6 +95,27 @@
         if(wasCover){ var rest=L.filter(function(x){return !x.removed_at;}); if(rest.length){ rest[0].is_cover=true; nc=rest[0].id; } }
         return {data:{photo_id:row.id,removed:true,new_cover:nc},error:null};
       }
+      if(n==='local_tasker_publish_status'||n==='publish_local_tasker'||n==='unpublish_local_tasker'){
+        window.__rpcCalls.push({name:n,args:args}); try{ sessionStorage.setItem('fake_rpc_calls',JSON.stringify(window.__rpcCalls)); }catch(e){}
+        var pc=(sc().pubrpc||{})[n]||{mode:'ok'};
+        if(pc.delay) await new Promise(function(r){setTimeout(r,pc.delay);});
+        if(failNow(n,pc)){
+          if(pc.mode==='network') return {data:null,error:{message:'TypeError: Failed to fetch'}};
+          if(pc.mode==='badjson') return {data:{unexpected:true},error:null};
+          return {data:null,error:{code:pc.sqlcode||'P0001',hint:pc.hint,message:pc.message||'x'}};
+        }
+        if(!window.__PUBST) window.__PUBST=JSON.parse(JSON.stringify(sc().pubState||{status:'draft',checks:[]}));
+        var PS=window.__PUBST;
+        var isReady=function(){ return PS.checks.every(function(c){ return c.ok||!c.blocking; }); };
+        if(n==='local_tasker_publish_status') return {data:{ready:isReady(),checks:PS.checks,services:PS.services||1,photos:PS.photos||0,status:PS.status},error:null};
+        if(n==='publish_local_tasker'){
+          if(!isReady()) return {data:null,error:{code:'P0001',hint:'not_ready',message:'not ready: service'}};
+          var again=PS.status==='published'; PS.status='published';
+          return {data:{status:'published',already_published:again,primary_service_id:'55555555-5555-4555-8555-555555555555'},error:null};
+        }
+        if(PS.status!=='published') return {data:{status:PS.status,changed:false},error:null};
+        PS.status='ready'; return {data:{status:'ready',changed:true},error:null};
+      }
       if(n==='update_local_tasker_profile'){
         window.__rpcCalls.push({name:n,args:args}); try{ sessionStorage.setItem('fake_rpc_calls',JSON.stringify(window.__rpcCalls)); }catch(e){}
         var u=sc().up||{mode:'ok'};

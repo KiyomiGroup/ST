@@ -228,6 +228,13 @@
     showUpdated();
     showServiceSaved();
     $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
+    var pubLink = $('coPubLink'), pubSum = $('coPubSummary');
+    if (pubLink && pubSum) {
+      pubLink.href = 'coordinator-publish.html?id=' + encodeURIComponent(p.tasker_user_id);
+      if (p.status === 'published') { pubLink.textContent = 'Manage listing'; pubSum.textContent = 'Published' + (p.published_at ? ' on ' + C.formatDate(p.published_at) : '') + '. Customers can find this person.'; }
+      else if (p.status === 'inactive') { pubLink.hidden = true; pubSum.textContent = 'This profile is retired and cannot be published.'; }
+      else { pubLink.textContent = 'Preview and publish'; pubSum.textContent = 'Not published. Nothing is shown to customers yet. Preview how it will look and check what is still needed.'; }
+    }
     loadConsents(p.tasker_user_id);
     loadServices(p.tasker_user_id);
     loadPhotos(p.tasker_user_id);

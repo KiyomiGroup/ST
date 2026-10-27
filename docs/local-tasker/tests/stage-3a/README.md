@@ -4,3 +4,5 @@
 
 Run (needs Python Playwright + Chromium): `ST_REPO_ROOT=/path/to/ST-Real-Main ST_SHOTS=/tmp/shots python3 run.py` from this folder.
 Expected last line: `TOTAL 307 FAILED 0`.
+
+Stage 4C-1 adds `run-4c1.py` (57 checks for the preview and publish page and the Publishing card; same `fake-supabase.js`). Run it the same way: `ST_REPO_ROOT=/path/to/ST-Real-Main ST_SHOTS=/tmp/shots python3 run-4c1.py`. Expected last line: `TOTAL 57 FAILED 0`.
