@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Service — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" id="coBackLink" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        My Local Taskers
+      </a>
+
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Service and agreed rate</p>
+        <h1 id="coHeroTitle">Add a service</h1>
+        <p class="co-hero-sub" id="coHeroSub">Describe one thing this Local Tasker offers and the rate they agreed. It stays hidden from customers until you publish.</p>
+        <div class="co-hero-chips">
+          <span class="co-chip">Local Tasker</span>
+          <span class="co-chip co-chip--light">Assisted mode</span>
+        </div>
+        <div class="co-hero-actions" id="coHeroActions" hidden>
+          <button type="submit" form="coForm" class="btn btn-white" id="coFSubmitTop">Save service</button>
+          <a class="btn co-btn-onhero" id="coCancelTop" href="coordinator-taskers.html">Cancel</a>
+        </div>
+      </section>
+
+      <p class="co-loading" id="coEditLoading">Loading…</p>
+
+      <div class="co-banner" id="coEditLoadError" role="alert" hidden>
+        <span>We couldn't load this just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coEditRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coEditMissing" hidden>
+        <p class="co-empty-title">Not found</p>
+        <p class="co-empty-text">This Local Tasker or service doesn't exist, or it isn't assigned to you.</p>
+      </div>
+
+      <div class="co-edit-layout co-edit-layout--single" id="coEditLayout" hidden>
+        <div class="co-edit-main">
+          <div class="co-proxy" role="note">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+            <p>Assisted mode: you are setting this up for <strong id="coProxyName">this Local Tasker</strong>. Only agree rates they have confirmed with you. Your changes are permanently logged. Nothing here is shown to customers until you publish.</p>
+          </div>
+
+          <form class="co-form" id="coForm" novalidate>
+            <section class="co-card" aria-labelledby="coFormSvcTitle">
+              <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><h2 class="co-card-title" id="coFormSvcTitle">The service</h2></div>
+              <div class="form-group">
+                <label class="form-label" for="coFName">Service title</label>
+                <input class="form-input" type="text" id="coFName" maxlength="100" autocomplete="off" placeholder="Solid wood wardrobe repair" aria-describedby="coFNameErr" />
+                <p class="co-field-error" id="coFNameErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFCategory">Category</label>
+                <select class="form-select" id="coFCategory" aria-describedby="coFCategoryErr">
+                  <option value="">Choose one</option><option value="barber">Barber / Hair</option><option value="electrician">Electrician</option><option value="cleaning">House Cleaning</option><option value="mechanic">Mechanic / Auto</option><option value="plumber">Plumber</option><option value="beauty">Make-up / Beauty</option><option value="carpentry">Carpentry &amp; Tailoring Crafts</option><option value="painting">Painting</option><option value="moving">Moving / Delivery</option><option value="other">Other</option>
+                </select>
+                <p class="co-field-error" id="coFCategoryErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFDesc">What is included</label>
+                <textarea class="form-textarea" id="coFDesc" maxlength="1000" aria-describedby="coFDescHelp coFDescErr"></textarea>
+                <p class="form-helper" id="coFDescHelp">At least 10 characters. Say what the price covers and what the customer provides.</p>
+                <p class="co-field-error" id="coFDescErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFSpec">Specialties (optional)</label>
+                <input class="form-input" type="text" id="coFSpec" autocomplete="off" placeholder="Wardrobes, Doors" aria-describedby="coFSpecHelp coFSpecErr" />
+                <p class="form-helper" id="coFSpecHelp">Separate with commas. Up to 10.</p>
+                <p class="co-field-error" id="coFSpecErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFLocation">Where (optional)</label>
+                <input class="form-input" type="text" id="coFLocation" maxlength="200" autocomplete="off" aria-describedby="coFLocationHelp coFLocationErr" />
+                <p class="form-helper" id="coFLocationHelp">Leave empty to use their areas served.</p>
+                <p class="co-field-error" id="coFLocationErr" hidden></p>
+              </div>
+            </section>
+
+            <section class="co-card" aria-labelledby="coFormRateTitle">
+              <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span><h2 class="co-card-title" id="coFormRateTitle">Agreed rate</h2></div>
+              <div class="form-group">
+                <label class="form-label" for="coFPrice">Price (₦)</label>
+                <input class="form-input" type="text" id="coFPrice" inputmode="decimal" autocomplete="off" placeholder="12500" aria-describedby="coFPriceErr" />
+                <p class="co-field-error" id="coFPriceErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFUnit">Per</label>
+                <select class="form-select" id="coFUnit" aria-describedby="coFUnitErr">
+                  <option value="/job">Job</option>
+                  <option value="/hour">Hour</option>
+                  <option value="/day">Day</option>
+                  <option value="/visit">Visit</option>
+                  <option value="/session">Session</option>
+                </select>
+                <p class="co-field-error" id="coFUnitErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coFAvail">Availability</label>
+                <select class="form-select" id="coFAvail">
+                  <option value="available_now">Available now</option>
+                  <option value="available_today">Available today</option>
+                  <option value="available_this_week" selected>Available this week</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="co-check" for="coFActive">
+                  <input type="checkbox" id="coFActive" checked />
+                  <span>Active. Untick to pause this service without removing it.</span>
+                </label>
+              </div>
+            </section>
+
+            <section class="co-card" aria-labelledby="coFormAgreeTitle" id="coAgreeCard">
+              <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><h2 class="co-card-title" id="coFormAgreeTitle">Their agreement</h2></div>
+              <p class="co-card-lead" id="coAgreeDone" hidden>Their agreement to have their service information published is already on record. Nothing more to add.</p>
+              <div id="coAgreeFields">
+                <p class="co-card-lead">Record how this person agreed to have their service information published. The record is kept permanently and cannot be edited.</p>
+                <div class="form-group">
+                  <label class="form-label" for="coFMethod">How did they agree?</label>
+                  <select class="form-select" id="coFMethod" aria-describedby="coFMethodErr">
+                    <option value="">Choose one</option>
+                    <option value="in_person">In person</option>
+                    <option value="phone">By phone call</option>
+                    <option value="written">In writing</option>
+                  </select>
+                  <p class="co-field-error" id="coFMethodErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="coFEvidence">Reference (optional)</label>
+                  <input class="form-input" type="text" id="coFEvidence" maxlength="500" autocomplete="off" aria-describedby="coFEvidenceErr" />
+                  <p class="co-field-error" id="coFEvidenceErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="coFDetails">Notes (optional)</label>
+                  <textarea class="form-textarea" id="coFDetails" maxlength="1000" aria-describedby="coFDetailsErr"></textarea>
+                  <p class="co-field-error" id="coFDetailsErr" hidden></p>
+                </div>
+                <div class="form-group">
+                  <label class="co-check" for="coFConfirm">
+                    <input type="checkbox" id="coFConfirm" aria-describedby="coFConfirmErr" />
+                    <span>I confirm this person agreed to have their service and rate published, and agreed this rate.</span>
+                  </label>
+                  <p class="co-field-error" id="coFConfirmErr" hidden></p>
+                </div>
+              </div>
+            </section>
+
+            <div class="co-banner" id="coFormError" role="alert" tabindex="-1" hidden>
+              <span id="coFormErrorText"></span>
+              <span class="co-banner-code" id="coFormErrorCode"></span>
+            </div>
+
+            <div class="co-form-actions">
+              <a class="btn btn-ghost" id="coCancel" href="coordinator-taskers.html">Cancel</a>
+              <button type="submit" class="btn btn-primary btn-lg" id="coFSubmit">Save service</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-service-edit.js"></script>
+</body>
+</html>

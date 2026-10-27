@@ -459,3 +459,11 @@ body.co-drawer-open { overflow: hidden; }
 .co-hero-status { margin-top: var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .co-hero-actions .btn { min-height: 44px; }
 .co-hero .co-hero-id { margin-top: var(--space-3); }
+
+/* Services on the profile and the service form (Stage 4B-1) */
+.co-svc-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+.co-svc-item { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-lg); }
+.co-svc-item .co-fact-link { align-self: flex-start; margin-top: var(--space-2); }
+.co-svc-list[hidden], #coSvcAdd[hidden], #coAgreeFields[hidden], #coAgreeDone[hidden] { display: none; }
+.co-edit-layout--single { display: flex; flex-direction: column; }
+@media (min-width: 1044px) { .co-edit-layout--single { display: flex; } .co-edit-layout--single .co-edit-main { max-width: 760px; } }

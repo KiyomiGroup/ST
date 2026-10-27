@@ -58,6 +58,59 @@
     box.hidden = false;
   }
 
+  function showServiceSaved() {
+    var q = new URLSearchParams(window.location.search).get('service_saved');
+    var box = $('coCreatedBanner'), text = $('coCreatedText');
+    var T = { created: 'Service added. It stays hidden from customers until you publish.', updated: 'Service saved.', none: 'Nothing was changed, so nothing was saved.' };
+    if (!box || !text || !T[q]) return;
+    text.textContent = T[q]; box.hidden = false;
+  }
+
+  var UNIT = { '/job': 'job', '/hour': 'hour', '/day': 'day', '/visit': 'visit', '/session': 'session' };
+  function money(n) { var x = Number(n); return isFinite(x) ? '\u20A6' + x.toLocaleString('en-NG', { maximumFractionDigits: 2 }) : ''; }
+
+  function serviceItem(id, s) {
+    var li = C.el('li', 'co-svc-item');
+    var head = C.el('div', 'co-consent-head');
+    head.appendChild(C.el('span', 'co-consent-purpose', s.service_name || 'Service'));
+    head.appendChild(C.el('span', s.available === false ? 'co-status co-status--draft' : 'co-status co-status--published', s.available === false ? 'Paused' : 'Active'));
+    li.appendChild(head);
+    var price = money(s.price);
+    var meta = (s.category ? C.statusLabel(s.category) : '') + (price ? (s.category ? ' · ' : '') + price + (UNIT[s.rate_unit] ? ' per ' + UNIT[s.rate_unit] : '') : '');
+    if (meta) li.appendChild(C.el('p', 'co-consent-meta', meta));
+    if (s.description) li.appendChild(C.el('p', 'co-consent-note', s.description));
+    var a = C.el('a', 'co-fact-link', 'Edit service');
+    a.href = 'coordinator-service-edit.html?id=' + encodeURIComponent(id) + '&service=' + encodeURIComponent(s.id);
+    li.appendChild(a);
+    return li;
+  }
+
+  /* Services load separately so a problem here can never hide the profile. */
+  async function loadServices(id) {
+    var list = $('coSvcList');
+    ['coSvcLoading', 'coSvcError', 'coSvcEmpty'].forEach(function (x) { $(x).hidden = true; });
+    list.hidden = true; list.textContent = '';
+    $('coSvcLoading').hidden = false;
+    $('coSvcAdd').href = 'coordinator-service-edit.html?id=' + encodeURIComponent(id);
+    try {
+      var res = await window.supabase.from('services')
+        .select('id, service_name, category, price, rate_unit, description, available, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: true });
+      if (res.error) throw res.error;
+      $('coSvcLoading').hidden = true;
+      var rows = res.data || [];
+      if (!rows.length) { $('coSvcEmpty').hidden = false; return; }
+      rows.forEach(function (s) { list.appendChild(serviceItem(id, s)); });
+      list.hidden = false;
+      if (rows.length >= 5) $('coSvcAdd').hidden = true;
+    } catch (e) {
+      console.error('[coordinator tasker services]', e);
+      $('coSvcLoading').hidden = true;
+      $('coSvcError').hidden = false;
+    }
+  }
+
   function consentItem(c) {
     var li = C.el('li', 'co-consent-item');
     var head = C.el('div', 'co-consent-head');
@@ -127,8 +180,10 @@
     show('coDetail');
     showCreated();
     showUpdated();
+    showServiceSaved();
     $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
     loadConsents(p.tasker_user_id);
+    loadServices(p.tasker_user_id);
   }
 
   async function load(detail) {

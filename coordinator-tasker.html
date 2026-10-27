@@ -76,6 +76,18 @@
           <dl class="co-facts" id="coFactsProfile"></dl>
         </section>
 
+        <section class="co-card" aria-labelledby="coDetailSvcTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+            <h2 class="co-card-title" id="coDetailSvcTitle">Services and agreed rates</h2>
+            <a class="btn btn-outline btn-sm" id="coSvcAdd" href="coordinator-service-edit.html">Add service</a>
+          </div>
+          <p class="co-loading" id="coSvcLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coSvcError" role="alert" hidden>We couldn't load the services just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coSvcEmpty" hidden>No services yet. Add one to describe what this person offers and the rate they agreed. Services stay hidden from customers until you publish.</p>
+          <ul class="co-svc-list" id="coSvcList" hidden></ul>
+        </section>
+
         <section class="co-card" aria-labelledby="coDetailVerifyTitle">
           <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><h2 class="co-card-title" id="coDetailVerifyTitle">Verification</h2></div>
           <dl class="co-facts" id="coFactsVerify"></dl>

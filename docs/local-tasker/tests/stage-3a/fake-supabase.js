@@ -28,6 +28,15 @@
       return {data:{ok:true,created:f.created!==false,tasker_user_id:f.id||'44444444-4444-4444-8444-444444444444'},error:null};
     } },
     rpc: async function(n,args){ window.__calls.push('rpc:'+n);
+      if(n==='save_local_tasker_service'){
+        window.__rpcCalls.push({name:n,args:args}); try{ sessionStorage.setItem('fake_rpc_calls',JSON.stringify(window.__rpcCalls)); }catch(e){}
+        var v=sc().svc||{mode:'ok'};
+        if(v.delay) await new Promise(function(r){setTimeout(r,v.delay);});
+        if(v.mode==='network') return {data:null,error:{message:'TypeError: Failed to fetch'}};
+        if(v.mode==='error') return {data:null,error:{code:v.sqlcode||'P0001',hint:v.hint,message:v.message||'x'}};
+        if(v.mode==='badjson') return {data:{unexpected:true},error:null};
+        return {data:{service_id:v.service_id||'55555555-5555-4555-8555-555555555555',created:v.created!==false&&!args.p_service_id,changed:v.changed||(args.p_service_id?['price']:[])},error:null};
+      }
       if(n==='update_local_tasker_profile'){
         window.__rpcCalls.push({name:n,args:args}); try{ sessionStorage.setItem('fake_rpc_calls',JSON.stringify(window.__rpcCalls)); }catch(e){}
         var u=sc().up||{mode:'ok'};
@@ -44,13 +53,20 @@
     from: function(t){
       var q={t:t,filters:{}};
       var chain={
-        select:function(){return chain;}, eq:function(k,v){q.filters[k]=v;return chain;}, is:function(){return chain;},
+        select:function(){return chain;}, eq:function(k,v){q.filters[k]=v;return chain;}, is:function(k,v){q.isNull=q.isNull||{};q.isNull[k]=v;return chain;},
         order:function(){return chain;}, in:function(k,v){q.inList=v;return chain;},
         maybeSingle: async function(){ window.__calls.push('from:'+t);
           if(t==='local_tasker_profiles'){
             if(sc().overviewError) return {data:null,error:{message:'rls'}};
             var id=q.filters.tasker_user_id; var mine=(sc().assignments||[]).indexOf(id)>-1; /* simulates RLS */
             var row=(sc().profiles||[]).filter(function(p){return p.tasker_user_id===id;})[0];
+            return {data:(mine&&row)?row:null,error:null};
+          }
+          if(t==='services'){
+            if(sc().svcReadError) return {data:null,error:{message:'rls'}};
+            var uid=q.filters.user_id, sid=q.filters.id;
+            var row=(sc().services||[]).filter(function(x){return x.user_id===uid&&x.id===sid;})[0];
+            var mine=(sc().assignments||[]).indexOf(uid)>-1;
             return {data:(mine&&row)?row:null,error:null};
           }
           if(t==='users'){ if(sc().usersError) return {data:null,error:{message:'rls'}}; return {data:(sc().publicName===undefined?{name:'Baba Alabi A.'}:(sc().publicName?{name:sc().publicName}:null)),error:null}; }
@@ -60,7 +76,8 @@
           var out;
           if(sc().overviewError) out={data:null,error:{message:'rls'}};
           else if(t==='coordinator_assignments') out={data:(sc().assignments||[]).map(function(id){return {tasker_user_id:id,assigned_at:'2026-10-01'};}),error:null};
-          else if(t==='local_tasker_consents'){ out = sc().consentsError ? {data:null,error:{message:'rls'}} : {data:(sc().consents||[]).filter(function(c){return c.tasker_user_id===q.filters.tasker_user_id;}),error:null}; }
+          else if(t==='services'){ out = sc().svcReadError ? {data:null,error:{message:'rls'}} : {data:(sc().services||[]).filter(function(x){return x.user_id===q.filters.user_id;}),error:null}; }
+          else if(t==='local_tasker_consents'){ out = sc().consentsError ? {data:null,error:{message:'rls'}} : {data:(sc().consents||[]).filter(function(c){return c.tasker_user_id===q.filters.tasker_user_id&&(!q.filters.purpose||c.purpose===q.filters.purpose)&&(!q.isNull||!('revoked_at' in q.isNull)||(c.revoked_at==null));}),error:null}; }
           else if(t==='local_tasker_profiles') out={data:(sc().profiles||[]).filter(function(p){return !q.inList||q.inList.indexOf(p.tasker_user_id)>-1;}),error:null};
           else out={data:[],error:null};
           return Promise.resolve(out).then(res,rej);
