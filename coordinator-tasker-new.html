@@ -32,17 +32,18 @@
         My Local Taskers
       </a>
 
-      <header class="co-page-head">
-        <div>
-          <h1 class="co-page-title">Add a Local Tasker</h1>
-          <p class="co-page-sub">Register someone you have met and who has agreed to work through you. They start as a draft: nothing is shown to customers until you publish.</p>
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>New profile</p>
+        <h1 id="coHeroTitle">Add a Local Tasker</h1>
+        <p class="co-hero-sub">Register someone you have met and who has agreed to work through you. They start as a draft: nothing is shown to customers until you publish.</p>
+        <div class="co-hero-chips">
+          <span class="co-chip">Local Tasker</span>
+          <span class="co-chip co-chip--light">Assisted mode</span>
+          <span class="co-chip co-chip--light">Private to you</span>
         </div>
-      </header>
+      </section>
 
-      <p class="co-note co-note--private">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>The phone number and full name stay private to you and StreetTasker administrators. Only the public name is ever shown to customers, and only after you publish.</span>
-      </p>
+      <div class="co-proxy" role="note"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><p>Assisted mode: you are registering this person on their behalf. Everything you save is permanently logged. The phone number and full name stay private to you and StreetTasker administrators; only the public name is ever shown to customers, and only after you publish.</p></div>
 
       <div class="co-banner co-banner--info" id="coFormCap" role="status" hidden>
         <span>You already have the maximum of 10 active Local Taskers, so you can't add another. Ask a StreetTasker administrator if a place should be freed.</span>
@@ -54,7 +55,7 @@
       <form class="co-form" id="coForm" novalidate>
 
         <section class="co-card" aria-labelledby="coFormWhoTitle">
-          <h2 class="co-card-title" id="coFormWhoTitle">Who they are</h2>
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><h2 class="co-card-title" id="coFormWhoTitle">Who they are</h2></div>
 
           <div class="form-group">
             <label class="form-label" for="coFPublicName">Public name</label>
@@ -78,7 +79,7 @@
         </section>
 
         <section class="co-card" aria-labelledby="coFormWorkTitle">
-          <h2 class="co-card-title" id="coFormWorkTitle">Their work</h2>
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><h2 class="co-card-title" id="coFormWorkTitle">Their work</h2></div>
 
           <div class="form-group">
             <label class="form-label" for="coFSkills">Skills</label>
@@ -101,7 +102,7 @@
         </section>
 
         <section class="co-card" aria-labelledby="coFormConsentTitle">
-          <h2 class="co-card-title" id="coFormConsentTitle">Their agreement</h2>
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><h2 class="co-card-title" id="coFormConsentTitle">Their agreement</h2></div>
           <p class="co-card-lead">Record how this person agreed to have this profile created. The record is kept permanently and cannot be edited.</p>
 
           <div class="form-group">

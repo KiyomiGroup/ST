@@ -27,13 +27,14 @@
 
     <main class="co-main co-main--page" id="coMain">
 
-      <header class="co-page-head">
-        <div>
-          <h1 class="co-page-title">My Local Taskers</h1>
-          <p class="co-page-sub" id="coListSummary">Neighbourhood taskers under your coordination.</p>
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Your people</p>
+        <h1 id="coHeroTitle">My Local Taskers</h1>
+        <p class="co-hero-sub" id="coListSummary">Neighbourhood taskers under your coordination.</p>
+        <div class="co-hero-actions">
+          <a class="btn btn-white co-head-action" href="coordinator-tasker-new.html" id="coAddLink">Add Local Tasker</a>
         </div>
-        <a class="btn btn-primary co-head-action" href="coordinator-tasker-new.html" id="coAddLink">Add Local Tasker</a>
-      </header>
+      </section>
 
       <div class="co-banner" id="coListError" role="alert" hidden>
         <span>We couldn't load your Local Taskers just now.</span>

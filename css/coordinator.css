@@ -404,8 +404,8 @@ body.co-drawer-open { overflow: hidden; }
 
 /* ── Edit page layout (Stage 4A-3 redesign) ─────────────────── */
 .co-edit-layout[hidden], .co-hero-actions[hidden], .co-preview-notes[hidden], .co-preview-skills[hidden] { display: none; }
-.co-hero--edit { padding-bottom: var(--space-6); }
-.co-hero--edit h1 { max-width: none; }
+.co-hero--edit, .co-hero--page { padding-bottom: var(--space-6); }
+.co-hero--edit h1, .co-hero--page h1 { max-width: none; }
 .co-hero-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
 .co-hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
 .co-btn-onhero { background: transparent; color: var(--color-text-on-primary); border: 1.5px solid var(--co-hero-text-soft); }
@@ -443,11 +443,19 @@ body.co-drawer-open { overflow: hidden; }
 .co-edit-aside .co-card-lead:last-child { margin-bottom: 0; }
 
 @media (min-width: 768px) {
-  .co-hero--edit { padding: var(--space-6) var(--space-7); }
+  .co-hero--edit, .co-hero--page { padding: var(--space-6) var(--space-7); position: relative; }
   .co-hero-actions { position: absolute; top: var(--space-6); right: var(--space-7); margin-top: 0; }
-  .co-hero--edit { position: relative; }
 }
 @media (min-width: 1044px) {
   .co-edit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: start; gap: var(--space-5); }
   .co-edit-aside { position: sticky; top: calc(var(--co-header-height) + var(--space-4)); }
 }
+
+/* Profile hero identity row and shared page hero bits (all coordinator pages) */
+.co-hero-id { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.co-hero-id .co-tasker-avatar { background: var(--co-mint); color: var(--co-green); }
+.co-hero-idtext { flex: 1; min-width: 200px; }
+.co-hero--page .co-hero-id h1 { margin-top: 0; }
+.co-hero-status { margin-top: var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.co-hero-actions .btn { min-height: 44px; }
+.co-hero .co-hero-id { margin-top: var(--space-3); }
