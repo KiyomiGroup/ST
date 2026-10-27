@@ -358,6 +358,7 @@ function stServiceCard(s) {
     </div>
     <div class="st-card-pad">
       <div class="st-card-top"><span class="st-card-eyebrow">${e(eyebrow)}</span>${ratingHtml}</div>
+      ${s.isLocal ? stLocalTags() : ''}
       <h3 class="st-card-title">${e(s.service_name)}</h3>
       ${s.description ? `<p class="st-card-desc">${e(s.description)}</p>` : ''}
     </div>
@@ -373,6 +374,12 @@ function stServiceCard(s) {
    Reads: provider_name, service_name, location, rating, reviews, verified,
    availability_status, photo, specialties[], portfolio[{image_url}],
    price, rate_unit, href, id. */
+/* Local Tasker labels (stage 4C-2). Only built when the caller says isLocal, which comes from the
+   database function local_tasker_public_info via js/local-tasker-public.js. Regular cards are unchanged. */
+function stLocalTags() {
+  const L = window.STLocal || {};
+  return `<div class="st-local-tags"><span class="st-chip st-chip--local">${L.LABEL || 'Local Tasker'}</span><span class="st-chip st-chip--local-phone">${L.LABEL_PHONE || 'Phone Assisted'}</span></div>`;
+}
 const ST_AVAIL = { available_now: ['Available', true], available_today: ['Available today', true], available_this_week: ['This week', false] };
 function stTaskerCard(s) {
   const e = window.escapeHtml || (x => String(x));
@@ -400,6 +407,7 @@ function stTaskerCard(s) {
         </div>
         <div class="st-tasker-avatar"><span aria-hidden="true">${initials}</span>${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
+      ${s.isLocal ? stLocalTags() : ''}
       ${shown.length ? `<div class="st-tasker-skills"><span class="st-card-label">Skills</span>
         <div class="st-tasker-skill-list">${shown.map(k => `<span class="st-chip st-chip--skill">${e(k)}</span>`).join('')}${more > 0 ? `<span class="st-chip st-chip--skill">+${more}</span>` : ''}</div></div>` : ''}
     </div>

@@ -155,6 +155,18 @@ async function loadServices() {
         });
         liveMapped.forEach(m => { m.portfolio = byUser[m.user_id] || []; });
       } catch (_pe) { /* portfolio is optional */ }
+      /* Local Taskers (stage 4C-2): the label, picture and honest rating come from the database function, never from a column.
+         A Local Tasker has no ratings yet, so the 4.5 default above must not be shown for them. If the lookup fails the person simply shows as a normal listing. */
+      try {
+        if (window.STLocal) {
+          await STLocal.load(liveMapped.map(m => m.user_id));
+          liveMapped.forEach(m => {
+            if (!STLocal.isLocal(m.user_id)) return;
+            m.isLocal = true; m.rating = 0; m.reviews = 0; m.portfolio = [];
+            m.photo = STLocal.coverUrl(m.user_id);
+          });
+        }
+      } catch (_le) { /* label is optional */ }
       /* Append dummies — mark them so Book button is hidden */
       ALL = [...liveMapped.map(normalizeServiceCard), ...DUMMY_SERVICES.map(normalizeServiceCard)];
       console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);

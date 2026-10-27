@@ -176,6 +176,8 @@ begin
   v_out := v_out || case when n = (select count(*) from storage.objects o where o.bucket_id = 'local-tasker-photos' and public.local_tasker_photo_is_public(o.name)) then 'PASS: ' else 'FAIL: ' end || 'a visitor sees exactly the public photo files and no others' || E'\n';
 
   -- 11. publishing again refreshes the listing (price change), no second "published" audit row
+  -- (the session was left as an anonymous visitor by step 10: sign in as coordinator A BEFORE editing the service)
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', cA::text, 'role', 'authenticated')::text, true);
   execute 'set local role authenticated';
   perform public.save_local_tasker_service(t1, sid, 'Solid Wood Wardrobe Repair', 'carpentry', 15000, '/job', 'Standard labour fee. Customer supplies timber.', 'Yaba, Sabo', array['Wardrobes'], 'available_this_week', true, null, null, null);
   execute 'reset role';

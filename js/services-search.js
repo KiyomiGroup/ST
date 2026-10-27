@@ -101,6 +101,17 @@ async function svcLoad() {
     if (!svc.photo && userMap[r.user_id] && userMap[r.user_id].avatar_url) svc.photo = userMap[r.user_id].avatar_url;
     return svc;
   });
+
+  /* Local Taskers (stage 4C-2): label and picture come from the database function. Failure = normal listing. */
+  try {
+    if (window.STLocal) {
+      await STLocal.load(SVC_ALL.map(x => x.user_id));
+      SVC_ALL.forEach(x => {
+        if (!STLocal.isLocal(x.user_id)) return;
+        x.isLocal = true; x.photo = STLocal.coverUrl(x.user_id); x.rating = 0; x.reviews_count = 0;
+      });
+    }
+  } catch (e) { /* label is optional */ }
 }
 
 /* ── Filtering ───────────────────────────────────────────────── */
@@ -209,7 +220,7 @@ function svcBuildCard(s) {
     service_name: s.service_name, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
-    turnaround: s.turnaround, perk: s.perk, href,
+    turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal,
   });
 }
 

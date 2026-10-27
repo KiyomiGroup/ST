@@ -58,7 +58,7 @@
       rateValue: Number(src.rateValue) || 0, rateUnit: text(src.rateUnit) || '/hour', priceNote: text(src.priceNote),
       available: src.available !== false, nextOpening: text(src.nextOpening),
       bio: text(src.bio), offers: [], services: [], portfolio: [], certs: [],
-      radius: Number(src.radius) || 0, areas: [], emergency: { enabled: false, text: '' }, isDemo: !!src.isDemo
+      radius: Number(src.radius) || 0, areas: [], emergency: { enabled: false, text: '' }, isDemo: !!src.isDemo, isLocal: !!src.isLocal
     };
     m.offers = list(src.offers).filter(function (o) { return o && text(o.title); });
     m.services = list(src.services).filter(function (o) { return o && text(o.title); });
@@ -107,6 +107,8 @@
 
     /* Trust chips: only what the data supports. Background Checked / Shield Backed are not shown (no data yet). */
     var chips = [];
+    /* Local Tasker labels (stage 4C-2): shown only when the database says this person is a published Local Tasker. */
+    if (m.isLocal) { chips.push(['user', (window.STLocal && STLocal.LABEL) || 'Local Tasker']); chips.push(['chat', (window.STLocal && STLocal.LABEL_PHONE) || 'Phone Assisted']); }
     if (m.verified) chips.push(['id', 'Govt ID Verified']);
     if (m.certs.length) chips.push(['award', 'Credentials Listed']);
     chips.push(['shield', 'Escrow Protected']);
@@ -256,10 +258,19 @@
     state.model = m;
     renderHero(m); renderStats(m); renderAbout(m); renderServices(m); renderPortfolio(m.portfolio);
     renderCerts(m); renderSide(m); renderActions(m);
+    renderLocalNote(m);
     $('secReviews').hidden = true;
     buildTabs(); syncEmpty();
     $('tpLoading').hidden = true;
     $('tpContent').hidden = false;
+  }
+
+  /* Inclusive-economy note for a Local Tasker (text only: no fee, donation or percentage is stated). */
+  function renderLocalNote(m) {
+    var sec = $('secLocal');
+    if (!sec) return;
+    sec.hidden = !m.isLocal;
+    if (m.isLocal) setText('tpLocalNote', (window.STLocal && STLocal.NOTE) || '');
   }
 
   function fail() { $('tpLoading').hidden = true; $('tpError').hidden = false; }
@@ -281,6 +292,16 @@
     }
     if (!tasker) return fail();
     state.tasker = tasker;
+
+    /* Local Tasker (stage 4C-2): asked of the database, never read from a column. Failure = normal profile. */
+    var isLocal = false, localPhotos = [], localCover = null;
+    try {
+      if (window.STLocal) {
+        await STLocal.load([String(id)]);
+        isLocal = STLocal.isLocal(id);
+        if (isLocal) { localPhotos = await STLocal.photos(id); localCover = STLocal.coverUrl(id); }
+      }
+    } catch (_l) { isLocal = false; }
 
     var results = await Promise.all([
       sb.from('verifications').select('status, business_name, business_address').eq('user_id', id).maybeSingle(),
@@ -313,12 +334,17 @@
       });
     }
 
+    if (isLocal) {
+      /* The portfolio of a Local Tasker is the coordinator's photo set, shown through signed links. Feed posts are not used. */
+      portfolio = localPhotos.map(function (p) { return { image_url: p.url, title: p.caption, description: '', location: '' }; });
+    }
+
     var cov = (d.coverage && typeof d.coverage === 'object') ? d.coverage : {};
     var model = buildModel({
       name: name, first: String(person).trim().split(/\s+/)[0] || name,
       service: tasker.service || tasker.service_name || '', headline: d.headline,
       location: tasker.business_address || tasker.location || (userRow && userRow.location) || '',
-      photo: tasker.photo_url || tasker.photo || (userRow && userRow.avatar_url) || null,
+      photo: isLocal ? localCover : (tasker.photo_url || tasker.photo || (userRow && userRow.avatar_url) || null), isLocal: isLocal,
       verified: verified, pending: !verified && !!(verification && verification.status === 'pending'),
       rating: tasker.rating, reviewCount: tasker.review_count, completed: completed, repeatPct: repeatPct,
       years: d.years_experience, expNote: d.experience_note,

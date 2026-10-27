@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/applications.css" />
   <link rel="stylesheet" href="css/profile-pages.css" />
+  <link rel="stylesheet" href="css/local-tasker-public.css" />
 </head>
 <body class="pg-hero-page st-no-bottom-nav">
   <div id="navbar-placeholder"></div>
@@ -103,6 +104,11 @@
                 <h2 class="tp-title" id="hAbout"><svg class="ap-i" aria-hidden="true"><use href="#i-user"/></svg>About <span id="tpFirst"></span></h2>
                 <div class="tp-prose" id="tpBio"></div>
                 <div class="tp-offers" id="tpOffers"></div>
+              </section>
+
+              <section class="ap-card tp-card" id="secLocal" aria-labelledby="hLocal" hidden>
+                <h2 class="tp-title" id="hLocal"><svg class="ap-i" aria-hidden="true"><use href="#i-user"/></svg>About Local Taskers</h2>
+                <p class="tp-local-note" id="tpLocalNote"></p>
               </section>
 
               <section class="ap-card tp-card" id="secServices" aria-labelledby="hServices" hidden>
@@ -209,6 +215,7 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/local-tasker-public.js"></script>
   <script src="js/app.js"></script>
   <script src="js/tasker-profile-demo.js"></script>
   <script src="js/tasker-profile.js"></script>
