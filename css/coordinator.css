@@ -395,3 +395,9 @@ body.co-drawer-open { overflow: hidden; }
   .co-form-actions { flex-direction: row; justify-content: flex-end; }
   .co-form-actions .btn { width: auto; }
 }
+
+/* Edit action on the profile page (Stage 4A-3) */
+.co-detail-actions { display: flex; }
+.co-detail-actions .btn { width: 100%; }
+@media (min-width: 640px) { .co-detail-actions .btn { width: auto; } }
+.co-form[hidden], .co-detail-actions[hidden] { display: none; }

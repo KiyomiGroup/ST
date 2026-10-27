@@ -50,6 +50,14 @@
     box.hidden = false;
   }
 
+  function showUpdated() {
+    var q = new URLSearchParams(window.location.search).get('updated');
+    var box = $('coCreatedBanner'), text = $('coCreatedText');
+    if (!box || !text || (q !== '1' && q !== '0')) return;
+    text.textContent = q === '1' ? 'Changes saved.' : 'Nothing was changed, so nothing was saved.';
+    box.hidden = false;
+  }
+
   function consentItem(c) {
     var li = C.el('li', 'co-consent-item');
     var head = C.el('div', 'co-consent-head');
@@ -118,6 +126,8 @@
     fact(v, 'Notes', p.verification_notes);
     show('coDetail');
     showCreated();
+    showUpdated();
+    $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
     loadConsents(p.tasker_user_id);
   }
 

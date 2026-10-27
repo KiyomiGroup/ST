@@ -10,12 +10,12 @@ Update this file at the end of every stage. Status values: Not started, In progr
 | 2A | Coordinator role, Local Tasker flag, assignments, 10-cap | M (SQL only) | No | Applied (owner ran it; reported correct) | handoffs/stage-02a.md |
 | 2B | Audit log, consent records, and security helper functions | M (SQL only) | No | Applied (owner ran it; reported correct) | handoffs/stage-02b.md |
 | 2C | RLS for existing tables and the public marketplace view | M (SQL only, high care) | No | Applied (owner ran `stage-2c-rls.sql`; reported successful) | handoffs/stage-02c.md; the AI did not observe the output |
-| 2D | Local Tasker account creation (no-login identity) and coordinator creation function | M (SQL plus one Edge Function) | No | Applied (SQL run by owner, tests run; Edge Function deployed). End-to-end Edge call UNVERIFIED | handoffs/stage-02d.md; first live call happens in 4A (needs 3A); see section 16 |
+| 2D | Local Tasker account creation (no-login identity) and coordinator creation function | M (SQL plus one Edge Function) | No | Verified live on 2026-10-26 through the 4A-2 form (owner's BLOCK 2 output). Sign-in refusal itself not attempted (owner declined curl); locked by the ban | handoffs/stage-02d.md; handoffs/stage-04a-2.md section 11 |
 | 3A | Coordinator sign-in, route guard, dashboard shell | M | Yes | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-03a.md; no SQL; owner check in section 8 of the handoff |
 | 3B | Coordinator overview (real data) | S | Yes | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-03b.md; no SQL; booking metrics wait for 5A/5B (coordinators have no booking access yet) |
 | 4A-1 | My Local Taskers: read-only list and profile | M | Yes (owner: follow the design system) | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only | handoffs/stage-04a-1.md; no SQL |
-| 4A-2 | My Local Taskers: add form (first real Edge Function call) with consent, and consent record on the profile | M | Yes (owner: follow the design system) | Written (not yet used against real Supabase); browser-tested with a MOCKED Supabase only (143 checks) | handoffs/stage-04a-2.md; no new SQL; owner check in section 7 |
-| 4A-3 | My Local Taskers: audited edit (new SQL function + edit form) | M | Yes (owner: follow the design system) | Not started; no inputs needed | handoffs/stage-04a-2.md section 9 |
+| 4A-2 | My Local Taskers: add form (first real Edge Function call) with consent, and consent record on the profile | M | Yes (owner: follow the design system) | First real create SUCCEEDED (owner ran the form, 2026-10-26); other paths browser-tested with a MOCKED Supabase only (143 checks) | handoffs/stage-04a-2.md; no new SQL; owner check in section 7 |
+| 4A-3 | My Local Taskers: audited edit (new SQL function + edit form) | M | Yes (owner: follow the design system) | Written (not yet run in the real project); SQL tested on a SCRATCH Postgres (24 PASS), browser-tested with a MOCKED Supabase (177 checks) | handoffs/stage-04a-3.md; owner steps in section 7 (SQL editor + deploy only) |
 | 4B | Service listings and portfolio photos | L, split if needed | Yes | Not started | |
 | 4C | Preview, publish, Local Tasker badge, marketplace, application block | M | Yes | Not started | |
 | 5A | Booking assignment and Local Tasker booking state machine (SQL) | L (SQL only), split if needed | No | Not started | |
@@ -35,13 +35,15 @@ Update this file at the end of every stage. Status values: Not started, In progr
 | 10 | Final handoff and deployment readiness | S (documents) | No | Not started | |
 
 ## Blockers
-- None for 4A-3. Owner check for 4A-2 (add one test Local Tasker through the form, then run BLOCK 2 of `stage-2d-edge-test-helpers.sql`) is the first real proof of the 2D Edge Function; if it fails, fix that before 4A-3 (handoffs/stage-04a-2.md sections 6 and 7).
-- Carry-forward: the 2D Edge Function has never completed a real create (first attempt failed `identity_not_locked`; fix deployed, unexercised).
+- None. Next: owner runs handoffs/stage-04a-3.md section 7, then 4B (service listings and portfolio photos).
+- Carry-forward for 9A: the placeholder Auth users have a stored password hash (`has_password: true`, unknown to everyone). Login is blocked by the ~100-year ban, and nobody tried to sign in. Optional hardening: blank `encrypted_password` inside `create_local_tasker` and for existing placeholders.
 
 ## Decisions pending
 Only defaults the owner may overrule: O3 (verification record location), customer-contact visibility, D13 (coordinator must be active to receive Local Taskers). See `DECISIONS.md`.
 
 ## Last session
+Update 2026-10-26 (Stage 4A-3): new SQL function `update_local_tasker_profile` (RPC, authority checked inside from `auth.uid()`, audited with field names only, no-op saves write nothing; cannot touch status/assignment/consent/verification) plus rollback and tests; edit page `coordinator-tasker-edit.html` and an Edit button on the profile. SQL: 24 PASS on a scratch Postgres (not Supabase); browser: 177 checks pass with a MOCKED Supabase; nothing run in the real project. Unverified: coordinator read of `users.name` for a draft person, and supabase-js exposing the error `hint`. Console and curl steps stay removed (standing instruction 14). Earlier notes follow.
+
 Update 2026-10-26 (Stage 4A-2): built the Add a Local Tasker form (retry-safe request id, error code shown on screen, cap handling) calling the 2D Edge Function, and an \"Agreement on record\" card on the profile. 143 browser checks pass with a MOCKED Supabase; nothing run against the real project. Edit split off as 4A-3 (needs new SQL). Console and curl steps stay removed (standing instruction 14). Earlier notes follow.
 
 Update 2026-10-26 (Stage 4A-1): built My Local Taskers list (search, status filter) and read-only profile page, real data under RLS; nav link live; Overview cards link to profiles. 68 browser checks pass with a MOCKED Supabase; nothing run against the real project. Create/edit (4A-2) is blocked on three inputs listed in handoffs/stage-04a-1.md section 8. Earlier notes follow.
