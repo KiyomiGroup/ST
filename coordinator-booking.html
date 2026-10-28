@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Booking — StreetTasker Coordinator</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" href="coordinator-bookings.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Bookings
+      </a>
+
+      <p class="co-loading" id="coBdLoading">Loading…</p>
+
+      <div class="co-banner" id="coBdError" role="alert" hidden>
+        <span>We couldn't load this booking just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coBdRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coBdMissing" hidden>
+        <p class="co-empty-title">Booking not found</p>
+        <p class="co-empty-text">This booking doesn't exist, or it isn't one of yours.</p>
+      </div>
+
+      <article class="co-detail" id="coBd" hidden>
+        <section class="co-hero co-hero--page" aria-labelledby="coBdTitle">
+          <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span><span id="coBdRef">Booking</span></p>
+          <h1 id="coBdTitle">Booking</h1>
+          <p class="co-hero-sub" id="coBdSub"></p>
+          <div class="co-hero-status"><span id="coBdStatus"></span></div>
+        </section>
+
+        <section class="co-card co-bk-next-card" aria-labelledby="coBdNextTitle">
+          <h2 class="co-card-title" id="coBdNextTitle">Next step</h2>
+          <p class="co-bk-next is-action" id="coBdNext"></p>
+          <p class="co-consent-meta">Recording steps from this page arrives in the next update. For now this page is for reading.</p>
+        </section>
+
+        <section class="co-card" aria-labelledby="coBdJobTitle">
+          <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
+          <dl class="co-facts" id="coBdJob"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coBdCustTitle">
+          <h2 class="co-card-title" id="coBdCustTitle">Customer</h2>
+          <dl class="co-facts" id="coBdCust"></dl>
+          <p class="co-consent-meta" id="coBdCustNote"></p>
+        </section>
+
+        <section class="co-card" aria-labelledby="coBdTaskerTitle">
+          <h2 class="co-card-title" id="coBdTaskerTitle">Local Tasker</h2>
+          <dl class="co-facts" id="coBdTasker"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coBdPayTitle">
+          <h2 class="co-card-title" id="coBdPayTitle">Payment</h2>
+          <dl class="co-facts" id="coBdPay"></dl>
+          <p class="co-consent-meta">Read only. Payments are handled by StreetTasker, and a coordinator can't change them.</p>
+        </section>
+
+        <section class="co-card" aria-labelledby="coBdHistTitle">
+          <h2 class="co-card-title" id="coBdHistTitle">History</h2>
+          <p class="co-fact-value is-empty" id="coBdHistEmpty" hidden>Nothing recorded yet.</p>
+          <ul class="co-bk-history" id="coBdHist"></ul>
+        </section>
+      </article>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-booking.js"></script>
+</body>
+</html>

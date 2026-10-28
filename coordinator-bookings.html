@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Bookings — StreetTasker Coordinator</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Your jobs</p>
+        <h1 id="coHeroTitle">Bookings</h1>
+        <p class="co-hero-sub" id="coBkSummary">Bookings for the Local Taskers you coordinate.</p>
+      </section>
+
+      <div class="co-banner" id="coBkError" role="alert" hidden>
+        <span>We couldn't load your bookings just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coBkRetry">Try again</button>
+      </div>
+
+      <div class="co-toolbar" id="coBkToolbar" hidden>
+        <label class="co-search">
+          <span class="co-visually-hidden">Search your bookings</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="coBkSearch" placeholder="Search by job, customer or Local Tasker" autocomplete="off" />
+        </label>
+        <div class="co-filters" id="coBkTabs" role="group" aria-label="Show bookings that"></div>
+      </div>
+
+      <p class="co-loading" id="coBkLoading">Loading your bookings…</p>
+      <ul class="co-bk-list" id="coBkList" hidden></ul>
+
+      <div class="co-empty" id="coBkEmpty" hidden>
+        <p class="co-empty-title">No bookings yet</p>
+        <p class="co-empty-text">When a customer books one of your published Local Taskers, the booking appears here with the next thing you need to do.</p>
+      </div>
+      <div class="co-empty" id="coBkNoMatch" hidden>
+        <p class="co-empty-title" id="coBkNoMatchTitle">Nothing here</p>
+        <p class="co-empty-text" id="coBkNoMatchText">No bookings match.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-bookings.js"></script>
+</body>
+</html>
