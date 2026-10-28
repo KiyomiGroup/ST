@@ -164,6 +164,60 @@
           </div>
         </section>
 
+        <section class="co-card" id="coQt" aria-labelledby="coQtTitle" hidden>
+          <h2 class="co-card-title" id="coQtTitle">The quote</h2>
+          <p class="co-card-lead" id="coQtLead"></p>
+          <div class="co-banner" id="coQtError" role="alert" hidden><span id="coQtErrorText"></span></div>
+
+          <div id="coQtSummary" hidden>
+            <dl class="co-facts" id="coQtLines"></dl>
+            <p class="co-consent-meta" id="coQtStatusNote"></p>
+          </div>
+
+          <form class="co-form" id="coQtForm" novalidate hidden>
+            <dl class="co-facts" id="coQtFixed"></dl>
+            <p class="co-consent-meta" id="coQtFixedNote">This is the Local Tasker’s own price. You can’t change it here. If it has changed, record a new answer from them above.</p>
+            <div class="form-group">
+              <label class="form-label" for="coQtTransport">Transport (₦)</label>
+              <input class="form-input" type="text" id="coQtTransport" inputmode="decimal" autocomplete="off" aria-describedby="coQtTransportHelp coQtTransportErr" />
+              <p class="form-helper" id="coQtTransportHelp"></p>
+              <p class="co-field-error" id="coQtTransportErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtMaterials">Materials (₦)</label>
+              <input class="form-input" type="text" id="coQtMaterials" inputmode="decimal" autocomplete="off" aria-describedby="coQtMaterialsHelp coQtMaterialsErr" />
+              <p class="form-helper" id="coQtMaterialsHelp"></p>
+              <p class="co-field-error" id="coQtMaterialsErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtOtherLabel">Another agreed cost (optional)</label>
+              <input class="form-input" type="text" id="coQtOtherLabel" maxlength="60" autocomplete="off" placeholder="What it is for, e.g. Parking fee" aria-describedby="coQtOtherLabelErr" />
+              <p class="co-field-error" id="coQtOtherLabelErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtOther">Amount for it (₦)</label>
+              <input class="form-input" type="text" id="coQtOther" inputmode="decimal" autocomplete="off" aria-describedby="coQtOtherHelp coQtOtherErr" />
+              <p class="form-helper" id="coQtOtherHelp">Leave empty for none. At least ₦100, and no more than the service fee.</p>
+              <p class="co-field-error" id="coQtOtherErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtNote">Note on this quote (optional)</label>
+              <textarea class="form-textarea" id="coQtNote" maxlength="300" aria-describedby="coQtNoteErr"></textarea>
+              <p class="co-field-error" id="coQtNoteErr" hidden></p>
+            </div>
+            <dl class="co-facts co-qt-total"><dt class="co-fact-label">Total</dt><dd class="co-fact-value" id="coQtTotal"></dd></dl>
+            <p class="co-consent-meta">The Local Tasker pays no commission, so there is no fee line. The customer approves quotes in the next update (Stage 5D). Payments are handled by StreetTasker.</p>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coQtSend">Send the quote</button>
+            </div>
+          </form>
+
+          <div id="coQtHistBox" hidden>
+            <h3 class="co-cf-sub">Earlier versions</h3>
+            <ul class="co-bk-history" id="coQtHist"></ul>
+          </div>
+        </section>
+
         <section class="co-card" aria-labelledby="coBdJobTitle">
           <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
           <dl class="co-facts" id="coBdJob"></dl>
@@ -202,6 +256,7 @@
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-confirmation.js"></script>
+  <script src="js/coordinator-quote.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@
   function noteFor(d) {
     if (!active(d)) return '';
     if (WAITING[d.lt_status]) return 'Use “The Local Tasker’s answer” below to record your call.';
-    if (d.lt_status === 'tasker_confirmed') return 'Building the quote arrives in the next update.';
+    if (d.lt_status === 'tasker_confirmed' || d.lt_status === 'quote_declined') return 'Build the quote in “The quote” below.';
     return '';
   }
 

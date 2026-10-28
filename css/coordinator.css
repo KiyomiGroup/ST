@@ -544,3 +544,11 @@ body.co-drawer-open { overflow: hidden; }
 #coCf .co-banner { margin-bottom: var(--space-4); }
 #coCf .co-form-actions .btn { min-height: 44px; }
 .co-cf-group[hidden], #coCfSummary[hidden], #coCfAgainRow[hidden], #coCfAgainConfirm[hidden], #coCfAttemptsBox[hidden], #coCfLimitsGroup[hidden], #coCfNotesGroup[hidden], #coCfActions[hidden] { display: none; }
+
+/* ── The quote (Stage 5C-2) ─────────────────────────────────── */
+.co-qt-total { padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.co-qt-total .co-fact-value { font-family: var(--font-heading); font-weight: 800; color: var(--co-green); }
+.co-fact-value.is-lock::after { content: ' · set by the Local Tasker'; font-size: var(--text-xs); font-weight: 600; color: var(--co-ink-muted); }
+#coQt .co-banner { margin-bottom: var(--space-4); }
+#coQt .co-form-actions .btn { min-height: 44px; }
+#coQtSummary[hidden], #coQtHistBox[hidden] { display: none; }

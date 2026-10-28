@@ -118,7 +118,7 @@ async def main():
         await goto(p, 3)
         check('summary: confirmed booking shows the record and the calls made; typed text is not rendered as HTML',
               await p.is_visible('#coCfSummary') and await p.is_hidden('#coCfForm') and await p.locator('#coCf b, #coCf i').count() == 0 and 'Baba <b>Alabi</b>' in await p.inner_text('#coCfFacts') and 'No answer' in await p.inner_text('#coCfAttempts'))
-        check('summary: next-step note says the quote comes in the next update', 'next update' in await p.inner_text('#coBdNextNote'))
+        check('summary: next-step note points to the quote card', 'The quote' in await p.inner_text('#coBdNextNote'))
         await p.click('#coCfAgain')
         check('redo: asks to confirm first and makes no call yet', await p.is_visible('#coCfAgainConfirm') and not any(x.startswith('local_booking_step') for x in await rpcs(p)))
         await p.click('#coCfAgainCancel')
