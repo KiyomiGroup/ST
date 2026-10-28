@@ -79,6 +79,63 @@
     } catch (e) { return []; }
   }
 
+
+  /* ── "Meet Local Taskers" grid, shared by index.html and local-taskers.html ─────────────
+     Real PUBLISHED Local Taskers replace the static sample cards. The sample cards stay ONLY when nobody
+     is published or the lookup fails. Everything is inserted as text, never as HTML. */
+  var PHONE_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1z"/></svg>';
+  var PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  function initials(n) { return String(n || '').replace(/[^a-zA-Z ]/g, '').trim().split(/\s+/).filter(Boolean).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase() || 'LT'; }
+  function ngn(n) { return '\u20A6' + Number(n || 0).toLocaleString('en-NG'); }
+  function el(tag, cls, txt) { var x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; }
+
+  function gridCard(c) {
+    var art = el('div', 'lt-tasker-card lt-tasker-card--live');
+    var photo = el('div', 'lt-tasker-photo lt-tasker-photo--live');
+    if (c.coverUrl) {
+      var img = el('img', 'lt-tasker-img'); img.src = c.coverUrl; img.alt = ''; img.loading = 'lazy';
+      img.addEventListener('error', function () { img.remove(); });
+      photo.appendChild(img);
+    }
+    photo.appendChild(el('span', 'lt-tasker-initials', initials(c.name)));
+    var body = el('div', 'lt-tasker-body');
+    body.appendChild(el('div', 'lt-tasker-name', c.name));
+    body.appendChild(el('div', 'lt-tasker-spec', c.service));
+    /* One tag in the body (not on the photo) so it also shows in the phone layout, where the photo is a small circle. */
+    var tag = el('span', 'lt-live-tag'); tag.innerHTML = PHONE_SVG + ' '; tag.appendChild(document.createTextNode('Phone Assisted'));
+    body.appendChild(tag);
+    if (c.location) { var loc = el('div', 'lt-tasker-loc'); loc.innerHTML = PIN_SVG + ' '; loc.appendChild(document.createTextNode(c.location)); body.appendChild(loc); }
+    body.appendChild(el('div', 'lt-tasker-rating', c.price ? 'From ' + ngn(c.price) + c.rate_unit : 'Ask for a quote'));
+    var a = el('a', 'btn btn-outline btn-sm btn-full', 'View Profile'); a.href = 'tasker-profile.html?id=' + encodeURIComponent(c.user_id);
+    body.appendChild(a);
+    art.appendChild(photo); art.appendChild(body);
+    return art;
+  }
+
+  /* opts: { grid, chips, note } elements. Safe to call once per page. */
+  function mountGrid(opts) {
+    var grid = opts && opts.grid, chips = opts && opts.chips, note = opts && opts.note, live = null;
+    if (!grid) return Promise.resolve(0);
+    function show(filter) {
+      var f = String(filter || '').toLowerCase();
+      var rows = live.filter(function (c) { return !f || (c.service + ' ' + c.category + ' ' + c.specialties.join(' ')).toLowerCase().indexOf(f) !== -1; });
+      grid.textContent = '';
+      rows.forEach(function (c) { grid.appendChild(gridCard(c)); });
+      if (note) { note.hidden = rows.length > 0; note.textContent = rows.length ? '' : 'No Local Taskers in this craft yet. Please check again soon.'; }
+    }
+    if (chips) chips.addEventListener('click', function (e) {
+      var chip = e.target.closest('.filter-chip');
+      if (!chip || !chips.contains(chip)) return;
+      chips.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      if (live) show(chip.textContent.trim() === 'All Crafts' ? '' : chip.textContent.trim());
+    });
+    return cards(12).then(function (rows) {
+      if (!rows.length) return 0;            /* nobody published: keep the sample cards */
+      live = rows; show(''); return rows.length;
+    });
+  }
+
   window.STLocal = {
     LABEL: 'Local Tasker',
     LABEL_PHONE: 'Phone Assisted',
@@ -88,6 +145,7 @@
     isLocal: function (id) { return !!info[String(id)]; },
     coverUrl: function (id) { return (info[String(id)] && info[String(id)].coverUrl) || null; },
     photos: photos,
-    cards: cards
+    cards: cards,
+    mountGrid: mountGrid
   };
 })();
