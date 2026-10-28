@@ -55,7 +55,113 @@
         <section class="co-card co-bk-next-card" aria-labelledby="coBdNextTitle">
           <h2 class="co-card-title" id="coBdNextTitle">Next step</h2>
           <p class="co-bk-next is-action" id="coBdNext"></p>
-          <p class="co-consent-meta">Recording steps from this page arrives in the next update. For now this page is for reading.</p>
+          <p class="co-consent-meta" id="coBdNextNote"></p>
+        </section>
+
+        <section class="co-card" id="coCf" aria-labelledby="coCfTitle" hidden>
+          <h2 class="co-card-title" id="coCfTitle">The Local Tasker’s answer</h2>
+          <p class="co-card-lead" id="coCfLead"></p>
+          <div class="co-banner" id="coCfError" role="alert" hidden><span id="coCfErrorText"></span></div>
+
+          <div id="coCfSummary" hidden>
+            <dl class="co-facts" id="coCfFacts"></dl>
+            <p class="co-consent-meta" id="coCfSecondNote"></p>
+            <div class="co-form-actions" id="coCfAgainRow">
+              <button type="button" class="btn btn-outline" id="coCfAgain">Record a new answer</button>
+            </div>
+            <div class="co-pub-reason" id="coCfAgainConfirm" hidden>
+              <p class="co-card-lead" id="coCfAgainText"></p>
+              <div class="co-form-actions">
+                <button type="button" class="btn btn-ghost" id="coCfAgainCancel">Keep it as it is</button>
+                <button type="button" class="btn btn-primary" id="coCfAgainGo">Yes, record a new answer</button>
+              </div>
+            </div>
+          </div>
+
+          <form class="co-form" id="coCfForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coCfName">Who did you speak to?</label>
+              <input class="form-input" type="text" id="coCfName" maxlength="100" autocomplete="off" aria-describedby="coCfNameErr" />
+              <p class="co-field-error" id="coCfNameErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coCfNumber">Number you called</label>
+              <input class="form-input" type="tel" id="coCfNumber" maxlength="30" autocomplete="off" inputmode="tel" aria-describedby="coCfNumberHelp coCfNumberErr" />
+              <p class="form-helper" id="coCfNumberHelp"></p>
+              <p class="co-field-error" id="coCfNumberErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coCfWhen">When did you call?</label>
+              <input class="form-input" type="datetime-local" id="coCfWhen" aria-describedby="coCfWhenErr" />
+              <p class="co-field-error" id="coCfWhenErr" hidden></p>
+            </div>
+
+            <fieldset class="co-cf-outcome">
+              <legend class="form-label">What did they say?</legend>
+              <label class="co-check" for="coCfOutConfirmed"><input type="radio" name="coCfOutcome" id="coCfOutConfirmed" value="confirmed" /><span>They can do the job</span></label>
+              <label class="co-check" for="coCfOutDeclined"><input type="radio" name="coCfOutcome" id="coCfOutDeclined" value="declined" /><span>They can’t, or won’t, do the job</span></label>
+              <label class="co-check" for="coCfOutNoAnswer"><input type="radio" name="coCfOutcome" id="coCfOutNoAnswer" value="no_answer" /><span>No answer (I’ll try again)</span></label>
+              <p class="co-field-error" id="coCfOutcomeErr" hidden></p>
+            </fieldset>
+
+            <div class="co-cf-group" id="coCfConfirmFields" hidden>
+              <label class="co-check" for="coCfAvail"><input type="checkbox" id="coCfAvail" /><span>They are available at the time the customer wants</span></label>
+              <label class="co-check" for="coCfCan"><input type="checkbox" id="coCfCan" /><span>They can do this job</span></label>
+              <p class="co-field-error" id="coCfAvailErr" hidden></p>
+              <div class="form-group">
+                <label class="form-label" for="coCfPrice">Their price for the work (₦)</label>
+                <input class="form-input" type="text" id="coCfPrice" inputmode="decimal" autocomplete="off" aria-describedby="coCfPriceHelp coCfPriceErr" />
+                <p class="form-helper" id="coCfPriceHelp">The price they gave you, for their time and skill only. You can’t change it later; a new price needs a new call.</p>
+                <p class="co-field-error" id="coCfPriceErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfDuration">How long will it take?</label>
+                <input class="form-input" type="text" id="coCfDuration" maxlength="80" autocomplete="off" placeholder="About 2 hours" aria-describedby="coCfDurationErr" />
+                <p class="co-field-error" id="coCfDurationErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfTransport">Transport they will need (₦, optional)</label>
+                <input class="form-input" type="text" id="coCfTransport" inputmode="decimal" autocomplete="off" aria-describedby="coCfTransportErr" />
+                <p class="co-field-error" id="coCfTransportErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfMaterials">Materials they will buy (₦, optional)</label>
+                <input class="form-input" type="text" id="coCfMaterials" inputmode="decimal" autocomplete="off" aria-describedby="coCfMaterialsErr" />
+                <p class="co-field-error" id="coCfMaterialsErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfMatNotes">What materials? (optional)</label>
+                <input class="form-input" type="text" id="coCfMatNotes" maxlength="300" autocomplete="off" aria-describedby="coCfMatNotesErr" />
+                <p class="co-field-error" id="coCfMatNotesErr" hidden></p>
+              </div>
+            </div>
+
+            <div class="form-group" id="coCfLimitsGroup" hidden>
+              <label class="form-label" for="coCfLimits" id="coCfLimitsLabel">Limits or conditions</label>
+              <textarea class="form-textarea" id="coCfLimits" maxlength="300" aria-describedby="coCfLimitsErr"></textarea>
+              <p class="co-field-error" id="coCfLimitsErr" hidden></p>
+            </div>
+            <div class="form-group" id="coCfNotesGroup" hidden>
+              <label class="form-label" for="coCfNotes">Anything else agreed (optional)</label>
+              <textarea class="form-textarea" id="coCfNotes" maxlength="300" aria-describedby="coCfNotesErr"></textarea>
+              <p class="co-field-error" id="coCfNotesErr" hidden></p>
+            </div>
+
+            <div class="co-cf-group" id="coCfSureFields" hidden>
+              <label class="co-check" for="coCfReadBack"><input type="checkbox" id="coCfReadBack" /><span>I read the price back to them and they agreed to it</span></label>
+              <p class="co-field-error" id="coCfReadBackErr" hidden></p>
+              <label class="co-check" for="coCfSecond"><input type="checkbox" id="coCfSecond" /><span>Ask a StreetTasker administrator to call them back before the quote is sent (optional)</span></label>
+            </div>
+
+            <div class="co-form-actions" id="coCfActions" hidden>
+              <button type="submit" class="btn btn-primary" id="coCfSave">Save their answer</button>
+            </div>
+          </form>
+
+          <div id="coCfAttemptsBox" hidden>
+            <h3 class="co-cf-sub">Calls recorded</h3>
+            <ul class="co-bk-history" id="coCfAttempts"></ul>
+          </div>
         </section>
 
         <section class="co-card" aria-labelledby="coBdJobTitle">
@@ -95,6 +201,7 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-confirmation.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>

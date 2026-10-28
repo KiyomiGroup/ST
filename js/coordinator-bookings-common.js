@@ -32,7 +32,11 @@
     assigned: 'Booking assigned to you',
     needs_reassignment: 'No coordinator available; waiting for an administrator',
     reassigned: 'Booking moved to a coordinator',
-    status_changed: 'Step recorded'
+    status_changed: 'Step recorded',
+    confirmation_recorded: 'Local Tasker’s answer recorded',
+    confirmation_superseded: 'An earlier answer is no longer current',
+    second_check_passed: 'Administrator call-back: passed',
+    second_check_failed: 'Administrator call-back: failed'
   };
 
   function sentence(s) { var t = String(s || '').replace(/_/g, ' '); return t ? t.charAt(0).toUpperCase() + t.slice(1) : ''; }

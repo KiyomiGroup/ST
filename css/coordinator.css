@@ -534,3 +534,13 @@ body.co-drawer-open { overflow: hidden; }
 @media (min-width: 1044px) {
   .co-bk-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ── Local Tasker's answer (Stage 5C-1) ─────────────────────── */
+.co-cf-outcome { border: 0; padding: 0; margin: 0; min-width: 0; }
+.co-cf-outcome .form-label { margin-bottom: var(--space-1); }
+.co-cf-group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-lg); }
+.co-cf-sub { margin: var(--space-5) 0 var(--space-3); font-size: var(--text-sm); font-weight: 700; color: var(--co-ink); }
+.co-cf-warn { color: var(--co-danger); font-weight: 600; }
+#coCf .co-banner { margin-bottom: var(--space-4); }
+#coCf .co-form-actions .btn { min-height: 44px; }
+.co-cf-group[hidden], #coCfSummary[hidden], #coCfAgainRow[hidden], #coCfAgainConfirm[hidden], #coCfAttemptsBox[hidden], #coCfLimitsGroup[hidden], #coCfNotesGroup[hidden], #coCfActions[hidden] { display: none; }
