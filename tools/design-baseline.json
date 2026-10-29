@@ -3,23 +3,21 @@
     "inline": 7
   },
   "css/styles.css": {
-    "hex": 64,
-    "rgb": 76,
+    "hex": 52,
+    "rgb": 73,
     "important": 77
   },
   "css/subscription.css": {
     "hex": 1,
-    "rgb": 7,
+    "rgb": 6,
     "important": 2
   },
   "css/tasks.css": {
     "hex": 8,
-    "rgb": 6
+    "rgb": 5
   },
   "dashboard-customer.html": {
-    "hex": 53,
-    "rgb": 5,
-    "inline": 70,
+    "inline": 7,
     "important": 1
   },
   "dashboard-tasker.html": {
@@ -52,7 +50,6 @@
     "hex": 1
   },
   "js/location.js": {
-    "hex": 2,
     "inline": 3
   },
   "js/subscription.js": {

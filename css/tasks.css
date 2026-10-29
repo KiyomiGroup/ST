@@ -541,7 +541,7 @@
 .avail-dot-green {
   background: var(--green-light);
   color: var(--green);
-  border: 1px solid rgba(22,163,74,0.2);
+  border: 1px solid var(--color-accent-border);
 }
 .avail-dot-gray {
   background: var(--gray-100);

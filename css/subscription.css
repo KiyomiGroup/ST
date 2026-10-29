@@ -133,7 +133,7 @@
   padding: 3px 8px;
   background: var(--green-light);
   color: var(--green);
-  border: 1px solid rgba(22,163,74,0.2);
+  border: 1px solid var(--color-accent-border);
   border-radius: var(--radius-pill);
 }
 

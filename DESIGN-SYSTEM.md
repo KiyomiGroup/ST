@@ -18,7 +18,9 @@ Single source of truth for how StreetTasker looks and is built. Every human and 
 
 **Single source:** the old tokens in `styles.css` that have the same value as a new token (`--text-primary`, `--border`, `--bg`, `--amber`, `--red`, `--font` and others) now point at the new tokens, so changing a value in `tokens.css` updates both.
 
-**Still open:** the site's other greens. Links, badges, prices, icons and the `--blue` / `--green` tokens in `styles.css` are still `#16A34A`. Only primary buttons use `#0F6B46` so far. Decide whether those should move to `#0F6B46` too, or stay as a lighter accent. Until decided, new code uses `--color-primary` for buttons only.
+| 6 | **Brand green** (2026-10-29) | `#0F6B46` is the one green for actions: buttons, links, prices, icons, focus, badges, success. `#16A34A`, `#004F31`, `#18704B`, `#168A5B`, `#006A43`, `#116C47` and `#1A8D61` are retired; their tokens (`--blue`, `--green`, `--color-accent*`, `--pt-green`, `--gc-green*`, `--co-green*`, `--auth-green*`, `--color-card-primary`) now alias `--color-primary` / `--color-primary-hover`. Dark surfaces (hero, mobile nav, dark chips and panels) use the forest scale: hero and mobile nav `--color-forest-900`, dark chips and panels `--color-forest-800`, idle hero chips `--color-forest-700`. The bright live dot is `--color-live`. |
+
+**Still open:** one-off greens that are scoped to a single page block in `tokens.css` (about 90 tints, glows and dark neutrals for gift cards, coordinator, auth and profile pages), and the Tailwind greens inside the two dashboards.
 
 ---|---|---|
 | 1 | **Brand green.** The site token `--blue` is `#16A34A` (named "blue" but green). The nav spec uses `#168A5B`. The audit also found `#0F6B46`, `#005938` and `#0B4D30` in use. | `#168A5B` becomes the single primary. If you prefer `#16A34A`, change only the one `--color-primary` line in section 2. |
@@ -46,7 +48,7 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 
 | Token | Value | Replaces / notes |
 |---|---|---|
-| `--color-primary` | `#0F6B46` | Primary buttons (`.btn-primary`, nav Post a Task). The legacy `--blue` / `--green` stay `#16A34A` for now (see section 0). |
+| `--color-primary` | `#0F6B46` | Primary buttons (`.btn-primary`, nav Post a Task). The legacy `--blue` / `--green` now alias it (decision 6). |
 | `--color-primary-hover` | `#0B5638` | Hover for primary buttons. Derived. |
 | `--color-primary-soft` | `#EEFFF1` | Mint fill. Used by the Become a Tasker button. Replaces `--mint` (`#E8F5EC`) in nav use. |
 | `--color-primary-soft-hover` | `#DFF7E4` | |
@@ -66,7 +68,8 @@ Tokens are defined in `css/tokens.css`, which `styles.css` imports at the top, s
 | `--color-border-strong` | `#D0D0D0` | `--border-strong` |
 | `--color-warning` | `#D97706` | `--amber`. Pair with `--color-warning-soft: rgba(217,119,6,0.1)`. |
 | `--color-danger` | `#DC2626` | `--red`. Pair with `--color-danger-soft: rgba(220,38,38,0.08)`. |
-| `--color-success` | not yet created | Depends on the accent-green decision. |
+| `--color-success` | `var(--color-primary)` | Success / confirmed / paid. Same green as the brand. |
+| `--color-live` | `#4ADE80` | Bright live dot on dark surfaces only. Never for text or buttons. |
 
 **Rules**
 - Status colours (warning, danger, success) appear only on badges, alerts, validation and status text. Never as decoration.

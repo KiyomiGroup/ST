@@ -301,7 +301,7 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
     const row = document.createElement('div');
     row.className = 'loc-row';
     const badge = (r.precise && mode === 'precise')
-      ? ' <span style="font-size:var(--text-xs);font-weight:700;background:var(--green-light,#dcfce7);color:var(--green,#16a34a);border-radius:4px;padding:1px 5px;">street</span>'
+      ? ' <span style="font-size:var(--text-xs);font-weight:700;background:var(--green-light);color:var(--green);border-radius:4px;padding:1px 5px;">street</span>'
       : '';
     const sub = r.instant && !r.precise && mode === 'precise'
       ? '<span class="loc-row-sub" style="font-size:var(--text-xs);color:var(--text-muted);">Type more for exact street</span>'

@@ -48,8 +48,8 @@
   --border:         var(--color-border);
   --border-strong:  var(--color-border-strong);
 
-  --green:          #16A34A;
-  --green-light:    rgba(22, 163, 74, 0.1);
+  --green:          var(--color-primary);
+  --green-light:    var(--color-accent-soft);
   --amber:          var(--color-warning);
   --amber-light:    var(--color-warning-soft);
   --red:            var(--color-danger);
@@ -424,7 +424,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
   color: var(--white); font-size: var(--text-xs); font-weight: 700;
   display: flex; align-items: center; gap: 8px;
 }
-.hero-float-badge2 .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; }
+.hero-float-badge2 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-live); }
 
 @media (max-width: 768px) {
   .hero-mascot { display: none; }
@@ -1260,10 +1260,10 @@ p  { color: var(--text-secondary); font-weight: 400; }
 }
 
 .status-open       { background: var(--blue-light);  color: var(--blue);  border: 1px solid var(--blue-border); }
-.status-active     { background: var(--green-light); color: var(--green); border: 1px solid rgba(22,163,74,0.2); }
+.status-active     { background: var(--green-light); color: var(--green); border: 1px solid var(--color-accent-border); }
 .status-completed  { background: var(--gray-100);    color: var(--gray-600); border: 1px solid var(--border); }
 .status-pending    { background: var(--amber-light); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
-.status-confirmed  { background: var(--green-light); color: var(--green); border: 1px solid rgba(22,163,74,0.2); }
+.status-confirmed  { background: var(--green-light); color: var(--green); border: 1px solid var(--color-accent-border); }
 .status-cancelled  { background: var(--red-light);   color: var(--red);   border: 1px solid rgba(220,38,38,0.1); }
 
 /* ── Booking row ─────────────────────────────────────────────── */
@@ -1641,7 +1641,7 @@ input.has-gps-btn { padding-right: inherit !important; }
   font-family: var(--font); flex: 1;
   transition: color 0.15s ease;
 }
-.mobile-bottom-bar button.active { color: #0F6B46; font-weight: 700; }
+.mobile-bottom-bar button.active { color: var(--color-primary); font-weight: 700; }
 .mobile-bottom-bar button svg    { flex-shrink: 0; }
 
 
@@ -2331,7 +2331,7 @@ img { max-width: 100%; height: auto; }
   min-height: 220px;
 }
 .spg-hero-text { max-width: 560px; }
-.spg-hero-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; margin-right: 6px; }
+.spg-hero-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--color-live); margin-right: 6px; }
 .spg-hero-eyebrow {
   font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
   color: rgba(255,255,255,0.7); margin-bottom: 14px; display: flex; align-items: center;
@@ -2467,7 +2467,7 @@ img { max-width: 100%; height: auto; }
        green), which is exactly why the bottom corners looked square. */
   }
   .spg-hero {
-    background: #013109; /* flat, matching the nav exactly above it — no seam */
+    background: var(--hero-bg-mobile); /* flat, matching the nav exactly above it — no seam */
     flex-direction: column; align-items: flex-start; text-align: left;
     padding: 20px 24px 100px; border-radius: 0 0 32px 32px; min-height: 0;
     /* Full-bleed edge-to-edge, cancelling out .container's own side
@@ -2694,7 +2694,7 @@ img { max-width: 100%; height: auto; }
      against the dark background). Logged in: the "+" button is
      replaced by a notification bell + the user's own avatar. */
   body.spg-page #navbar {
-    background: #013109;
+    background: var(--hero-bg-mobile);
     /* Extend the same green up behind the iPhone notch/status bar
        instead of leaving it white there. */
     padding-top: env(safe-area-inset-top, 0px);
@@ -2732,7 +2732,7 @@ img { max-width: 100%; height: auto; }
   }
   body.st-logged-in .nav-role-badge.nav-tasker,
   body.st-logged-in .nav-role-badge.nav-role-customer {
-    color: #0B4D30; background: #9EF0C4;
+    color: var(--color-forest-900); background: var(--pt-mint);
   }
   /* Page-title subtitle under the logo is intentionally removed — logo only. */
   body.st-logged-in .nav-mobile-subtitle { display: none !important; }
@@ -2750,7 +2750,7 @@ img { max-width: 100%; height: auto; }
     background: var(--red); border: 1.5px solid var(--white);
   }
   .nav-mobile-avatar {
-    background: #0B4D30; border: none;
+    background: var(--color-forest-800); border: none;
   }
 }
 
@@ -2786,13 +2786,13 @@ img { max-width: 100%; height: auto; }
     padding: 4px 2px; border-radius: 10px;
     transition: color 0.15s ease;
   }
-  .st-bn-item.active { color: #0F6B46; font-weight: 700; }
+  .st-bn-item.active { color: var(--color-primary); font-weight: 700; }
 
   /* Centre "+" create button */
   .st-bn-plus {
     flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
     width: 52px; height: 52px; border-radius: 50%;
-    background: #0F6B46; color: var(--white);
+    background: var(--color-primary); color: var(--white);
     box-shadow: 0 6px 16px rgba(11, 46, 28, 0.4);
     text-decoration: none; margin: 0 4px;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -3011,7 +3011,7 @@ img { max-width: 100%; height: auto; }
   padding: 7px 16px; border-radius: var(--radius-pill); z-index: 4;
   border: 1px solid rgba(255,255,255,0.22); white-space: nowrap; margin: 0;
 }
-.lt-hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; flex-shrink: 0; }
+.lt-hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-live); flex-shrink: 0; }
 
 /* Rating badge — same badge class/position as the homepage's "127 tasks
    posted today" badge (.hero-float-badge2), just different copy + icon. */
@@ -4746,6 +4746,15 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
     background: var(--color-bg); box-shadow: var(--shadow-xl); color: var(--pt-ink-muted);
     font-weight: 500;
   }
+}
+
+/* Tablet (769 to 1043px): the content column is too narrow for the search pill and every filter on one
+   row, and centred wrapping left one filter alone on a second row. Search takes the first row; the
+   filters share the second row evenly. At 1044px and up everything fits on one row, as before. */
+@media (min-width: 769px) and (max-width: 1043px) {
+  .pg-hero-page .pg-hero-search { flex: 1 1 100%; max-width: none; }
+  .pg-hero-page .pg-hero-select-wrap { flex: 1 1 0; min-width: 0; }
+  .pg-hero-page .pg-hero-select { width: 100%; }
 }
 
 

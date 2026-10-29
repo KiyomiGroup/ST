@@ -12,6 +12,10 @@
   /* ── Colour ── */
   --color-primary:            #0F6B46;   /* primary buttons */
   --color-primary-hover:      #0B5638;   /* derived: darker step of primary */
+  --color-success:            var(--color-primary);   /* success / confirmed / paid: same green as the brand */
+  --color-glass-soft:         rgba(255, 255, 255, 0.15);   /* translucent fill on a green card */
+  --color-glass-border:       rgba(255, 255, 255, 0.35);   /* its border */
+  --color-live:               #4ADE80;   /* bright 'live' dot on dark surfaces only (not for text or buttons) */
   --color-primary-soft:       #EEFFF1;   /* mint fill (Become a Tasker) */
   --color-primary-soft-hover: #DFF7E4;
 
@@ -86,10 +90,10 @@
    the "accent green" decision can be made in one place later.
    Not for primary buttons: those use --color-primary. */
 :root {
-  --color-accent:         #16A34A;
-  --color-accent-hover:   #128244;
-  --color-accent-soft:    rgba(22, 163, 74, 0.08);
-  --color-accent-border:  rgba(22, 163, 74, 0.22);
+  --color-accent:         var(--color-primary);
+  --color-accent-hover:   var(--color-primary-hover);
+  --color-accent-soft:    rgba(15, 107, 70, 0.08);
+  --color-accent-border:  rgba(15, 107, 70, 0.22);
   --color-mint:           #E8F5EC;
   --color-mint-border:    #BFE3CB;
   --color-mint-hover:     #DAEFDF;
@@ -116,7 +120,7 @@
   --color-card-posted:      #94A3B8;   /* "Posted 5 days ago" */
   --color-card-action-bg:   #F3F4F6;   /* View Task button */
   --color-card-action-text: #262626;
-  --color-card-primary:     #18704B;   /* Apply button */
+  --color-card-primary:     var(--color-primary);   /* Apply button */
 
   --shadow-card-btn:    0 1px 2px rgba(0, 0, 0, 0.05);
   --radius-card:        28px;
@@ -140,7 +144,7 @@
   --pt-toggle-off:    #E2E3E0;
   --pt-mint:          #9EF1C2;   /* selected chips, eyebrow, step numbers */
   --pt-mint-soft:     #D8F9E7;   /* selected In Person card */
-  --pt-green:         #004F31;   /* deep green: progress, headings accents, Post button (desktop) */
+  --pt-green:         var(--color-primary);   /* deep green: progress, headings accents, Post button (desktop) */
   --pt-ink:           #1A1C1B;
   --pt-ink-muted:     #3F4942;
   --pt-danger:        #BA1A1A;
@@ -166,7 +170,7 @@
    Values marked "derived" were not in the screenshot (hover states).
    Page-specific: do not reuse elsewhere without a design decision. */
 :root {
-  --gc-hero-bg:           #013109;   /* hero background */
+  --gc-hero-bg:           var(--color-forest-900);   /* hero background */
   --gc-hero-glow-top:     #06431C;   /* soft glow, top right */
   --gc-hero-glow-bottom:  #184E25;   /* soft glow, bottom left */
   --gc-mint:              var(--pt-mint);   /* accent text, primary button, icons */
@@ -202,9 +206,9 @@
   --gc-ink:            var(--pt-ink);   /* headings, card titles */
   --gc-ink-muted:      var(--pt-ink-muted);   /* body text, labels */
   --gc-green:          var(--pt-green);   /* deep green: price, featured buttons, ribbon */
-  --gc-green-mid:      #116C47;   /* standard card button */
-  --gc-green-mid-hover:#0D5A3A;   /* derived: darker step of --gc-green-mid */
-  --gc-green-text:     #18704B;   /* text on mint chips */
+  --gc-green-mid:      var(--color-primary);   /* standard card button */
+  --gc-green-mid-hover:var(--color-primary-hover);   /* derived: darker step of --gc-green-mid */
+  --gc-green-text:     var(--color-primary);   /* text on mint chips */
   --gc-field:          var(--pt-field-strong);   /* idle chips and icon circles */
   --gc-field-hover:    #E4E4E1;   /* derived: darker step of --gc-field */
   --gc-pill:           #A1F4C5;   /* "100% Flexible" pill */
@@ -321,10 +325,10 @@
   --hero-text-muted:    rgba(255, 255, 255, 0.7);   /* eyebrow, description */
   --hero-btn-bg:        var(--color-primary-soft);  /* pale pill buttons on the hero */
   --hero-btn-bg-hover:  var(--color-primary-soft-hover);
-  --hero-chip-bg:       var(--pt-green);            /* idle filter chips on the hero */
+  --hero-chip-bg:       var(--color-forest-700);            /* idle filter chips on the hero */
   --hero-chip-bg-hover: var(--pt-escrow-icon);
-  --hero-dot:           #4ADE80;                    /* live dot (same green as .spg-hero-dot) */
-  --hero-bg-mobile:     #013109;                    /* flat hero fill on mobile; the mobile top nav uses the same value so there is no seam */
+  --hero-dot:           var(--color-live);                    /* live dot (same green as .spg-hero-dot) */
+  --hero-bg-mobile:     var(--color-forest-900);                    /* flat hero fill on mobile; the mobile top nav uses the same value so there is no seam */
   --hero-float-gap:     40px;                       /* how far floating content overlaps the hero's bottom edge */
   --hero-bar-overlap:   24px;                       /* how far the floating search pill overlaps the hero's bottom edge (about half its height) */
   --hero-chip-h:        32px;                       /* filter chip height on the hero */
@@ -372,7 +376,7 @@
   --card-surface:        var(--color-bg);
   --card-surface-tint:   #F7F7F3;               /* footer strip under the media */
   --card-chip-glass:     rgba(255, 255, 255, 0.92);
-  --card-chip-dark:      var(--pt-green);        /* turnaround / photo-count chips on media */
+  --card-chip-dark:      var(--color-forest-800);        /* turnaround / photo-count chips on media */
   --card-cta-bg:         var(--pt-green);
   --card-cta-bg-hover:   var(--color-forest-800);
   --card-skill-bg:       #F1F1ED;
@@ -386,7 +390,7 @@
    One component, two skins: dark compact card on phones, light wide banner
    from 768px up. Colours alias the deep-green / mint already in the system. */
 :root {
-  --pp-dark-bg:          var(--pt-green);
+  --pp-dark-bg:          var(--color-forest-800);
   --pp-dark-track:       var(--color-forest-700);
   --pp-dark-text:        var(--color-text-on-primary);
   --pp-dark-muted:       var(--tm-text-soft);
@@ -415,9 +419,9 @@
   --co-ink-muted:     var(--pt-ink-muted);   /* secondary text on light */
   --co-field:         var(--pt-field);   /* inputs, notes, tiles */
   --co-green:         var(--pt-green);   /* deep green: sign-in button, headings accents */
-  --co-green-hover:   #003D26;   /* derived: darker step of --co-green */
-  --co-green-mid:     #006A43;   /* active nav item */
-  --co-green-bright:  #1A8D61;   /* secondary actions, links */
+  --co-green-hover:   var(--color-primary-hover);   /* derived: darker step of --co-green */
+  --co-green-mid:     var(--color-primary);   /* active nav item */
+  --co-green-bright:  var(--color-primary);   /* secondary actions, links */
   --co-mint:          var(--pt-mint);   /* chips, eyebrow dot, accent text on dark */
   --co-mint-soft:     #D5F3E0;   /* sign-in illustration panel */
   --co-hero-start:    var(--color-forest-800);   /* hero gradient start (= --color-forest-800) */
@@ -446,13 +450,13 @@
   --auth-ink:        #1A1C1B;
   --auth-body:       #3E4942;
   --auth-muted:      #6E7A71;
-  --auth-green:      #006A43;
-  --auth-green-mid:  #168A5B;
-  --auth-green-ring: #0F6B46;
+  --auth-green:      var(--color-primary);
+  --auth-green-mid:  var(--color-primary);
+  --auth-green-ring: var(--color-primary);
   --auth-border:     #BDCABF;
   --auth-input-bg:   #EEEEEC;
   --auth-shadow-sm:  0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --auth-green-deep:       #005938;   /* primary hover on the role cards */
+  --auth-green-deep:       var(--color-primary-hover);   /* primary hover on the role cards */
   --auth-page:             var(--pt-page);        /* #F9F9F7 */
   --auth-line:             var(--pt-toggle-off);  /* #E2E3E0 */
   --auth-surface-hover:    #F0F0EE;
@@ -467,16 +471,16 @@
   --auth-glass-60:         rgba(255, 255, 255, 0.6);
   --auth-glass-40:         rgba(255, 255, 255, 0.4);
   --auth-glass-30:         rgba(255, 255, 255, 0.3);
-  --auth-green-mid-a00:    rgba(22, 138, 91, 0);
-  --auth-green-mid-a05:    rgba(22, 138, 91, 0.05);
-  --auth-green-mid-a10:    rgba(22, 138, 91, 0.1);
-  --auth-green-mid-a20:    rgba(22, 138, 91, 0.2);
-  --auth-work-a05:         rgba(17, 108, 71, 0.05);
-  --auth-work-a10:         rgba(17, 108, 71, 0.1);
-  --auth-work-a20:         rgba(17, 108, 71, 0.2);
+  --auth-green-mid-a00:    rgba(15, 107, 70, 0);
+  --auth-green-mid-a05:    rgba(15, 107, 70, 0.05);
+  --auth-green-mid-a10:    rgba(15, 107, 70, 0.1);
+  --auth-green-mid-a20:    rgba(15, 107, 70, 0.2);
+  --auth-work-a05:         rgba(15, 107, 70, 0.05);
+  --auth-work-a10:         rgba(15, 107, 70, 0.1);
+  --auth-work-a20:         rgba(15, 107, 70, 0.2);
   --auth-shadow-xs:        0 8px 15px rgba(0, 0, 0, 0.05);
   --auth-shadow-lg:        0 20px 25px -5px rgba(0, 0, 0, 0.1);
   --auth-shadow-card:      0 7px 29px rgba(0, 106, 67, 0.05);
-  --auth-shadow-role:      0 8px 32px rgba(22, 138, 91, 0.15);
-  --auth-shadow-panel:     0 8px 32px rgba(22, 138, 91, 0.08);
+  --auth-shadow-role:      0 8px 32px rgba(15, 107, 70, 0.15);
+  --auth-shadow-panel:     0 8px 32px rgba(15, 107, 70, 0.08);
 }
