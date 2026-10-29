@@ -20,7 +20,7 @@ Single source of truth for how StreetTasker looks and is built. Every human and 
 
 | 6 | **Brand green** (2026-10-29) | `#0F6B46` is the one green for actions: buttons, links, prices, icons, focus, badges, success. `#16A34A`, `#004F31`, `#18704B`, `#168A5B`, `#006A43`, `#116C47` and `#1A8D61` are retired; their tokens (`--blue`, `--green`, `--color-accent*`, `--pt-green`, `--gc-green*`, `--co-green*`, `--auth-green*`, `--color-card-primary`) now alias `--color-primary` / `--color-primary-hover`. Dark surfaces (hero, mobile nav, dark chips and panels) use the forest scale: hero and mobile nav `--color-forest-900`, dark chips and panels `--color-forest-800`, idle hero chips `--color-forest-700`. The bright live dot is `--color-live`. |
 
-**Still open:** one-off greens that are scoped to a single page block in `tokens.css` (about 90 tints, glows and dark neutrals for gift cards, coordinator, auth and profile pages), and the Tailwind greens inside the two dashboards.
+**Still open:** one-off greens that are scoped to a single page block in `tokens.css` (about 90 tints, glows and dark neutrals for gift cards, coordinator, auth and profile pages).
 
 ---|---|---|
 | 1 | **Brand green.** The site token `--blue` is `#16A34A` (named "blue" but green). The nav spec uses `#168A5B`. The audit also found `#0F6B46`, `#005938` and `#0B4D30` in use. | `#168A5B` becomes the single primary. If you prefer `#16A34A`, change only the one `--color-primary` line in section 2. |
@@ -369,3 +369,7 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 - `--gc-*` and `--co-*` values that were identical to a `--pt-*` or `--color-forest-*` value now alias it (for example `--co-green` and `--gc-green` are `var(--pt-green)`, `--co-hero-start` is `var(--color-forest-800)`). Computed values are unchanged (checked: all 367 custom properties resolve to the same value before and after). Change the `--pt-*` value and the gift cards and coordinator portal follow.
 - New "Auth pages" block in `css/tokens.css`: the raw colours that login, signup and onboarding-tasker used in `styles.css` (including the `--auth-*` set that lived inside `.av2-page`) are now tokens with the same values. Added `--color-danger-border` (rgba 220,38,38,0.2) to the core set.
 - The Google "G" logo (four brand colours) moved from inline SVG to `images/google-g.svg`. Those colours belong to Google and are not part of the palette.
+
+
+### Dashboards (2026-10-29)
+Both dashboards use `css/dashboard.css` (prefix `db-` for shared, `tdb-` for tasker-only) instead of inline styles. Only `display:none` start states that the page script toggles stay inline. The banner colour palette on the tasker dashboard is user data (`data-color` on each swatch, painted by script), so those hex values stay.

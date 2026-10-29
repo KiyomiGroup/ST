@@ -13,6 +13,7 @@
   --color-primary:            #0F6B46;   /* primary buttons */
   --color-primary-hover:      #0B5638;   /* derived: darker step of primary */
   --color-success:            var(--color-primary);   /* success / confirmed / paid: same green as the brand */
+  --color-scrim-soft:         rgba(0, 0, 0, 0.28);       /* light dark wash over an image (drag hint) */
   --color-glass-soft:         rgba(255, 255, 255, 0.15);   /* translucent fill on a green card */
   --color-glass-border:       rgba(255, 255, 255, 0.35);   /* its border */
   --color-live:               #4ADE80;   /* bright 'live' dot on dark surfaces only (not for text or buttons) */

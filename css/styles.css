@@ -5278,7 +5278,7 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   .st-pp-desc strong { color: var(--color-text); }
   .st-pp-short { display: none; }
   .st-pp-long { display: inline; }
-  .st-pp-cta { align-self: center; padding: 0 var(--space-5); background: var(--pp-dark-bg); color: var(--pp-dark-text); min-height: var(--toast-hit-size); }
+  .st-pp-cta { align-self: center; padding: 0 var(--space-5); background: var(--color-primary); color: var(--color-text-on-primary); min-height: var(--toast-hit-size); }
   .st-pp-cta:hover { background: var(--color-forest-800); }
   .st-pp-cta:focus-visible { outline-color: var(--pp-fill); }
   .st-pp-track { flex: none; width: var(--pp-track-width); background: var(--pp-light-track); }
