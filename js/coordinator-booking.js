@@ -87,6 +87,7 @@
     if (window.STCoExceptions) window.STCoExceptions.mount(d, { reload: function () { return load(); } });
     if (window.STCoCloseout) window.STCoCloseout.mount(d, { reload: function () { return load(); } });
     if (window.STCoExtras) window.STCoExtras.mount(d, { reload: function () { return load(); } });
+    if (window.STCoReduction) window.STCoReduction.mount(d, { reload: function () { return load(); } });
     show('ok');
     document.title = 'Booking ' + B.ref(d.booking_id) + ' — StreetTasker Coordinator';
   }

@@ -588,3 +588,12 @@ body.co-drawer-open { overflow: hidden; }
 #coXt .co-form-actions .btn { min-height: 44px; }
 #coXt .co-consent-meta { margin-top: var(--space-4); }
 #coXt .co-check input:disabled + span { opacity: 0.55; }
+
+/* Stage 5D-3c-2: "Lower the price" card */
+#coRd .co-banner { margin-bottom: var(--space-4); }
+#coRd .co-bk-history { display: flex; flex-direction: column; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 0; list-style: none; }
+#coRd .co-bk-history:empty { display: none; }
+#coRd .co-bk-history .btn { align-self: flex-start; margin-top: var(--space-2); min-height: 44px; }
+#coRd .co-form-actions .btn { min-height: 44px; }
+#coRd .co-consent-meta { margin-top: var(--space-4); }
+#coRd .co-check input:disabled + span { opacity: 0.55; }

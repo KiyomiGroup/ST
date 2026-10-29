@@ -393,6 +393,44 @@
           <p class="co-consent-meta">The customer pays or declines in their Job Room. This never changes the agreed price and never moves money. To lower a price, report a problem so support can decide.</p>
         </section>
 
+        <section class="co-card" id="coRd" aria-labelledby="coRdTitle" hidden>
+          <h2 class="co-card-title" id="coRdTitle">Lower the price</h2>
+          <p class="co-card-lead" id="coRdLead"></p>
+          <div class="co-banner" id="coRdError" role="alert" hidden><span id="coRdErrorText"></span></div>
+          <ul class="co-bk-history" id="coRdList"></ul>
+          <form class="co-form" id="coRdForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coRdAmount">How much lower? (₦)</label>
+              <input class="form-input" type="text" inputmode="numeric" id="coRdAmount" autocomplete="off" aria-describedby="coRdAmountHelp coRdAmountErr" />
+              <p class="form-helper" id="coRdAmountHelp"></p>
+              <p class="co-field-error" id="coRdAmountErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRdWhy">Why does the price go down?</label>
+              <textarea class="form-textarea" id="coRdWhy" maxlength="300" aria-describedby="coRdWhyErr"></textarea>
+              <p class="co-field-error" id="coRdWhyErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRdHow">How did the Local Tasker confirm this to you?</label>
+              <select class="form-select" id="coRdHow" aria-describedby="coRdHowErr">
+                <option value="">Choose one</option>
+                <option value="phone_call">On a phone call</option>
+                <option value="in_person">In person</option>
+                <option value="message">By message</option>
+              </select>
+              <p class="co-field-error" id="coRdHowErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="co-check" for="coRdSure"><input type="checkbox" id="coRdSure" aria-describedby="coRdSureErr" /><span>The Local Tasker agreed to this lower price. I understand this opens a problem report for StreetTasker support and pauses payments on this job until support has decided.</span></label>
+              <p class="co-field-error" id="coRdSureErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRdSubmit">Report to support</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">Support decides and records any refund. This never refunds, never changes the agreed price and never moves money. You can withdraw the report until support starts on it.</p>
+        </section>
+
         <section class="co-card" aria-labelledby="coBdJobTitle">
           <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
           <dl class="co-facts" id="coBdJob"></dl>
@@ -436,6 +474,7 @@
   <script src="js/coordinator-exceptions.js"></script>
   <script src="js/coordinator-closeout.js"></script>
   <script src="js/coordinator-extras.js"></script>
+  <script src="js/coordinator-reduction.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>
