@@ -102,6 +102,10 @@
   --color-forest-900:     #0B2E1C;
   --color-forest-800:     #0F3D26;
   --color-forest-700:     #16512F;
+  --color-dark:           #0E1814;   /* near-black green: nav pill, dark panels, ink */
+  --color-dark-raised:    #14211B;   /* a card sitting on --color-dark */
+  --color-dark-border:    #22362C;   /* its border */
+  --color-dark-chip:      #1F3328;   /* chips and active rows on it */
   --color-warning-border: rgba(217, 119, 6, 0.2);
   --shadow-primary-sm:    0 1px 3px rgba(15, 107, 70, 0.25);
   --shadow-primary-md:    0 4px 12px rgba(15, 107, 70, 0.35);
@@ -150,8 +154,8 @@
   --pt-ink-muted:     #3F4942;
   --pt-danger:        #BA1A1A;
   --pt-danger-soft:   #FFDAD6;
-  --pt-escrow-icon:   #196146;
-  --pt-escrow-deco:   #035F3C;
+  --pt-escrow-icon:   var(--color-forest-700);
+  --pt-escrow-deco:   var(--color-forest-800);
   --pt-escrow-text:   #C8D9D3;
   --pt-photo-label:   rgba(26, 28, 27, 0.62);
   --pt-glow:          rgba(158, 241, 194, 0.28);
@@ -172,15 +176,15 @@
    Page-specific: do not reuse elsewhere without a design decision. */
 :root {
   --gc-hero-bg:           var(--color-forest-900);   /* hero background */
-  --gc-hero-glow-top:     #06431C;   /* soft glow, top right */
-  --gc-hero-glow-bottom:  #184E25;   /* soft glow, bottom left */
+  --gc-hero-glow-top:     var(--color-forest-800);   /* soft glow, top right */
+  --gc-hero-glow-bottom:  var(--color-forest-700);   /* soft glow, bottom left */
   --gc-mint:              var(--pt-mint);   /* accent text, primary button, icons */
   --gc-mint-hover:        #86E3B0;   /* derived: darker step of --gc-mint */
   --gc-text-soft:         #75C798;   /* hero paragraph */
-  --gc-chip-bg:           #1A4521;   /* eyebrow chip, mobile chips */
-  --gc-btn-dark:          #254E2C;   /* secondary hero button */
-  --gc-btn-dark-hover:    #2E5E36;   /* derived: lighter step of --gc-btn-dark */
-  --gc-divider:           #1D562C;   /* rule above the trust row */
+  --gc-chip-bg:           var(--color-forest-800);   /* eyebrow chip, mobile chips */
+  --gc-btn-dark:          var(--color-forest-700);   /* secondary hero button */
+  --gc-btn-dark-hover:    var(--color-primary-hover);   /* derived: lighter step of --gc-btn-dark */
+  --gc-divider:           var(--color-forest-700);   /* rule above the trust row */
 
   --gc-card-bg:           #166546;   /* voucher card base */
   --gc-card-glow-top:     #0C8155;   /* voucher card glow, top right */
@@ -212,7 +216,7 @@
   --gc-green-text:     var(--color-primary);   /* text on mint chips */
   --gc-field:          var(--pt-field-strong);   /* idle chips and icon circles */
   --gc-field-hover:    #E4E4E1;   /* derived: darker step of --gc-field */
-  --gc-pill:           #A1F4C5;   /* "100% Flexible" pill */
+  --gc-pill:           var(--pt-mint);   /* "100% Flexible" pill */
   --gc-pill-text:      #002112;
   --gc-tile-border:    #F2F2F0;   /* guess: card edge is almost invisible in the design */
   --gc-tile-rule:      var(--pt-field-strong);   /* guess: rule above the card footer */
@@ -227,23 +231,23 @@
    the --gc-* tokens above; only values that were not covered live here. */
 :root {
   --gc-cz-bg:       var(--pt-field);   /* section band behind the form and preview */
-  --gc-cz-card-bg:  #0F5A3C;   /* live preview card base */
+  --gc-cz-card-bg:  var(--color-forest-800);   /* live preview card base */
 }
 
 /* ── Logged-in nav (customer + tasker) ──
    Sampled from the logged-in navigation design image (no Figma values supplied).
    Used by the shared #navbar and the customer dashboard's .ds-topnav. */
 :root {
-  --color-nav-pill:         #0D1712;   /* dark pill behind the nav links */
+  --color-nav-pill:         var(--color-dark);   /* dark pill behind the nav links */
   --color-nav-pill-text:    #E6EDE9;   /* link text on the dark pill */
   --color-nav-pill-hover:   rgba(255, 255, 255, 0.1);
-  --color-nav-pill-active:  #006A43;   /* active link fill */
-  --color-nav-badge-bg:     #E6F4EE;   /* CUSTOMER / TASKER badge */
-  --color-nav-badge-pro-bg: #D3F5E1;   /* TASKER PRO badge */
-  --color-nav-badge-text:   #0B5638;
+  --color-nav-pill-active:  var(--color-primary);   /* active link fill */
+  --color-nav-badge-bg:     var(--color-mint);   /* CUSTOMER / TASKER badge */
+  --color-nav-badge-pro-bg: var(--pt-mint-soft);   /* TASKER PRO badge */
+  --color-nav-badge-text:   var(--color-primary-hover);
   --color-nav-bg:           rgba(255, 255, 255, 0.92);   /* fixed bar glass background */
-  --color-nav-avatar:       #111E17;   /* avatar circle */
-  --color-nav-dot:          #10B981;   /* indicator dots + online dot */
+  --color-nav-avatar:       var(--color-dark);   /* avatar circle */
+  --color-nav-dot:          var(--color-live);   /* indicator dots + online dot */
 
   --nav-icon-size:    36px;   /* round icon buttons */
   --nav-avatar-size:  40px;
@@ -255,32 +259,32 @@
    Sampled from the Overview design screenshot (no Figma values supplied).
    Page-specific: do not reuse elsewhere without a design decision. */
 :root {
-  --to-page-bg:         #F4F7F5;   /* page band behind the overview (flat so the tab notch blends in) */
+  --to-page-bg:         var(--color-bg-subtle);   /* page band behind the overview (flat so the tab notch blends in) */
   --to-card-border:     #E6ECE8;
   --to-card-shadow:     0 1px 2px rgba(15, 26, 22, 0.04), 0 10px 28px -16px rgba(15, 26, 22, 0.14);
   --to-muted:           #6B7670;   /* small caps labels, helper text */
-  --to-green:           #0A7A4F;   /* trend text, icons, sparkline */
-  --to-green-soft:      #E3F6EC;   /* icon bubbles, SECURED pill */
+  --to-green:           var(--color-primary);   /* trend text, icons, sparkline */
+  --to-green-soft:      var(--color-mint);   /* icon bubbles, SECURED pill */
   --to-bar-1:           #D5F7E6;   /* bar chart, oldest to newest month */
   --to-bar-2:           #A9EFCC;
   --to-bar-3:           #7BE5B3;
   --to-bar-4:           #3FD392;
   --to-bar-5:           #0E9F67;
   --to-bar-6:           #066B44;
-  --to-ink-dark:        #0D1712;   /* Payout button */
+  --to-ink-dark:        var(--color-dark);   /* Payout button */
 
-  --to-dark:            #0E1814;   /* Active Assignments panel */
-  --to-dark-raised:     #14211B;   /* list cards and detail card */
-  --to-dark-border:     #22362C;
-  --to-dark-selected:   #139062;   /* selected list card outline */
+  --to-dark:            var(--color-dark);   /* Active Assignments panel */
+  --to-dark-raised:     var(--color-dark-raised);   /* list cards and detail card */
+  --to-dark-border:     var(--color-dark-border);
+  --to-dark-selected:   var(--color-primary);   /* selected list card outline */
   --to-dark-text:       #FFFFFF;
   --to-dark-muted:      #93A89D;
-  --to-dark-chip:       #1F3328;   /* category tags, avatar circles */
-  --to-dark-accent:     #34D399;   /* Real-time dot, tag text */
+  --to-dark-chip:       var(--color-dark-chip);   /* category tags, avatar circles */
+  --to-dark-accent:     var(--pt-mint);   /* Real-time dot, tag text */
   --to-dark-warn:       #F2B45A;   /* Review / Pending text on dark */
   --to-dark-warn-soft:  rgba(242, 180, 90, 0.16);
-  --to-dark-action:     #0F7A52;   /* Mark Complete button */
-  --to-dark-action-hover: #0B6643; /* derived: darker step */
+  --to-dark-action:     var(--color-primary);   /* Mark Complete button */
+  --to-dark-action-hover: var(--color-primary-hover); /* derived: darker step */
 
   --radius-to-panel:    40px;      /* Active Assignments outer corners */
   --radius-to-notch:    28px;      /* tab notch bottom corners and shoulders */
@@ -291,14 +295,14 @@
 /* ── Tasker dashboard: Overview, mobile layout ──
    Sampled from the mobile design screenshot. Page-specific. */
 :root {
-  --tm-panel:        #0F4A34;   /* Active Assignments panel */
-  --tm-panel-deep:   #0B3A28;   /* tab track, cards inside the panel */
-  --tm-card:         #0D4430;   /* featured job card */
-  --tm-border:       #1D6247;
-  --tm-chip:         #1B5E44;   /* chips inside the panel */
-  --tm-mint:         #A8F2CE;   /* primary action, pills, promo bar */
-  --tm-mint-ink:     #064E34;   /* text on mint */
-  --tm-mint-soft:    #D9F8E8;   /* header pills */
+  --tm-panel:        var(--color-forest-800);   /* Active Assignments panel */
+  --tm-panel-deep:   var(--color-forest-900);   /* tab track, cards inside the panel */
+  --tm-card:         var(--color-forest-800);   /* featured job card */
+  --tm-border:       var(--color-forest-700);
+  --tm-chip:         var(--color-forest-700);   /* chips inside the panel */
+  --tm-mint:         var(--pt-mint);   /* primary action, pills, promo bar */
+  --tm-mint-ink:     var(--color-forest-900);   /* text on mint */
+  --tm-mint-soft:    var(--pt-mint-soft);   /* header pills */
   --tm-text-soft:    #A9CDBB;   /* muted text on the green panel */
 }
 
@@ -342,9 +346,9 @@
    Taken from the Toast & Notification spec. Status colours are for alerts,
    validation and status chips only, never decoration. */
 :root {
-  --tone-success-bg:     #E8F8EE;
-  --tone-success-border: #BDE6CC;
-  --tone-success-ink:    #0B5638;
+  --tone-success-bg:     var(--color-mint);
+  --tone-success-border: var(--color-mint-border);
+  --tone-success-ink:    var(--color-primary-hover);
   --tone-success-icon:   var(--color-primary);
 
   --tone-info-bg:        #EAF2FF;
@@ -414,7 +418,7 @@
    are kept separate so the portal can diverge. Marked "derived" = not in the screens.
    Page-specific: do not reuse elsewhere without a design decision. */
 :root {
-  --co-page:          #F1F5F1;   /* page background, top */
+  --co-page:          var(--color-bg-subtle);   /* page background, top */
   --co-page-end:      var(--pt-page);   /* page background, bottom */
   --co-ink:           var(--pt-ink);   /* headings, body on light */
   --co-ink-muted:     var(--pt-ink-muted);   /* secondary text on light */
@@ -424,17 +428,17 @@
   --co-green-mid:     var(--color-primary);   /* active nav item */
   --co-green-bright:  var(--color-primary);   /* secondary actions, links */
   --co-mint:          var(--pt-mint);   /* chips, eyebrow dot, accent text on dark */
-  --co-mint-soft:     #D5F3E0;   /* sign-in illustration panel */
+  --co-mint-soft:     var(--pt-mint-soft);   /* sign-in illustration panel */
   --co-hero-start:    var(--color-forest-800);   /* hero gradient start (= --color-forest-800) */
-  --co-hero-end:      #135332;   /* hero gradient end */
+  --co-hero-end:      var(--color-forest-700);   /* hero gradient end */
   --co-hero-text-soft:var(--pt-escrow-text);   /* hero paragraph (= --pt-escrow-text) */
-  --co-dark:          #0E1713;   /* workspace panel */
-  --co-dark-raised:   #15271E;   /* raised row on the dark panel */
-  --co-dark-active:   #183125;   /* selected row on the dark panel */
-  --co-nav-dark:      #111E17;   /* desktop nav pill, avatar */
+  --co-dark:          var(--color-dark);   /* workspace panel */
+  --co-dark-raised:   var(--color-dark-raised);   /* raised row on the dark panel */
+  --co-dark-active:   var(--color-dark-chip);   /* selected row on the dark panel */
+  --co-nav-dark:      var(--color-dark);   /* desktop nav pill, avatar */
   --co-danger:        var(--pt-danger);   /* error text */
   --co-danger-soft:   var(--pt-danger-soft);   /* error banner */
-  --co-notice-soft:   #E8F6EF;   /* info banner */
+  --co-notice-soft:   var(--color-mint);   /* info banner */
 
   --radius-co-hero:   40px;
   --radius-co-card:   28px;
@@ -463,11 +467,11 @@
   --auth-surface-hover:    #F0F0EE;
   --auth-line-hover:       #C9CBC7;
   --auth-text-soft:        #5E6561;
-  --auth-mint-hover-bg:    #F0FBF5;
+  --auth-mint-hover-bg:    var(--color-primary-soft);
   --auth-oauth-hover-border: #9DB09F;
-  --auth-oauth-hover-bg:   #FAFCFA;
+  --auth-oauth-hover-bg:   var(--color-bg-subtle);
   --auth-grad-start:       #90F7BF;   /* role-icon gradient */
-  --auth-grad-end:         #A1F4C5;
+  --auth-grad-end:         var(--pt-mint);
   --auth-glass-70:         rgba(255, 255, 255, 0.7);
   --auth-glass-60:         rgba(255, 255, 255, 0.6);
   --auth-glass-40:         rgba(255, 255, 255, 0.4);
@@ -481,7 +485,7 @@
   --auth-work-a20:         rgba(15, 107, 70, 0.2);
   --auth-shadow-xs:        0 8px 15px rgba(0, 0, 0, 0.05);
   --auth-shadow-lg:        0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  --auth-shadow-card:      0 7px 29px rgba(0, 106, 67, 0.05);
+  --auth-shadow-card:      0 7px 29px rgba(15, 107, 70, 0.05);
   --auth-shadow-role:      0 8px 32px rgba(15, 107, 70, 0.15);
   --auth-shadow-panel:     0 8px 32px rgba(15, 107, 70, 0.08);
 }
