@@ -70,22 +70,19 @@
     .hf-search { padding-bottom: var(--space-3); }
     .hf-search .spg-searchbar { margin: 0; max-width: 880px; }
     .hf-search-loc { position: relative; }
-    @media (max-width: 900px) { .hf-search .spg-searchbar { margin: 0; } }
+    @media (max-width: 768px) { .hf-search .spg-searchbar { margin: 0; } }
 
     /* ── Hero (shared .pg-hero in styles.css), customers and taskers ───────
        Desktop: the search pill floats over the hero's bottom edge. Phones: the hero and
        search bar scroll with the page under the fixed nav.
-       769 to 900px keeps the hero as a card with the search bar below it. */
+       Phones (768px and under) keep the hero as a card with the search bar below it. */
     .hf-ico-map { display: none; }
     body.role-tasker .hf-ico-pin { display: none; }
     body.role-tasker .hf-ico-map { display: block; }
     /* Customer location chip, on the hero's pale pill */
     .pg-hero-meta .hf-loc { background: var(--hero-btn-bg); border-color: transparent; }
     .hf-top-spacer { display: none; }
-    @media (min-width: 769px) and (max-width: 900px) {
-      .hf-hero-dt .pg-hero { padding-bottom: 44px; }
-    }
-    @media (min-width: 901px) {
+    @media (min-width: 769px) {
       .hf-search { padding-bottom: var(--space-3); }
       .hf-search .spg-searchbar { margin: calc(-1 * var(--hero-float-gap)) auto 0; max-width: none; }
     }
@@ -199,10 +196,10 @@
     .hf-cat-ic { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pt-mint-soft); color: var(--pt-green); }
     .hf-sec :focus-visible, .hf-banner-btn:focus-visible, a.hf-card:focus-visible { outline: 2px solid var(--pt-green); outline-offset: 2px; }
 
-    @media (min-width: 640px) {
+    @media (min-width: 768px) {
       .hf-row-stack { display: grid; grid-template-columns: repeat(2, 1fr); }
     }
-    @media (min-width: 900px) {
+    @media (min-width: 769px) {
       .hf-row { display: grid; grid-template-columns: repeat(4, 1fr); overflow: visible; }
       .hf-row-stack { grid-template-columns: repeat(4, 1fr); }
       .hf-card { flex: none; }
@@ -236,8 +233,8 @@
     .hf-tcard-skel { pointer-events: none; }
     .hf-sec-note { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--pt-ink-muted); }
     .hf-sec[hidden] { display: none; }
-    @media (min-width: 640px) { .hf-tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (min-width: 900px) { .hf-tgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 768px) { .hf-tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 769px) { .hf-tgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
     /* ── Skeleton ─────────────────────────────────────────────── */
     .skel { background: linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: var(--radius-sm); }

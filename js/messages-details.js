@@ -1,7 +1,7 @@
 /* ============================================================
    STREETTASKER — messages-details.js   (Job Room, Stage 4)
    The Job Details column: task, location, schedule, money and status,
-   plus Payment History and Activity. On desktop (1045px and up) it fills the
+   plus Payment History and Activity. On desktop (1044px and up) it fills the
    third column (#jrDetailBody). Below that the same content opens as a
    draggable bottom sheet from the room header (#chatHeadDetails).
 
@@ -46,7 +46,7 @@
   var SNAP_PEEK = 0.58;        /* sheet height as a share of the room, half open */
   var SNAP_FULL = 0.94;        /* fully open */
   var CLOSE_BELOW = 0.32;      /* released lower than this = dismiss */
-  var DESKTOP_MIN = 1045;
+  var DESKTOP_MIN = 1044;
 
   var PAY_STATE = {
     none:       { label: 'No payment requested',       tone: 'muted'   },

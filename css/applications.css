@@ -29,7 +29,7 @@
   transform: translateX(-50%); pointer-events: none;
   background: radial-gradient(closest-side, var(--pt-glow), transparent);
 }
-.ap-container { position: relative; width: min(1112px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
+.ap-container { position: relative; width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 .ap-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); align-items: start; }
 .ap-layout.has-side { grid-template-columns: minmax(0, 1fr) 360px; }
 .ap-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
@@ -210,7 +210,7 @@
 .ap-textarea { height: auto; padding: var(--space-3) var(--space-4); resize: vertical; }
 .ap-error { font-size: var(--text-sm); color: var(--color-danger); }
 
-@media (max-width: 1024px) { .ap-layout.has-side { grid-template-columns: minmax(0, 1fr); } .ap-side { position: static; } }
+@media (max-width: 1043px) { .ap-layout.has-side { grid-template-columns: minmax(0, 1fr); } .ap-side { position: static; } }
 
 .ap-figures > div:empty { display: none; }
 .ap-mobile-only { display: none; }

@@ -31,7 +31,7 @@
 .svc-card .spg-card-media .svc-card-cat {
   position: absolute; top: var(--space-3); left: var(--space-3);
   background: var(--white); color: var(--text-primary);
-  font-size: var(--text-xs); font-weight: 700; padding: 3px 10px; border-radius: 9999px;
+  font-size: var(--text-xs); font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill);
   box-shadow: var(--shadow-sm);
 }
 .svc-card-price-note { font-weight: 600; font-size: var(--text-sm); color: var(--text-muted); }

@@ -29,7 +29,7 @@
   transform: translateX(-50%); pointer-events: none;
   background: radial-gradient(closest-side, var(--pt-glow), transparent);
 }
-.pt-container { position: relative; width: min(1120px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
+.pt-container { position: relative; width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 
 /* ── Top bar: back link (shared with post-service) ───────── */
 .pt-topbar {

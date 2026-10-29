@@ -77,7 +77,7 @@
 
 /* ── Application decision bar ────────────────────────────── */
 .tp-decision { padding: var(--space-3) 0; background: var(--color-bg); border-bottom: 2px solid var(--pt-green); }
-.tp-decision-inner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); width: min(1112px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
+.tp-decision-inner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 .tp-decision-q, .tp-decision-ok { flex: 1; min-width: 0; font-size: var(--text-sm); font-weight: 700; }
 .tp-decision-ok { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--pt-green); }
 .tp-decision-no { color: var(--color-danger); }
@@ -253,7 +253,7 @@
 .tp-actionbar { display: none; }
 
 /* ── Tablet and phones ───────────────────────────────────── */
-@media (max-width: 1024px) {
+@media (max-width: 1043px) {
   .tp-layout { grid-template-columns: minmax(0, 1fr) 320px; }
   .tp-portfolio { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -460,7 +460,7 @@
 /* Mobile action bar (hidden on desktop) */
 .cp-actionbar { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 1043px) {
   .cp-layout { grid-template-columns: minmax(0, 1fr) 320px; }
   .cp-reviews { grid-template-columns: minmax(0, 1fr); }
 }

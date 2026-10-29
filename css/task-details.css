@@ -199,7 +199,7 @@
 /* Phone action bar (hidden on desktop) */
 .td-actionbar { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 1043px) {
   .td-layout { grid-template-columns: minmax(0, 1fr) 320px; }
   .td-checks, .td-logistics { grid-template-columns: minmax(0, 1fr); }
 }

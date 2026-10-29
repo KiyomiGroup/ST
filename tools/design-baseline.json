@@ -3,8 +3,8 @@
     "inline": 7
   },
   "css/styles.css": {
-    "hex": 87,
-    "rgb": 101,
+    "hex": 64,
+    "rgb": 76,
     "important": 77
   },
   "css/subscription.css": {
@@ -66,9 +66,6 @@
   "local-taskers.html": {
     "inline": 30
   },
-  "login.html": {
-    "hex": 8
-  },
   "messages.html": {
     "hex": 1,
     "inline": 3
@@ -78,7 +75,6 @@
     "inline": 13
   },
   "onboarding-tasker.html": {
-    "hex": 8,
     "inline": 1
   },
   "post-service.html": {
@@ -93,7 +89,6 @@
     "inline": 2
   },
   "signup.html": {
-    "hex": 16,
     "inline": 3
   },
   "subscription.html": {

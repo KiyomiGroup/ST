@@ -342,14 +342,14 @@
 .faq-item.open .faq-body { display: block; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .plan-cards-grid { grid-template-columns: 1fr; gap: 14px; }
   .plan-highlighted { transform: none; }
   .plan-highlighted:hover { transform: translateY(-2px); }
   .plan-badge { position: static; transform: none; display: inline-flex; margin-bottom: 12px; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
   .comparison-table th, .comparison-table td { padding: 10px 12px; font-size: var(--text-xs); }
   .comp-feature { min-width: 140px; }
 }

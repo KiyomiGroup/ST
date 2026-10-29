@@ -51,7 +51,7 @@
   transform: translateX(-50%); pointer-events: none;
   background: radial-gradient(closest-side, var(--pt-glow), transparent);
 }
-.wl-container { position: relative; width: min(1120px, calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
+.wl-container { position: relative; width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
 .wl-main { display: flex; flex-direction: column; gap: var(--space-6); }
 
 /* ── Header ──────────────────────────────────────────────── */
@@ -516,7 +516,7 @@ html.wl-lock { overflow: hidden; }
 .wl-safepay-text { margin-top: var(--space-1); font-size: var(--text-xs); line-height: 1.4; color: var(--pt-ink-muted); }
 
 /* Four cards need room: two per row below the full desktop width */
-@media (max-width: 1044px) {
+@media (max-width: 1043px) {
   .wl-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wl-gc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wl-led-head { flex-wrap: wrap; }
@@ -532,7 +532,7 @@ html.wl-lock { overflow: hidden; }
    with the balance cards floating over its bottom edge (four for taskers, the gift card credits card for customers). */
 @media (min-width: 769px) {
   .wl-page:is([data-role="tasker"], [data-role="customer"]) { padding-top: calc(var(--nav-height) + var(--space-5)); }
-  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { width: min(1112px, calc(100% - 2 * var(--page-margin))); }
+  .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-container { width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); }
   .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-header { display: none; }
   .wl-page:is([data-role="tasker"], [data-role="customer"]) .wl-balances {
     position: relative; z-index: 2;

@@ -95,7 +95,7 @@
   (function () {
     var groups = document.querySelectorAll('.footer-accordion');
     function sync() {
-      var isDesktop = window.matchMedia('(min-width: 641px)').matches;
+      var isDesktop = window.matchMedia('(min-width: 769px)').matches;
       groups.forEach(function (d) {
         if (isDesktop) { d.setAttribute('open', ''); }
         else if (!d.dataset.userToggled) { d.removeAttribute('open'); }

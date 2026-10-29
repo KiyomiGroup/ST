@@ -32,6 +32,7 @@
   --color-warning-soft: rgba(217, 119, 6, 0.1);
   --color-danger:       #DC2626;
   --color-danger-soft:  rgba(220, 38, 38, 0.08);
+  --color-danger-border: rgba(220, 38, 38, 0.2);
 
   /* ── Typography ── */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -74,6 +75,7 @@
 
   /* ── Layout ── */
   --page-margin:    60px;     /* side margin on every page: a no-content area */
+  --page-width:     1112px;   /* content width of every page wrapper (.ap-/.bk-/.pt-/.wl-container). .container is 1160 incl. 2x24 padding = 1112 content */
   --nav-max-width:  1312px;   /* logged-out desktop nav, centred */
   --nav-min-width:  1044px;   /* narrowest the full nav row fits */
   --nav-hover-bar:  4px;      /* thickness of the bar above a hovered nav link */
@@ -167,7 +169,7 @@
   --gc-hero-bg:           #013109;   /* hero background */
   --gc-hero-glow-top:     #06431C;   /* soft glow, top right */
   --gc-hero-glow-bottom:  #184E25;   /* soft glow, bottom left */
-  --gc-mint:              #9EF1C2;   /* accent text, primary button, icons */
+  --gc-mint:              var(--pt-mint);   /* accent text, primary button, icons */
   --gc-mint-hover:        #86E3B0;   /* derived: darker step of --gc-mint */
   --gc-text-soft:         #75C798;   /* hero paragraph */
   --gc-chip-bg:           #1A4521;   /* eyebrow chip, mobile chips */
@@ -197,18 +199,18 @@
    (same designer palette) but are kept separate so the pages can diverge.
    Marked "guess" = not readable in the screenshot. */
 :root {
-  --gc-ink:            #1A1C1B;   /* headings, card titles */
-  --gc-ink-muted:      #3F4942;   /* body text, labels */
-  --gc-green:          #004F31;   /* deep green: price, featured buttons, ribbon */
+  --gc-ink:            var(--pt-ink);   /* headings, card titles */
+  --gc-ink-muted:      var(--pt-ink-muted);   /* body text, labels */
+  --gc-green:          var(--pt-green);   /* deep green: price, featured buttons, ribbon */
   --gc-green-mid:      #116C47;   /* standard card button */
   --gc-green-mid-hover:#0D5A3A;   /* derived: darker step of --gc-green-mid */
   --gc-green-text:     #18704B;   /* text on mint chips */
-  --gc-field:          #EEEEEC;   /* idle chips and icon circles */
+  --gc-field:          var(--pt-field-strong);   /* idle chips and icon circles */
   --gc-field-hover:    #E4E4E1;   /* derived: darker step of --gc-field */
   --gc-pill:           #A1F4C5;   /* "100% Flexible" pill */
   --gc-pill-text:      #002112;
   --gc-tile-border:    #F2F2F0;   /* guess: card edge is almost invisible in the design */
-  --gc-tile-rule:      #EEEEEC;   /* guess: rule above the card footer */
+  --gc-tile-rule:      var(--pt-field-strong);   /* guess: rule above the card footer */
   --shadow-gc-tile:    0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);  /* guess: same as --shadow-pt-card */
   --shadow-gc-tile-hover: 0 2px 4px rgba(26, 28, 27, 0.06), 0 16px 32px -14px rgba(26, 28, 27, 0.16);  /* derived */
   --text-gc-body:      var(--text-base);   /* 16px card body */
@@ -219,7 +221,7 @@
    Sampled from the desktop + mobile design screenshots. Most colours reuse
    the --gc-* tokens above; only values that were not covered live here. */
 :root {
-  --gc-cz-bg:       #F4F4F1;   /* section band behind the form and preview */
+  --gc-cz-bg:       var(--pt-field);   /* section band behind the form and preview */
   --gc-cz-card-bg:  #0F5A3C;   /* live preview card base */
 }
 
@@ -408,25 +410,25 @@
    Page-specific: do not reuse elsewhere without a design decision. */
 :root {
   --co-page:          #F1F5F1;   /* page background, top */
-  --co-page-end:      #F9F9F7;   /* page background, bottom */
-  --co-ink:           #1A1C1B;   /* headings, body on light */
-  --co-ink-muted:     #3F4942;   /* secondary text on light */
-  --co-field:         #F4F4F1;   /* inputs, notes, tiles */
-  --co-green:         #004F31;   /* deep green: sign-in button, headings accents */
+  --co-page-end:      var(--pt-page);   /* page background, bottom */
+  --co-ink:           var(--pt-ink);   /* headings, body on light */
+  --co-ink-muted:     var(--pt-ink-muted);   /* secondary text on light */
+  --co-field:         var(--pt-field);   /* inputs, notes, tiles */
+  --co-green:         var(--pt-green);   /* deep green: sign-in button, headings accents */
   --co-green-hover:   #003D26;   /* derived: darker step of --co-green */
   --co-green-mid:     #006A43;   /* active nav item */
   --co-green-bright:  #1A8D61;   /* secondary actions, links */
-  --co-mint:          #9EF1C2;   /* chips, eyebrow dot, accent text on dark */
+  --co-mint:          var(--pt-mint);   /* chips, eyebrow dot, accent text on dark */
   --co-mint-soft:     #D5F3E0;   /* sign-in illustration panel */
-  --co-hero-start:    #0F3D26;   /* hero gradient start (= --color-forest-800) */
+  --co-hero-start:    var(--color-forest-800);   /* hero gradient start (= --color-forest-800) */
   --co-hero-end:      #135332;   /* hero gradient end */
-  --co-hero-text-soft:#C8D9D3;   /* hero paragraph (= --pt-escrow-text) */
+  --co-hero-text-soft:var(--pt-escrow-text);   /* hero paragraph (= --pt-escrow-text) */
   --co-dark:          #0E1713;   /* workspace panel */
   --co-dark-raised:   #15271E;   /* raised row on the dark panel */
   --co-dark-active:   #183125;   /* selected row on the dark panel */
   --co-nav-dark:      #111E17;   /* desktop nav pill, avatar */
-  --co-danger:        #BA1A1A;   /* error text */
-  --co-danger-soft:   #FFDAD6;   /* error banner */
+  --co-danger:        var(--pt-danger);   /* error text */
+  --co-danger-soft:   var(--pt-danger-soft);   /* error banner */
   --co-notice-soft:   #E8F6EF;   /* info banner */
 
   --radius-co-hero:   40px;
@@ -435,4 +437,46 @@
   --shadow-co-panel:  0 24px 48px -16px rgba(0, 0, 0, 0.35);   /* = --shadow-gc-card */
   --co-header-height: 72px;
   --co-bottom-nav-height: 72px;
+}
+
+/* ── Auth pages (login, signup, onboarding): colours that were raw in styles.css ──
+   Same values as before (no visual change). Names mirror the `.av2-page` --auth-* set.
+   Page-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --auth-ink:        #1A1C1B;
+  --auth-body:       #3E4942;
+  --auth-muted:      #6E7A71;
+  --auth-green:      #006A43;
+  --auth-green-mid:  #168A5B;
+  --auth-green-ring: #0F6B46;
+  --auth-border:     #BDCABF;
+  --auth-input-bg:   #EEEEEC;
+  --auth-shadow-sm:  0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --auth-green-deep:       #005938;   /* primary hover on the role cards */
+  --auth-page:             var(--pt-page);        /* #F9F9F7 */
+  --auth-line:             var(--pt-toggle-off);  /* #E2E3E0 */
+  --auth-surface-hover:    #F0F0EE;
+  --auth-line-hover:       #C9CBC7;
+  --auth-text-soft:        #5E6561;
+  --auth-mint-hover-bg:    #F0FBF5;
+  --auth-oauth-hover-border: #9DB09F;
+  --auth-oauth-hover-bg:   #FAFCFA;
+  --auth-grad-start:       #90F7BF;   /* role-icon gradient */
+  --auth-grad-end:         #A1F4C5;
+  --auth-glass-70:         rgba(255, 255, 255, 0.7);
+  --auth-glass-60:         rgba(255, 255, 255, 0.6);
+  --auth-glass-40:         rgba(255, 255, 255, 0.4);
+  --auth-glass-30:         rgba(255, 255, 255, 0.3);
+  --auth-green-mid-a00:    rgba(22, 138, 91, 0);
+  --auth-green-mid-a05:    rgba(22, 138, 91, 0.05);
+  --auth-green-mid-a10:    rgba(22, 138, 91, 0.1);
+  --auth-green-mid-a20:    rgba(22, 138, 91, 0.2);
+  --auth-work-a05:         rgba(17, 108, 71, 0.05);
+  --auth-work-a10:         rgba(17, 108, 71, 0.1);
+  --auth-work-a20:         rgba(17, 108, 71, 0.2);
+  --auth-shadow-xs:        0 8px 15px rgba(0, 0, 0, 0.05);
+  --auth-shadow-lg:        0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --auth-shadow-card:      0 7px 29px rgba(0, 106, 67, 0.05);
+  --auth-shadow-role:      0 8px 32px rgba(22, 138, 91, 0.15);
+  --auth-shadow-panel:     0 8px 32px rgba(22, 138, 91, 0.08);
 }

@@ -19,7 +19,7 @@
 .ep-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-5); align-items: start; }
 .ep-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
 .ep-side { display: flex; flex-direction: column; gap: var(--space-4); position: sticky; top: calc(var(--nav-height) + var(--space-4)); }
-@media (max-width: 1024px) {
+@media (max-width: 1043px) {
   .ep-layout { grid-template-columns: minmax(0, 1fr); }
   .ep-side { position: static; }
 }

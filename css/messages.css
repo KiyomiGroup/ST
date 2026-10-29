@@ -1287,7 +1287,7 @@ body.msg-page {
 }
 
 /* Desktop: list | room | job details */
-@media (min-width: 1045px) {
+@media (min-width: 1044px) {
   .jr-shell {
     grid-template-columns: 340px 1fr 340px;
     gap: var(--space-5);
@@ -1296,9 +1296,9 @@ body.msg-page {
   .jr-detail { display: flex; }
 }
 
-/* Floating bottom nav is visible up to 900px (styles.css). It pads the body,
+/* Floating bottom nav is visible up to 768px (styles.css). It pads the body,
    but this page scrolls inside its panels, so the list carries the space. */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   body.msg-page.st-logged-in { padding-bottom: 0; }
   .msg-sidebar-list { padding-bottom: calc(var(--space-9) + var(--space-5)); }
 }
@@ -1497,15 +1497,6 @@ body.msg-page {
    Order on a phone: task header, status banner, conversation (cards
    inside it), composer; actions and Job Details open as bottom sheets.
    ============================================================ */
-
-/* 769-900px: the floating bottom nav sits over the page, so the whole
-   shell (list, room composer, details) keeps clear of it. */
-@media (min-width: 769px) and (max-width: 900px) {
-  .jr-shell { padding-bottom: calc(var(--space-9) + var(--space-5)); }
-  .msg-sidebar-list { padding-bottom: var(--space-3); }
-  .msg-req-label { display: none; }
-  .msg-pay-request-btn { padding: var(--space-2) var(--space-3); }
-}
 
 @media (max-width: 768px) {
   /* Header: the task title may use two lines instead of being cut off */
@@ -1865,7 +1856,7 @@ body.msg-page {
 .jr-dt-event-note { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); overflow-wrap: anywhere; }
 .jr-dt-event-meta { margin-top: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
 
-/* Bottom sheet (below 1045px). Height is set at runtime by the drag handler. */
+/* Bottom sheet (below 1044px). Height is set at runtime by the drag handler. */
 .jr-dsheet-layer { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
 .jr-dsheet {
   position: relative;
@@ -1908,7 +1899,7 @@ body.msg-page {
 }
 
 /* The header button only exists where the third column does not */
-@media (min-width: 1045px) {
+@media (min-width: 1044px) {
   .jr-head-details { display: none; }
   .jr-dsheet-layer { display: none; }
 }
@@ -2190,4 +2181,4 @@ body.msg-page {
   color: var(--color-primary);
   cursor: pointer;
 }
-@media (min-width: 1045px) { .jr-jobdrop-full { display: none; } }   /* the details column is already open there */
+@media (min-width: 1044px) { .jr-jobdrop-full { display: none; } }   /* the details column is already open there */

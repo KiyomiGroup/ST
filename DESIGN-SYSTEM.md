@@ -13,6 +13,8 @@ Single source of truth for how StreetTasker looks and is built. Every human and 
 | 1 | **Primary button green** | `#0F6B46`. Hover is `#0B5638` (a darker step I derived; change `--color-primary-hover` if you have a Figma value). |
 | 2 | **Fonts** | Manrope for headings, buttons and nav; Inter for body text. |
 | 3 | **Breakpoints** | 480, 768 and 1044px (section 6). |
+| 4 | **Page width** (2026-10-29) | Every page wrapper is `--page-width` = 1112px of content, with the 60px `--page-margin` each side. `.container` (max 1160 with 24px padding) already gives 1112px of content on desktop, so it is unchanged. |
+| 5 | **Pill radius** (2026-10-29) | `--radius-pill` is now 999px in code (it was 100px) and literal 99 / 100 / 9999px pill radii use the token. |
 
 **Single source:** the old tokens in `styles.css` that have the same value as a new token (`--text-primary`, `--border`, `--bg`, `--amber`, `--red`, `--font` and others) now point at the new tokens, so changing a value in `tokens.css` updates both.
 
@@ -142,6 +144,8 @@ Keep the existing `--shadow-xs` through `--shadow-xl`, `--ease` and `--t` (0.18s
 | `.container` | max 1160px | 24px (16px on mobile) | Default page content |
 | `.container-home` | max 1440px | 60px | Homepage sections only |
 | Nav inner | 1312px | 10px | Logged-out desktop nav only (section 5) |
+
+**Page width:** `--page-width` (1112px) is the content width of `.ap-container`, `.bk-container`, `.pt-container`, `.wl-container`, `.tp-decision-inner` and the dashboard `.tov` blocks. Do not type 1112 or 1120 in a page.
 
 **Page margin:** every page keeps a 60px no-content margin on each side (`--page-margin`). The logged-out nav is 1312px wide and centred, but on screens narrower than 1432px it becomes `100% - 120px` wide so the 60px margin stays. The margin only shrinks below 60px when the screen is under 1164px wide, because the nav row needs at least 1044px (`--nav-min-width`).
 
@@ -302,7 +306,9 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 | `md` | `max-width: 768px` | Mobile layout, mobile nav |
 | `lg` | `min-width: 1044px` | Full desktop nav row fits |
 
-Existing 900, 700, 640, 600 and 560px queries should be moved to the nearest of these. Do this per page with testing, not as a global find-and-replace.
+**Migrated 2026-10-29** (all pages except the two dashboards): 560 and 600 became 480; 640, 700, 767, 860 and 900 (including 899.98 and 901) became 768 / 769; 1024 and 1044 became 1043; min-width 600 became 481, 640 became 768, 641 / 900 / 901 became 769, 1045 became 1044. JavaScript `matchMedia` values that mirror them were changed too (`find-tasks.html`, `components/footer.html`, `js/messages-details.js`). The two tablet-only blocks (769 to 900px) in `messages.css` and `home-feed.html` were removed because the floating bottom nav now ends at 768px.
+
+**Still off-spec on purpose or pending:** 380px (`bookings.css`, tiny phones), 1164px (`post-task.css`, the width where the 60px page margin starts to shrink), and the 700px queries inside `dashboard-customer.html` and `dashboard-tasker.html` (dashboards are last).
 
 ---
 
@@ -352,3 +358,11 @@ Existing 900, 700, 640, 600 and 560px queries should be moved to the nearest of 
 ## Coordinator portal tokens (Stage 3A, added 2026-10-26)
 
 `css/tokens.css` now has a `--co-*` block (colours, `--radius-co-*`, `--shadow-co-*`, header and bottom-nav heights) used only by `coordinator-login.html`, `coordinator-dashboard.html`, `css/coordinator.css` and the coordinator components. Values were sampled from the owner's coordinator design screens (no Figma values), so they are approximations; replace them in `tokens.css` if exact Figma values exist. Same rule as the Post a Task and Gift Cards blocks: page-specific, do not reuse elsewhere without a design decision.
+
+---
+
+## Palette merge and auth tokens (2026-10-29)
+
+- `--gc-*` and `--co-*` values that were identical to a `--pt-*` or `--color-forest-*` value now alias it (for example `--co-green` and `--gc-green` are `var(--pt-green)`, `--co-hero-start` is `var(--color-forest-800)`). Computed values are unchanged (checked: all 367 custom properties resolve to the same value before and after). Change the `--pt-*` value and the gift cards and coordinator portal follow.
+- New "Auth pages" block in `css/tokens.css`: the raw colours that login, signup and onboarding-tasker used in `styles.css` (including the `--auth-*` set that lived inside `.av2-page`) are now tokens with the same values. Added `--color-danger-border` (rgba 220,38,38,0.2) to the core set.
+- The Google "G" logo (four brand colours) moved from inline SVG to `images/google-g.svg`. Those colours belong to Google and are not part of the palette.
