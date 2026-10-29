@@ -12,7 +12,7 @@
 
 (function () {
   var esc = window.escapeHtml || function (s) { return String(s == null ? '' : s); };
-  var S = { by: {}, ui: {}, ids: {}, busy: {}, err: {}, opts: null };
+  var S = { by: {}, ms: {}, ui: {}, ids: {}, busy: {}, err: {}, opts: null };
   var naira = function (n) { return '₦' + Number(n || 0).toLocaleString('en-NG'); };
   var icon = function (id) { return '<svg class="bk-i" aria-hidden="true"><use href="#i-' + id + '"/></svg>'; };
   var REASON_MAX = 300;
@@ -24,7 +24,7 @@
 
   /* ── data ───────────────────────────────────────────────── */
   async function load() {
-    S.by = {};
+    S.by = {}; S.ms = {};
     try {
       var res = await window.supabase.rpc('local_booking_customer_quotes', { p_booking: null });
       if (res.error) throw res.error;
@@ -33,6 +33,12 @@
       /* The page still works without quotes: an ordinary booking never has one, and the Job Room is unchanged. */
       console.error('[customer quote]', e);
     }
+    /* Stage 5D-2: what the coordinator recorded on the day (read only). Never blocks the page. */
+    try {
+      var mr = await window.supabase.rpc('local_booking_customer_milestones', { p_booking: null });
+      if (mr.error) throw mr.error;
+      (mr.data || []).forEach(function (m) { if (m && m.booking_id) S.ms[m.booking_id] = m.items || []; });
+    } catch (e2) { console.error('[customer milestones]', e2); }
   }
   function get(id) { return S.by[id] || null; }
 
@@ -134,9 +140,24 @@
     return head + body + errBox(id);
   }
 
+  var MS_LABEL = { address_confirmed: 'Address confirmed', arrived: 'Arrived', started: 'Work started', finished: 'Work finished' };
+  function when(iso) {
+    var d = new Date(iso); if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  }
+  /* the day-of-the-job steps the coordinator recorded; empty until the first one */
+  function progressHtml(id) {
+    var items = S.ms[id]; if (!items || !items.length) return '';
+    var rows = items.map(function (x) {
+      return '<li class="bk-ms-item"><span class="bk-ms-name">' + esc(MS_LABEL[x.kind] || '') + '</span><span class="bk-q-help">' + esc(when(x.happened_at)) + '</span></li>';
+    }).join('');
+    return '<section class="bk-q bk-ms" aria-label="Progress on the day"><h3 class="bk-q-title">Progress on the day</h3>' +
+      '<p class="bk-q-sub">Recorded by your coordinator after speaking to the Local Tasker.</p><ul class="bk-ms-list">' + rows + '</ul></section>';
+  }
+
   function html(id) {
     if (!get(id)) return '';
-    return '<section class="bk-q" data-qbox="' + esc(id) + '" aria-label="Quote">' + inner(id) + '</section>';
+    return '<section class="bk-q" data-qbox="' + esc(id) + '" aria-label="Quote">' + inner(id) + '</section>' + progressHtml(id);
   }
 
   function redraw(id) {

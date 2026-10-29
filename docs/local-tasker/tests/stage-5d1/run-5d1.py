@@ -65,7 +65,7 @@ async def main():
         d = (await p.evaluate('window.__decide'))[0]
         check('approve: exact arguments (booking, version 2, uuid, approved, no reason)', d['p_booking'] == uid(1) and d['p_version'] == 2 and d['p_decision'] == 'approved' and d['p_reason'] is None and re.match(r'^[0-9a-f-]{36}$', d['p_request_id']) and len(d) == 5, d)
         check('approve: page re-read the quotes and now shows Quote approved with Pay in Job Room and Payment Needed', 'Quote approved' in await p.inner_text(box(1)) and 'Payment Needed' in await p.inner_text(card(1) + ' .bk-badge') and 'Pay in Chat' in await p.inner_text(card(1) + ' > .bk-actions'), (await p.inner_text(card(1) + ' .bk-badge')) + ' / ' + (await p.inner_text(card(1) + ' > .bk-actions')))
-        check('approve: only the two quote calls were made, and no table was written', set(x.split(':')[0] for x in await rpcs(p)) == {'local_booking_customer_quotes', 'local_booking_decide_quote'} and not errs, errs)
+        check('approve: only the two quote calls and the read-only milestones read were made, and no table was written', set(x.split(':')[0] for x in await rpcs(p)) == {'local_booking_customer_quotes', 'local_booking_decide_quote', 'local_booking_customer_milestones'} and not errs, errs)
 
         t2 = await p.inner_text(box(2))
         check('approved quote: each line shows its payment state (to pay, paid, declined, failed)', 'To pay' in t2 and 'Paid' in t2 and 'Declined' in t2 and 'try again' in t2, t2.replace('\n', ' | '))

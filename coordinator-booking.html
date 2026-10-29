@@ -218,6 +218,30 @@
           </div>
         </section>
 
+        <section class="co-card" id="coMs" aria-labelledby="coMsTitle" hidden>
+          <h2 class="co-card-title" id="coMsTitle">On the day</h2>
+          <p class="co-card-lead" id="coMsLead"></p>
+          <div class="co-banner" id="coMsError" role="alert" hidden><span id="coMsErrorText"></span></div>
+          <ul class="co-bk-history" id="coMsList"></ul>
+          <form class="co-form" id="coMsForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coMsWhen" id="coMsWhenLabel">When did it happen?</label>
+              <input class="form-input" type="datetime-local" id="coMsWhen" aria-describedby="coMsWhenHelp coMsWhenErr" />
+              <p class="form-helper" id="coMsWhenHelp">The time the Local Tasker told you. It can be up to 3 days back, and not before the step above.</p>
+              <p class="co-field-error" id="coMsWhenErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coMsNote">Note (optional)</label>
+              <input class="form-input" type="text" id="coMsNote" maxlength="300" autocomplete="off" aria-describedby="coMsNoteErr" />
+              <p class="co-field-error" id="coMsNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coMsSubmit">Record</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coMsFoot">Recording a step only writes it down. It never changes a payment, and it does not mark the job as done.</p>
+        </section>
+
         <section class="co-card" aria-labelledby="coBdJobTitle">
           <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
           <dl class="co-facts" id="coBdJob"></dl>
@@ -257,6 +281,7 @@
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-confirmation.js"></script>
   <script src="js/coordinator-quote.js"></script>
+  <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>
