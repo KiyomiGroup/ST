@@ -340,6 +340,59 @@
           <p class="co-consent-meta" id="coCoFoot">Cancelling only works when nothing has been paid. It never moves money. A problem report is opened in the Local Tasker’s name and is decided by StreetTasker support.</p>
         </section>
 
+        <section class="co-card" id="coXt" aria-labelledby="coXtTitle" hidden>
+          <h2 class="co-card-title" id="coXtTitle">Extra costs</h2>
+          <p class="co-card-lead" id="coXtLead"></p>
+          <div class="co-banner" id="coXtError" role="alert" hidden><span id="coXtErrorText"></span></div>
+          <ul class="co-bk-history" id="coXtList"></ul>
+          <form class="co-form" id="coXtForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coXtKind">What is the extra cost for?</label>
+              <select class="form-select" id="coXtKind" aria-describedby="coXtKindErr">
+                <option value="">Choose one</option>
+                <option value="additional_cost">Extra work</option>
+                <option value="materials">Materials</option>
+                <option value="transport">Transport</option>
+              </select>
+              <p class="co-field-error" id="coXtKindErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtAmount">Amount (₦)</label>
+              <input class="form-input" type="text" inputmode="numeric" id="coXtAmount" autocomplete="off" aria-describedby="coXtAmountHelp coXtAmountErr" />
+              <p class="form-helper" id="coXtAmountHelp"></p>
+              <p class="co-field-error" id="coXtAmountErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtTitleIn">Short title the customer will see</label>
+              <input class="form-input" type="text" id="coXtTitleIn" maxlength="60" autocomplete="off" aria-describedby="coXtTitleInErr" />
+              <p class="co-field-error" id="coXtTitleInErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtDetails">Details the customer will see</label>
+              <textarea class="form-textarea" id="coXtDetails" maxlength="300" aria-describedby="coXtDetailsErr"></textarea>
+              <p class="co-field-error" id="coXtDetailsErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtHow">How did the Local Tasker confirm this cost to you?</label>
+              <select class="form-select" id="coXtHow" aria-describedby="coXtHowErr">
+                <option value="">Choose one</option>
+                <option value="phone_call">On a phone call</option>
+                <option value="in_person">In person</option>
+                <option value="message">By message</option>
+              </select>
+              <p class="co-field-error" id="coXtHowErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="co-check" for="coXtSure"><input type="checkbox" id="coXtSure" aria-describedby="coXtSureErr" /><span>The Local Tasker confirmed this cost. I understand the customer is asked to pay it and can decline.</span></label>
+              <p class="co-field-error" id="coXtSureErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coXtSubmit">Ask the customer to pay</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">The customer pays or declines in their Job Room. This never changes the agreed price and never moves money. To lower a price, report a problem so support can decide.</p>
+        </section>
+
         <section class="co-card" aria-labelledby="coBdJobTitle">
           <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
           <dl class="co-facts" id="coBdJob"></dl>
@@ -382,6 +435,7 @@
   <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-exceptions.js"></script>
   <script src="js/coordinator-closeout.js"></script>
+  <script src="js/coordinator-extras.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>
