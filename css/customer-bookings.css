@@ -7,7 +7,8 @@
 
    1. Pay dialog (price summary, wallet / gift / Paystack options)
    2. Completion code reveal, issue textarea
-   3. Mobile pass
+   3. Local Tasker quote inside a booking card (Stage 5D-1, js/customer-quote.js)
+   4. Mobile pass
    ============================================================ */
 
 /* .bk-btn sets display, which would otherwise beat the hidden attribute (Load More, wallet button) */
@@ -44,10 +45,26 @@
 /* Report Issue sits quietly next to the main action, like Decline on the provider page */
 .bk-btn-quiet.is-danger { color: var(--color-danger); }
 
+/* ── Local Tasker quote (Stage 5D-1) ─────────────────────── */
+.bk-q { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--pt-field-icon); border-radius: var(--radius-lg); }
+.bk-q-title { margin: 0; font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; letter-spacing: -0.02em; }
+.bk-q-sub, .bk-q-note, .bk-q-panel-text { margin: 0; font-size: var(--text-sm); line-height: 20px; color: var(--pt-ink-muted); overflow-wrap: anywhere; }
+.bk-q-note strong { color: var(--pt-ink); font-family: var(--font-heading); }
+.bk-q-panel { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--pt-field); }
+.bk-q-panel .bk-textarea { background: var(--color-bg); min-height: 88px; }
+.bk-q-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
+.bk-q-help { margin: 0; font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.bk-q-state { display: inline-block; margin-left: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--pt-field-strong); color: var(--pt-ink-muted); font-size: var(--text-xs); font-weight: 700; }
+.bk-q-state.is-paid { background: var(--pt-mint); color: var(--pt-green); }
+.bk-q-state.is-pending, .bk-q-state.is-failed, .bk-q-state.is-processing { background: var(--color-warning-soft); color: var(--color-warning); }
+.bk-q-error { margin: 0; }
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .bk-pay-opt { flex-direction: column; align-items: stretch; }
   .bk-pay-opt .bk-btn { width: 100%; height: 44px; }
   .bk-code-show { font-size: var(--text-xl); }
   .bk-textarea { font-size: var(--text-base); } /* 16px stops iOS zooming into the field */
+  .bk-q { padding: var(--space-3); }
+  .bk-q .bk-actions .bk-btn { flex: 1 1 auto; height: 44px; }
 }

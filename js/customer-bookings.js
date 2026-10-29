@@ -9,6 +9,9 @@
      release code and problem reports all happen in the chat, so this page never moves money or job status.
    - Sidebar snapshot worked out from all loaded bookings, ignoring the filters.
 
+   Stage 5D-1: a booking made with a Local Tasker can have a QUOTE from the coordinator. js/customer-quote.js shows it inside
+   the booking card (approve or decline). Approving creates the payment requests in the job room; paying stays in the chat.
+
    Job flow (one flow, in the chat): pending -> confirmed (tasker accepts; the server posts the payment request
    in the chat) -> paid (you pay in the chat, money held in escrow) -> awaiting_confirmation (tasker marked it
    done; you review and get your release code in the chat) -> completed (tasker enters the code, payout released).
@@ -150,6 +153,7 @@
     var people = await lookup('users', ['id,name,first_name,last_name,business_name,avatar_url', 'id,name,avatar_url', 'id,name'], providerIds, 'id');
     var tasks = await lookup('tasks', ['id,title,description,budget,location,category'], unique(rows, 'task_id'), 'id');
     var services = await lookup('services', ['*'], unique(rows, 'service_id'), 'id');
+    if (window.STCustQuote) await window.STCustQuote.load();   /* never throws: a page without quotes still works */
 
     return rows.map(function (b) {
       var t = tasks[b.task_id] || {};
@@ -167,7 +171,7 @@
         ref: refOf(b.id),
         group: group(b),
         disputed: isDisputed(b),
-        label: label(b),
+        label: (!isDisputed(b) && window.STCustQuote && window.STCustQuote.label(b.id)) || label(b),
         title: title,
         provider: provider,
         avatar: safeUrl(tp.photo_url || u.avatar_url || ''),
@@ -289,6 +293,8 @@
   function hint(v) {
     var b = v.raw;
     if (v.disputed) return { tone: 'danger', text: 'A problem report is open. Payment stays on hold while our team reviews it. Follow it in the job room.' };
+    var qh = window.STCustQuote && window.STCustQuote.hint(v.id);
+    if (qh) return qh;
     switch (v.group) {
       case 'pending':  return { tone: '', text: 'Waiting for the tasker to confirm. You won\u2019t be charged until you pay.' };
       case 'progress': return isPaid(b)
@@ -318,7 +324,7 @@
 
   /* ONE button. Everything else (pay, review, release code, report a problem) lives in the job room. */
   function actions(v) {
-    var id = esc(v.id), needsPay = v.group === 'progress' && !isPaid(v.raw) && !v.disputed;
+    var id = esc(v.id), needsPay = (v.group === 'progress' && !isPaid(v.raw) && !v.disputed) || (!v.disputed && !!window.STCustQuote && window.STCustQuote.needsPay(v.id));
     var primary = needsPay || (v.group === 'signoff' && !v.disputed);
     return '<button type="button" class="bk-btn' + (primary ? ' bk-btn-primary' : '') + '" data-act="room" data-id="' + id + '">' + icon(needsPay ? 'lock' : 'chat') +
       (needsPay ? 'Pay in Chat' : v.group === 'signoff' && !v.disputed ? 'Review in Job Room' : 'Open Job Room') + '</button>';
@@ -344,6 +350,7 @@
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +
       figures(v) +
       (v.note ? '<p class="bk-quote"><strong>Your note:</strong> \u201C' + esc(v.note) + '\u201D</p>' : '') +
+      (window.STCustQuote ? window.STCustQuote.html(v.id) : '') +
       (h ? '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' : '') +
       (links ? '<div class="bk-actions">' + links + '</div>' : '') +
     '</article>';
@@ -368,9 +375,13 @@
 
   /* Sidebar numbers come from every loaded booking, ignoring the filters */
   function renderSide() {
-    var pending = 0, active = 0, done = 0, escrow = 0, toPay = 0, spent = 0, toPayN = 0, toFinishN = 0;
+    var pending = 0, active = 0, done = 0, escrow = 0, toPay = 0, spent = 0, toPayN = 0, toFinishN = 0, quoteN = 0;
     state.rows.forEach(function (v) {
       var price = v.amount || v.budget;
+      if (window.STCustQuote && !v.disputed) {
+        if (window.STCustQuote.due(v.id)) quoteN++;                                        /* a quote waits for your answer */
+        else if (v.group === 'pending' && window.STCustQuote.needsPay(v.id)) toPayN++;     /* approved, payment requests waiting */
+      }
       if (v.group === 'pending') pending++;
       else if (v.group === 'completed') { done++; spent += v.amount; }
       else if (v.group === 'progress' || v.group === 'signoff') {
@@ -382,9 +393,9 @@
         else if (v.group === 'signoff' && !codeLocked(v.raw)) toFinishN++;
       }
     });
-    var action = toPayN + toFinishN;
+    var action = toPayN + toFinishN + quoteN;
     $('sAction').textContent = action;
-    $('sActionSub').textContent = action ? (toPayN ? toPayN + ' to pay' : '') + (toPayN && toFinishN ? ' \u2022 ' : '') + (toFinishN ? toFinishN + ' to review' : '') : 'all caught up';
+    $('sActionSub').textContent = action ? [toPayN ? toPayN + ' to pay' : '', quoteN ? quoteN + (quoteN === 1 ? ' quote' : ' quotes') + ' to answer' : '', toFinishN ? toFinishN + ' to review' : ''].filter(Boolean).join(' \u2022 ') : 'all caught up';
     $('sActive').textContent = active;
     $('sActiveSub').textContent = pending ? pending + ' awaiting provider' : 'in progress';
     $('sEscrow').textContent = naira(escrow);
@@ -494,6 +505,7 @@
       start();
     }
   });
+  if (window.STCustQuote) window.STCustQuote.bind($('bkList'), { refresh: refresh, openRoom: function (id) { var v = find(id); if (v) openChat(v); } });
   $('bkFilterBtn').addEventListener('click', function () {
     var open = $('bkToolbar').classList.toggle('is-open');
     this.setAttribute('aria-expanded', open ? 'true' : 'false');

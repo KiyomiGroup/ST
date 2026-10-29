@@ -1,7 +1,7 @@
 /* ============================================================
    StreetTasker — coordinator-quote.js (Stage 5C-2)
    The "The quote" card on the coordinator booking page.
-   Reads:  rpc local_booking_quote(p_booking)       (current quote with its lines, what the confirmation allows, earlier versions)
+   Reads:  rpc local_booking_quote(p_booking)       (current quote with its lines, what the confirmation allows, earlier versions, and (5D-1) the customer's decision and reason)
    Writes: rpc local_booking_send_quote(...)        (the ONLY way to reach "quote sent")
    The service fee is shown, never typed: the database copies it from the Local Tasker's recorded price. Transport and
    materials can only go down from what the Local Tasker said. The total on screen is a preview; the database works out
@@ -80,7 +80,8 @@
     if (canBuild) {
       var needSecond = conf.second_check_status === 'requested' || conf.second_check_status === 'failed';
       $('coQtLead').textContent = st === 'quote_declined'
-        ? 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.'
+        ? 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.' +
+          (cur && cur.decision && cur.decision.reason ? ' Their reason: “' + cur.decision.reason + '”.' : '')
         : 'Check the figures below, then send the quote. The service fee is the Local Tasker’s own price.';
       if (needSecond) {
         $('coQtLead').textContent = 'An administrator call-back to the Local Tasker is still needed before a quote can be sent.';
@@ -92,7 +93,7 @@
     } else if (cur) {
       renderLines($('coQtLines'), cur);
       $('coQtLead').textContent = 'Quote version ' + cur.version + (cur.created_at ? ' · ' + B.dateTime(cur.created_at) : '');
-      $('coQtStatusNote').textContent = st === 'quote_approved' ? 'The customer approved this quote.' : st === 'quote_sent' ? 'Waiting for the customer to approve. To change the price, record a new answer from the Local Tasker.' : '';
+      $('coQtStatusNote').textContent = st === 'quote_approved' ? 'The customer approved this quote. Their payment requests are now waiting in the job room.' : st === 'quote_sent' ? 'Waiting for the customer to approve. To change the price, record a new answer from the Local Tasker.' : '';
       $('coQtSummary').hidden = false;
     } else {
       card.hidden = true; return;
