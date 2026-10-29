@@ -271,7 +271,73 @@
               <button type="submit" class="btn btn-primary" id="coExSubmit">Record</button>
             </div>
           </form>
-          <p class="co-consent-meta" id="coExFoot">Recording this only writes it down. It never changes a payment and it does not cancel the booking. Cancelling and problem reports come in the next stage.</p>
+          <p class="co-consent-meta" id="coExFoot">Recording this only writes it down. It never changes a payment and it does not cancel the booking. To cancel, or to report a problem, use the card below.</p>
+        </section>
+
+        <section class="co-card" id="coCo" aria-labelledby="coCoTitle" hidden>
+          <h2 class="co-card-title" id="coCoTitle">Cancel or report a problem</h2>
+          <p class="co-card-lead" id="coCoLead"></p>
+          <div class="co-banner" id="coCoError" role="alert" hidden><span id="coCoErrorText"></span></div>
+          <p class="co-card-lead" id="coCoCancelled" hidden></p>
+          <ul class="co-bk-history" id="coCoList"></ul>
+          <form class="co-form" id="coCoForm" novalidate hidden>
+            <fieldset class="form-group co-fieldset" id="coCoKinds">
+              <legend class="form-label">What do you want to do?</legend>
+              <label class="co-check" for="coCoCancel"><input type="radio" name="coCoKind" id="coCoCancel" value="cancel" /><span>Cancel this booking</span></label>
+              <p class="form-helper" id="coCoCancelWhy" hidden></p>
+              <label class="co-check" for="coCoReport"><input type="radio" name="coCoKind" id="coCoReport" value="report" /><span>Report a problem for the Local Tasker</span></label>
+              <p class="form-helper" id="coCoReportWhy" hidden></p>
+              <p class="co-field-error" id="coCoKindErr" hidden></p>
+            </fieldset>
+            <div id="coCoCancelFields" hidden>
+              <div class="form-group">
+                <label class="form-label" for="coCoReason">Why is it being cancelled?</label>
+                <select class="form-select" id="coCoReason" aria-describedby="coCoReasonErr">
+                  <option value="">Choose a reason</option>
+                  <option value="customer_asked">The customer asked to cancel</option>
+                  <option value="customer_unreachable">The customer could not be reached</option>
+                  <option value="tasker_unavailable">The Local Tasker is not available</option>
+                  <option value="tasker_no_show">The Local Tasker did not come</option>
+                  <option value="other">Something else</option>
+                </select>
+                <p class="co-field-error" id="coCoReasonErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCoNote">Note the customer will see (needed for “Something else”)</label>
+                <input class="form-input" type="text" id="coCoNote" maxlength="300" autocomplete="off" aria-describedby="coCoNoteErr" />
+                <p class="co-field-error" id="coCoNoteErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="co-check" for="coCoSure"><input type="checkbox" id="coCoSure" aria-describedby="coCoSureErr" /><span>I understand this ends the booking and tells the customer. It can’t be undone.</span></label>
+                <p class="co-field-error" id="coCoSureErr" hidden></p>
+              </div>
+            </div>
+            <div id="coCoReportFields" hidden>
+              <div class="form-group">
+                <label class="form-label" for="coCoCategory">What is the problem about?</label>
+                <select class="form-select" id="coCoCategory" aria-describedby="coCoCategoryErr">
+                  <option value="">Choose one</option>
+                  <option value="not_done">The work was not done</option>
+                  <option value="poor_quality">The work was poor quality</option>
+                  <option value="no_show">Someone did not turn up</option>
+                  <option value="wrong_amount">The amount is wrong</option>
+                  <option value="payment_issue">A payment problem</option>
+                  <option value="other">Something else</option>
+                </select>
+                <p class="co-field-error" id="coCoCategoryErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCoDesc">What happened?</label>
+                <textarea class="form-textarea" id="coCoDesc" maxlength="1000" aria-describedby="coCoDescHelp coCoDescErr"></textarea>
+                <p class="form-helper" id="coCoDescHelp">10 to 1000 characters. Support reads this and decides. The customer is told a report was opened, and payments on this booking are paused until it is decided.</p>
+                <p class="co-field-error" id="coCoDescErr" hidden></p>
+              </div>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coCoSubmit">Continue</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coCoFoot">Cancelling only works when nothing has been paid. It never moves money. A problem report is opened in the Local Tasker’s name and is decided by StreetTasker support.</p>
         </section>
 
         <section class="co-card" aria-labelledby="coBdJobTitle">
@@ -315,6 +381,7 @@
   <script src="js/coordinator-quote.js"></script>
   <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-exceptions.js"></script>
+  <script src="js/coordinator-closeout.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>

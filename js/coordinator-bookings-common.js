@@ -89,6 +89,9 @@
     }
     if (e.kind === 'milestone') return ({ address_confirmed: 'Address confirmed', arrived: 'Arrived', started: 'Work started', finished: 'Work finished' })[e.to_status] || 'Step on the day recorded';
     if (e.kind === 'exception') return ({ customer_unreachable: 'Customer could not be reached', tasker_no_show: 'Local Tasker did not come' })[e.to_status] || 'Exception recorded';
+    if (e.kind === 'cancelled') return 'Booking cancelled' + (({ customer_asked: ': the customer asked', customer_unreachable: ': the customer could not be reached', tasker_unavailable: ': the Local Tasker is not available', tasker_no_show: ': the Local Tasker did not come' })[e.to_status] || '');
+    if (e.kind === 'problem_reported') return 'Problem reported for the Local Tasker';
+    if (e.kind === 'problem_withdrawn') return 'Problem report withdrawn';
     return EVENT_LABEL[e.kind] || sentence(e.kind);
   }
   function ref(id) { return '#' + String(id || '').replace(/-/g, '').slice(0, 8).toUpperCase(); }
