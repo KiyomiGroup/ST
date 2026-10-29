@@ -25,6 +25,7 @@
     not_approved: 'The customer has not approved the quote yet.',
     payment_needed: 'The customer has not paid yet, so the work cannot be marked as started.',
     dispute_open: 'A problem report is open on this booking. Nothing can be recorded right now.',
+    no_show: 'A no-show is on record for this booking, so no step can be recorded. Send the booking back to the Local Tasker for a new answer if the job is going ahead.',
     booking_closed: 'This booking is closed.',
     all_recorded: 'All four steps are recorded. The job is finished from your side; the customer’s release code and the payout come next.'
   };
@@ -72,6 +73,7 @@
     if (hint === 'not_found' || /not found/i.test(msg)) return 'This booking is no longer yours, or it can’t be found.';
     if (hint === 'booking_closed') return 'This booking is closed, so nothing can be recorded.';
     if (hint === 'dispute_open') return 'A problem report is open on this booking, so nothing can be recorded right now.';
+    if (hint === 'no_show_standing') return 'A no-show is on record for this booking, so no step can be recorded.';
     if (hint === 'not_approved') return 'The customer has not approved the quote yet.';
     if (hint === 'payment_needed') return 'The customer has not paid yet, so the work cannot be marked as started.';
     if (hint === 'already_recorded' || hint === 'out_of_order') return 'That step has changed since you opened the page. We have reloaded it.';
@@ -107,7 +109,7 @@
       ctx.reload();
     } catch (err) {
       var h = err && err.hint;
-      if (h === 'already_recorded' || h === 'out_of_order' || h === 'not_approved' || h === 'payment_needed' || h === 'dispute_open' || h === 'booking_closed') {
+      if (h === 'already_recorded' || h === 'out_of_order' || h === 'not_approved' || h === 'payment_needed' || h === 'dispute_open' || h === 'booking_closed' || h === 'no_show_standing') {
         delete ids[kind];
         try { await load(); render(); } catch (e2) { /* keep the message below */ }
       }

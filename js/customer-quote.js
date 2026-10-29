@@ -24,7 +24,7 @@
 
   /* ── data ───────────────────────────────────────────────── */
   async function load() {
-    S.by = {}; S.ms = {};
+    S.by = {}; S.ms = {}; S.ex = {};
     try {
       var res = await window.supabase.rpc('local_booking_customer_quotes', { p_booking: null });
       if (res.error) throw res.error;
@@ -39,6 +39,12 @@
       if (mr.error) throw mr.error;
       (mr.data || []).forEach(function (m) { if (m && m.booking_id) S.ms[m.booking_id] = m.items || []; });
     } catch (e2) { console.error('[customer milestones]', e2); }
+    /* Stage 5D-3a: exceptions the coordinator recorded (customer could not be reached, Local Tasker did not come). Never blocks the page. */
+    try {
+      var xr = await window.supabase.rpc('local_booking_customer_exceptions', { p_booking: null });
+      if (xr.error) throw xr.error;
+      (xr.data || []).forEach(function (m) { if (m && m.booking_id) S.ex[m.booking_id] = m.items || []; });
+    } catch (e3) { console.error('[customer exceptions]', e3); }
   }
   function get(id) { return S.by[id] || null; }
 
@@ -146,13 +152,20 @@
     return d.toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
   }
   /* the day-of-the-job steps the coordinator recorded; empty until the first one */
+  var EX_TEXT = { customer_unreachable: 'We tried to reach you and could not', tasker_no_show: 'The Local Tasker did not arrive as agreed' };
   function progressHtml(id) {
-    var items = S.ms[id]; if (!items || !items.length) return '';
+    var items = S.ms[id] || [], ex = S.ex[id] || [];
+    if (!items.length && !ex.length) return '';
     var rows = items.map(function (x) {
       return '<li class="bk-ms-item"><span class="bk-ms-name">' + esc(MS_LABEL[x.kind] || '') + '</span><span class="bk-q-help">' + esc(when(x.happened_at)) + '</span></li>';
     }).join('');
+    var exRows = ex.map(function (x) {
+      return '<li class="bk-ms-item bk-ms-item-alert"><span class="bk-ms-name">' + esc(EX_TEXT[x.kind] || 'Something went wrong') + '</span><span class="bk-q-help">' + esc(when(x.happened_at)) + '</span></li>';
+    }).join('');
+    var sub = items.length ? 'Recorded by your coordinator after speaking to the Local Tasker.' : 'Recorded by your coordinator.';
+    var tail = ex.length ? '<p class="bk-q-sub">Your coordinator is following this up. This note does not change any payment.</p>' : '';
     return '<section class="bk-q bk-ms" aria-label="Progress on the day"><h3 class="bk-q-title">Progress on the day</h3>' +
-      '<p class="bk-q-sub">Recorded by your coordinator after speaking to the Local Tasker.</p><ul class="bk-ms-list">' + rows + '</ul></section>';
+      '<p class="bk-q-sub">' + sub + '</p><ul class="bk-ms-list">' + rows + exRows + '</ul>' + tail + '</section>';
   }
 
   function html(id) {

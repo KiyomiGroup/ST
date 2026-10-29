@@ -242,6 +242,38 @@
           <p class="co-consent-meta" id="coMsFoot">Recording a step only writes it down. It never changes a payment, and it does not mark the job as done.</p>
         </section>
 
+        <section class="co-card" id="coEx" aria-labelledby="coExTitle" hidden>
+          <h2 class="co-card-title" id="coExTitle">When something goes wrong</h2>
+          <p class="co-card-lead" id="coExLead"></p>
+          <div class="co-banner" id="coExError" role="alert" hidden><span id="coExErrorText"></span></div>
+          <ul class="co-bk-history" id="coExList"></ul>
+          <form class="co-form" id="coExForm" novalidate hidden>
+            <fieldset class="form-group co-fieldset" id="coExKinds">
+              <legend class="form-label">What happened?</legend>
+              <label class="co-check" for="coExUnreach"><input type="radio" name="coExKind" id="coExUnreach" value="customer_unreachable" /><span>I couldn’t reach the customer</span></label>
+              <p class="form-helper" id="coExUnreachWhy" hidden></p>
+              <label class="co-check" for="coExNoShow"><input type="radio" name="coExKind" id="coExNoShow" value="tasker_no_show" /><span>The Local Tasker didn’t come as agreed</span></label>
+              <p class="form-helper" id="coExNoShowWhy" hidden></p>
+              <p class="co-field-error" id="coExKindErr" hidden></p>
+            </fieldset>
+            <div class="form-group">
+              <label class="form-label" for="coExWhen">When did it happen?</label>
+              <input class="form-input" type="datetime-local" id="coExWhen" aria-describedby="coExWhenHelp coExWhenErr" />
+              <p class="form-helper" id="coExWhenHelp">It can be up to 3 days back, and not in the future.</p>
+              <p class="co-field-error" id="coExWhenErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coExNote">Note (optional)</label>
+              <input class="form-input" type="text" id="coExNote" maxlength="300" autocomplete="off" aria-describedby="coExNoteErr" />
+              <p class="co-field-error" id="coExNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coExSubmit">Record</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coExFoot">Recording this only writes it down. It never changes a payment and it does not cancel the booking. Cancelling and problem reports come in the next stage.</p>
+        </section>
+
         <section class="co-card" aria-labelledby="coBdJobTitle">
           <h2 class="co-card-title" id="coBdJobTitle">The job</h2>
           <dl class="co-facts" id="coBdJob"></dl>
@@ -282,6 +314,7 @@
   <script src="js/coordinator-confirmation.js"></script>
   <script src="js/coordinator-quote.js"></script>
   <script src="js/coordinator-milestones.js"></script>
+  <script src="js/coordinator-exceptions.js"></script>
   <script src="js/coordinator-booking.js"></script>
 </body>
 </html>

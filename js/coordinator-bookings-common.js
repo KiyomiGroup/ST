@@ -88,6 +88,7 @@
       return (e.from_status ? ltLabel(e.from_status) + ' → ' : '') + ltLabel(e.to_status);
     }
     if (e.kind === 'milestone') return ({ address_confirmed: 'Address confirmed', arrived: 'Arrived', started: 'Work started', finished: 'Work finished' })[e.to_status] || 'Step on the day recorded';
+    if (e.kind === 'exception') return ({ customer_unreachable: 'Customer could not be reached', tasker_no_show: 'Local Tasker did not come' })[e.to_status] || 'Exception recorded';
     return EVENT_LABEL[e.kind] || sentence(e.kind);
   }
   function ref(id) { return '#' + String(id || '').replace(/-/g, '').slice(0, 8).toUpperCase(); }

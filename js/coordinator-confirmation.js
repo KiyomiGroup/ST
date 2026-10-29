@@ -211,6 +211,8 @@
     if (hint === 'booking_closed') return 'This booking is closed, so nothing more can be recorded.';
     if (hint === 'dispute_open') return 'A problem report is open on this booking, so nothing can be recorded right now.';
     if (hint === 'invalid_transition') return 'An answer is already on record. Reload the page to see it.';
+    if (hint === 'work_started') return 'The Local Tasker has already arrived, so this booking can’t be sent back for a new price. Report a problem or contact an administrator.';
+    if (hint === 'payment_started') return 'The customer has already started paying, so this booking can’t be sent back for a new price. Contact an administrator.';
     if (hint === 'bad_input' && msg) return msg;              // the database's own plain sentence, e.g. "Enter the number you called."
     return 'We couldn’t save that just now. Check your connection and try again. Nothing was recorded.';
   }
