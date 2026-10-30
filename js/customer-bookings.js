@@ -100,7 +100,25 @@
 
   function refOf(id) { return 'BK-' + String(id || '').replace(/-/g, '').slice(0, 4).toUpperCase(); }
 
-  function payout(amount) {
+  /* Stage 7A: the fee rate for each provider comes from the server (0 for a Local Tasker, 12% for everyone else). Display only: nothing here
+     moves money. If the lookup fails the card falls back to the normal rate, exactly as before. */
+  async function loadFeeRates(ids) {
+    var map = {};
+    if (!ids.length) return map;
+    try {
+      var r = await window.supabase.rpc('booking_fee_rates', { p_tasker_ids: ids });
+      if (!r.error) (r.data || []).forEach(function (x) {
+        if (x && x.tasker_id && x.fee_rate !== null && x.fee_rate !== undefined && isFinite(Number(x.fee_rate))) map[x.tasker_id] = Number(x.fee_rate);
+      });
+    } catch (e) { /* the page still works with the normal rate */ }
+    return map;
+  }
+
+  function payout(amount, rate) {
+    if (typeof rate === 'number' && isFinite(rate) && rate >= 0 && rate < 1) {
+      var f = Math.round(amount * rate);
+      return { fee: f, net: amount - f };
+    }
     try {
       var a = window.ST.payments.calculateAmounts(amount);
       return { fee: a.platformFee, net: a.taskerAmount };
@@ -154,6 +172,7 @@
     var tasks = await lookup('tasks', ['id,title,description,budget,location,category'], unique(rows, 'task_id'), 'id');
     var services = await lookup('services', ['*'], unique(rows, 'service_id'), 'id');
     if (window.STCustQuote) await window.STCustQuote.load();   /* never throws: a page without quotes still works */
+    var feeRates = await loadFeeRates(providerIds);
 
     return rows.map(function (b) {
       var t = tasks[b.task_id] || {};
@@ -181,6 +200,7 @@
         budget: Number(t.budget) || 0,
         note: b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : '',
         taskerId: b.tasker_id || '',
+        feeRate: feeRates[b.tasker_id],
         taskId: t.id || '',
         created: b.created_at,
         scheduled: when ? when.date.toISOString() : null,
@@ -314,7 +334,7 @@
   function figures(v) {
     var amt = v.amount;
     if (!amt || v.group === 'pending' || v.group === 'cancelled') return '';
-    var p = payout(amt), pay = v.raw.payment_status;
+    var p = payout(amt, v.feeRate), pay = v.raw.payment_status;
     var status = v.group === 'completed' || pay === 'released' ? 'Released' : v.disputed ? 'Frozen' : pay === 'paid' ? 'In Escrow' : 'Not Paid';
     return '<div class="bk-figures">' +
       '<div><div class="bk-fig-label">Job Price</div><div class="bk-fig-value">' + naira(amt) + '</div></div>' +
