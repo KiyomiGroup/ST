@@ -46,6 +46,7 @@
     var st = $('coBdStatus'); st.textContent = '';
     st.appendChild(C.el('span', 'co-status co-status--other', d.frozen ? 'Problem reported' : B.ltLabel(d.lt_status)));
     $('coBdNext').textContent = next.text;
+    $('coBdChat').href = 'coordinator-chat.html?booking=' + encodeURIComponent(d.booking_id);
     $('coBdNext').className = 'co-bk-next' + (next.tab === 'action' ? ' is-action' : '');
     $('coBdNextNote').textContent = (window.STCoConfirm && window.STCoConfirm.noteFor(d)) || '';
 

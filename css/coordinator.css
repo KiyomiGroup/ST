@@ -597,3 +597,6 @@ body.co-drawer-open { overflow: hidden; }
 #coRd .co-form-actions .btn { min-height: 44px; }
 #coRd .co-consent-meta { margin-top: var(--space-4); }
 #coRd .co-check input:disabled + span { opacity: 0.55; }
+
+/* Link from the booking page to its conversation (Stage 6B) */
+#coBdChat { margin-top: var(--space-3); }
