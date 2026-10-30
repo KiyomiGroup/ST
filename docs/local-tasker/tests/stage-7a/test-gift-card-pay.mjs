@@ -21,7 +21,7 @@ function makeDb() {
     auth: { getUser: async () => ({ data: { user: { id: USER } } }) },
     rpc: async (name, args) => {
       rec.push({ op: "rpc", t: name, payload: args });
-      if (name === "platform_fee_rate_for_tasker") return scn.rateErr ? { data: null, error: { message: "function does not exist" } } : { data: scn.rate, error: null };
+      if (name === "platform_fee_rate_for_booking") return scn.rateErr ? { data: null, error: { message: "function does not exist" } } : { data: scn.rate, error: null };
       if (name === "gift_available") return { data: 5000, error: null };
       if (name === "gift_hold_create") return { data: { hold_id: "h1", amount: scn.holdAmount ?? scn.price }, error: null };
       return { data: null, error: null };
@@ -54,7 +54,7 @@ ok(r.status === 200 && r.json.done === true, "regular: done");
 ok(pay.platform_fee === 1800 && pay.tasker_amount === 13200 && pay.amount === 15000, "regular N15,000: payments row fee 1800, tasker 13200");
 ok(esc.platform_fee === 1800 && esc.tasker_amount === 13200, "regular: escrow row fee 1800, tasker 13200");
 ok(/after 12% fee/.test(note.message), "regular: notification still says 'after 12% fee'");
-ok(rec.find((x) => x.t === "platform_fee_rate_for_tasker").payload.p_tasker === TASKER, "the booking's tasker id is what is asked about");
+ok(rec.find((x) => x.t === "platform_fee_rate_for_booking").payload.p_booking === BK, "the BOOKING id is what is asked about (the database resolves the tasker)");
 
 // B. Local Tasker
 scn = { price: 15000, rate: 0 }; rec = [];

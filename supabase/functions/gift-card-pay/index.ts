@@ -10,9 +10,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SITE = (Deno.env.get("SITE_URL") ?? "https://streettasker.com").replace(/\/+$/, "");
 const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY") ?? "";
-// Stage 7A: the fee rate is no longer a constant here. It comes from the database function platform_fee_rate_for_tasker(),
+// Stage 7A: the fee rate is no longer a constant here. It comes from the database function platform_fee_rate_for_booking(),
 // the same single answer the Job Room path uses: 0 for a Local Tasker, otherwise platform_fee_rate() (0.12 today).
-// Needs stage-7a-core.sql in the project BEFORE this function is deployed.
+// Needs stage-7a-core.sql AND stage-7a2-core.sql in the project BEFORE this function is deployed.
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
 function cors(req: Request): Record<string, string> {
@@ -58,7 +58,7 @@ async function loadBooking(bookingId: string, userId: string) {
   if (price <= 0) throw new Fail(422, "no_price", "This booking has no price yet.");
 
   // Stage 7A: asked BEFORE any gift card money is reserved or taken, so a failure here moves no money
-  const { data: rate, error: rateErr } = await db.rpc("platform_fee_rate_for_tasker", { p_tasker: bk.tasker_id });
+  const { data: rate, error: rateErr } = await db.rpc("platform_fee_rate_for_booking", { p_booking: bk.id });
   const feeRate = Number(rate);
   if (rateErr || rate === null || rate === undefined || !Number.isFinite(feeRate) || feeRate < 0 || feeRate >= 1) {
     console.error("fee rate lookup failed:", rateErr?.message ?? String(rate));
