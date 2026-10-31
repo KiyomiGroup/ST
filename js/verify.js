@@ -50,6 +50,17 @@
     return !!(s && s.verified === true);
   }
 
+  /** Server answer to "may this person publish a task or service right now?" (idv_can_publish, stage V6a).
+      Always returns an object; { can_publish: false, reason: 'unavailable' } if the read fails (safe default:
+      nothing goes live). Never reads a browser-writable table. */
+  async function canPublish() {
+    try {
+      var r = await window.supabase.rpc('idv_can_publish');
+      if (r.error || !r.data || typeof r.data.can_publish !== 'boolean') return { can_publish: false, reason: 'unavailable' };
+      return r.data;
+    } catch (e) { return { can_publish: false, reason: 'unavailable' }; }
+  }
+
   /** Old shape kept so existing dashboards keep working:
       { status: 'approved' | 'pending' | 'rejected', rejection_reason: '' } or null.
       The reason is always empty: Didit's reasons are never shown or stored here. */
@@ -84,7 +95,8 @@
 
   window.ST = window.ST || {};
   window.ST.verify = { getVerificationStatus: getVerificationStatus, isUserVerified: isUserVerified,
-                       requireVerification: requireVerification, getServerStatus: getServerStatus };
+                       requireVerification: requireVerification, getServerStatus: getServerStatus,
+                       canPublish: canPublish };
 
   /* ── the verify page (runs only where #verifyMain exists) ── */
 

@@ -45,6 +45,14 @@ async function postTask({ title, description, category, budget, location, deadli
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
+  /* V6b: the SERVER decides whether this task may go live (idv_can_publish). If the answer is
+     missing or the read fails, the task is saved as a draft: nothing goes live by accident. */
+  let canGoLive = false;
+  try {
+    const g = window.ST && window.ST.verify && window.ST.verify.canPublish ? await window.ST.verify.canPublish() : null;
+    canGoLive = !!(g && g.can_publish === true);
+  } catch (e) { canGoLive = false; }
+
   const payload = {
     user_id:     user.id,
     customer_id: user.id,
@@ -57,7 +65,7 @@ async function postTask({ title, description, category, budget, location, deadli
     urgent:      urgent,
     task_type:   taskType || 'one_off',
     urgency:     urgency || (urgent ? 'immediate' : 'flexible'),
-    status:      'open',
+    status:      canGoLive ? 'open' : 'draft',
   };
   if (photoUrls && photoUrls.length) payload.photo_urls = photoUrls;
 
@@ -82,9 +90,11 @@ async function postTask({ title, description, category, budget, location, deadli
   }
   if (error) throw error;
 
-  /* Notify nearby taskers (non-blocking) */
-  try { await _notifyTaskersOfNewTask(data); } catch(e) { /* silent */ }
+  /* Notify nearby taskers (non-blocking), only for a task that is actually live */
+  if (canGoLive) { try { await _notifyTaskersOfNewTask(data); } catch(e) { /* silent */ } }
 
+  /* Tells the page which message to show (tasks.js). Not a column. */
+  if (data) data._needs_verification = !canGoLive;
   return data;
 }
 

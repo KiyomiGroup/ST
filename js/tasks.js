@@ -870,7 +870,7 @@ async function handleTaskSubmit(e) {
       let photos = [];
       try { photos = await uploadTaskPhotos(); } catch (err) { console.warn('Photo upload skipped:', err.message); }
 
-      await window.ST.db.postTask({
+      const created = await window.ST.db.postTask({
         title:       taskPayload.title,
         description: taskPayload.description,
         budget:      taskPayload.budget,
@@ -889,9 +889,19 @@ async function handleTaskSubmit(e) {
         photoUrls:   photos.map(p => p.url),
         photoLabels: photos.map(p => p.label),
       });
+      /* V6b: what the server decided, for the success modal */
+      taskPayload.id = created && created.id;
+      taskPayload.needsVerification = !(created && created._needs_verification === false);
     } else {
       /* Fallback: direct insert if db.js not loaded */
       const { data: { user } } = await window.supabase.auth.getUser();
+      /* V6b: same server decision as db.js; no answer = draft */
+      let canGoLive = false;
+      try {
+        const g = window.ST && window.ST.verify && window.ST.verify.canPublish ? await window.ST.verify.canPublish() : null;
+        canGoLive = !!(g && g.can_publish === true);
+      } catch (e) { canGoLive = false; }
+      taskPayload.needsVerification = !canGoLive;
       const { error } = await window.supabase.from('tasks').insert({
         title:       taskPayload.title,
         description: taskPayload.description,
@@ -899,7 +909,7 @@ async function handleTaskSubmit(e) {
         location:    taskPayload.location,
         deadline:    taskPayload.deadline ? new Date(taskPayload.deadline).toISOString() : null,
         category:    taskPayload.category,
-        status:      'open',
+        status:      canGoLive ? 'open' : 'draft',
         customer_id: user ? user.id : null,
         user_id:     user ? user.id : null,
       });
@@ -930,22 +940,13 @@ async function showTaskSuccessModal(payload) {
   /* Set task title in both modal states */
   modal.querySelectorAll('[data-task-title]').forEach(el => { el.textContent = payload.title; });
 
-  /* Check if user is already verified */
-  let isVerified = false;
-  try {
-    const sess = await window.supabase.auth.getSession();
-    const uid  = sess.data.session && sess.data.session.user.id;
-    if (uid) {
-      const { data: vRow } = await window.supabase.from('verifications')
-        .select('status').eq('user_id', uid).maybeSingle();
-      isVerified = vRow && vRow.status === 'approved';
-
-      /* Store task_id for draft save */
-      if (payload.id) {
-        try { sessionStorage.setItem('st_last_task_id', String(payload.id)); } catch(e) {}
-      }
-    }
-  } catch(e) {}
+  /* V6b: the server decided when the task was saved (payload.needsVerification). The old browser-side
+     check of the verifications table (writable from the browser) and the later 'make it a draft' update
+     are gone: the task is saved with the right status in the first place. */
+  const isVerified = payload.needsVerification === false;
+  if (payload.id) {
+    try { sessionStorage.setItem('st_last_task_id', String(payload.id)); } catch(e) {}
+  }
 
   /* Show correct modal state */
   const verifyNeeded   = document.getElementById('modalVerifyNeeded');
@@ -953,16 +954,9 @@ async function showTaskSuccessModal(payload) {
   if (isVerified) {
     if (verifyNeeded)    verifyNeeded.style.display = 'none';
     if (alreadyVerified) alreadyVerified.style.display = 'block';
-    /* Task already has status=open since user is verified */
   } else {
     if (verifyNeeded)    verifyNeeded.style.display = 'block';
     if (alreadyVerified) alreadyVerified.style.display = 'none';
-    /* Mark task as draft until verified */
-    if (payload.id) {
-      try {
-        await window.supabase.from('tasks').update({ status: 'draft' }).eq('id', payload.id);
-      } catch(e) {}
-    }
   }
 
   modal.classList.add('modal-open');

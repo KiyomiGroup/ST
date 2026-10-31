@@ -16,5 +16,7 @@ These paths match the repo root. They are the new verify page: stages V3a (marku
 | `pending-ui/post-service.html` | `post-service.html` (replaces; live or draft now comes from the server verified read, stage V3d) |
 | `pending-ui/js/app.js` | `js/app.js` (replaces; adds the loader for the gate, stage V1g-3) |
 | `pending-ui/js/verify-gate.js` | `js/verify-gate.js` (new, stage V1g-3) |
+| `pending-ui/js/db.js` | `js/db.js` (replaces; `postTask` saves a draft unless the server says the user may publish, stage V6b) |
+| `pending-ui/js/tasks.js` | `js/tasks.js` (replaces; success modal uses the server decision, stage V6b) |
 
-Copy ALL TWELVE in the same commit, and only after the three Didit functions are deployed (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).
+Copy ALL FOURTEEN in the same commit, and only after the three Didit functions are deployed (and, for db.js and tasks.js, after `sql/verification/v6a-can-publish.sql` is applied) (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).
