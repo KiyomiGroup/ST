@@ -1,0 +1,4 @@
+table_name,trigger_name,event_manipulation,action_timing,action_statement
+local_tasker_consents,local_tasker_consents_guard,DELETE,BEFORE,EXECUTE FUNCTION local_tasker_consent_guard()
+local_tasker_consents,local_tasker_consents_guard,UPDATE,BEFORE,EXECUTE FUNCTION local_tasker_consent_guard()
+notifications,notifications_email,INSERT,AFTER,EXECUTE FUNCTION email_new_notification()

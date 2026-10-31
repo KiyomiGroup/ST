@@ -1,0 +1,9 @@
+table_name,column_name,data_type,is_nullable
+coordinators,user_id,uuid,NO
+coordinators,display_name,text,YES
+coordinators,phone,text,YES
+coordinators,status,text,NO
+coordinators,approved_by,uuid,YES
+coordinators,approved_at,timestamp with time zone,YES
+coordinators,created_at,timestamp with time zone,NO
+coordinators,updated_at,timestamp with time zone,NO

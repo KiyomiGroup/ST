@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Local Tasker — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+
+      <a class="co-back" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        My Local Taskers
+      </a>
+
+      <p class="co-loading" id="coDetailLoading">Loading…</p>
+
+      <div class="co-banner" id="coDetailError" role="alert" hidden>
+        <span>We couldn't load this Local Tasker just now.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coDetailRetry">Try again</button>
+      </div>
+
+      <div class="co-empty" id="coDetailMissing" hidden>
+        <p class="co-empty-title">Local Tasker not found</p>
+        <p class="co-empty-text">This profile doesn't exist, or it isn't assigned to you.</p>
+      </div>
+
+      <div class="co-banner co-banner--info" id="coCreatedBanner" role="status" hidden>
+        <span id="coCreatedText"></span>
+      </div>
+
+      <article class="co-detail" id="coDetail" hidden>
+        <section class="co-hero co-hero--page" aria-labelledby="coDetailName">
+          <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Local Tasker profile</p>
+          <div class="co-hero-id">
+            <span class="co-tasker-avatar co-tasker-avatar--lg" id="coDetailAvatar">LT</span>
+            <div class="co-hero-idtext">
+              <h1 id="coDetailName">Local Tasker</h1>
+              <p class="co-hero-sub" id="coDetailSkills"></p>
+              <div class="co-hero-status"><span id="coDetailStatus"></span></div>
+            </div>
+          </div>
+          <div class="co-hero-actions">
+            <a class="btn btn-white" id="coEditLink" href="coordinator-taskers.html">Edit details</a>
+          </div>
+        </section>
+
+        <div class="co-proxy" role="note"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><p>Private to you and StreetTasker administrators. Customers never see the phone number or the full name here.</p></div>
+
+        <section class="co-card" aria-labelledby="coDetailContactTitle">
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span><h2 class="co-card-title" id="coDetailContactTitle">Contact and area</h2></div>
+          <dl class="co-facts" id="coFactsContact"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailProfileTitle">
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><h2 class="co-card-title" id="coDetailProfileTitle">Profile</h2></div>
+          <dl class="co-facts" id="coFactsProfile"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailSvcTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+            <h2 class="co-card-title" id="coDetailSvcTitle">Services and agreed rates</h2>
+            <a class="btn btn-outline btn-sm" id="coSvcAdd" href="coordinator-service-edit.html">Add service</a>
+          </div>
+          <p class="co-loading" id="coSvcLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coSvcError" role="alert" hidden>We couldn't load the services just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coSvcEmpty" hidden>No services yet. Add one to describe what this person offers and the rate they agreed. Services stay hidden from customers until you publish.</p>
+          <ul class="co-svc-list" id="coSvcList" hidden></ul>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailPhotoTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+            <h2 class="co-card-title" id="coDetailPhotoTitle">Photos</h2>
+            <a class="btn btn-outline btn-sm" id="coPhotoManage" href="coordinator-photos.html">Add photos</a>
+          </div>
+          <p class="co-loading" id="coPhotoLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coPhotoError" role="alert" hidden>We couldn't load the photos just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coPhotoEmpty" hidden>No photos yet. Add photos of this person's work. They stay private until you publish.</p>
+          <ul class="co-photo-strip" id="coPhotoStrip" hidden></ul>
+          <p class="co-consent-meta" id="coPhotoCount" hidden></p>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailPubTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            <h2 class="co-card-title" id="coDetailPubTitle">Publishing</h2>
+            <a class="btn btn-outline btn-sm" id="coPubLink" href="coordinator-publish.html">Preview and publish</a>
+          </div>
+          <p class="co-fact-value" id="coPubSummary"></p>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailVerifyTitle">
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><h2 class="co-card-title" id="coDetailVerifyTitle">Verification</h2></div>
+          <dl class="co-facts" id="coFactsVerify"></dl>
+        </section>
+
+        <section class="co-card" aria-labelledby="coDetailConsentTitle">
+          <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span><h2 class="co-card-title" id="coDetailConsentTitle">Agreement on record</h2></div>
+          <p class="co-loading" id="coConsentLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coConsentError" role="alert" hidden>We couldn't load the agreement record just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coConsentEmpty" hidden>No agreement has been recorded for this person.</p>
+          <ul class="co-consent-list" id="coConsentList" hidden></ul>
+        </section>
+      </article>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-tasker.js"></script>
+</body>
+</html>

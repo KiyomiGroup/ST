@@ -1,0 +1,31 @@
+schemaname,tablename,policyname,cmd,roles,qual,with_check
+public,local_tasker_consents,lt_consents_read,SELECT,{authenticated},(coordinator_manages_tasker(tasker_user_id) OR is_local_tasker_admin()),null
+public,local_tasker_profiles,lt_profiles_read,SELECT,{authenticated},(coordinator_manages_tasker(tasker_user_id) OR is_local_tasker_admin()),null
+public,notifications,notifications_insert,INSERT,{authenticated},null,"can_notify((user_id)::text, type, data)"
+public,notifications,notifications_select,SELECT,{authenticated},((user_id)::text = (auth.uid())::text),null
+public,notifications,notifications_update,UPDATE,{authenticated},((user_id)::text = (auth.uid())::text),((user_id)::text = (auth.uid())::text)
+public,taskers,Public can read taskers,SELECT,{anon},true,null
+public,taskers,auth_own_taskers,ALL,{authenticated},((auth.uid())::text = user_id),((auth.uid())::text = user_id)
+public,taskers,auth_read_taskers,SELECT,{authenticated},true,null
+public,taskers,lt_hide_unpublished_taskers,SELECT,"{anon,authenticated}","local_tasker_row_visible(COALESCE(user_id, id))",null
+public,taskers,taskers delete own,DELETE,{public},(user_id = (auth.uid())::text),null
+public,taskers,taskers insert own,INSERT,{public},null,(user_id = (auth.uid())::text)
+public,taskers,taskers public read,SELECT,{public},true,null
+public,taskers,taskers update own,UPDATE,{public},(user_id = (auth.uid())::text),null
+public,taskers,taskers: insert,INSERT,{authenticated},null,((user_id = (auth.uid())::text) OR (id = (auth.uid())::text))
+public,taskers,taskers: owner full access,ALL,{authenticated},(user_id = (auth.uid())::text),(user_id = (auth.uid())::text)
+public,taskers,taskers: public read,SELECT,{public},(available = true),null
+public,taskers,taskers: read,SELECT,{authenticated},true,null
+public,taskers,taskers: update,UPDATE,{authenticated},((user_id = (auth.uid())::text) OR (id = (auth.uid())::text)),null
+public,users,Public can read user display info,SELECT,{anon},true,null
+public,users,auth_own_users,ALL,{authenticated},(auth.uid() = id),(auth.uid() = id)
+public,users,auth_read_users,SELECT,{authenticated},true,null
+public,users,lt_hide_unpublished_users,SELECT,"{anon,authenticated}",local_tasker_row_visible((id)::text),null
+public,users,users: owner update,UPDATE,{authenticated},(id = auth.uid()),null
+public,users,users: public read profile,SELECT,{public},true,null
+public,verifications,Users can insert own verification,INSERT,{authenticated},null,(auth.uid() = user_id)
+public,verifications,Users can update own verification,UPDATE,{authenticated},(auth.uid() = user_id),null
+public,verifications,Users can view own verification,SELECT,{authenticated},(auth.uid() = user_id),null
+public,verifications,verifications: user inserts own,INSERT,{authenticated},null,(user_id = auth.uid())
+public,verifications,verifications: user reads own,SELECT,{authenticated},(user_id = auth.uid()),null
+public,verifications,verifications: user updates own pending,UPDATE,{authenticated},((user_id = auth.uid()) AND (status = 'pending'::text)),null

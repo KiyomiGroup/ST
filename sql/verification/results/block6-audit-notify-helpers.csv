@@ -1,0 +1,16 @@
+proname,args
+_notify,"p_user uuid, p_type text, p_title text, p_msg text, p_data jsonb"
+can_notify,"p_recipient text, p_type text, p_data jsonb"
+dispute_events_notify,
+email_new_notification,
+local_booking_cancellations_audit,
+local_booking_confirmations_audit,
+local_booking_exceptions_audit,
+local_booking_extra_costs_audit,
+local_booking_milestones_audit,
+local_booking_problem_reports_audit,
+local_booking_quotes_audit,
+local_booking_reductions_audit,
+local_tasker_audit,"p_action text, p_entity text, p_entity_id text DEFAULT NULL::text, p_before jsonb DEFAULT NULL::jsonb, p_after jsonb DEFAULT NULL::jsonb, p_actor uuid DEFAULT NULL::uuid"
+local_tasker_audit_append_only,
+local_tasker_consent_guard,

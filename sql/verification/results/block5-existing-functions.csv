@@ -1,0 +1,174 @@
+proname,args,security_definer,body
+is_active_coordinator,,true,"CREATE OR REPLACE FUNCTION public.is_active_coordinator()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select public.is_active_coordinator(auth.uid())
+$function$
+"
+is_active_coordinator,p_user uuid,true,"CREATE OR REPLACE FUNCTION public.is_active_coordinator(p_user uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select p_user is not null and exists (select 1 from public.coordinators c where c.user_id = p_user and c.status = 'active')
+$function$
+"
+is_coordinator,,true,"CREATE OR REPLACE FUNCTION public.is_coordinator()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select public.is_coordinator(auth.uid())
+$function$
+"
+is_coordinator,p_user uuid,true,"CREATE OR REPLACE FUNCTION public.is_coordinator(p_user uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select p_user is not null and exists (select 1 from public.coordinators c where c.user_id = p_user)
+$function$
+"
+process_verification,p_user_id uuid,true,"CREATE OR REPLACE FUNCTION public.process_verification(p_user_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v   verifications%ROWTYPE;
+  u   users%ROWTYPE;
+  fmt BOOLEAN;
+  res JSONB;
+BEGIN
+  -- Load verification submission
+  SELECT * INTO v FROM verifications WHERE user_id = p_user_id AND status = 'pending';
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'No pending verification found');
+  END IF;
+
+  -- Load user
+  SELECT * INTO u FROM users WHERE id = p_user_id;
+
+  -- 1. Format check
+  fmt := validate_nigerian_id(v.id_type, v.id_number);
+  IF NOT fmt THEN
+    UPDATE verifications
+    SET status = 'rejected',
+        id_format_ok = false,
+        auto_checked = true,
+        rejection_reason = 'ID number format is invalid for the selected ID type.',
+        reviewed_at = now()
+    WHERE user_id = p_user_id;
+
+    RETURN jsonb_build_object(
+      'ok', false,
+      'reason', 'ID number format is invalid. Please check and resubmit.',
+      'code', 'FORMAT_INVALID'
+    );
+  END IF;
+
+  UPDATE verifications SET id_format_ok = true WHERE user_id = p_user_id;
+
+  -- 2. Name coherence check
+  -- The first_name submitted must loosely match the name on their account.
+  -- This catches people submitting someone else's NIN with their own name.
+  IF v.first_name IS NOT NULL AND u.name IS NOT NULL THEN
+    IF NOT (
+      LOWER(u.name) LIKE '%' || LOWER(v.first_name) || '%'
+      OR LOWER(u.name) LIKE '%' || LOWER(v.last_name) || '%'
+    ) THEN
+      UPDATE verifications
+      SET status = 'rejected',
+          auto_checked = true,
+          rejection_reason = 'Name does not match your account name.',
+          reviewed_at = now()
+      WHERE user_id = p_user_id;
+
+      RETURN jsonb_build_object(
+        'ok', false,
+        'reason', 'The name on your ID does not match your account name. Please use the same name you registered with.',
+        'code', 'NAME_MISMATCH'
+      );
+    END IF;
+  END IF;
+
+  -- 3. Age check — must be 18+
+  IF v.dob IS NOT NULL THEN
+    IF EXTRACT(YEAR FROM AGE(v.dob)) < 18 THEN
+      UPDATE verifications
+      SET status = 'rejected',
+          auto_checked = true,
+          rejection_reason = 'User is under 18.',
+          reviewed_at = now()
+      WHERE user_id = p_user_id;
+
+      RETURN jsonb_build_object(
+        'ok', false,
+        'reason', 'You must be 18 or older to use StreetTasker.',
+        'code', 'UNDERAGE'
+      );
+    END IF;
+  END IF;
+
+  -- ── Phase 1: All soft checks passed → auto-approve ───────────
+  -- When Dojah is integrated (Phase 2), this section will call
+  -- the external API and only approve if the government record
+  -- also matches. For now, format + name + age is sufficient
+  -- to deter casual fraud.
+
+  UPDATE verifications
+  SET status = 'approved',
+      auto_checked = true,
+      id_format_ok = true,
+      reviewed_at = now()
+  WHERE user_id = p_user_id;
+
+  -- Mark the user as verified
+  UPDATE users
+  SET is_verified = true,
+      verified_at = now(),
+      first_name  = v.first_name,
+      last_name   = v.last_name,
+      dob         = v.dob
+  WHERE id = p_user_id;
+
+  -- Mark their tasker profile as verified too (if they're a tasker)
+  UPDATE taskers
+  SET is_verified = true,
+      verified_at = now()
+  WHERE user_id = CAST(p_user_id AS TEXT);
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'reason', 'Identity verified successfully.',
+    'code', 'APPROVED'
+  );
+END;
+$function$
+"
+validate_nigerian_id,"id_type text, id_value text",false,"CREATE OR REPLACE FUNCTION public.validate_nigerian_id(id_type text, id_value text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ IMMUTABLE
+AS $function$
+DECLARE
+  clean TEXT := UPPER(REGEXP_REPLACE(id_value, '\s', '', 'g'));
+BEGIN
+  RETURN CASE id_type
+    WHEN 'nin'             THEN clean ~ '^\d{11}$'
+    WHEN 'bvn'             THEN clean ~ '^\d{11}$'
+    WHEN 'drivers_license' THEN clean ~ '^[A-Z]{3}[A-Z0-9]{6,9}$'
+    WHEN 'passport'        THEN clean ~ '^[A-Z]{1,2}\d{7}$'
+    WHEN 'voters_card'     THEN clean ~ '^[A-Z0-9]{18,19}$'
+    ELSE false
+  END;
+END;
+$function$
+"

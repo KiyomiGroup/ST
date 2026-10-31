@@ -1,0 +1,18 @@
+table_name,conname,definition
+local_tasker_profiles,local_tasker_profiles_created_by_fkey,FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL
+local_tasker_profiles,local_tasker_profiles_pkey,PRIMARY KEY (tasker_user_id)
+local_tasker_profiles,local_tasker_profiles_published_by_fkey,FOREIGN KEY (published_by) REFERENCES auth.users(id) ON DELETE SET NULL
+local_tasker_profiles,local_tasker_profiles_status_check,"CHECK ((status = ANY (ARRAY['draft'::text, 'ready'::text, 'published'::text, 'inactive'::text])))"
+local_tasker_profiles,local_tasker_profiles_tasker_user_id_fkey,FOREIGN KEY (tasker_user_id) REFERENCES auth.users(id) ON DELETE RESTRICT
+local_tasker_profiles,local_tasker_profiles_verification_method_check,CHECK (((verification_method IS NULL) OR (char_length(verification_method) <= 40)))
+local_tasker_profiles,local_tasker_profiles_verified_by_fkey,FOREIGN KEY (verified_by) REFERENCES auth.users(id) ON DELETE SET NULL
+local_tasker_consents,local_tasker_consents_details_check,CHECK (((details IS NULL) OR (char_length(details) <= 1000)))
+local_tasker_consents,local_tasker_consents_evidence_ref_check,CHECK (((evidence_ref IS NULL) OR (char_length(evidence_ref) <= 500)))
+local_tasker_consents,local_tasker_consents_method_check,"CHECK ((method = ANY (ARRAY['in_person'::text, 'phone'::text, 'written'::text])))"
+local_tasker_consents,local_tasker_consents_pkey,PRIMARY KEY (id)
+local_tasker_consents,local_tasker_consents_purpose_check,"CHECK ((purpose = ANY (ARRAY['profile'::text, 'publish_info'::text, 'photos'::text, 'payout'::text, 'price_change'::text, 'booking_confirmation'::text])))"
+local_tasker_consents,local_tasker_consents_recorded_by_fkey,FOREIGN KEY (recorded_by) REFERENCES auth.users(id) ON DELETE RESTRICT
+local_tasker_consents,local_tasker_consents_revoke_consistent,CHECK (((revoked_at IS NOT NULL) OR ((revoked_by IS NULL) AND (revoke_reason IS NULL))))
+local_tasker_consents,local_tasker_consents_revoke_reason_check,CHECK (((revoke_reason IS NULL) OR (char_length(revoke_reason) <= 500)))
+local_tasker_consents,local_tasker_consents_revoked_by_fkey,FOREIGN KEY (revoked_by) REFERENCES auth.users(id) ON DELETE RESTRICT
+local_tasker_consents,local_tasker_consents_tasker_user_id_fkey,FOREIGN KEY (tasker_user_id) REFERENCES local_tasker_profiles(tasker_user_id) ON DELETE RESTRICT

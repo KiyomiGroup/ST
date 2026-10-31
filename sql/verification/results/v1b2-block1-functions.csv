@@ -1,0 +1,96 @@
+proname,args,security_definer,source
+_notify,"p_user uuid, p_type text, p_title text, p_msg text, p_data jsonb",true,"
+begin
+  insert into public.notifications (user_id, type, title, message, data, is_read)
+  values (p_user, p_type, p_title, p_msg, p_data, false);
+exception when others then
+  null;   -- a notification problem must never block money movement
+end "
+can_notify,"p_recipient text, p_type text, p_data jsonb",true,"
+declare me text := auth.uid()::text;
+begin
+  if me is null or p_recipient is null then return false; end if;
+  if p_recipient = me then return true; end if;
+
+  -- the category broadcast when posting a task: only that type, only for your own task
+  if p_type = 'new_task' and coalesce(p_data ? 'task_id', false)
+     and exists (select 1 from public.tasks k where k.id::text = p_data->>'task_id' and k.user_id::text = me) then
+    return true;
+  end if;
+
+  -- the other person in one of your message threads
+  if exists (select 1 from public.message_threads t
+              where (t.customer_id::text = me and t.tasker_id::text = p_recipient)
+                 or (t.tasker_id::text = me and t.customer_id::text = p_recipient)) then
+    return true;
+  end if;
+
+  -- the other person in one of your bookings
+  if exists (select 1 from public.bookings b
+              where (b.customer_id::text = me and b.tasker_id::text = p_recipient)
+                 or (b.tasker_id::text = me and b.customer_id::text = p_recipient)) then
+    return true;
+  end if;
+
+  -- task owner <-> applicant
+  if exists (select 1 from public.tasks k join public.task_applications a on a.task_id::text = k.id::text
+              where (k.user_id::text = me and a.tasker_id::text = p_recipient)
+                 or (a.tasker_id::text = me and k.user_id::text = p_recipient)) then
+    return true;
+  end if;
+
+  return false;
+end "
+coordinator_manages_tasker,p_tasker uuid,true,"
+  select public.coordinator_manages_tasker(auth.uid(), p_tasker)
+"
+coordinator_manages_tasker,"p_coordinator uuid, p_tasker uuid",true,"
+  select p_coordinator is not null and p_tasker is not null and exists (
+    select 1 from public.coordinator_assignments a
+      join public.coordinators c on c.user_id = a.coordinator_id and c.status = 'active'
+     where a.coordinator_id = p_coordinator and a.tasker_user_id = p_tasker and a.ended_at is null)
+"
+is_local_tasker_admin,,true,"
+  select public._is_support()
+"
+local_tasker_audit,"p_action text, p_entity text, p_entity_id text, p_before jsonb, p_after jsonb, p_actor uuid",true,"
+declare v_actor uuid := coalesce(auth.uid(), p_actor); v_role text; v_id uuid;
+begin
+  v_role := case
+    when v_actor is null then 'system'
+    when exists (select 1 from public.support_staff s where s.user_id = v_actor) then 'admin'
+    when exists (select 1 from public.coordinators c where c.user_id = v_actor) then 'coordinator'
+    else 'other' end;
+  insert into public.local_tasker_audit_log (actor_id, actor_role, action, entity, entity_id, before_data, after_data)
+  values (v_actor, v_role, p_action, p_entity, p_entity_id,
+          public.local_tasker_scrub(p_before), public.local_tasker_scrub(p_after))
+  returning id into v_id;
+  return v_id;
+end "
+local_tasker_audit_append_only,,false,"
+begin
+  raise exception 'The audit log is append-only: rows cannot be changed or deleted.' using errcode = 'P0001';
+end "
+local_tasker_consent_guard,,false,"
+begin
+  if tg_op = 'DELETE' then
+    raise exception 'Consent records cannot be deleted.' using errcode = 'P0001';
+  end if;
+  if new.id is distinct from old.id or new.tasker_user_id is distinct from old.tasker_user_id
+     or new.purpose is distinct from old.purpose or new.method is distinct from old.method
+     or new.recorded_by is distinct from old.recorded_by or new.recorded_at is distinct from old.recorded_at
+     or new.evidence_ref is distinct from old.evidence_ref or new.details is distinct from old.details then
+    raise exception 'A consent record cannot be edited. Record a new one.' using errcode = 'P0001';
+  end if;
+  if old.revoked_at is not null
+     and (new.revoked_at is distinct from old.revoked_at or new.revoked_by is distinct from old.revoked_by
+          or new.revoke_reason is distinct from old.revoke_reason) then
+    raise exception 'This consent has already been withdrawn.' using errcode = 'P0001';
+  end if;
+  return new;
+end "
+local_tasker_touch_updated_at,,false,"
+begin
+  new.updated_at := now();
+  return new;
+end "
