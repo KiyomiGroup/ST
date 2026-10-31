@@ -1838,8 +1838,15 @@ function openMessagesPanel() {
           photo_url:     finalPhotoUrl,
           whatsapp:      finalWhatsapp,
           phone:         finalPhone,
-          available:     true,
         };
+
+        /* V1h: saving a profile must never make the listing live by itself (it used to set available = true for
+           everyone, verified or not, and would also undo a hide). Only the server's answer (idv_can_publish) may
+           switch it on; otherwise the field is left out, so the stored value is kept. */
+        try {
+          var _pub = (window.ST && window.ST.verify && window.ST.verify.canPublish) ? await window.ST.verify.canPublish() : null;
+          if (_pub && _pub.can_publish === true) taskerPayload.available = true;
+        } catch (_pe) { /* no answer: leave availability alone */ }
 
         /* Upsert: insert if no row exists, update if it does.
            This is the correct pattern — update alone silently discards data

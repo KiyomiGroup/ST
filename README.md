@@ -11,7 +11,7 @@ These paths match the repo root. They are the new verify page: stages V3a (marku
 | `pending-ui/js/coordinator-tasker.js` | `js/coordinator-tasker.js` (replaces; three lines added, stage V3c) |
 | `pending-ui/verification-done.html` | `verification-done.html` (new public page, stage V3c-2) |
 | `pending-ui/data-consent.html` | `data-consent.html` (new public page: the Data Consent Notice) |
-| `pending-ui/dashboard-tasker.html` | `dashboard-tasker.html` (replaces; old verification panel removed) |
+| `pending-ui/dashboard-tasker.html` | `dashboard-tasker.html` (replaces; old verification panel removed; profile save no longer sets the listing live by itself, stage V1h) |
 | `pending-ui/components/navbar.html` | `components/navbar.html` (replaces; Verification links go to verify.html) |
 | `pending-ui/post-service.html` | `post-service.html` (replaces; live or draft now comes from the server verified read, stage V3d; registers the saved service and listing for auto-publish, stage V6e) |
 | `pending-ui/js/app.js` | `js/app.js` (replaces; adds the loader for the gate, stage V1g-3) |
