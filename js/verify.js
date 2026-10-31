@@ -11,6 +11,8 @@
 (function () {
   var CONSENT_FALLBACK_MSG = 'Something went wrong. Please try again.';
   var RETURN_FLAG = 'st_idv_out';
+  var REDIRECT_DELAY_MS = 1500;
+  var GATE_NOTICE = 'Your account needs identity verification before you can use StreetTasker. Until then your tasks and services stay hidden.';
   var RETURN_FLAG_MAX_AGE_MS = 6 * 60 * 60 * 1000;
   var PANELS_WITH_START = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1 };
 
@@ -78,17 +80,6 @@
     var back = encodeURIComponent(window.location.href);
     window.location.href = 'verify.html?return=' + back + '&action=' + encodeURIComponent(actionName || 'continue');
     return false;
-  }
-
-  /** Drafts go live ONLY when the server says VERIFIED (checked again here, not trusted from the caller). */
-  async function publishDrafts(userId) {
-    try {
-      if (!(await isUserVerified())) return;
-      await window.supabase.from('tasks').update({ status: 'open' })
-        .or('customer_id.eq.' + userId + ',user_id.eq.' + userId).eq('status', 'draft');
-      await window.supabase.from('services').update({ available: true })
-        .eq('user_id', userId).eq('available', false);
-    } catch (e) { console.warn('[Verify] Could not publish drafts.'); }
   }
 
   window.ST = window.ST || {};
@@ -187,8 +178,26 @@
       btn.disabled = state.busy || !agreed || !state.versionOk;
     }
 
+    /* Where to send a freshly verified person: the profile page the server names (whitelisted), else by kind. */
+    async function goToProfile(redirectNow) {
+      var url = null;
+      try {
+        var r = await window.supabase.rpc('idv_my_gate');
+        var g = r && r.data;
+        if (g && /^edit-profile-(tasker|customer)\.html$/.test(g.profile_url || '')) url = g.profile_url;
+      } catch (e) { /* fall through */ }
+      if (!url) return;
+      var next = $('verifyContinueBtn');
+      if (next) next.setAttribute('href', url);
+      if (redirectNow) {
+        say($('verifyNotice'), 'You are verified. Taking you to complete your profile\u2026');
+        window.setTimeout(function () { window.location.replace(url); }, REDIRECT_DELAY_MS);
+      }
+    }
+
     function render(s) {
       var status = s.status === 'ABANDONED' ? 'FAILED' : s.status;
+      var prev = state.status;
       state.status = status;
       if (proxy) {
         state.consentGiven = s.consent_given === true;
@@ -228,7 +237,12 @@
         var next = $('verifyContinueBtn');
         var back = safeReturnUrl();
         if (next && back) next.setAttribute('href', back);
-        currentUser().then(function (u) { if (u) publishDrafts(u.id); });
+        /* Hidden tasks and services come back on the SERVER when it records VERIFIED (idv_restore_user), not from this page.
+           Right after a real verification (status just changed, or the person just came back from Didit) the next step is
+           their profile, unless they arrived with a return target. A person who is already verified is never bounced. */
+        if (!proxy && !back) goToProfile((prev && prev !== 'VERIFIED') || state.cameBack === true);
+      } else if (!proxy && q0.get('gate') === '1') {
+        say($('verifyNotice'), GATE_NOTICE);
       }
     }
 
@@ -371,7 +385,7 @@
         await load();
         return;
       }
-      if (cameBackFromDidit()) { await sync(true); clearReturnMarks(); }
+      if (cameBackFromDidit()) { state.cameBack = true; await sync(true); clearReturnMarks(); }
       await load();
     })();
   }

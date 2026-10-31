@@ -249,6 +249,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  /* Step 8: identity re-verification gate. A person the re-verify run flagged is sent to verify.html until VERIFIED.
+     Loaded here so the 38 pages that run app.js need no edit. It is a page-level check, not a lock (database guard: V1h). */
+  const gateScript = document.createElement('script');
+  gateScript.src = 'js/verify-gate.js';
+  gateScript.defer = true;
+  document.body.appendChild(gateScript);
+
   console.log('[StreetTasker] App ready ✓');
 });
 

@@ -14,5 +14,7 @@ These paths match the repo root. They are the new verify page: stages V3a (marku
 | `pending-ui/dashboard-tasker.html` | `dashboard-tasker.html` (replaces; old verification panel removed) |
 | `pending-ui/components/navbar.html` | `components/navbar.html` (replaces; Verification links go to verify.html) |
 | `pending-ui/post-service.html` | `post-service.html` (replaces; live or draft now comes from the server verified read, stage V3d) |
+| `pending-ui/js/app.js` | `js/app.js` (replaces; adds the loader for the gate, stage V1g-3) |
+| `pending-ui/js/verify-gate.js` | `js/verify-gate.js` (new, stage V1g-3) |
 
-Copy ALL TEN in the same commit, and only after the three Didit functions are deployed (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).
+Copy ALL TWELVE in the same commit, and only after the three Didit functions are deployed (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).
