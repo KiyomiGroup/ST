@@ -51,15 +51,9 @@
 .verify-list li { margin-bottom: var(--space-2); }
 .verify-list li:last-child { margin-bottom: 0; }
 
-.verify-consent {
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
-}
+.verify-consent { margin-bottom: var(--space-2); }
 .verify-consent-done { color: var(--color-success); font-weight: 600; margin: var(--space-3) 0 0; }
-.consent-check { display: flex; gap: var(--space-3); align-items: flex-start; margin-top: var(--space-3); }
+.consent-check { display: flex; gap: var(--space-3); align-items: flex-start; margin-top: 0; }
 .consent-check input { flex-shrink: 0; margin-top: var(--space-1); width: var(--space-4); height: var(--space-4); cursor: pointer; }
 .consent-check label { font-size: var(--text-sm); color: var(--color-text); cursor: pointer; line-height: 1.5; }
 .verify-section .consent-check { margin-bottom: var(--space-4); }
@@ -68,3 +62,19 @@
   .verify-status,
   .verify-section { padding: var(--space-4); }
 }
+
+.verify-linkbox { margin-top: var(--space-4); }
+.verify-linkbox .verify-actions, .verify-actions-spaced { margin-top: var(--space-3); }
+
+/* Data Consent Notice page (data-consent.html) */
+.consent-doc { max-width: 48rem; margin: 0 auto; padding: calc(var(--nav-height) + var(--space-6)) var(--space-4) var(--space-8); }
+.consent-doc h1 { font-size: var(--text-2xl); margin-bottom: var(--space-2); }
+.consent-doc h2 { font-size: var(--text-lg); margin: var(--space-5) 0 var(--space-2); }
+.consent-doc p, .consent-doc li { font-size: var(--text-sm); line-height: 1.75; color: var(--color-text-secondary); }
+.consent-doc ul { list-style: disc; padding-left: var(--space-5); margin: var(--space-2) 0 var(--space-3); }
+.consent-doc li { margin-bottom: var(--space-2); }
+.consent-doc-meta { font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+.consent-doc-nav { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5); }
+.consent-doc-nav a { font-size: var(--text-sm); font-weight: 600; }
+
+.consent-check label a, .verify-consent-done a, .verify-text a, .consent-doc a { color: var(--color-primary); text-decoration: underline; font-weight: 600; }

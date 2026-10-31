@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Consent Notice — StreetTasker</title>
+  <meta name="description" content="How StreetTasker and Didit use your ID photo, selfie and face comparison to verify your identity, and your choices." />
+  <link rel="canonical" href="https://streettasker.com/data-consent.html" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/verify.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body>
+<!--
+  Data Consent Notice (stage V3b follow-up, owner's request 2026-10-30). The verify page shows ONE agreement box whose text links
+  here, the way Jumio, CoinJar, Revolut and Envato do. Wording: docs/verification/CONSENT-WORDING.md. Plain and factual, NOT legal
+  text: a lawyer must approve it before launch (D-V8). It is version "v1": if the meaning changes after launch, change this text,
+  idv_consent_version() and data-consent-version on verify.html together (v1 -> v2) so older consents stop counting.
+  Public page: no sign-in, no scripts of its own.
+-->
+  <div id="navbar-placeholder"></div>
+
+  <article class="consent-doc">
+    <h1>Data Consent Notice</h1>
+    <p class="consent-doc-meta">Identity verification &middot; Version 1 &middot; October 2026</p>
+
+    <nav class="consent-doc-nav" aria-label="Related pages">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="verify.html">Back to verification</a>
+    </nav>
+
+    <p>This notice explains what happens to your information when you verify your identity on StreetTasker. Please read it before you agree. If you agree, you do so by ticking the box on the verification page.</p>
+
+    <h2>1. Who is responsible</h2>
+    <p>StreetTasker decides why and how your verification information is used. Didit, our identity verification provider, carries out the check on our behalf and under our instructions.</p>
+
+    <h2>2. What is collected</h2>
+    <ul>
+      <li>A photo of your government-issued ID, including the details printed on it.</li>
+      <li>A short live selfie check, to show that a real person is present.</li>
+      <li>A comparison of your face with the photo on your ID. This comparison uses <strong>biometric data</strong>, which is sensitive personal data.</li>
+    </ul>
+
+    <h2>3. Why we use it</h2>
+    <p>Only to confirm that you are the person on the ID, so that people on StreetTasker can trust who they are dealing with and to help prevent fraud and impersonation. We do not use it for marketing, and we do not sell it.</p>
+
+    <h2>4. Who handles it</h2>
+    <ul>
+      <li><strong>Didit</strong> collects and processes your ID photo, selfie and face comparison. Didit may process data outside Nigeria.</li>
+      <li><strong>StreetTasker</strong> receives the result of the check (for example verified or not completed) and the dates. We do not receive your ID images, and we do not ask you to type your ID number into StreetTasker.</li>
+      <li>If a check needs a manual review, authorised StreetTasker staff may view the verification record in Didit.</li>
+      <li>We do not share your verification information with anyone else, except where the law requires it.</li>
+    </ul>
+
+    <h2>5. How long it is kept</h2>
+    <p>We keep the result and dates while your account is active. Didit keeps your images only for a limited period set in our Didit account, and then deletes them. Our <a href="privacy.html">Privacy Policy</a> gives the details.</p>
+
+    <h2>6. Your choice and your rights</h2>
+    <ul>
+      <li>Giving consent is your choice. Verification is required to offer or book services on StreetTasker, and without your consent we cannot verify you.</li>
+      <li>You can withdraw your consent at any time by emailing <a href="mailto:support@streettasker.com">support@streettasker.com</a>. Withdrawing does not undo what has already happened.</li>
+      <li>You can ask to see, correct or delete your information by emailing the same address.</li>
+      <li>You can also complain to the Nigeria Data Protection Commission.</li>
+    </ul>
+
+    <h2>7. If a coordinator verifies you</h2>
+    <p>If you are a Local Tasker and your coordinator starts the check for you, they must explain this notice to you first. They record that you agreed, how you agreed and when. You do the check on your own phone.</p>
+
+    <h2>8. Changes to this notice</h2>
+    <p>If we change this notice in a way that matters, we will ask for your consent again before you verify.</p>
+
+    <h2>9. Contact</h2>
+    <p>For any question about this notice, email <a href="mailto:support@streettasker.com">support@streettasker.com</a>.</p>
+  </article>
+
+  <div id="footer-placeholder"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

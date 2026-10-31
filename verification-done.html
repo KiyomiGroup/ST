@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Identity check — StreetTasker</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/verify.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+</head>
+<body>
+<!--
+  Stage V3c-2. Public page (no sign-in, no scripts, no data): Didit sends a Local Tasker here after a check started by
+  their coordinator. It says nothing about the result, because a redirect is not proof; the result is only ever shown
+  from the server to the coordinator. Ship together with the redeployed didit-create-session function.
+-->
+  <main class="verify-page">
+    <div class="verify-wrap">
+      <header class="verify-header">
+        <div class="icon-box verify-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h1 class="verify-title">You can close this page</h1>
+        <p class="verify-lead">Thank you. You are back from the identity check.</p>
+      </header>
+      <section class="card verify-status" aria-labelledby="doneHeading">
+        <p class="verify-status-msg" id="doneHeading">Your coordinator will see the result when it is ready.</p>
+        <p class="verify-status-sub">If any step was not finished, or you need help, please ask your coordinator.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -228,6 +228,8 @@
     showUpdated();
     showServiceSaved();
     $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
+    var vLink = $('coVerifyLink');
+    if (vLink) vLink.href = 'verify.html?mode=proxy&id=' + encodeURIComponent(p.tasker_user_id);
     var pubLink = $('coPubLink'), pubSum = $('coPubSummary');
     if (pubLink && pubSum) {
       pubLink.href = 'coordinator-publish.html?id=' + encodeURIComponent(p.tasker_user_id);

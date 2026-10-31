@@ -4,7 +4,7 @@
    is_verified, verified, verified_at or any verification status.
    Only the server (Didit webhook / sync -> idv_apply_event) can.
    Success is shown only from the server read idv_my_status().
-   Proxy mode (coordinator for a Local Tasker) is stage V3c.
+   Proxy mode (V3c): verify.html?mode=proxy&id=<local tasker id>, for an assigned coordinator only (the server decides).
    ============================================================ */
 'use strict';
 
@@ -23,13 +23,21 @@
     } catch (e) { return null; }
   }
 
+  /** Reads a status. Self: idv_my_status(). Proxy: idv_local_status(tasker) (server checks the coordinator).
+      Returns { data } or { error: <message safe to show or ''> }. */
+  async function readStatus(taskerId) {
+    try {
+      var r = taskerId ? await window.supabase.rpc('idv_local_status', { p_tasker: taskerId })
+                       : await window.supabase.rpc('idv_my_status');
+      if (r.error || !r.data) return { error: (r.error && r.error.hint && r.error.message) || '' };
+      return { data: r.data };
+    } catch (e) { return { error: '' }; }
+  }
+
   /** Server status for the signed-in user (null if not available). */
   async function getServerStatus() {
-    try {
-      var r = await window.supabase.rpc('idv_my_status');
-      if (r.error || !r.data) return null;
-      return r.data;
-    } catch (e) { return null; }
+    var r = await readStatus(null);
+    return r.data || null;
   }
 
   /** True only when the server has set the verified flag (read-only check). */
@@ -150,7 +158,12 @@
     var main = $('verifyMain');
     if (!main) return;
 
+    var q0 = new URLSearchParams(window.location.search);
+    var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    var proxy = q0.get('mode') === 'proxy';
+    var taskerId = proxy ? q0.get('id') : null;
     var state = { status: null, busy: false };
+    if (proxy) main.setAttribute('data-mode', 'proxy');
     var consentBlock = $('consentBlock');
     var pageVersion = consentBlock ? consentBlock.getAttribute('data-consent-version') : null;
 
@@ -162,6 +175,14 @@
     }
 
     function updateStartButton() {
+      if (proxy) {
+        var pb = $('proxyStartBtn');
+        if (pb) {
+          var ready = state.consentGiven || (($('proxyMethod') && $('proxyMethod').value) && $('proxyConsentCheck') && $('proxyConsentCheck').checked);
+          pb.disabled = state.busy || !ready || !!state.linkMade;
+        }
+        return;
+      }
       var btn = $('verifyStartBtn');
       if (!btn) return;
       var agreed = !!(state.consentGiven || ($('consentCheck') && $('consentCheck').checked));
@@ -171,13 +192,32 @@
     function render(s) {
       var status = s.status === 'ABANDONED' ? 'FAILED' : s.status;
       state.status = status;
-      state.consentGiven = s.consent_given === true && s.consent_version === pageVersion;
-      state.versionOk = !pageVersion || s.consent_version === pageVersion;
+      if (proxy) {
+        state.consentGiven = s.consent_given === true;
+        state.versionOk = true;
+      } else {
+        state.consentGiven = s.consent_given === true && s.consent_version === pageVersion;
+        state.versionOk = !pageVersion || s.consent_version === pageVersion;
+      }
 
       setHidden($('verifyLoading'), true);
       setHidden(main, false);
       showPanel(status);
       setHidden($('verifyStart'), !PANELS_WITH_START[status]);
+      if (proxy) {
+        /* The coordinator explains the Data Consent Notice: hide the self-service agreement box and button. */
+        setHidden($('consentSection'), true);   /* the coordinator uses the proxy form below instead */
+        setHidden($('consentSelf'), true); setHidden($('consentDone'), true); setHidden($('verifyStartBtn'), true);
+        setHidden($('proxyPanel'), !PANELS_WITH_START[status]);
+        setHidden($('proxyConsentFields'), state.consentGiven);
+        var back = $('proxyBackLink');
+        if (back) back.setAttribute('href', 'coordinator-tasker.html?id=' + encodeURIComponent(taskerId));
+        var vc = $('verifyContinueBtn');
+        if (vc) vc.setAttribute('href', 'coordinator-tasker.html?id=' + encodeURIComponent(taskerId));
+        if (!state.versionOk) say($('verifyError'), 'This page is out of date. Please reload it.');
+        updateStartButton();
+        return;
+      }
 
       if (!state.versionOk) {
         say($('verifyError'), 'This page is out of date. Please reload it.');
@@ -195,18 +235,19 @@
     }
 
     async function load() {
-      var s = await getServerStatus();
-      if (!s) {
+      var r = await readStatus(taskerId);
+      if (!r.data) {
         setHidden($('verifyLoading'), true);
-        say($('verifyError'), 'We could not load your verification status. Please reload the page or try again later.');
+        say($('verifyError'), r.error || 'We could not load the verification status. Please reload the page or try again later.');
         return;
       }
-      render(s);
+      render(r.data);
     }
 
     async function sync(returned) {
       try {
-        await callFunction('didit-sync', { mode: 'self', returned: !!returned });
+        await callFunction('didit-sync', proxy ? { mode: 'proxy', local_tasker_user_id: taskerId, returned: !!returned }
+                                               : { mode: 'self', returned: !!returned });
         return true;
       } catch (e) {
         say($('verifyNotice'), 'We could not reach the verification service just now. Showing your last saved status.');
@@ -234,6 +275,43 @@
       }
     }
 
+    async function proxyStartFlow() {
+      if (state.busy || state.linkMade) return;
+      state.busy = true; updateStartButton();
+      say($('verifyError'), '');
+      try {
+        if (!state.consentGiven) {
+          var ev = ($('proxyEvidence') && $('proxyEvidence').value || '').trim();
+          var c = await window.supabase.rpc('idv_record_local_consent', {
+            p_tasker: taskerId, p_method: $('proxyMethod').value, p_evidence_ref: ev || null, p_details: null });
+          if (c.error) throw new Error((c.error.hint && c.error.message) || CONSENT_FALLBACK_MSG);
+          state.consentGiven = true;
+        }
+        var made = await callFunction('didit-create-session', { mode: 'proxy', local_tasker_user_id: taskerId, request_id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 10) });
+        if (!isDiditUrl(made.url)) throw new Error(CONSENT_FALLBACK_MSG);
+        /* The link goes to the Local Tasker, not to this browser: show it, never redirect, never store it. */
+        $('proxyLinkInput').value = made.url;
+        $('proxyOpenLink').setAttribute('href', made.url);
+        setHidden($('proxyLinkBox'), false);
+        setHidden($('proxyConsentFields'), true);
+        state.linkMade = true;
+        say($('verifyNotice'), 'Verification is ready. Give the link below to the Local Tasker. Use "Check again" later to see the result.');
+      } catch (e) {
+        say($('verifyError'), e.message || CONSENT_FALLBACK_MSG);
+      }
+      state.busy = false; updateStartButton();
+    }
+
+    function copyLink() {
+      var inp = $('proxyLinkInput');
+      if (!inp || !inp.value) return;
+      var done = function () { say($('verifyNotice'), 'Link copied.'); };
+      try {
+        if (window.navigator && window.navigator.clipboard) { window.navigator.clipboard.writeText(inp.value).then(done, function () { inp.select(); }); return; }
+      } catch (e) { /* fall through */ }
+      if (inp.select) inp.select();
+    }
+
     async function refresh(btn) {
       if (state.busy) return;
       state.busy = true;
@@ -251,11 +329,16 @@
     /* events */
     var check = $('consentCheck');
     if (check) check.addEventListener('change', updateStartButton);
+    ['proxyMethod', 'proxyConsentCheck'].forEach(function (id) { var e = $(id); if (e) e.addEventListener('change', updateStartButton); });
+    var copyBtn = $('proxyCopyBtn');
+    if (copyBtn) copyBtn.addEventListener('click', copyLink);
     main.addEventListener('click', function (ev) {
       var el = ev.target.closest ? ev.target.closest('[data-action]') : null;
       if (!el) return;
       var action = el.getAttribute('data-action');
-      if (action === 'start' || action === 'resume') startFlow();
+      if (proxy && action === 'proxy-start') proxyStartFlow();
+      else if (proxy && (action === 'resume' || action === 'retry')) { var pp = $('proxyPanel'); if (pp) pp.scrollIntoView({ block: 'center' }); }
+      else if (action === 'start' || action === 'resume') startFlow();
       else if (action === 'refresh') refresh(el);
       else if (action === 'retry') {
         if (state.consentGiven) startFlow();
@@ -268,6 +351,19 @@
       var user = null;
       try { user = await window.ST.auth.requireAuth(); } catch (e) { user = null; }
       if (!user) return;
+      if (proxy) {
+        if (!UUID.test(taskerId || '')) {
+          setHidden($('verifyLoading'), true);
+          say($('verifyError'), 'This link is not valid. Open the Local Tasker from your coordinator list and try again.');
+          return;
+        }
+        try {
+          var pr = await window.supabase.from('local_tasker_profiles').select('full_name').eq('tasker_user_id', taskerId).maybeSingle();
+          var nm = $('proxyName'); if (nm) nm.textContent = (pr && pr.data && pr.data.full_name) || 'this Local Tasker';
+        } catch (e) { /* name is optional */ }
+        await load();
+        return;
+      }
       if (cameBackFromDidit()) { await sync(true); clearReturnMarks(); }
       await load();
     })();

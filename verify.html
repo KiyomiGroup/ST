@@ -57,7 +57,7 @@
           <div data-status-panel="NOT_STARTED" hidden>
             <span class="badge badge-gray">Not started</span>
             <p class="verify-status-msg">Your identity verification has not been completed.</p>
-            <p class="verify-status-sub">Read the notes below, give your consent, then start. It uses your phone or computer camera.</p>
+            <p class="verify-status-sub">Tick the agreement box below, then start. It uses your phone or computer camera.</p>
           </div>
 
           <div data-status-panel="IN_PROGRESS" hidden>
@@ -96,7 +96,7 @@
             </ul>
             <div class="verify-actions">
               <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
-              <a class="btn btn-ghost" href="mailto:hello@streettasker.com">Contact support</a>
+              <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
             </div>
           </div>
 
@@ -129,28 +129,17 @@
             </ul>
           </section>
 
-          <!-- Consent wording (stage V3b, owner's request 2026-10-30): drafted from how Didit, Stripe Identity and the Nigeria Data
-               Protection Act ask for consent; see docs/verification/CONSENT-WORDING.md. Plain and factual, NOT legal text.
-               A lawyer must approve it before launch (D-V8). If the text changes after launch, bump idv_consent_version() and
-               data-consent-version together (v1 -> v2), so older consents stop counting. -->
-          <section class="card verify-section" aria-labelledby="verifyConsentHeading">
-            <h2 class="verify-h2" id="verifyConsentHeading">Your data and consent</h2>
-
+          <!-- Consent: ONE agreement box whose text links to the full Data Consent Notice (data-consent.html, opens in a new tab),
+               the way Jumio, CoinJar, Revolut and Envato do. The notice text is in docs/verification/CONSENT-WORDING.md and is NOT
+               legal text: a lawyer must approve it before launch (D-V8). If its meaning changes after launch, bump
+               idv_consent_version() and data-consent-version together (v1 -> v2), so older consents stop counting. -->
+          <section class="card verify-section" id="consentSection" aria-label="Agreement">
             <div class="verify-consent" id="consentBlock" data-consent-version="v1">
-              <p class="verify-text">Please read this before you start. It explains what happens to your information when you verify.</p>
-              <ul class="verify-list">
-                <li><strong>What is collected.</strong> Didit, our verification provider, takes a photo of your ID and a short live selfie check, then compares your face with the photo on the ID. This comparison uses biometric data, which is sensitive personal data.</li>
-                <li><strong>Why.</strong> Only to confirm that you are the person on the ID. We do not use it for marketing and we do not sell it.</li>
-                <li><strong>Who handles it.</strong> Didit processes it for us and may do so outside Nigeria. StreetTasker receives the result (for example verified or not completed) and the dates, not your ID images. We do not ask you to type your ID number into StreetTasker. If a check needs manual review, authorised StreetTasker staff may view the record in Didit.</li>
-                <li><strong>How long.</strong> We keep the result and dates while your account is active. Didit keeps your images only for a limited period set in our Didit account, then deletes them. Details are in our <a href="privacy.html">privacy policy</a>.</li>
-                <li><strong>Your choice.</strong> Verification is required to offer or book services on StreetTasker. You can withdraw your consent at any time by emailing <a href="mailto:hello@streettasker.com">hello@streettasker.com</a>, and you can ask to see, correct or delete your data. Withdrawing does not undo what has already happened, and without consent we cannot verify you.</li>
-              </ul>
-
               <div class="consent-check" id="consentSelf">
                 <input type="checkbox" id="consentCheck" />
-                <label for="consentCheck">I have read the information above. I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity.</label>
+                <label for="consentCheck">I have read the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity.</label>
               </div>
-              <p class="verify-text verify-consent-done" id="consentDone" hidden>Your consent is recorded.</p>
+              <p class="verify-text verify-consent-done" id="consentDone" hidden>Your consent is recorded. <a href="data-consent.html" target="_blank" rel="noopener">Read the Data Consent Notice</a></p>
             </div>
 
             <button type="button" class="btn btn-primary btn-full" id="verifyStartBtn" data-action="start" disabled>
@@ -162,8 +151,9 @@
         <!-- ===== COORDINATOR PROXY MODE (shown by V3c only for an assigned Local Tasker) ===== -->
         <section class="card verify-section" id="proxyPanel" aria-labelledby="proxyHeading" hidden>
           <h2 class="verify-h2" id="proxyHeading">Verification for <span id="proxyName"></span></h2>
-          <p class="verify-text">You are starting identity verification for a Local Tasker you manage. Explain the notes above to them first. Only Didit's result can mark them verified; nothing on this page can.</p>
+          <p class="verify-text">You are starting identity verification for a Local Tasker you manage. Explain the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> to them first. Only Didit's result can mark them verified; nothing on this page can.</p>
 
+          <div id="proxyConsentFields">
           <div class="form-group">
             <label class="form-label" for="proxyMethod">How did the Local Tasker give consent?</label>
             <select id="proxyMethod" class="form-input">
@@ -180,11 +170,24 @@
           </div>
           <div class="consent-check">
             <input type="checkbox" id="proxyConsentCheck" />
-            <label for="proxyConsentCheck">I explained the notes above and this Local Tasker agreed to the identity check.</label>
+            <label for="proxyConsentCheck">I explained the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and this Local Tasker agreed to the identity check.</label>
+          </div>
           </div>
           <button type="button" class="btn btn-primary btn-full" id="proxyStartBtn" data-action="proxy-start" disabled>
             Start verification for this Local Tasker
           </button>
+
+          <div id="proxyLinkBox" class="verify-linkbox" hidden>
+            <p class="verify-text">Give this link to the Local Tasker. They open it on their own phone and follow the steps there. Do not send it to anyone else.</p>
+            <input type="text" id="proxyLinkInput" class="form-input" readonly autocomplete="off" />
+            <div class="verify-actions">
+              <button type="button" class="btn btn-outline" id="proxyCopyBtn">Copy link</button>
+              <a class="btn btn-primary" id="proxyOpenLink" href="#" rel="noopener">Open on this device</a>
+            </div>
+          </div>
+          <div class="verify-actions verify-actions-spaced">
+            <a class="btn btn-ghost" id="proxyBackLink" href="coordinator-taskers.html">Back to Local Tasker</a>
+          </div>
         </section>
 
       </div>
