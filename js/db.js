@@ -93,8 +93,22 @@ async function postTask({ title, description, category, budget, location, deadli
   /* Notify nearby taskers (non-blocking), only for a task that is actually live */
   if (canGoLive) { try { await _notifyTaskersOfNewTask(data); } catch(e) { /* silent */ } }
 
-  /* Tells the page which message to show (tasks.js). Not a column. */
-  if (data) data._needs_verification = !canGoLive;
+  /* V6c: a draft saved because the person is not verified yet is registered with the server, which
+     publishes it by itself when they become VERIFIED (idv_hold_publish). If they got verified in the
+     meantime the server publishes it right now. A failure here never blocks posting: the draft stays a draft. */
+  let publishedNow = false;
+  if (!canGoLive && data && data.id != null) {
+    data._held = false;
+    try {
+      const h = await window.supabase.rpc('idv_hold_publish', { p_entity: 'task', p_id: String(data.id) });
+      if (h && h.data && h.data.published === true) publishedNow = true;
+      data._held = !!(h && h.data && h.data.held === true);
+      if (h && h.error) console.warn('[postTask] could not register the draft for auto-publish:', h.error.message);
+    } catch (e) { console.warn('[postTask] could not register the draft for auto-publish:', e && e.message); }
+  }
+
+  /* Tells the page which message to show (tasks.js). Not columns. */
+  if (data) data._needs_verification = !canGoLive && !publishedNow;
   return data;
 }
 
