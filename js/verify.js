@@ -253,6 +253,13 @@
       }
     }
 
+    /* The error box is at the top of the page and the Start button is far below it: bring the message into view,
+       otherwise a failed start looks like "the button does nothing". */
+    function showError() {
+      var el = $('verifyError');
+      if (el && !el.hidden && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+    }
+
     async function startFlow() {
       if (state.busy) return;
       state.busy = true; updateStartButton();
@@ -269,6 +276,7 @@
         window.location.href = made.url;
       } catch (e) {
         say($('verifyError'), e.message || CONSENT_FALLBACK_MSG);
+        showError();
         state.busy = false; updateStartButton();
       }
     }
@@ -296,6 +304,7 @@
         say($('verifyNotice'), 'Verification is ready. Give the link below to the Local Tasker. Use "Check again" later to see the result.');
       } catch (e) {
         say($('verifyError'), e.message || CONSENT_FALLBACK_MSG);
+        showError();
       }
       state.busy = false; updateStartButton();
     }
