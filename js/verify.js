@@ -1,5 +1,5 @@
 /* ============================================================
-   STREET TASKER — verify.js  (Didit stage V3b: self mode)
+   STREET TASKER — verify.js  (Didit stages V3b, V3c, V3d)
    Replaces the old soft-check version. This file NEVER writes
    is_verified, verified, verified_at or any verification status.
    Only the server (Didit webhook / sync -> idv_apply_event) can.
@@ -40,14 +40,12 @@
     return r.data || null;
   }
 
-  /** True only when the server has set the verified flag (read-only check). */
+  /** True only when the SERVER says the user is VERIFIED (idv_my_status). It no longer reads users.is_verified:
+      a signed-in user can still write that column from the browser until the lock-down stage (V1d).
+      If the read fails the answer is false (safe default: nothing goes live). */
   async function isUserVerified() {
-    var user = await currentUser();
-    if (!user) return false;
-    try {
-      var r = await window.supabase.from('users').select('is_verified').eq('id', user.id).maybeSingle();
-      return !!(r.data && r.data.is_verified === true);
-    } catch (e) { return false; }
+    var s = await getServerStatus();
+    return !!(s && s.verified === true);
   }
 
   /** Old shape kept so existing dashboards keep working:
@@ -82,10 +80,10 @@
     return false;
   }
 
-  /** Existing behaviour kept (not part of verification): drafts go live. Runs only after the
-      SERVER says verified. Stage V3d decides the final gating. */
+  /** Drafts go live ONLY when the server says VERIFIED (checked again here, not trusted from the caller). */
   async function publishDrafts(userId) {
     try {
+      if (!(await isUserVerified())) return;
       await window.supabase.from('tasks').update({ status: 'open' })
         .or('customer_id.eq.' + userId + ',user_id.eq.' + userId).eq('status', 'draft');
       await window.supabase.from('services').update({ available: true })

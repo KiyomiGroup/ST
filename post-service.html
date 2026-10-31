@@ -622,20 +622,12 @@
         var postUser = sessRes.data.session && sessRes.data.session.user;
         if (!postUser) throw new Error('Session expired. Please log in again.');
 
-        /* Check if already verified — verified users skip the prompt */
+        /* Verified = the SERVER says VERIFIED (idv_my_status). The old checks (verifications.status,
+           users.is_verified) are browser-writable and are no longer trusted. If the read fails: not verified. */
         var isVerified = false;
         try {
-          var verifRes = await window.supabase.from('verifications')
-            .select('status').eq('user_id', postUser.id).maybeSingle();
-          if (verifRes.data && verifRes.data.status === 'approved') isVerified = true;
-        } catch(e) {}
-        if (!isVerified) {
-          try {
-            var uvRes = await window.supabase.from('users')
-              .select('is_verified').eq('id', postUser.id).maybeSingle();
-            if (uvRes.data && uvRes.data.is_verified === true) isVerified = true;
-          } catch(e) {}
-        }
+          isVerified = !!(window.ST && window.ST.verify && await window.ST.verify.isUserVerified());
+        } catch(e) { isVerified = false; }
 
         /*
           available = true  → already verified, listing goes live now
