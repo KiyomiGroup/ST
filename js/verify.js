@@ -61,6 +61,17 @@
     } catch (e) { return { can_publish: false, reason: 'unavailable' }; }
   }
 
+  /** Ask the server to publish a saved draft by itself once the person is VERIFIED (idv_hold_publish, V6c/V6e).
+      entity: 'task' | 'service' | 'tasker_listing' (id 'mine' = the caller's own listing). Never throws.
+      Returns { held, published }: published = the server could publish it right away (already allowed). */
+  async function holdForVerification(entity, id) {
+    try {
+      var r = await window.supabase.rpc('idv_hold_publish', { p_entity: entity, p_id: String(id) });
+      var d = r && r.data;
+      return { held: !!(d && d.held === true), published: !!(d && d.published === true) };
+    } catch (e) { return { held: false, published: false }; }
+  }
+
   /** Old shape kept so existing dashboards keep working:
       { status: 'approved' | 'pending' | 'rejected', rejection_reason: '' } or null.
       The reason is always empty: Didit's reasons are never shown or stored here. */
@@ -96,7 +107,7 @@
   window.ST = window.ST || {};
   window.ST.verify = { getVerificationStatus: getVerificationStatus, isUserVerified: isUserVerified,
                        requireVerification: requireVerification, getServerStatus: getServerStatus,
-                       canPublish: canPublish };
+                       canPublish: canPublish, holdForVerification: holdForVerification };
 
   /* ── the verify page (runs only where #verifyMain exists) ── */
 

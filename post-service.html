@@ -701,6 +701,23 @@
           showToast('Service posted and live! Redirecting...');
           setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1600);
         } else {
+          /* V6e: register the saved service and the public listing with the server, so both go live by
+             themselves once the person is verified. A failure here never blocks the page. If the server
+             could publish right away (already allowed), treat it as live. */
+          var servedLive = false;
+          try {
+            if (window.ST && window.ST.verify && window.ST.verify.holdForVerification && savedServiceId) {
+              var holdSvc = await window.ST.verify.holdForVerification('service', savedServiceId);
+              await window.ST.verify.holdForVerification('tasker_listing', 'mine');
+              servedLive = !!holdSvc.published;
+            }
+          } catch(holdErr) { console.warn('[post-service] could not register for auto-publish', holdErr && holdErr.message); }
+          if (servedLive) {
+            showToast('Service posted and live! Redirecting...');
+            setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1600);
+            return;
+          }
+
           /* Show verify prompt — pass return URL so verify.html bounces back */
           document.getElementById('verifyNowBtn').href = verifyUrl();
           /* "Verify My Identity Now" in the sidebar: go straight to verification once saved */
