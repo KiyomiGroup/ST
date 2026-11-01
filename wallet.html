@@ -69,6 +69,11 @@
           <p class="spg-hero-eyebrow pg-hero-eyebrow">Wallet</p>
           <p class="pg-hero-label">Available to withdraw</p>
           <p class="wl-amt pg-hero-amount"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+          <!-- CR-2: hidden until clearing > 0 (wallet-data.js shows it and fills the two hooks) -->
+          <div class="wl-clr" data-wl-clearing hidden>
+            <p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">&#8358;<span data-wl-value="clearing">&mdash;</span><span class="wl-amt-dec">.00</span></span></p>
+            <p class="wl-clr-note" data-wl-value="clearing-note"></p>
+          </div>
         </div>
         <div class="pg-hero-side">
           <button type="button" class="pg-hero-btn" data-action="withdraw">Withdraw to Bank</button>
@@ -145,6 +150,11 @@
             </header>
             <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
             <p class="wl-bal-note">Ready for immediate transfer</p>
+            <!-- CR-2: hidden until clearing > 0 -->
+            <div class="wl-clr" data-wl-clearing hidden>
+              <p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">&#8358;<span data-wl-value="clearing">&mdash;</span><span class="wl-amt-dec">.00</span></span></p>
+              <p class="wl-clr-note" data-wl-value="clearing-note"></p>
+            </div>
             <footer class="wl-bal-foot wl-bal-foot-line">
               <button type="button" class="wl-btn wl-btn-mint" data-action="withdraw">Withdraw Funds<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
             </footer>
@@ -200,6 +210,11 @@
               <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
             </div>
             <span class="wl-pill"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
+          </div>
+          <!-- CR-2: hidden until clearing > 0 -->
+          <div class="wl-clr" data-wl-clearing hidden>
+            <p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">&#8358;<span data-wl-value="clearing">&mdash;</span><span class="wl-amt-dec">.00</span></span></p>
+            <p class="wl-clr-note" data-wl-value="clearing-note"></p>
           </div>
           <button type="button" class="wl-btn wl-btn-block" data-action="withdraw"><svg class="wl-i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Withdraw to Bank</button>
         </section>
@@ -469,6 +484,11 @@
         <div class="wl-wd-avail">
           <span class="wl-wd-avail-label">Available balance</span>
           <span class="wl-wd-avail-amt">&#8358;<span data-wd="available">&mdash;</span><span class="wl-amt-dec">.00</span></span>
+        </div>
+        <!-- CR-2: hidden until clearing > 0 -->
+        <div class="wl-clr wl-clr-wd" data-wd-clearing hidden>
+          <p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">&#8358;<span data-wd="clearing">&mdash;</span><span class="wl-amt-dec">.00</span></span></p>
+          <p class="wl-clr-note" data-wd="clearing-note"></p>
         </div>
 
         <!-- Pay to: saved accounts (W6c fills #wdAccountList from #wdAccountTemplate; the default is pre-selected) -->

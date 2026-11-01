@@ -40,7 +40,7 @@
   var PAGE_SIZE = 5;
   var CREDIT_TYPES = ['escrow_release', 'earning'];
   var SVG_NS = 'http://www.w3.org/2000/svg';
-  var state = { uid: null, role: null, wallet: null, rows: [], filter: 'all', pageNo: 1 };
+  var state = { uid: null, role: null, wallet: null, clearing: null, rows: [], filter: 'all', pageNo: 1 };
 
   /* ── Small helpers ───────────────────────────────────────── */
   function $(sel, root) { return (root || page).querySelector(sel); }
@@ -101,9 +101,47 @@
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
   function monthKey(d) { return d.getFullYear() * 12 + d.getMonth(); }
 
+  /* ── Available vs Clearing (CR-2) ────────────────────────── */
+  // The database decides (withdrawal_clearing_mine); this is only for display, and the server
+  // refuses an amount that is still clearing. If the numbers could not be loaded (state.clearing
+  // is null) the page behaves as before: available = balance, nothing about clearing is shown.
+  // Computed from the CURRENT balance, so a balance read a moment later than the clearing numbers
+  // can never show more available than the balance.
+  function clearingInfo(wallet) {
+    var c = state.clearing;
+    var balance = wallet ? num(wallet.balance) : 0;
+    if (!wallet || !c) return { clearing: 0, available: balance, hours: null, next: null };
+    var clearing = Math.min(balance, num(c.clearing));
+    return { clearing: clearing, available: balance - clearing, hours: c.hold_hours || null, next: c.next_clear_at || null };
+  }
+  // "Mon 3 Nov, 4:46 PM" in Nigeria time; '' if the date is missing or unreadable
+  function lagosDate(iso) {
+    var d = iso ? new Date(iso) : null;
+    if (!d || isNaN(d)) return '';
+    try {
+      var p = {};
+      new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', weekday: 'short', day: 'numeric', month: 'short',
+        hour: 'numeric', minute: '2-digit', hour12: true }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+      if (!p.weekday || !p.day || !p.month || !p.hour || !p.minute || !p.dayPeriod) return '';
+      return p.weekday + ' ' + p.day + ' ' + p.month + ', ' + p.hour + ':' + p.minute + ' ' + p.dayPeriod.toUpperCase();
+    } catch (_e) { return ''; }
+  }
+  function clearingNote(info) {
+    var when = lagosDate(info.next);
+    var s = 'Earnings from a job can be withdrawn ' + (info.hours ? info.hours + (info.hours === 1 ? ' hour' : ' hours') : 'a while') + ' after the customer paid.';
+    return when ? s + ' Next available: ' + when + '.' : s;
+  }
+  function renderClearing(wallet) {
+    var info = clearingInfo(wallet), show = info.clearing > 0;
+    setAmount('clearing', show ? info.clearing : null);
+    setText('clearing-note', show ? clearingNote(info) : '');
+    $$('[data-wl-clearing]').forEach(function (n) { n.hidden = !show; });
+  }
+
   function renderCards(wallet, rows, heldCount) {
-    var available = num(wallet.balance), escrow = num(wallet.pending_balance);
+    var available = clearingInfo(wallet).available, escrow = num(wallet.pending_balance);
     setAmount('available', available);
+    renderClearing(wallet);
     setAmount('escrow', escrow);
     setText('escrow-short', '\u20A6' + fmt(escrow) + ' Escrow');
     setText('escrow-tasks', plural(heldCount, 'Active Task', 'Active Tasks'));
@@ -291,6 +329,9 @@
   function showError(message) {
     page.classList.remove('wl-loading');
     ['available', 'escrow', 'lifetime'].forEach(function (n) { setAmount(n, null); });
+    state.clearing = null;
+    setText('clearing-note', '');
+    $$('[data-wl-clearing]').forEach(function (n) { n.hidden = true; });
     setText('escrow-short', '\u20A6\u2014 Escrow');
     setText('escrow-tasks', 'Unavailable');
     setText('lifetime-tasks', 'Unavailable');
@@ -321,9 +362,12 @@
       state.wallet = wallet;
       return Promise.all([
         pay.fetchWalletTransactions(state.uid, 500),
-        safe(sb.from('escrow_payments').select('*').eq('tasker_id', state.uid).eq('status', 'held'))
+        safe(sb.from('escrow_payments').select('*').eq('tasker_id', state.uid).eq('status', 'held')),
+        // CR-2: null on any failure (then available = balance, as before)
+        Promise.resolve().then(function () { return typeof pay.getClearing === 'function' ? pay.getClearing() : null; }).then(function (c) { return c || null; }, function () { return null; })
       ]).then(function (res) {
         var txns = res[0] || [], held = res[1] || [];
+        state.clearing = res[2];
         var ids = [];
         txns.concat(held).forEach(function (r) { if (r.booking_id && ids.indexOf(r.booking_id) === -1) ids.push(r.booking_id); });
         return loadJobs(ids).then(function (jobs) {
@@ -393,7 +437,7 @@
     var FEE_FAIL = 'We could not work out your transfer fee. Please try again.';
     // Server refusals that send the person back to step 1 (nothing was sent to the bank)
     var BACK_TO_FORM = ['low_balance', 'daily_limit', 'below_min', 'above_max', 'bad_amount', 'not_tasker',
-      'account_unavailable', 'account_cooldown', 'bad_account'];
+      'account_unavailable', 'account_cooldown', 'bad_account', 'still_clearing'];
     var RELOAD_ACCOUNTS = ['account_unavailable', 'account_cooldown', 'bad_account'];
 
     var limits = { min: 500, max: 500000, daily: 1000000 };   // same numbers as the markup; overwritten from the database
@@ -405,7 +449,8 @@
     var listSeq = 0;
 
     var digits = function (v) { return parseInt(String(v).replace(/[^0-9]/g, ''), 10) || 0; };
-    var available = function () { return state.wallet ? num(state.wallet.balance) : 0; };
+    // What can be withdrawn now: the balance minus what is still clearing (CR-2). The server decides.
+    var available = function () { return state.wallet ? clearingInfo(state.wallet).available : 0; };
     var isOpen = function () { return modal.open === true || modal.hasAttribute('open'); };
     function setAll(name, value) { $$('[data-wd="' + name + '"]', modal).forEach(function (n) { n.textContent = value; }); }
     function showStep(n) {
@@ -420,6 +465,11 @@
       if (!state.wallet) return;
       setAll('available', fmt(available()));
       $$('.wl-wd-avail-amt .wl-amt-dec', modal).forEach(function (n) { n.textContent = '.' + cents(available()); });
+      var info = clearingInfo(state.wallet), show = info.clearing > 0;
+      setAll('clearing', fmt(info.clearing));
+      $$('[data-wd-clearing] .wl-amt-dec', modal).forEach(function (n) { n.textContent = '.' + cents(info.clearing); });
+      setAll('clearing-note', show ? clearingNote(info) : '');
+      $$('[data-wd-clearing]', modal).forEach(function (n) { n.hidden = !show; });
     }
     function setLimitsText() {
       setAll('min', fmt(limits.min)); setAll('max', fmt(limits.max)); setAll('daily', fmt(limits.daily));
@@ -522,8 +572,16 @@
 
     /* Amount */
     function amountProblem(v) {
-      if (available() <= 0) return 'You have no available balance to withdraw yet.';
-      if (v > available()) return 'That is more than your available balance of \u20A6' + fmt(available()) + '.';
+      var info = clearingInfo(state.wallet), later = lagosDate(info.next);
+      var from = later ? ' and becomes available from ' + later : ' and becomes available later';
+      if (available() <= 0) {
+        if (info.clearing > 0) return 'You have nothing to withdraw right now. \u20A6' + fmt(info.clearing) + ' is still clearing' + from + '.';
+        return 'You have no available balance to withdraw yet.';
+      }
+      if (v > available()) {
+        if (info.clearing > 0) return 'Only \u20A6' + fmt(available()) + ' can be withdrawn now. \u20A6' + fmt(info.clearing) + ' is still clearing' + from + '.';
+        return 'That is more than your available balance of \u20A6' + fmt(available()) + '.';
+      }
       if (v > 0 && v < limits.min) return 'The minimum withdrawal is \u20A6' + fmt(limits.min) + '.';
       if (v > limits.max) return 'The most you can withdraw at once is \u20A6' + fmt(limits.max) + '.';
       return '';
@@ -569,6 +627,9 @@
       document.documentElement.classList.add('wl-lock');
       if (available() <= 0) validateAmount(true);
       amountIn.focus();
+      // The page may have been open for hours: if the first clearing amount has been freed since the
+      // numbers were read, read them again so an amount that is now allowed is not refused here.
+      if (state.clearing && state.clearing.next_clear_at && Date.parse(state.clearing.next_clear_at) <= Date.now()) refreshWallet();
       loadAccounts('');
       loadLimits();
     }
@@ -699,7 +760,7 @@
           errForm.textContent = msg;
           showStep(1);
           if (RELOAD_ACCOUNTS.indexOf(code) !== -1) loadAccounts('');
-          if (code === 'low_balance') refreshWallet();
+          if (code === 'low_balance' || code === 'still_clearing') refreshWallet();   // also re-reads the clearing numbers
           validateAmount(false);
           amountIn.focus();
           return;

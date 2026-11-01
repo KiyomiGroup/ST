@@ -342,6 +342,31 @@ async function listBankAccounts() {
   });
 }
 
+/* CR-2: how much of the tasker's balance is still "clearing" (earnings from a customer payment
+   that is younger than the hold) and how much can be withdrawn now. The database works it out
+   (withdrawal_clearing_mine) and is the only authority; this is for display. Returns
+   { balance, clearing, available, hold_hours, next_clear_at, all_clear_at } or NULL on ANY failure
+   or odd answer (the page then shows the old behaviour). Never throws, never logs values. */
+async function getClearing() {
+  try {
+    var d = await _rpc('withdrawal_clearing_mine');
+    if (!d || typeof d !== 'object') return null;
+    var balance = Number(d.balance), clearing = Number(d.clearing), available = Number(d.available);
+    if (d.balance == null || d.clearing == null || d.available == null) return null;
+    if (!isFinite(balance) || !isFinite(clearing) || !isFinite(available)) return null;
+    if (balance < 0 || clearing < 0 || available < 0) return null;
+    var hours = Number(d.hold_hours);
+    return {
+      balance: balance, clearing: clearing, available: available,
+      hold_hours: isFinite(hours) && hours > 0 ? hours : null,
+      next_clear_at: typeof d.next_clear_at === 'string' ? d.next_clear_at : null,
+      all_clear_at: typeof d.all_clear_at === 'string' ? d.all_clear_at : null,
+    };
+  } catch (_e) {
+    return null;
+  }
+}
+
 /* Save an account (the server looks the name up again and stores the Paystack name). */
 async function addBankAccount(bankCode, accountNumber) {
   _wdCheckAccount(bankCode, accountNumber);
@@ -564,6 +589,7 @@ window.ST.payments = {
   getBanks,
   resolveAccount,
   listBankAccounts,
+  getClearing,
   addBankAccount,
   removeBankAccount,
   setDefaultBankAccount,
