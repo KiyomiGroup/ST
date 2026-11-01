@@ -25,3 +25,8 @@
 @media (min-width: 768px) {
   .co-filter-groups { flex-direction: row; flex-wrap: wrap; align-items: center; }
 }
+
+/* Stage V4b: note under the Verification card on a Local Tasker's profile. */
+.co-verify-note { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-verify-note[hidden] { display: none; }
+.co-facts[hidden], #coVerifyLink[hidden] { display: none; }

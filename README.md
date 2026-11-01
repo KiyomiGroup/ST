@@ -7,7 +7,7 @@ These paths match the repo root. They are the new verify page: stages V3a (marku
 | `pending-ui/verify.html` | `verify.html` (replaces the old page) |
 | `pending-ui/css/verify.css` | `css/verify.css` (new) |
 | `pending-ui/js/verify.js` | `js/verify.js` (replaces the old file) |
-| `pending-ui/coordinator-tasker.html` | `coordinator-tasker.html` (replaces; one button added, stage V3c) |
+| `pending-ui/coordinator-tasker.html` | `coordinator-tasker.html` (replaces; one button added, stage V3c; Verification card shows the server's identity check, stage V4b) |
 | `pending-ui/js/coordinator-tasker.js` | `js/coordinator-tasker.js` (replaces; three lines added, stage V3c) |
 | `pending-ui/verification-done.html` | `verification-done.html` (new public page, stage V3c-2) |
 | `pending-ui/data-consent.html` | `data-consent.html` (new public page: the Data Consent Notice) |

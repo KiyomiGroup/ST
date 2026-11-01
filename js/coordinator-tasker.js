@@ -175,6 +175,48 @@
     return li;
   }
 
+  /* Stage V4b: the identity check shown here is the SERVER's answer (idv_local_status), never the old
+     hand-typed verification fields. Read only: nothing on this page can mark anyone verified.
+     It must never block the profile itself. */
+  var verifyToken = 0;
+  async function loadVerify(id) {
+    var mine = ++verifyToken;
+    var list = $('coFactsVerify'), note = $('coVerifyNote'), link = $('coVerifyLink');
+    $('coVerifyLoading').hidden = false; $('coVerifyError').hidden = true; list.hidden = true; note.hidden = true;
+    list.textContent = '';
+    var row = null, failed = false;
+    try {
+      var res = await window.supabase.rpc('idv_local_status', { p_tasker: id });
+      if (res.error) throw res.error;
+      row = res.data;
+    } catch (e) {
+      console.error('[coordinator tasker identity check]', e);
+      failed = true;
+    }
+    if (mine !== verifyToken) return;
+    $('coVerifyLoading').hidden = true;
+    if (failed || !row || typeof row !== 'object') {
+      $('coVerifyError').hidden = false;
+      if (link) { link.hidden = false; link.textContent = 'Open identity check'; }
+      return;
+    }
+    var v = C.verifyView(row, id);
+    var dd = C.el('span', 'co-vstatus co-vstatus--' + v.tone, v.label);
+    var dl = C.el('dt', 'co-fact-label', 'Identity check');
+    var dv = C.el('dd', 'co-fact-value'); dv.appendChild(dd);
+    list.appendChild(dl); list.appendChild(dv);
+    if (v.date) fact(list, 'Verified on', v.date);
+    else if (row.verified !== true && row.started_at) fact(list, 'Started', C.formatDate(row.started_at));
+    if (row.verified !== true && row.status !== 'NOT_STARTED' && row.updated_at) fact(list, 'Last update', C.formatDate(row.updated_at));
+    fact(list, 'Agreement', row.consent_given ? 'Recorded' : 'Not recorded yet');
+    list.hidden = false;
+    var msg = row.needs_review === true
+      ? 'This check is being reviewed. The result will appear here when it is decided.'
+      : 'The result comes from the identity check itself. It cannot be changed here.';
+    note.textContent = msg; note.hidden = false;
+    if (link) { if (v.action) { link.textContent = v.action; link.hidden = false; } else { link.hidden = true; } }
+  }
+
   /* The agreement record is read-only and must never block the profile itself. */
   async function loadConsents(id) {
     var list = $('coConsentList');
@@ -219,10 +261,6 @@
     fact(f, 'Added', C.formatDate(p.created_at));
     fact(f, 'Published', p.published_at ? C.formatDate(p.published_at) : '', { empty: 'Not published' });
 
-    var v = $('coFactsVerify'); v.textContent = '';
-    fact(v, 'Method', p.verification_method, { empty: 'Not verified yet' });
-    fact(v, 'Verified on', C.formatDate(p.verified_at), { empty: 'Not verified yet' });
-    fact(v, 'Notes', p.verification_notes);
     show('coDetail');
     showCreated();
     showUpdated();
@@ -230,6 +268,7 @@
     $('coEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(p.tasker_user_id);
     var vLink = $('coVerifyLink');
     if (vLink) vLink.href = 'verify.html?mode=proxy&id=' + encodeURIComponent(p.tasker_user_id);
+    loadVerify(p.tasker_user_id);
     var pubLink = $('coPubLink'), pubSum = $('coPubSummary');
     if (pubLink && pubSum) {
       pubLink.href = 'coordinator-publish.html?id=' + encodeURIComponent(p.tasker_user_id);
@@ -249,7 +288,7 @@
     var cb = $('coCreatedBanner'); if (cb) cb.hidden = true;
     try {
       var res = await window.supabase.from('local_tasker_profiles')
-        .select('tasker_user_id, full_name, phone, areas_served, skills, availability_notes, status, published_at, verification_method, verified_at, verification_notes, created_at')
+        .select('tasker_user_id, full_name, phone, areas_served, skills, availability_notes, status, published_at, created_at')
         .eq('tasker_user_id', id)
         .maybeSingle();
       if (res.error) throw res.error;
