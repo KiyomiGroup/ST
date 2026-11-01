@@ -7,6 +7,7 @@
   <title>My Local Taskers — StreetTasker</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="stylesheet" href="css/coordinator-verify.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
 </head>
@@ -47,11 +48,19 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="coSearch" placeholder="Search by name, skill or area" autocomplete="off" />
         </label>
-        <div class="co-filters" role="group" aria-label="Filter by status">
-          <button type="button" class="co-filter is-active" data-co-filter="all" aria-pressed="true">All</button>
-          <button type="button" class="co-filter" data-co-filter="published" aria-pressed="false">Published</button>
-          <button type="button" class="co-filter" data-co-filter="draft" aria-pressed="false">Draft</button>
-          <button type="button" class="co-filter" data-co-filter="inactive" aria-pressed="false">Inactive</button>
+        <div class="co-filter-groups">
+          <div class="co-filters" role="group" aria-label="Filter by status">
+            <button type="button" class="co-filter is-active" data-co-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="co-filter" data-co-filter="published" aria-pressed="false">Published</button>
+            <button type="button" class="co-filter" data-co-filter="draft" aria-pressed="false">Draft</button>
+            <button type="button" class="co-filter" data-co-filter="inactive" aria-pressed="false">Inactive</button>
+          </div>
+          <div class="co-filters" role="group" aria-label="Filter by identity check">
+            <button type="button" class="co-filter is-active" data-co-vfilter="all" aria-pressed="true">Any identity check</button>
+            <button type="button" class="co-filter" data-co-vfilter="verified" aria-pressed="false">Verified</button>
+            <button type="button" class="co-filter" data-co-vfilter="progress" aria-pressed="false">In progress</button>
+            <button type="button" class="co-filter" data-co-vfilter="not" aria-pressed="false">Not verified</button>
+          </div>
         </div>
       </div>
 
@@ -75,6 +84,7 @@
   <script src="js/supabaseClient.js"></script>
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-verify-status.js"></script>
   <script src="js/coordinator-taskers.js"></script>
 </body>
 </html>

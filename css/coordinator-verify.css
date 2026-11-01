@@ -1,0 +1,27 @@
+/* Didit stage V4a: verification status on the coordinator's Local Taskers list.
+   Tokens only (DESIGN-SYSTEM.md). Loaded after css/coordinator.css. Reused by stage V4b. */
+.co-tasker-verify {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-3); border-top: 1px solid var(--co-field);
+}
+.co-vstatus {
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); font-weight: 700;
+  background: var(--co-field); color: var(--co-ink-muted);
+}
+.co-vstatus--verified { background: var(--co-mint); color: var(--co-green); }
+.co-vstatus--progress,
+.co-vstatus--review { background: var(--tone-warning-bg); color: var(--tone-warning-ink); }
+.co-vstatus--bad { background: var(--co-danger-soft); color: var(--co-danger); }
+.co-vdate { font-size: var(--text-xs); color: var(--co-ink-muted); }
+.co-vaction {
+  margin-left: auto; font-size: var(--text-sm); font-weight: 700;
+  color: var(--co-green); text-decoration: underline;
+}
+.co-vaction:hover { color: var(--co-green-bright); }
+.co-vaction:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.co-filter-groups { display: flex; flex-direction: column; gap: var(--space-2); }
+@media (min-width: 768px) {
+  .co-filter-groups { flex-direction: row; flex-wrap: wrap; align-items: center; }
+}

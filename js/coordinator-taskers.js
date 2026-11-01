@@ -3,6 +3,10 @@
    "My Local Taskers" list. Read-only: own ACTIVE assignments plus the profiles
    of those taskers, both under RLS (lt_assignments_read, lt_profiles_read).
    Search and status filter run in the browser on the rows already loaded.
+   Stage V4a: each card also shows the real identity-check status, read with the
+   server function idv_local_status_list() (the server decides who may see what).
+   If that read fails the list still loads and the card says "Status unavailable".
+   There is no control anywhere to mark a person verified.
    Runs on `coordinator:ready` (after the route guard).
    ============================================================ */
 'use strict';
@@ -14,6 +18,7 @@
   var rows = [];          /* [{ id, profile|null }] in assignment order */
   var last = null;
   var filter = 'all';
+  var vfilter = 'all';
   var query = '';
 
   function haystack(r) {
@@ -38,6 +43,18 @@
     link.appendChild(C.el('p', 'co-tasker-skills', skills.length ? skills.join(', ') : 'No skills recorded yet'));
     link.appendChild(C.el('p', 'co-tasker-area', p.areas_served || 'No service area recorded yet'));
     li.appendChild(link);
+
+    var v = C.verifyView(r.verify, r.id);
+    var foot = C.el('div', 'co-tasker-verify');
+    foot.appendChild(C.el('span', 'co-vstatus co-vstatus--' + v.tone, v.label));
+    if (v.date) foot.appendChild(C.el('span', 'co-vdate', v.date));
+    if (v.action && v.href) {
+      var act = C.el('a', 'co-vaction', v.action);
+      act.href = v.href;
+      act.setAttribute('aria-label', v.action + ' for ' + name);
+      foot.appendChild(act);
+    }
+    li.appendChild(foot);
     return li;
   }
 
@@ -55,6 +72,7 @@
     var shown = rows.filter(function (r) {
       var st = r.profile ? r.profile.status : 'unknown';
       if (filter !== 'all' && st !== filter) return false;
+      if (vfilter !== 'all' && C.verifyView(r.verify, r.id).group !== vfilter) return false;
       return !q || haystack(r).indexOf(q) > -1;
     });
     shown.forEach(function (r) { grid.appendChild(card(r)); });
@@ -94,7 +112,19 @@
         if (pr.error) throw pr.error;
         (pr.data || []).forEach(function (p) { byId[p.tasker_user_id] = p; });
       }
-      rows = ids.map(function (id) { return { id: id, profile: byId[id] || null }; });
+      /* Stage V4a: one server read for all of this coordinator's Local Taskers. Never blocks the list. */
+      var vById = {};
+      try {
+        var vr = await sb.rpc('idv_local_status_list');
+        if (vr.error) throw vr.error;
+        (Array.isArray(vr.data) ? vr.data : []).forEach(function (x) { if (x && x.tasker_user_id) vById[x.tasker_user_id] = x; });
+      } catch (ve) {
+        console.error('[coordinator taskers] identity status', ve);
+        vById = null;
+      }
+      rows = ids.map(function (id) {
+        return { id: id, profile: byId[id] || null, verify: vById ? (vById[id] || { status: 'NOT_STARTED' }) : null };
+      });
       $('coListLoading').hidden = true;
       summary();
       render();
@@ -111,6 +141,17 @@
     if (retry) retry.addEventListener('click', function () { if (last) load(last); });
     var search = $('coSearch');
     if (search) search.addEventListener('input', function () { query = search.value; render(); });
+    document.querySelectorAll('[data-co-vfilter]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        vfilter = b.getAttribute('data-co-vfilter');
+        document.querySelectorAll('[data-co-vfilter]').forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle('is-active', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        render();
+      });
+    });
     document.querySelectorAll('[data-co-filter]').forEach(function (b) {
       b.addEventListener('click', function () {
         filter = b.getAttribute('data-co-filter');
