@@ -246,58 +246,146 @@ async function topUpWallet(amountNaira, userEmail) {
   return { reference: reference, amount: Math.round(amountNaira) };
 }
 
-/* ── Withdraw from wallet to bank — calls Edge Function ─────── */
-async function withdrawFromWallet(amountNaira, bankCode, accountNumber, accountName) {
-  var { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) throw new Error('Please log in first.');
+/* ── Withdrawals: banks, saved bank accounts, withdraw (CR-1) ────
+   Money goes ONLY to a saved account. Everything here talks to the process-withdrawal
+   Edge Function through _callFn, except listBankAccounts (a direct read with an explicit
+   column list: the browser may never read the full number or the recipient code).
+   Errors are thrown as Error(plain text from the server); err.code is the server's code and
+   err.status the HTTP status. For withdrawFromWallet, err.refresh = true means "re-read the
+   balance and the transactions, do not trust your own arithmetic" and err.unknown = true means
+   "we could not tell whether it started: tell the user to check, never to blindly retry". */
+var _WD_FN = 'process-withdrawal';
+var _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+var _WD_REFRESH_CODES = { not_sent: 1, refund_pending: 1, start_failed: 1, unknown_outcome: 1 };
+var _WD_UNKNOWN_TEXT = 'We could not confirm whether your withdrawal started. Please check your balance and transactions before trying again.';
+var _banksCache = null;
+var _withdrawBusy = false;
 
-  var wallet = await getWallet(user.id);
-  if (wallet._stub) throw new Error('Wallet system not set up. Contact support.');
-  if ((wallet.balance || 0) < amountNaira) {
-    throw new Error('Insufficient balance (₦' + Number(wallet.balance||0).toLocaleString() + ' available).');
+function _wdError(message, code, status) {
+  var e = new Error(message);
+  if (code) e.code = code;
+  if (status) e.status = status;
+  return e;
+}
+
+/* One call to process-withdrawal. `isWithdraw` makes an unreadable or lost answer an
+   "unknown outcome" instead of a plain failure. */
+async function _wdCall(body, isWithdraw) {
+  var res;
+  try {
+    res = await _callFn(_WD_FN, body);
+  } catch (e) {
+    if (e && e.message === 'Session expired. Please log in again.') throw e;   /* nothing was sent */
+    if (isWithdraw) { var u = _wdError(_WD_UNKNOWN_TEXT, 'unknown_outcome'); u.unknown = true; u.refresh = true; throw u; }
+    throw _wdError('We could not reach the server. Check your connection and try again.', 'network');
   }
-  if (!accountNumber || accountNumber.length !== 10) throw new Error('Account number must be exactly 10 digits.');
-  if (!bankCode) throw new Error('Please enter your bank name.');
-  if (!accountName) throw new Error('Please enter the account name.');
-
- /* Call the Supabase Edge Function — this is where the real bank transfer happens */
-
-const { data: { session } } = await window.supabase.auth.getSession();
-
-if (!session || !session.access_token) {
-  throw new Error('Session expired. Please log in again.');
+  var d = res.data || {};
+  if (!res.ok) {
+    var known = typeof d.error === 'string' && d.error.length > 0 && d.error.length <= 400;
+    if (isWithdraw && !known && res.status >= 500) {
+      var u2 = _wdError(_WD_UNKNOWN_TEXT, 'unknown_outcome', res.status); u2.unknown = true; u2.refresh = true; throw u2;
+    }
+    var err = _wdError(known ? d.error : 'Something went wrong. Please try again.', typeof d.code === 'string' ? d.code : 'server', res.status);
+    if (isWithdraw && _WD_REFRESH_CODES[err.code]) err.refresh = true;
+    throw err;
+  }
+  return d;
 }
 
-const token = session.access_token;
-
-var edgeFnUrl = 'https://ftoiqbacutnbjnztguts.supabase.co/functions/v1/process-withdrawal';
-
-var res = await fetch(edgeFnUrl, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token,
-  },
-  body: JSON.stringify({
-    amount: Math.round(amountNaira),
-    bank_name: bankCode,
-    account_number: accountNumber,
-    account_name: accountName,
-  }),
-});
-
-var data = await res.json();
-
-if (!res.ok || !data.success) {
-  throw new Error(data.error || 'Withdrawal failed. Please try again.');
+function _wdCheckAccount(bankCode, accountNumber) {
+  if (typeof bankCode !== 'string' || !/^[A-Za-z0-9-]{1,20}$/.test(bankCode)) throw _wdError('Please choose your bank.', 'bad_bank');
+  if (typeof accountNumber !== 'string' || !/^\d{10}$/.test(accountNumber)) throw _wdError('Account number must be exactly 10 digits.', 'bad_account_number');
 }
 
-return {
-  success: true,
-  newBalance: data.new_balance,
-  message: data.message
-};
+function _wdCheckId(id) {
+  if (typeof id !== 'string' || !_UUID_RE.test(id)) throw _wdError('Please choose a bank account.', 'bad_account');
 }
+
+function _copyBanks(list) { return list.map(function (b) { return { name: b.name, code: b.code }; }); }
+
+/* The list of banks (name + code). Loaded once per page; a failed load is not remembered. */
+async function getBanks() {
+  if (_banksCache) return _copyBanks(_banksCache);
+  var d = await _wdCall({ action: 'banks' });
+  if (!d || !Array.isArray(d.banks) || d.banks.length === 0) throw _wdError('We could not load the list of banks. Please try again.', 'banks_unavailable');
+  var list = d.banks
+    .filter(function (b) { return b && typeof b.name === 'string' && typeof b.code === 'string' && b.name && b.code; })
+    .map(function (b) { return { name: b.name, code: b.code }; });
+  if (list.length === 0) throw _wdError('We could not load the list of banks. Please try again.', 'banks_unavailable');
+  _banksCache = list;
+  return _copyBanks(list);
+}
+
+/* Ask Paystack (through the server) whose account this is. Returns { accountName, bankName, bankCode }. */
+async function resolveAccount(bankCode, accountNumber) {
+  _wdCheckAccount(bankCode, accountNumber);
+  var d = await _wdCall({ action: 'resolve', bank_code: bankCode, account_number: accountNumber });
+  if (typeof d.account_name !== 'string' || !d.account_name) throw _wdError('We could not check this account. Please try again.', 'lookup_unavailable');
+  return { accountName: d.account_name, bankName: String(d.bank_name || ''), bankCode: String(d.bank_code || bankCode) };
+}
+
+/* Saved accounts of the logged-in tasker, default first. Explicit columns only: never select('*'),
+   never the full number. Row-level security limits it to the user's own rows. */
+async function listBankAccounts() {
+  var r = await window.supabase
+    .from('withdrawal_bank_accounts')
+    .select('id, bank_code, bank_name, account_name, account_last4, is_default, created_at')
+    .is('removed_at', null)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: true });
+  if (r.error) {
+    console.warn('[Payments] listBankAccounts error:', r.error.code);
+    throw _wdError('We could not load your bank accounts. Please try again.', 'list_failed');
+  }
+  return (r.data || []).map(function (a) {
+    return { id: a.id, bankCode: a.bank_code, bankName: a.bank_name, accountName: a.account_name, last4: a.account_last4, isDefault: !!a.is_default };
+  });
+}
+
+/* Save an account (the server looks the name up again and stores the Paystack name). */
+async function addBankAccount(bankCode, accountNumber) {
+  _wdCheckAccount(bankCode, accountNumber);
+  var d = await _wdCall({ action: 'account_add', bank_code: bankCode, account_number: accountNumber });
+  if (typeof d.id !== 'string') throw _wdError('We could not save this account. Please try again.', 'account_failed');
+  return { id: d.id, bankName: d.bank_name, accountName: d.account_name, last4: d.last4, isDefault: !!d.is_default, alreadySaved: !!d.already_saved };
+}
+
+async function removeBankAccount(id) {
+  _wdCheckId(id);
+  var d = await _wdCall({ action: 'account_remove', id: id });
+  return { id: d.id || id, removed: !!d.removed, alreadyRemoved: !!d.already_removed, newDefaultId: d.new_default_id || null };
+}
+
+async function setDefaultBankAccount(id) {
+  _wdCheckId(id);
+  var d = await _wdCall({ action: 'account_default', id: id });
+  return { id: d.id || id, isDefault: d.is_default === true, changed: !!d.changed };
+}
+
+/* Withdraw to a SAVED account. The server takes the fee out of the amount, debits the wallet and
+   starts the transfer; success means "processing", never "paid". */
+async function withdrawFromWallet(amountNaira, bankAccountId) {
+  var amount = typeof amountNaira === 'string' && /^\d{1,10}$/.test(amountNaira) ? Number(amountNaira) : amountNaira;
+  if (typeof amount !== 'number' || !isFinite(amount) || amount <= 0 || Math.floor(amount) !== amount) throw _wdError('Enter a whole naira amount.', 'bad_amount');
+  _wdCheckId(bankAccountId);
+  if (_withdrawBusy) throw _wdError('Your withdrawal is already being sent. Please wait.', 'in_progress');
+  _withdrawBusy = true;
+  try {
+    var d = await _wdCall({ action: 'withdraw', amount: amount, bank_account_id: bankAccountId }, true);
+    if (d.status !== 'processing' || typeof d.reference !== 'string' || !d.reference) {
+      var u = _wdError(_WD_UNKNOWN_TEXT, 'unknown_outcome'); u.unknown = true; u.refresh = true; throw u;
+    }
+    function num(v) { var n = Number(v); return (v === null || v === undefined || !isFinite(n)) ? null : n; }
+    return {
+      status: 'processing', reference: d.reference, amount: num(d.amount), fee: num(d.fee), netAmount: num(d.net_amount),
+      bankName: typeof d.bank_name === 'string' ? d.bank_name : '', accountLast4: typeof d.account_last4 === 'string' ? d.account_last4 : '',
+      balanceAfter: num(d.balance_after), message: typeof d.message === 'string' ? d.message : ''
+    };
+  } finally {
+    _withdrawBusy = false;
+  }
+}
+
 /* ── Pay from wallet balance ─────────────────────────────────
    The server checks the balance, takes the money and holds it in escrow.
    amountNaira / taskerUserId are ignored: the server knows the price and the tasker. */
@@ -473,6 +561,12 @@ window.ST.payments = {
   fetchWalletTransactions,
   topUpWallet,
   withdrawFromWallet,
+  getBanks,
+  resolveAccount,
+  listBankAccounts,
+  addBankAccount,
+  removeBankAccount,
+  setDefaultBankAccount,
   payFromWallet,
   initiatePayment,
   getGiftQuote,

@@ -1,0 +1,101 @@
+{
+  "components/navbar.html": {
+    "inline": 7
+  },
+  "css/styles.css": {
+    "hex": 52,
+    "rgb": 73,
+    "important": 77
+  },
+  "css/subscription.css": {
+    "hex": 1,
+    "rgb": 6,
+    "important": 2
+  },
+  "css/tasks.css": {
+    "hex": 8,
+    "rgb": 5
+  },
+  "dashboard-customer.html": {
+    "inline": 7,
+    "important": 1
+  },
+  "dashboard-tasker.html": {
+    "hex": 17,
+    "inline": 21,
+    "important": 1
+  },
+  "explore-tasks.html": {
+    "hex": 5,
+    "rgb": 2,
+    "inline": 60
+  },
+  "find-taskers.html": {
+    "hex": 1,
+    "inline": 35
+  },
+  "find-tasks.html": {
+    "hex": 1,
+    "inline": 9
+  },
+  "home-feed.html": {
+    "hex": 6
+  },
+  "index.html": {
+    "rgb": 5,
+    "inline": 38
+  },
+  "js/future-features.js": {
+    "hex": 1
+  },
+  "js/location.js": {
+    "inline": 3
+  },
+  "js/subscription.js": {
+    "hex": 3,
+    "rgb": 1,
+    "inline": 5
+  },
+  "js/taskers.js": {
+    "inline": 1
+  },
+  "local-taskers.html": {
+    "inline": 30
+  },
+  "messages.html": {
+    "hex": 1,
+    "inline": 3
+  },
+  "onboarding-customer.html": {
+    "hex": 1,
+    "inline": 13
+  },
+  "onboarding-tasker.html": {
+    "inline": 1
+  },
+  "post-service.html": {
+    "hex": 2,
+    "inline": 5
+  },
+  "post-task.html": {
+    "hex": 4,
+    "inline": 13
+  },
+  "privacy.html": {
+    "inline": 2
+  },
+  "signup.html": {
+    "inline": 3
+  },
+  "subscription.html": {
+    "hex": 3,
+    "rgb": 8,
+    "inline": 21
+  },
+  "terms.html": {
+    "inline": 2
+  },
+  "verify.html": {
+    "inline": 31
+  }
+}

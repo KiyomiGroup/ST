@@ -1,0 +1,2 @@
+# withdrawals-reference (READ-ONLY, do not copy into the repo)
+Real project files at their project paths, for the withdrawal stages. `process-withdrawal` is the CURRENT (unsafe) function to be replaced; `paystack-webhook` is the CURRENT deployed gift-card webhook to be merged; `messaging-step6a.sql` is the source of truth for wallet and escrow SQL. CSS, JS, HTML, design docs and the design check come from the repo zip (newest). Edit the real repo files, never these copies.

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/applications.css" />
   <link rel="stylesheet" href="css/profile-pages.css" />
   <link rel="stylesheet" href="css/edit-profile.css" />
+  <link rel="stylesheet" href="css/bank-reminder.css" />
 </head>
 <body class="pg-hero-page st-no-bottom-nav">
   <div id="navbar-placeholder"></div>
@@ -64,6 +65,9 @@
           <div class="pp-stat"><span class="pp-stat-label">Earned</span><span class="pp-stat-value" id="epEarned">&#8358;0</span><span class="pp-stat-note">After the 12% platform fee</span></div>
           <div class="pp-stat"><span class="pp-stat-label">Experience</span><span class="pp-stat-value" id="epExpStat">&mdash;</span><span class="pp-stat-note" id="epExpStatNote">Add it below</span></div>
         </section>
+
+        <!-- Bank account reminder (js/bank-reminder.js): shown only to taskers with no saved bank account -->
+        <div data-bank-reminder="profile" hidden></div>
 
         <div class="ep-layout">
 
@@ -394,5 +398,6 @@
   <script src="js/pg-hero-fixed.js"></script>
   <script src="js/edit-profile-common.js"></script>
   <script src="js/edit-profile-tasker.js"></script>
+  <script src="js/bank-reminder.js"></script>
 </body>
 </html>

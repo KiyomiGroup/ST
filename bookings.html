@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/bookings.css" />
+  <link rel="stylesheet" href="css/bank-reminder.css" />
 </head>
 <body class="pg-hero-page">
   <div id="navbar-placeholder"></div>
@@ -100,6 +101,8 @@
 
       <div class="bk-layout has-side" id="bkLayout">
         <div class="bk-main">
+          <!-- Bank account reminder (js/bank-reminder.js): shown only to taskers with a booking and no saved bank account -->
+          <div data-bank-reminder="booked" hidden></div>
           <p class="sr-only" id="bkStatus" role="status"></p>
           <div class="bk-list" id="bkList" aria-busy="true">
             <div class="bk-state"><p class="bk-state-text">Loading your bookings…</p></div>
@@ -182,5 +185,6 @@
   <script src="js/app.js"></script>
   <script src="js/bookings.js"></script>
   <script src="js/pg-hero-fixed.js"></script>
+  <script src="js/bank-reminder.js"></script>
 </body>
 </html>

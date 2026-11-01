@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Wallet — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/wallet.css" />
+</head>
+<body class="pg-hero-page pg-hero-nav">
+  <div id="navbar-placeholder"></div>
+
+  <!-- Icon sprite: every icon on this page is a <use> of one of these -->
+  <svg class="wl-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+      <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-banknote" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+      <symbol id="i-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+      <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+      <symbol id="i-trending-up" viewBox="0 0 24 24"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-broom" viewBox="0 0 24 24"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></symbol>
+      <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></symbol>
+      <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+      <symbol id="i-plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></symbol>
+      <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+      <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+      <symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+      <symbol id="i-landmark" viewBox="0 0 24 24"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2 20 7H4z"/></symbol>
+      <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+      <symbol id="i-square-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- data-role is "tasker" or "customer". wallet-ui.js sets it (see that file). -->
+  <div class="wl-page wl-loading" id="walletPage" data-role="customer" data-pg-fixed-pad>
+    <div class="wl-container pg-hero-page">
+
+      <!-- Tasker, desktop (769px and up): shared .pg-hero. The stat cards below float over its bottom edge.
+           Customers and phones keep the header underneath. -->
+      <section class="wl-hero-dt pg-hero wl-tasker-only wl-desk" aria-labelledby="wlHeroTitle">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="wlHeroTitle"><span class="spg-hero-dot"></span>Wallet &amp; Earnings</h1>
+          <p class="pg-hero-desc">Manage payouts, verified Nigerian bank transfers, and dedicated service gift vouchers.</p>
+        </div>
+        <div class="pg-hero-side">
+          <button type="button" class="pg-hero-btn" data-bank-open="list">Bank details</button>
+          <button type="button" class="pg-hero-btn" data-action="withdraw">Initiate Withdrawal</button>
+        </div>
+      </section>
+
+      <!-- Tasker, phone only (768px and below): shared .pg-hero with the live balance. The values
+           are filled by wallet-data.js through the same data-wl-value hooks as the cards below.
+           The round button jumps to the gift cards. -->
+      <section class="pg-hero wl-hero-mob wl-tasker-only wl-mob" data-pg-fixed aria-label="Available to withdraw">
+        <span class="pg-hero-live"><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
+        <div class="pg-hero-text">
+          <p class="spg-hero-eyebrow pg-hero-eyebrow">Wallet</p>
+          <p class="pg-hero-label">Available to withdraw</p>
+          <p class="wl-amt pg-hero-amount"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+        </div>
+        <div class="pg-hero-side">
+          <button type="button" class="pg-hero-btn" data-action="withdraw">Withdraw to Bank</button>
+          <button type="button" class="pg-hero-btn pg-hero-icon-btn" data-bank-open="list" aria-label="Bank details"><svg class="wl-i" aria-hidden="true"><use href="#i-landmark"/></svg></button>
+          <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
+        </div>
+      </section>
+
+      <!-- Customer, desktop (769px and up): the same shared .pg-hero. The gift card credits card below floats over its bottom edge. -->
+      <section class="wl-hero-dt pg-hero wl-customer-only wl-desk" aria-labelledby="wlHeroTitleCust">
+        <div class="pg-hero-text">
+          <h1 class="spg-hero-eyebrow pg-hero-eyebrow" id="wlHeroTitleCust"><span class="spg-hero-dot"></span>My Wallet</h1>
+          <p class="pg-hero-desc">Manage your service gift cards and keep track of what you top up and spend.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="redeem.html" class="pg-hero-btn">Redeem Gift Card</a>
+        </div>
+      </section>
+
+      <!-- Customer, phone only (768px and below): shared .pg-hero, fixed under the nav like the tasker one. The round button jumps to the gift cards. -->
+      <section class="pg-hero wl-hero-mob wl-customer-only wl-mob" data-pg-fixed aria-label="My wallet">
+        <div class="pg-hero-text">
+          <p class="spg-hero-eyebrow pg-hero-eyebrow"><span class="spg-hero-dot"></span>My Wallet</p>
+          <p class="pg-hero-desc">Manage your gift cards, top-ups and spending.</p>
+        </div>
+        <div class="pg-hero-side">
+          <a href="redeem.html" class="pg-hero-btn">Redeem Gift Card</a>
+          <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
+        </div>
+      </section>
+
+      <!-- ── SECTION 1 · Header ─────────────────────────────────── -->
+      <header class="wl-header">
+        <div class="wl-header-copy">
+          <span class="wl-eyebrow wl-tasker-only"><span class="wl-eyebrow-dot" aria-hidden="true"></span>Verified Escrow &amp; Payout Hub</span>
+          <span class="wl-eyebrow wl-customer-only"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg>Gift Card Wallet</span>
+
+          <h1 class="wl-title">
+            <span class="wl-tasker-only">Wallet &amp; Earnings</span>
+            <span class="wl-customer-only">My Wallet</span>
+          </h1>
+
+          <p class="wl-lede wl-tasker-only">Manage milestone payouts, verified Nigerian bank transfers, and dedicated service gift vouchers.</p>
+          <p class="wl-lede wl-customer-only">Manage your service gift cards and keep track of what you top up and spend.</p>
+        </div>
+
+        <!-- Tasker, desktop. All withdraw buttons open the withdrawal popup (section 7). -->
+        <button type="button" class="wl-btn wl-tasker-only wl-desk" id="initiateWithdrawalBtn" data-action="withdraw">
+          <svg class="wl-i" aria-hidden="true"><use href="#i-wallet"/></svg>Initiate Withdrawal
+        </button>
+      </header>
+
+      <!-- Tasker, mobile only: replaces the title block (matches the mobile design) -->
+      <div class="wl-safepay wl-tasker-only wl-mob" role="note">
+        <span class="wl-safepay-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-shield-check"/></svg></span>
+        <div>
+          <p class="wl-safepay-title">StreetTasker SafePay &bull; Escrow Protected</p>
+          <p class="wl-safepay-text">Task funds are held securely until client sign-off.</p>
+        </div>
+      </div>
+
+      <div class="wl-main" id="walletMain"><!-- a div, not main: styles.css force-pads every main element on mobile -->
+        <!-- ── SECTION 2 · Balance cards ──────────────────────────
+             Static placeholder values. data-wl-* attributes mark where real
+             numbers go: set the text of .wl-amt-num (whole naira, formatted
+             with commas) and leave .wl-amt-dec as ".00". -->
+        <section class="wl-balances" aria-label="Balances">
+
+          <!-- Tasker: available to withdraw -->
+          <article class="wl-bal wl-bal-primary wl-tasker-only" data-wl-card="available">
+            <header class="wl-bal-head">
+              <h2 class="wl-bal-label">Available balance</h2>
+              <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-banknote"/></svg></span>
+            </header>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-note">Ready for immediate transfer</p>
+            <footer class="wl-bal-foot wl-bal-foot-line">
+              <button type="button" class="wl-btn wl-btn-mint" data-action="withdraw">Withdraw Funds<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+            </footer>
+          </article>
+
+          <!-- Tasker: locked in escrow -->
+          <article class="wl-bal wl-tasker-only" data-wl-card="escrow">
+            <header class="wl-bal-head">
+              <h2 class="wl-bal-label">Locked in escrow</h2>
+              <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-lock"/></svg></span>
+            </header>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="escrow">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-meta"><span class="wl-chip wl-chip-mint" data-wl-value="escrow-tasks">&mdash;</span><span class="wl-bal-note">Client sign-off pending</span></p>
+            <footer class="wl-bal-foot">
+              <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Safeguarded until final job inspection</p>
+            </footer>
+          </article>
+
+          <!-- Shared: gift card credits (customers see only this card) -->
+          <article class="wl-bal" data-wl-card="giftcards">
+            <header class="wl-bal-head">
+              <h2 class="wl-bal-label">Gift card credits</h2>
+              <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-gift"/></svg></span>
+            </header>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="giftcards">103,500</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-note" data-wl-value="giftcards-count">Across 3 service-dedicated cards</p>
+            <footer class="wl-bal-foot wl-bal-foot-row">
+              <a class="wl-link" href="#giftCards">View Breakdown<svg class="wl-i" aria-hidden="true"><use href="#i-chevron-down"/></svg></a>
+              <span class="wl-chip wl-chip-grey wl-tasker-only">Valid in Lagos &amp; Abuja</span>
+            </footer>
+          </article>
+
+          <!-- Tasker: lifetime disbursed -->
+          <article class="wl-bal wl-tasker-only" data-wl-card="lifetime">
+            <header class="wl-bal-head">
+              <h2 class="wl-bal-label">Lifetime disbursed</h2>
+              <span class="wl-bal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-badge-check"/></svg></span>
+            </header>
+            <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="lifetime">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            <p class="wl-bal-note" data-wl-value="lifetime-tasks">&mdash;</p>
+            <footer class="wl-bal-foot wl-bal-foot-row">
+              <span class="wl-trend"><svg class="wl-i" aria-hidden="true"><use href="#i-trending-up"/></svg><span data-wl-value="lifetime-growth">&mdash;</span></span>
+              <span class="wl-bal-note">growth compared to last month</span>
+            </footer>
+          </article>
+        </section>
+
+        <!-- Tasker, mobile only: compact version of the four cards above. Hidden on phones now: the hero carries the same figures (see wallet.css) -->
+        <section class="wl-bal-mob wl-tasker-only wl-mob" aria-label="Available to withdraw">
+          <div class="wl-bal-mob-top">
+            <div>
+              <h2 class="wl-bal-label">Available to withdraw</h2>
+              <p class="wl-amt"><span class="wl-amt-cur">&#8358;</span><span class="wl-amt-num" data-wl-value="available">&mdash;</span><span class="wl-amt-dec">.00</span></p>
+            </div>
+            <span class="wl-pill"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg><span data-wl-value="escrow-short">&#8358;&mdash; Escrow</span></span>
+          </div>
+          <button type="button" class="wl-btn wl-btn-block" data-action="withdraw"><svg class="wl-i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Withdraw to Bank</button>
+        </section>
+
+        <!-- ── SECTION 3 · Service gift cards ────────────────────────
+             Shared by tasker and customer. Placeholder cards: repeat one
+             <article class="wl-gc"> per card. data-pct drives the progress bar
+             (wallet-ui.js sets the width), data-copy holds the full code. -->
+        <section class="wl-gcs" id="giftCards" aria-labelledby="gcTitle">
+          <header class="wl-sec-head">
+            <div class="wl-sec-copy">
+              <h2 class="wl-sec-title" id="gcTitle"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg>Service Gift Cards</h2>
+              <p class="wl-sec-sub"><span class="wl-desk">Category-locked vouchers given by clients or promotional partners. Non-withdrawable to bank; applies directly to booking services.</span><span class="wl-mob">Credits dedicated to specific task trades</span></p>
+            </div>
+            <a class="wl-btn wl-btn-soft" href="redeem.html" data-action="redeem"><svg class="wl-i" aria-hidden="true"><use href="#i-plus-circle"/></svg><span class="wl-desk">Redeem New Gift Card</span><span class="wl-mob">Redeem Code</span></a>
+          </header>
+          <div class="wl-gc-grid">
+          <article class="wl-gc" data-wl-giftcard>
+            <span class="wl-gc-deco" aria-hidden="true"></span>
+            <header class="wl-gc-top">
+              <span class="wl-gc-icon wl-gc-icon-on" aria-hidden="true"><svg class="wl-i"><use href="#i-broom"/></svg></span>
+              <span class="wl-gc-exp wl-desk">Exp: 14 Dec 2025</span>
+            </header>
+            <div class="wl-gc-body">
+              <p class="wl-gc-cat wl-desk">Home Services</p>
+              <h3 class="wl-gc-title">Deep Home Cleaning Voucher</h3>
+              <p class="wl-gc-desc wl-desk">Valid for standard cleaning, deep scrub, or post-construction janitorial tasks.</p>
+              <p class="wl-gc-code wl-mob">Code: <strong>ST-CLN-8829</strong></p>
+            </div>
+            <div class="wl-gc-bal">
+              <p class="wl-gc-left"><strong>&#8358;68,500</strong><span class="wl-desk"> left</span></p>
+              <p class="wl-gc-orig"><span class="wl-desk">Original: &#8358;100,000</span><span class="wl-mob">left of &#8358;100k</span></p>
+            </div>
+            <div class="wl-gc-bar" role="progressbar" aria-label="Balance remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="68.5"><span class="wl-gc-fill" data-pct="68.5"></span></div>
+            <p class="wl-gc-stats wl-desk"><span class="wl-gc-avail">68.5% Available</span><span>&#8358;31,500 applied</span></p>
+            <p class="wl-gc-lock wl-mob"><span class="wl-gc-lock-text"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg>Usable exclusively on Cleaning tasks</span><span class="wl-gc-exp-short">Exp. Dec 2025</span></p>
+            <footer class="wl-gc-foot wl-desk">
+              <span class="wl-gc-codechip"><code>ST-CLN-8829-****</code><button type="button" class="wl-gc-copy" data-copy="ST-CLN-8829" aria-label="Copy gift card code"><svg class="wl-i" aria-hidden="true"><use href="#i-copy"/></svg></button></span>
+              <a class="wl-link" href="post-task.html" data-action="apply-giftcard">Apply to Task<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            </footer>
+          </article>
+          <article class="wl-gc" data-wl-giftcard>
+            <span class="wl-gc-deco" aria-hidden="true"></span>
+            <header class="wl-gc-top">
+              <span class="wl-gc-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-shirt"/></svg></span>
+              <span class="wl-gc-exp wl-desk">Exp: 08 Oct 2025</span>
+            </header>
+            <div class="wl-gc-body">
+              <p class="wl-gc-cat wl-desk">Fashion &amp; Style</p>
+              <h3 class="wl-gc-title">Bespoke Tailoring &amp; Fit</h3>
+              <p class="wl-gc-desc wl-desk">Usable with top-rated neighborhood tailors for measurements and bespoke native wear.</p>
+              <p class="wl-gc-code wl-mob">Code: <strong>ST-TLR-4109</strong></p>
+            </div>
+            <div class="wl-gc-bal">
+              <p class="wl-gc-left"><strong>&#8358;20,000</strong><span class="wl-desk"> left</span></p>
+              <p class="wl-gc-orig"><span class="wl-desk">Original: &#8358;50,000</span><span class="wl-mob">left of &#8358;50k</span></p>
+            </div>
+            <div class="wl-gc-bar" role="progressbar" aria-label="Balance remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40"><span class="wl-gc-fill" data-pct="40"></span></div>
+            <p class="wl-gc-stats wl-desk"><span class="wl-gc-avail">40% Available</span><span>&#8358;30,000 applied</span></p>
+            <p class="wl-gc-lock wl-mob"><span class="wl-gc-lock-text"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg>Usable exclusively on Tailoring bookings</span><span class="wl-gc-exp-short">Exp. Oct 2025</span></p>
+            <footer class="wl-gc-foot wl-desk">
+              <span class="wl-gc-codechip"><code>ST-TLR-4109-****</code><button type="button" class="wl-gc-copy" data-copy="ST-TLR-4109" aria-label="Copy gift card code"><svg class="wl-i" aria-hidden="true"><use href="#i-copy"/></svg></button></span>
+              <a class="wl-link" href="post-task.html" data-action="apply-giftcard">Apply to Task<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            </footer>
+          </article>
+          <article class="wl-gc" data-wl-giftcard>
+            <span class="wl-gc-deco" aria-hidden="true"></span>
+            <header class="wl-gc-top">
+              <span class="wl-gc-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-wrench"/></svg></span>
+              <span class="wl-gc-exp wl-desk">Exp: 30 Nov 2025</span>
+            </header>
+            <div class="wl-gc-body">
+              <p class="wl-gc-cat wl-desk">Handyman &amp; Utilities</p>
+              <h3 class="wl-gc-title">Plumbing &amp; Leak Fixes</h3>
+              <p class="wl-gc-desc wl-desk">Covers master labor fees and basic replacement fixtures for water lines.</p>
+              <p class="wl-gc-code wl-mob">Code: <strong>ST-PLM-7714</strong></p>
+            </div>
+            <div class="wl-gc-bal">
+              <p class="wl-gc-left"><strong>&#8358;15,000</strong><span class="wl-desk"> left</span></p>
+              <p class="wl-gc-orig"><span class="wl-desk">Original: &#8358;35,000</span><span class="wl-mob">left of &#8358;35k</span></p>
+            </div>
+            <div class="wl-gc-bar" role="progressbar" aria-label="Balance remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42.8"><span class="wl-gc-fill" data-pct="42.8"></span></div>
+            <p class="wl-gc-stats wl-desk"><span class="wl-gc-avail">42.8% Available</span><span>&#8358;20,000 applied</span></p>
+            <p class="wl-gc-lock wl-mob"><span class="wl-gc-lock-text"><svg class="wl-i" aria-hidden="true"><use href="#i-lock"/></svg>Usable exclusively on Plumbing jobs</span><span class="wl-gc-exp-short">Exp. Nov 2025</span></p>
+            <footer class="wl-gc-foot wl-desk">
+              <span class="wl-gc-codechip"><code>ST-PLM-7714-****</code><button type="button" class="wl-gc-copy" data-copy="ST-PLM-7714" aria-label="Copy gift card code"><svg class="wl-i" aria-hidden="true"><use href="#i-copy"/></svg></button></span>
+              <a class="wl-link" href="post-task.html" data-action="apply-giftcard">Apply to Task<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            </footer>
+          </article>
+          </div>
+        </section>
+
+        <!-- ── SECTION 4 · Escrow explainer (tasker only) ─────────────
+             Desktop only: on mobile the SafePay banner at the top says the same thing. -->
+        <section class="wl-escrow wl-tasker-only wl-desk" aria-labelledby="escrowTitle">
+          <span class="wl-escrow-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-shield-check"/></svg></span>
+          <div class="wl-escrow-copy">
+            <h2 class="wl-escrow-title" id="escrowTitle">How Escrow Safeguards Your Earnings</h2>
+            <p class="wl-escrow-text">StreetTasker guarantees client funds are pre-funded before you start any task. Once the client approves the completed work, funds shift instantly from <strong>Locked in Escrow</strong> to your <strong>Available Balance</strong>.</p>
+          </div>
+          <span class="wl-chip wl-chip-grey wl-escrow-badge">100% Protected</span>
+        </section>
+
+        <!-- ── SECTION 5 · Financial ledger ───────────────────────────
+             Desktop: card with filters, rows and pagination. Mobile: the compact
+             "Recent Activity" list below. Tasker and customer each get their own list
+             (customers see gift card top-ups and spend only). Static placeholder rows:
+             data-types lists the filters a row belongs to, data-total is the full count
+             for the pager text. -->
+        <section class="wl-ledger wl-desk" aria-labelledby="ledgerTitle">
+          <header class="wl-led-head">
+            <div class="wl-led-copy">
+              <h2 class="wl-led-title" id="ledgerTitle">Financial Ledger</h2>
+              <p class="wl-sec-sub wl-tasker-only">Audited track of all completed task payouts, bank disbursements, and gift card spends.</p>
+              <p class="wl-sec-sub wl-customer-only">Audited track of your gift card top-ups and what you have spent on bookings.</p>
+            </div>
+            <div class="wl-filters wl-tasker-only" role="group" aria-label="Filter transactions" aria-controls="ledgerTasker">
+              <button type="button" class="wl-filter" data-filter="all" aria-pressed="true">All Transactions</button>
+              <button type="button" class="wl-filter" data-filter="earning" aria-pressed="false">Task Earnings</button>
+              <button type="button" class="wl-filter" data-filter="withdrawal" aria-pressed="false">Withdrawals</button>
+              <button type="button" class="wl-filter" data-filter="giftcard" aria-pressed="false">Gift Cards</button>
+              <button type="button" class="wl-filter" data-filter="escrow" aria-pressed="false">Escrow Releases</button>
+            </div>
+            <div class="wl-filters wl-customer-only" role="group" aria-label="Filter transactions" aria-controls="ledgerCustomer">
+              <button type="button" class="wl-filter" data-filter="all" aria-pressed="true">All Transactions</button>
+              <button type="button" class="wl-filter" data-filter="spend" aria-pressed="false">Gift Card Spend</button>
+              <button type="button" class="wl-filter" data-filter="topup" aria-pressed="false">Top-ups</button>
+            </div>
+          </header>
+          <div class="wl-led-pane wl-tasker-only" id="ledgerTasker" data-live data-total="0">
+            <ul class="wl-tx-list" aria-live="polite"></ul>
+            <p class="wl-led-empty">Loading your transactions&hellip;</p>
+            <footer class="wl-led-foot">
+              <p class="wl-led-count" aria-live="polite">Showing <span data-wl-shown>0</span> of <span data-wl-total>0</span> transaction<span data-wl-plural>s</span></p>
+              <div class="wl-pager">
+                <button type="button" class="wl-pager-btn" data-action="ledger-prev" disabled>Previous</button>
+                <button type="button" class="wl-pager-btn wl-pager-next" data-action="ledger-next">Next</button>
+              </div>
+            </footer>
+          </div>
+          <div class="wl-led-pane wl-customer-only" id="ledgerCustomer" data-total="12">
+            <ul class="wl-tx-list">
+            <li class="wl-tx" data-types="spend">
+              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-credit-card"/></svg></span>
+              <div class="wl-tx-main">
+                <p class="wl-tx-title"><span>Gift Card Applied: Deep Home Cleaning</span><span class="wl-badge wl-badge-mint">Applied</span></p>
+                <p class="wl-tx-meta">Voucher ST-CLN-8829-**** applied &bull; Task #ST-90455 &bull; Ikeja, Lagos</p>
+              </div>
+              <div class="wl-tx-side">
+                <p class="wl-tx-amt is-credit">-&#8358;15,000.00</p>
+                <p class="wl-tx-date">Today, 11:40 AM</p>
+              </div>
+            </li>
+            <li class="wl-tx" data-types="topup">
+              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-plus-circle"/></svg></span>
+              <div class="wl-tx-main">
+                <p class="wl-tx-title"><span>Gift Card Top-up: Bespoke Tailoring &amp; Fit</span><span class="wl-badge wl-badge-mint">Completed</span></p>
+                <p class="wl-tx-meta">Voucher ST-TLR-4109-**** &bull; Paid by card &bull; Instant credit</p>
+              </div>
+              <div class="wl-tx-side">
+                <p class="wl-tx-amt is-credit">+&#8358;50,000.00</p>
+                <p class="wl-tx-date">Yesterday, 4:05 PM</p>
+              </div>
+            </li>
+            <li class="wl-tx" data-types="spend">
+              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-credit-card"/></svg></span>
+              <div class="wl-tx-main">
+                <p class="wl-tx-title"><span>Gift Card Applied: Plumbing &amp; Leak Fixes</span><span class="wl-badge wl-badge-mint">Applied</span></p>
+                <p class="wl-tx-meta">Voucher ST-PLM-7714-**** applied &bull; Task #ST-90102 &bull; Yaba, Lagos</p>
+              </div>
+              <div class="wl-tx-side">
+                <p class="wl-tx-amt is-credit">-&#8358;20,000.00</p>
+                <p class="wl-tx-date">12 May 2025</p>
+              </div>
+            </li>
+            <li class="wl-tx" data-types="topup">
+              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-plus-circle"/></svg></span>
+              <div class="wl-tx-main">
+                <p class="wl-tx-title"><span>Gift Card Top-up: Plumbing &amp; Leak Fixes</span><span class="wl-badge wl-badge-mint">Completed</span></p>
+                <p class="wl-tx-meta">Voucher ST-PLM-7714-**** &bull; Paid by card &bull; Instant credit</p>
+              </div>
+              <div class="wl-tx-side">
+                <p class="wl-tx-amt is-credit">+&#8358;35,000.00</p>
+                <p class="wl-tx-date">10 May 2025</p>
+              </div>
+            </li>
+            <li class="wl-tx" data-types="spend">
+              <span class="wl-tx-icon wl-tx-icon-mint" aria-hidden="true"><svg class="wl-i"><use href="#i-credit-card"/></svg></span>
+              <div class="wl-tx-main">
+                <p class="wl-tx-title"><span>Gift Card Applied: Bespoke Tailoring</span><span class="wl-badge wl-badge-mint">Applied</span></p>
+                <p class="wl-tx-meta">Voucher ST-TLR-4109-**** applied &bull; Task #ST-89877 &bull; Surulere, Lagos</p>
+              </div>
+              <div class="wl-tx-side">
+                <p class="wl-tx-amt is-credit">-&#8358;30,000.00</p>
+                <p class="wl-tx-date">08 May 2025</p>
+              </div>
+            </li>
+            </ul>
+            <p class="wl-led-empty" hidden>No transactions in this view yet.</p>
+            <footer class="wl-led-foot">
+              <p class="wl-led-count" aria-live="polite">Showing <span data-wl-shown>5</span> of <span data-wl-total>12</span> transaction<span data-wl-plural>s</span></p>
+              <div class="wl-pager">
+                <button type="button" class="wl-pager-btn" data-action="ledger-prev" disabled>Previous</button>
+                <button type="button" class="wl-pager-btn wl-pager-next" data-action="ledger-next">Next</button>
+              </div>
+            </footer>
+          </div>
+        </section>
+
+        <!-- Mobile only: Recent Activity (replaces the filters and pager) -->
+        <section class="wl-activity wl-mob" aria-labelledby="actTitle">
+          <header class="wl-sec-head">
+            <h2 class="wl-sec-title" id="actTitle">Recent Activity</h2>
+            <span class="wl-act-live">Updated live</span>
+          </header>
+          <ul class="wl-act-list wl-tasker-only" id="actTasker" aria-live="polite"></ul>
+          <p class="wl-act-empty wl-tasker-only" id="actTaskerEmpty">Loading your activity&hellip;</p>
+          <ul class="wl-act-list wl-customer-only">
+            <li class="wl-act">
+              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-gift"/></svg></span>
+              <div class="wl-act-main"><p class="wl-act-title">Cleaning Card Credit Applied</p><p class="wl-act-sub">ST-CLN-8829 &bull; Task #9021</p></div>
+              <div class="wl-act-side"><p class="wl-act-amt is-debit">-&#8358;15,000</p><p class="wl-act-date">Today, 11:40 AM</p></div>
+            </li>
+            <li class="wl-act">
+              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-plus-circle"/></svg></span>
+              <div class="wl-act-main"><p class="wl-act-title">Gift Card Top-up</p><p class="wl-act-sub">Tailoring &bull; ST-TLR-4109</p></div>
+              <div class="wl-act-side"><p class="wl-act-amt is-credit">+&#8358;50,000</p><p class="wl-act-date">Yesterday</p></div>
+            </li>
+            <li class="wl-act">
+              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-gift"/></svg></span>
+              <div class="wl-act-main"><p class="wl-act-title">Plumbing Card Credit Applied</p><p class="wl-act-sub">ST-PLM-7714 &bull; Task #9102</p></div>
+              <div class="wl-act-side"><p class="wl-act-amt is-debit">-&#8358;20,000</p><p class="wl-act-date">May 12</p></div>
+            </li>
+            <li class="wl-act">
+              <span class="wl-act-icon " aria-hidden="true"><svg class="wl-i"><use href="#i-plus-circle"/></svg></span>
+              <div class="wl-act-main"><p class="wl-act-title">Gift Card Top-up</p><p class="wl-act-sub">Plumbing &bull; ST-PLM-7714</p></div>
+              <div class="wl-act-side"><p class="wl-act-amt is-credit">+&#8358;35,000</p><p class="wl-act-date">May 10</p></div>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+    </div>
+
+  <!-- ── SECTION 7 · Withdrawal popup (tasker only) ──────────────
+       Native <dialog>: the browser handles focus trap, Esc and the backdrop.
+       Money goes ONLY to a saved bank account (CR-1): step 1 picks one of the saved accounts
+       (cards) and the amount, step 2 reviews amount / fee / "you receive", step 3 says the
+       withdrawal is PROCESSING (not "done"), step 4 shows a failure message.
+       js/wallet-data.js (W6c) fills the cards and runs the steps; it calls
+       ST.payments.withdrawFromWallet(amount, bankAccountId). Saved accounts are added in the
+       Bank details sheet (W6d), opened by [data-bank-open].
+       Only the last 4 digits of an account ever appear on this page. -->
+  <dialog class="wl-modal wl-tasker-only" id="withdrawModal" aria-labelledby="wdTitle">
+    <header class="wl-modal-head">
+      <span class="wl-modal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-wallet"/></svg></span>
+      <div class="wl-modal-heading">
+        <h2 class="wl-modal-title" id="wdTitle">Withdraw to bank</h2>
+        <p class="wl-modal-step" data-wd-stepline>Step 1 of 2 &bull; Choose account and amount</p>
+      </div>
+      <button type="button" class="wl-modal-close" data-wd-close aria-label="Close withdrawal"><svg class="wl-i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </header>
+
+    <!-- Step 1 · Saved account + amount -->
+    <form class="wl-modal-panel" id="wdStep1" data-wd-step="1" novalidate>
+      <div class="wl-modal-body">
+        <div class="wl-wd-avail">
+          <span class="wl-wd-avail-label">Available balance</span>
+          <span class="wl-wd-avail-amt">&#8358;<span data-wd="available">&mdash;</span><span class="wl-amt-dec">.00</span></span>
+        </div>
+
+        <!-- Pay to: saved accounts (W6c fills #wdAccountList from #wdAccountTemplate; the default is pre-selected) -->
+        <fieldset class="wl-acct-set" id="wdAccounts" aria-describedby="wdAccountsError">
+          <legend class="wl-label">Pay to</legend>
+          <p class="wl-acct-note" id="wdAccountsLoading" role="status" hidden>Loading your bank accounts&hellip;</p>
+          <div class="wl-acct-list" id="wdAccountList"></div>
+          <div class="wl-acct-empty" id="wdAccountsEmpty" hidden>
+            <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+            <p class="wl-acct-empty-title">No bank account saved yet</p>
+            <p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+          </div>
+          <p class="wl-field-error" id="wdAccountsError" role="alert"></p>
+          <button type="button" class="wl-btn wl-btn-soft wl-acct-add" id="wdAddAccountBtn" data-bank-open="add"><svg class="wl-i" aria-hidden="true"><use href="#i-plus-circle"/></svg>Add bank account</button>
+        </fieldset>
+
+        <label class="wl-label" for="wdAmount">Amount to withdraw</label>
+        <div class="wl-field" data-wd-field>
+          <span class="wl-field-naira" aria-hidden="true">&#8358;</span>
+          <input class="wl-input" id="wdAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="wdLimits wdError" />
+        </div>
+        <p class="wl-field-error" id="wdError" role="alert"></p>
+        <div class="wl-presets" role="group" aria-label="Quick amounts">
+          <span class="wl-presets-label">Quick pick</span>
+          <button type="button" class="wl-preset" data-wd-preset="0.25">25%</button>
+          <button type="button" class="wl-preset" data-wd-preset="0.5">50%</button>
+          <button type="button" class="wl-preset" data-wd-preset="1">Max</button>
+        </div>
+        <p class="wl-wd-hint" id="wdLimits">Minimum &#8358;<span data-wd="min">500</span> and maximum &#8358;<span data-wd="max">500,000</span> per withdrawal, up to &#8358;<span data-wd="daily">1,000,000</span> a day. A small transfer fee is taken from the amount; you will see it before you confirm.</p>
+        <p class="wl-field-error" id="wdFormError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-wd-close>Cancel</button>
+        <button type="submit" class="wl-btn" data-wd-continue disabled>Continue<svg class="wl-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+      </footer>
+    </form>
+
+    <!-- Step 2 · Review (amount, fee, you receive) -->
+    <div class="wl-modal-panel" id="wdStep2" data-wd-step="2" hidden>
+      <div class="wl-modal-body">
+        <div class="wl-wd-total">
+          <span class="wl-wd-avail-label">You receive</span>
+          <span class="wl-wd-total-amt">&#8358;<span data-wd="receive">0</span><span class="wl-amt-dec">.00</span></span>
+        </div>
+        <dl class="wl-wd-rows">
+          <div><dt>Amount from your wallet</dt><dd>&#8358;<span data-wd="amount">0</span>.00</dd></div>
+          <div><dt>Transfer fee</dt><dd>&minus;&#8358;<span data-wd="fee">0</span>.00</dd></div>
+          <div><dt>Bank</dt><dd data-wd="bank">-</dd></div>
+          <div><dt>Account name</dt><dd data-wd="name">-</dd></div>
+          <div><dt>Account number</dt><dd data-wd="acct">-</dd></div>
+        </dl>
+        <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Bank transfers cannot be reversed. Check the account details above before you confirm.</p>
+        <p class="wl-field-error" id="wdConfirmError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-wd-back>Back</button>
+        <button type="button" class="wl-btn" data-wd-confirm>Confirm Withdrawal</button>
+      </footer>
+    </div>
+
+    <!-- Step 3 · Processing (the money is not at the bank yet, so this is NOT "All done") -->
+    <div class="wl-modal-panel" id="wdStep3" data-wd-step="3" hidden>
+      <div class="wl-modal-body wl-wd-done" role="status">
+        <span class="wl-wd-done-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-clock"/></svg></span>
+        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal processing</h3>
+        <p class="wl-wd-done-text">&#8358;<span data-wd="receive">0</span>.00 is on its way to <span data-wd="bank">your bank</span> (<span data-wd="acct">-</span>). Your wallet has been debited. We will let you know when it arrives, and you can follow it in your transactions.</p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-block" data-wd-close>Done</button>
+      </footer>
+    </div>
+
+    <!-- Step 4 · Failed (W6c puts the plain message from the server in [data-wd="failMessage"]) -->
+    <div class="wl-modal-panel" id="wdStep4" data-wd-step="4" hidden>
+      <div class="wl-modal-body wl-wd-done" role="alert">
+        <span class="wl-wd-done-icon wl-wd-done-icon-fail" aria-hidden="true"><svg class="wl-i"><use href="#i-x"/></svg></span>
+        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal not completed</h3>
+        <p class="wl-wd-done-text" data-wd="failMessage">We could not complete your withdrawal. Please try again.</p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-wd-close>Close</button>
+        <button type="button" class="wl-btn" data-wd-retry>Try again</button>
+      </footer>
+    </div>
+
+    <!-- One saved-account card. W6c clones this for each saved account and sets: the radio value
+         (the account id), data-acct="bank", "name", "last4", and shows data-acct="default" for the default. -->
+    <template id="wdAccountTemplate">
+      <label class="wl-acct">
+        <input class="wl-acct-input" type="radio" name="wdAccount" value="" />
+        <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+        <span class="wl-acct-text">
+          <span class="wl-acct-head">
+            <span class="wl-acct-bank" data-acct="bank"></span>
+            <span class="wl-acct-default" data-acct="default" hidden>Default</span>
+          </span>
+          <span class="wl-acct-name" data-acct="name"></span>
+          <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-acct="last4"></span></span>
+        </span>
+        <span class="wl-acct-check" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
+      </label>
+    </template>
+  </dialog>
+
+  <!-- ── SECTION 8 · Bank details sheet (tasker only, CR-1) ──────
+       Where the tasker saves, defaults and removes the bank accounts their withdrawals are paid to.
+       Native <dialog> like the withdrawal popup (same .wl-modal shell: bottom sheet on phones, sticky
+       foot). Three panels, only one visible at a time (W6e switches them with the hidden attribute):
+         list   = saved accounts + "Add bank account"      (#bkPanelList)
+         add    = bank, account number, automatic name check, Save   (#bkAddForm)
+         remove = two-step confirm, no confirm() popup     (#bkPanelRemove)
+       Opened by any [data-bank-open] button (value "list" or "add") and by wallet.html#bank-details.
+       Only the last 4 digits of an account are ever put on this page (W6e must never write the full
+       number back into the DOM). Ids and data hooks are listed in docs/withdrawals/handoffs/W6d.md. -->
+  <dialog class="wl-modal wl-tasker-only" id="bankModal" aria-labelledby="bkTitle">
+    <header class="wl-modal-head">
+      <span class="wl-modal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+      <div class="wl-modal-heading">
+        <h2 class="wl-modal-title" id="bkTitle">Bank details</h2>
+        <p class="wl-modal-step" data-bk-stepline>Saved accounts</p>
+      </div>
+      <button type="button" class="wl-modal-close" data-bk-close aria-label="Close bank details"><svg class="wl-i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </header>
+
+    <!-- Panel 1 · Saved accounts -->
+    <div class="wl-modal-panel" id="bkPanelList" data-bk-panel="list" data-bk-step="Saved accounts">
+      <div class="wl-modal-body">
+        <p class="wl-bk-intro">Your withdrawals are only ever paid to a bank account saved here. You can save up to <span data-bk="max">3</span> accounts.</p>
+        <p class="wl-acct-note" id="bkLoading" role="status" hidden>Loading your bank accounts&hellip;</p>
+        <p class="wl-field-error" id="bkListError" role="alert"></p>
+        <button type="button" class="wl-btn wl-btn-soft wl-bk-retry" id="bkReloadBtn" data-bk-reload hidden>Try again</button>
+        <ul class="wl-bk-list" id="bkAccountList" role="list"></ul>
+        <div class="wl-acct-empty" id="bkEmpty" hidden>
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <p class="wl-acct-empty-title">No bank account saved yet</p>
+          <p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+        </div>
+        <p class="wl-bk-note" id="bkMaxNote" hidden>You have saved the most accounts allowed. Remove one if you want to add another.</p>
+        <p class="wl-bk-note" id="bkCooldownNote" hidden></p>
+        <p class="wl-bk-status" id="bkListStatus" role="status"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-close>Close</button>
+        <button type="button" class="wl-btn" id="bkAddBtn" data-bk-add><svg class="wl-i" aria-hidden="true"><use href="#i-plus-circle"/></svg>Add account</button>
+      </footer>
+    </div>
+
+    <!-- Panel 2 · Add a bank account (the name is checked automatically; Save stays off until it shows) -->
+    <form class="wl-modal-panel" id="bkAddForm" data-bk-panel="add" data-bk-step="Add a bank account" autocomplete="off" novalidate hidden>
+      <div class="wl-modal-body">
+        <label class="wl-label" for="bkBank">Bank</label>
+        <div class="wl-field wl-field-sm" data-bk-field="bank">
+          <select class="wl-select" id="bkBank" name="bank" required disabled aria-describedby="bkBankNote bkBankError">
+            <option value="">Choose your bank</option>
+          </select>
+          <svg class="wl-i wl-sel-chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </div>
+        <p class="wl-acct-note wl-bk-hint" id="bkBankNote" role="status" hidden>Loading banks&hellip;</p>
+        <p class="wl-field-error" id="bkBankError" role="alert"></p>
+        <button type="button" class="wl-btn wl-btn-soft wl-bk-retry" id="bkBanksRetry" data-bk-banks-retry hidden>Try again</button>
+
+        <label class="wl-label wl-label-gap" for="bkAcct">Account number</label>
+        <div class="wl-field wl-field-sm" data-bk-field="acct">
+          <input class="wl-input" id="bkAcct" name="account_number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="10 digits" required aria-describedby="bkAcctHint bkAcctError" />
+        </div>
+        <p class="wl-wd-hint wl-bk-hint" id="bkAcctHint">The 10-digit number on your bank card or app.</p>
+        <p class="wl-field-error" id="bkAcctError" role="alert"></p>
+
+        <!-- Live region: always present so screen readers announce what appears inside it -->
+        <div class="wl-bk-check" id="bkCheck" aria-live="polite">
+          <p class="wl-bk-checking" data-bk="checking" hidden><span class="wl-bk-spin" aria-hidden="true"></span>Checking account&hellip;</p>
+          <div class="wl-bk-verified" data-bk="verified" hidden>
+            <span class="wl-bk-verified-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
+            <div class="wl-bk-verified-text">
+              <p class="wl-bk-verified-label">Account name</p>
+              <p class="wl-bk-verified-name" data-bk="resolvedName"></p>
+            </div>
+          </div>
+        </div>
+
+        <p class="wl-bal-callout wl-bk-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>We check the account name with the bank before saving. Make sure the name above is yours.</p>
+        <p class="wl-field-error" id="bkFormError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-back>Back</button>
+        <button type="submit" class="wl-btn" id="bkSaveBtn" data-bk-save disabled>Save account</button>
+      </footer>
+    </form>
+
+    <!-- Panel 3 · Remove: asks once more, in plain words -->
+    <div class="wl-modal-panel" id="bkPanelRemove" data-bk-panel="remove" data-bk-step="Remove a bank account" hidden>
+      <div class="wl-modal-body">
+        <h3 class="wl-bk-confirm-title" tabindex="-1">Remove this bank account?</h3>
+        <div class="wl-bk-summary">
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <span class="wl-acct-text">
+            <span class="wl-acct-bank" data-bk="removeBank"></span>
+            <span class="wl-acct-name" data-bk="removeName"></span>
+            <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-bk="removeLast4"></span></span>
+          </span>
+        </div>
+        <p class="wl-bk-confirm-text">It will no longer be offered when you withdraw. You can add it again later.</p>
+        <p class="wl-bk-confirm-text" data-bk="removeDefaultNote" hidden>This is your default account. Your oldest other saved account becomes the default.</p>
+        <p class="wl-bk-confirm-text">If a withdrawal to this account is still on its way, wait until it arrives before you remove it.</p>
+        <p class="wl-field-error" id="bkRemoveError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-remove-cancel>Cancel</button>
+        <button type="button" class="wl-btn wl-btn-danger" data-bk-remove-confirm>Remove</button>
+      </footer>
+    </div>
+
+    <!-- One saved-account row. W6e clones this for each saved account and fills the data-bk hooks.
+         It also sets aria-label on the two buttons ("Make Guaranty Trust Bank, ending 1234, the default",
+         "Remove Guaranty Trust Bank, ending 1234") so a screen reader can tell the rows apart. -->
+    <template id="bkAccountTemplate">
+      <li class="wl-bk-item">
+        <div class="wl-bk-main">
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <span class="wl-acct-text">
+            <span class="wl-acct-head">
+              <span class="wl-acct-bank" data-bk="bank"></span>
+              <span class="wl-acct-default" data-bk="default" hidden>Default</span>
+            </span>
+            <span class="wl-acct-name" data-bk="name"></span>
+            <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-bk="last4"></span></span>
+            <span class="wl-bk-cool" data-bk="cooldown" hidden></span>
+          </span>
+        </div>
+        <div class="wl-bk-actions">
+          <button type="button" class="wl-bk-action" data-bk-default hidden>Make default</button>
+          <button type="button" class="wl-bk-action wl-bk-action-danger" data-bk-remove>Remove</button>
+        </div>
+      </li>
+    </template>
+  </dialog>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Same shell scripts as post-task.html: they load the navbar and footer. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/wallet-ui.js"></script>
+  <script src="js/wallet-data.js"></script>
+  <script src="js/wallet-gift.js"></script>
+  <script src="js/pg-hero-fixed.js"></script>
+</body>
+</html>

@@ -55,6 +55,7 @@
           <p class="pg-hero-desc">Manage payouts, verified Nigerian bank transfers, and dedicated service gift vouchers.</p>
         </div>
         <div class="pg-hero-side">
+          <button type="button" class="pg-hero-btn" data-bank-open="list">Bank details</button>
           <button type="button" class="pg-hero-btn" data-action="withdraw">Initiate Withdrawal</button>
         </div>
       </section>
@@ -71,6 +72,7 @@
         </div>
         <div class="pg-hero-side">
           <button type="button" class="pg-hero-btn" data-action="withdraw">Withdraw to Bank</button>
+          <button type="button" class="pg-hero-btn pg-hero-icon-btn" data-bank-open="list" aria-label="Bank details"><svg class="wl-i" aria-hidden="true"><use href="#i-landmark"/></svg></button>
           <a href="#giftCards" class="pg-hero-btn pg-hero-icon-btn" aria-label="Go to service gift cards"><svg class="wl-i" aria-hidden="true"><use href="#i-gift"/></svg></a>
         </div>
       </section>
@@ -444,19 +446,24 @@
 
   <!-- ── SECTION 7 · Withdrawal popup (tasker only) ──────────────
        Native <dialog>: the browser handles focus trap, Esc and the backdrop.
-       js/wallet-data.js runs the steps and calls ST.payments.withdrawFromWallet
-       (the process-withdrawal Edge Function does the transfer and checks the balance). -->
+       Money goes ONLY to a saved bank account (CR-1): step 1 picks one of the saved accounts
+       (cards) and the amount, step 2 reviews amount / fee / "you receive", step 3 says the
+       withdrawal is PROCESSING (not "done"), step 4 shows a failure message.
+       js/wallet-data.js (W6c) fills the cards and runs the steps; it calls
+       ST.payments.withdrawFromWallet(amount, bankAccountId). Saved accounts are added in the
+       Bank details sheet (W6d), opened by [data-bank-open].
+       Only the last 4 digits of an account ever appear on this page. -->
   <dialog class="wl-modal wl-tasker-only" id="withdrawModal" aria-labelledby="wdTitle">
     <header class="wl-modal-head">
       <span class="wl-modal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-wallet"/></svg></span>
       <div class="wl-modal-heading">
         <h2 class="wl-modal-title" id="wdTitle">Withdraw to bank</h2>
-        <p class="wl-modal-step" data-wd-stepline>Step 1 of 2 &bull; Enter amount</p>
+        <p class="wl-modal-step" data-wd-stepline>Step 1 of 2 &bull; Choose account and amount</p>
       </div>
       <button type="button" class="wl-modal-close" data-wd-close aria-label="Close withdrawal"><svg class="wl-i" aria-hidden="true"><use href="#i-x"/></svg></button>
     </header>
 
-    <!-- Step 1 · Amount -->
+    <!-- Step 1 · Saved account + amount -->
     <form class="wl-modal-panel" id="wdStep1" data-wd-step="1" novalidate>
       <div class="wl-modal-body">
         <div class="wl-wd-avail">
@@ -464,10 +471,24 @@
           <span class="wl-wd-avail-amt">&#8358;<span data-wd="available">&mdash;</span><span class="wl-amt-dec">.00</span></span>
         </div>
 
+        <!-- Pay to: saved accounts (W6c fills #wdAccountList from #wdAccountTemplate; the default is pre-selected) -->
+        <fieldset class="wl-acct-set" id="wdAccounts" aria-describedby="wdAccountsError">
+          <legend class="wl-label">Pay to</legend>
+          <p class="wl-acct-note" id="wdAccountsLoading" role="status" hidden>Loading your bank accounts&hellip;</p>
+          <div class="wl-acct-list" id="wdAccountList"></div>
+          <div class="wl-acct-empty" id="wdAccountsEmpty" hidden>
+            <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+            <p class="wl-acct-empty-title">No bank account saved yet</p>
+            <p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+          </div>
+          <p class="wl-field-error" id="wdAccountsError" role="alert"></p>
+          <button type="button" class="wl-btn wl-btn-soft wl-acct-add" id="wdAddAccountBtn" data-bank-open="add"><svg class="wl-i" aria-hidden="true"><use href="#i-plus-circle"/></svg>Add bank account</button>
+        </fieldset>
+
         <label class="wl-label" for="wdAmount">Amount to withdraw</label>
         <div class="wl-field" data-wd-field>
           <span class="wl-field-naira" aria-hidden="true">&#8358;</span>
-          <input class="wl-input" id="wdAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="wdError" />
+          <input class="wl-input" id="wdAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="wdLimits wdError" />
         </div>
         <p class="wl-field-error" id="wdError" role="alert"></p>
         <div class="wl-presets" role="group" aria-label="Quick amounts">
@@ -476,13 +497,7 @@
           <button type="button" class="wl-preset" data-wd-preset="0.5">50%</button>
           <button type="button" class="wl-preset" data-wd-preset="1">Max</button>
         </div>
-
-        <label class="wl-label" for="wdBank">Bank name</label>
-        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdBank" type="text" autocomplete="off" placeholder="e.g. GTBank" /></div>
-        <label class="wl-label wl-label-gap" for="wdAcct">Account number</label>
-        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdAcct" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="10-digit account number" /></div>
-        <label class="wl-label wl-label-gap" for="wdName">Account name</label>
-        <div class="wl-field wl-field-sm"><input class="wl-input" id="wdName" type="text" autocomplete="off" placeholder="Name on the account" /></div>
+        <p class="wl-wd-hint" id="wdLimits">Minimum &#8358;<span data-wd="min">500</span> and maximum &#8358;<span data-wd="max">500,000</span> per withdrawal, up to &#8358;<span data-wd="daily">1,000,000</span> a day. A small transfer fee is taken from the amount; you will see it before you confirm.</p>
         <p class="wl-field-error" id="wdFormError" role="alert"></p>
       </div>
       <footer class="wl-modal-foot">
@@ -491,18 +506,19 @@
       </footer>
     </form>
 
-    <!-- Step 2 · Review -->
+    <!-- Step 2 · Review (amount, fee, you receive) -->
     <div class="wl-modal-panel" id="wdStep2" data-wd-step="2" hidden>
       <div class="wl-modal-body">
         <div class="wl-wd-total">
-          <span class="wl-wd-avail-label">You are withdrawing</span>
+          <span class="wl-wd-avail-label">You receive</span>
           <span class="wl-wd-total-amt">&#8358;<span data-wd="receive">0</span><span class="wl-amt-dec">.00</span></span>
         </div>
         <dl class="wl-wd-rows">
-          <div><dt>Amount</dt><dd>&#8358;<span data-wd="amount">0</span>.00</dd></div>
+          <div><dt>Amount from your wallet</dt><dd>&#8358;<span data-wd="amount">0</span>.00</dd></div>
+          <div><dt>Transfer fee</dt><dd>&minus;&#8358;<span data-wd="fee">0</span>.00</dd></div>
           <div><dt>Bank</dt><dd data-wd="bank">-</dd></div>
-          <div><dt>Account number</dt><dd data-wd="acct">-</dd></div>
           <div><dt>Account name</dt><dd data-wd="name">-</dd></div>
+          <div><dt>Account number</dt><dd data-wd="acct">-</dd></div>
         </dl>
         <p class="wl-bal-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>Bank transfers cannot be reversed. Check the account details above before you confirm.</p>
         <p class="wl-field-error" id="wdConfirmError" role="alert"></p>
@@ -513,17 +529,181 @@
       </footer>
     </div>
 
-    <!-- Step 3 · Done -->
+    <!-- Step 3 · Processing (the money is not at the bank yet, so this is NOT "All done") -->
     <div class="wl-modal-panel" id="wdStep3" data-wd-step="3" hidden>
-      <div class="wl-modal-body wl-wd-done">
-        <span class="wl-wd-done-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
-        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal submitted</h3>
-        <p class="wl-wd-done-text">&#8358;<span data-wd="amount">0</span>.00 has been submitted to <span data-wd="bank">your bank</span>. Your balance has been updated.</p>
+      <div class="wl-modal-body wl-wd-done" role="status">
+        <span class="wl-wd-done-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-clock"/></svg></span>
+        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal processing</h3>
+        <p class="wl-wd-done-text">&#8358;<span data-wd="receive">0</span>.00 is on its way to <span data-wd="bank">your bank</span> (<span data-wd="acct">-</span>). Your wallet has been debited. We will let you know when it arrives, and you can follow it in your transactions.</p>
       </div>
       <footer class="wl-modal-foot">
         <button type="button" class="wl-btn wl-btn-block" data-wd-close>Done</button>
       </footer>
     </div>
+
+    <!-- Step 4 · Failed (W6c puts the plain message from the server in [data-wd="failMessage"]) -->
+    <div class="wl-modal-panel" id="wdStep4" data-wd-step="4" hidden>
+      <div class="wl-modal-body wl-wd-done" role="alert">
+        <span class="wl-wd-done-icon wl-wd-done-icon-fail" aria-hidden="true"><svg class="wl-i"><use href="#i-x"/></svg></span>
+        <h3 class="wl-wd-done-title" tabindex="-1">Withdrawal not completed</h3>
+        <p class="wl-wd-done-text" data-wd="failMessage">We could not complete your withdrawal. Please try again.</p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-wd-close>Close</button>
+        <button type="button" class="wl-btn" data-wd-retry>Try again</button>
+      </footer>
+    </div>
+
+    <!-- One saved-account card. W6c clones this for each saved account and sets: the radio value
+         (the account id), data-acct="bank", "name", "last4", and shows data-acct="default" for the default. -->
+    <template id="wdAccountTemplate">
+      <label class="wl-acct">
+        <input class="wl-acct-input" type="radio" name="wdAccount" value="" />
+        <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+        <span class="wl-acct-text">
+          <span class="wl-acct-head">
+            <span class="wl-acct-bank" data-acct="bank"></span>
+            <span class="wl-acct-default" data-acct="default" hidden>Default</span>
+          </span>
+          <span class="wl-acct-name" data-acct="name"></span>
+          <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-acct="last4"></span></span>
+        </span>
+        <span class="wl-acct-check" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
+      </label>
+    </template>
+  </dialog>
+
+  <!-- ── SECTION 8 · Bank details sheet (tasker only, CR-1) ──────
+       Where the tasker saves, defaults and removes the bank accounts their withdrawals are paid to.
+       Native <dialog> like the withdrawal popup (same .wl-modal shell: bottom sheet on phones, sticky
+       foot). Three panels, only one visible at a time (W6e switches them with the hidden attribute):
+         list   = saved accounts + "Add bank account"      (#bkPanelList)
+         add    = bank, account number, automatic name check, Save   (#bkAddForm)
+         remove = two-step confirm, no confirm() popup     (#bkPanelRemove)
+       Opened by any [data-bank-open] button (value "list" or "add") and by wallet.html#bank-details.
+       Only the last 4 digits of an account are ever put on this page (W6e must never write the full
+       number back into the DOM). Ids and data hooks are listed in docs/withdrawals/handoffs/W6d.md. -->
+  <dialog class="wl-modal wl-tasker-only" id="bankModal" aria-labelledby="bkTitle">
+    <header class="wl-modal-head">
+      <span class="wl-modal-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+      <div class="wl-modal-heading">
+        <h2 class="wl-modal-title" id="bkTitle">Bank details</h2>
+        <p class="wl-modal-step" data-bk-stepline>Saved accounts</p>
+      </div>
+      <button type="button" class="wl-modal-close" data-bk-close aria-label="Close bank details"><svg class="wl-i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </header>
+
+    <!-- Panel 1 · Saved accounts -->
+    <div class="wl-modal-panel" id="bkPanelList" data-bk-panel="list" data-bk-step="Saved accounts">
+      <div class="wl-modal-body">
+        <p class="wl-bk-intro">Your withdrawals are only ever paid to a bank account saved here. You can save up to <span data-bk="max">3</span> accounts.</p>
+        <p class="wl-acct-note" id="bkLoading" role="status" hidden>Loading your bank accounts&hellip;</p>
+        <p class="wl-field-error" id="bkListError" role="alert"></p>
+        <button type="button" class="wl-btn wl-btn-soft wl-bk-retry" id="bkReloadBtn" data-bk-reload hidden>Try again</button>
+        <ul class="wl-bk-list" id="bkAccountList" role="list"></ul>
+        <div class="wl-acct-empty" id="bkEmpty" hidden>
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <p class="wl-acct-empty-title">No bank account saved yet</p>
+          <p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+        </div>
+        <p class="wl-bk-note" id="bkMaxNote" hidden>You have saved the most accounts allowed. Remove one if you want to add another.</p>
+        <p class="wl-bk-note" id="bkCooldownNote" hidden></p>
+        <p class="wl-bk-status" id="bkListStatus" role="status"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-close>Close</button>
+        <button type="button" class="wl-btn" id="bkAddBtn" data-bk-add><svg class="wl-i" aria-hidden="true"><use href="#i-plus-circle"/></svg>Add account</button>
+      </footer>
+    </div>
+
+    <!-- Panel 2 · Add a bank account (the name is checked automatically; Save stays off until it shows) -->
+    <form class="wl-modal-panel" id="bkAddForm" data-bk-panel="add" data-bk-step="Add a bank account" autocomplete="off" novalidate hidden>
+      <div class="wl-modal-body">
+        <label class="wl-label" for="bkBank">Bank</label>
+        <div class="wl-field wl-field-sm" data-bk-field="bank">
+          <select class="wl-select" id="bkBank" name="bank" required disabled aria-describedby="bkBankNote bkBankError">
+            <option value="">Choose your bank</option>
+          </select>
+          <svg class="wl-i wl-sel-chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </div>
+        <p class="wl-acct-note wl-bk-hint" id="bkBankNote" role="status" hidden>Loading banks&hellip;</p>
+        <p class="wl-field-error" id="bkBankError" role="alert"></p>
+        <button type="button" class="wl-btn wl-btn-soft wl-bk-retry" id="bkBanksRetry" data-bk-banks-retry hidden>Try again</button>
+
+        <label class="wl-label wl-label-gap" for="bkAcct">Account number</label>
+        <div class="wl-field wl-field-sm" data-bk-field="acct">
+          <input class="wl-input" id="bkAcct" name="account_number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="10 digits" required aria-describedby="bkAcctHint bkAcctError" />
+        </div>
+        <p class="wl-wd-hint wl-bk-hint" id="bkAcctHint">The 10-digit number on your bank card or app.</p>
+        <p class="wl-field-error" id="bkAcctError" role="alert"></p>
+
+        <!-- Live region: always present so screen readers announce what appears inside it -->
+        <div class="wl-bk-check" id="bkCheck" aria-live="polite">
+          <p class="wl-bk-checking" data-bk="checking" hidden><span class="wl-bk-spin" aria-hidden="true"></span>Checking account&hellip;</p>
+          <div class="wl-bk-verified" data-bk="verified" hidden>
+            <span class="wl-bk-verified-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
+            <div class="wl-bk-verified-text">
+              <p class="wl-bk-verified-label">Account name</p>
+              <p class="wl-bk-verified-name" data-bk="resolvedName"></p>
+            </div>
+          </div>
+        </div>
+
+        <p class="wl-bal-callout wl-bk-callout"><svg class="wl-i" aria-hidden="true"><use href="#i-shield"/></svg>We check the account name with the bank before saving. Make sure the name above is yours.</p>
+        <p class="wl-field-error" id="bkFormError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-back>Back</button>
+        <button type="submit" class="wl-btn" id="bkSaveBtn" data-bk-save disabled>Save account</button>
+      </footer>
+    </form>
+
+    <!-- Panel 3 · Remove: asks once more, in plain words -->
+    <div class="wl-modal-panel" id="bkPanelRemove" data-bk-panel="remove" data-bk-step="Remove a bank account" hidden>
+      <div class="wl-modal-body">
+        <h3 class="wl-bk-confirm-title" tabindex="-1">Remove this bank account?</h3>
+        <div class="wl-bk-summary">
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <span class="wl-acct-text">
+            <span class="wl-acct-bank" data-bk="removeBank"></span>
+            <span class="wl-acct-name" data-bk="removeName"></span>
+            <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-bk="removeLast4"></span></span>
+          </span>
+        </div>
+        <p class="wl-bk-confirm-text">It will no longer be offered when you withdraw. You can add it again later.</p>
+        <p class="wl-bk-confirm-text" data-bk="removeDefaultNote" hidden>This is your default account. Your oldest other saved account becomes the default.</p>
+        <p class="wl-bk-confirm-text">If a withdrawal to this account is still on its way, wait until it arrives before you remove it.</p>
+        <p class="wl-field-error" id="bkRemoveError" role="alert"></p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-bk-remove-cancel>Cancel</button>
+        <button type="button" class="wl-btn wl-btn-danger" data-bk-remove-confirm>Remove</button>
+      </footer>
+    </div>
+
+    <!-- One saved-account row. W6e clones this for each saved account and fills the data-bk hooks.
+         It also sets aria-label on the two buttons ("Make Guaranty Trust Bank, ending 1234, the default",
+         "Remove Guaranty Trust Bank, ending 1234") so a screen reader can tell the rows apart. -->
+    <template id="bkAccountTemplate">
+      <li class="wl-bk-item">
+        <div class="wl-bk-main">
+          <span class="wl-acct-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-landmark"/></svg></span>
+          <span class="wl-acct-text">
+            <span class="wl-acct-head">
+              <span class="wl-acct-bank" data-bk="bank"></span>
+              <span class="wl-acct-default" data-bk="default" hidden>Default</span>
+            </span>
+            <span class="wl-acct-name" data-bk="name"></span>
+            <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-bk="last4"></span></span>
+            <span class="wl-bk-cool" data-bk="cooldown" hidden></span>
+          </span>
+        </div>
+        <div class="wl-bk-actions">
+          <button type="button" class="wl-bk-action" data-bk-default hidden>Make default</button>
+          <button type="button" class="wl-bk-action wl-bk-action-danger" data-bk-remove>Remove</button>
+        </div>
+      </li>
+    </template>
   </dialog>
   </div>
 

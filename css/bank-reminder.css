@@ -1,0 +1,8 @@
+/* ============================================================
+   Bank-account reminder (js/bank-reminder.js, withdrawals W6f).
+   The look is the shared .st-notice in styles.css. This file only does one thing:
+   on phones and tablets the two buttons reach the 44px touch size (.btn-sm is about 30px).
+   ============================================================ */
+@media (max-width: 768px) {
+  .st-bank-reminder .st-notice-actions .btn { min-height: var(--toast-hit-size); }
+}
