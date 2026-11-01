@@ -22,5 +22,8 @@ These paths match the repo root. They are the new verify page: stages V3a (marku
 | `pending-ui/js/coordinator-taskers.js` | `js/coordinator-taskers.js` (replaces; shows each Local Tasker's identity-check status, stage V4a) |
 | `pending-ui/js/coordinator-verify-status.js` | `js/coordinator-verify-status.js` (new, stage V4a; reused by V4b) |
 | `pending-ui/css/coordinator-verify.css` | `css/coordinator-verify.css` (new, stage V4a) |
+| `pending-ui/components/coordinator-nav.html` | `components/coordinator-nav.html` (replaces; adds the notifications bell, stage V4c-2) |
+| `pending-ui/js/coordinator.js` | `js/coordinator.js` (replaces; loads the shared notification panel and opens it from the bell, stage V4c-2) |
+| `pending-ui/css/coordinator.css` | `css/coordinator.css` (replaces; bell, dot and phone panel position, stage V4c-2) |
 
-Copy ALL EIGHTEEN in the same commit, and only after the three Didit functions are deployed (and, for db.js and tasks.js, after `sql/verification/v6a-can-publish.sql` AND `v6c-hold-publish.sql` AND `v6e-hold-listing.sql` are applied; the same for `verify.js` and `post-service.html`) (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).
+Copy ALL TWENTY-ONE in the same commit, and only after the three Didit functions are deployed (and, for db.js and tasks.js, after `sql/verification/v6a-can-publish.sql` AND `v6c-hold-publish.sql` AND `v6e-hold-listing.sql` are applied; the same for `verify.js` and `post-service.html`) (`docs/verification/DEPLOY-FUNCTIONS.md`). The first three alone break verification; the coordinator pair only adds the entry button. Test with the two test accounts only. `tests/*.mjs` test `pending-ui/js/verify.js` (do not copy it into the repo).

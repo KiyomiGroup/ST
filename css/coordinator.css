@@ -151,6 +151,23 @@ a.co-nav-link:hover { background: var(--co-dark-active); }
 .co-icon-btn { background: var(--co-field); color: var(--co-ink); }
 .co-icon-btn:hover { background: var(--co-mint-soft); }
 
+/* Notifications bell (V4c-2): same round button as the avatar; the dot is the one the shared panel toggles. */
+.co-bell { position: relative; margin-left: auto; }
+.co-bell + .co-account { margin-left: 0; }
+.co-bell-dot {
+  position: absolute; top: var(--space-2); right: var(--space-2);
+  width: var(--nav-dot-size); height: var(--nav-dot-size); border-radius: 50%;
+  border: 2px solid var(--co-field); background: var(--color-nav-dot);
+}
+.co-bell-dot[hidden] { display: none; }
+@media (max-width: 768px) {
+  /* The shared panel is a sheet under the site nav on phones; here it sits under the coordinator header and above the bottom bar. */
+  .np {
+    top: calc(var(--co-header-height) + var(--space-5) + var(--space-2));
+    max-height: calc(100vh - var(--co-header-height) - var(--co-bottom-nav-height) - var(--space-7));
+  }
+}
+
 .co-menu {
   position: absolute; right: 0; top: calc(100% + var(--space-2)); min-width: 220px;
   padding: var(--space-3); background: var(--color-bg);

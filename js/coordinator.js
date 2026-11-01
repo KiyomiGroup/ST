@@ -96,6 +96,7 @@
     var so = $('coSignOut'); if (so) so.addEventListener('click', signOut);
     var dso = $('coDrawerSignOut'); if (dso) dso.addEventListener('click', signOut);
     wireMenus();
+    wireBell();
   }
 
   function wireMenus() {
@@ -128,6 +129,54 @@
       setMenu(false);
       setDrawer(false);
     });
+  }
+
+  /* ── Notifications bell (Stage V4c-2) ─────────────────────────
+     Coordinators had no in-app notifications: the rows were written but nothing showed them. The shared
+     panel (js/notifications-panel.js) is loaded here and opened from the bell. It reads only the signed-in
+     person's own rows. Nothing in here may stop the page: every failure is swallowed. */
+  var panelWaiting = null;   /* callbacks waiting for the one panel script request */
+  function loadPanel(done) {
+    if (window.ST && window.ST.notifPanel) { done(); return; }
+    if (panelWaiting) { panelWaiting.push(done); return; }   /* already requested: wait for it, do not add another */
+    panelWaiting = [done];
+    var s = document.createElement('script');
+    s.src = 'js/notifications-panel.js';
+    s.addEventListener('load', function () {
+      var q = panelWaiting || []; panelWaiting = null;
+      q.forEach(function (f) { try { f(); } catch (e) { /* ignore */ } });
+    });
+    s.addEventListener('error', function () { panelWaiting = null; });   /* a later click tries again */
+    document.body.appendChild(s);
+  }
+
+  function wireBell() {
+    try {
+      var btn = $('coBellBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        loadPanel(function () {
+          if (window.ST && window.ST.notifPanel) window.ST.notifPanel.toggle(btn);
+        });
+      });
+      /* Load the panel now so the live "new notification" dot works without a first click. */
+      loadPanel(function () {});
+      showUnreadDot();
+    } catch (e) { /* the bell is a convenience; the page still works */ }
+  }
+
+  async function showUnreadDot() {
+    try {
+      var sb = window.supabase;
+      var sess = await sb.auth.getSession();
+      var uid = sess.data && sess.data.session && sess.data.session.user.id;
+      if (!uid) return;
+      var r = await sb.from('notifications').select('id').eq('user_id', uid).eq('is_read', false).limit(1);
+      if (!r.error && r.data && r.data.length) {
+        var dot = $('navNotifDot'); if (dot) dot.hidden = false;
+      }
+    } catch (e) { /* no dot is the safe answer */ }
   }
 
   function paintIdentity(name) {
