@@ -10,6 +10,9 @@
        The toggle only turns on after Paystack confirms payment. If the
        person closes Paystack without paying, they come back to the form
        with everything they typed and the toggle off.
+     - urgent is greyed out (with a "Verify now" link) for anyone the SERVER
+       says may not publish yet (idv_can_publish), so no one pays for it
+       before they can use it
      - auto-saved draft (localStorage) + progress indicator
 
    Supabase insert: window.ST.db.postTask() in db.js.
@@ -87,6 +90,8 @@ function initTaskForm() {
   wireUrgentToggle();
   wirePhotos();
   wireDraft();       /* restore first, then auto-save */
+  applyUrgentGate();  /* after the draft is restored: grey out urgent if verification is needed */
+  window.addEventListener('pageshow', (e) => { if (e.persisted) applyUrgentGate(); });  /* back from verify.html */
   wireProgress();
 
   form.addEventListener('submit', handleTaskSubmit);
@@ -331,14 +336,22 @@ function wireUrgentToggle() {
   });
 }
 
+/* True while the server says this person must verify before they can use urgent (never true once urgent is paid) */
+let urgentLocked = false;
+
 function setUrgentUI(state) {
   /* state: 'off' | 'pending' | 'paid' */
   const toggle = $id('urgentToggle');
   const box = document.querySelector('.pt-urgent');
   const note = $id('urgentNote');
   if (!toggle || !box) return;
+  const locked = urgentLocked && state === 'off';
   toggle.checked = state === 'paid';
-  toggle.disabled = state === 'pending';
+  toggle.disabled = state === 'pending' || locked;
+  box.classList.toggle('is-locked', locked);
+  const lock = $id('urgentLock');
+  if (lock) lock.hidden = !locked;
+  if (note) note.hidden = locked;
   box.classList.toggle('is-pending', state === 'pending');
   box.classList.toggle('is-paid', state === 'paid');
   if (note) {
@@ -350,8 +363,51 @@ function setUrgentUI(state) {
   }
 }
 
+/* Ask the SERVER (idv_can_publish) whether this person may use urgent. Returns 'ok', 'verify' or 'unavailable'.
+   Signed-out people return 'ok' here: the existing log-in step handles them. No answer = no payment. */
+async function urgentGateState() {
+  let user = null;
+  try {
+    const res = await window.supabase.auth.getUser();
+    user = res && res.data && res.data.user;
+  } catch (e) { /* treated as signed out below */ }
+  if (!user) return 'ok';
+  let g = null;
+  try {
+    g = window.ST && window.ST.verify && window.ST.verify.canPublish ? await window.ST.verify.canPublish() : null;
+  } catch (e) { g = null; }
+  if (g && g.can_publish === true) return 'ok';
+  if (g && g.can_publish === false && g.reason === 'verification_required') return 'verify';
+  return 'unavailable';
+}
+
+function showUrgentLock(kind) {
+  const text = $id('urgentLockText');
+  const link = $id('urgentVerifyLink');
+  if (text) text.textContent = kind === 'verify'
+    ? 'You need to verify your identity to use this feature.'
+    : 'We could not check your verification just now. Refresh the page to try again.';
+  if (link) {
+    link.hidden = kind !== 'verify';
+    link.href = 'verify.html?return=' + encodeURIComponent('post-task.html') + '&action=' + encodeURIComponent('pay for urgent');
+  }
+  urgentLocked = true;
+  setUrgentUI('off');
+}
+
+async function applyUrgentGate() {
+  if (taskDraft.urgentPaid) return;           /* already paid: nothing to lock */
+  const state = await urgentGateState();
+  if (state === 'ok') {
+    if (urgentLocked) { urgentLocked = false; setUrgentUI('off'); }
+    return;
+  }
+  showUrgentLock(state);
+}
+
 async function startUrgentPayment() {
   if (taskDraft.urgentPaid) { setUrgentUI('paid'); return; }
+  if (urgentLocked) return;
 
   /* Keep everything typed so far, whatever happens next */
   saveDraft();
@@ -365,6 +421,13 @@ async function startUrgentPayment() {
   if (!user) {
     showToast('Please log in to pay for urgent priority. Your task details are saved.');
     setTimeout(() => { window.location.href = 'login.html?redirect=post-task.html'; }, 1400);
+    return;
+  }
+  /* Check again with the server right before Paystack opens (the page state may be stale or edited) */
+  const gate = await urgentGateState();
+  if (gate !== 'ok') {
+    showUrgentLock(gate);
+    showToast(gate === 'verify' ? 'Verify your identity to use urgent. Your task details are saved.' : 'We could not check your verification. Nothing was charged.');
     return;
   }
   if (typeof PaystackPop === 'undefined' || typeof PAYSTACK_PUBLIC_KEY === 'undefined') {

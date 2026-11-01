@@ -316,6 +316,16 @@
 .pt-toggle input:focus-visible + .pt-toggle-track { box-shadow: var(--shadow-focus); }
 .pt-toggle input:disabled { cursor: default; }
 .pt-urgent.is-pending .pt-toggle { opacity: 0.6; }
+/* Urgent is greyed out until the person has verified (shown by tasks.js from the server's idv_can_publish answer) */
+.pt-urgent.is-locked .pt-urgent-icon,
+.pt-urgent.is-locked .pt-urgent-title,
+.pt-urgent.is-locked .pt-urgent-desc,
+.pt-urgent.is-locked .pt-urgent-note { opacity: 0.55; }
+.pt-urgent.is-locked .pt-toggle { opacity: 0.5; cursor: not-allowed; }
+.pt-urgent.is-locked .pt-toggle input { cursor: not-allowed; }
+.pt-urgent-lock { margin-top: var(--space-2); font-size: var(--text-xs); line-height: 1.5; font-weight: 600; color: var(--pt-ink); }
+.pt-urgent-lock-link { color: var(--pt-green); font-weight: 700; text-decoration: underline; white-space: nowrap; }
+.pt-urgent-lock-link[hidden] { display: none; }
 
 /* ── Photos ──────────────────────────────────────────────── */
 .pt-file { display: none; }
