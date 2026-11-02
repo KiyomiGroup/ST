@@ -93,27 +93,38 @@
     if (p === 'paid') return 'held';
     return 'unpaid';
   }
-  function bookingDate(b) { return new Date(b.scheduled_time || b.created_at || Date.now()); }
+  /* scheduled_time from the booking pop-up reads "2026-11-05 \u2014 Morning (7am \u2013 12pm)", which new Date() rejects.
+     sched() reads it safely: { date, slot, hasTime } or null when there is no readable date. */
+  function sched(b) {
+    if (!b || !b.scheduled_time) return null;
+    var w = window.STBookingJob ? window.STBookingJob.when(b.scheduled_time) : null;
+    if (!w) { var d = new Date(b.scheduled_time); w = { date: d, slot: '', hasTime: true }; }
+    return w.date && !isNaN(w.date.getTime()) ? w : null;
+  }
+  function bookingDate(b) { var w = sched(b); return w ? w.date : new Date(b.created_at || Date.now()); }
 
   function dueText(b) {
     if (b.status === 'completed') return 'Completed';
-    if (!b.scheduled_time) {
+    var sw = sched(b);
+    if (!sw) {
       var ago = Math.max(0, Math.round((startOfDay(new Date()) - startOfDay(new Date(b.created_at))) / DAY));
       return ago === 0 ? 'Requested today' : 'Requested ' + ago + (ago === 1 ? ' day ago' : ' days ago');
     }
-    var diff = Math.round((startOfDay(new Date(b.scheduled_time)) - startOfDay(new Date())) / DAY);
+    var diff = Math.round((startOfDay(sw.date) - startOfDay(new Date())) / DAY);
     if (diff === 0) return 'Due today';
     if (diff > 0)  return 'Due in ' + diff + (diff === 1 ? ' day' : ' days');
     return 'Overdue ' + Math.abs(diff) + (diff === -1 ? ' day' : ' days');
   }
   function scheduleText(b) {
-    if (!b.scheduled_time) return 'No date set yet';
-    var d = new Date(b.scheduled_time);
+    var sw = sched(b);
+    if (!sw) return 'No date set yet';
+    var d = sw.date;
     var diff = Math.round((startOfDay(d) - startOfDay(new Date())) / DAY);
     var day = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday'
       : d.toLocaleDateString('en-NG', { weekday: 'short', day: 'numeric', month: 'short' });
-    var time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: d.getMinutes() ? '2-digit' : undefined });
-    return 'Scheduled for ' + day + ', ' + time;
+    /* A time window from the pop-up ("Morning (7am \u2013 12pm)") is shown as picked; a real clock time is formatted */
+    var tail = sw.slot ? sw.slot : (sw.hasTime ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: d.getMinutes() ? '2-digit' : undefined }) : '');
+    return 'Scheduled for ' + day + (tail ? ', ' + tail : '');
   }
 
   /* ── data ─────────────────────────────────────────────────── */
@@ -134,6 +145,10 @@
       if (b.service_id && svcIds.indexOf(b.service_id) === -1) svcIds.push(b.service_id);
       if (b.customer_id && custIds.indexOf(b.customer_id) === -1) custIds.push(b.customer_id);
     });
+
+    /* What the customer filled in on the booking pop-up, plus the street address (the database only returns it
+       once the tasker has confirmed the booking) */
+    var addrs = window.STBookingJob ? await window.STBookingJob.loadAddresses(rows.map(function (b) { return b.id; })) : {};
 
     async function safe(p) { try { var r = await p; return (r && r.data) || null; } catch (e) { return null; } }
 
@@ -169,10 +184,12 @@
 
     rows.forEach(function (b) {
       var t = tasks[b.task_id] || null, s = svcs[b.service_id] || null, u = custs[b.customer_id] || null;
-      b._title = (t && t.title) || (s && (s.service_name || s.service)) ||
+      b._job = window.STBookingJob ? window.STBookingJob.parse(b) : null;
+      b._addr = addrs[b.id] || '';
+      b._title = (t && t.title) || (b._job && b._job.title) || (s && (s.service_name || s.service)) ||
         (b.notes ? String(b.notes).slice(0, 48) : 'Booking request');
       b._category = (t && t.category) || (s && s.category) || '';
-      b._location = (t && t.location) || (s && s.location) || (u && u.location) || '';
+      b._location = (t && t.location) || (b._job && b._job.area) || (s && s.location) || (u && u.location) || '';
       var amt = Number(b.amount) || Number(t && t.budget) || 0;
       b._amount = amt;
       b._client = u
@@ -222,7 +239,8 @@
     $('tovActiveValue').innerHTML = inProg.length + ' <span class="tov-value-unit">In Progress</span>';
     var tomorrow = startOfDay(new Date(Date.now() + DAY)).getTime();
     var sched = all.filter(function (b) {
-      return group(b) !== 'completed' && b.scheduled_time && startOfDay(new Date(b.scheduled_time)).getTime() === tomorrow;
+      var sw = sched(b);
+      return group(b) !== 'completed' && !!sw && startOfDay(sw.date).getTime() === tomorrow;
     }).length;
     var pending = all.filter(function (b) { return group(b) === 'pending'; }).length;
     $('tovActiveSub').innerHTML = sched > 0
@@ -446,6 +464,13 @@
     }
   }
 
+  /* The customer's description, timing, area, photos and (once confirmed) street address */
+  function jobBlock(b) {
+    if (!b._job || !window.STBookingJob) return '';
+    var h = window.STBookingJob.html(b._job, b._addr, esc, null, { description: true });
+    return h ? '<div class="tov-job"><span class="tov-dlabel">Job details</span>' + h + '</div>' : '';
+  }
+
   function renderDetail(b) {
     var el = $('tovDetail');
     if (!b) { el.innerHTML = '<p class="tov-empty tov-empty-detail">Select an assignment to see its details.</p>'; return; }
@@ -487,6 +512,7 @@
             '<span><strong>' + esc(b._location || 'Location not set') + '</strong><span class="tov-loc-sub">' + esc(scheduleText(b)) + '</span></span></div>' +
         '</div>' +
       '</div>' +
+      jobBlock(b) +
       (addons ? '<div class="tov-addons">' + addons + '</div>' : '') +
       '<div class="tov-escrow-note"><span class="tov-note-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><p>' + notice + '</p></div>' +
       '<div class="tov-detail-foot">' +
@@ -499,7 +525,7 @@
         '<div class="tov-actions">' +
           '<button type="button" class="tov-round" data-act="copy" aria-label="Copy reference" title="Copy reference">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>' +
-          '<button type="button" class="tov-round" data-act="ics" aria-label="Add to calendar" title="Add to calendar"' + (b.scheduled_time ? '' : ' disabled') + '>' +
+          '<button type="button" class="tov-round" data-act="ics" aria-label="Add to calendar" title="Add to calendar"' + (sched(b) ? '' : ' disabled') + '>' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>' +
           '<button type="button" class="tov-btn-light" data-act="chat"' + (chatOk ? '' : ' disabled title="Confirm the booking to start messaging"') + '>' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
@@ -512,12 +538,18 @@
   }
 
   function icsFor(b) {
-    var start = new Date(b.scheduled_time), end = new Date(start.getTime() + 60 * 60 * 1000);
+    var sw = sched(b); if (!sw) return;
+    var start = new Date(sw.date.getTime()), end;
+    if (!sw.hasTime) {                      /* a date plus a time window: start at the window's first hour */
+      var slot = String(sw.slot || '');
+      start.setHours(/^Morning/.test(slot) ? 7 : /^Afternoon/.test(slot) ? 12 : /^Evening/.test(slot) ? 17 : 9, 0, 0, 0);
+    }
+    end = new Date(start.getTime() + 60 * 60 * 1000);
     var f = function (d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); };
     var text = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StreetTasker//Overview//EN', 'BEGIN:VEVENT',
       'UID:' + b.id + '@streettasker.com', 'DTSTAMP:' + f(new Date()), 'DTSTART:' + f(start), 'DTEND:' + f(end),
       'SUMMARY:' + String(b._title).replace(/[,;\n]/g, ' '),
-      'LOCATION:' + String(b._location || '').replace(/[,;\n]/g, ' '),
+      'LOCATION:' + String([b._addr, b._location].filter(Boolean).join(' ')).replace(/[,;\n]/g, ' '),
       'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
     var blob = new Blob([text], { type: 'text/calendar' });
     var a = document.createElement('a');
@@ -746,6 +778,7 @@
       '<div class="tom-client"><span class="tom-client-av">' + esc(initials(b._client)) + '</span>' +
         '<span class="tom-client-text"><strong>' + esc(b._client) + '</strong><small>' +
         esc([b._location, b.scheduled_time ? scheduleText(b).replace('Scheduled for ', '') : ''].filter(Boolean).join(' • ') || 'Details to be confirmed') + '</small></span></div>' +
+      jobBlock(b) +
       (addons ? '<div class="tom-addons"><span class="tom-addons-label">Add-ons</span>' + addons + '</div>' : '') +
       '<div class="tom-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p>' + note + '</p></div>' +
       '<div class="tom-feature-actions">' +

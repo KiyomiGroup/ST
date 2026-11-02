@@ -4065,6 +4065,13 @@ body.tdash-overview .dashboard-page { background: var(--to-page-bg); }
 .tov-loc strong { font-family: var(--font-heading); font-weight: 700; }
 .tov-loc-sub { font-size: var(--text-xs); color: var(--to-dark-muted); }
 
+/* Job details from the booking pop-up, inside the dark assignment panels (js/booking-job.js draws the .bk-job markup) */
+.tov-job { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.tov-job .bk-job-desc, .tov-job .bk-job-address strong { color: var(--to-dark-text); }
+.tov-job .bk-job-address { color: var(--to-dark-muted); }
+.tov-job .bk-job-chip { background: var(--to-dark-chip); color: var(--to-dark-text); }
+.tov-job .bk-job-chip.is-urgent { color: var(--to-dark-accent); }
+
 .tov-addons { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); }
 .tov-addon {
   display: flex; flex-direction: column; gap: var(--space-1);

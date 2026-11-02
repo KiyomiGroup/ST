@@ -20,7 +20,8 @@
 
    Other data (best effort, a blocked query just leaves that row blank):
      tasks        title, location, deadline
-     bookings     scheduled_time
+     bookings     scheduled_time, plus the job details from the booking pop-up (title, description, area, urgency,
+                  photos) and the street address, both read through js/booking-job.js (the database decides who may see the address)
      job_events   Activity timeline (hidden if the table is missing)
 
    Receipts (Stage 8): the list and each receipt are read from payment_receipts (written by the
@@ -108,7 +109,7 @@
     threadId: null,
     view: 'main',              /* main | history | activity | receipts | receipt | evidence | dispute */
     filter: 'all',             /* history filter: all | invoice */
-    extra: {},                 /* per thread: { title, location, deadline, scheduled } */
+    extra: {},                 /* per thread: { title, location, deadline, scheduled, job, address } */
     ev: { key: '', rows: null, loading: false, failed: false },
     rc: { key: '', rows: null, loading: false, failed: false },   /* receipts of this thread */
     dp: { key: '', rows: null, refunds: [], events: [], loading: false, failed: false },   /* problem reports */
@@ -150,6 +151,15 @@
     if (!d) return '';
     return fmtDate(v) + ', ' + d.toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
+  /* bookings.scheduled_time from the pop-up reads "2026-11-05 \u2014 Morning (7am \u2013 12pm)"; new Date() rejects that,
+     so go through STBookingJob.when(): a date plus either the time window or the clock time. */
+  function fmtSchedule(raw) {
+    var w = window.STBookingJob ? window.STBookingJob.when(raw) : null;
+    if (!w) return fmtDateTime(raw);
+    if (!w.date) return '';
+    var tail = w.slot ? w.slot : (w.hasTime ? w.date.toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
+    return fmtDate(w.date) + (tail ? ', ' + tail : '');
+  }
   function isDesktop() { return window.matchMedia('(min-width: ' + DESKTOP_MIN + 'px)').matches; }
   function reducedMotion() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function humanise(k) {
@@ -163,7 +173,7 @@
   /* ── data (all best effort) ──────────────────────────────── */
   async function loadExtra(t) {
     if (!t || S.extra[t.id]) return false;
-    var x = { taskId: t._taskId || null, title: '', location: '', deadline: '', scheduled: '' };
+    var x = { taskId: t._taskId || null, title: '', location: '', deadline: '', scheduled: '', job: null, address: '' };
     S.extra[t.id] = x;                                   /* claim it so we only ask once */
     var sb = window.supabase;
     if (!sb) return false;
@@ -184,6 +194,15 @@
         var b = await sb.from('bookings').select('id,scheduled_time').eq('id', bid).maybeSingle();
         if (b.data) x.scheduled = b.data.scheduled_time || '';
       } catch (_e2) {}
+      /* What the customer filled in on the booking pop-up. A booking made from a profile has no task row,
+         so these also fill the title and location that would otherwise be blank. */
+      if (window.STBookingJob) {
+        try {
+          var bj = await window.STBookingJob.loadOne(bid);
+          x.job = bj.job; x.address = bj.address;
+          if (bj.job) { x.title = x.title || bj.job.title; x.location = x.location || bj.job.area; }
+        } catch (_e3) {}
+      }
     }
     return true;
   }
@@ -323,7 +342,7 @@
     var c = S.ctx;
     if (!c) return null;
     var t = c.thread;
-    var x = S.extra[t.id] || { title: '', location: '', deadline: '', scheduled: '' };
+    var x = S.extra[t.id] || { title: '', location: '', deadline: '', scheduled: '', job: null, address: '' };
     var sm = window.JRMoney ? window.JRMoney.summary(t) : { base: 0, additions: 0, addonsPaid: 0, total: 0, paid: 0, outstanding: 0, payState: 'none' };
     var hist = window.JRMoney ? window.JRMoney.history(t) : [];
     var st = window.JRRoom ? window.JRRoom.statusFor(t, c.role) : { label: '' };
@@ -332,7 +351,7 @@
       title: x.title || t._title || 'This task',
       taskId: t._taskId || null,
       location: x.location,
-      scheduled: x.scheduled, deadline: x.deadline,
+      scheduled: x.scheduled, deadline: x.deadline, job: x.job, address: x.address,
       status: st.label || 'Discussing details',
       sm: sm, hist: hist,
       bookingId: bookingIdOf(t),
@@ -344,7 +363,7 @@
   function signature(m) {
     if (!m) return 'none';
     return JSON.stringify([
-      S.view, S.filter, m.t.id, m.title, m.location, m.scheduled, m.deadline, m.status,
+      S.view, S.filter, m.t.id, m.title, m.location, m.scheduled, m.deadline, m.job, m.address, m.status,
       m.sm, m.hist, m.ev.rows, m.ev.loading, m.ev.failed, m.eventsReady, m.me,
       m.rc.rows && m.rc.rows.map(function (r) { return r.id; }), m.rc.failed, S.rcOpen && S.rcOpen.id,
       m.dp.key, m.dp.failed, m.dp.loading, m.dp.rows && m.dp.rows.map(function (d) { return d.id + d.status; }),
@@ -443,11 +462,21 @@
     var dl1 = el('dl', 'jr-dt-list');
     dl1.appendChild(row('Task', m.title));
     dl1.appendChild(row('Location', m.location || muted('Not set')));
-    var when = m.scheduled ? fmtDateTime(m.scheduled)
+    if (m.address) dl1.appendChild(row('Address', m.address));
+    var when = m.scheduled ? fmtSchedule(m.scheduled)
              : (m.deadline ? 'Needed by ' + fmtDate(m.deadline) : '');
     dl1.appendChild(row('Scheduled', when || muted('Not scheduled yet')));
     g1.appendChild(dl1);
     wrap.appendChild(g1);
+
+    /* What the customer wrote and attached on the booking pop-up */
+    if (m.job && (m.job.description || m.job.photos.length)) {
+      var gj = group('Job description');
+      var jb = el('div', 'jr-dt-job');
+      jb.innerHTML = window.STBookingJob.html({ description: m.job.description, area: '', urgent: m.job.urgent, flexible: m.job.flexible, photos: m.job.photos }, '', null, null, { description: true });   /* html() escapes every value */
+      gj.appendChild(jb);
+      wrap.appendChild(gj);
+    }
 
     /* Payment */
     var sm = m.sm;

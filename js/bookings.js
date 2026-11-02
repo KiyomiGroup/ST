@@ -82,6 +82,12 @@
     return isNaN(d) ? null : { date: d, hasTime: true };
   }
 
+  /* The time window the customer picked in the pop-up ("Morning (7am \u2013 12pm)"), shown after the date */
+  function slotOf(b) {
+    var w = window.STBookingJob && b.scheduled_time ? window.STBookingJob.when(b.scheduled_time) : null;
+    return w ? w.slot : '';
+  }
+
   /* "Today, 10:30 AM" / "Tomorrow" / "Mon, 12 Oct, 2:00 PM" */
   function scheduleText(p) {
     var d = p.date;
@@ -206,7 +212,7 @@
         taskId: t.id || '',
         created: b.created_at,
         scheduled: when ? when.date.toISOString() : null,
-        when: when ? scheduleText(when) : ''
+        when: when ? scheduleText(when) + (slotOf(b) ? ' \u2022 ' + slotOf(b) : '') : ''
       };
     });
 

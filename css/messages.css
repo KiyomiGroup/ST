@@ -1765,6 +1765,7 @@ body.msg-page {
   color: var(--color-text);
 }
 .jr-dt-muted { font-weight: 400; color: var(--color-text-muted); }
+.jr-dt-job { padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); }
 .jr-dt-row--key { align-items: center; background: var(--color-primary-soft); }
 .jr-dt-row--key .jr-dt-label { font-weight: 700; color: var(--color-text); }
 .jr-dt-row--key .jr-dt-value {

@@ -514,6 +514,14 @@
 
 /* ── Booking pop-up (Stage 1): centred, scrolls inside the screen, job details + urgency ── */
 .tp-dialog-book { position: fixed; inset: 0; margin: auto; width: min(480px, calc(100% - 2 * var(--space-4))); height: fit-content; max-height: calc(100dvh - 2 * var(--space-4)); overflow-y: auto; border-radius: var(--radius-form); }
+/* Fixed, vertical-only scrolling: nothing inside may be wider than the pop-up, sideways drags are ignored,
+   and scrolling past the top or bottom never moves the page behind it. */
+.tp-dialog-book { box-sizing: border-box; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y pinch-zoom; -webkit-overflow-scrolling: touch; overflow-wrap: anywhere; }
+.tp-dialog-book :is(.tp-dialog-body, .form-group, .tp-bk-loc, .tp-bk-opts, .tp-bk-photos, .tp-dialog-sum, .tp-bk-price) { min-width: 0; max-width: 100%; }
+.tp-dialog-book :is(.form-input, .form-select, .form-textarea) { display: block; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+.tp-dialog-book input[type="date"] { -webkit-appearance: none; appearance: none; }   /* phone browsers give date fields a minimum width of their own */
+.tp-dialog-book .location-suggestions { max-width: 100%; }
+html:has(.tp-dialog-book[open]) { overflow: hidden; }   /* the page behind stays put while the pop-up is open */
 .tp-bk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 .tp-bk-row .form-label { margin-bottom: var(--space-2); }
 .tp-bk-count { font-size: var(--text-xs); color: var(--pt-ink-muted); }
