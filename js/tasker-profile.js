@@ -711,7 +711,7 @@
 
     if (status === 'pending') {
       body.innerHTML = '<span class="tp-decision-q">Hire this tasker for your task?</span>' +
-        '<button type="button" class="btn btn-primary btn-sm" id="tpAccept">Accept Application</button>' +
+        '<button type="button" class="btn btn-primary btn-sm tp-decision-yes" id="tpAccept">Accept Application</button>' +
         '<button type="button" class="btn btn-ghost btn-sm tp-decision-no" id="tpReject">Decline</button>';
       bar.hidden = false;
       $('tpAccept').onclick = async function () {

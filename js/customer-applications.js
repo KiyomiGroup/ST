@@ -169,8 +169,8 @@
       '<div>' + (a.offers > 1 ? '<div class="ap-fig-label">Competition</div><div class="ap-fig-text">' + icon('users') + a.offers + ' offers on this task</div>' : '') + '</div></div>';
 
     var pitch = a.pitch ? '<div><div class="ap-proposal-head"><span class="ap-fig-label">Their Proposal</span></div><p class="ap-quote">\u201C' + esc(a.pitch) + '\u201D</p></div>' : '';
-    var arrival = a.arrival ? '<div><span class="ap-fig-label">Can start</span><p class="ap-meta">' + icon('clock') + esc(a.arrival) + '</p></div>' : '';
-    var proofs = a.proofs && a.proofs.length ? '<div><span class="ap-fig-label">Previous work</span><div class="ap-proofs">' + a.proofs.map(function (u, i) {
+    var arrival = a.arrival ? '<div><div class="ap-fig-label">Can start</div><div class="ap-fig-text">' + icon('clock') + esc(a.arrival) + '</div></div>' : '';
+    var proofs = a.proofs && a.proofs.length ? '<div><div class="ap-fig-label">Previous work</div><div class="ap-proofs">' + a.proofs.map(function (u, i) {
       return '<a class="ap-proof" href="' + esc(u) + '" target="_blank" rel="noopener"><img src="' + esc(u) + '" alt="Previous work photo ' + (i + 1) + '" loading="lazy" /></a>';
     }).join('') + '</div></div>' : '';
     var profile = 'tasker-profile.html?id=' + encodeURIComponent(a.taskerId || '') + '&task=' + encodeURIComponent(t.id || '') + '&app=' + encodeURIComponent(a.id);

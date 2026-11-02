@@ -78,7 +78,15 @@
 /* ── Application decision bar ────────────────────────────── */
 .tp-decision { padding: var(--space-3) 0; background: var(--color-bg); border-bottom: 2px solid var(--pt-green); }
 .tp-decision-inner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; }
-.tp-decision-q, .tp-decision-ok { flex: 1; min-width: 0; font-size: var(--text-sm); font-weight: 700; }
+.tp-decision-q, .tp-decision-ok { flex: 1 1 100%; min-width: 0; font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; letter-spacing: -0.02em; line-height: 1.3; color: var(--pt-ink); }
+/* Phones: the question gets its own full line, the buttons share the row under it */
+.tp-decision-inner .btn { flex: 1 1 0; justify-content: center; white-space: nowrap; }
+.tp-decision-inner .tp-decision-yes { flex: 2 1 0; }
+@media (max-width: 639px) { .tp-decision-inner .btn { height: 44px; } }
+@media (min-width: 640px) {
+  .tp-decision-q, .tp-decision-ok { flex: 1 1 0; }
+  .tp-decision-inner .btn { flex: 0 0 auto; }
+}
 .tp-decision-ok { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--pt-green); }
 .tp-decision-no { color: var(--color-danger); }
 
