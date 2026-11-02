@@ -48,6 +48,9 @@
             <p>Log in to continue building community.</p>
           </div>
 
+          <!-- status notice: account created, email sent, link expired... (filled by showNotice) -->
+          <div class="st-notice lg2-notice" id="loginNotice" hidden></div>
+
           <form id="loginForm" novalidate>
 
             <div class="av2-field">
@@ -157,7 +160,75 @@
       } catch (e) { return null; }
     }
 
+    /* ── Notice box (account created, email sent, link expired…) ──
+       tone: success | info | warning | danger. All text goes in with textContent. */
+    const NOTICE_ICONS = {
+      success: '<path d="M20 6 9 17l-5-5"/>',
+      info:    '<path d="M12 11v6"/><path d="M12 7h.01"/>',
+      warning: '<path d="M12 7v6"/><path d="M12 17h.01"/>',
+      danger:  '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    };
+    function showNotice(tone, title, body, action) {
+      const box = document.getElementById('loginNotice');
+      if (!box) return null;
+      box.className = 'st-notice st-notice--' + tone + ' lg2-notice';
+      box.setAttribute('role', tone === 'danger' ? 'alert' : 'status');
+      box.textContent = '';
+
+      const icon = document.createElement('span');
+      icon.className = 'st-notice-icon';
+      icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + NOTICE_ICONS[tone] + '</svg>';
+
+      const main = document.createElement('div');
+      main.className = 'st-notice-main';
+      const t = document.createElement('div');
+      t.className = 'st-notice-title';
+      t.textContent = title;
+      main.appendChild(t);
+      if (body) {
+        const b = document.createElement('div');
+        b.className = 'st-notice-body';
+        b.textContent = body;
+        main.appendChild(b);
+      }
+      let actionBtn = null;
+      if (action) {
+        const row = document.createElement('div');
+        row.className = 'st-notice-actions';
+        actionBtn = document.createElement('button');
+        actionBtn.type = 'button';
+        actionBtn.className = 'st-notice-link';
+        actionBtn.textContent = action.label;
+        actionBtn.addEventListener('click', () => action.onClick(actionBtn));
+        row.appendChild(actionBtn);
+        main.appendChild(row);
+      }
+      box.append(icon, main);
+      box.hidden = false;
+      return actionBtn;
+    }
+    /* Button that can only be pressed once a minute (Supabase limits how often it will send mail) */
+    function cooldown(btn, label, seconds) {
+      let left = seconds;
+      btn.disabled = true;
+      const tick = () => {
+        if (left <= 0) { btn.disabled = false; btn.textContent = label; return; }
+        btn.textContent = label + ' (' + left + 's)';
+        left -= 1;
+        setTimeout(tick, 1000);
+      };
+      tick();
+    }
+
     function initPage() {
+      /* A password-reset link that landed here instead of reset-password.html
+         (Supabase falls back to the site URL if the redirect is not on its allow list).
+         Hand the whole link over so the person can set a new password. */
+      if (window.location.hash.includes('type=recovery')) {
+        window.location.replace('reset-password.html' + window.location.hash);
+        return;
+      }
+
       /* ── Google OAuth callback ─────────────────────────────────
          After the OAuth provider redirects back, Supabase fires
          onAuthStateChange. We read the role from the URL param
@@ -165,13 +236,7 @@
       ─────────────────────────────────────────────────────────── */
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('oauth') === '1') {
-        const banner = document.getElementById('loginErr');
-        if (banner) {
-          banner.textContent = 'Signing you in…';
-          banner.style.background = 'var(--blue-light)';
-          banner.style.color      = 'var(--blue)';
-          banner.style.display    = 'block';
-        }
+        showNotice('info', 'Signing you in…', 'One moment while we finish setting things up.');
 
         const oauthRole = urlParams.get('role')
           || (function(){ try { return localStorage.getItem('st_pending_role'); } catch(e){ return null; } })()
@@ -190,12 +255,7 @@
             if (!oauthRole) {
               /* Came from login page, not signup — block access */
               await window.supabase.auth.signOut();
-              if (banner) {
-                banner.textContent = 'No account found. Please sign up first.';
-                banner.style.background = 'var(--red-light)';
-                banner.style.color      = 'var(--red)';
-                banner.style.display    = 'block';
-              }
+              showNotice('danger', 'No account found', 'We could not find an account for that Google login. Please sign up first.');
               return;
             }
             /* Came from signup — create their account with the chosen role */
@@ -236,13 +296,7 @@
       /* ── Email confirmation redirect ── */
       const hash = window.location.hash;
       if (hash && hash.includes('access_token') && hash.includes('type=signup')) {
-        const banner = document.getElementById('loginErr');
-        if (banner) {
-          banner.textContent = 'Confirming your email…';
-          banner.style.background = 'var(--blue-light)';
-          banner.style.color = 'var(--blue)';
-          banner.style.display = 'block';
-        }
+        showNotice('info', 'Confirming your email…', 'This only takes a moment.');
         /* They clicked the link in the confirmation email. Make sure their profile
            rows exist, then sign them out and send them to Log In to sign in. */
         let confirmDone = false;
@@ -278,41 +332,38 @@
       /* ── Expired or invalid confirmation link ── */
       if (window.location.hash.includes('error_description')) {
         const h = new URLSearchParams(window.location.hash.slice(1));
-        const e = document.getElementById('loginErr');
-        e.textContent = (h.get('error_code') === 'otp_expired')
-          ? 'That confirmation link has expired or was already used. Try logging in below. If it says your email isn\'t verified, sign up again to get a new link.'
-          : (h.get('error_description') || 'That link is not valid.').replace(/\+/g, ' ');
-        e.style.display = 'block';
+        if (h.get('error_code') === 'otp_expired') {
+          showNotice('warning', 'That link has expired',
+            'It was already used or is too old. Try logging in below. If it says your email isn\'t verified, sign up again to get a new link.');
+        } else {
+          showNotice('danger', 'That link is not valid', (h.get('error_description') || 'Please request a new one.').replace(/\+/g, ' '));
+        }
       }
 
-      /* ── Just signed up: show the "verify your email" notice ── */
+      /* ── Just signed up / confirmed / reset: show the matching notice ── */
       const qs = new URLSearchParams(window.location.search);
+      const mail = qs.get('email') || '';
       if (qs.get('verify') === '1' || qs.get('created') === '1' || qs.get('confirmed') === '1') {
-        const note = document.getElementById('loginErr');
-        const mail = qs.get('email') || '';
         if (mail) document.getElementById('loginEmail').value = mail;
-        note.textContent = qs.get('confirmed') === '1'
-          ? 'Email confirmed! Your account is ready. Log in below to continue.'
-          : qs.get('verify') === '1'
-          ? 'Account created! We sent a verification link to ' + (mail || 'your email') + '. Please verify your email, then log in below.'
-          : 'Account created! Log in below to continue.';
-        note.style.background = 'var(--blue-light)';
-        note.style.color      = 'var(--blue)';
-        note.style.display    = 'block';
-        if (qs.get('verify') === '1' && mail) {
-          const resend = document.createElement('button');
-          resend.type = 'button';
-          resend.className = 'lg2-forgot';
-          resend.textContent = ' Resend email';
-          resend.addEventListener('click', async () => {
-            const { error } = await window.supabase.auth.resend({
-              type: 'signup', email: mail,
-              options: { emailRedirectTo: window.location.origin + '/login.html' }
-            });
-            showToast(error ? 'Could not resend: ' + error.message : 'Verification email sent to ' + mail + '.');
-          });
-          note.appendChild(resend);
+        if (qs.get('confirmed') === '1') {
+          showNotice('success', 'Email confirmed', 'Your account is ready. Log in below to continue.');
+        } else if (qs.get('verify') === '1') {
+          showNotice('success', 'Account created',
+            'We sent a verification link to ' + (mail || 'your email') + '. Verify your email, then log in below. It can take a few minutes, so check your spam folder too.',
+            mail ? { label: 'Resend email', onClick: async (btn) => {
+              cooldown(btn, 'Resend email', 60);
+              const { error } = await window.supabase.auth.resend({
+                type: 'signup', email: mail,
+                options: { emailRedirectTo: window.location.origin + '/login.html' }
+              });
+              showToast(error ? 'Could not resend: ' + error.message : 'Verification email sent to ' + mail + '.');
+            } } : null);
+        } else {
+          showNotice('success', 'Account created', 'Log in below to continue.');
         }
+      }
+      if (qs.get('reset') === '1') {
+        showNotice('success', 'Password updated', 'Your password was changed. Log in below with your new password.');
       }
 
       /* ── Password toggle ── */
@@ -391,7 +442,7 @@
         }
       });
 
-      function showErr(msg) { err.textContent = msg; err.style.background = ''; err.style.color = ''; err.style.display = 'block'; }
+      function showErr(msg) { err.textContent = msg; err.style.display = 'block'; }
 
       function friendlyAuthError(msg) {
         if (!msg) return 'Login failed. Please try again.';
@@ -404,14 +455,24 @@
 
     async function handleForgotPassword() {
       const email = document.getElementById('loginEmail')?.value?.trim();
-      if (!email) { showToast('Enter your email address first, then click Forgot password.'); return; }
+      if (!email) { showToast('Enter your email address first, then click Forgot password.'); document.getElementById('loginEmail')?.focus(); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Please enter a valid email address.'); return; }
       try {
+        /* The link in the email opens reset-password.html, where they choose a new password */
         const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/login.html'
+          redirectTo: window.location.origin + '/reset-password.html'
         });
         if (error) throw error;
-        showToast('Password reset link sent to ' + email + '. Check your inbox.');
-      } catch(e) { showToast('Could not send reset email: ' + e.message); }
+        showNotice('success', 'Check your email',
+          'If an account exists for ' + email + ', we sent a link to reset your password. It can take a few minutes, so check your spam folder too.',
+          { label: 'Send again', onClick: (btn) => { cooldown(btn, 'Send again', 60); handleForgotPassword(); } });
+        const again = document.querySelector('#loginNotice .st-notice-link');
+        if (again) cooldown(again, 'Send again', 60);
+      } catch (e) {
+        const limited = e && (e.status === 429 || /rate limit|too many/i.test(e.message || ''));
+        showNotice('danger', limited ? 'Please wait a minute' : 'Could not send the email',
+          limited ? 'We just sent a reset email. Wait a minute before asking for another.' : (e.message || 'Please try again.'));
+      }
     }
     window.handleForgotPassword = handleForgotPassword;
 

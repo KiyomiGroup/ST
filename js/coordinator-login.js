@@ -123,8 +123,8 @@
       var email = ($('coEmail').value || '').trim();
       if (!email) { showMsg('Enter your email address first, then choose Forgot password.', 'info'); return; }
       try {
-        /* Same call and destination as the main login page. */
-        var res = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login.html' });
+        /* Same reset page as the main login. */
+        var res = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/reset-password.html' });
         if (res.error) throw res.error;
         showMsg('If that email has an account, a password reset link is on its way.', 'info');
       } catch (e) {

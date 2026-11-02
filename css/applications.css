@@ -66,7 +66,7 @@
 @media (max-width: 768px) {
   .ap-header { display: none; }
   .ap-container { display: flex; flex-direction: column; }
-  .ap-hero-dt.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
+  .ap-hero-dt.pg-hero { order: 1; border-radius: var(--radius-form); padding-bottom: var(--space-4); }
   .ap-toolbar { order: 2; margin-bottom: var(--space-4); }
   .ap-tabs { order: 3; }
   .ap-layout { order: 4; }

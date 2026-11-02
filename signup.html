@@ -117,11 +117,12 @@
               <label for="cPassword">Password</label>
               <div class="av2-field-wrap">
                 <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input type="password" id="cPassword" name="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required />
+                <input type="password" id="cPassword" name="password" placeholder="Create a password" autocomplete="new-password" aria-describedby="cPwdRules" required />
                 <button type="button" class="av2-pwd-toggle" onclick="togglePwd('cPassword', this)" aria-label="Show password">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+              <ul class="pwd-rules" id="cPwdRules" aria-live="polite"></ul>
             </div>
 
             <!-- mobile-only: desktop frame has no terms checkbox -->
@@ -225,11 +226,12 @@
               <label for="tPassword">Password</label>
               <div class="av2-field-wrap">
                 <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input type="password" id="tPassword" name="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required />
+                <input type="password" id="tPassword" name="password" placeholder="Create a password" autocomplete="new-password" aria-describedby="tPwdRules" required />
                 <button type="button" class="av2-pwd-toggle" onclick="togglePwd('tPassword', this)" aria-label="Show password">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+              <ul class="pwd-rules" id="tPwdRules" aria-live="polite"></ul>
             </div>
 
             <!-- mobile-only: desktop frame has no terms checkbox -->
@@ -295,6 +297,10 @@
       const role = params.get('step') || params.get('role');
       if (role === 'customer' || role === 'tasker') showStep(role);
     })();
+
+    /* Live password checklist under each password field (rules live in js/auth.js) */
+    window.ST.auth.attachPasswordRules(document.getElementById('cPassword'), document.getElementById('cPwdRules'));
+    window.ST.auth.attachPasswordRules(document.getElementById('tPassword'), document.getElementById('tPwdRules'));
 
     function togglePwd(fieldId, btn) {
       const input = document.getElementById(fieldId);

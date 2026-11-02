@@ -45,5 +45,5 @@
 /* ── Hero (shared .pg-hero from styles.css, same as Applications and My Tasks) ──
    Desktop needs nothing extra. Phones: the hero comes first, the search bar joins it in one green block, then the tabs. */
 @media (max-width: 768px) {
-  .sv-hero.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
+  .sv-hero.pg-hero { order: 1; border-radius: var(--radius-form); padding-bottom: var(--space-4); }
 }

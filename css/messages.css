@@ -1306,10 +1306,10 @@ body.msg-page {
 /* Mobile: list full screen, room opens over it */
 @media (max-width: 768px) {
   .jr-shell { padding: 0; gap: 0; }
-  .jr-list { border: 0; border-radius: 0; }
+  .jr-list { border: 0; border-radius: var(--radius-form); }
   .jr-detail { display: none; }
 
-  .jr-room { display: none; border: 0; border-radius: 0; }
+  .jr-room { display: none; border: 0; border-radius: var(--radius-form); }
   .jr-room.open {
     display: flex;
     position: fixed;

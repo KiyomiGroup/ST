@@ -561,7 +561,7 @@ html.wl-lock { overflow: hidden; }
 
 /* Native select inside the same pill as the other fields: the phone shows its own picker */
 .wl-select {
-  width: 100%; min-width: 0; height: 48px; padding: 0; border: 0; border-radius: 0; outline: 0; cursor: pointer;
+  width: 100%; min-width: 0; height: 48px; padding: 0; border: 0; border-radius: var(--radius-form); outline: 0; cursor: pointer;
   appearance: none; -webkit-appearance: none; background: transparent; text-overflow: ellipsis;
   font-family: var(--font-heading); font-size: var(--text-base); font-weight: 500; color: var(--pt-ink);
 }

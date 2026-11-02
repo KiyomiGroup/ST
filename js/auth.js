@@ -444,8 +444,64 @@ async function syncNavbarAuthState() {
   }
 }
 
+/* ── Password rules ──────────────────────────────────────────────
+   One list of rules for sign-up and reset-password. checkPassword() returns
+   which rules a password meets; attachPasswordRules() wires a live checklist
+   (<ul class="pwd-rules" data-pwd-rules>) to an input. Keep this in step with
+   Supabase Dashboard > Authentication > Password strength, which is the
+   server-side check that cannot be bypassed. */
+const PASSWORD_RULES = [
+  { id: 'length',  label: 'At least 8 characters',        test: (p) => p.length >= 8 },
+  { id: 'upper',   label: 'One uppercase letter (A-Z)',   test: (p) => /[A-Z]/.test(p) },
+  { id: 'lower',   label: 'One lowercase letter (a-z)',   test: (p) => /[a-z]/.test(p) },
+  { id: 'number',  label: 'One number (0-9)',             test: (p) => /[0-9]/.test(p) },
+  { id: 'symbol',  label: 'One symbol (like ! @ # $ %)',  test: (p) => /[^A-Za-z0-9\s]/.test(p) },
+];
+
+function checkPassword(pwd) {
+  const value = String(pwd == null ? '' : pwd);
+  const results = PASSWORD_RULES.map(r => ({ id: r.id, label: r.label, ok: r.test(value) }));
+  return { ok: results.every(r => r.ok), results, failed: results.filter(r => !r.ok) };
+}
+
+/* Sentence listing every rule not met, or "" when the password is fine */
+function passwordProblem(pwd) {
+  const f = checkPassword(pwd).failed;
+  if (!f.length) return '';
+  return 'Your password needs: ' + f.map(r => r.label.charAt(0).toLowerCase() + r.label.slice(1)).join(', ') + '.';
+}
+
+function attachPasswordRules(input, list) {
+  if (!input || !list) return;
+  list.textContent = '';
+  const items = {};
+  PASSWORD_RULES.forEach(r => {
+    const li = document.createElement('li');
+    li.className = 'pwd-rule';
+    li.dataset.rule = r.id;
+    const dot = document.createElement('span');
+    dot.className = 'pwd-rule-icon';
+    dot.setAttribute('aria-hidden', 'true');
+    const txt = document.createElement('span');
+    txt.textContent = r.label;
+    li.append(dot, txt);
+    list.appendChild(li);
+    items[r.id] = li;
+  });
+  const update = () => {
+    const { results } = checkPassword(input.value);
+    results.forEach(r => items[r.id].classList.toggle('is-met', r.ok));
+    list.classList.toggle('is-touched', input.value.length > 0);
+  };
+  input.addEventListener('input', update);
+  update();
+}
+
 /* ── Auth operations ─────────────────────────────────────────── */
 async function signUpUser({ name, email, password, role, phone = '' }) {
+  /* Same rules the live checklist shows, enforced here so every sign-up form gets them */
+  const problem = passwordProblem(password);
+  if (problem) throw new Error(problem);
   /* Supabase silently resends confirmation for duplicate emails instead of erroring.
      Detect this by checking identities array on the returned user object. */
   const { data, error } = await window.supabase.auth.signUp({
@@ -607,6 +663,6 @@ async function initDashboardWelcome() {
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
-  signUpUser, loginUser, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
+  signUpUser, loginUser, checkPassword, passwordProblem, attachPasswordRules, PASSWORD_RULES, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
   initDashboardWelcome,
 };

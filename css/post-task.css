@@ -596,7 +596,7 @@
   /* Sticky submit bar */
   .pt-submit {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
-    padding: var(--space-4) calc(var(--space-4) + var(--space-1)) var(--space-3); border-radius: 0; box-shadow: var(--shadow-pt-bar);
+    padding: var(--space-4) calc(var(--space-4) + var(--space-1)) var(--space-3); border-radius: var(--radius-form); box-shadow: var(--shadow-pt-bar);
   }
   .pt-post-btn { width: 100%; height: 52px; background: var(--color-primary); font-weight: 700; box-shadow: var(--shadow-primary-md); }
   .pt-post-btn:hover { background: var(--color-primary-hover); }
