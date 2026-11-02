@@ -20,7 +20,6 @@
   'use strict';
 
   var PAGE_SIZE = 10;
-  var FEE_RATE = 0.12; /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
   var MAX_CODE_TRIES = 3; /* mirrors the limit in ST.payments.submitCompletionCode */
   var SIGNOFF = ['awaiting_confirmation', 'awaiting_code', 'provider_done']; /* provider_done: old rows only, the server no longer writes it */
   var state = { user: null, rows: [], filter: 'all', query: '', category: '', range: 'all', sort: 'recent', shown: PAGE_SIZE };
@@ -100,24 +99,18 @@
 
   function refOf(id) { return 'BK-' + String(id || '').replace(/-/g, '').slice(0, 4).toUpperCase(); }
 
-  function payout(amount) {
-    try {
-      var a = window.ST.payments.calculateAmounts(amount);
-      return { fee: a.platformFee, net: a.taskerAmount };
-    } catch (e) {
-      var fee = Math.round(amount * FEE_RATE);
-      return { fee: fee, net: amount - fee };
-    }
-  }
-
   /* ── Data ─────────────────────────────────────────────── */
   async function fetchBookings(uid) {
     var sb = window.supabase;
     var base = 'id,customer_id,tasker_id,task_id,service_id,status,payment_status,amount,notes,scheduled_time,created_at,code_attempts';
-    var res = await sb.from('bookings').select(base + ',completed_at').eq('customer_id', uid).order('created_at', { ascending: false });
-    if (res.error) {
-      /* completed_at may not exist on every deployment: retry without it */
-      res = await sb.from('bookings').select(base).eq('customer_id', uid).order('created_at', { ascending: false });
+    /* The job columns (sql/booking-popup-stage5.sql) and completed_at may not exist on every deployment:
+       try the fullest column set first and fall back to smaller ones. */
+    var job = window.STBookingJob ? ',' + window.STBookingJob.COLS : '';
+    var sets = [base + job + ',completed_at', base + job, base + ',completed_at', base], res;
+    for (var i = 0; i < sets.length; i++) {
+      if (i && sets[i] === sets[i - 1]) continue;
+      res = await sb.from('bookings').select(sets[i]).eq('customer_id', uid).order('created_at', { ascending: false });
+      if (!res.error) break;
     }
     if (res.error) throw res.error;
     return res.data || [];
@@ -161,7 +154,8 @@
       var u = people[b.tasker_id] || {};
       var userName = u.first_name && u.last_name ? u.first_name + ' ' + u.last_name : u.name;
       var provider = tp.business_name || u.business_name || tp.name || userName || 'Service provider';
-      var title = t.title || s.service_name || s.service || s.title || tp.service_name || tp.service ||
+      var job = window.STBookingJob ? window.STBookingJob.parse(b) : null;
+      var title = t.title || (job && job.title) || s.service_name || s.service || s.title || tp.service_name || tp.service ||
         (b.notes ? String(b.notes).slice(0, 60) : 'Service booking');
       var when = parseWhen(b.scheduled_time);
       return {
@@ -178,7 +172,8 @@
         category: t.category || s.category || tp.category || '',
         amount: Number(b.amount) || 0,
         budget: Number(t.budget) || 0,
-        note: b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : '',
+        job: job,
+        note: job ? job.description : (b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : ''),
         taskerId: b.tasker_id || '',
         taskId: t.id || '',
         created: b.created_at,
@@ -313,12 +308,11 @@
   function figures(v) {
     var amt = v.amount;
     if (!amt || v.group === 'pending' || v.group === 'cancelled') return '';
-    var p = payout(amt), pay = v.raw.payment_status;
+    var pay = v.raw.payment_status;
     var status = v.group === 'completed' || pay === 'released' ? 'Released' : v.disputed ? 'Frozen' : pay === 'paid' ? 'In Escrow' : 'Not Paid';
-    return '<div class="bk-figures">' +
+    return '<div class="bk-figures bk-figures--two">' +
       '<div><div class="bk-fig-label">Job Price</div><div class="bk-fig-value">' + naira(amt) + '</div></div>' +
-      '<div><div class="bk-fig-label">Payment</div><div class="bk-fig-value">' + status + '</div></div>' +
-      '<div><div class="bk-fig-label">Provider Receives</div><div class="bk-fig-value is-green">' + naira(p.net) + '</div></div></div>';
+      '<div><div class="bk-fig-label">Payment</div><div class="bk-fig-value">' + status + '</div></div></div>';
   }
 
   /* ONE button. Everything else (pay, review, release code, report a problem) lives in the job room. */
@@ -348,6 +342,7 @@
           (v.category ? '<span>' + esc(v.category) + '</span>' : '') + '</div></div></div></div>' +
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +
       figures(v) +
+      (window.STBookingJob ? window.STBookingJob.html(v.job, '', esc, icon) : '') +
       (v.note ? '<p class="bk-quote"><strong>Your note:</strong> \u201C' + esc(v.note) + '\u201D</p>' : '') +
       (window.STCustQuote ? window.STCustQuote.html(v.id) : '') +
       (h ? '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' : '') +

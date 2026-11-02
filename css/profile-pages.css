@@ -511,3 +511,65 @@
   .cp-bar-tasks:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
   .cp-bar-msg { flex: 1; min-width: 0; height: 52px; justify-content: center; gap: var(--space-2); box-shadow: var(--shadow-lg); }
 }
+
+/* ── Booking pop-up (Stage 1): centred, scrolls inside the screen, job details + urgency ── */
+.tp-dialog-book { position: fixed; inset: 0; margin: auto; width: min(480px, calc(100% - 2 * var(--space-4))); height: fit-content; max-height: calc(100dvh - 2 * var(--space-4)); overflow-y: auto; border-radius: var(--radius-form); }
+.tp-bk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.tp-bk-row .form-label { margin-bottom: var(--space-2); }
+.tp-bk-count { font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.tp-dialog .form-input { border: 1.5px solid transparent; background: var(--pt-field); font-size: var(--text-sm); }
+.tp-dialog .form-input:not([type="date"]) { height: 48px; padding: 0 var(--space-5); border-radius: var(--radius-pill); }
+.tp-dialog .form-input:focus { background: var(--color-bg); border-color: var(--color-primary); }
+.tp-bk-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.tp-bk-opt {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: var(--space-3) var(--space-2); cursor: pointer;
+  border: 0; border-radius: var(--radius-form); background: var(--pt-field); color: var(--pt-ink); text-align: center;
+}
+.tp-bk-opt .ap-i { width: 20px; height: 20px; color: var(--pt-green); }
+.tp-bk-opt strong { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
+.tp-bk-opt span { font-size: var(--text-xs); color: var(--pt-ink-muted); }
+.tp-bk-opt:hover { background: var(--pt-field-strong); }
+.tp-bk-opt:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.tp-bk-opt[aria-checked="true"] { background: var(--color-primary); color: var(--color-text-on-primary); }
+.tp-bk-opt[aria-checked="true"] .ap-i, .tp-bk-opt[aria-checked="true"] span { color: var(--color-text-on-primary); }
+
+/* ── Booking pop-up (Stage 2): area field with suggestions, street address ── */
+.tp-bk-loc { position: relative; }
+.tp-bk-tag { font-weight: 400; color: var(--pt-ink-muted); }
+.tp-bk-help { margin-top: var(--space-1); padding-left: var(--space-2); font-size: var(--text-xs); color: var(--pt-ink-muted); }
+
+/* ── Booking pop-up (Stage 3): price summary (customer view, no platform fee) ── */
+.tp-bk-price { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); padding: var(--space-4); border-radius: var(--radius-xl); background: var(--pt-field); font-size: var(--text-sm); }
+.tp-bk-price-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.tp-bk-price-row strong { text-align: right; }
+.tp-bk-price-total strong { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; color: var(--pt-green); }
+.tp-bk-price-note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--pt-ink-muted); }
+.tp-bk-price-note .ap-i { flex-shrink: 0; width: 16px; height: 16px; margin-top: 1px; color: var(--pt-green); }
+
+/* ── Booking pop-up (Stage 4): job photos ── */
+.tp-bk-file { display: none; }
+.tp-bk-photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.tp-bk-photos:empty { display: none; }
+.tp-bk-thumb { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: var(--radius-form); background: var(--pt-field); }
+.tp-bk-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tp-bk-thumb-remove {
+  position: absolute; top: var(--space-1); right: var(--space-1); display: grid; place-items: center; width: var(--space-5); height: var(--space-5);
+  padding: 0; cursor: pointer; border: 0; border-radius: 50%; background: var(--pt-ink); color: var(--color-text-on-primary);
+}
+.tp-bk-thumb-remove .ap-i { width: var(--space-3); height: var(--space-3); stroke-width: 3; }
+.tp-bk-thumb-remove:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.tp-bk-add-photo {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); aspect-ratio: 1 / 1; padding: var(--space-2);
+  cursor: pointer; border: 0; border-radius: var(--radius-form); background: var(--pt-field); color: var(--pt-ink-muted);
+  font-size: var(--text-xs); font-weight: 600;
+}
+.tp-bk-add-photo .ap-i { width: 24px; height: 24px; color: var(--pt-green); }
+.tp-bk-add-photo:hover { background: var(--pt-field-strong); }
+.tp-bk-add-photo:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.tp-bk-photos + .tp-bk-help { margin-top: var(--space-2); }
+
+/* ── Booking pop-up (Stage 5): phones ── */
+@media (max-width: 480px) {
+  .tp-dialog-book .tp-dialog-body { padding: var(--space-4); }
+  .tp-dialog-book .tp-dialog-x { top: var(--space-2); right: var(--space-2); }
+}

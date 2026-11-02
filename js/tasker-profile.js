@@ -412,6 +412,113 @@
   }
   function toLogin() { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href); }
 
+  /* Booking pop-up limits (Stage 1) */
+  var JOB_MIN = 5, JOB_MAX = 80, DESC_MIN = 10, DESC_MAX = 600, AREA_MIN = 3, AREA_MAX = 120, STREET_MAX = 160;
+  /* Job photos (Stage 4): same rules and bucket as Post a Task and Make an Offer */
+  var MAX_PHOTOS = 5, MAX_PHOTO_BYTES = 5 * 1024 * 1024, PHOTO_BUCKET = 'task-images';
+  var PHOTO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  /* Until bookings has its own columns (Stage 5), the job details travel in notes:
+     line 1 = title, then the description, then "Area: ...", "Address: ..." (only if given), "Urgency: ..." and
+     "Photos: <url> <url>" (only if given).
+     Plain text, so older pages still show it. */
+  function buildNotes(tag, job, desc, area, street, urgency, photos) {
+    return (tag + job + '\n' + desc + '\nArea: ' + area + (street ? '\nAddress: ' + street : '') + '\nUrgency: ' + urgency +
+      (photos && photos.length ? '\nPhotos: ' + photos.join(' ') : '')).trim();
+  }
+
+  /* ── Job photos (Stage 4) ── */
+  function bkPhotoError(msg) { var e = $('bkPhotoErr'); if (!e) return; e.textContent = msg; e.hidden = !msg; }
+  function resetBkPhotos() {
+    (state.bkPhotos || []).forEach(function (p) { if (p.objectUrl) URL.revokeObjectURL(p.objectUrl); });
+    state.bkPhotos = [];
+  }
+  function renderBkPhotos() {
+    var box = $('bkPhotos'); if (!box) return;
+    box.textContent = '';
+    state.bkPhotos.forEach(function (p, i) {
+      var item = document.createElement('div'); item.className = 'tp-bk-thumb';
+      var img = document.createElement('img'); img.src = p.objectUrl; img.alt = 'Job photo ' + (i + 1); item.appendChild(img);
+      var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'tp-bk-thumb-remove';
+      rm.setAttribute('aria-label', 'Remove photo ' + (i + 1)); rm.setAttribute('data-photo-remove', String(i)); rm.innerHTML = icon('close');
+      item.appendChild(rm); box.appendChild(item);
+    });
+    if (state.bkPhotos.length < MAX_PHOTOS) {
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'tp-bk-add-photo'; add.setAttribute('data-photo-add', '1');
+      add.innerHTML = icon('camera-plus') + '<span>Add Photo</span>';
+      box.appendChild(add);
+    }
+    var c = $('bkPhotoCount'); if (c) c.textContent = state.bkPhotos.length ? state.bkPhotos.length + ' of ' + MAX_PHOTOS : 'Up to ' + MAX_PHOTOS;
+  }
+  function addBkFiles(files) {
+    if (!files.length) return;
+    var ok = files.filter(function (f) { return PHOTO_EXT[f.type]; }), msg = '';
+    if (!ok.length) return bkPhotoError('Please choose image files (JPG, PNG or WebP only).');
+    if (ok.length < files.length) msg = 'Only JPG, PNG and WebP photos can be added.';
+    var small = ok.filter(function (f) { return f.size <= MAX_PHOTO_BYTES; });
+    if (small.length < ok.length) msg = (ok.length - small.length) + ' photo(s) over 5 MB were skipped.';
+    var room = MAX_PHOTOS - state.bkPhotos.length;
+    if (small.length > room) msg = 'You can add up to ' + MAX_PHOTOS + ' photos.';
+    small.slice(0, room).forEach(function (f) { state.bkPhotos.push({ file: f, objectUrl: URL.createObjectURL(f), url: null }); });
+    bkPhotoError(msg); renderBkPhotos();
+  }
+  function removeBkPhoto(i) {
+    var gone = state.bkPhotos.splice(i, 1)[0];
+    if (gone && gone.objectUrl) URL.revokeObjectURL(gone.objectUrl);
+    bkPhotoError(''); renderBkPhotos();
+  }
+  /* Uploads the photos not uploaded yet. Resolves true when every photo has a URL. */
+  async function uploadBkPhotos() {
+    var pending = state.bkPhotos.filter(function (p) { return p.file && !p.url; });
+    if (!pending.length) return true;
+    var failed = 0;
+    try {
+      var user = await currentUser(), sb = window.supabase;
+      await Promise.all(pending.map(async function (p, i) {
+        try {
+          var name = 'tasks/' + user.id + '-booking-' + Date.now() + '-' + i + '.' + PHOTO_EXT[p.file.type];
+          var up = await sb.storage.from(PHOTO_BUCKET).upload(name, p.file, { cacheControl: '3600', upsert: true });
+          if (up.error) throw up.error;
+          p.url = sb.storage.from(PHOTO_BUCKET).getPublicUrl(name).data.publicUrl;
+        } catch (e) { failed++; console.warn('[booking] photo upload failed:', e && e.message); }
+      }));
+    } catch (e) { failed = pending.length; }
+    if (failed) { bkPhotoError(failed === 1 ? 'One photo could not be uploaded. Remove it or try again.' : failed + ' photos could not be uploaded. Remove them or try again.'); return false; }
+    bkPhotoError('');
+    return true;
+  }
+
+  /* Price summary for the customer (Stage 3). Shows the tasker's rate and what to expect, never the platform fee.
+     Only a per-job rate gives a total; hourly or daily rates depend on the time the job takes, so no total is guessed. */
+  function priceSummary(mode, m) {
+    var rate = money(m.rateValue), unit = String(m.rateUnit || '').replace(/^\//, '').toLowerCase();
+    var rows, note;
+    if (mode === 'quote' || !rate) {
+      rows = '<div class="tp-bk-price-row"><span>Price</span><strong>' + (mode === 'quote' ? 'Quote after review' : 'To be agreed') + '</strong></div>';
+      note = 'The tasker will price the job once they have seen your request. You only pay after you agree.';
+    } else if (unit === 'job') {
+      rows = '<div class="tp-bk-price-row tp-bk-price-total"><span>Estimated total</span><strong>' + esc(rate) + '</strong></div>';
+      note = 'The final price is agreed in chat before you pay. You are not charged for sending a request.';
+    } else {
+      rows = '<div class="tp-bk-price-row"><span>Rate</span><strong>' + esc(rate + ' /' + unit) + '</strong></div>' +
+             '<div class="tp-bk-price-row"><span>Total</span><strong>Depends on the time needed</strong></div>';
+      note = 'The final price is agreed in chat before you pay. You are not charged for sending a request.';
+    }
+    return '<div class="tp-bk-price" aria-label="Price summary">' + rows +
+      '<p class="tp-bk-price-note">' + icon('shield') + '<span>' + esc(note) + ' Your payment is held in escrow until you sign off the work.</span></p></div>';
+  }
+
+  /* The customer's saved location (users.location) pre-fills the Area field. Read once, kept on state. */
+  async function savedLocation(user) {
+    if (state.bkSavedLoc != null) return state.bkSavedLoc;
+    var v = '';
+    try {
+      var r = await window.supabase.from('users').select('location').eq('id', user.id).maybeSingle();
+      v = text(r && r.data && r.data.location);
+    } catch (e) { /* optional: the field simply starts empty */ }
+    state.bkSavedLoc = v;
+    return v;
+  }
+
   /* mode: 'book' | 'quote' | 'callout' */
   async function openBooking(mode) {
     mode = mode || 'book';
@@ -426,59 +533,113 @@
     var rate = money(m.rateValue);
     var title = mode === 'quote' ? 'Request a quote' : (mode === 'callout' ? 'Emergency callout' : 'Book ' + svc);
     var lead = mode === 'quote' ? 'Describe the job and ' + m.first + ' will reply with a quote.' : (mode === 'callout' ? 'Tell ' + m.first + ' what is wrong. Choose today if it is urgent.' : 'Fill in the details below and send your request.');
+    var urgent = mode === 'callout';
+    var savedLoc = await savedLocation(user);
+    var jobLabel = mode === 'quote' ? 'What do you need a quote for? *' : 'What do you need done? *';
     var body = $('tpBookBody');
+    state.bkUrgency = urgent ? 'urgent' : 'flexible';
+    resetBkPhotos();
     body.innerHTML =
       '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
       '<h2 class="tp-dialog-title" id="tpBookTitle">' + esc(title) + '</h2>' +
       '<p class="tp-dialog-lead">' + esc(lead) + '</p>' +
       '<div class="tp-dialog-sum"><span>' + esc(svc) + '</span><strong>' + esc(rate ? rate + ' ' + m.rateUnit : 'Price to be agreed') + '</strong></div>' +
-      '<div class="form-group"><label class="form-label" for="bkDate">Preferred date *</label><input type="date" id="bkDate" class="form-input" min="' + today + '" value="' + (mode === 'callout' ? today : '') + '" /></div>' +
+      '<div class="form-group"><label class="form-label" for="bkJob">' + jobLabel + '</label>' +
+        '<input type="text" id="bkJob" class="form-input" maxlength="' + JOB_MAX + '" autocomplete="off" placeholder="e.g. Fix a leaking kitchen tap" /></div>' +
+      '<div class="form-group"><div class="tp-bk-row"><label class="form-label" for="bkNotes">Describe the job *</label><span class="tp-bk-count" id="bkCount" aria-live="polite">0 / ' + DESC_MAX + '</span></div>' +
+        '<textarea id="bkNotes" class="form-textarea" rows="4" maxlength="' + DESC_MAX + '" placeholder="What needs doing, how big the job is, and anything the tasker should bring or know\u2026"></textarea></div>' +
+      '<div class="form-group"><div class="tp-bk-row"><span class="form-label" id="bkPhotoLabel">Photos of the job <span class="tp-bk-tag">(optional)</span></span><span class="tp-bk-count" id="bkPhotoCount" aria-live="polite">Up to ' + MAX_PHOTOS + '</span></div>' +
+        '<input type="file" id="bkPhotoFiles" class="tp-bk-file" accept="image/jpeg,image/png,image/webp" multiple aria-labelledby="bkPhotoLabel" />' +
+        '<div class="tp-bk-photos" id="bkPhotos"></div>' +
+        '<p class="tp-bk-help">JPG, PNG or WebP, up to 5 MB each. Photos help the tasker price the job.</p>' +
+        '<p class="ap-error" id="bkPhotoErr" role="alert" hidden></p></div>' +
+      '<div class="form-group"><label class="form-label" for="bkArea">Area / neighbourhood *</label>' +
+        '<div class="tp-bk-loc"><input type="text" id="bkArea" class="form-input" maxlength="' + AREA_MAX + '" autocomplete="off" value="' + esc(savedLoc) + '" placeholder="e.g. Lekki Phase 1, Lagos" /><div id="bkAreaSuggestions" class="location-suggestions"></div></div></div>' +
+      '<div class="form-group"><label class="form-label" for="bkStreet">Street address or landmark <span class="tp-bk-tag">(optional)</span></label>' +
+        '<input type="text" id="bkStreet" class="form-input" maxlength="' + STREET_MAX + '" autocomplete="off" placeholder="e.g. 14 Allen Avenue, near the bus stop" />' +
+        '<p class="tp-bk-help">Only the tasker you book can see this, and only after they accept.</p></div>' +
+      '<div class="form-group"><span class="form-label" id="bkUrgLabel">How soon do you need it?</span>' +
+        '<div class="tp-bk-opts" id="bkUrgency" role="radiogroup" aria-labelledby="bkUrgLabel">' +
+          '<button type="button" class="tp-bk-opt" role="radio" aria-checked="' + (urgent ? 'false' : 'true') + '" data-urgency="flexible">' + icon('calendar') + '<strong>Flexible</strong><span>Any day that suits</span></button>' +
+          '<button type="button" class="tp-bk-opt" role="radio" aria-checked="' + (urgent ? 'true' : 'false') + '" data-urgency="urgent">' + icon('bolt') + '<strong>Urgent</strong><span>As soon as possible</span></button>' +
+        '</div></div>' +
+      '<div class="form-group"><label class="form-label" for="bkDate">Preferred date *</label><input type="date" id="bkDate" class="form-input" min="' + today + '" value="' + (urgent ? today : '') + '" /></div>' +
       '<div class="form-group"><label class="form-label" for="bkTime">Preferred time</label><select id="bkTime" class="form-select">' +
-        '<option value="">Choose a time\u2026</option><option>Morning (7am \u2013 12pm)</option><option>Afternoon (12pm \u2013 5pm)</option><option>Evening (5pm \u2013 9pm)</option><option' + (mode === 'callout' ? ' selected' : '') + '>Flexible</option></select></div>' +
-      '<div class="form-group"><label class="form-label" for="bkNotes">' + (mode === 'quote' ? 'What do you need?' : 'Additional notes') + '</label>' +
-        '<textarea id="bkNotes" class="form-textarea" rows="3" placeholder="Describe what you need, your address, or any special requests\u2026"></textarea></div>' +
+        '<option value="">Choose a time\u2026</option><option>Morning (7am \u2013 12pm)</option><option>Afternoon (12pm \u2013 5pm)</option><option>Evening (5pm \u2013 9pm)</option><option' + (urgent ? ' selected' : '') + '>Flexible</option></select></div>' +
+      priceSummary(mode, m) +
       '<p class="ap-error" id="bkErr" role="alert" hidden></p>' +
       '<button type="button" class="btn btn-primary tp-dialog-submit" id="bkSubmitBtn" data-mode="' + esc(mode) + '">' + (mode === 'quote' ? 'Send Quote Request' : (mode === 'callout' ? 'Send Callout Request' : 'Send Booking Request')) + '</button>' +
       '<p class="tp-dialog-foot">All communication stays on StreetTasker. No phone numbers shared.</p>';
     openDialog($('tpBookDialog'));
+    renderBkPhotos();
+    if (typeof window.initLocationInput === 'function') window.initLocationInput({ inputId: 'bkArea', dropdownId: 'bkAreaSuggestions', gps: true, mode: 'area' });
   }
 
   async function submitBooking(mode) {
     var user = await currentUser(); if (!user) return;
-    var dateVal = text($('bkDate').value), timeVal = $('bkTime').value, notesVal = text($('bkNotes').value);
+    var jobVal = text($('bkJob').value), areaVal = text($('bkArea').value), streetVal = text($('bkStreet').value), dateVal = text($('bkDate').value), timeVal = $('bkTime').value, descVal = text($('bkNotes').value);
+    var urgencyVal = state.bkUrgency === 'urgent' ? 'Urgent' : 'Flexible';
     var err = $('bkErr'), btn = $('bkSubmitBtn'), body = $('tpBookBody');
-    if (!dateVal) { err.textContent = 'Please select a preferred date.'; err.hidden = false; return; }
-    err.hidden = true; btn.disabled = true; btn.textContent = 'Sending\u2026';
+    function fail(msg, el) { err.textContent = msg; err.hidden = false; if (el) el.focus(); }
+    if (jobVal.length < JOB_MIN) return fail('Please say what you need done (at least ' + JOB_MIN + ' characters).', $('bkJob'));
+    if (descVal.length < DESC_MIN) return fail('Please describe the job (at least ' + DESC_MIN + ' characters) so the tasker knows what to expect.', $('bkNotes'));
+    if (areaVal.length < AREA_MIN) return fail('Please tell us the area where the job is (for example Lekki Phase 1).', $('bkArea'));
+    if (!dateVal) return fail('Please select a preferred date.', $('bkDate'));
+    err.hidden = true; btn.disabled = true;
+    var btnLabel = btn.textContent;
+    btn.textContent = state.bkPhotos.length ? 'Uploading photos\u2026' : 'Sending\u2026';
+    if (!(await uploadBkPhotos())) { err.textContent = 'A photo could not be uploaded, so the request was not sent. Remove the photo or try again.'; err.hidden = false; btn.disabled = false; btn.textContent = btnLabel; return; }
+    var photoUrls = state.bkPhotos.map(function (p) { return p.url; }).filter(Boolean);
+    btn.textContent = 'Sending\u2026';
     var tag = mode === 'quote' ? '[Quote request] ' : (mode === 'callout' ? '[Emergency callout] ' : '');
 
     try {
-      var ex = await window.supabase.from('bookings').select('id').eq('customer_id', user.id).eq('tasker_id', state.id).in('status', ['pending', 'confirmed']).maybeSingle();
-      var bookingId = ex.data && ex.data.id;
+      /* Every request is its own booking (Stage 5). The job details go in their own columns; if the Stage 5 SQL has
+         not been run yet the insert is retried in the older form, with everything as lines in notes. */
+      var scheduled = dateVal + (timeVal ? ' \u2014 ' + timeVal : '');
+      var row = { customer_id: user.id, tasker_id: state.id, status: 'pending', scheduled_time: scheduled };
+      var ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
+        notes: (tag + jobVal + '\n' + descVal).trim(),
+        job_title: jobVal, job_description: descVal, job_area: areaVal, job_urgency: urgencyVal.toLowerCase(), job_photos: photoUrls
+      })).select('id').single();
+      var columnsMissing = false;
+      if (ins.error && /job_(title|description|area|urgency|photos)|PGRST204|42703/.test((ins.error.code || '') + ' ' + (ins.error.message || ''))) {
+        columnsMissing = true;
+        ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
+          notes: buildNotes(tag, jobVal, descVal, areaVal, '', urgencyVal, photoUrls)   /* no street address in the open notes */
+        })).select('id').single();
+      }
+      if (ins.error) throw ins.error;
+      var bookingId = ins.data.id;
 
-      if (!bookingId) {
-        var scheduled = dateVal + (timeVal ? ' \u2014 ' + timeVal : '');
-        var ins = await window.supabase.from('bookings').insert({
-          customer_id: user.id, tasker_id: state.id, status: 'pending', notes: (tag + notesVal).trim() || null, scheduled_time: scheduled
-        }).select('id').single();
-        if (ins.error) throw ins.error;
-        bookingId = ins.data.id;
+      /* The street address goes in the private table (readable by the tasker only once they confirm) */
+      var addressSaved = true;
+      if (streetVal) {
+        try {
+          var pr = await window.supabase.from('booking_private').insert({ booking_id: bookingId, address: streetVal });
+          if (pr.error) throw pr.error;
+        } catch (e) { addressSaved = false; console.warn('[booking] street address not saved:', e && e.message); }
+      }
+      if (columnsMissing) console.warn('[booking] Stage 5 SQL not run: saved the older way (details in notes).');
 
-        var who = (user.user_metadata && user.user_metadata.name) || (user.email && user.email.split('@')[0]) || 'A customer';
-        var svcName = (state.tasker && (state.tasker.service_name || state.tasker.service)) || 'your service';
+      var who = (user.user_metadata && user.user_metadata.name) || (user.email && user.email.split('@')[0]) || 'A customer';
+      var svcName = (state.tasker && (state.tasker.service_name || state.tasker.service)) || 'your service';
+      try {
         await window.supabase.from('notifications').insert({
           user_id: state.id, type: 'new_booking',
           title: mode === 'callout' ? 'Emergency Callout Request' : (mode === 'quote' ? 'New Quote Request' : 'New Booking Request'),
-          message: who + (mode === 'quote' ? ' asked for a quote for ' : ' wants to book ') + svcName + ' on ' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + (notesVal ? '. Note: ' + notesVal.slice(0, 80) : ''),
+          message: who + (mode === 'quote' ? ' asked for a quote for ' : ' wants to book ') + svcName + ' in ' + areaVal + ' on ' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + '. Job: ' + jobVal.slice(0, 80) + (urgencyVal === 'Urgent' ? ' (urgent)' : ''),
           data: { booking_id: bookingId, from: user.id }, is_read: false
         });
-      }
+      } catch (e) { /* the notification is a courtesy: the request itself is saved */ }
 
       sessionStorage.setItem('st_chat_context', JSON.stringify({ contextType: 'booking', contextId: bookingId, taskerId: state.id, customerId: user.id }));
 
       body.innerHTML =
         '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
         '<h2 class="tp-dialog-title">Request sent</h2>' +
-        '<p class="tp-dialog-lead">Your request has been sent for <strong>' + esc(dateVal + (timeVal ? ' (' + timeVal + ')' : '')) + '</strong>. The tasker will respond shortly.</p>' +
+        '<p class="tp-dialog-lead">Your request for <strong>' + esc(jobVal) + '</strong> in <strong>' + esc(areaVal) + '</strong> has been sent for <strong>' + esc(dateVal + (timeVal ? ' (' + timeVal + ')' : '')) + '</strong>' + (urgencyVal === 'Urgent' ? ' and marked urgent' : '') + (photoUrls.length ? ', with ' + photoUrls.length + (photoUrls.length === 1 ? ' photo' : ' photos') : '') + '. The tasker will respond shortly.</p>' +
+        (addressSaved ? '' : '<p class="ap-error">We could not save your street address. Please send it to the tasker in chat once they reply.</p>') +
         '<a href="messages.html" class="btn btn-primary tp-dialog-submit">' + icon('chat') + 'Message Provider</a>' +
         '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
     } catch (e) {
@@ -614,7 +775,25 @@
       var dlg = $(id);
       dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDialog(dlg); });
     });
+    $('tpBookDialog').addEventListener('input', function (e) {
+      if (e.target.id !== 'bkNotes') return;
+      var c = $('bkCount'); if (c) c.textContent = e.target.value.length + ' / ' + DESC_MAX;
+    });
+    $('tpBookDialog').addEventListener('change', function (e) {
+      if (e.target.id !== 'bkPhotoFiles') return;
+      addBkFiles(Array.prototype.slice.call(e.target.files || [])); e.target.value = '';
+    });
+    $('tpBookDialog').addEventListener('close', resetBkPhotos);
     $('tpBookDialog').addEventListener('click', function (e) {
+      var padd = e.target.closest('[data-photo-add]'); if (padd) { $('bkPhotoFiles').click(); return; }
+      var prem = e.target.closest('[data-photo-remove]'); if (prem) { removeBkPhoto(Number(prem.getAttribute('data-photo-remove'))); return; }
+      var urg = e.target.closest('[data-urgency]');
+      if (urg) {
+        state.bkUrgency = urg.getAttribute('data-urgency');
+        Array.prototype.forEach.call($('bkUrgency').children, function (b) { b.setAttribute('aria-checked', b === urg ? 'true' : 'false'); });
+        if (state.bkUrgency === 'urgent') { var d = $('bkDate'); if (d && !d.value) d.value = d.min; }
+        return;
+      }
       if (e.target.closest('[data-close]')) return closeDialog($('tpBookDialog'));
       var sub = e.target.closest('#bkSubmitBtn'); if (sub) return submitBooking(sub.getAttribute('data-mode'));
       var retry = e.target.closest('[data-retry]'); if (retry) openBooking(retry.getAttribute('data-retry'));

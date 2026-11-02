@@ -119,10 +119,14 @@
   async function fetchBookings(uid) {
     var sb = window.supabase;
     var base = 'id,customer_id,tasker_id,task_id,service_id,status,payment_status,amount,notes,scheduled_time,created_at,code_attempts';
-    var res = await sb.from('bookings').select(base + ',completed_at').eq('tasker_id', uid).order('created_at', { ascending: false });
-    if (res.error) {
-      /* completed_at may not exist on every deployment: retry without it */
-      res = await sb.from('bookings').select(base).eq('tasker_id', uid).order('created_at', { ascending: false });
+    /* The job columns (sql/booking-popup-stage5.sql) and completed_at may not exist on every deployment:
+       try the fullest column set first and fall back to smaller ones. */
+    var job = window.STBookingJob ? ',' + window.STBookingJob.COLS : '';
+    var sets = [base + job + ',completed_at', base + job, base + ',completed_at', base], res;
+    for (var i = 0; i < sets.length; i++) {
+      if (i && sets[i] === sets[i - 1]) continue;
+      res = await sb.from('bookings').select(sets[i]).eq('tasker_id', uid).order('created_at', { ascending: false });
+      if (!res.error) break;
     }
     if (res.error) throw res.error;
     return res.data || [];
@@ -163,6 +167,7 @@
     if (role === 'customer') { window.location.replace('dashboard-customer.html?panel=bookings'); return; }
 
     var rows = await fetchBookings(user.id);
+    var addresses = window.STBookingJob ? await window.STBookingJob.loadAddresses(rows.map(function (b) { return b.id; })) : {};   /* the database only returns the ones this tasker may see */
     var people = await lookup('users', ['id,name,first_name,last_name,avatar_url', 'id,name,first_name,last_name'], unique(rows, 'customer_id'));
     var tasks = await lookup('tasks', ['id,title,description,budget,location,category'], unique(rows, 'task_id'));
     var services = await lookup('services', ['*'], unique(rows, 'service_id'));
@@ -177,7 +182,8 @@
       var t = tasks[b.task_id] || {};
       var s = services[b.service_id] || {};
       var p = people[b.customer_id] || {};
-      var title = t.title || s.service_name || s.service || s.title || own.service_name || own.service ||
+      var job = window.STBookingJob ? window.STBookingJob.parse(b) : null;
+      var title = t.title || (job && job.title) || s.service_name || s.service || s.title || own.service_name || own.service ||
         (b.notes ? String(b.notes).slice(0, 60) : 'Booking request');
       var when = parseWhen(b.scheduled_time);
       return {
@@ -194,7 +200,8 @@
         category: t.category || s.category || own.category || '',
         amount: Number(b.amount) || 0,
         budget: Number(t.budget) || 0,
-        note: b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : '',
+        job: job, address: addresses[b.id] || '',
+        note: job ? job.description : (b.notes && String(b.notes).trim() !== title ? String(b.notes).trim() : ''),
         customerId: b.customer_id || '',
         taskId: t.id || '',
         created: b.created_at,
@@ -342,6 +349,7 @@
           (v.category ? '<span>' + esc(v.category) + '</span>' : '') + '</div></div></div></div>' +
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +
       figures(v) +
+      (window.STBookingJob ? window.STBookingJob.html(v.job, v.address, esc, icon) : '') +
       (v.note ? '<p class="bk-quote"><strong>Note:</strong> \u201C' + esc(v.note) + '\u201D</p>' : '') +
       (h ? '<div class="bk-hint' + (h.tone ? ' is-' + h.tone : '') + '">' + icon('info') + '<span>' + esc(h.text) + '</span></div>' : '') +
       (links ? '<div class="bk-actions">' + links + '</div>' : '') +
