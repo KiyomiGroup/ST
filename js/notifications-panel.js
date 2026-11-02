@@ -5,6 +5,17 @@
 
    Reads and writes the same `notifications` table as the rest of the site
    (user_id, type, title, message, data, is_read, created_at). Loaded by js/app.js on every page.
+
+   Arrival (new in this version):
+     1. Supabase Realtime on `notifications` INSERT: instant. Needs sql/notifications-realtime.sql run once.
+        The subscription reconnects by itself (with back-off) if it drops.
+     2. A light check every 15 s (30 s while the tab is hidden), and straight away when the person comes back to
+        the tab or the phone reconnects. This is the safety net: even with Realtime off, the red dot lights within
+        seconds, not only when the bell is clicked.
+   Each notification is handled once (known{} by id), so Realtime + the check never double-ring.
+   Sound: a short two-note chime made with the Web Audio API (no audio file). ON by default; the speaker button in
+   the panel header mutes it and the choice is kept in localStorage ('st_notif_sound' = 'off'). Browsers only allow
+   sound after the person has tapped or clicked the page once, so the first click anywhere "unlocks" it.
    ============================================================ */
 'use strict';
 (function () {
@@ -14,6 +25,55 @@
   var tab = 'inbox';          /* 'inbox' = unread, 'all' = everything */
   var items = [];
   var panel = null, backdrop = null, openerEl = null, loaded = false, userId = null;
+
+  var SOUND_KEY = 'st_notif_sound';          /* 'off' = muted; anything else (or nothing saved) = on */
+  var DING_KEY = 'st_notif_ding_at';         /* shared by tabs so two open tabs do not both ring */
+  var POLL_VISIBLE = 15000, POLL_HIDDEN = 30000;
+  var known = {};                            /* ids already seen: a notification is announced once */
+  var primed = false;                        /* known{} filled from the first check, without ringing */
+  var rt = { channel: null, ok: false, tries: 0, timer: null };
+  var pollTimer = null, checking = false, audioCtx = null;
+
+  /* ── sound ───────────────────────────────────────────────── */
+  function soundOn() { try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { return true; } }
+  function setSound(on) { try { localStorage.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch (e) {} syncSoundBtn(); }
+
+  /* The audio engine can only start inside a tap/click; the first one anywhere on the page unlocks it */
+  function unlockAudio() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audioCtx = new AC(); } catch (e) { return null; }
+    }
+    if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+    if (audioCtx.state === 'running') {
+      ['click', 'touchend', 'keydown'].forEach(function (ev) { document.removeEventListener(ev, unlockAudio, true); });
+    }
+    return audioCtx;
+  }
+  ['click', 'touchend', 'keydown'].forEach(function (ev) { document.addEventListener(ev, unlockAudio, true); });
+
+  function chime() {
+    var c = audioCtx;
+    if (!c || c.state !== 'running') return;                /* still locked: stay silent rather than error */
+    var t = c.currentTime;
+    [[880, 0], [1318.5, 0.14]].forEach(function (n) {       /* A5 then E6: a friendly two-note ding */
+      var o = c.createOscillator(), g = c.createGain(), at = t + n[1];
+      o.type = 'sine'; o.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.22, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.45);
+      o.connect(g); g.connect(c.destination);
+      o.start(at); o.stop(at + 0.5);
+    });
+  }
+  function ding() {
+    if (!soundOn()) return;
+    var now = Date.now(), last = 0;
+    try { last = Number(localStorage.getItem(DING_KEY)) || 0; localStorage.setItem(DING_KEY, String(now)); } catch (e) {}
+    if (now - last < 2500) return;                          /* just rang (here or in another tab) */
+    chime();
+  }
 
   /* ── helpers ─────────────────────────────────────────────── */
   function esc(s) {
@@ -88,6 +148,7 @@
       .eq('user_id', uid).order('created_at', { ascending: false }).limit(LIMIT);
     if (r.error) throw r.error;
     items = r.data || [];
+    items.forEach(function (n) { known[String(n.id)] = true; });
     loaded = true;
   }
   function unreadCount() { return items.filter(function (n) { return !n.is_read; }).length; }
@@ -124,7 +185,10 @@
     panel.innerHTML =
       '<header class="np-head">' +
         '<h2 class="np-title">Notifications</h2>' +
-        '<button type="button" class="np-markall" data-np-markall>Mark all as read</button>' +
+        '<div class="np-head-actions">' +
+          '<button type="button" class="np-sound" data-np-sound aria-pressed="true"><svg class="np-sound-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="np-sound-label"></span></button>' +
+          '<button type="button" class="np-markall" data-np-markall>Mark all as read</button>' +
+        '</div>' +
       '</header>' +
       '<div class="np-tabs" role="tablist">' +
         '<button type="button" class="np-tab" role="tab" data-np-tab="inbox" aria-selected="true">Inbox <span class="np-count" data-np-count></span></button>' +
@@ -133,12 +197,19 @@
       '<div class="np-list" data-np-list></div>';
     document.body.appendChild(backdrop);
     document.body.appendChild(panel);
+    syncSoundBtn();
 
     backdrop.addEventListener('click', close);
     panel.addEventListener('click', function (e) {
       var t = e.target.closest('[data-np-tab]');
       if (t) { tab = t.getAttribute('data-np-tab'); render(); return; }
       if (e.target.closest('[data-np-markall]')) { markAll(); return; }
+      if (e.target.closest('[data-np-sound]')) {
+        var turningOn = !soundOn();
+        setSound(turningOn);
+        if (turningOn) { var c = unlockAudio(); if (c && c.state !== 'running' && c.resume) { c.resume().then(chime).catch(function () {}); } else { chime(); } }   /* a short preview */
+        return;
+      }
       var row = e.target.closest('[data-np-id]');
       if (row) {
         var id = row.getAttribute('data-np-id');
@@ -151,6 +222,19 @@
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) close(); });
     window.addEventListener('resize', function () { if (!panel.hidden) place(); });
+  }
+
+  var SPEAKER_ON = '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/>';
+  var SPEAKER_OFF = '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6"/><path d="m17 9 6 6"/>';
+  function syncSoundBtn() {
+    if (!panel) return;
+    var b = panel.querySelector('[data-np-sound]'); if (!b) return;
+    var on = soundOn();
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.setAttribute('aria-label', on ? 'Notification sound is on. Tap to mute' : 'Notification sound is muted. Tap to turn on');
+    b.title = on ? 'Mute notification sound' : 'Turn notification sound on';
+    b.querySelector('.np-sound-ico').innerHTML = on ? SPEAKER_ON : SPEAKER_OFF;
+    b.querySelector('.np-sound-label').textContent = on ? 'Sound on' : 'Muted';
   }
 
   function render() {
@@ -200,7 +284,8 @@
     document.documentElement.classList.add('np-open');
     if (openerEl && openerEl.setAttribute) openerEl.setAttribute('aria-expanded', 'true');
     var list = panel.querySelector('[data-np-list]');
-    if (!loaded) list.innerHTML = '<p class="np-empty">Loading…</p>';
+    if (loaded) render(); else list.innerHTML = '<p class="np-empty">Loading…</p>';   /* cached rows show at once; fresh ones replace them */
+    syncSoundBtn();
     try { await load(); render(); setDots(unreadCount() > 0); }
     catch (e) { list.innerHTML = '<p class="np-empty">Could not load notifications.</p>'; }
   }
@@ -209,7 +294,6 @@
     panel.hidden = true; backdrop.hidden = true;
     document.documentElement.classList.remove('np-open');
     if (openerEl && openerEl.setAttribute) openerEl.setAttribute('aria-expanded', 'false');
-    loaded = false; /* fetch fresh next time */
   }
   function toggle(opener) { if (panel && !panel.hidden) close(); else open(opener); }
 
@@ -225,20 +309,87 @@
     toggle(drawer ? document.getElementById('navMobileBell') || el : el);
   }, true);
 
-  /* Live: a new notification lights the dot and refreshes an open panel */
-  async function subscribe() {
+  /* ── arrival: Realtime first, a light check as the safety net ── */
+  /* One new notification: red dot, chime, and (if the panel is open or already loaded) the list */
+  function onArrive(row) {
+    if (!row || row.id == null) return;
+    var key = String(row.id);
+    if (known[key]) return;
+    known[key] = true;
+    if (row.is_read) return;
+    setDots(true);
+    ding();
+    if (loaded && !items.some(function (n) { return String(n.id) === key; })) {
+      items.unshift(row);
+      if (items.length > LIMIT) items.length = LIMIT;
+    }
+    if (panel && !panel.hidden) render();
+  }
+
+  async function check() {
+    if (checking || !window.supabase) return;
+    checking = true;
     try {
       var uid = await getUser();
-      if (!uid || !window.supabase.channel) return;
-      window.supabase.channel('np-notifs:' + uid)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + uid }, function () {
-          setDots(true);
-          if (panel && !panel.hidden) { load().then(render).catch(function () {}); }
-        }).subscribe();
+      if (!uid) return;
+      var r = await window.supabase.from('notifications').select('*')
+        .eq('user_id', uid).order('created_at', { ascending: false }).limit(20);
+      if (r.error || !r.data) return;
+      if (!primed) {                                         /* first look: remember what is there, no ringing */
+        r.data.forEach(function (n) { known[String(n.id)] = true; });
+        primed = true;
+        if (r.data.some(function (n) { return !n.is_read; })) setDots(true);
+      } else {
+        r.data.slice().reverse().forEach(onArrive);          /* oldest first, so the newest ends up on top */
+      }
+    } catch (e) { /* offline or signed out: try again next time */ }
+    finally { checking = false; }
+  }
+
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(function () { check().then(schedulePoll); }, document.hidden ? POLL_HIDDEN : POLL_VISIBLE);
+  }
+
+  function retryRealtime() {
+    if (rt.timer) return;
+    var wait = Math.min(30000, 2000 * Math.pow(2, rt.tries++));
+    rt.timer = setTimeout(function () { rt.timer = null; connect(); }, wait);
+  }
+  function connect() {
+    var sb = window.supabase;
+    if (!sb || !sb.channel || !userId) return;
+    if (rt.channel) { var old = rt.channel; rt.channel = null; try { sb.removeChannel(old); } catch (e) {} }
+    rt.ok = false;
+    var ch = sb.channel('np-notifs:' + userId + ':' + Date.now());
+    rt.channel = ch;
+    ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + userId },
+      function (payload) { onArrive(payload && payload.new); })
+      .subscribe(function (status) {
+        if (rt.channel !== ch) return;                       /* an old channel we replaced */
+        if (status === 'SUBSCRIBED') { rt.ok = true; rt.tries = 0; check(); }   /* catch anything that landed while connecting */
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { rt.ok = false; retryRealtime(); }
+      });
+  }
+
+  async function start() {
+    try {
+      var uid = await getUser();
+      if (!uid) return;
+      await check();                                         /* prime known{} before any live event can ring */
+      connect();
+      schedulePoll();
+      /* Back on the tab, or the phone is online again: look now, and mend a dropped connection */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) return;
+        check(); if (!rt.ok) connect(); schedulePoll();
+      });
+      window.addEventListener('online', function () { check(); connect(); });
+      window.addEventListener('focus', function () { check(); });
     } catch (e) {}
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(subscribe, 800); });
-  else setTimeout(subscribe, 800);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(start, 300); });
+  else setTimeout(start, 300);
 
   window.ST = window.ST || {};
   window.ST.notifPanel = { open: open, close: close, toggle: toggle };
