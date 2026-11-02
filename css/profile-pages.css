@@ -242,7 +242,7 @@
 .tp-dialog .form-select { height: 48px; padding: 0 var(--space-5); border-radius: var(--radius-pill); }
 .tp-dialog .form-textarea { padding: var(--space-4) var(--space-5); border-radius: var(--radius-xl); line-height: 1.6; }
 .tp-dialog :is(.form-select, .form-textarea):focus { background: var(--color-bg); border-color: var(--color-primary); }
-.tp-lightbox { width: min(600px, calc(100% - 2 * var(--space-4))); overflow: hidden; }
+.tp-lightbox { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100dvh - 2 * var(--space-4)); width: min(600px, calc(100% - 2 * var(--space-4))); overflow: hidden; }
 .tp-lightbox-img { display: block; width: 100%; max-height: 420px; object-fit: cover; }
 .tp-lightbox-title { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; }
 .tp-lightbox-text { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.6; color: var(--pt-ink-muted); }
