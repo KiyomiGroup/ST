@@ -279,6 +279,27 @@
     loadConsents(p.tasker_user_id);
     loadServices(p.tasker_user_id);
     loadPhotos(p.tasker_user_id);
+    loadPayout(p.tasker_user_id);
+  }
+
+  /* Payout account (Stage 7B): masked summary only, from the database function. A problem here never hides the profile. */
+  async function loadPayout(id) {
+    var ld = $('coPayLoading'), er = $('coPayError'), em = $('coPayEmpty'), sm = $('coPaySummary');
+    if (!ld) return;
+    $('coPayManage').href = 'coordinator-tasker-payout.html?id=' + encodeURIComponent(id);
+    ld.hidden = false; er.hidden = true; em.hidden = true; sm.hidden = true;
+    try {
+      var res = await window.supabase.rpc('local_payout_account', { p_tasker: id });
+      if (res.error) throw res.error;
+      var a = res.data || {};
+      if (a.has_account === true) {
+        sm.textContent = (a.bank_name || 'Bank') + ' ' + (a.account_mask || '') + ' · verified ' + C.formatDate(a.verified_at);
+        sm.hidden = false; $('coPayManage').textContent = 'Change account';
+      } else { em.hidden = false; $('coPayManage').textContent = 'Set up payouts'; }
+    } catch (e) {
+      console.error('[coordinator tasker payout]', e && e.code);
+      er.hidden = false;
+    } finally { ld.hidden = true; }
   }
 
   async function load(detail) {

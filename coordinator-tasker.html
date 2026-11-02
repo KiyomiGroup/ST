@@ -102,6 +102,18 @@
           <p class="co-consent-meta" id="coPhotoCount" hidden></p>
         </section>
 
+        <section class="co-card" aria-labelledby="coDetailPayTitle">
+          <div class="co-card-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+            <h2 class="co-card-title" id="coDetailPayTitle">Payout account</h2>
+            <a class="btn btn-outline btn-sm" id="coPayManage" href="coordinator-tasker-payout.html">Set up payouts</a>
+          </div>
+          <p class="co-loading" id="coPayLoading">Loading…</p>
+          <p class="co-fact-value is-empty" id="coPayError" role="alert" hidden>We couldn't load the payout account just now. Reload the page to try again.</p>
+          <p class="co-fact-value is-empty" id="coPayEmpty" hidden>No payout account yet. Add a verified bank account so completed bookings can be paid out. Nothing is paid out until one is saved.</p>
+          <p class="co-fact-value" id="coPaySummary" hidden></p>
+        </section>
+
         <section class="co-card" aria-labelledby="coDetailPubTitle">
           <div class="co-card-head">
             <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
