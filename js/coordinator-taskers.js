@@ -84,9 +84,11 @@
     var n = rows.length;
     var el = $('coListSummary');
     if (!el) return;
-    el.textContent = n
-      ? n + ' of ' + C.CAP + ' places used. Choose a Local Tasker to see their profile.'
-      : 'Neighbourhood taskers under your coordination.';
+    el.textContent = n ? n + ' active. Choose a Local Tasker to see their profile.' : 'Neighbourhood taskers under your coordination.';
+    if (!n) return;
+    C.plan().then(function (plan) {   /* capacity is the coordinator's plan (Stage 7G); the line above stands if it cannot be read */
+      if (plan) el.textContent = n + ' of ' + plan.capacity + ' places used. Choose a Local Tasker to see their profile.';
+    });
   }
 
   async function load(detail) {

@@ -15,7 +15,6 @@
 
 (function () {
   var C = window.STCo;
-  var CAP = C.CAP;   /* display mirror of the database cap; the assignment trigger is the authority */
 
   function $(id) { return document.getElementById(id); }
   function setStat(key, text) {
@@ -91,8 +90,16 @@
       setStat('assigned', String(ids.length));
       setStat('published', String(published));
       setStat('draft', String(drafts));
-      setStat('open', String(Math.max(0, CAP - ids.length)));
-      var cap = $('coCapNote'); if (cap) cap.textContent = 'of ' + CAP + ' allowed';
+      /* Capacity comes from the coordinator's plan (Stage 7G), not from a number in this file. */
+      var plan = await C.plan();
+      var cap = $('coCapNote');
+      if (plan) {
+        setStat('open', String(Math.max(0, plan.capacity - ids.length)));
+        if (cap) cap.textContent = 'of ' + plan.capacity + ' allowed';
+      } else {
+        setStat('open', '—');
+        if (cap) cap.textContent = 'Active assignments';
+      }
 
       if (loading) loading.hidden = true;
       if (!ids.length) {

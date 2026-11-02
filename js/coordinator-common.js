@@ -32,8 +32,20 @@
     if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
-  /* Display mirror of the database cap; the assignment trigger is the authority. */
-  var CAP = 10;
+  /* The coordinator's plan (Stage 7G): tier, capacity, active count, places left. The database function my_coordinator_plan() is the source and the
+     assignment trigger is the authority; the page only shows what it returns. One call per page load, shared. Resolves to null if it cannot be read
+     (the caller then shows a dash instead of guessing a number). */
+  var planPromise = null;
+  function plan() {
+    if (!planPromise) {
+      planPromise = Promise.resolve().then(function () { return window.supabase.rpc('my_coordinator_plan'); }).then(function (res) {
+        var d = res && res.data;
+        if (!res || res.error || !d || typeof d.capacity !== 'number' || typeof d.active_count !== 'number') return null;
+        return d;
+      }).catch(function (e) { console.error('[coordinator plan]', e); return null; });
+    }
+    return planPromise;
+  }
 
-  window.STCo = { el: el, initialsOf: initialsOf, statusLabel: statusLabel, statusClass: statusClass, isUuid: isUuid, formatDate: formatDate, CAP: CAP };
+  window.STCo = { el: el, initialsOf: initialsOf, statusLabel: statusLabel, statusClass: statusClass, isUuid: isUuid, formatDate: formatDate, plan: plan };
 })();

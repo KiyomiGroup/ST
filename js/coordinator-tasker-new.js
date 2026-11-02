@@ -52,7 +52,7 @@
   /* ── Messages ───────────────────────────────────────────── */
   var MESSAGES = {
     not_active_coordinator: "Your coordinator account isn't active, so you can't add Local Taskers.",
-    coordinator_cap: 'You already have the maximum of 10 active Local Taskers, so no one more can be added. Ask a StreetTasker administrator if a place should be freed.',
+    coordinator_cap: 'You already have the most active Local Taskers your plan allows, so no one more can be added. A place is freed when an assignment ends.',
     consent_required: 'Choose how they agreed and tick the confirmation.',
     request_mismatch: 'This form was already used for a different Local Tasker. Nothing was changed. Please press Create again.',
     identity_in_use: 'This form was already used for a different Local Tasker. Nothing was changed. Please press Create again.',
@@ -190,13 +190,12 @@
   async function checkCap(detail) {
     $('coFormCap').hidden = true; $('coFormCheckError').hidden = true;
     try {
-      var asg = await window.supabase.from('coordinator_assignments')
-        .select('tasker_user_id')
-        .eq('coordinator_id', detail.userId)
-        .is('ended_at', null);
-      if (asg.error) throw asg.error;
-      if ((asg.data || []).length >= C.CAP) {
+      var plan = await C.plan();     /* Stage 7G: capacity and active count come from the coordinator's plan */
+      if (!plan) throw new Error('plan unavailable');
+      if (plan.places_left <= 0) {
         atCap = true;
+        var note = $('coFormCap').querySelector('span');
+        if (note) note.textContent = 'You already have the maximum of ' + plan.capacity + ' active Local Taskers for your plan, so you can\u2019t add another. A place is freed when an assignment ends.';
         $('coFormCap').hidden = false;
         $('coFSubmit').disabled = true;
       }
