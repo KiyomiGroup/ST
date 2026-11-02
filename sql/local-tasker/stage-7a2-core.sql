@@ -1,3 +1,5 @@
+-- ###### SUPERSEDED on 2026-11-01 (owner process change C1). DO NOT APPLY AS WRITTEN. ######
+-- Local Taskers pay the same 12% as everyone. Use stage-7a-r-core.sql instead (safe whether or not this file was ever applied).
 -- ============================================================================
 -- StreetTasker Local Tasker: STAGE 7A core, PART 2 (the Job Room payment path stops charging Local Taskers 12%)
 -- Additive-in-effect and re-runnable. Needs stage-7a-core.sql (part 1) first. Rollback: stage-7a2-rollback.sql (puts the exact original bodies back).

@@ -1,3 +1,5 @@
+-- ###### SUPERSEDED on 2026-11-01 (owner process change C1). DO NOT APPLY AS WRITTEN. ######
+-- Local Taskers pay the same 12% as everyone. Use stage-7a-r-core.sql instead (safe whether or not this file was ever applied).
 -- ============================================================================
 -- StreetTasker Local Tasker: STAGE 7A core (commission exemption, PART 1: the single trusted answer)
 -- Additive and re-runnable. Rollback: stage-7a-rollback.sql. Run in the Supabase SQL editor (select all, Run). Safe to run twice.

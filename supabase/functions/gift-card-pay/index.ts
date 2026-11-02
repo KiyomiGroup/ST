@@ -10,9 +10,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SITE = (Deno.env.get("SITE_URL") ?? "https://streettasker.com").replace(/\/+$/, "");
 const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY") ?? "";
-// Stage 7A: the fee rate is no longer a constant here. It comes from the database function platform_fee_rate_for_booking(),
-// the same single answer the Job Room path uses: 0 for a Local Tasker, otherwise platform_fee_rate() (0.12 today).
-// Needs stage-7a-core.sql AND stage-7a2-core.sql in the project BEFORE this function is deployed.
+// Stage 7A-R: the fee rate is not a constant here. It comes from the database function platform_fee_rate_for_booking(),
+// the same single answer the Job Room path uses: platform_fee_rate() (0.12 today) for EVERY tasker, Local Taskers included.
+// Needs stage-7a-r-core.sql in the project BEFORE this function is deployed (it defines platform_fee_rate_for_booking).
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
 function cors(req: Request): Record<string, string> {
@@ -57,7 +57,7 @@ async function loadBooking(bookingId: string, userId: string) {
   price = Math.round(price);
   if (price <= 0) throw new Fail(422, "no_price", "This booking has no price yet.");
 
-  // Stage 7A: asked BEFORE any gift card money is reserved or taken, so a failure here moves no money
+  // Stage 7A-R: asked BEFORE any gift card money is reserved or taken, so a failure here moves no money
   const { data: rate, error: rateErr } = await db.rpc("platform_fee_rate_for_booking", { p_booking: bk.id });
   const feeRate = Number(rate);
   if (rateErr || rate === null || rate === undefined || !Number.isFinite(feeRate) || feeRate < 0 || feeRate >= 1) {
@@ -90,7 +90,7 @@ async function confirmBooking(bk: { id: string; tasker_id: string | null }, user
     const fmt = (n: number) => "\u20A6" + n.toLocaleString("en-NG");
     await db.from("notifications").insert({
       user_id: bk.tasker_id, type: "payment_received", title: "\uD83D\uDCB0 Payment received! " + fmt(price),
-      message: "A customer has paid " + fmt(price) + " for your service. Your earning (" + fmt(taskerAmount) + (fee > 0 ? " after " + Math.round(feeRate * 100) + "% fee" : ", no fee") + ") is held in escrow. Complete the job and have the customer confirm to release it.",
+      message: "A customer has paid " + fmt(price) + " for your service. Your earning (" + fmt(taskerAmount) + " after " + Math.round(feeRate * 100) + "% fee" + ") is held in escrow. Complete the job and have the customer confirm to release it.",
       data: { booking_id: bk.id, payment_id: paymentId }, is_read: false,
     });
   }
