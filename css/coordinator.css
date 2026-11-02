@@ -629,3 +629,11 @@ body.co-drawer-open { overflow: hidden; }
 .co-po-facts { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); font-size: var(--text-sm); line-height: 1.5; color: var(--co-ink); }
 .co-po-facts li { padding-left: var(--space-4); position: relative; }
 .co-po-facts li::before { content: ""; position: absolute; left: 0; top: var(--space-2); width: 6px; height: 6px; border-radius: 50%; background: var(--co-green-bright); }
+
+/* Stage 7C-1c: "Release the payment" card (enter the customer's release code) */
+#coRl .co-banner { margin-bottom: var(--space-4); }
+#coRl .co-form-actions .btn { min-height: 44px; }
+#coRl .co-consent-meta { margin-top: var(--space-4); }
+#coRl .co-rl-code { max-width: 14rem; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+#coRl .co-form .co-consent-meta { margin-top: 0; }
+#coRl[hidden], #coRlForm[hidden], #coRlAttempts[hidden], #coRlDone[hidden] { display: none; }

@@ -243,6 +243,26 @@
           <p class="co-consent-meta" id="coMsFoot">Recording a step only writes it down. It never changes a payment, and it does not mark the job as done.</p>
         </section>
 
+        <section class="co-card" id="coRl" aria-labelledby="coRlTitle" hidden>
+          <h2 class="co-card-title" id="coRlTitle">Release the payment</h2>
+          <p class="co-card-lead" id="coRlLead"></p>
+          <div class="co-banner" id="coRlError" role="alert" hidden><span id="coRlErrorText"></span></div>
+          <div class="co-banner co-banner--info" id="coRlDone" role="status" hidden><span id="coRlDoneText"></span></div>
+          <form class="co-form" id="coRlForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coRlCode">The customer’s 6-digit release code</label>
+              <input class="form-input co-rl-code" type="text" id="coRlCode" inputmode="numeric" maxlength="9" autocomplete="off" aria-describedby="coRlHelp coRlCodeErr" />
+              <p class="form-helper" id="coRlHelp">The customer sees this code in their Job Room once they are happy with the work. Never ask for it before the job is done.</p>
+              <p class="co-field-error" id="coRlCodeErr" hidden></p>
+            </div>
+            <p class="co-consent-meta" id="coRlAttempts" hidden></p>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRlSubmit">Release the payment</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coRlFoot">A wrong code uses one of three attempts. After three wrong codes the booking is locked and only a StreetTasker administrator can unlock it. Entering the right code releases the payment once. It can’t be undone.</p>
+        </section>
+
         <section class="co-card" id="coEx" aria-labelledby="coExTitle" hidden>
           <h2 class="co-card-title" id="coExTitle">When something goes wrong</h2>
           <p class="co-card-lead" id="coExLead"></p>
@@ -473,6 +493,7 @@
   <script src="js/coordinator-quote.js"></script>
   <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-exceptions.js"></script>
+  <script src="js/coordinator-release.js"></script>
   <script src="js/coordinator-closeout.js"></script>
   <script src="js/coordinator-extras.js"></script>
   <script src="js/coordinator-reduction.js"></script>

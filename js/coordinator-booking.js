@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker — coordinator-booking.js (Stage 5B, 5C-1, 5C-2)
+   StreetTasker — coordinator-booking.js (Stage 5B, 5C-1, 5C-2, 7C-1c)
    One booking, read-only. One call: rpc local_booking_detail(booking id from ?id=).
    A booking that is not the signed-in coordinator's comes back as "not_found"
    from the database and is shown as "Booking not found" (same for a bad id).
@@ -85,6 +85,7 @@
     if (window.STCoConfirm) window.STCoConfirm.mount(d, { reload: function () { return load(); } });
     if (window.STCoQuote) window.STCoQuote.mount(d, { reload: function () { return load(); } });
     if (window.STCoMilestones) window.STCoMilestones.mount(d, { reload: function () { return load(); } });
+    if (window.STCoRelease) window.STCoRelease.mount(d, { reload: function () { return load(); } });
     if (window.STCoExceptions) window.STCoExceptions.mount(d, { reload: function () { return load(); } });
     if (window.STCoCloseout) window.STCoCloseout.mount(d, { reload: function () { return load(); } });
     if (window.STCoExtras) window.STCoExtras.mount(d, { reload: function () { return load(); } });
