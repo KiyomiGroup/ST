@@ -130,7 +130,13 @@ async function _verifyPayment(reference) {
   if (last && last.status === 202) {
     msg = 'Your payment is being confirmed. If you were charged, it will show here shortly. You do not need to pay again.';
   }
-  throw new Error(msg);
+  var err = new Error(msg);
+  /* Stage 7I: extra detail for callers that want it (the plan page). Callers that only read err.message are unaffected. */
+  err.status = last ? last.status : 0;
+  err.pending = !!(last && last.status === 202);
+  err.needsReview = !!(last && last.data && last.data.needs_review === true);
+  err.reference = reference;
+  throw err;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -244,6 +250,43 @@ async function topUpWallet(amountNaira, userEmail) {
   /* The wallet is credited by the server only after Paystack confirms the payment */
   await _verifyPayment(reference);
   return { reference: reference, amount: Math.round(amountNaira) };
+}
+
+/* ── Coordinator tier upgrade (Stage 7I) ─────────────────────
+   The browser sends NOTHING but the purpose: no amount, no tier, no id. The server works out the next tier and its
+   price from the database, tells us the reference and the amount to show in the pop-up, and raises the tier only after
+   Paystack confirms the payment. This function never sets a tier; the caller must re-read the plan afterwards.
+   Failures carry err.code so the page can say the right thing:
+     'init'    the server refused to start it (err.message is the server's plain text; nothing was charged)
+     'closed'  the pop-up was closed before paying (nothing was charged)
+     'pending' paid or not, Paystack has not confirmed yet (err.reference); the customer must NOT pay again
+     'review'  Paystack took the money but the upgrade could not be applied automatically (err.reference); contact support
+     'failed'  anything else while confirming (err.reference) */
+async function upgradeCoordinatorTier(userEmail) {
+  var { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) { var e0 = new Error('Please log in first.'); e0.code = 'init'; throw e0; }
+
+  var init = await _callFn('payment-init', { purpose: 'tier_upgrade' });
+  if (!init.ok || !init.data || !init.data.reference || !init.data.amountKobo) {
+    var e1 = new Error((init.data && init.data.error) || 'Could not start the upgrade.');
+    e1.code = 'init'; throw e1;
+  }
+
+  var reference;
+  try {
+    reference = await _openPaystack(init.data, userEmail || init.data.email || user.email, { type: 'tier_upgrade' });
+  } catch (e2) {
+    e2.code = 'closed'; e2.reference = init.data.reference; throw e2;
+  }
+
+  try {
+    var res = await _verifyPayment(reference);
+    return { reference: reference, tier: res && res.tier != null ? res.tier : init.data.tier, capacity: res && res.capacity != null ? res.capacity : init.data.capacity };
+  } catch (e3) {
+    e3.code = e3.needsReview ? 'review' : (e3.pending ? 'pending' : (e3.status === 409 ? 'review' : 'failed'));
+    e3.reference = e3.reference || reference;
+    throw e3;
+  }
 }
 
 /* ── Withdrawals: banks, saved bank accounts, withdraw (CR-1) ────
@@ -585,6 +628,7 @@ window.ST.payments = {
   getWallet,
   fetchWalletTransactions,
   topUpWallet,
+  upgradeCoordinatorTier,
   withdrawFromWallet,
   getBanks,
   resolveAccount,

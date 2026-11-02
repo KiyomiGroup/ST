@@ -1,0 +1,59 @@
+/* ============================================================
+   StreetTasker — coordinator-plan.css (Stage 7I)
+   Plan and upgrade page (coordinator-plan.html) only.
+   Built on the coordinator portal pieces (.co-hero, .co-stats, .co-card, .co-banner, .co-facts, .co-bk-event).
+   Tokens only: no raw colours, sizes or radii. Breakpoints (DESIGN-SYSTEM.md section 6): 768 and 1044.
+   Kept in its own file so it cannot clash with other coordinator stages that edit css/coordinator.css.
+   ============================================================ */
+
+.co-pl-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+.co-pl-grid[hidden] { display: none; }
+
+/* Places meter. The fill width is the only runtime value (a CSS variable set by the script). */
+.co-meter {
+  height: var(--space-2); margin-bottom: var(--space-4);
+  background: var(--co-field); border-radius: var(--radius-pill); overflow: hidden;
+}
+.co-meter-fill {
+  display: block; height: 100%; width: var(--co-meter, 0%);
+  background: var(--co-green-bright); border-radius: var(--radius-pill);
+  transition: width var(--t) var(--ease);
+}
+.co-meter.is-full .co-meter-fill { background: var(--color-warning); }
+
+.co-pl-foot { margin: var(--space-4) 0 0; }
+
+/* Next step card */
+.co-pl-price {
+  font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800;
+  line-height: 1.1; color: var(--co-ink);
+}
+#coPlNextBody .co-card-lead { margin-top: var(--space-2); }
+#coPlNextBody .co-po-facts { margin-bottom: var(--space-5); }
+#coPlNextBody[hidden], #coPlTopBody[hidden] { display: none; }
+
+.co-pl-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+.co-pl-actions[hidden] { display: none; }
+.co-pl-actions .btn, .co-pl-confirm .btn { min-height: 44px; }
+
+/* Inline confirmation, shown before anything is charged */
+.co-pl-confirm {
+  padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-md);
+  font-size: var(--text-sm); line-height: 1.5; color: var(--co-ink);
+}
+.co-pl-confirm[hidden] { display: none; }
+.co-pl-confirm p { margin-bottom: var(--space-4); font-weight: 600; }
+.co-pl-confirm .co-form-actions .btn { width: 100%; }
+
+/* History rows reuse .co-bk-event; the tier line is the heading, the rest is the note */
+.co-pl-history .co-loading { padding: var(--space-2) 0; }
+.co-pl-history .co-loading[hidden], .co-pl-history .co-card-lead[hidden], .co-pl-history .co-bk-history[hidden] { display: none; }
+.co-pl-history .co-bk-event-note { font-variant-numeric: tabular-nums; }
+.co-pl-ref { display: block; margin-top: var(--space-1); font-size: var(--text-xs); color: var(--co-ink-muted); overflow-wrap: anywhere; }
+
+@media (min-width: 768px) {
+  .co-pl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+  .co-pl-history { grid-column: 1 / -1; }
+  .co-pl-confirm .co-form-actions { flex-direction: row; justify-content: flex-end; }
+  .co-pl-confirm .co-form-actions .btn { width: auto; }
+}

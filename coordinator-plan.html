@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Plan &amp; upgrade — StreetTasker Coordinator</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="stylesheet" href="css/coordinator-plan.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main" id="coMain">
+
+      <section class="co-hero" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Your plan</p>
+        <h1 id="coHeroTitle">Plan &amp; upgrade</h1>
+        <p class="co-hero-sub">See how many Local Taskers your plan allows and move up one step when you need more places.</p>
+      </section>
+
+      <!-- Every number here comes from the server (my_coordinator_plan). A dash means "not loaded", never a guess. -->
+      <section class="co-stats" aria-label="Plan summary">
+        <article class="co-stat">
+          <p class="co-stat-label">Current plan</p>
+          <p class="co-stat-value" id="coPlTier">—</p>
+          <p class="co-stat-note" id="coPlTierNote">Plan not loaded</p>
+        </article>
+        <article class="co-stat">
+          <p class="co-stat-label">Places used</p>
+          <p class="co-stat-value" id="coPlUsed">—</p>
+          <p class="co-stat-note" id="coPlUsedNote">Active Local Taskers</p>
+        </article>
+        <article class="co-stat">
+          <p class="co-stat-label">Places left</p>
+          <p class="co-stat-value" id="coPlLeft">—</p>
+          <p class="co-stat-note">Before you reach the limit</p>
+        </article>
+        <article class="co-stat">
+          <p class="co-stat-label">Next step</p>
+          <p class="co-stat-value" id="coPlNextPrice">—</p>
+          <p class="co-stat-note" id="coPlNextNote">One step at a time</p>
+        </article>
+      </section>
+
+      <div class="co-banner" id="coPlError" role="alert" hidden>
+        <span>We couldn't load your plan just now. Nothing has been charged.</span>
+        <button type="button" class="co-link-btn co-banner-retry" id="coPlRetry">Try again</button>
+      </div>
+
+      <!-- Outcome of an upgrade attempt. Filled by js/coordinator-plan.js; text only. -->
+      <div class="co-banner" id="coPlStatus" role="status" tabindex="-1" hidden>
+        <span id="coPlStatusText"></span>
+        <span class="co-banner-code" id="coPlStatusRef" hidden></span>
+      </div>
+
+      <div class="co-banner co-banner--info" id="coPlOver" role="status" hidden>
+        <span>You have more active Local Taskers than your plan allows. Everyone you have stays, but you can't add anyone new until a place is free or you upgrade.</span>
+      </div>
+
+      <p class="co-loading" id="coPlLoading">Loading your plan…</p>
+
+      <div class="co-pl-grid" id="coPlGrid" hidden>
+
+        <section class="co-card" aria-labelledby="coPlUsageTitle">
+          <h2 class="co-card-title" id="coPlUsageTitle">Your places</h2>
+          <p class="co-card-lead" id="coPlUsageLead"></p>
+          <div class="co-meter" id="coPlMeter" role="img" aria-label="Places used">
+            <span class="co-meter-fill"></span>
+          </div>
+          <div class="co-facts">
+            <p class="co-fact-label">Active Local Taskers</p>
+            <p class="co-fact-value" id="coPlFactActive">—</p>
+            <p class="co-fact-label">Allowed on your plan</p>
+            <p class="co-fact-value" id="coPlFactCap">—</p>
+            <p class="co-fact-label">Places left</p>
+            <p class="co-fact-value" id="coPlFactLeft">—</p>
+          </div>
+          <p class="co-card-lead co-pl-foot">Ending an assignment frees a place. Your plan only counts Local Taskers who are currently assigned to you.</p>
+        </section>
+
+        <section class="co-card" id="coPlNextCard" aria-labelledby="coPlNextTitle">
+          <h2 class="co-card-title" id="coPlNextTitle">Next step</h2>
+
+          <div id="coPlNextBody" hidden>
+            <p class="co-pl-price" id="coPlPrice">—</p>
+            <p class="co-card-lead" id="coPlNextLead"></p>
+            <ul class="co-po-facts">
+              <li>Plans are bought one step at a time. A step can't be skipped.</li>
+              <li>You pay online through Paystack. Your plan is raised only after Paystack confirms the payment.</li>
+              <li>An upgrade is permanent. The payment is not refunded.</li>
+            </ul>
+
+            <div class="co-pl-actions" id="coPlActions">
+              <button type="button" class="btn btn-primary btn-lg btn-full" id="coPlUpgradeBtn">Upgrade</button>
+            </div>
+
+            <div class="co-pl-confirm" id="coPlConfirm" role="group" aria-labelledby="coPlConfirmText" hidden>
+              <p id="coPlConfirmText"></p>
+              <div class="co-form-actions">
+                <button type="button" class="btn btn-outline" id="coPlCancelBtn">Not now</button>
+                <button type="button" class="btn btn-primary" id="coPlPayBtn">Pay</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="coPlTopBody" hidden>
+            <p class="co-empty-title">You're on the highest plan</p>
+            <p class="co-card-lead">There is no further step to buy. Your plan allows the most Local Taskers available.</p>
+          </div>
+        </section>
+
+        <section class="co-card co-pl-history" aria-labelledby="coPlHistTitle">
+          <h2 class="co-card-title" id="coPlHistTitle">Upgrade history</h2>
+          <p class="co-loading" id="coPlHistLoading">Loading your upgrades…</p>
+          <ul class="co-bk-history" id="coPlHistList" hidden></ul>
+          <p class="co-card-lead" id="coPlHistEmpty" hidden>No upgrades yet. You're on the free starting plan.</p>
+          <div class="co-banner" id="coPlHistError" role="alert" hidden>
+            <span>We couldn't load your upgrade history just now. Your plan above is not affected.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coPlHistRetry">Try again</button>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Paystack pop-up library: the same one the wallet and checkout pages use -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/coordinator-plan.js"></script>
+</body>
+</html>
