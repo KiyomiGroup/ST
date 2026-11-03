@@ -476,6 +476,7 @@
     }
     window.closeApply = closeApply;
 
+    let APPLY_REQ = null;   /* { task, id }: request id of the offer being sent, see submitApply */
     async function submitApply() {
       const _aSess = await window.supabase.auth.getSession();
       const user = _aSess.data.session && _aSess.data.session.user;
@@ -501,36 +502,36 @@
         if (ACTIVE_TASK && (ACTIVE_TASK.customer_id === uid || ACTIVE_TASK.user_id === uid)) {
           throw new Error('You cannot apply to your own task.');
         }
-        /* Check for duplicate */
-        const { data: existing } = await window.supabase.from('task_applications')
-          .select('id').eq('task_id', ACTIVE_TASK_ID).eq('tasker_id', uid).maybeSingle();
-        if (existing) throw new Error('already applied');
-        const { error: appErr } = await window.supabase.from('task_applications').insert({
-          task_id:   ACTIVE_TASK_ID,
-          tasker_id: uid,
-          message:   fullMsg,
-          status:    'pending',
-        });
-        if (appErr) {
-          if (appErr.message && (appErr.message.includes('violates') || appErr.message.includes('foreign') || appErr.message.includes('invalid input syntax'))) {
-            closeApply();
-            showToast('Application sent!');
-            return;
-          }
-          throw appErr;
-        }
-        closeApply();
-        showToast('Application sent! The customer will be notified.');
-      } catch(e) {
-        if (e.message && e.message.includes('already applied')) {
-          err.textContent = '⚠ You have already applied for this task.';
-        } else if (e.message && (e.message.includes('foreign') || e.message.includes('violates') || e.message.includes('invalid'))) {
-          /* Demo task — no real DB entry needed, show success */
+        /* Demo tasks (ids like "dt18") are not in the database: keep the old behaviour of showing success without saving */
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(ACTIVE_TASK_ID))) {
           closeApply();
           showToast('Application sent!');
           return;
+        }
+        /* The database checks the offer allowance, duplicates and task status, saves the offer and notifies the customer (submit_offer).
+           One request id per task: a retry after an unknown outcome (network) reuses it, so the offer is never counted twice. */
+        if (!APPLY_REQ || APPLY_REQ.task !== ACTIVE_TASK_ID) {
+          APPLY_REQ = { task: ACTIVE_TASK_ID, id: 'offer-' + ACTIVE_TASK_ID + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) };
+        }
+        await window.ST.db.applyToTask({ taskId: ACTIVE_TASK_ID, message: fullMsg, requestId: APPLY_REQ.id });
+        APPLY_REQ = null;
+        closeApply();
+        showToast('Application sent! The customer will be notified.');
+      } catch(e) {
+        const code = e && e.offerCode;
+        if (code) APPLY_REQ = null;   /* a coded answer is final; the next try is a new request */
+        if (code === 'offer_limit_reached') {
+          err.textContent = '\u26A0 You have used all your offers for this period. Upgrade your plan to send more.';
+        } else if (code === 'already_offered') {
+          err.textContent = '\u26A0 You have already applied for this task.';
+        } else if (code === 'not_signed_in' || /log in/i.test((e && e.message) || '')) {
+          err.textContent = 'Your session has ended. Please log in again.';
+        } else if (code) {
+          err.textContent = '\u26A0 ' + e.message;   /* the database's own plain sentence */
+        } else if (e && e.message === 'You cannot apply to your own task.') {
+          err.textContent = '\u26A0 ' + e.message;
         } else {
-          err.textContent = 'Failed: ' + e.message;
+          err.textContent = 'We could not send your application. Check your connection and try again.';
         }
         err.style.display = 'block';
       } finally {

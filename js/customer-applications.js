@@ -71,7 +71,7 @@
     var rows = [];
     if (state.tasks.length) {
       var ar = await window.supabase.from('task_applications').select('*')
-        .in('task_id', state.tasks.map(function (t) { return t.id; })).order('created_at', { ascending: false });
+        .in('task_id', state.tasks.map(function (t) { return t.id; })).neq('status', 'withdrawn').order('created_at', { ascending: false });   /* withdrawn offers are kept but not shown */
       if (ar.error) { renderError(ar.error.message); return; }
       rows = ar.data || [];
     }

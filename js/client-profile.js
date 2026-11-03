@@ -126,7 +126,7 @@
     var out = { counts: {}, mine: {} };
     if (!taskIds.length) return out;
     try {
-      var r = await sb.from('task_applications').select('task_id, tasker_id').in('task_id', taskIds);
+      var r = await sb.from('task_applications').select('task_id, tasker_id').in('task_id', taskIds).neq('status', 'withdrawn');
       (r.data || []).forEach(function (a) {
         out.counts[a.task_id] = (out.counts[a.task_id] || 0) + 1;
         if (state.viewer && String(a.tasker_id) === String(state.viewer.id)) out.mine[a.task_id] = true;
@@ -360,7 +360,7 @@
     var sb = window.supabase, ctx = null;
     try {
       if (state.allTaskIds.length) {
-        var a = await sb.from('task_applications').select('id').in('task_id', state.allTaskIds).eq('tasker_id', user.id).limit(1);
+        var a = await sb.from('task_applications').select('id').in('task_id', state.allTaskIds).eq('tasker_id', user.id).neq('status', 'withdrawn').limit(1);
         if (a.data && a.data[0]) ctx = { contextType: 'task_application', contextId: String(a.data[0].id) };
       }
       if (!ctx) {

@@ -703,17 +703,25 @@
         await window.updateMyApplication(state.myApplication.id, { message: pitchText(), rate: state.amount, arrival: buildArrival(), proofs: proofUrls() });
       } else {
         var apply = (window.ST && window.ST.db && window.ST.db.applyToTask) || window.applyToTask;
-        var saved = await apply({ taskId: state.task.id, message: buildMessage() });
+        /* One request id per offer attempt: a retry after an unknown outcome (network) reuses it, so the offer is never counted twice */
+        if (!state.requestId) state.requestId = 'offer-' + state.id + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        var saved = await apply({ taskId: state.task.id, message: buildMessage(), requestId: state.requestId });
         state.myApplication = { id: saved && saved.id, status: 'pending' };
+        state.requestId = null;
       }
       state.sending = false;
       showDone();
     } catch (e) {
-      var msg = (e && e.message) || '';
+      var msg = (e && e.message) || '', code = e && e.offerCode;
       state.sending = false; btn.disabled = false; paintSubmit();
-      if (state.edit && /no longer be edited/i.test(msg)) showSubmitError('This offer can no longer be edited. It may have been answered or withdrawn.', 'applications.html', 'View My Applications');
-      else if (/already applied/i.test(msg)) showSubmitError('You have already applied for this task.', 'applications.html', 'View My Applications');
-      else if (/log in/i.test(msg)) showSubmitError('Your session has ended. Please log in again.', 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search), 'Log in');
+      /* A coded answer from the database is final: the next try is a new request. No code means the outcome is unknown, so the id is kept */
+      if (code) state.requestId = null;
+      var mine = 'applications.html', mineLabel = 'View My Applications';
+      if (code === 'offer_not_pending' || code === 'application_not_found') showSubmitError('This offer can no longer be edited. It may have been answered or withdrawn.', mine, mineLabel);
+      else if (code === 'already_offered') showSubmitError('You have already applied for this task.', mine, mineLabel);
+      else if (code === 'offer_limit_reached') showSubmitError('You have used all your offers for this period. Upgrade your plan to send more.', 'subscription.html', 'See plans');
+      else if (code === 'fair_use_daily' || code === 'fair_use_monthly' || code === 'task_closed' || code === 'local_tasker' || code === 'not_a_tasker' || code === 'own_task' || code === 'task_not_found' || code === 'message_too_long' || code === 'bad_contact') showSubmitError(msg);
+      else if (code === 'not_signed_in' || /log in/i.test(msg)) showSubmitError('Your session has ended. Please log in again.', 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search), 'Log in');
       else showSubmitError(state.edit ? 'We could not save your changes. Check your connection and try again.' : 'We could not send your offer. Check your connection and try again.');
     }
   }
@@ -751,6 +759,7 @@
     ]);
     state.poster = results[0]; state.rating = results[1]; state.myApplication = results[2];
 
+    if (state.myApplication && String(state.myApplication.status || '').toLowerCase() === 'withdrawn') state.myApplication = null;   /* a withdrawn offer can be sent again (the database revives it) */
     var mine = state.myApplication;
     if (state.edit && !mine) state.edit = false;   /* nothing to edit: treat the link as a new offer */
     if (mine && !state.edit) {

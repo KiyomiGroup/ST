@@ -853,7 +853,7 @@
       const ids = tasks.map(t => t.id).filter(Boolean);
       if (!ids.length) return;
       try {
-        const { data, error } = await window.supabase.from('task_applications').select('task_id').in('task_id', ids);
+        const { data, error } = await window.supabase.from('task_applications').select('task_id').in('task_id', ids).neq('status', 'withdrawn');
         if (error || !data) return;
         const n = {}; data.forEach(r => { n[String(r.task_id)] = (n[String(r.task_id)] || 0) + 1; });
         tasks.forEach(t => { t._offers = n[String(t.id)] || 0; });

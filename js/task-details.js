@@ -116,7 +116,7 @@
   async function loadOffers(sb, taskId) {
     var res = { readable: false, rows: [] };
     try {
-      var r = await sb.from('task_applications').select('*').eq('task_id', taskId).order('created_at', { ascending: false }).limit(50);
+      var r = await sb.from('task_applications').select('*').eq('task_id', taskId).neq('status', 'withdrawn').order('created_at', { ascending: false }).limit(50);   /* withdrawn offers are kept but not shown */
       if (r.error) return res;
       res.readable = true;
       var rows = r.data || [];
@@ -150,7 +150,7 @@
   async function loadMyApplication(sb, taskId, user) {
     if (!user) return null;
     try {
-      var r = await sb.from('task_applications').select('id, status').eq('task_id', taskId).eq('tasker_id', user.id).limit(1);
+      var r = await sb.from('task_applications').select('id, status').eq('task_id', taskId).eq('tasker_id', user.id).neq('status', 'withdrawn').limit(1);   /* a withdrawn offer means "not applied": the tasker can send it again */
       return (r.data && r.data[0]) || null;
     } catch (e) { return null; }
   }

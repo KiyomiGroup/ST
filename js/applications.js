@@ -57,7 +57,7 @@
 
     var res = await window.supabase.from('task_applications')
       .select('*, tasks!task_id(id, title, budget, location, category, status, created_at, user_id, customer_id)')
-      .eq('tasker_id', user.id).order('created_at', { ascending: false });
+      .eq('tasker_id', user.id).neq('status', 'withdrawn').order('created_at', { ascending: false });   /* a withdrawn offer is kept in the database but not listed */
     if (res.error) { renderError(res.error.message); return; }
     var rows = res.data || [];
 
@@ -79,7 +79,7 @@
     try {
       var tids = Object.keys(taskIds);
       if (tids.length) {
-        var c = await window.supabase.from('task_applications').select('task_id, tasker_id').in('task_id', tids);
+        var c = await window.supabase.from('task_applications').select('task_id, tasker_id').in('task_id', tids).neq('status', 'withdrawn');
         (c.data || []).forEach(function (r) { if (r.tasker_id !== user.id) rivals[r.task_id] = (rivals[r.task_id] || 0) + 1; });
       }
     } catch (e) { /* hide competition */ }
@@ -271,7 +271,7 @@
     current = a;
     var act = b.getAttribute('data-act');
     if (act === 'withdraw') {
-      $('apWdText').textContent = 'Your offer for \u201C' + (a.task.title || 'this task') + '\u201D will be removed and the client will be told. You can apply again later if the task is still open.';
+      $('apWdText').textContent = 'Your offer for \u201C' + (a.task.title || 'this task') + '\u201D will be removed and the client will be told. You can apply again later if the task is still open, but this offer still counts towards your offers for the period.';
       $('apWithdrawDlg').showModal();
     } else if (act === 'message') {
       sessionStorage.setItem('st_chat_context', JSON.stringify({

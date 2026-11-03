@@ -169,50 +169,67 @@ async function countMyTasks() {
 
 /* ── Task Applications ──────────────────────────────────────── */
 
-async function applyToTask({ taskId, message = '' }) {
+/* Offer errors. The three offer functions (submit_offer, edit_offer, withdraw_offer) raise a stable code as the
+   exception MESSAGE and a plain-text sentence as DETAILS. The Error thrown here has .offerCode (the code) and a
+   readable .message, so a page can branch on the code and show the message. Anything else (network, unknown) is
+   rethrown untouched and has no .offerCode, which means "outcome unknown, a retry is safe with the same request id". */
+const OFFER_ERROR_TEXT = {
+  not_signed_in:       'Your session has ended. Please log in again.',
+  bad_request_id:      'We could not send your offer. Please try again.',
+  task_not_found:      'This task could not be found.',
+  message_too_long:    'Your offer text is too long.',
+  bad_contact:         'That phone or WhatsApp number is too long.',
+  request_id_reused:   'We could not send your offer. Please reload the page and try again.',
+  local_tasker:        'Local Taskers cannot send offers. Their coordinator handles bookings.',
+  not_a_tasker:        'Only taskers can send offers.',
+  own_task:            'You cannot send an offer on your own task.',
+  already_offered:     'You have already sent an offer for this task.',
+  task_closed:         'This task is no longer taking offers.',
+  offer_limit_reached: 'You have used all your offers for this period.',
+  fair_use_daily:      'You have reached the daily fair-use limit for offers. Please try again tomorrow.',
+  fair_use_monthly:    'You have reached the monthly fair-use limit for offers.',
+  application_not_found: 'This offer could not be found.',
+  offer_not_pending:   'Only an offer that is still waiting for an answer can be changed.',
+};
+function _offerRpcError(error) {
+  const code = String((error && error.message) || '');
+  if (!Object.prototype.hasOwnProperty.call(OFFER_ERROR_TEXT, code)) return error;
+  const e = new Error((error.details && String(error.details)) || OFFER_ERROR_TEXT[code]);
+  e.offerCode = code;
+  return e;
+}
+function _newOfferRequestId() {
+  try { if (window.crypto && window.crypto.randomUUID) return 'offer-' + window.crypto.randomUUID(); } catch (e) {}
+  return 'offer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+}
+
+/* Send an offer. All checks, the offer allowance and the owner notification happen in the database (submit_offer).
+   requestId: pass the same value when retrying after a failure with an unknown outcome (no .offerCode), so the offer
+   is never counted twice; leave it out for a new offer. Returns { id, status, resubmitted, replayed, source, entitlements }. */
+async function applyToTask({ taskId, message = '', phone = null, whatsapp = null, requestId = null }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to apply for tasks.');
   await ensureUserProfile(user);
 
-  const { data: existing } = await window.supabase.from('task_applications')
-    .select('id').eq('task_id', taskId).eq('tasker_id', user.id).maybeSingle();
-  if (existing) throw new Error('You have already applied for this task.');
-
-  const { data: taskerRow } = await window.supabase.from('taskers')
-    .select('name, service').eq('user_id', String(user.id)).maybeSingle();
-  const taskerName = taskerRow?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'A tasker';
-
-  const { data: app, error } = await window.supabase.from('task_applications').insert({
-    task_id:   taskId,
-    tasker_id: user.id,
-    message:   message.trim() || null,
-    status:    'pending',
-  }).select().single();
-  if (error) throw error;
-
-  /* Notify task owner */
-  try {
-    const { data: task } = await window.supabase.from('tasks')
-      .select('user_id, customer_id, title').eq('id', taskId).single();
-    const ownerId = task?.customer_id || task?.user_id;
-    if (ownerId) {
-      await _insertNotification({
-        userId:  ownerId,
-        type:    'task_application',
-        title:   'New Application',
-        message: `${taskerName} applied for your task "${task.title}"`,
-        data:    { task_id: taskId, application_id: app.id, tasker_id: user.id },
-      });
-    }
-  } catch(e) { /* silent */ }
-
-  return app;
+  const { data, error } = await window.supabase.rpc('submit_offer', {
+    p_task:              taskId,
+    p_message:           message,
+    p_phone:             phone,
+    p_whatsapp:          whatsapp,
+    p_client_request_id: requestId || _newOfferRequestId(),
+  });
+  if (error) throw _offerRpcError(error);
+  return {
+    id: data.application_id, status: 'pending',
+    resubmitted: !!data.resubmitted, replayed: !!data.replayed,
+    source: data.source, entitlements: data.entitlements,
+  };
 }
 
 async function fetchTaskApplications(taskId) {
   const { data, error } = await window.supabase.from('task_applications')
     .select('*, taskers:tasker_id(name, service, location, rating, photo_url, user_id, business_name)')
-    .eq('task_id', taskId).order('created_at', { ascending: false });
+    .eq('task_id', taskId).neq('status', 'withdrawn').order('created_at', { ascending: false });
   if (error) return [];
   const rows = data || [];
   /* For accepted applications fetch tasker contact details */
@@ -237,7 +254,7 @@ async function fetchMyApplications() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) return [];
   const { data, error } = await window.supabase.from('task_applications')
-    .select('*, tasks(*)').eq('tasker_id', user.id).order('created_at', { ascending: false });
+    .select('*, tasks(*)').eq('tasker_id', user.id).neq('status', 'withdrawn').order('created_at', { ascending: false });
   if (error) return [];
   return data || [];
 }
@@ -293,46 +310,21 @@ async function updateMyApplication(applicationId, { message, rate, arrival, proo
   links = links.map(u => String(u || '').trim()).filter(u => /^https:\/\/[^\s\/]+\/storage\/v1\/object\/public\/\S+$/.test(u) && u.indexOf('|') === -1).slice(0, 5);
   const stored = (pitch ? pitch + ' ' : '') + '| Proposed rate: \u20A6' + amount.toLocaleString('en-NG') +
     (when ? ' | Arrival: ' + when : '') + (links.length ? ' | Proof: ' + links.join(' ') : '');
-  const { data, error } = await window.supabase.from('task_applications')
-    .update({ message: stored })
-    .eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending')
-    .select('id, task_id, message').maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error('This application can no longer be edited.');
-  try {
-    const { data: task } = await window.supabase.from('tasks')
-      .select('user_id, customer_id, title').eq('id', data.task_id).single();
-    const ownerId = task?.customer_id || task?.user_id;
-    if (ownerId) await _insertNotification({
-      userId: ownerId, type: 'task_application', title: 'Offer Updated',
-      message: `A tasker updated their offer for "${task.title}"`,
-      data: { task_id: data.task_id, application_id: data.id, tasker_id: user.id },
-    });
-  } catch(e) { /* silent */ }
-  return data;
+  /* The database checks that the offer is yours and still pending, saves it, and tells the task owner */
+  const { data, error } = await window.supabase.rpc('edit_offer', {
+    p_application: applicationId, p_message: stored, p_phone: null, p_whatsapp: null,
+  });
+  if (error) throw _offerRpcError(error);
+  return { id: data.application_id, status: data.status, message: stored };
 }
 
-/* Tasker withdraws a still-pending proposal. */
+/* Tasker withdraws a still-pending proposal. The offer is kept with status 'withdrawn' (it used to be deleted);
+   the database tells the task owner and gives no offer back. */
 async function withdrawMyApplication(applicationId) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to withdraw your application.');
-  const { data: app } = await window.supabase.from('task_applications')
-    .select('id, task_id, status').eq('id', applicationId).eq('tasker_id', user.id).maybeSingle();
-  if (!app) throw new Error('Application not found.');
-  if (app.status !== 'pending') throw new Error('Only pending applications can be withdrawn.');
-  const { error } = await window.supabase.from('task_applications')
-    .delete().eq('id', applicationId).eq('tasker_id', user.id).eq('status', 'pending');
-  if (error) throw error;
-  try {
-    const { data: task } = await window.supabase.from('tasks')
-      .select('user_id, customer_id, title').eq('id', app.task_id).single();
-    const ownerId = task?.customer_id || task?.user_id;
-    if (ownerId) await _insertNotification({
-      userId: ownerId, type: 'task_application', title: 'Application Withdrawn',
-      message: `A tasker withdrew their application for "${task.title}"`,
-      data: { task_id: app.task_id, tasker_id: user.id },
-    });
-  } catch(e) { /* silent */ }
+  const { error } = await window.supabase.rpc('withdraw_offer', { p_application: applicationId });
+  if (error) throw _offerRpcError(error);
   return true;
 }
 

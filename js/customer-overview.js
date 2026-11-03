@@ -132,7 +132,7 @@
     var openIds = tasks.filter(function (t) { return !t.status || t.status === 'open'; })
       .map(function (t) { return t.id; });
     var apps = openIds.length
-      ? await safe(sb.from('task_applications').select('id,task_id,status').in('task_id', openIds)) : null;
+      ? await safe(sb.from('task_applications').select('id,task_id,status').in('task_id', openIds).neq('status', 'withdrawn')) : null;
     apps = apps || [];
     var offersByTask = {};
     apps.forEach(function (a) {
