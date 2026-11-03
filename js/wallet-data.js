@@ -40,7 +40,7 @@
   var PAGE_SIZE = 5;
   var CREDIT_TYPES = ['escrow_release', 'earning'];
   var SVG_NS = 'http://www.w3.org/2000/svg';
-  var state = { uid: null, role: null, wallet: null, clearing: null, rows: [], filter: 'all', pageNo: 1 };
+  var state = { uid: null, role: null, coordinator: false, wallet: null, clearing: null, rows: [], filter: 'all', pageNo: 1 };
 
   /* ── Small helpers ───────────────────────────────────────── */
   function $(sel, root) { return (root || page).querySelector(sel); }
@@ -194,6 +194,15 @@
           actTitle: t.type === 'escrow_release' ? 'Escrow Released' : 'Task Earning Received',
           actSub: j.title, actIcon: t.type === 'escrow_release' ? 'i-badge-check' : 'i-banknote',
           meta: j.meta, badge: { text: 'Completed', cls: 'mint' }, sign: '+', amtClass: 'is-credit'
+        });
+      } else if (t.type === 'coordinator_commission') {
+        // Stage 7F: the coordinator's commission share of a job (credited by Stage 7E). An earning, like a task earning.
+        rows.push({
+          date: date, amount: amount, earning: String(t.status || 'completed') !== 'failed', kind: 'credit',
+          filters: ['earning'], icon: 'i-arrow-down', tone: 'mint',
+          title: 'Coordinator commission' + (info && info.title ? ': ' + info.title : ''),
+          actTitle: 'Commission Received', actSub: (info && info.title) || 'Coordinator commission', actIcon: 'i-banknote',
+          meta: describeJob(info, t.booking_id).meta, badge: { text: 'Completed', cls: 'mint' }, sign: '+', amtClass: 'is-credit'
         });
       } else if (t.type === 'withdrawal_refund') {
         // Money returned after a failed or reversed withdrawal: a credit, but NOT an earning
@@ -1138,6 +1147,12 @@
     bankApi = { openFromHash: function () { if (location.hash === '#bank-details' && !bkIsOpen()) bkOpen(null, 'list'); } };
   }
 
+  /* ── Is the signed-in person an ACTIVE coordinator? (Stage 7F) ── */
+  function isActiveCoordinator(sb) {
+    return Promise.resolve().then(function () { return sb.rpc('is_active_coordinator'); })
+      .then(function (r) { return !!(r && !r.error && r.data === true); }, function () { return false; });
+  }
+
   /* ── Start ───────────────────────────────────────────────── */
   function start() {
     var sb = window.supabase;
@@ -1149,13 +1164,24 @@
       var roleP = (window.ST && window.ST.auth && window.ST.auth.getUserRole)
         ? window.ST.auth.getUserRole(user).catch(function () { return null; }) : Promise.resolve(null);
       return roleP.then(function (role) {
-        state.role = role === 'tasker' ? 'tasker' : 'customer';   // the session decides, never the URL
-        page.setAttribute('data-role', state.role);
-        if (state.role === 'tasker') {
-          var openHash = function () { if (bankApi) bankApi.openFromHash(); };   // wallet.html#bank-details
-          return loadTasker().then(openHash, openHash);
-        }
-        page.classList.remove('wl-loading');
+        // Stage 7F: a tasker, or an ACTIVE coordinator, gets the tasker-style wallet. A coordinator is asked of the DATABASE
+        // (is_active_coordinator() reads the signed-in session); only the exact answer true counts, and any failure means "no"
+        // (the customer view, no money buttons). The server checks again on every bank account and withdrawal call.
+        var asked = role === 'tasker' ? Promise.resolve(false) : isActiveCoordinator(sb);
+        return asked.then(function (isCoordinator) {
+          state.coordinator = isCoordinator;
+          state.role = (role === 'tasker' || isCoordinator) ? 'tasker' : 'customer';   // the session decides, never the URL
+          page.setAttribute('data-role', state.role);
+          if (isCoordinator) {
+            page.setAttribute('data-wallet-owner', 'coordinator');
+            $$('[data-wl-coordinator]').forEach(function (n) { n.hidden = false; });   // the way back to the coordinator portal
+          }
+          if (state.role === 'tasker') {
+            var openHash = function () { if (bankApi) bankApi.openFromHash(); };   // wallet.html#bank-details
+            return loadTasker().then(openHash, openHash);
+          }
+          page.classList.remove('wl-loading');
+        });
       });
     }).catch(function (e) {
       console.warn('[Wallet] start failed:', e && e.message);

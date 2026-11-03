@@ -133,3 +133,14 @@ The schedule is computed by ONE database function, `coordinator_tier_terms(tier)
 | D-7I-2 | There ARE real users now. The earlier O2 ("one Supabase project and no real users, no backup or test copy required") no longer holds. SQL that touches money (`_release_escrow`, payments, wallets: stages 7C, 7E) needs a backup or a test copy first, or at least an explicit owner "go" after reading the SQL. | Owner statement, recorded by the AI |
 | D-7I-3 | No reference screens were supplied for `coordinator-plan.html`; the owner asked the AI to build it from the other coordinator screens and the design system. | Owner |
 
+## Decisions made in Stage 7F (2026-11-02), all overrulable by the owner
+| # | Decision | Reason |
+|---|---|---|
+| D-7F-1 | The database patch edits the five functions AS THEY ARE LIVE (reads the definition, replaces only the taskers-only line, all or nothing) instead of re-creating them from `w2b-create.sql` / `w2d-accounts.sql`. | The site already uses a later "clearing" rule (CR-2: `withdrawal_clearing_mine`, `still_clearing`) whose SQL was not supplied; re-creating `withdrawal_create` from the old file could silently drop that rule on a live money path. |
+| D-7F-2 | The 7F Edge Function is delivered at `docs/local-tasker/7f/process-withdrawal.index.ts`, NOT over `supabase/functions/process-withdrawal/index.ts`. | The brief forbids editing the old live function; the repo still holds the old one; the W stages (W7b) install the new one. W7b must deploy the 7F file instead of the W7a file. |
+| D-7F-3 | The Edge check asks the database helper by name; if the helper does not exist yet (42883 / PGRST202) it falls back to the old taskers-only check; any other error is a generic failure (never an allow). | Deploying the function before the SQL must not lock real taskers out; a coordinator is simply refused until the SQL is run. |
+| D-7F-4 | The wallet page asks `is_active_coordinator()` only for people whose role is not `tasker`; only the exact answer `true` counts; errors give the customer view. A coordinator is shown the tasker-style wallet (`data-role="tasker"`, plus `data-wallet-owner="coordinator"`). | Role comes from the session and the database, never the URL (brief). The server re-checks on every bank-account and withdrawal call. |
+| D-7F-5 | A coordinator on `wallet.html` gets a "way back" link to `coordinator-dashboard.html` (desktop: a hero button; phone: a text link under the SafePay note). | The main site navbar has no coordinator links. |
+| D-7F-6 | The coordinator Overview shows the raw `wallets.balance` (one read of the own row, never creates a wallet); the wallet page shows available vs clearing. | Brief: "an Overview tile showing the balance (read through the existing wallet read)". |
+| D-7F-7 | The phone bottom bar (4 icons) is unchanged; Wallet is in the top menu, the drawer and the Overview panel. | Adding a 5th icon would change a layout the owner did not ask to change. |
+

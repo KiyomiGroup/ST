@@ -90,6 +90,25 @@
         </div>
       </section>
 
+      <!-- Stage 7F: the coordinator's wallet (the same wallet a tasker has). The balance is read by js/coordinator-wallet-tile.js;
+           it shows a dash, never a made-up number, if it cannot be read. Withdrawals happen on wallet.html. -->
+      <section class="co-section" aria-labelledby="coWalletTitle">
+        <div class="co-section-head">
+          <div>
+            <h2 id="coWalletTitle">Wallet</h2>
+            <p class="co-section-sub">Your commission, bank accounts and withdrawals.</p>
+          </div>
+        </div>
+        <article class="co-card">
+          <div class="co-facts">
+            <p class="co-fact-label">Wallet balance</p>
+            <p class="co-fact-value" id="coWalletBalance" aria-live="polite">—</p>
+          </div>
+          <p class="co-card-lead" id="coWalletNote" role="status" hidden></p>
+          <p class="co-card-lead"><a class="co-fact-link" href="wallet.html">Open your wallet</a> to add a bank account or withdraw.</p>
+        </article>
+      </section>
+
     </main>
   </div>
 
@@ -99,5 +118,6 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-overview.js"></script>
+  <script src="js/coordinator-wallet-tile.js"></script>
 </body>
 </html>
