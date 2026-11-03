@@ -225,7 +225,7 @@ async function recordSubscriptionChoice(tier) {
     const { data: { user } } = await window.supabase.auth.getUser();
     if (!user) {
       showToast('Please log in to subscribe.');
-      window.location.href = 'login.html';
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
       return;
     }
 

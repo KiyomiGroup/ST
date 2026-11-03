@@ -1201,7 +1201,7 @@ function openMessagesPanel() {
         }
         user = sess.data.session.user;
       } catch(e) {
-        window.location.href = 'login.html';
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
         return;
       }
 
@@ -2093,7 +2093,7 @@ function openMessagesPanel() {
       try {
         var sess = await window.supabase.auth.getSession();
         var cu = sess.data.session && sess.data.session.user;
-        if (!cu) { window.location.href = 'login.html'; return; }
+        if (!cu) { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search); return; }
         sessionStorage.setItem('st_chat_context', JSON.stringify({
           contextType: contextType,
           contextId:   contextId,
@@ -2212,7 +2212,7 @@ function openMessagesPanel() {
         var res = await window.supabase.auth.getSession();
         _user = res.data && res.data.session && res.data.session.user;
       } catch(e) { sidebarStatus('\u26a0 Could not connect. Refresh to try again.'); return; }
-      if (!_user) { window.location.href = 'login.html'; return; }
+      if (!_user) { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search); return; }
     }
     _role = localStorage.getItem('st_role') || (_user.user_metadata && _user.user_metadata.role) || 'tasker';
 

@@ -57,7 +57,7 @@
 <script>
   async function initPage() {
     var sess = await window.supabase.auth.getSession();
-    if (!sess.data.session) { window.location.href = 'login.html'; return; }
+    if (!sess.data.session) { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search); return; }
     var user = sess.data.session.user;
     var name = (user.user_metadata && (user.user_metadata.name || user.user_metadata.full_name))
       || user.email.split('@')[0] || 'there';

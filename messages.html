@@ -277,7 +277,7 @@
       sidebarStatus('⚠ Could not connect. <a href="javascript:location.reload()" style="color:var(--blue);">Retry</a>');
       return;
     }
-    if (!_user) { window.location.href = 'login.html'; return; }
+    if (!_user) { window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search); return; }
 
     _role = localStorage.getItem('st_role') ||
             (_user.user_metadata && _user.user_metadata.role) || 'customer';

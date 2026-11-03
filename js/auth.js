@@ -444,6 +444,116 @@ async function syncNavbarAuthState() {
   }
 }
 
+/* ── Where to go after sign-up / log-in ──────────────────────────
+   A page that needs an account sends people to login.html or signup.html with
+   ?redirect=<page> (older pages use ?next=). We carry that target through every step
+   (log-in <-> sign-up, the verification email, Google) and open it once they are in.
+   Only a page on this site is accepted, so a link can never send anyone to another site.
+   Order of what wins after log-in: ?redirect  >  the target saved at sign-up (same email)  >
+   first-time default (tasker -> post-service.html, customer -> post-task.html)  >  home. */
+const POST_LOGIN_KEY  = 'st_post_login';    /* sessionStorage: survives the Google round trip in this tab */
+const POST_SIGNUP_KEY = 'st_post_signup';   /* localStorage: survives the verification email (same browser) */
+const POST_LOGIN_MAX_AGE  = 30 * 60 * 1000;
+const POST_SIGNUP_MAX_AGE = 24 * 60 * 60 * 1000;
+const AUTH_PAGES = /\/(login|signup|reset-password|coordinator-login)(\.html)?$/;
+
+function safeRedirect(raw) {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw, window.location.origin + '/');
+    if (u.origin !== window.location.origin) return null;
+    if (AUTH_PAGES.test(u.pathname) || u.pathname === '/') return null;
+    return u.pathname + u.search + u.hash;
+  } catch (e) { return null; }
+}
+function requestedRedirect() {
+  const q = new URLSearchParams(window.location.search);
+  return safeRedirect(q.get('redirect') || q.get('next'));
+}
+/* "?redirect=..." (or "" when there is nothing to carry) for building login / sign-up links */
+function redirectQuery(prefix) {
+  const to = requestedRedirect();
+  return to ? (prefix || '?') + 'redirect=' + encodeURIComponent(to) : '';
+}
+function rememberRedirect(to) {
+  try {
+    const t = to === undefined ? requestedRedirect() : safeRedirect(to);
+    if (t) sessionStorage.setItem(POST_LOGIN_KEY, JSON.stringify({ to: t, at: Date.now() }));
+    else sessionStorage.removeItem(POST_LOGIN_KEY);
+  } catch (e) { /* storage blocked: they land on their first-time page instead */ }
+}
+function takeRememberedRedirect() {
+  try {
+    const raw = sessionStorage.getItem(POST_LOGIN_KEY);
+    sessionStorage.removeItem(POST_LOGIN_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d || !d.at || Date.now() - d.at > POST_LOGIN_MAX_AGE) return null;
+    return safeRedirect(d.to);
+  } catch (e) { return null; }
+}
+/* Saved when the sign-up form is submitted, used by the first log-in with that email */
+function rememberSignupTarget(email) {
+  try {
+    const to = requestedRedirect() || takeRememberedRedirect();
+    if (to) localStorage.setItem(POST_SIGNUP_KEY, JSON.stringify({ to, email: String(email || '').toLowerCase(), at: Date.now() }));
+  } catch (e) {}
+}
+function takeSignupTarget(email) {
+  try {
+    const raw = localStorage.getItem(POST_SIGNUP_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d || !d.at || Date.now() - d.at > POST_SIGNUP_MAX_AGE) { localStorage.removeItem(POST_SIGNUP_KEY); return null; }
+    if (d.email && email && d.email !== String(email).toLowerCase()) return null;   /* somebody else's sign-up */
+    localStorage.removeItem(POST_SIGNUP_KEY);
+    return safeRedirect(d.to);
+  } catch (e) { return null; }
+}
+
+/* ── First log-in ────────────────────────────────────────────────
+   A first log-in is one where we have not yet recorded user_metadata.st_welcomed.
+   Accounts older than 30 days are treated as returning, so people who signed up long
+   before this existed are not sent to a "first time" page. */
+const FIRST_LOGIN_WINDOW = 30 * 24 * 60 * 60 * 1000;
+function isFirstLogin(user) {
+  if (!user) return false;
+  if (user.user_metadata && user.user_metadata.st_welcomed) return false;
+  const made = Date.parse(user.created_at || '');
+  if (made && Date.now() - made > FIRST_LOGIN_WINDOW) return false;
+  return true;
+}
+async function markWelcomed() {
+  try { await window.supabase.auth.updateUser({ data: { st_welcomed: true } }); } catch (e) {}
+}
+function firstLoginUrl(role) { return role === 'tasker' ? 'post-service.html' : 'post-task.html'; }
+
+/* Logged-out visitors who click Sign Up / Log in / Become a Tasker from a page get sent back to
+   that page afterwards. Runs for every <a> on the site, including ones added later. */
+function _initAuthLinkTargets() {
+  if (window.__stAuthLinksReady) return;
+  window.__stAuthLinksReady = true;
+  document.addEventListener('click', function (e) {
+    if (document.body.classList.contains('st-logged-in')) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    let u;
+    try { u = new URL(a.getAttribute('href'), window.location.href); } catch (x) { return; }
+    if (u.origin !== window.location.origin || !/\/(login|signup)(\.html)?$/.test(u.pathname)) return;
+    if (u.searchParams.has('redirect') || u.searchParams.has('next')) return;
+    if (AUTH_PAGES.test(window.location.pathname)) {            /* on login <-> signup: pass along what we were given */
+      const carry = requestedRedirect();
+      if (carry) { u.searchParams.set('redirect', carry); a.setAttribute('href', u.pathname.replace(/^\//, '') + u.search + u.hash); }
+      return;
+    }
+    const here = safeRedirect(window.location.pathname + window.location.search);
+    if (!here) return;                                          /* home page etc.: nothing to go back to */
+    u.searchParams.set('redirect', here);
+    a.setAttribute('href', u.pathname.replace(/^\//, '') + u.search + u.hash);
+  }, true);
+}
+_initAuthLinkTargets();
+
 /* ── Password rules ──────────────────────────────────────────────
    One list of rules for sign-up and reset-password. checkPassword() returns
    which rules a password meets; attachPasswordRules() wires a live checklist
@@ -663,6 +773,8 @@ async function initDashboardWelcome() {
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
+  safeRedirect, requestedRedirect, redirectQuery, rememberRedirect, takeRememberedRedirect, rememberSignupTarget, takeSignupTarget,
+  isFirstLogin, markWelcomed, firstLoginUrl,
   signUpUser, loginUser, checkPassword, passwordProblem, attachPasswordRules, PASSWORD_RULES, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
   initDashboardWelcome,
 };

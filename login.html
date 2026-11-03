@@ -127,38 +127,8 @@
        site is accepted, so the link cannot send anyone to another site.
        Google leaves the site and come back without that parameter,
        so the destination is parked in this tab's sessionStorage first. */
-    const POST_LOGIN_KEY = 'st_post_login';
-    const POST_LOGIN_MAX_AGE = 30 * 60 * 1000;
-
-    function safeRedirect(raw) {
-      if (!raw) return null;
-      try {
-        const u = new URL(raw, window.location.origin + '/');
-        if (u.origin !== window.location.origin) return null;
-        if (u.pathname === '/login.html' || u.pathname === '/signup.html') return null;
-        return u.pathname + u.search + u.hash;
-      } catch (e) { return null; }
-    }
-    function requestedRedirect() {
-      return safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
-    }
-    function rememberRedirect() {
-      try {
-        const to = requestedRedirect();
-        if (to) sessionStorage.setItem(POST_LOGIN_KEY, JSON.stringify({ to: to, at: Date.now() }));
-        else sessionStorage.removeItem(POST_LOGIN_KEY);
-      } catch (e) { /* storage blocked: they land on their dashboard instead */ }
-    }
-    function takeRememberedRedirect() {
-      try {
-        const raw = sessionStorage.getItem(POST_LOGIN_KEY);
-        sessionStorage.removeItem(POST_LOGIN_KEY);
-        if (!raw) return null;
-        const d = JSON.parse(raw);
-        if (!d || !d.at || Date.now() - d.at > POST_LOGIN_MAX_AGE) return null;
-        return safeRedirect(d.to);
-      } catch (e) { return null; }
-    }
+    /* The redirect helpers (safeRedirect, requestedRedirect, rememberRedirect, takeRememberedRedirect)
+       are defined in js/auth.js, so sign-up uses exactly the same rules. */
 
     /* ── Notice box (account created, email sent, link expired…) ──
        tone: success | info | warning | danger. All text goes in with textContent. */
@@ -269,7 +239,10 @@
             }).catch(() => {});
             localStorage.setItem('st_role', oauthRole);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
-            window.location.replace(oauthRole === 'tasker' ? 'onboarding-tasker.html' : 'onboarding-customer.html');
+            /* First time in: where they clicked before signing up, else their first-time page */
+            const backTo = takeRememberedRedirect();
+            await window.ST.auth.markWelcomed();
+            window.location.replace(backTo || window.ST.auth.firstLoginUrl(oauthRole));
           } else {
             /* Existing account — log them in to their correct dashboard */
             try { localStorage.removeItem('st_pending_role'); } catch(e) {}
@@ -366,6 +339,10 @@
         showNotice('success', 'Password updated', 'Your password was changed. Log in below with your new password.');
       }
 
+      /* "Sign up for free" keeps the page they were trying to reach */
+      const toSignup = document.querySelector('.av2-form-footer a[href="signup.html"]');
+      if (toSignup) toSignup.setAttribute('href', 'signup.html' + window.ST.auth.redirectQuery());
+
       /* ── Password toggle ── */
       const toggle = document.getElementById('pwdToggle');
       const input  = document.getElementById('loginPwd');
@@ -408,31 +385,35 @@
         try {
           const { user } = await window.ST.auth.loginUser(email, pwd);
 
-          const redirect = requestedRedirect();
+          /* Where to: the page they came for, else (first log-in only) post a service / post a task, else home */
+          const role     = await window.ST.auth.getUserRole(user);
+          const first    = window.ST.auth.isFirstLogin(user);
+          const redirect = requestedRedirect() || window.ST.auth.takeSignupTarget(email);
+          if (first) await window.ST.auth.markWelcomed();
+
           if (redirect) {
             showToast('Welcome back! Redirecting...');
             setTimeout(() => { window.location.href = redirect; }, 800);
+          } else if (first) {
+            showToast(role === 'tasker' ? 'Welcome! Let\'s post your first service.' : 'Welcome! Let\'s post your first task.');
+            setTimeout(() => { window.location.href = window.ST.auth.firstLoginUrl(role); }, 800);
+          } else if (role === 'tasker') {
+            try {
+              const { data: tRow } = await window.supabase.from('taskers')
+                .select('service, service_name, location')
+                .eq('user_id', user.id).maybeSingle();
+              const hasProfile = tRow && (tRow.service || tRow.service_name) && tRow.location;
+              if (!hasProfile) {
+                showToast('Welcome! Let\'s set up your profile first.');
+                setTimeout(() => { window.location.href = 'dashboard-tasker.html?setup=1'; }, 800);
+                return;
+              }
+            } catch(e) {}
+            showToast('Welcome back! Taking you home...');
+            setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
           } else {
-            const role = await window.ST.auth.getUserRole(user);
-
-            if (role === 'tasker') {
-              try {
-                const { data: tRow } = await window.supabase.from('taskers')
-                  .select('service, service_name, location')
-                  .eq('user_id', user.id).maybeSingle();
-                const hasProfile = tRow && (tRow.service || tRow.service_name) && tRow.location;
-                if (!hasProfile) {
-                  showToast('Welcome! Let\'s set up your profile first.');
-                  setTimeout(() => { window.location.href = 'dashboard-tasker.html?setup=1'; }, 800);
-                  return;
-                }
-              } catch(e) {}
-              showToast('Welcome back! Taking you home...');
-              setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
-            } else {
-              showToast('Welcome back! Taking you home...');
-              setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
-            }
+            showToast('Welcome back! Taking you home...');
+            setTimeout(() => { window.location.href = window.ST.auth.getHomeUrl(); }, 800);
           }
 
         } catch (authErr) {

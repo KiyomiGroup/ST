@@ -302,6 +302,11 @@
     window.ST.auth.attachPasswordRules(document.getElementById('cPassword'), document.getElementById('cPwdRules'));
     window.ST.auth.attachPasswordRules(document.getElementById('tPassword'), document.getElementById('tPwdRules'));
 
+    /* "Log In" links keep the page they were trying to reach */
+    document.querySelectorAll('.av2-form-footer a[href="login.html"]').forEach(function (a) {
+      a.setAttribute('href', 'login.html' + window.ST.auth.redirectQuery());
+    });
+
     function togglePwd(fieldId, btn) {
       const input = document.getElementById(fieldId);
       const isHidden = input.type === 'password';
@@ -314,6 +319,7 @@
          public.users row and picks the right onboarding screen for the role. */
       const r = role || 'customer';
       try { localStorage.setItem('st_pending_role', r); } catch (e) {}
+      window.ST.auth.rememberRedirect();   /* the Google round trip comes back to login.html, which opens this page */
       if (!window.supabase?.auth) { showToast('Sign-up is unavailable right now. Please refresh and try again.'); return; }
       const opts = { redirectTo: window.location.origin + '/login.html?oauth=1&role=' + r };
       window.supabase.auth.signInWithOAuth({ provider, options: opts }).then(({ error }) => {
@@ -346,8 +352,9 @@
 
       try {
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'customer' });
-        /* Send them to Log In with a "check your email" notice */
-        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email);
+        /* Send them to Log In with a "check your email" notice, keeping the page they were trying to reach */
+        window.ST.auth.rememberSignupTarget(email);
+        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
@@ -381,8 +388,9 @@
 
       try {
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
-        /* Send them to Log In with a "check your email" notice */
-        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email);
+        /* Send them to Log In with a "check your email" notice, keeping the page they were trying to reach */
+        window.ST.auth.rememberSignupTarget(email);
+        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';

@@ -13,7 +13,7 @@
         the tab or the phone reconnects. This is the safety net: even with Realtime off, the red dot lights within
         seconds, not only when the bell is clicked.
    Each notification is handled once (known{} by id), so Realtime + the check never double-ring.
-   Sound: a short two-note chime made with the Web Audio API (no audio file). ON by default; the speaker button in
+   Sound: a short two-note chime made with the Web Audio API (no audio file), with an <audio> back-up for phones. ON by default; the speaker button in
    the panel header mutes it and the choice is kept in localStorage ('st_notif_sound' = 'off'). Browsers only allow
    sound after the person has tapped or clicked the page once, so the first click anywhere "unlocks" it.
    ============================================================ */
@@ -38,24 +38,88 @@
   function soundOn() { try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { return true; } }
   function setSound(on) { try { localStorage.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch (e) {} syncSoundBtn(); }
 
-  /* The audio engine can only start inside a tap/click; the first one anywhere on the page unlocks it */
+  /* Phones are stricter than desktops about sound, so there are two layers:
+       1. Web Audio (the chime), 2. a tiny <audio> clip as a back-up.
+     - Each page load needs one real tap to unlock sound. Unlocking listens to touchend as well as click
+       (a scroll gesture does not count on iOS) and stays armed, because iOS puts the audio engine in an
+       "interrupted" state when the screen locks or the tab is backgrounded, and it must be woken again.
+     - iPhones keep Web Audio silent while the ringer switch is on silent, unless an <audio> element has
+       played. The unlock plays a silent clip once, and asks Safari for the "playback" audio session.
+     - If the engine is still asleep when a notification arrives we try to wake it, then fall back to the
+       <audio> clip, then (Android) a short vibration, rather than staying silent. */
+  var fallbackAudio = null, fallbackUrl = '';
+
+  /* Builds a WAV (two-note ding, or silence) in memory: no audio file to host */
+  function makeWav(notes) {
+    var rate = 22050, secs = 0.7, n = Math.floor(rate * secs), pcm = new Int16Array(n);
+    (notes || []).forEach(function (note) {
+      var start = Math.floor(note[1] * rate);
+      for (var i = start; i < n; i++) {
+        var t = (i - start) / rate; if (t > 0.5) break;
+        var env = Math.min(t / 0.02, 1) * Math.exp(-t * 7);
+        pcm[i] += Math.round(Math.sin(2 * Math.PI * note[0] * t) * env * 9000);
+      }
+    });
+    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    function str(o, t) { for (var i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); }
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, n * 2, true);
+    for (var k = 0; k < n; k++) v.setInt16(44 + k * 2, pcm[k], true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function prepFallback() {
+    if (fallbackAudio) return fallbackAudio;
+    try {
+      fallbackUrl = makeWav([[880, 0], [1318.5, 0.14]]);
+      fallbackAudio = new Audio(fallbackUrl);
+      fallbackAudio.preload = 'auto';
+      fallbackAudio.setAttribute('playsinline', '');
+    } catch (e) { fallbackAudio = null; }
+    return fallbackAudio;
+  }
+
   function unlockAudio() {
+    /* iOS 16.4+: sound should play even with the ringer switch on silent */
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+
     if (!audioCtx) {
       var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      try { audioCtx = new AC(); } catch (e) { return null; }
+      if (AC) { try { audioCtx = new AC(); } catch (e) { audioCtx = null; } }
     }
-    if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
-    if (audioCtx.state === 'running') {
-      ['click', 'touchend', 'keydown'].forEach(function (ev) { document.removeEventListener(ev, unlockAudio, true); });
+    if (audioCtx && audioCtx.state !== 'running') {
+      try { var r = audioCtx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+      try {                                                   /* a silent one-sample blip finishes the iOS unlock */
+        var b = audioCtx.createBuffer(1, 1, 22050), src = audioCtx.createBufferSource();
+        src.buffer = b; src.connect(audioCtx.destination); src.start(0);
+      } catch (e) {}
+    }
+    /* Prime the <audio> clip while we are inside the tap: muted, so nothing is heard */
+    var a = prepFallback();
+    if (a && !a.__primed) {
+      try {
+        a.muted = true;
+        var p = a.play();
+        var done = function () { try { a.pause(); a.currentTime = 0; a.muted = false; a.__primed = true; } catch (e) {} };
+        if (p && p.then) p.then(done).catch(function () { a.muted = false; }); else done();
+      } catch (e) {}
     }
     return audioCtx;
   }
-  ['click', 'touchend', 'keydown'].forEach(function (ev) { document.addEventListener(ev, unlockAudio, true); });
+  /* Stays armed for the life of the page (see the note above); each tap is cheap */
+  ['touchend', 'click', 'keydown', 'pointerup'].forEach(function (ev) {
+    document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
+  });
+  /* Coming back to the tab or the page: wake an engine the phone put to sleep (works if the page was already unlocked) */
+  function wakeAudio() {
+    if (audioCtx && audioCtx.state !== 'running') { try { var r = audioCtx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) wakeAudio(); });
+  window.addEventListener('pageshow', wakeAudio);
+  window.addEventListener('focus', wakeAudio);
 
-  function chime() {
-    var c = audioCtx;
-    if (!c || c.state !== 'running') return;                /* still locked: stay silent rather than error */
+  function playNotes(c) {
     var t = c.currentTime;
     [[880, 0], [1318.5, 0.14]].forEach(function (n) {       /* A5 then E6: a friendly two-note ding */
       var o = c.createOscillator(), g = c.createGain(), at = t + n[1];
@@ -66,6 +130,28 @@
       o.connect(g); g.connect(c.destination);
       o.start(at); o.stop(at + 0.5);
     });
+  }
+  function playFallback() {
+    var a = fallbackAudio;
+    if (a && a.__primed) {
+      try { a.muted = false; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(buzz); return; } catch (e) {}
+    }
+    buzz();
+  }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {} }
+
+  function chime() {
+    var c = audioCtx;
+    if (c && c.state === 'running') { playNotes(c); return; }
+    if (c && c.resume) {                                    /* asleep: try to wake it, then play; else the back-up clip */
+      var woke = false;
+      try {
+        c.resume().then(function () { if (woke) return; woke = true; if (c.state === 'running') playNotes(c); else playFallback(); }).catch(function () { if (!woke) { woke = true; playFallback(); } });
+        setTimeout(function () { if (!woke) { woke = true; playFallback(); } }, 400);
+        return;
+      } catch (e) {}
+    }
+    playFallback();
   }
   function ding() {
     if (!soundOn()) return;
@@ -207,7 +293,7 @@
       if (e.target.closest('[data-np-sound]')) {
         var turningOn = !soundOn();
         setSound(turningOn);
-        if (turningOn) { var c = unlockAudio(); if (c && c.state !== 'running' && c.resume) { c.resume().then(chime).catch(function () {}); } else { chime(); } }   /* a short preview */
+        if (turningOn) { unlockAudio(); setTimeout(chime, 60); }   /* a short preview */
         return;
       }
       var row = e.target.closest('[data-np-id]');
