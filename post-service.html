@@ -729,7 +729,7 @@
         }
 
       } catch(err) {
-        showErr(err.message || 'Failed to save. Please try again.');
+        showErr((window.ST && window.ST.db && window.ST.db.isListingError && window.ST.db.isListingError(err) ? window.ST.db.listingErrorMessage(err) : err.message) || 'Failed to save. Please try again.');
         btn.disabled = false; draftBtn.disabled = false; verifyAsideBtn.disabled = false;
         btnLabel.textContent = 'Save & Continue'; draftBtn.textContent = 'Save Draft';
       }

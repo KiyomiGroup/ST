@@ -429,6 +429,9 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
     svc = r3.data; svcErr = r3.error;
   }
 
+  /* Over the plan's listing limit: say so plainly instead of falling back to the old table-only save */
+  if (svcErr && isListingError(svcErr)) throw new Error(listingErrorMessage(svcErr));
+
   const rateStr = `₦${numericPrice.toLocaleString()}${finalUnit}`;
 
   if (svcErr) {
@@ -461,6 +464,47 @@ async function updateService(serviceId, updates) {
     .from('services').update(updates).eq('id', serviceId).select().single();
   if (error) throw error;
   return data;
+}
+
+/* ── Listing gate (S3d). The server decides how many active listings a plan allows (S3c); these only call it. ── */
+const LISTING_MESSAGES = {
+  listing_limit_reached: 'You have reached the number of active listings your plan allows. Pause or delete one, or upgrade your plan.',
+  listing_paused:        'This listing is paused. Reactivate it first.',
+  listing_status_locked: 'Use the pause and reactivate buttons to change a listing.',
+  too_many_selected:     'You chose more listings than your plan allows.',
+  no_services_selected:  'Choose at least one listing to keep active.',
+  service_not_found:     'This listing could not be found. Refresh the page and try again.',
+  local_tasker:          'Your coordinator manages your listings.',
+  not_signed_in:         'Please sign in.',
+  bad_request:           'That request was not valid.'
+};
+/* The server's own sentence (it names the plan and the numbers) is used when there is one; otherwise the fixed text above. */
+function listingErrorMessage(err) {
+  const code = err && err.message;
+  if (code && LISTING_MESSAGES[code]) return (err.details || err.detail || LISTING_MESSAGES[code]);
+  return (err && err.message) || 'Something went wrong. Please try again.';
+}
+function isListingError(err) { return !!(err && err.message && LISTING_MESSAGES[err.message]); }
+async function _listingRpc(fn, args) {
+  const { data, error } = await window.supabase.rpc(fn, args);
+  if (error) {
+    const e = new Error(listingErrorMessage(error));
+    e.code = error.message; e.detail = error.details || '';
+    throw e;
+  }
+  return data;
+}
+function publishService(serviceId)    { return _listingRpc('publish_service',    { p_service: serviceId }); }
+function pauseService(serviceId)      { return _listingRpc('pause_service',      { p_service: serviceId }); }
+function reactivateService(serviceId) { return _listingRpc('reactivate_service', { p_service: serviceId }); }
+function chooseActiveListings(ids)    { return _listingRpc('choose_active_listings', { p_ids: ids }); }
+/* { limit, active, remaining } for the signed-in tasker, from the server (null if it cannot be read) */
+async function fetchMyListingSlots() {
+  try {
+    const { data, error } = await window.supabase.rpc('get_my_entitlements');
+    if (error || !data || !data.listings) return null;
+    return data.listings;
+  } catch (e) { return null; }
 }
 
 async function deleteService(serviceId) {
@@ -817,6 +861,7 @@ window.ST    = window.ST || {};
 window.ST.db = {
   postTask, fetchTasks, fetchMyTasks, countMyTasks,
   postService, updateService, deleteService,
+  publishService, pauseService, reactivateService, chooseActiveListings, fetchMyListingSlots, listingErrorMessage, isListingError,
   fetchServices, fetchMyServices, fetchMyTaskerProfile, fetchMatchingServices, uploadServiceImage,
   applyToTask, fetchTaskApplications, fetchMyApplications, updateApplicationStatus,
   createBooking, fetchMyBookings, fetchTaskerBookings, updateBookingStatus,

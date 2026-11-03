@@ -15,7 +15,7 @@
 
   var PAGE_SIZE = 10;
   var AVAIL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
-  var state = { user: null, services: [], filter: 'all', query: '', category: '', sort: 'recent', shown: PAGE_SIZE, bookingsTotal: null };
+  var state = { user: null, services: [], filter: 'all', query: '', category: '', sort: 'recent', shown: PAGE_SIZE, bookingsTotal: null, slots: null };
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = window.escapeHtml || function (s) { return String(s == null ? '' : s); };
@@ -56,7 +56,7 @@
       rows = sr.data.map(function (s) {
         return { id: String(s.id), name: s.service_name, category: s.category, price: s.price, unit: s.rate_unit,
           location: s.location, description: s.description, photo: s.photo, available: s.available,
-          availability: s.availability_status, created: s.created_at, fromServices: true };
+          availability: s.availability_status, created: s.created_at, fromServices: true, status: s.listing_status };
       });
     } else {
       /* Older accounts: the listing lives in the taskers table */
@@ -89,10 +89,11 @@
         id: s.id, name: s.name || 'Untitled service', category: s.category || '', location: s.location || '',
         description: s.description || '', price: Number(s.price) || 0, unit: unitLabel(s.unit),
         photo: safeUrl(s.photo || ''), availability: s.availability || '', created: s.created,
-        group: s.available === false ? 'draft' : 'live', fromServices: s.fromServices,
+        group: s.status === 'paused' ? 'paused' : (s.available === false ? 'draft' : 'live'), fromServices: s.fromServices,
         bookings: counts[s.id] || 0
       };
     });
+    state.slots = await window.ST.db.fetchMyListingSlots();
     buildCategoryOptions();
     render();
   }
@@ -124,13 +125,14 @@
   }
 
   function badge(s) {
+    if (s.group === 'paused') return '<span class="ap-badge ap-badge-completed">Paused</span>';
     return s.group === 'live'
       ? '<span class="ap-badge ap-badge-accepted"><span class="ap-badge-dot"></span>Live</span>'
       : '<span class="ap-badge ap-badge-pending">Draft</span>';
   }
 
   function figures(s) {
-    var avail = s.group === 'draft' ? 'Not live yet' : (AVAIL[s.availability] || '\u2014');
+    var avail = s.group === 'paused' ? 'Paused' : s.group === 'draft' ? 'Not live yet' : (AVAIL[s.availability] || '\u2014');
     return '<div class="ap-figures">' +
       '<div><div class="ap-fig-label">Rate</div><div class="ap-fig-value">' + (s.price ? naira(s.price) : '\u2014') +
         (s.price ? ' <span class="sv-unit">/ ' + esc(s.unit) + '</span>' : '') + '</div></div>' +
@@ -144,7 +146,9 @@
     if (s.group === 'draft') {
       a += '<a class="ap-btn ap-btn-primary" href="verify.html?role=tasker&return=my-services.html">Verify to Post</a>';
     }
+    if (s.fromServices && s.group === 'paused') a += '<button type="button" class="ap-btn ap-btn-primary" data-act="reactivate" data-id="' + id + '">Reactivate</button>';
     a += '<a class="ap-btn' + (s.group === 'draft' ? '' : ' ap-btn-primary') + '" href="post-service.html?id=' + encodeURIComponent(s.id) + '">Edit</a>';
+    if (s.fromServices && s.group !== 'paused') a += '<button type="button" class="ap-btn" data-act="pause" data-id="' + id + '">Pause</button>';
     if (s.fromServices) a += '<button type="button" class="ap-btn ap-btn-quiet sv-delete" data-act="delete" data-id="' + id + '">Delete</button>';
     return '<div class="ap-actions">' + a + '</div>';
   }
@@ -163,7 +167,8 @@
   }
 
   function renderSummary() {
-    var all = state.services, live = all.filter(function (s) { return s.group === 'live'; }).length, draft = all.length - live;
+    var all = state.services, live = all.filter(function (s) { return s.group === 'live'; }).length,
+        draft = all.filter(function (s) { return s.group === 'draft'; }).length;
     $('sTotal').textContent = all.length; $('sLive').textContent = live; $('sDraft').textContent = draft;
     $('sBookings').textContent = state.bookingsTotal == null ? '\u2014' : state.bookingsTotal;
     var bar = $('sBar').children;
@@ -171,12 +176,21 @@
     bar[1].style.width = all.length ? (live / all.length * 100) + '%' : '0';
     $('sBarText').textContent = all.length ? live + ' of ' + all.length + ' live' : 'No services yet';
     $('svVerifyCard').hidden = !draft;
+    renderSlots();
+  }
+
+  /* Slots come from the server (get_my_entitlements). Nothing here knows the plan's numbers. */
+  function renderSlots() {
+    var el = $('sSlots'), sl = state.slots;
+    if (!sl) { el.textContent = ''; return; }
+    el.textContent = sl.active + ' of ' + sl.limit + ' active listing' + (sl.limit === 1 ? '' : 's') + ' used' +
+      (sl.remaining === 0 ? '. Pause or delete one to add another, or upgrade your plan.' : '.');
   }
 
   function render() {
     $('svList').setAttribute('aria-busy', 'false');
     var all = state.services, list = visible(), host = $('svList');
-    var counts = { all: all.length, live: 0, draft: 0 };
+    var counts = { all: all.length, live: 0, draft: 0, paused: 0 };
     all.forEach(function (s) { counts[s.group]++; });
     document.querySelectorAll('[data-count]').forEach(function (el) {
       var n = counts[el.getAttribute('data-count')]; el.textContent = n > 0 ? n : '';
@@ -228,11 +242,24 @@
     if (act === 'retry') { $('svList').setAttribute('aria-busy', 'true'); load().catch(function (x) { renderError(x && x.message ? x.message : 'Something went wrong.'); }); return; }
     current = state.services.filter(function (s) { return s.id === b.getAttribute('data-id'); })[0];
     if (!current) return;
+    if (act === 'pause' || act === 'reactivate') { changeListing(act, b); return; }
     if (act === 'delete') {
       $('svDelText').textContent = '\u201C' + current.name + '\u201D will no longer appear to customers. This can\u2019t be undone.';
       $('svDelError').hidden = true; dlg.showModal();
     }
   });
+
+  async function changeListing(act, btn) {
+    var s = current; btn.disabled = true;
+    try {
+      var r = act === 'pause' ? await window.ST.db.pauseService(s.id) : await window.ST.db.reactivateService(s.id);
+      s.group = r.listing_status === 'paused' ? 'paused' : (r.available ? 'live' : 'draft');
+      if (r.entitlements && r.entitlements.listings) state.slots = r.entitlements.listings;
+      render();
+      toast(act === 'pause' ? 'Listing paused. It is hidden from customers.' :
+            (r.available ? 'Listing is live again.' : 'Listing reactivated. It goes live once you are verified.'));
+    } catch (x) { toast(x.message || 'Something went wrong.'); btn.disabled = false; }
+  }
 
   $('svDelConfirm').addEventListener('click', async function () {
     var btn = this, s = current, err = $('svDelError'); btn.disabled = true; err.hidden = true;
@@ -242,6 +269,7 @@
       if (!r.data || !r.data.length) throw new Error('We could not delete this service. Please refresh and try again.');
       state.services = state.services.filter(function (x) { return x.id !== s.id; });
       dlg.close(); render(); toast('Service deleted.');
+      window.ST.db.fetchMyListingSlots().then(function (sl) { if (sl) { state.slots = sl; renderSlots(); } });
     } catch (x) { err.textContent = x.message || 'Could not delete this service.'; err.hidden = false; }
     btn.disabled = false;
   });
