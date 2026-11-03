@@ -336,6 +336,14 @@
     sessionP.then(function (r) {
       var token = r && r.data && r.data.session ? r.data.session.access_token : '';
       if (!token) { goToLogin(); return null; }      // logged out: save the form, sign in, come back
+      var A = window.ST && window.ST.auth;
+      var roleP = A && A.checkCustomerOnly
+        ? A.getCurrentUser().then(function (u) { return u ? A.checkCustomerOnly(u) : { ok: true }; }).catch(function () { return { ok: true }; })
+        : Promise.resolve({ ok: true });
+      return roleP.then(function (c) {
+      if (!c.ok) {
+        return { ok: false, data: { code: 'customer_only', error: 'Only customer accounts can buy gift cards. ' + (c.hasCustomer ? 'Use \u201CSwitch to customer account\u201D in the Settings menu.' : 'Use \u201CCreate customer account\u201D in the Settings menu.') } };
+      }
       var ctrl = new AbortController();
       var timer = setTimeout(function () { ctrl.abort(); }, 25000);
       return fetch(FUNCTIONS_URL + 'create-gift-card-checkout', {
@@ -347,6 +355,7 @@
         clearTimeout(timer);
         return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, data: data }; });
       }, function (err) { clearTimeout(timer); throw err; });
+      });
     }).then(function (out) {
       if (!out) return;                                // heading to the login page
       if (out.data && out.data.code === 'login_required') { goToLogin(); return; }

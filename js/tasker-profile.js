@@ -519,11 +519,40 @@
     return v;
   }
 
+  /* Only customer accounts can book. A tasker is offered a switch (or one-tap create) instead of the form. */
+  async function blockIfTasker(user) {
+    var A = window.ST && window.ST.auth;
+    if (!A || !A.checkCustomerOnly) return false;
+    var c = await A.checkCustomerOnly(user);
+    if (c.ok) return false;
+    $('tpBookBody').innerHTML =
+      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
+      '<div class="tp-dialog-done"><h2 class="tp-dialog-title" id="tpBookTitle">Customer account needed</h2>' +
+      '<p class="tp-dialog-lead">Only customer accounts can book a service. ' + (c.hasCustomer ? 'You already have one, so just switch to it.' : 'You can create a customer account with the same email in one tap.') + '</p>' +
+      '<p class="ap-error" id="bkSwitchErr" role="alert" hidden></p>' +
+      '<button type="button" class="btn btn-primary tp-dialog-submit" data-role-switch="' + (c.hasCustomer ? 'switch' : 'create') + '">' + (c.hasCustomer ? 'Switch to customer account' : 'Create customer account') + '</button>' +
+      '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Not now</button></div>';
+    openDialog($('tpBookDialog'));
+    return true;
+  }
+
+  async function switchToCustomer(btn) {
+    var A = window.ST.auth, err = $('bkSwitchErr');
+    btn.disabled = true; err.hidden = true;
+    try {
+      if (btn.getAttribute('data-role-switch') === 'switch') await A.switchRole('customer'); else await A.addRole('customer');
+      window.location.reload();
+    } catch (e) {
+      btn.disabled = false; err.textContent = (e && e.message) || 'Could not switch account. Please try again.'; err.hidden = false;
+    }
+  }
+
   /* mode: 'book' | 'quote' | 'callout' */
   async function openBooking(mode) {
     mode = mode || 'book';
     var user = await currentUser();
     if (!user) return toLogin();
+    if (await blockIfTasker(user)) return;
     var m = state.model; if (!m) return;
     if (state.demo) return openDemoBooking();
     if (!state.id) return;
@@ -654,6 +683,7 @@
   async function openQuote() {
     var user = await currentUser();
     if (!user) return toLogin();
+    if (await blockIfTasker(user)) return;
     if (state.demo) return openDemoBooking();
     try {
       var ex = await window.supabase.from('bookings').select('id').eq('customer_id', user.id).eq('tasker_id', state.id).in('status', ['pending', 'confirmed']).maybeSingle();
@@ -795,6 +825,7 @@
         return;
       }
       if (e.target.closest('[data-close]')) return closeDialog($('tpBookDialog'));
+      var rs = e.target.closest('[data-role-switch]'); if (rs) return switchToCustomer(rs);
       var sub = e.target.closest('#bkSubmitBtn'); if (sub) return submitBooking(sub.getAttribute('data-mode'));
       var retry = e.target.closest('[data-retry]'); if (retry) openBooking(retry.getAttribute('data-retry'));
     });

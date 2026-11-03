@@ -369,6 +369,8 @@ function _initNavMenus() {
       toggle.setAttribute('aria-expanded', String(!menu.hidden));
       return;
     }
+    const sw = e.target.closest('[data-nav-switch-role]');
+    if (sw) { _handleRoleSwitchClick(sw); return; }
     if (e.target.closest('[data-nav-logout]')) { logoutUser(); }
   });
 
@@ -411,6 +413,7 @@ async function syncNavbarAuthState() {
     } catch(e) {}
 
     _applyNavState(true, role, name);
+    _syncRoleSwitchItems(user, role).catch(() => {});
     _loadNavIndicators(user, role); /* plan badge, counts, dots — non-blocking */
     /* Try to load profile photo */
     try {
@@ -607,6 +610,150 @@ function attachPasswordRules(input, list) {
   update();
 }
 
+
+/* ── Roles: one login can hold a customer profile and a tasker profile ──
+   public.users.role is the ACTIVE role (everything else on the site reads it); public.users.roles lists
+   every role the person holds. add_my_role / switch_my_role (sql/dual-role-customer-tasker.sql) are the
+   only way to change them. Only customers can book a service or buy / redeem a gift card. */
+const CUSTOMER_ONLY_BOOKING = 'Only customer accounts can book a service.';
+const CUSTOMER_ONLY_GIFTS   = 'Only customer accounts can buy or redeem gift cards.';
+
+function _setCachedRole(role) {
+  try {
+    localStorage.setItem('st_role', role);
+    localStorage.removeItem('st_plan');
+  } catch (e) {}
+}
+
+function _roleErrorMessage(error) {
+  const msg = String((error && error.message) || '');
+  if ((error && error.code === 'PGRST202') || /add_my_role|switch_my_role|schema cache/i.test(msg)) {
+    return 'Switching between customer and tasker accounts is not switched on yet. Please try again later.';
+  }
+  if (/not_held/i.test(msg)) return 'You do not have that kind of account yet.';
+  return msg || 'Something went wrong. Please try again.';
+}
+
+async function getMyRoles(user) {
+  user = user || await getCurrentUser();
+  if (!user) return [];
+  const active = await getUserRole(user);
+  try {
+    const { data, error } = await window.supabase.from('users').select('roles').eq('id', user.id).maybeSingle();
+    if (!error && data && Array.isArray(data.roles) && data.roles.length) {
+      return data.roles.indexOf(active) === -1 && active ? data.roles.concat(active) : data.roles;
+    }
+  } catch (e) { /* roles column not there yet: the active role is all we know */ }
+  return active ? [active] : [];
+}
+
+/* Adds a customer or tasker profile to the signed-in login and makes it the active one */
+async function addRole(role, profile) {
+  profile = profile || {};
+  if (role !== 'customer' && role !== 'tasker') throw new Error('Unknown account type.');
+  const { error } = await window.supabase.rpc('add_my_role', { p_role: role });
+  if (error) throw new Error(_roleErrorMessage(error));
+  const user = await getCurrentUser();
+  if (role === 'tasker' && user) {
+    const name = profile.name || user.user_metadata?.name || (user.email || '').split('@')[0] || 'Tasker';
+    try {
+      await window.supabase.from('taskers').upsert(
+        { id: user.id, user_id: user.id, name, email: user.email, service: '', location: '', rating: 0, task_count: 0 },
+        { onConflict: 'id', ignoreDuplicates: true }
+      );
+    } catch (e) {}
+  }
+  try { await window.supabase.auth.updateUser({ data: { role } }); } catch (e) {}
+  _setCachedRole(role);
+  try {
+    localStorage.setItem('st_session', '1');
+    if (user) localStorage.setItem('st_name', user.user_metadata?.name || profile.name || (user.email || '').split('@')[0]);
+  } catch (e) {}
+  return role;
+}
+
+/* Makes a role the person already holds the active one */
+async function switchRole(role) {
+  const { error } = await window.supabase.rpc('switch_my_role', { p_role: role });
+  if (error) throw new Error(_roleErrorMessage(error));
+  try { await window.supabase.auth.updateUser({ data: { role } }); } catch (e) {}
+  _setCachedRole(role);
+  return role;
+}
+
+/* Booking and gift cards are for customers. A tasker gets { ok: false, hasCustomer } so the page can offer
+   "Switch to your customer account" (hasCustomer) or "Create a customer account" (not yet). */
+async function checkCustomerOnly(user) {
+  user = user || await getCurrentUser();
+  if (!user) return { ok: true, loggedIn: false };
+  const role = await getUserRole(user);
+  if (role !== 'tasker') return { ok: true, loggedIn: true };
+  const roles = await getMyRoles(user);
+  return { ok: false, loggedIn: true, hasCustomer: roles.indexOf('customer') !== -1 };
+}
+
+/* Signing up with an email that already has a login: if the password is that login's own password, add the
+   new kind of account to it. Supabase allows one login per email, so this is how one email gets both. */
+async function _addRoleToExistingLogin({ name, email, password, role, phone }) {
+  const label = role === 'tasker' ? 'tasker' : 'customer';
+  let signedIn;
+  try {
+    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    signedIn = data;
+  } catch (e) {
+    if (/confirm/i.test(String((e && e.message) || ''))) {
+      throw new Error('This email is registered but not confirmed yet. Open the confirmation email we sent you, then try again.');
+    }
+    throw new Error('This email already has a StreetTasker account. To add a ' + label + ' account to it, enter the password you already use for that account. Or log in instead.');
+  }
+  const user = signedIn.user;
+  const roles = await getMyRoles(user);
+  if (roles.indexOf(role) !== -1) {
+    try { await window.supabase.auth.signOut(); } catch (e) {}
+    throw new Error('You already have a ' + label + ' account with this email. Please log in instead.');
+  }
+  try {
+    await addRole(role, { name, email, phone });
+  } catch (e) {
+    try { await window.supabase.auth.signOut(); } catch (x) {}
+    throw e;
+  }
+  return { user, needsVerification: false, roleAdded: true, role };
+}
+
+/* Settings menu + mobile drawer: "Switch to customer account" / "Create customer account" (tasker) and
+   "Switch to tasker account" (customer who also has a tasker profile). */
+async function _syncRoleSwitchItems(user, role) {
+  const items = document.querySelectorAll('[data-nav-switch-role]');
+  if (!items.length) return;
+  const roles = await getMyRoles(user);
+  let target = null, has = false;
+  if (role === 'tasker') { target = 'customer'; has = roles.indexOf('customer') !== -1; }
+  else if (roles.indexOf('tasker') !== -1) { target = 'tasker'; has = true; }
+  items.forEach(el => {
+    if (!target) { el.hidden = true; return; }
+    el.dataset.targetRole = target;
+    el.dataset.hasRole = has ? '1' : '0';
+    const label = el.querySelector('[data-switch-label]') || el;
+    label.textContent = (has ? 'Switch to ' : 'Create ') + target + ' account';
+    el.hidden = false;
+  });
+}
+
+async function _handleRoleSwitchClick(el) {
+  const target = el.dataset.targetRole;
+  if (!target || el.disabled) return;
+  el.disabled = true;
+  try {
+    if (el.dataset.hasRole === '1') await switchRole(target); else await addRole(target);
+    window.location.href = target === 'tasker' ? 'dashboard-tasker.html' : getHomeUrl();
+  } catch (err) {
+    el.disabled = false;
+    if (window.showToast) window.showToast(err.message || 'Could not switch account. Please try again.');
+  }
+}
+
 /* ── Auth operations ─────────────────────────────────────────── */
 async function signUpUser({ name, email, password, role, phone = '' }) {
   /* Same rules the live checklist shows, enforced here so every sign-up form gets them */
@@ -626,7 +773,8 @@ async function signUpUser({ name, email, password, role, phone = '' }) {
   if (!data.user) throw new Error('Sign-up failed — try again.');
   /* Empty identities = email already registered */
   if (!data.user.identities || data.user.identities.length === 0) {
-    throw new Error('An account with this email already exists. Please log in instead.');
+    /* The email has a login already: add this kind of account to it (needs that login's password) */
+    return _addRoleToExistingLogin({ name, email, password, role, phone });
   }
 
   await window.supabase.from('users').upsert(
@@ -775,6 +923,7 @@ window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
   safeRedirect, requestedRedirect, redirectQuery, rememberRedirect, takeRememberedRedirect, rememberSignupTarget, takeSignupTarget,
   isFirstLogin, markWelcomed, firstLoginUrl,
+  getMyRoles, addRole, switchRole, checkCustomerOnly, CUSTOMER_ONLY_BOOKING, CUSTOMER_ONLY_GIFTS,
   signUpUser, loginUser, checkPassword, passwordProblem, attachPasswordRules, PASSWORD_RULES, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
   initDashboardWelcome,
 };

@@ -393,7 +393,19 @@ function initBookingModal() {
   document.getElementById('bookingForm')?.addEventListener('submit', handleBookingSubmit);
 }
 
+/* Only customer accounts can book: a tasker is told how to switch instead of seeing the form */
 function openBookingModal(svcId) {
+  const A = window.ST && window.ST.auth;
+  if (!A || !A.checkCustomerOnly) { _openBookingModal(svcId); return; }
+  A.getCurrentUser().then(u => (u ? A.checkCustomerOnly(u) : { ok: true })).then(c => {
+    if (c.ok) { _openBookingModal(svcId); return; }
+    showToast(c.hasCustomer
+      ? 'Only customer accounts can book a service. Use "Switch to customer account" in the Settings menu.'
+      : 'Only customer accounts can book a service. Use "Create customer account" in the Settings menu.');
+  }).catch(() => _openBookingModal(svcId));
+}
+
+function _openBookingModal(svcId) {
   const s = ALL.find(x => x.id === svcId);
   if (!s) { console.warn('[Booking] service not found:', svcId); return; }
   const modal = document.getElementById('bookingModal');
@@ -450,6 +462,12 @@ async function handleBookingSubmit(e) {
     setTimeout(() => { window.location.href = 'login.html?redirect=find-taskers.html'; }, 1200);
     return;
   }
+  /* Guard: only customer accounts can book */
+  try {
+    const A = window.ST && window.ST.auth;
+    const c = A && A.checkCustomerOnly ? await A.checkCustomerOnly(user) : { ok: true };
+    if (!c.ok) { closeBookingModal(); showToast('Only customer accounts can book a service. Switch to your customer account from the Settings menu.'); return; }
+  } catch (e) { /* the database refuses it too */ }
   /* Guard: tasker can't book their own service */
   if (svc && svc.user_id && String(svc.user_id) === String(user.id)) {
     closeBookingModal();

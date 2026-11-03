@@ -111,7 +111,21 @@
     var btn = this, err = document.getElementById('rd-action-error');
     err.hidden = true;
     btn.disabled = true;
-    call('redeem').then(function (out) {
+    /* Only customer accounts can load a gift card */
+    var A = window.ST && window.ST.auth;
+    var roleP = A && A.checkCustomerOnly
+      ? A.getCurrentUser().then(function (u) { return u ? A.checkCustomerOnly(u) : { ok: true }; }).catch(function () { return { ok: true }; })
+      : Promise.resolve({ ok: true });
+    roleP.then(function (c) {
+      if (!c.ok) {
+        btn.disabled = false;
+        err.textContent = 'Only customer accounts can redeem gift cards. ' + (c.hasCustomer ? 'Use \u201CSwitch to customer account\u201D in the Settings menu.' : 'Use \u201CCreate customer account\u201D in the Settings menu.');
+        err.hidden = false;
+        return null;
+      }
+      return call('redeem');
+    }).then(function (out) {
+      if (!out) return;
       var d = out.data || {};
       if (out.status === 200 && d.redeemed) {
         setField('credited', naira(d.credited));

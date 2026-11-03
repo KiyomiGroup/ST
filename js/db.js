@@ -617,6 +617,11 @@ async function uploadServiceImage(file) {
 async function createBooking({ taskerId, serviceId = null, taskId = null, scheduledTime = null, notes = '' }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to book a service.');
+  /* Only customer accounts can book (the database refuses it too) */
+  if (window.ST && window.ST.auth && window.ST.auth.checkCustomerOnly) {
+    const who = await window.ST.auth.checkCustomerOnly(user);
+    if (!who.ok) throw new Error('Only customer accounts can book a service. Switch to your customer account first.');
+  }
 
   /* Ensure the customer has a public.users row (required for FK) */
   await ensureUserProfile(user);

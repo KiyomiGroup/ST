@@ -246,7 +246,16 @@
           } else {
             /* Existing account — log them in to their correct dashboard */
             try { localStorage.removeItem('st_pending_role'); } catch(e) {}
-            const role = existingUser.role || oauthRole || 'customer';
+            let role = existingUser.role || oauthRole || 'customer';
+            /* Came from Sign up as the other kind of account: add it to this login (or switch to it) */
+            if (oauthRole && oauthRole !== role) {
+              try {
+                const held = await window.ST.auth.getMyRoles(session.user);
+                if (held.indexOf(oauthRole) === -1) await window.ST.auth.addRole(oauthRole);
+                else await window.ST.auth.switchRole(oauthRole);
+                role = oauthRole;
+              } catch (e) { /* keep the role they already had */ }
+            }
             localStorage.setItem('st_role', role);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
             window.location.replace(takeRememberedRedirect() || window.ST.auth.getHomeUrl());
