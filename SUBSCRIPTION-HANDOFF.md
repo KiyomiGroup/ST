@@ -27,9 +27,10 @@ The owner said on 2026-11-03 that she did everything every earlier handoff asked
 | S5b (`payment-init`) | **Deployed by the owner.** |
 | **T1** (close the top-up) | **Deployed by the owner** ("T1 deployed", 2026-11-04). `payment-init` is S5b + T1; `supabase/deploy/payment-init/index.ts` is the source of truth. |
 | **S5c-1** (`subscription_store_authorization`) | **Applied** (owner: "S5c-1 applied", 2026-11-04). |
-| **S5c-2** (webhook saves the card) | **Written, 38 Node tests pass, NOT deployed.** Source of truth `supabase/deploy/paystack-webhook/index.ts`. Steps in `handoffs/sub-S5c-2.md`. |
-| **S4a** (membership label CSS) | **Written, tested, not deployed** (CSS + demo page only; owner copies 5 files, nothing depends on it). |
-| S4b onward, S5d to S5g, S7 | Not started. |
+| **S5c-2** (webhook saves the card) | **Deployed by the owner** ("S5c-2 deployed", 2026-11-04). 38 Node tests passed; the real card save is only provable in the Paystack TEST run (S7c). Source of truth `supabase/deploy/paystack-webhook/index.ts`. |
+| **S4a** (membership label CSS) | **Written, tested.** Deployment is implied by the owner's standing convention below once she sends the next files without an error. |
+| **S4b** (pricing page hero + cards) | **Written, tested with stubbed Supabase, not deployed.** Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). Paid buttons charge nothing until S5d sets `window.StPricing.onChoose`. `js/subscription.js` is now unused (delete in S4d). |
+| S4c onward, S5d to S5g, S7 | Not started. S5d needs S4f (my-subscription page). |
 
 Owner answers (`DECISIONS.md`): D1 no subscribers, D2 saved-card auto renewal (Paystack only, R-W), D3 no admin in this project (`ADMIN-REQUIREMENTS.md` is the contract), D4 booking caps removed, D13 resolved. D5-D12 defaults stand; D14 optional.
 
@@ -59,7 +60,10 @@ Facts every later session needs:
 
 - S5c-1 (applied): `subscription_store_authorization(reference, authorization jsonb, customer_email)`, service role only; owner of the card is read from the payment, only a PAID `subscription` payment stores, only `reusable: true` is kept (anything else answers `{ok:true, stored:false, reason}`, never an error), one row per person, newer paid card wins, replays safe, event `card_saved` without code or email, no notification. Answer carries only `ok, stored, reason, already, card_last4, card_brand`.
 
-- S5c-2 (not deployed): the webhook saves the card for a paid subscription payment, also when the browser check finalised it first; only the needed authorization fields are sent; a failure to save is only logged (never with card data) and never changes the answer to Paystack; deployed source of truth `supabase/deploy/paystack-webhook/index.ts` (the repo copy under `supabase/functions/` is stale).
+- S5c-2 (deployed): the webhook saves the card for a paid subscription payment, also when the browser check finalised it first; only the needed authorization fields are sent; a failure to save is only logged (never with card data) and never changes the answer to Paystack; deployed source of truth `supabase/deploy/paystack-webhook/index.ts` (the repo copy under `supabase/functions/` is stale).
+
+## Owner convention: silence means success (set 2026-11-04)
+When the owner sends files to work with (a new zip, a project snapshot) and does NOT report any error, that means she deployed / applied the last stage's files and everything succeeded. Record that stage as applied/deployed ("per the owner's no-error convention") and continue; do not ask her to re-confirm. If she DOES report an error, stop and fix that first. This does not replace a stage's own explicit gate: a stage that says it needs "X deployed" still needs her to say so or to send files that follow it. Never claim a test passed or a payment worked on this basis; it only settles "applied / deployed".
 
 ## Owner rules (carry into every stage)
 - **R-W: no user top-ups; subscriptions are paid only through Paystack; wallet money cannot pay for a subscription (`OWNER-RULE-NO-TOPUPS.md`). Never ask the owner to make a top-up, not even as a test.**
