@@ -31,6 +31,8 @@
   var POLL_VISIBLE = 15000, POLL_HIDDEN = 30000;
   var known = {};                            /* ids already seen: a notification is announced once */
   var primed = false;                        /* known{} filled from the first check, without ringing */
+  var newestSeen = 0;                       /* newest created_at already on the account when the page loaded: only a newer one may ring */
+  function see(n) { var t = n && n.created_at ? Date.parse(n.created_at) : NaN; if (!isNaN(t) && t > newestSeen) newestSeen = t; }
   var rt = { channel: null, ok: false, tries: 0, timer: null };
   var pollTimer = null, checking = false, audioCtx = null;
 
@@ -47,7 +49,7 @@
        played. The unlock plays a silent clip once, and asks Safari for the "playback" audio session.
      - If the engine is still asleep when a notification arrives we try to wake it, then fall back to the
        <audio> clip, then (Android) a short vibration, rather than staying silent. */
-  var fallbackAudio = null, fallbackUrl = '';
+  var fallbackAudio = null, silentUrl = '', dingUrl = '';
 
   /* Builds a WAV (two-note ding, or silence) in memory: no audio file to host */
   function makeWav(notes) {
@@ -69,11 +71,14 @@
     for (var k = 0; k < n; k++) v.setInt16(44 + k * 2, pcm[k], true);
     return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
+  /* The <audio> element is unlocked with a SILENT clip (so tapping a link or switching pages can never make a sound).
+     The chime clip is only put on the element at the moment a real notification rings. */
   function prepFallback() {
     if (fallbackAudio) return fallbackAudio;
     try {
-      fallbackUrl = makeWav([[880, 0], [1318.5, 0.14]]);
-      fallbackAudio = new Audio(fallbackUrl);
+      silentUrl = makeWav([]);
+      dingUrl = makeWav([[880, 0], [1318.5, 0.14]]);
+      fallbackAudio = new Audio(silentUrl);
       fallbackAudio.preload = 'auto';
       fallbackAudio.setAttribute('playsinline', '');
     } catch (e) { fallbackAudio = null; }
@@ -95,7 +100,7 @@
         src.buffer = b; src.connect(audioCtx.destination); src.start(0);
       } catch (e) {}
     }
-    /* Prime the <audio> clip while we are inside the tap: muted, so nothing is heard */
+    /* Prime the <audio> element while we are inside the tap, with the silent clip: nothing can be heard */
     var a = prepFallback();
     if (a && !a.__primed) {
       try {
@@ -134,7 +139,7 @@
   function playFallback() {
     var a = fallbackAudio;
     if (a && a.__primed) {
-      try { a.muted = false; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(buzz); return; } catch (e) {}
+      try { a.muted = false; if (dingUrl && a.src !== dingUrl) a.src = dingUrl; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(buzz); return; } catch (e) {}
     }
     buzz();
   }
@@ -234,7 +239,7 @@
       .eq('user_id', uid).order('created_at', { ascending: false }).limit(LIMIT);
     if (r.error) throw r.error;
     items = r.data || [];
-    items.forEach(function (n) { known[String(n.id)] = true; });
+    items.forEach(function (n) { known[String(n.id)] = true; see(n); });
     loaded = true;
   }
   function unreadCount() { return items.filter(function (n) { return !n.is_read; }).length; }
@@ -402,9 +407,12 @@
     var key = String(row.id);
     if (known[key]) return;
     known[key] = true;
+    var t = row.created_at ? Date.parse(row.created_at) : NaN;
+    var isNew = isNaN(t) || t > newestSeen;                  /* an old row seen late (slow first check, reconnect) never rings */
+    if (!isNaN(t) && t > newestSeen) newestSeen = t;
     if (row.is_read) return;
     setDots(true);
-    ding();
+    if (isNew) ding();
     if (loaded && !items.some(function (n) { return String(n.id) === key; })) {
       items.unshift(row);
       if (items.length > LIMIT) items.length = LIMIT;
@@ -422,7 +430,7 @@
         .eq('user_id', uid).order('created_at', { ascending: false }).limit(20);
       if (r.error || !r.data) return;
       if (!primed) {                                         /* first look: remember what is there, no ringing */
-        r.data.forEach(function (n) { known[String(n.id)] = true; });
+        r.data.forEach(function (n) { known[String(n.id)] = true; see(n); });
         primed = true;
         if (r.data.some(function (n) { return !n.is_read; })) setDots(true);
       } else {

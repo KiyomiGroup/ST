@@ -722,17 +722,21 @@ async function _addRoleToExistingLogin({ name, email, password, role, phone }) {
   return { user, needsVerification: false, roleAdded: true, role };
 }
 
-/* Settings menu + mobile drawer: "Switch to customer account" / "Create customer account" (tasker) and
-   "Switch to tasker account" (customer who also has a tasker profile). */
+/* Settings menu + mobile drawer: the account switch, on every page, for both kinds of account.
+   A tasker sees "Switch to customer account" (or "Create customer account" if they have none yet);
+   a customer sees "Switch to tasker account" (or "Create tasker account"). Clicking "Create" adds the profile
+   with add_my_role, which also holds if the roles list was never filled in for that login. */
 async function _syncRoleSwitchItems(user, role) {
   const items = document.querySelectorAll('[data-nav-switch-role]');
   if (!items.length) return;
+  if (role && role !== 'tasker' && role !== 'customer') {        /* coordinator / admin logins have no second account */
+    items.forEach(el => { el.hidden = true; });
+    return;
+  }
   const roles = await getMyRoles(user);
-  let target = null, has = false;
-  if (role === 'tasker') { target = 'customer'; has = roles.indexOf('customer') !== -1; }
-  else if (roles.indexOf('tasker') !== -1) { target = 'tasker'; has = true; }
+  const target = role === 'tasker' ? 'customer' : 'tasker';
+  const has = roles.indexOf(target) !== -1;
   items.forEach(el => {
-    if (!target) { el.hidden = true; return; }
     el.dataset.targetRole = target;
     el.dataset.hasRole = has ? '1' : '0';
     const label = el.querySelector('[data-switch-label]') || el;
