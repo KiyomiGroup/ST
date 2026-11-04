@@ -1,4 +1,4 @@
-/* StreetTasker: My Subscription page (S4e view, S4f-2 listing chooser, S5d: manage buttons removed, S5e-2: Pay again).
+/* StreetTasker: My Subscription page (S4e view, S4f-2 listing chooser, S5d: manage buttons removed, S5e-2: Pay again, S5f: payment history and printable receipt).
    Reads get_my_entitlements() (plan, price, period, end date, offers and listings meters, features), get_public_plans() (names)
    and the person's own subscriptions row (only to say that an earlier paid plan has ended).
    No price, limit, window or plan name is written in this file. Plans never renew by themselves and nothing about a card or bank
@@ -7,7 +7,8 @@
    the "Pay again" button only when the server says kind = renewal. The button runs ST.payments.payForSubscription(plan key); the
    browser sends only the plan key, the server decides the amount. Afterwards the page re-reads get_my_entitlements() and says the
    plan was extended only if the server's period end moved forward. The other write on this page is the listing chooser
-   (choose_active_listings). The server decides every rule and the page shows its answer. */
+   (choose_active_listings). S5f: the Payment history card reads the person's OWN rows of subscription_receipts (read-only; the
+   database allows nothing else) and prints one receipt through the browser's print dialog. The server decides every rule and the page shows its answer. */
 (function () {
   'use strict';
 
@@ -320,6 +321,92 @@
     });
   }
 
+  /* ---- payment history and printable receipt (S5f): own rows of subscription_receipts, read only ---- */
+  var RECEIPT_COLS = 'id,receipt_number,reference,plan_name,kind,price_kobo,credit_kobo,amount_kobo,period_start,period_end,paid_at';
+  var HISTORY_PAGE = 10;
+  var KIND_TEXT = { new: 'New plan', upgrade: 'Upgrade', renewal: 'Paid again' };
+  var history = { rows: [], failed: false };
+
+  async function fetchReceipts(from) {
+    try {
+      var r = await window.supabase.from('subscription_receipts').select(RECEIPT_COLS)
+        .eq('user_id', ctx.user.id).order('paid_at', { ascending: false }).range(from, from + HISTORY_PAGE);   /* one extra row tells us there is more */
+      if (!r || r.error || !Array.isArray(r.data)) return null;
+      return r.data;
+    } catch (x) { return null; }
+  }
+
+  function fillPrint(rc) {
+    var box = $('mysubPrint');
+    box.textContent = '';
+    box.appendChild(el('h1', 'mysub-print-title', 'Payment receipt'));
+    box.appendChild(el('p', 'mysub-print-brand', 'StreetTasker'));
+    var dl = el('dl', 'mysub-print-list');
+    function row(k, v) { dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', null, v)); }
+    row('Receipt number', rc.receipt_number);
+    row('Date paid', fmtDate(rc.paid_at));
+    row('Plan', rc.plan_name);
+    row('Type', KIND_TEXT[rc.kind] || rc.kind);
+    row('Period covered', fmtDate(rc.period_start) + ' to ' + fmtDate(rc.period_end));
+    row('Plan price', naira(rc.price_kobo));
+    if (Number(rc.credit_kobo) > 0) row('Credit for unused days', '-' + naira(rc.credit_kobo));
+    row('Amount paid', naira(rc.amount_kobo));
+    row('Paid with', 'Paystack');
+    row('Payment reference', rc.reference);
+    box.appendChild(dl);
+    box.appendChild(el('p', 'mysub-print-foot', 'This receipt confirms a StreetTasker subscription payment. The plan does not renew automatically.'));
+  }
+
+  function printReceipt(rc) {
+    fillPrint(rc);
+    document.body.classList.add('mysub-printing');
+    var done = function () { document.body.classList.remove('mysub-printing'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    try { window.print(); } catch (x) { done(); }
+  }
+
+  function drawHistory(hasMore) {
+    var ul = $('mysubHistory');
+    ul.textContent = '';
+    history.rows.forEach(function (rc) {
+      var li = el('li', 'mysub-pay');
+      var main = el('div', 'mysub-pay-main');
+      main.appendChild(el('p', 'mysub-pay-title', rc.plan_name + ' \u2013 ' + (KIND_TEXT[rc.kind] || rc.kind)));
+      main.appendChild(el('p', 'mysub-pay-meta', 'Paid ' + fmtDate(rc.paid_at) + ' \u00B7 ' + rc.receipt_number));
+      main.appendChild(el('p', 'mysub-pay-meta', 'Covers ' + fmtDate(rc.period_start) + ' to ' + fmtDate(rc.period_end)));
+      var side = el('div', 'mysub-pay-side');
+      side.appendChild(el('span', 'mysub-pay-amount', naira(rc.amount_kobo)));
+      var b = el('button', 'btn btn-outline btn-sm', 'Print receipt');
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Print receipt ' + rc.receipt_number);
+      b.addEventListener('click', function () { printReceipt(rc); });
+      side.appendChild(b);
+      li.appendChild(main); li.appendChild(side);
+      ul.appendChild(li);
+    });
+    $('mysubHistoryEmpty').hidden = history.failed || history.rows.length > 0;
+    $('mysubHistoryError').hidden = !history.failed;
+    var more = $('mysubHistoryMore');
+    more.hidden = !hasMore;
+    more.disabled = false;
+  }
+
+  async function renderHistory() {
+    history = { rows: [], failed: false };
+    var data = await fetchReceipts(0);
+    if (data === null) { history.failed = true; drawHistory(false); return; }
+    history.rows = data.slice(0, HISTORY_PAGE);
+    drawHistory(data.length > HISTORY_PAGE);
+    var more = $('mysubHistoryMore');
+    more.onclick = async function () {
+      more.disabled = true;
+      var next = await fetchReceipts(history.rows.length);
+      if (next === null) { more.disabled = false; return; }
+      history.rows = history.rows.concat(next.slice(0, HISTORY_PAGE));
+      drawHistory(next.length > HISTORY_PAGE);
+    };
+  }
+
   async function endedPlan(user) {
     try {
       var r = await window.supabase.from('subscriptions').select('plan,status,current_period_end')
@@ -364,6 +451,7 @@
     renderIncludes(e);
     renderActions(e, state, quote);
     await renderChooser(e);
+    await renderHistory();
     show('content');
     if (afterNote) { setNote(afterNote.text, afterNote.tone); afterNote = null; }
   }

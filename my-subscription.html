@@ -81,6 +81,16 @@
           <ul class="mysub-includes" id="mysubIncludes"></ul>
         </section>
 
+        <section class="mysub-card" aria-labelledby="mysubHistoryTitle">
+          <h2 class="mysub-card-title" id="mysubHistoryTitle">Payment history</h2>
+          <p class="mysub-history-empty" id="mysubHistoryEmpty" hidden>No payments yet. When you pay for a plan, your receipt appears here.</p>
+          <p class="mysub-history-error" id="mysubHistoryError" role="alert" hidden>We could not load your payment history. Refresh the page to try again.</p>
+          <ul class="mysub-history" id="mysubHistory"></ul>
+          <div class="mysub-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="mysubHistoryMore" hidden>Show older payments</button>
+          </div>
+        </section>
+
         <p class="mysub-fine">Your plan label (PRO, PREMIUM) shows your plan only. Every StreetTasker user completes identity verification, whatever their plan.</p>
       </div>
     </div>
@@ -88,6 +98,9 @@
   </main>
 
   <div id="footer-placeholder"></div>
+
+  <!-- Printable receipt (S5f): empty on screen, filled by js/my-subscription.js when the person presses Print receipt, shown only when printing. -->
+  <div class="mysub-print" id="mysubPrint" aria-hidden="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
