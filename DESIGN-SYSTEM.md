@@ -132,6 +132,7 @@ The audit found 46 different pixel values. Odd ones (9, 11, 13, 22, 26 and so on
 | `--radius-lg` | 14px | Cards, panels |
 | `--radius-xl` | 20px | Modals, hero blocks |
 | `--radius-pill` | 999px | Buttons, badges, pills (replaces 100px, 99px, 999px, 9999px) |
+| `--radius-hero` | 32px | Page heroes: all four corners on desktop (inset card), bottom corners on phones (full width under the nav). Same value as `.pg-hero`. |
 | `50%` | | Avatars and circular icon buttons only |
 
 ### 2.5 Shadow, motion

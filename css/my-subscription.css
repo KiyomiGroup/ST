@@ -2,7 +2,10 @@
 
 .mysub-page { min-height: 100vh; padding-top: var(--nav-height); background: var(--color-bg); }
 
-.mysub-hero { background: var(--color-forest-900); color: var(--color-text-on-primary); padding: var(--space-7) 0; text-align: center; }
+.mysub-hero { background: var(--color-forest-900); color: var(--color-text-on-primary); padding: var(--space-7) 0; text-align: center; border-radius: var(--radius-hero); }
+/* Phones: styles.css gives every main a short top padding that replaces the nav clearance, so the hero clears the fixed nav itself. */
+@media (max-width: 768px) { .mysub-hero { margin-top: var(--nav-height); } }
+@media (min-width: 769px) { .mysub-hero { margin: var(--space-5) auto 0; width: calc(100% - 2 * var(--gutter)); max-width: calc(1160px - 2 * var(--gutter)); } }
 .mysub-hero-inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
 .mysub-eyebrow { color: var(--pt-mint); }
 .mysub-title { color: var(--color-text-on-primary); font-size: var(--text-2xl); line-height: 1.15; margin: 0; }

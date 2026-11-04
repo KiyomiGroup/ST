@@ -163,6 +163,7 @@
   --radius-2xl:       24px;
   --radius-form:      16px;      /* Post a Task / Post a Service: every non-pill corner */
   --radius-full:      999px;     /* Post a Task / Post a Service: fully rounded (pills, toggles, segments) */
+  --radius-hero:      32px;      /* page heroes: desktop all four corners, phones bottom corners (same value .pg-hero uses) */
   --text-pt-title:    clamp(1.625rem, 4vw, 3rem);
 
   --shadow-pt-card:   0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);
