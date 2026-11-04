@@ -209,7 +209,7 @@
   }
 
   async function currentContext() {
-    var ctx = { signedIn: false, currentKey: null, hasManagePage: false };
+    var ctx = { signedIn: false, currentKey: null, hasManagePage: true };
     try {
       var user = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
       if (!user) return ctx;

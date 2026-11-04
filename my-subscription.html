@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>My Subscription — StreetTasker</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/membership.css" />
+  <link rel="stylesheet" href="css/my-subscription.css" />
+</head>
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- MY SUBSCRIPTION (S4e, read-only view). Everything shown comes from get_my_entitlements() and get_public_plans():
+       plan, price, period, renewal, offers, listings, features. No number or plan name is written here.
+       Upgrade, downgrade, cancel and the listing chooser arrive in S4f; payment in S5d. -->
+  <main class="mysub-page">
+
+    <section class="mysub-hero" aria-labelledby="mysubTitle">
+      <div class="container mysub-hero-inner">
+        <span class="eyebrow mysub-eyebrow">Your account</span>
+        <h1 id="mysubTitle" class="mysub-title">My Subscription</h1>
+        <p class="mysub-lead">See your plan, when it renews, and how much of your monthly allowance you have used.</p>
+      </div>
+    </section>
+
+    <div class="container mysub-body">
+      <div class="mysub-skeleton" id="mysubLoading" aria-busy="true" aria-label="Loading your subscription">
+        <div class="mysub-skel"></div>
+        <div class="mysub-skel"></div>
+      </div>
+
+      <div class="mysub-error" id="mysubError" role="alert" hidden>
+        <p>We could not load your subscription. Check your connection and try again.</p>
+        <button type="button" class="btn btn-outline btn-sm" id="mysubRetry">Try again</button>
+      </div>
+
+      <div id="mysubContent" hidden>
+        <div class="mysub-banner" id="mysubBanner" role="status" hidden></div>
+
+        <section class="mysub-card mysub-plan" aria-labelledby="mysubPlanName">
+          <div class="mysub-plan-head">
+            <div>
+              <p class="mysub-kicker">Current plan</p>
+              <h2 class="mysub-plan-name" id="mysubPlanName"></h2>
+            </div>
+            <span class="mysub-status" id="mysubStatus"></span>
+          </div>
+          <dl class="mysub-facts" id="mysubFacts"></dl>
+          <div class="mysub-actions">
+            <a class="btn btn-primary" href="subscription.html">See all plans</a>
+          </div>
+        </section>
+
+        <section class="mysub-card" aria-labelledby="mysubUsageTitle">
+          <h2 class="mysub-card-title" id="mysubUsageTitle">This period&rsquo;s usage</h2>
+          <div class="mysub-meters" id="mysubMeters"></div>
+        </section>
+
+        <section class="mysub-card" aria-labelledby="mysubIncludesTitle">
+          <h2 class="mysub-card-title" id="mysubIncludesTitle">Included in your plan</h2>
+          <ul class="mysub-includes" id="mysubIncludes"></ul>
+        </section>
+
+        <p class="mysub-fine">Your plan label (PRO, PREMIUM) shows your plan only. Every StreetTasker user completes identity verification, whatever their plan.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/my-subscription.js"></script>
+</body>
+</html>
