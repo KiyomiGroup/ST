@@ -274,6 +274,47 @@ async function upgradeCoordinatorTier(userEmail) {
   }
 }
 
+/* ── Subscription payment (S5d) ──────────────────────────────
+   Pays for ONE month of a paid plan through Paystack, and nothing else. The browser sends only the plan key; the server
+   (payment-init -> subscription_payment_prepare) decides the price, any credit for unused time, the reference and the amount
+   the pop-up shows. This function never sets a plan: the caller must re-read get_my_entitlements() afterwards and say
+   "active" only if the server says so. Nothing is saved: no card, no bank detail (owner rule: Paystack handles every payment).
+   Errors carry err.code:
+     'init'    the server refused or could not start it (err.reason = server reason code); nothing was charged
+     'closed'  the pop-up was closed before paying (err.reference); no money is taken unless Paystack already reported success
+     'pending' paid or not, Paystack has not confirmed yet (err.reference); the person must NOT pay again
+     'review'  Paystack took the money but the plan could not be switched automatically (err.reference); contact support
+     'failed'  anything else while confirming (err.reference) */
+async function payForSubscription(planKey, userEmail) {
+  var { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) { var e0 = new Error('Please log in first.'); e0.code = 'init'; throw e0; }
+  if (typeof planKey !== 'string' || !planKey) { var ep = new Error('Please choose a plan.'); ep.code = 'init'; throw ep; }
+
+  var init = await _callFn('payment-init', { purpose: 'subscription', plan: planKey });
+  if (!init.ok || !init.data || !init.data.reference || !init.data.amountKobo) {
+    var msg = init.data && typeof init.data.error === 'string' && init.data.error.length <= 200 ? init.data.error : 'We could not start the payment. Nothing was charged.';
+    var e1 = new Error(msg);
+    e1.code = 'init'; e1.reason = (init.data && init.data.reason) || null; throw e1;
+  }
+
+  var reference;
+  try {
+    reference = await _openPaystack(init.data, userEmail || user.email || init.data.email, { type: 'subscription', plan: planKey });
+  } catch (e2) {
+    e2.code = 'closed'; e2.reference = init.data.reference; throw e2;
+  }
+
+  try {
+    var res = await _verifyPayment(reference);
+    return { reference: reference, plan: planKey, planName: init.data.planName || null, kind: init.data.kind || null,
+             periodEnd: init.data.periodEnd || null, verified: res };
+  } catch (e3) {
+    e3.code = e3.needsReview ? 'review' : (e3.pending ? 'pending' : (e3.status === 409 ? 'review' : 'failed'));
+    e3.reference = e3.reference || reference;
+    throw e3;
+  }
+}
+
 /* ── Withdrawals: banks, saved bank accounts, withdraw (CR-1) ────
    Money goes ONLY to a saved account. Everything here talks to the process-withdrawal
    Edge Function through _callFn, except listBankAccounts (a direct read with an explicit
@@ -613,6 +654,7 @@ window.ST.payments = {
   getWallet,
   fetchWalletTransactions,
   upgradeCoordinatorTier,
+  payForSubscription,
   withdrawFromWallet,
   getBanks,
   resolveAccount,

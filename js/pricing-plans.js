@@ -1,7 +1,9 @@
 /* StreetTasker: pricing page plan cards, comparison table, FAQ label sentence and final CTA (S4b-S4d).
    Reads plans from the database (get_public_plans) and, for a signed-in person, their current plan (get_my_entitlements).
-   No price, limit or plan name is written in this file. Nothing here changes a subscription: the paid-plan button calls
-   StPricing.onChoose(planKey) when S5d provides it, and until then says that checkout is not open yet. */
+   No price, limit or plan name is written in this file. S5d: a paid-plan button opens the Paystack payment window through
+   ST.payments.payForSubscription(planKey); the browser sends only the plan key, the server decides the amount. The page never
+   sets a plan: after paying it re-reads get_my_entitlements() and says "active" only if the server says so. Plans never renew
+   by themselves and nothing about a card or bank account is saved (owner rule, 2026-11-04). */
 (function () {
   'use strict';
 
@@ -37,11 +39,24 @@
     return lines;
   }
 
-  function showNotice(msg) {
+  function showNotice(msg, href, linkText) {
     var n = document.getElementById('pricingNotice');
     if (!n) return;
     n.textContent = msg;
+    if (href) {
+      n.appendChild(document.createTextNode(' '));
+      var a = el('a', null, linkText || 'View My Subscription');
+      a.href = href;
+      n.appendChild(a);
+    }
     n.hidden = false;
+    if (n.scrollIntoView) { try { n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* older browsers */ } }
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Lagos' }); }
+    catch (e) { return ''; }
   }
 
   function loginUrl() {
@@ -64,13 +79,17 @@
       cta = el('a', 'btn ' + outline + ' btn-lg', 'Manage your plan');
       cta.href = 'my-subscription.html';
       cta.hidden = !ctx.hasManagePage;
+    } else if (ctx.isPaid && Number(p.price_kobo) <= Number(ctx.currentPrice)) {
+      /* A lower plan is not bought on top of a running higher plan. It is chosen when the current plan has ended. */
+      cta = el('button', 'btn ' + outline + ' btn-lg', 'Available when your plan ends');
+      cta.type = 'button'; cta.disabled = true;
     } else {
       cta = el('button', 'btn btn-lg ' + (p.plan_key === POPULAR_KEY ? 'btn-primary' : outline), 'Choose ' + p.name);
       cta.type = 'button';
+      cta.setAttribute('data-choose', p.plan_key);
       cta.addEventListener('click', function () {
         var hook = window.StPricing && window.StPricing.onChoose;
         if (typeof hook === 'function') hook(p.plan_key);
-        else showNotice('Plan checkout is not open yet. Nothing was charged and your plan has not changed.');
       });
     }
     return cta;
@@ -209,15 +228,72 @@
   }
 
   async function currentContext() {
-    var ctx = { signedIn: false, currentKey: null, hasManagePage: true };
+    var ctx = { signedIn: false, currentKey: null, isPaid: false, currentPrice: 0, hasManagePage: true };
     try {
       var user = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
       if (!user) return ctx;
       ctx.signedIn = true;
       var r = await window.supabase.rpc('get_my_entitlements');
-      if (!r.error && r.data && r.data.plan_key) ctx.currentKey = r.data.plan_key;
+      if (!r.error && r.data && r.data.plan_key) {
+        ctx.currentKey = r.data.plan_key;
+        ctx.isPaid = !!r.data.is_paid;
+        ctx.currentPrice = Number(r.data.price_kobo) || 0;
+      }
     } catch (e) { /* the cards still work without knowing the current plan */ }
     return ctx;
+  }
+
+
+  /* ---- checkout (S5d) ---- */
+  var busy = false;
+  function setChoosing(disabled) {
+    var bs = document.querySelectorAll('[data-choose]');
+    for (var i = 0; i < bs.length; i++) bs[i].disabled = disabled;
+  }
+  function payError(err) {
+    var ref = err && err.reference ? ' Reference: ' + err.reference + '.' : '';
+    switch (err && err.code) {
+      case 'closed': return 'The payment window was closed before the payment finished. If you were charged, your plan will update shortly; if not, nothing was taken.';
+      case 'pending': return 'Your payment is being confirmed. You do not need to pay again. Check My Subscription in a minute.' + ref;
+      case 'review': return 'Your payment was received but we could not switch your plan automatically. Please do not pay again. Contact support and quote the reference.' + ref;
+      case 'failed': return 'We could not confirm your payment. If you were charged, please contact support and quote the reference.' + ref;
+      case 'init': return (err.message || 'We could not start the payment.') + ' Nothing was charged.';
+      default: return 'Something went wrong. Nothing was charged. Please try again.';
+    }
+  }
+  async function checkout(planKey) {
+    if (busy) return;
+    var pay = window.ST && window.ST.payments && window.ST.payments.payForSubscription;
+    if (typeof pay !== 'function' || typeof window.PaystackPop === 'undefined') {
+      showNotice('The payment window could not load. Check your connection, refresh the page and try again. Nothing was charged.');
+      return;
+    }
+    var role = null;
+    try {
+      var user = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+      role = user && typeof getUserRole === 'function' ? await getUserRole(user) : null;
+    } catch (e) { /* the server also refuses non-taskers */ }
+    try { role = role || localStorage.getItem('st_role'); } catch (e) { /* storage blocked */ }
+    if (role === 'customer') { showNotice('Plans are for taskers. Switch to your tasker account to subscribe. Nothing was charged.'); return; }
+
+    busy = true; setChoosing(true);
+    showNotice('Opening the secure Paystack payment window. Paystack shows the exact amount before you pay.');
+    var result = null, failure = null;
+    try { result = await pay(planKey); } catch (err) { failure = err; }
+    if (failure) {
+      showNotice(payError(failure));
+    } else {
+      showNotice('Payment received. Confirming your plan…');
+      var e = null;
+      try { var r = await window.supabase.rpc('get_my_entitlements'); e = !r.error && r.data ? r.data : null; } catch (x) { e = null; }
+      if (e && e.is_paid && e.plan_key === planKey) {
+        showNotice('Your ' + e.plan_name + ' plan is active until ' + fmtDate(e.period_end) + '. It does not renew by itself: to continue after that date you pay again with Paystack.', 'my-subscription.html');
+      } else {
+        showNotice('We received your payment, but your plan has not changed yet. Please do not pay again. Check My Subscription in a minute; if it has not changed, contact support and quote reference ' + result.reference + '.', 'my-subscription.html');
+      }
+    }
+    busy = false;
+    await load();
   }
 
   async function load() {
@@ -239,6 +315,6 @@
     applyFinalCta(ctx);
   }
 
-  window.StPricing = window.StPricing || { onChoose: null, buildCard: buildCard, buildCompare: buildCompare, buildFaqLabels: buildFaqLabels, featureLines: featureLines, naira: naira };
+  window.StPricing = window.StPricing || { onChoose: checkout, checkout: checkout, payError: payError, buildCard: buildCard, buildCompare: buildCompare, buildFaqLabels: buildFaqLabels, featureLines: featureLines, naira: naira };
   window.initPage = load;
 })();

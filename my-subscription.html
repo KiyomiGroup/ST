@@ -15,17 +15,18 @@
 
   <div id="navbar-placeholder"></div>
 
-  <!-- MY SUBSCRIPTION (S4e, read-only view). Everything shown comes from get_my_entitlements() and get_public_plans():
-       plan, price, period, renewal, offers, listings, features. No number or plan name is written here.
-       S4f-2 adds the manage buttons (lower plan, stay on plan, cancel, undo cancel) and the listing chooser; they only call the
-       server functions. Payment for an upgrade arrives in S5d. -->
+  <!-- MY SUBSCRIPTION (S4e view). Everything shown comes from get_my_entitlements() and get_public_plans():
+       plan, price, period, end date, offers, listings, features. No number or plan name is written here.
+       Plans never renew by themselves (owner rule 2026-11-04): the page has no cancel, undo or lower-plan buttons. Payment
+       happens on the pricing page (S5d); the pay-again button for the current plan arrives in S5e. The listing chooser calls
+       the server function choose_active_listings. -->
   <main class="mysub-page">
 
     <section class="mysub-hero" aria-labelledby="mysubTitle">
       <div class="container mysub-hero-inner">
         <span class="eyebrow mysub-eyebrow">Your account</span>
         <h1 id="mysubTitle" class="mysub-title">My Subscription</h1>
-        <p class="mysub-lead">See your plan, when it renews, and how much of your monthly allowance you have used.</p>
+        <p class="mysub-lead">See your plan, when it ends, and how much of your monthly allowance you have used.</p>
       </div>
     </section>
 
@@ -83,18 +84,6 @@
     </div>
 
   </main>
-
-  <div class="modal-overlay" id="mysubModal" role="dialog" aria-modal="true" aria-labelledby="mysubModalTitle">
-    <div class="modal-box mysub-modal-box">
-      <h2 id="mysubModalTitle"></h2>
-      <div class="mysub-modal-body" id="mysubModalBody"></div>
-      <p class="mysub-modal-error" id="mysubModalError" role="alert" hidden></p>
-      <div class="mysub-actions">
-        <button type="button" class="btn btn-outline" id="mysubModalBack">Go back</button>
-        <button type="button" class="btn btn-primary" id="mysubModalOk"></button>
-      </div>
-    </div>
-  </div>
 
   <div id="footer-placeholder"></div>
 

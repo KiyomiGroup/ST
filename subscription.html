@@ -33,11 +33,11 @@
     <section class="sub-plans" id="plans" aria-labelledby="plansTitle">
       <div class="container">
         <h2 id="plansTitle" class="sub-plans-title">Pick the plan that fits your business</h2>
-        <p class="sub-plans-sub">Start free and upgrade when you are ready. Prices are in naira, billed monthly.</p>
+        <p class="sub-plans-sub">Start free and upgrade when you are ready. Prices are in naira. Each payment covers one month and does not renew by itself.</p>
 
         <div class="sub-note" id="pricingNotice" role="status" aria-live="polite" hidden></div>
         <div class="sub-plan-grid" id="planGrid" aria-busy="true"></div>
-        <p class="sub-fine">Membership labels (PRO, PREMIUM) show your plan only. Every StreetTasker user completes identity verification, whatever their plan.</p>
+        <p class="sub-fine">Membership labels (PRO, PREMIUM) show your plan only. Every StreetTasker user completes identity verification, whatever their plan. Payments are made through Paystack, and we never save your card or bank details.</p>
       </div>
     </section>
 
@@ -118,11 +118,11 @@
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>What happens when my offers run out?</span></summary>
-            <p class="sub-faq-a">You cannot send new offers until your allowance renews or you move to a plan with a bigger one. Free allowances renew at the start of each calendar month; paid allowances renew on your billing date. Offers you already sent stay as they are, and you can still edit them. Withdrawing an offer does not give it back to your allowance. Your bookings are not limited by your plan.</p>
+            <p class="sub-faq-a">You cannot send new offers until your allowance renews or you move to a plan with a bigger one. Free allowances renew at the start of each calendar month; paid allowances start again with each period you pay for. Offers you already sent stay as they are, and you can still edit them. Withdrawing an offer does not give it back to your allowance. Your bookings are not limited by your plan.</p>
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>Can I change my subscription?</span></summary>
-            <p class="sub-faq-a">Yes. When you upgrade, the unused time on your current plan is credited toward the new one, and you see the amount before you pay. When you move to a lower plan, the change is scheduled for the end of your current billing period, so you keep what you paid for until then.</p>
+            <p class="sub-faq-a">Yes. When you upgrade, the unused time on your current plan is credited toward the new one, and Paystack shows you the exact amount before you pay. To move to a lower plan, choose it when your current plan has ended. Until then you keep everything you paid for.</p>
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>What happens to my listings if I downgrade?</span></summary>
@@ -134,11 +134,11 @@
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>Can I cancel my subscription?</span></summary>
-            <p class="sub-faq-a">Yes, at any time. You keep your plan&rsquo;s benefits until the end of the period you have already paid for, your card is not charged again, and you then move to the Free plan. The listing rules above apply if you have more listings than Free allows.</p>
+            <p class="sub-faq-a">There is nothing to cancel. Your plan never renews by itself, and we never keep your card or bank details. You keep your plan&rsquo;s benefits until the end of the period you have paid for, then you move to the Free plan. The listing rules above apply if you have more listings than Free allows.</p>
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>How does monthly renewal work?</span></summary>
-            <p class="sub-faq-a">Subscriptions are paid with Paystack only. Your first payment saves your card with Paystack, and your plan then renews automatically each month. We send you a reminder before a renewal. If a renewal payment fails, you have a short grace period to put it right before your plan ends. Wallet balance cannot be used to pay for a subscription.</p>
+            <p class="sub-faq-a">Subscriptions are paid with Paystack only, one month at a time. Your plan does not renew automatically and we do not save your card or bank details: Paystack handles every payment. To continue after your plan ends, you pay again with Paystack. If you do not, you move to the Free plan. Wallet balance cannot be used to pay for a subscription.</p>
           </details>
           <details class="sub-faq-item">
             <summary class="sub-faq-q"><span>Is identity verification included?</span></summary>
@@ -172,8 +172,10 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/pricing-plans.js"></script>
 </body>
 </html>
