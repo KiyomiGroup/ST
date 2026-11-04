@@ -17,7 +17,8 @@
 
   <!-- MY SUBSCRIPTION (S4e, read-only view). Everything shown comes from get_my_entitlements() and get_public_plans():
        plan, price, period, renewal, offers, listings, features. No number or plan name is written here.
-       Upgrade, downgrade, cancel and the listing chooser arrive in S4f; payment in S5d. -->
+       S4f-2 adds the manage buttons (lower plan, stay on plan, cancel, undo cancel) and the listing chooser; they only call the
+       server functions. Payment for an upgrade arrives in S5d. -->
   <main class="mysub-page">
 
     <section class="mysub-hero" aria-labelledby="mysubTitle">
@@ -51,8 +52,19 @@
             <span class="mysub-status" id="mysubStatus"></span>
           </div>
           <dl class="mysub-facts" id="mysubFacts"></dl>
-          <div class="mysub-actions">
+          <div class="mysub-actions" id="mysubActions">
             <a class="btn btn-primary" href="subscription.html">See all plans</a>
+          </div>
+          <p class="mysub-note" id="mysubNote" role="status" hidden></p>
+        </section>
+
+        <section class="mysub-card" id="mysubChooser" aria-labelledby="mysubChooserTitle" hidden>
+          <h2 class="mysub-card-title" id="mysubChooserTitle">Choose which listings stay active</h2>
+          <p class="mysub-chooser-help" id="mysubChooserHelp"></p>
+          <ul class="mysub-chooser-list" id="mysubChooserList"></ul>
+          <p class="mysub-modal-error" id="mysubChooserError" role="alert" hidden></p>
+          <div class="mysub-actions">
+            <button type="button" class="btn btn-primary" id="mysubChooserSave">Keep these active</button>
           </div>
         </section>
 
@@ -71,6 +83,18 @@
     </div>
 
   </main>
+
+  <div class="modal-overlay" id="mysubModal" role="dialog" aria-modal="true" aria-labelledby="mysubModalTitle">
+    <div class="modal-box mysub-modal-box">
+      <h2 id="mysubModalTitle"></h2>
+      <div class="mysub-modal-body" id="mysubModalBody"></div>
+      <p class="mysub-modal-error" id="mysubModalError" role="alert" hidden></p>
+      <div class="mysub-actions">
+        <button type="button" class="btn btn-outline" id="mysubModalBack">Go back</button>
+        <button type="button" class="btn btn-primary" id="mysubModalOk"></button>
+      </div>
+    </div>
+  </div>
 
   <div id="footer-placeholder"></div>
 

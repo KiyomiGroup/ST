@@ -31,6 +31,16 @@
 .mysub-fact dt { color: var(--color-text-muted); font-size: var(--text-xs); margin: 0 0 var(--space-1); }
 .mysub-fact dd { font-size: var(--text-sm); font-weight: 600; margin: 0; overflow-wrap: anywhere; }
 .mysub-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.mysub-note { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--tone-success-border); background: var(--tone-success-bg); font-size: var(--text-sm); }
+.mysub-note[hidden], #mysubChooser[hidden], .mysub-modal-error[hidden] { display: none; }
+.mysub-modal-box { text-align: left; display: flex; flex-direction: column; gap: var(--space-4); }
+.mysub-modal-box h2, .mysub-modal-box p { margin: 0; }
+.mysub-modal-body { display: flex; flex-direction: column; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); }
+.mysub-modal-error { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--tone-danger-border); background: var(--tone-danger-bg); font-size: var(--text-sm); }
+.mysub-choice { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); cursor: pointer; }
+.mysub-choice input { flex-shrink: 0; }
+.mysub-chooser-list { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.mysub-chooser-help { margin: 0 0 var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
 
 .mysub-banner { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--tone-info-border); background: var(--tone-info-bg); font-size: var(--text-sm); }
 .mysub-banner--warning { border-color: var(--tone-warning-border); background: var(--tone-warning-bg); }
@@ -65,3 +75,11 @@
 
 .mysub-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 480px) { .mysub-actions .btn { width: 100%; justify-content: center; } }
+
+/* Confirm dialog (S4f-2). tasks.css, which styles .modal-overlay elsewhere, is not loaded on this page, so the overlay is styled here. */
+#mysubModal { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center; padding: var(--space-5); background: var(--drawer-overlay); }
+#mysubModal.modal-open { display: flex; }
+.mysub-modal-box { background: var(--color-bg); border-radius: var(--radius-xl); padding: var(--space-6); max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
+.mysub-modal-box h2 { font-size: var(--text-xl); }
+@media (max-width: 480px) { #mysubModal { align-items: flex-end; padding: 0; } .mysub-modal-box { border-bottom-left-radius: 0; border-bottom-right-radius: 0; } }
+.mysub-choices { display: flex; flex-direction: column; gap: var(--space-2); }

@@ -17,10 +17,10 @@ test('state logic covers free, active, past due (also in grace), cancelling, exp
   assert.equal(state({ is_paid: true, status: 'cancelling', cancel_at_period_end: true }), 'cancelling');
   assert.equal(state({ is_paid: true, status: 'active', cancel_at_period_end: true }), 'cancelling');
 });
-test('read-only: no write call, no payment call, no top-up, no wallet', () => {
+test('no direct table write, no payment call, no top-up, no wallet (S4f-2 manage actions go through server functions only)', () => {
   assert.ok(!/\.insert\(|\.update\(|\.upsert\(|\.delete\(|payment-init|payment-verify|topup|wallet|onChoose/i.test(js + html));
   const rpcs = [...js.matchAll(/rpc\('([a-z_]+)'/g)].map(m => m[1]).sort();
-  assert.deepEqual(rpcs, ['get_my_entitlements', 'get_public_plans']);
+  assert.deepEqual(rpcs, ['get_my_entitlements', 'get_public_plans']);   /* direct reads; the manage RPCs go through callRpc (see s4f2-manage.test.mjs) */
 });
 test('no number, price or plan name is written in the page or script (all from the database)', () => {
   const text = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ');
