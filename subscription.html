@@ -17,7 +17,7 @@
 
   <!-- SUBSCRIPTION / PRICING PAGE (S4b: hero + plan cards).
        Plans, prices and limits are read from the database (get_public_plans). Nothing numeric is written here.
-       Sections 3-7 of the brief (comparison, why upgrade, visibility, FAQ, final CTA) arrive in S4c and S4d. -->
+       Sections 3-5 (comparison, why upgrade, visibility) are S4c. Sections 6-7 (FAQ, final CTA) arrive in S4d. -->
   <main class="subscription-page">
 
     <section class="sub-hero" aria-labelledby="subHeroTitle">
@@ -37,6 +37,72 @@
         <div class="sub-note" id="pricingNotice" role="status" aria-live="polite" hidden></div>
         <div class="sub-plan-grid" id="planGrid" aria-busy="true"></div>
         <p class="sub-fine">Membership labels (PRO, PREMIUM) show your plan only. Every StreetTasker user completes identity verification, whatever their plan.</p>
+      </div>
+    </section>
+
+    <section class="sub-compare" id="compare" aria-labelledby="compareTitle" hidden>
+      <div class="container">
+        <h2 id="compareTitle" class="sub-section-title">Compare plans side by side</h2>
+        <p class="sub-section-sub">Every row below comes from the same plan settings as the cards above.</p>
+        <p class="sub-swipe">Swipe sideways to compare all plans.</p>
+        <div class="sub-table-wrap" tabindex="0" role="region" aria-label="Plan comparison table, scrolls sideways on small screens">
+          <table class="sub-table" id="compareTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="sub-why" id="why-upgrade" aria-labelledby="whyTitle">
+      <div class="container">
+        <h2 id="whyTitle" class="sub-section-title">Why upgrade?</h2>
+        <p class="sub-section-sub">More room to work, and more ways for customers to find you.</p>
+        <div class="sub-why-grid">
+          <article class="sub-why-item">
+            <h3>More monthly offers</h3>
+            <p>Reply to more tasks each month. Higher plans raise your offer allowance, and the top plan removes the monthly cap, within fair use.</p>
+          </article>
+          <article class="sub-why-item">
+            <h3>More service listings</h3>
+            <p>Show more of what you do. Each extra listing is another way for customers to find and book you.</p>
+          </article>
+          <article class="sub-why-item">
+            <h3>Better visibility</h3>
+            <p>Paid plans give your profile and listings a modest lift in search. Relevance still comes first, so a good match always matters more than a plan.</p>
+          </article>
+          <article class="sub-why-item">
+            <h3>Featured placement</h3>
+            <p>Plans that include it can appear in featured spots. Featured spots are shared fairly between eligible taskers.</p>
+          </article>
+          <article class="sub-why-item">
+            <h3>Advanced analytics</h3>
+            <p>See how many people view your profile and listings, so you can improve what is working. The depth of analytics grows with your plan.</p>
+          </article>
+          <article class="sub-why-item">
+            <h3>Business growth tools</h3>
+            <p>Priority support, early access to new features and an expanded portfolio on the plans that include them. See the table above for exactly what each plan has.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="sub-visibility" id="visibility" aria-labelledby="visTitle">
+      <div class="container">
+        <h2 id="visTitle" class="sub-section-title">How visibility works</h2>
+        <p class="sub-section-sub">Three levels, from everyone to the plans that include more.</p>
+        <div class="sub-vis-grid">
+          <article class="sub-vis-item">
+            <h3>Standard search placement</h3>
+            <p>Every tasker, on every plan, appears in search. Results are ordered by how well they match what the customer is looking for.</p>
+          </article>
+          <article class="sub-vis-item">
+            <h3>Featured placement</h3>
+            <p>On plans that include it, your services can appear in featured spots. Eligible taskers take turns, so spots rotate rather than going to one person.</p>
+          </article>
+          <article class="sub-vis-item">
+            <h3>Premium recommendations</h3>
+            <p>On the plan that includes it, you can be recommended ahead of others when your services are a good match for the customer.</p>
+          </article>
+        </div>
+        <p class="sub-vis-note">No plan guarantees bookings, customers or income. Visibility helps customers find you; hiring is always the customer&rsquo;s choice. Plans never override relevance or safety checks.</p>
       </div>
     </section>
 

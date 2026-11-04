@@ -1,4 +1,4 @@
-/* StreetTasker: pricing page plan cards (S4b).
+/* StreetTasker: pricing page plan cards (S4b, S4c).
    Reads plans from the database (get_public_plans) and, for a signed-in person, their current plan (get_my_entitlements).
    No price, limit or plan name is written in this file. Nothing here changes a subscription: the paid-plan button calls
    StPricing.onChoose(planKey) when S5d provides it, and until then says that checkout is not open yet. */
@@ -114,6 +114,65 @@
     return card;
   }
 
+
+  /* Comparison table: one row per benefit, one column per plan, built from the same plan rows as the cards. */
+  function yes(text) { return { on: true, text: text }; }
+  function flag(v) { return { on: !!v, text: v ? 'Included' : 'Not included' }; }
+  var COMPARE_ROWS = [
+    ['Price per month', function (p) { return { on: true, plain: true, text: Number(p.price_kobo) > 0 ? naira(p.price_kobo) : naira(0) }; }],
+    ['Offers per month', function (p) { return { on: true, plain: true, text: p.offers_per_month == null ? 'Unlimited (fair use)' : String(p.offers_per_month) }; }],
+    ['Service listings', function (p) { return { on: true, plain: true, text: String(p.listing_limit) }; }],
+    ['Analytics', function (p) { var a = (p.features || {}).analytics || 'none'; return { on: a !== 'none', plain: true, text: a === 'none' ? 'None' : (ANALYTICS_TEXT[a] || ANALYTICS_TEXT.basic).replace(' analytics', '') }; }],
+    ['Featured placement', function (p) { return flag((p.features || {}).featured_placement); }],
+    ['Priority recommendations', function (p) { return flag((p.features || {}).priority_recommendation); }],
+    ['Priority support', function (p) { return flag((p.features || {}).priority_support); }],
+    ['Early access to new features', function (p) { return flag((p.features || {}).early_access); }],
+    ['Expanded portfolio', function (p) { return flag((p.features || {}).expanded_portfolio); }],
+    ['Membership label', function (p) { return { on: !!p.membership_label, plain: true, text: p.membership_label || 'None', label: p.membership_label || null }; }]
+  ];
+
+  function buildCompare(plans) {
+    var t = document.getElementById('compareTable');
+    var sec = document.getElementById('compare');
+    if (!t || !sec) return;
+    t.innerHTML = '';
+    var cap = el('caption', 'sub-sr', 'Comparison of plans');
+    t.appendChild(cap);
+    var thead = el('thead'), hr = el('tr');
+    var corner = el('th', null, 'Benefit'); corner.scope = 'col'; hr.appendChild(corner);
+    plans.forEach(function (p) {
+      var th = el('th', p.plan_key === POPULAR_KEY ? 'sub-col--popular' : null);
+      th.scope = 'col';
+      var nm = el('span', 'membership-name');
+      nm.appendChild(el('span', 'membership-name__text', p.name));
+      th.appendChild(nm);
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr); t.appendChild(thead);
+    var tb = el('tbody');
+    COMPARE_ROWS.forEach(function (row) {
+      var tr = el('tr');
+      var h = el('th', null, row[0]); h.scope = 'row'; tr.appendChild(h);
+      plans.forEach(function (p) {
+        var v = row[1](p);
+        var td = el('td', p.plan_key === POPULAR_KEY ? 'sub-col--popular' : null);
+        if (v.plain) {
+          if (v.label) {
+            td.appendChild(el('span', 'membership-label membership-label--sm membership-label--' + v.label.toLowerCase(), v.label));
+          } else td.appendChild(document.createTextNode(v.text));
+        } else {
+          td.className = (td.className ? td.className + ' ' : '') + (v.on ? 'sub-cell-yes' : 'sub-cell-no');
+          td.appendChild(el('span', 'sub-sr', v.text));
+          td.appendChild(el('span', null, v.on ? '\u2713' : '\u2013')).setAttribute('aria-hidden', 'true');
+        }
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    sec.hidden = false;
+  }
+
   function showSkeleton(grid) {
     grid.innerHTML = '';
     grid.setAttribute('aria-busy', 'true');
@@ -158,8 +217,9 @@
     grid.innerHTML = '';
     plans.forEach(function (p) { grid.appendChild(buildCard(p, ctx)); });
     grid.setAttribute('aria-busy', 'false');
+    buildCompare(plans);
   }
 
-  window.StPricing = window.StPricing || { onChoose: null, buildCard: buildCard, featureLines: featureLines, naira: naira };
+  window.StPricing = window.StPricing || { onChoose: null, buildCard: buildCard, buildCompare: buildCompare, featureLines: featureLines, naira: naira };
   window.initPage = load;
 })();

@@ -68,3 +68,37 @@
 
 .sub-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sub-card .btn[hidden] { display: none; }
+
+/* ── S4c: comparison, why upgrade, visibility ── */
+.sub-section-title { font-size: var(--text-xl); text-align: center; margin: 0 0 var(--space-2); }
+.sub-section-sub { color: var(--color-text-secondary); text-align: center; margin: 0 0 var(--space-6); }
+.sub-compare, .sub-why, .sub-visibility { padding: 0 0 var(--space-8); }
+.sub-compare[hidden] { display: none; }
+
+.sub-table-wrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); }
+.sub-table { width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0; font-size: var(--text-sm); }
+.sub-table th, .sub-table td { padding: var(--space-3) var(--space-4); text-align: center; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+.sub-table thead th { background: var(--color-bg-subtle); font-weight: 700; }
+.sub-table tbody tr:last-child th, .sub-table tbody tr:last-child td { border-bottom: none; }
+.sub-table th[scope="row"] { text-align: left; font-weight: 600; background: var(--color-bg); position: sticky; left: 0; z-index: 1; min-width: 150px; }
+.sub-table thead th:first-child { position: sticky; left: 0; z-index: 2; text-align: left; }
+.sub-table .sub-col--popular { background: var(--color-primary-soft); }
+.sub-table thead .sub-col--popular { background: var(--color-primary-soft); color: var(--color-primary); }
+.sub-cell-yes { color: var(--color-primary); font-weight: 700; }
+.sub-cell-no { color: var(--color-text-muted); }
+
+.sub-why-grid, .sub-vis-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+@media (min-width: 640px)  { .sub-why-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .sub-why-grid { grid-template-columns: repeat(3, 1fr); } .sub-vis-grid { grid-template-columns: repeat(3, 1fr); } }
+.sub-why-item, .sub-vis-item { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); }
+.sub-why-item h3, .sub-vis-item h3 { font-size: var(--text-base); margin: 0 0 var(--space-2); }
+.sub-why-item p, .sub-vis-item p { color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0; }
+.sub-vis-note { max-width: 720px; margin: var(--space-5) auto 0; padding: var(--space-3) var(--space-4); text-align: center; font-size: var(--text-sm); border: 1px solid var(--tone-warning-border); background: var(--tone-warning-bg); border-radius: var(--radius-lg); }
+
+.sub-swipe { display: none; color: var(--color-text-muted); font-size: var(--text-xs); text-align: center; margin: 0 0 var(--space-2); }
+@media (max-width: 639px) {
+  .sub-swipe { display: block; }
+  .sub-table { min-width: 520px; font-size: var(--text-xs); }
+  .sub-table th, .sub-table td { padding: var(--space-2) var(--space-3); }
+  .sub-table th[scope="row"] { min-width: 108px; }
+}

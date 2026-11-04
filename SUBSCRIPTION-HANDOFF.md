@@ -29,8 +29,9 @@ The owner said on 2026-11-03 that she did everything every earlier handoff asked
 | **S5c-1** (`subscription_store_authorization`) | **Applied** (owner: "S5c-1 applied", 2026-11-04). |
 | **S5c-2** (webhook saves the card) | **Deployed by the owner** ("S5c-2 deployed", 2026-11-04). 38 Node tests passed; the real card save is only provable in the Paystack TEST run (S7c). Source of truth `supabase/deploy/paystack-webhook/index.ts`. |
 | **S4a** (membership label CSS) | **Written, tested.** Deployment is implied by the owner's standing convention below once she sends the next files without an error. |
-| **S4b** (pricing page hero + cards) | **Written, tested with stubbed Supabase, not deployed.** Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). Paid buttons charge nothing until S5d sets `window.StPricing.onChoose`. `js/subscription.js` is now unused (delete in S4d). |
-| S4c onward, S5d to S5g, S7 | Not started. S5d needs S4f (my-subscription page). |
+| **S4b** (pricing page hero + cards) | **Deployed per the owner convention (2026-11-04).** Was: written, tested with stubbed Supabase. Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). Paid buttons charge nothing until S5d sets `window.StPricing.onChoose`. `js/subscription.js` is now unused (delete in S4d). |
+| **S4c** (comparison, why upgrade, visibility) | **Written, tested with stubbed Supabase, not deployed.** Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). |
+| S4d onward, S5d to S5g, S7 | Not started. S5d needs S4f (my-subscription page). |
 
 Owner answers (`DECISIONS.md`): D1 no subscribers, D2 saved-card auto renewal (Paystack only, R-W), D3 no admin in this project (`ADMIN-REQUIREMENTS.md` is the contract), D4 booking caps removed, D13 resolved. D5-D12 defaults stand; D14 optional.
 
