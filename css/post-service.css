@@ -146,7 +146,7 @@
 .ps-verify-btn { width: 100%; height: 56px; margin-top: var(--space-5); font-size: var(--text-base); font-weight: 600; text-decoration: none; }
 .ps-verify-later {
   display: block; width: 100%; margin-top: var(--space-4); text-align: center;
-  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 500; color: var(--pt-ink-muted); text-decoration: none;
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500; color: var(--pt-ink-muted); text-decoration: none;
 }
 .ps-verify-later:hover { text-decoration: underline; }
 .ps-verify-foot { margin-top: var(--space-5); text-align: center; font-size: var(--text-xs); line-height: 1.5; color: var(--pt-ink-muted); }

@@ -271,7 +271,7 @@
 .pt-tod { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-1); padding: var(--space-1); min-height: 40px; background: var(--pt-field-strong); border-radius: var(--radius-full); }
 .pt-tod-opt > span {
   height: 100%; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-full);
-  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 500; color: var(--pt-ink-muted);
+  font-family: var(--font-body); font-size: var(--text-xs); font-weight: 500; color: var(--pt-ink-muted);
   transition: background var(--t) var(--ease);
 }
 .pt-tod-opt input:checked + span { background: var(--color-bg); color: var(--pt-green); font-weight: 700; }
@@ -517,7 +517,7 @@
 
   /* Mobile type + field sizes */
   .pt-label { font-size: var(--text-base); margin-bottom: var(--space-3); }
-  .pt-hint, .pt-counter { font-size: var(--text-base-sm); font-family: var(--font-heading); font-weight: 500; color: var(--pt-ink-muted); }
+  .pt-hint, .pt-counter { font-size: var(--text-base-sm); font-family: var(--font-body); font-weight: 500; color: var(--pt-ink-muted); }
   .pt-field { min-height: 48px; padding: 0 var(--space-4); }
   .pt-input { font-size: var(--text-lg); }
   .pt-field-icon { margin-right: var(--space-3); }
@@ -534,7 +534,7 @@
   .pt-chips-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
   .pt-chips-head .pt-label { margin: 0; }
   .pt-eyebrow-label { font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pt-ink-muted); }
-  .pt-scroll-hint { display: inline-flex; align-items: center; font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600; color: var(--pt-green); }
+  .pt-scroll-hint { display: inline-flex; align-items: center; font-family: var(--font-body); font-size: var(--text-base-sm); font-weight: 600; color: var(--pt-green); }
   .pt-scroll-hint .pt-i { width: 16px; height: 16px; }
   .pt-chips { flex-wrap: nowrap; gap: var(--space-3); margin: 0 calc(-1 * var(--space-4) - var(--space-1)); padding: 0 calc(var(--space-4) + var(--space-1)); overflow-x: auto; scrollbar-width: none; }
   .pt-chips::-webkit-scrollbar { display: none; }
