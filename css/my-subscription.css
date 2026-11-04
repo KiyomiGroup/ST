@@ -35,6 +35,11 @@
 .mysub-fact dd { font-size: var(--text-sm); font-weight: 600; margin: 0; overflow-wrap: anywhere; }
 .mysub-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .mysub-note { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--tone-success-border); background: var(--tone-success-bg); font-size: var(--text-sm); }
+.mysub-note--info { border-color: var(--tone-info-border); background: var(--tone-info-bg); }
+.mysub-note--warning { border-color: var(--tone-warning-border); background: var(--tone-warning-bg); }
+.mysub-note--danger { border-color: var(--tone-danger-border); background: var(--tone-danger-bg); }
+.mysub-renew { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.mysub-renew[hidden] { display: none; }
 .mysub-note[hidden], #mysubChooser[hidden], .mysub-modal-error[hidden] { display: none; }
 .mysub-modal-box { text-align: left; display: flex; flex-direction: column; gap: var(--space-4); }
 .mysub-modal-box h2, .mysub-modal-box p { margin: 0; }

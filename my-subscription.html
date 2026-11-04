@@ -17,9 +17,10 @@
 
   <!-- MY SUBSCRIPTION (S4e view). Everything shown comes from get_my_entitlements() and get_public_plans():
        plan, price, period, end date, offers, listings, features. No number or plan name is written here.
-       Plans never renew by themselves (owner rule 2026-11-04): the page has no cancel, undo or lower-plan buttons. Payment
-       happens on the pricing page (S5d); the pay-again button for the current plan arrives in S5e. The listing chooser calls
-       the server function choose_active_listings. -->
+       Plans never renew by themselves (owner rule 2026-11-04): the page has no cancel, undo or lower-plan buttons. A new or
+       higher plan is paid on the pricing page (S5d). The current plan is continued here by paying again with Paystack (S5e-2):
+       the Pay again button is built by js/my-subscription.js only when the server says the current plan can be paid again now.
+       The listing chooser calls the server function choose_active_listings. -->
   <main class="mysub-page">
 
     <section class="mysub-hero" aria-labelledby="mysubTitle">
@@ -53,6 +54,7 @@
             <span class="mysub-status" id="mysubStatus"></span>
           </div>
           <dl class="mysub-facts" id="mysubFacts"></dl>
+          <p class="mysub-renew" id="mysubRenewInfo" hidden></p>
           <div class="mysub-actions" id="mysubActions">
             <a class="btn btn-primary" href="subscription.html">See all plans</a>
           </div>
@@ -92,8 +94,10 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/payments.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/my-subscription.js"></script>
 </body>
 </html>

@@ -79,8 +79,9 @@
       cta = el('a', 'btn ' + outline + ' btn-lg', 'Manage your plan');
       cta.href = 'my-subscription.html';
       cta.hidden = !ctx.hasManagePage;
-    } else if (ctx.isPaid && Number(p.price_kobo) <= Number(ctx.currentPrice)) {
-      /* A lower plan is not bought on top of a running higher plan. It is chosen when the current plan has ended. */
+    } else if (ctx.isPaid && !ctx.inGrace && Number(p.price_kobo) <= Number(ctx.currentPrice)) {
+      /* A lower plan is not bought on top of a running higher plan. It is chosen when the current plan has ended
+         (the grace days count as ended: the server allows a cheaper plan then, S5e-1). */
       cta = el('button', 'btn ' + outline + ' btn-lg', 'Available when your plan ends');
       cta.type = 'button'; cta.disabled = true;
     } else {
@@ -228,7 +229,7 @@
   }
 
   async function currentContext() {
-    var ctx = { signedIn: false, currentKey: null, isPaid: false, currentPrice: 0, hasManagePage: true };
+    var ctx = { signedIn: false, currentKey: null, isPaid: false, inGrace: false, currentPrice: 0, hasManagePage: true };
     try {
       var user = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
       if (!user) return ctx;
@@ -237,6 +238,7 @@
       if (!r.error && r.data && r.data.plan_key) {
         ctx.currentKey = r.data.plan_key;
         ctx.isPaid = !!r.data.is_paid;
+        ctx.inGrace = !!r.data.in_grace;   /* the plan has ended and only the grace days are running: any plan is a new purchase now */
         ctx.currentPrice = Number(r.data.price_kobo) || 0;
       }
     } catch (e) { /* the cards still work without knowing the current plan */ }
