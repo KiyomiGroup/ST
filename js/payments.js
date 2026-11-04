@@ -237,21 +237,6 @@ async function fetchWalletTransactions(userId, limit) {
   }
 }
 
-/* ── Top up wallet via Paystack ──────────────────────────────── */
-async function topUpWallet(amountNaira, userEmail) {
-  var { data: { user } } = await window.supabase.auth.getUser();
-  if (!user) throw new Error('Please log in first.');
-  if (!amountNaira || amountNaira < 100) throw new Error('Minimum top-up is ₦100.');
-
-  var init = await _callFn('payment-init', { purpose: 'topup', amount: Math.round(amountNaira) });
-  if (!init.ok) throw new Error(init.data.error || 'Could not start the top-up.');
-
-  var reference = await _openPaystack(init.data, userEmail || user.email, { type: 'topup' });
-  /* The wallet is credited by the server only after Paystack confirms the payment */
-  await _verifyPayment(reference);
-  return { reference: reference, amount: Math.round(amountNaira) };
-}
-
 /* ── Coordinator tier upgrade (Stage 7I) ─────────────────────
    The browser sends NOTHING but the purpose: no amount, no tier, no id. The server works out the next tier and its
    price from the database, tells us the reference and the amount to show in the pop-up, and raises the tier only after
@@ -627,7 +612,6 @@ window.ST.payments = {
   calculateAmounts,
   getWallet,
   fetchWalletTransactions,
-  topUpWallet,
   upgradeCoordinatorTier,
   withdrawFromWallet,
   getBanks,
