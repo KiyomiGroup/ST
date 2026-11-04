@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const read = f => fs.readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = read('subscription.html'), js = read('js/pricing-plans.js'), css = read('css/subscription.css');
-const prose = html.slice(html.indexOf('id="compare"'));
+const prose = html.slice(html.indexOf('id="compare"'), html.indexOf('id="faq"'));   // S4d: FAQ and CTA have their own test (s4d-faq-cta.test.mjs)
 test('sections 3, 4 and 5 are present with the brief headings', () => {
   for (const t of ['Compare plans side by side', 'Why upgrade?', 'How visibility works',
     'More monthly offers', 'More service listings', 'Better visibility', 'Featured placement', 'Advanced analytics', 'Business growth tools',

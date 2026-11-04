@@ -15,9 +15,10 @@
 
   <div id="navbar-placeholder"></div>
 
-  <!-- SUBSCRIPTION / PRICING PAGE (S4b: hero + plan cards).
-       Plans, prices and limits are read from the database (get_public_plans). Nothing numeric is written here.
-       Sections 3-5 (comparison, why upgrade, visibility) are S4c. Sections 6-7 (FAQ, final CTA) arrive in S4d. -->
+  <!-- SUBSCRIPTION / PRICING PAGE (S4b-S4d: hero, plan cards, comparison, why upgrade, visibility, FAQ, final CTA).
+       Plans, prices and limits are read from the database (get_public_plans). Nothing numeric is written here:
+       the FAQ and CTA prose carry no digits, prices or plan names (tests/s4d-faq-cta.test.mjs enforces it).
+       The one plan-specific FAQ sentence (which plan shows PRO / PREMIUM) is filled in from the plan rows. -->
   <main class="subscription-page">
 
     <section class="sub-hero" aria-labelledby="subHeroTitle">
@@ -103,6 +104,62 @@
           </article>
         </div>
         <p class="sub-vis-note">No plan guarantees bookings, customers or income. Visibility helps customers find you; hiring is always the customer&rsquo;s choice. Plans never override relevance or safety checks.</p>
+      </div>
+    </section>
+
+    <section class="sub-faq" id="faq" aria-labelledby="faqTitle">
+      <div class="container">
+        <h2 id="faqTitle" class="sub-section-title">Frequently asked questions</h2>
+        <p class="sub-section-sub">Straight answers before you choose.</p>
+        <div class="sub-faq-list">
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>Can I start with a free plan?</span></summary>
+            <p class="sub-faq-a">Yes. Every tasker can start on the Free plan at no cost and with no card. You get a monthly offer allowance and a service listing allowance, so you can set up your profile and start replying to tasks straight away. Upgrade only when you want more.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>What happens when my offers run out?</span></summary>
+            <p class="sub-faq-a">You cannot send new offers until your allowance renews or you move to a plan with a bigger one. Free allowances renew at the start of each calendar month; paid allowances renew on your billing date. Offers you already sent stay as they are, and you can still edit them. Withdrawing an offer does not give it back to your allowance. Your bookings are not limited by your plan.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>Can I change my subscription?</span></summary>
+            <p class="sub-faq-a">Yes. When you upgrade, the unused time on your current plan is credited toward the new one, and you see the amount before you pay. When you move to a lower plan, the change is scheduled for the end of your current billing period, so you keep what you paid for until then.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>What happens to my listings if I downgrade?</span></summary>
+            <p class="sub-faq-a">Nothing is deleted. If you have more listings than the new plan allows, we tell you before anything changes and you choose which ones stay active. Listings you do not choose are paused only after the date we gave you: your most recently updated listings stay active up to the new limit, and the rest are paused. A paused listing is kept, and you can reactivate it whenever you have room.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>Does featured placement guarantee bookings?</span></summary>
+            <p class="sub-faq-a">No. Featured placement gives your services more exposure, and featured spots rotate fairly between eligible taskers. Customers choose who to hire, so no plan guarantees bookings, customers or income.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>Can I cancel my subscription?</span></summary>
+            <p class="sub-faq-a">Yes, at any time. You keep your plan&rsquo;s benefits until the end of the period you have already paid for, your card is not charged again, and you then move to the Free plan. The listing rules above apply if you have more listings than Free allows.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>How does monthly renewal work?</span></summary>
+            <p class="sub-faq-a">Subscriptions are paid with Paystack only. Your first payment saves your card with Paystack, and your plan then renews automatically each month. We send you a reminder before a renewal. If a renewal payment fails, you have a short grace period to put it right before your plan ends. Wallet balance cannot be used to pay for a subscription.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>Is identity verification included?</span></summary>
+            <p class="sub-faq-a">Identity verification is not a paid feature. Every StreetTasker user completes it, whatever their plan, and a membership label never means that someone is verified.</p>
+          </details>
+          <details class="sub-faq-item">
+            <summary class="sub-faq-q"><span>What is the difference between PRO and PREMIUM membership?</span></summary>
+            <p class="sub-faq-a">Both are membership labels shown after a tasker&rsquo;s name on profiles, search results and offers, so customers can see which paid plan someone is on. <span id="faqLabelMap"></span>PREMIUM is the higher level and goes with the most features; the plan comparison on this page shows exactly what each plan includes. A label shows a plan only. It is not a check, a rating or a promise of anything.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="sub-final" id="get-started" aria-labelledby="finalTitle">
+      <div class="container sub-final-inner">
+        <h2 id="finalTitle" class="sub-final-title">Ready to grow on StreetTasker?</h2>
+        <p class="sub-final-lead">Start with Free and upgrade when you are ready, or choose the plan that suits your business.</p>
+        <div class="sub-final-actions">
+          <a class="btn btn-mint btn-lg" id="finalStartFree" href="signup.html">Start free</a>
+          <a class="btn btn-outline btn-lg" href="#plans">Choose a plan</a>
+        </div>
       </div>
     </section>
 

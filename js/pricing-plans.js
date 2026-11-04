@@ -1,4 +1,4 @@
-/* StreetTasker: pricing page plan cards (S4b, S4c).
+/* StreetTasker: pricing page plan cards, comparison table, FAQ label sentence and final CTA (S4b-S4d).
    Reads plans from the database (get_public_plans) and, for a signed-in person, their current plan (get_my_entitlements).
    No price, limit or plan name is written in this file. Nothing here changes a subscription: the paid-plan button calls
    StPricing.onChoose(planKey) when S5d provides it, and until then says that checkout is not open yet. */
@@ -173,6 +173,23 @@
     sec.hidden = false;
   }
 
+  /* FAQ 9: which plan shows which label, filled from the plan rows (no plan name is written in the page). */
+  function buildFaqLabels(plans) {
+    var span = document.getElementById('faqLabelMap');
+    if (!span) return;
+    var parts = [];
+    plans.forEach(function (p) {
+      if (p.membership_label === 'PRO' || p.membership_label === 'PREMIUM') parts.push(p.name + ' shows ' + p.membership_label);
+    });
+    span.textContent = parts.length ? parts.join('; ') + '. ' : '';
+  }
+
+  /* Final CTA: a signed-in person already has an account, so "Start free" is hidden for them. */
+  function applyFinalCta(ctx) {
+    var b = document.getElementById('finalStartFree');
+    if (b) b.hidden = !!(ctx && ctx.signedIn);
+  }
+
   function showSkeleton(grid) {
     grid.innerHTML = '';
     grid.setAttribute('aria-busy', 'true');
@@ -210,16 +227,18 @@
     var plans;
     try {
       var r = await window.supabase.rpc('get_public_plans');
-      if (r.error || !Array.isArray(r.data) || !r.data.length) { showError(grid); return; }
+      if (r.error || !Array.isArray(r.data) || !r.data.length) { showError(grid); currentContext().then(applyFinalCta); return; }
       plans = r.data.slice().sort(function (a, b) { return (a.sort_order - b.sort_order); });
-    } catch (e) { showError(grid); return; }
+    } catch (e) { showError(grid); currentContext().then(applyFinalCta); return; }
     var ctx = await currentContext();
     grid.innerHTML = '';
     plans.forEach(function (p) { grid.appendChild(buildCard(p, ctx)); });
     grid.setAttribute('aria-busy', 'false');
     buildCompare(plans);
+    buildFaqLabels(plans);
+    applyFinalCta(ctx);
   }
 
-  window.StPricing = window.StPricing || { onChoose: null, buildCard: buildCard, buildCompare: buildCompare, featureLines: featureLines, naira: naira };
+  window.StPricing = window.StPricing || { onChoose: null, buildCard: buildCard, buildCompare: buildCompare, buildFaqLabels: buildFaqLabels, featureLines: featureLines, naira: naira };
   window.initPage = load;
 })();

@@ -12,7 +12,7 @@ Work is split into small stages so no session runs out of room. Do ONE stage per
 5. `docs/subscription/DECISIONS.md` (owner answers D1-D12). `docs/subscription/00-owner-brief.md` only for requirement text (long; grep it).
 6. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work.
 
-## CURRENT STATE (updated in the S5c-2 session, 2026-11-04)
+## CURRENT STATE (updated in the S4d session, 2026-11-04)
 The owner said on 2026-11-03 that she did everything every earlier handoff asked and all of it succeeded. Individual results were sent for S2a to S3e only; for S3f, S3g and S5a the "applied" below rests on that general statement.
 
 | Stage | State |
@@ -30,8 +30,9 @@ The owner said on 2026-11-03 that she did everything every earlier handoff asked
 | **S5c-2** (webhook saves the card) | **Deployed by the owner** ("S5c-2 deployed", 2026-11-04). 38 Node tests passed; the real card save is only provable in the Paystack TEST run (S7c). Source of truth `supabase/deploy/paystack-webhook/index.ts`. |
 | **S4a** (membership label CSS) | **Written, tested.** Deployment is implied by the owner's standing convention below once she sends the next files without an error. |
 | **S4b** (pricing page hero + cards) | **Deployed per the owner convention (2026-11-04).** Was: written, tested with stubbed Supabase. Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). Paid buttons charge nothing until S5d sets `window.StPricing.onChoose`. `js/subscription.js` is now unused (delete in S4d). |
-| **S4c** (comparison, why upgrade, visibility) | **Written, tested with stubbed Supabase, not deployed.** Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`). |
-| S4d onward, S5d to S5g, S7 | Not started. S5d needs S4f (my-subscription page). |
+| **S4c** (comparison, why upgrade, visibility) | **Deployed per the owner convention (2026-11-04).** |
+| **S4d** (FAQ, final CTA, retire `js/subscription.js`) | **Written, tested with stubbed Supabase, not deployed.** Owner copies 3 site files (`subscription.html`, `css/subscription.css`, `js/pricing-plans.js`) and DELETES `js/subscription.js` from the site. |
+| S4e onward, S5d to S5g, S7 | Not started. S5d needs S4f (my-subscription page). |
 
 Owner answers (`DECISIONS.md`): D1 no subscribers, D2 saved-card auto renewal (Paystack only, R-W), D3 no admin in this project (`ADMIN-REQUIREMENTS.md` is the contract), D4 booking caps removed, D13 resolved. D5-D12 defaults stand; D14 optional.
 
@@ -56,7 +57,8 @@ Facts every later session needs:
 - S5b (deployed): `payment-init` accepts `{purpose: 'subscription', plan}` and reads nothing else from the browser; it answers the old fields plus `plan, planName, kind, fromPlan, priceKobo, creditKobo, netKobo, periodStart, periodEnd` (`amountKobo` is the NET amount for the Paystack pop-up); refusals are `400 {error, reason}`. Source of truth for the deployed function: `supabase/deploy/payment-init/index.ts`. `payment-verify` is unchanged and finalises subscription references through `payment_finalize`.
 - T1 (deployed): `payment-init` refuses `topup`; the deployed source of truth is still `supabase/deploy/payment-init/index.ts` (S5b + T1). What T1 left alone (job payment from wallet balance, the unreachable top-up branch in `payment_finalize`, gift-card wording) is listed in `handoffs/sub-T1.md`.
 
-## NEXT STAGE: after the owner says "S5c-2 deployed": **S5d (checkout wiring, JS)** or, if the `my-subscription` page does not exist yet, the UI rows first
+## NEXT STAGE: **S4e** (my-subscription page, read-only view), then S4f (manage actions), then S5d (checkout wiring). Pricing page rows S4a-S4d are finished.
+Read the S4e row in `01-stage-plan.md`. Needs S2c and D6 (both met). The FAQ and the pricing cards describe checkout, renewal and cancel behaviour that arrives with S4f/S5d/S5e; until then the Choose buttons charge nothing.
 `02-final-plan.md` section 4 rows 17-19: S4a-S4d (pricing page, badge; no Needs), S4e-S4g (my-subscription, offer UX; needs S2c, S3e), then S5d (`js/payments.js` one new function, `js/my-subscription.js`, buttons; needs S5b and S5c deployed). Read the S5d row in `01-stage-plan.md` and propose the order to the owner in one line before starting. Payments are Paystack only (R-W). Do not touch `task_applications`, `verify*`, `didit-*`, `idv_*`.
 
 - S5c-1 (applied): `subscription_store_authorization(reference, authorization jsonb, customer_email)`, service role only; owner of the card is read from the payment, only a PAID `subscription` payment stores, only `reusable: true` is kept (anything else answers `{ok:true, stored:false, reason}`, never an error), one row per person, newer paid card wins, replays safe, event `card_saved` without code or email, no notification. Answer carries only `ok, stored, reason, already, card_last4, card_brand`.
