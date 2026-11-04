@@ -442,7 +442,8 @@
     $('tdShareUrl').addEventListener('focus', function () { this.select(); });
 
     $('tdBack').addEventListener('click', function (e) {
-      if (window.history.length > 1 && document.referrer && document.referrer.indexOf(window.location.origin) === 0) { e.preventDefault(); window.history.back(); }
+      /* Never step back into the offer page: that is how Back and the offer page used to bounce between each other */
+      if (window.history.length > 1 && document.referrer && document.referrer.indexOf(window.location.origin) === 0 && !/\/make-offer\.html/.test(document.referrer)) { e.preventDefault(); window.history.back(); }
     });
 
     $('tdThumbs').addEventListener('click', function (e) { var b = e.target.closest('[data-photo]'); if (b) showPhoto(Number(b.getAttribute('data-photo'))); });

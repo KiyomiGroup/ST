@@ -725,6 +725,28 @@
       else showSubmitError(state.edit ? 'We could not save your changes. Check your connection and try again.' : 'We could not send your offer. Check your connection and try again.');
     }
   }
+  /* Leaving this page must not stack history. Back, Close and "View the original task" used to be plain links, so each trip
+     pushed a new entry and the browser Back button bounced between this page and the task page. Now: if the page we came from is
+     the link's target, step back to it; otherwise replace this entry with the target. */
+  function wireLeave() {
+    ['moBack', 'moClose', 'moDoneBack'].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+        var target;
+        try { target = new URL(el.href, window.location.href); } catch (_e) { return; }
+        e.preventDefault();
+        var cameFromTarget = false;
+        try {
+          var ref = new URL(document.referrer);
+          cameFromTarget = ref.origin === target.origin && ref.pathname === target.pathname && ref.search === target.search;
+        } catch (_e) { /* no usable referrer */ }
+        if (cameFromTarget && window.history.length > 1) window.history.back();
+        else window.location.replace(target.href);
+      });
+    });
+  }
   function wireSubmit() {
     $('moSubmit').addEventListener('click', submitOffer);
     $('moTerms').addEventListener('change', function () {
@@ -779,7 +801,7 @@
   }
 
   async function init() {
-    wireAmount(); wirePitch(); wireSubmit(); wireProof();
+    wireAmount(); wirePitch(); wireSubmit(); wireProof(); wireLeave();
     try {
       var q = new URLSearchParams(window.location.search);
       state.id = text(q.get('task') || q.get('id'));
