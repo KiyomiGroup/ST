@@ -104,6 +104,7 @@ function _applyNavState(loggedIn, role, name) {
     if (mAcct) mAcct.style.display = ''; /* shown on mobile by CSS (body.st-logged-in) */
     const mAvInit = $('navMobileAvatarInitial');
     if (mAvInit) mAvInit.textContent = initials;
+    try { _setNavAvatar(localStorage.getItem('st_avatar') || ''); } catch(e) {}   /* cached uploaded photo, no flash of initials */
 
     /* Hide logged-out elements */
     [$('nav-login'),$('nav-signup')]
@@ -173,6 +174,25 @@ function _syncNavDrawer(loggedIn, role, name, initials) {
     _setDrawerAvatar(photo);
   }
   _highlightDrawerActive();
+}
+
+/* The nav shows the photo the person uploaded on their profile, in all three places (desktop avatar, phone avatar, drawer).
+   The initials show only when there is no uploaded photo (or it fails to load). */
+function _setNavAvatar(url) {
+  [['navAvatarImg', 'navAvatarInitial'], ['navMobileAvatarImg', 'navMobileAvatarInitial']].forEach(([imgId, initId]) => {
+    const img = document.getElementById(imgId);
+    const init = document.getElementById(initId) || (imgId === 'navAvatarImg' ? document.getElementById('dsAvatarInitials') : null);   /* the customer dashboard's own nav */
+    if (!img) return;
+    if (url) {
+      img.onerror = () => { img.style.display = 'none'; if (init) init.style.display = ''; };
+      img.src = url; img.style.display = 'block';
+      if (init) init.style.display = 'none';
+    } else {
+      img.removeAttribute('src'); img.style.display = 'none';
+      if (init) init.style.display = '';
+    }
+  });
+  _setDrawerAvatar(url || '');
 }
 
 function _setDrawerAvatar(url) {
@@ -415,23 +435,18 @@ async function syncNavbarAuthState() {
     _applyNavState(true, role, name);
     _syncRoleSwitchItems(user, role).catch(() => {});
     _loadNavIndicators(user, role); /* plan badge, counts, dots — non-blocking */
-    /* Try to load profile photo */
+    /* Load the photo the person uploaded on their profile (users.avatar_url; for a tasker the service photo is the fallback,
+       the same order Edit Profile uses). A sign-in provider's picture is not an upload, so it is not used here. */
     try {
-      const photoUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-      const uRes = !photoUrl && await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
-      const finalPhoto = photoUrl || (uRes?.data?.avatar_url);
-      if (finalPhoto) {
-        try { localStorage.setItem('st_avatar', finalPhoto); } catch(e) {}
-        _setDrawerAvatar(finalPhoto);
-        const avImg = document.getElementById('navAvatarImg');
-        const avInit = document.getElementById('navAvatarInitial');
-        if (avImg) {
-          avImg.src = finalPhoto;
-          avImg.style.display = 'block';
-          if (avInit) avInit.style.display = 'none';
-          avImg.onerror = () => { avImg.style.display = 'none'; if (avInit) avInit.style.display = ''; };
-        }
+      let finalPhoto = '';
+      const uRes = await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
+      finalPhoto = (uRes && uRes.data && uRes.data.avatar_url) || '';
+      if (!finalPhoto && role === 'tasker') {
+        const tRes = await window.supabase.from('taskers').select('photo_url').eq('user_id', String(user.id)).maybeSingle();
+        finalPhoto = (tRes && tRes.data && tRes.data.photo_url) || '';
       }
+      try { if (finalPhoto) localStorage.setItem('st_avatar', finalPhoto); else localStorage.removeItem('st_avatar'); } catch(e) {}
+      _setNavAvatar(finalPhoto);
     } catch(_e) {}
   } else {
     /* Clear cache */
