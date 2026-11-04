@@ -288,27 +288,6 @@ function openMessagesPanel() {
             <!-- My Page -->
                           <div class="tdb-head-row">
 
-            <!-- Profile Completion Banner (component: .st-pp, css/styles.css) -->
-            <aside class="st-pp mb-24" id="profileCompleteBanner" aria-labelledby="profileCompleteTitle" hidden>
-              <span class="st-pp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-              <div class="st-pp-main">
-                <h3 class="st-pp-title" id="profileCompleteTitle">
-                  <span class="st-pp-long">Complete your profile — boost your chances of getting hired</span>
-                  <span class="st-pp-short">Complete profile (<span class="js-pp-pct">0</span>%)</span>
-                  <span class="st-pp-tip">TIP</span>
-                </h3>
-                <p class="st-pp-desc">
-                  <span class="st-pp-long">Customers check detailed profiles before accepting offers. Taskers with full credential verification and work samples receive up to <strong>3x more bookings</strong>.</span>
-                  <span class="st-pp-short">Get 3x more bookings from clients</span>
-                </p>
-              </div>
-              <div class="st-pp-progress">
-                <div class="st-pp-track" id="profileCompleteTrack" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="st-pp-fill" id="profileCompleteBar"></div></div>
-                <span class="st-pp-pct"><span id="profileCompletePct">0</span>% Complete</span>
-                <span class="st-pp-next" id="profileMissingItems"></span>
-              </div>
-              <button type="button" class="st-pp-cta" onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></button>
-            </aside>
             <div id="panel-mypage" class="dashboard-panel active">
               <!-- ═══ OVERVIEW — mobile layout (shown at 768px and below; js/tasker-overview.js fills it) ═══ -->
               <div class="tom" id="tom">
@@ -479,7 +458,30 @@ function openMessagesPanel() {
                   </article>
                 </section>
 
+                <!-- Profile Completion Banner (component: .st-pp, css/styles.css). Sits right under the hero; js moves it under the phone hero at 768px and below. -->
+                    <aside class="st-pp mb-24" id="profileCompleteBanner" aria-labelledby="profileCompleteTitle" hidden>
+                      <span class="st-pp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                      <div class="st-pp-main">
+                        <h3 class="st-pp-title" id="profileCompleteTitle">
+                          <span class="st-pp-long">Complete your profile — boost your chances of getting hired</span>
+                          <span class="st-pp-short">Complete profile (<span class="js-pp-pct">0</span>%)</span>
+                          <span class="st-pp-tip">TIP</span>
+                        </h3>
+                        <p class="st-pp-desc">
+                          <span class="st-pp-long">Customers check detailed profiles before accepting offers. Taskers with full credential verification and work samples receive up to <strong>3x more bookings</strong>.</span>
+                          <span class="st-pp-short">Get 3x more bookings from clients</span>
+                        </p>
+                      </div>
+                      <div class="st-pp-progress">
+                        <div class="st-pp-track" id="profileCompleteTrack" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="st-pp-fill" id="profileCompleteBar"></div></div>
+                        <span class="st-pp-pct"><span id="profileCompletePct">0</span>% Complete</span>
+                        <span class="st-pp-next" id="profileMissingItems"></span>
+                      </div>
+                      <button type="button" class="st-pp-cta" onclick="switchPanel('profile',document.querySelector('[data-panel=profile]'));loadProfilePanel();"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></button>
+                    </aside>
+
                 <!-- Filters -->
+
                 <section class="tov-filters" id="tovFilters" aria-label="Filter assignments">
                   <button type="button" class="tov-chip" id="tovActiveFilters" title="Clear all filters">
                     Active filters <span class="tov-chip-count" id="tovFilterCount" hidden>0</span>
@@ -1036,7 +1038,7 @@ function openMessagesPanel() {
     }
 
     async function confirmDeleteService(id) {
-      if (!confirm('Delete this service? This cannot be undone.')) return;
+      if (!(await window.stConfirm('This cannot be undone.', { title: 'Delete this service?', confirmText: 'Delete' }))) return;
       try {
         await window.supabase.from('services').delete().eq('id', id);
         var el = document.getElementById('svc-' + id);
@@ -1170,6 +1172,22 @@ function openMessagesPanel() {
       }
     }
     window.checkProfileCompletion = checkProfileCompletion;
+
+    /* The Overview has two copies of the hero (phone and desktop). The profile banner is one element, so it is
+       placed right under whichever hero is showing: under the phone hero at 768px and below, under the stat cards
+       that float over the desktop hero's edge above that. */
+    function placeProfileBanner() {
+      var banner = document.getElementById('profileCompleteBanner');
+      if (!banner) return;
+      var phone = window.matchMedia('(max-width: 768px)');
+      function place() {
+        var anchor = phone.matches ? document.querySelector('#tom > .pg-hero') : document.querySelector('#tov > .tov-stats');
+        if (anchor && anchor.parentNode && anchor.nextElementSibling !== banner) anchor.parentNode.insertBefore(banner, anchor.nextSibling);
+      }
+      place();
+      if (phone.addEventListener) phone.addEventListener('change', place); else if (phone.addListener) phone.addListener(place);
+    }
+    placeProfileBanner();
 
     async function initPage() {
 

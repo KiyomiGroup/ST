@@ -78,6 +78,9 @@
 
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* The reset above also removes the browser's margin:auto on <dialog>, which is what centres a modal dialog.
+   Without this line every dialog opened with showModal() sticks to a corner of the screen. */
+dialog:modal { margin: auto; }
 html {
   scroll-behavior: smooth; -webkit-text-size-adjust: 100%;
   overflow-x: hidden; max-width: 100%;
@@ -4692,6 +4695,8 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
   :is(body.tdash-overview, body.cdash-overview) .dashboard-body { padding-top: var(--space-5); }
   :is(body.tdash-overview, body.cdash-overview) .tov { max-width: var(--page-width); margin-inline: auto; }
   :is(body.tdash-overview, body.cdash-overview) .tov-stats { margin-inline: var(--space-6); }
+  /* The profile banner sits under the stat cards, inset the same amount */
+  body.tdash-overview .tov > .st-pp { margin-inline: var(--space-6); }
   /* Four cards in the inset row are narrower than before: trim the side padding, and tighten the
      Escrow card's top row (label + Secured + arrow) so it still fits on one line at 1440px. */
   :is(body.tdash-overview, body.cdash-overview) .tov-card { padding-inline: var(--space-4); }
@@ -5386,3 +5391,20 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 @media (prefers-reduced-motion: reduce) { .st-pp-fill { transition: none; } }
 /* long messages wrap inside a rounded card instead of a pill */
 .st-toast--wrap { border-radius: var(--radius-xl); }
+
+
+/* ============================================================
+   CONFIRM BOX  (stConfirm() in js/ui.js): centered, replaces the browser confirm()
+   ============================================================ */
+.st-confirm {
+  width: min(420px, calc(100% - 2 * var(--space-4)));
+  border: 0; border-radius: var(--radius-card);
+  background: var(--color-bg); color: var(--color-text);
+  box-shadow: var(--shadow-xl);
+}
+.st-confirm::backdrop { background: var(--drawer-overlay); }
+.st-confirm-body { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-6); }
+.st-confirm-title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; letter-spacing: -0.02em; }
+.st-confirm-text { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; }
+.st-confirm-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-2); }
+@media (max-width: 768px) { .st-confirm-actions .btn { flex: 1 1 0; } }

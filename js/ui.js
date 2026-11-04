@@ -120,6 +120,49 @@ function showToast(msg, opts) {
 window.showToast = showToast;
 window.stToast = showToast;   /* stable name: pages that define their own showToast() delegate here */
 
+/* ── Confirm box ─────────────────────────────────────────────── */
+/* Centered replacement for the browser's confirm(), which opens at the top of the window.
+   stConfirm('Delete this service?', { title, confirmText, cancelText, danger }) resolves true or false. */
+function stConfirm(message, opts) {
+  const o = opts || {};
+  return new Promise(function (resolve) {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'st-confirm';
+    dlg.setAttribute('aria-labelledby', 'stConfirmTitle');
+    const body = document.createElement('div');
+    body.className = 'st-confirm-body';
+    const title = document.createElement('h2');
+    title.className = 'st-confirm-title';
+    title.id = 'stConfirmTitle';
+    title.textContent = o.title || 'Are you sure?';
+    const text = document.createElement('p');
+    text.className = 'st-confirm-text';
+    text.textContent = String(message == null ? '' : message);
+    const actions = document.createElement('div');
+    actions.className = 'st-confirm-actions';
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.className = 'btn btn-outline';
+    no.textContent = o.cancelText || 'Cancel';
+    const yes = document.createElement('button');
+    yes.type = 'button';
+    yes.className = 'btn ' + (o.danger === false ? 'btn-primary' : 'btn-dark');
+    yes.textContent = o.confirmText || 'Confirm';
+    actions.append(no, yes);
+    body.append(title, text, actions);
+    dlg.appendChild(body);
+    let answer = false;
+    no.addEventListener('click', function () { dlg.close(); });
+    yes.addEventListener('click', function () { answer = true; dlg.close(); });
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });   /* click on the dimmed area */
+    dlg.addEventListener('close', function () { dlg.remove(); resolve(answer); });
+    document.body.appendChild(dlg);
+    dlg.showModal();
+    no.focus();
+  });
+}
+window.stConfirm = stConfirm;
+
 /* ── SVG icon helpers ────────────────────────────────────────── */
 const SVG_PIN = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 

@@ -602,7 +602,7 @@ async function fetchMatchingServices({ category, location, limit = 5 }) {
     .order('created_at', { ascending: false }).limit(limit * 2);
   if (error || !data?.length) {
     const { data: td } = await window.supabase.from('taskers').select('*')
-      .eq('category', category).order('rating', { ascending: false }).limit(limit);
+      .eq('category', category).eq('available', true).order('rating', { ascending: false }).limit(limit);
     return (td || []).slice(0, limit).map(t => ({
       id: String(t.id), service_name: t.service, category: t.category,
       pricing_type: 'per_job', price: t.rate_value, location: t.location,

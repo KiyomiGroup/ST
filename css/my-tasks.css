@@ -57,7 +57,7 @@
    Desktop needs nothing extra: .pg-hero, .pg-hero-chips and .pg-hero-bar do the work.
    Phones: the hero comes first, the search bar joins it in one green block, then the tabs. */
 @media (max-width: 768px) {
-  .mt-hero.pg-hero { order: 1; border-radius: var(--radius-form); padding-bottom: var(--space-4); }
+  .mt-hero.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
 }
 
 /* The Escrow Protection title sits on the green card: keep it the card's white (the heading colour would be dark on green) */
