@@ -280,6 +280,22 @@ All in `css/tokens.css`.
 | Cards | `--card-surface`, `--card-surface-tint`, `--card-chip-glass`, `--card-chip-dark`, `--card-cta-bg(-hover)`, `--card-skill-bg`, `--card-media-ratio`, `--card-avatar-size`, `--card-thumb-size`, `--shadow-card-hover` |
 | Profile prompt | `--pp-dark-*`, `--pp-accent(-hover/-ink)`, `--pp-light-*`, `--pp-fill`, `--pp-icon-size`, `--pp-track-height`, `--pp-track-width` (most alias existing greens) |
 
+### 4.12 Membership labels (PRO, PREMIUM)
+
+`css/membership.css` (load it after `styles.css`) and the `--membership-*` tokens in `css/tokens.css`. Added in S4a of the subscription overhaul.
+
+| Plan | Label | Class |
+|---|---|---|
+| Free, Starter | none: render no element | |
+| Professional | `PRO` | `.membership-label.membership-label--pro` (soft mint fill, green text) |
+| Business | `PREMIUM` | `.membership-label.membership-label--premium` (dark forest fill, mint text) |
+
+- Markup: wrap name and label in `.membership-name`, name first: `<span class="membership-name"><span class="membership-name__text">Chinedu Okafor</span> <span class="membership-label membership-label--premium">PREMIUM</span></span>`. The label is always AFTER the name.
+- `.membership-label--sm` for cards and search rows.
+- The label is subscription membership only. Never add a check mark, shield or the word "verified" to it, and never put it where the identity-verification mark goes. Every user is identity verified; the label means nothing about that.
+- The label text comes from the server (`membership_for_users`, S3f), never from `taskers.subscription_plan`.
+- Tokens: `--membership-{pro,premium}-{bg,ink,border}`, `--membership-gap`, `--membership-font-size`, `--membership-tracking`. All alias existing tokens.
+
 ---
 
 ## 5. Logged-out desktop navigation (implemented)

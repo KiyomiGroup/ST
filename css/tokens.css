@@ -489,3 +489,17 @@
   --auth-shadow-role:      0 8px 32px rgba(15, 107, 70, 0.15);
   --auth-shadow-panel:     0 8px 32px rgba(15, 107, 70, 0.08);
 }
+
+/* Membership labels (S4a, subscription overhaul): PRO and PREMIUM beside a name.
+   Subscription status only. Never used for identity verification. */
+:root {
+  --membership-pro-bg:        var(--color-primary-soft);
+  --membership-pro-ink:       var(--color-primary);
+  --membership-pro-border:    var(--color-accent-border);
+  --membership-premium-bg:    var(--color-forest-900);
+  --membership-premium-ink:   var(--pt-mint);
+  --membership-premium-border:var(--color-forest-700);
+  --membership-gap:           var(--space-2);   /* name to label */
+  --membership-font-size:     var(--text-xs);
+  --membership-tracking:      0.06em;
+}

@@ -1,0 +1,34 @@
+/* Membership labels (S4a). Tokens: css/tokens.css "Membership labels".
+   Markup: <span class="membership-name"><span class="membership-name__text">Name</span>
+           <span class="membership-label membership-label--pro">PRO</span></span>
+   The label always comes AFTER the name. Free and Starter get no label (no element at all).
+   This is subscription membership only. It is not identity verification: never use a
+   check mark, shield or the word "verified" in or near it. */
+
+.membership-name {
+  display: inline-flex; align-items: center; flex-wrap: wrap;
+  gap: var(--space-1) var(--membership-gap);
+  max-width: 100%; min-width: 0;
+}
+.membership-name__text { min-width: 0; overflow-wrap: anywhere; }
+
+.membership-label {
+  display: inline-flex; align-items: center; flex-shrink: 0;
+  font-size: var(--membership-font-size); font-weight: 700; line-height: 1;
+  letter-spacing: var(--membership-tracking); text-transform: uppercase; white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  vertical-align: middle;
+}
+.membership-label--pro {
+  background: var(--membership-pro-bg); color: var(--membership-pro-ink);
+  border-color: var(--membership-pro-border);
+}
+.membership-label--premium {
+  background: var(--membership-premium-bg); color: var(--membership-premium-ink);
+  border-color: var(--membership-premium-border);
+}
+
+/* Compact: cards, search rows, anywhere the name is already small. */
+.membership-label--sm { padding: 2px var(--space-2); }
