@@ -99,6 +99,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
 
+          <!-- What to do next on this booking, with a shortcut to the Actions sheet (all screen sizes) -->
+          <div class="cc-nextbar" id="ccNextBar" hidden>
+            <span class="cc-nextbar-text" id="ccNextText"></span>
+            <button class="cc-nextbar-btn" type="button" id="ccNextBtn" aria-haspopup="dialog" aria-controls="ccActions">Open actions</button>
+          </div>
+
           <div class="cc-offline" id="ccOffline" role="status" hidden>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
             <span>You're offline. Messages and notes can't be sent until you reconnect.</span>
@@ -110,6 +116,12 @@
             New messages
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
           </button>
+
+          <!-- Shown while a problem report is open on this booking -->
+          <div class="jr-dispute-bar" id="ccDisputeBar" role="status" hidden>
+            <span class="jr-dispute-bar-text" id="ccDisputeText">A problem report is open on this booking. Money actions are locked until support has decided it.</span>
+            <button class="jr-dispute-bar-btn" id="ccDisputeBtn" type="button">View</button>
+          </div>
 
           <!-- Former coordinator, or no coordinator assigned: read only -->
           <div class="cc-readonly" id="ccReadonly" role="status" hidden>
@@ -144,9 +156,439 @@
                 <label class="co-visually-hidden" for="ccInput" id="ccInputLabel">Message</label>
                 <textarea class="msg-input" id="ccInput" rows="1" maxlength="2000" placeholder="Write a message…" autocomplete="off"></textarea>
               </div>
+              <button class="msg-pay-request-btn cc-actions-btn" type="button" id="ccActionsBtn" hidden aria-haspopup="dialog" aria-controls="ccActions" aria-label="Job actions" title="Job actions">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                <span class="msg-req-label">Actions</span>
+                <span class="cc-actions-dot" id="ccActionsDot" hidden></span>
+              </button>
               <button class="msg-send-btn" type="button" id="ccSend" aria-label="Send" disabled>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
+            </div>
+          </div>
+
+          <!-- Job actions: the Request/Actions sheet of the coordinator. Every form below is the same card, with the same checks and the
+               same database function, as on coordinator-booking.html (the js/coordinator-*.js modules mount into it). Nothing here moves money itself. -->
+          <div class="jr-sheet-layer" id="ccActions" hidden>
+            <div class="jr-sheet-backdrop" id="ccActionsBackdrop"></div>
+            <div class="jr-sheet cc-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="ccActionsTitle">
+              <div class="jr-sheet-grab" aria-hidden="true"></div>
+              <div class="jr-sheet-head">
+                <h2 class="jr-sheet-title" id="ccActionsTitle">Job actions</h2>
+                <button class="jr-icon-btn" type="button" id="ccActionsClose" aria-label="Close">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="jr-sheet-body cc-actions-body" id="ccActionsBody">
+                <div id="ccActionsMenu"></div>
+                <div id="ccActionsPanes" hidden>
+                  <button class="jr-sheet-back" type="button" id="ccActionsBack">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    All actions
+                  </button>
+              <div class="cc-pane" data-pane="coCf" hidden>
+        <section class="co-card" id="coCf" aria-labelledby="coCfTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coCfTitle">The Local Tasker’s answer</h2>
+          <p class="co-card-lead" id="coCfLead"></p>
+          <div class="co-banner" id="coCfError" role="alert" hidden><span id="coCfErrorText"></span></div>
+
+          <div id="coCfSummary" hidden>
+            <dl class="co-facts" id="coCfFacts"></dl>
+            <p class="co-consent-meta" id="coCfSecondNote"></p>
+            <div class="co-form-actions" id="coCfAgainRow">
+              <button type="button" class="btn btn-outline" id="coCfAgain">Record a new answer</button>
+            </div>
+            <div class="co-pub-reason" id="coCfAgainConfirm" hidden>
+              <p class="co-card-lead" id="coCfAgainText"></p>
+              <div class="co-form-actions">
+                <button type="button" class="btn btn-ghost" id="coCfAgainCancel">Keep it as it is</button>
+                <button type="button" class="btn btn-primary" id="coCfAgainGo">Yes, record a new answer</button>
+              </div>
+            </div>
+          </div>
+
+          <form class="co-form" id="coCfForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coCfName">Who did you speak to?</label>
+              <input class="form-input" type="text" id="coCfName" maxlength="100" autocomplete="off" aria-describedby="coCfNameErr" />
+              <p class="co-field-error" id="coCfNameErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coCfNumber">Number you called</label>
+              <input class="form-input" type="tel" id="coCfNumber" maxlength="30" autocomplete="off" inputmode="tel" aria-describedby="coCfNumberHelp coCfNumberErr" />
+              <p class="form-helper" id="coCfNumberHelp"></p>
+              <p class="co-field-error" id="coCfNumberErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coCfWhen">When did you call?</label>
+              <input class="form-input" type="datetime-local" id="coCfWhen" aria-describedby="coCfWhenErr" />
+              <p class="co-field-error" id="coCfWhenErr" hidden></p>
+            </div>
+
+            <fieldset class="co-cf-outcome">
+              <legend class="form-label">What did they say?</legend>
+              <label class="co-check" for="coCfOutConfirmed"><input type="radio" name="coCfOutcome" id="coCfOutConfirmed" value="confirmed" /><span>They can do the job</span></label>
+              <label class="co-check" for="coCfOutDeclined"><input type="radio" name="coCfOutcome" id="coCfOutDeclined" value="declined" /><span>They can’t, or won’t, do the job</span></label>
+              <label class="co-check" for="coCfOutNoAnswer"><input type="radio" name="coCfOutcome" id="coCfOutNoAnswer" value="no_answer" /><span>No answer (I’ll try again)</span></label>
+              <p class="co-field-error" id="coCfOutcomeErr" hidden></p>
+            </fieldset>
+
+            <div class="co-cf-group" id="coCfConfirmFields" hidden>
+              <label class="co-check" for="coCfAvail"><input type="checkbox" id="coCfAvail" /><span>They are available at the time the customer wants</span></label>
+              <label class="co-check" for="coCfCan"><input type="checkbox" id="coCfCan" /><span>They can do this job</span></label>
+              <p class="co-field-error" id="coCfAvailErr" hidden></p>
+              <div class="form-group">
+                <label class="form-label" for="coCfPrice">Their price for the work (₦)</label>
+                <input class="form-input" type="text" id="coCfPrice" inputmode="decimal" autocomplete="off" aria-describedby="coCfPriceHelp coCfPriceErr" />
+                <p class="form-helper" id="coCfPriceHelp">The price they gave you, for their time and skill only. You can’t change it later; a new price needs a new call.</p>
+                <p class="co-field-error" id="coCfPriceErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfDuration">How long will it take?</label>
+                <input class="form-input" type="text" id="coCfDuration" maxlength="80" autocomplete="off" placeholder="About 2 hours" aria-describedby="coCfDurationErr" />
+                <p class="co-field-error" id="coCfDurationErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfTransport">Transport they will need (₦, optional)</label>
+                <input class="form-input" type="text" id="coCfTransport" inputmode="decimal" autocomplete="off" aria-describedby="coCfTransportErr" />
+                <p class="co-field-error" id="coCfTransportErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfMaterials">Materials they will buy (₦, optional)</label>
+                <input class="form-input" type="text" id="coCfMaterials" inputmode="decimal" autocomplete="off" aria-describedby="coCfMaterialsErr" />
+                <p class="co-field-error" id="coCfMaterialsErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCfMatNotes">What materials? (optional)</label>
+                <input class="form-input" type="text" id="coCfMatNotes" maxlength="300" autocomplete="off" aria-describedby="coCfMatNotesErr" />
+                <p class="co-field-error" id="coCfMatNotesErr" hidden></p>
+              </div>
+            </div>
+
+            <div class="form-group" id="coCfLimitsGroup" hidden>
+              <label class="form-label" for="coCfLimits" id="coCfLimitsLabel">Limits or conditions</label>
+              <textarea class="form-textarea" id="coCfLimits" maxlength="300" aria-describedby="coCfLimitsErr"></textarea>
+              <p class="co-field-error" id="coCfLimitsErr" hidden></p>
+            </div>
+            <div class="form-group" id="coCfNotesGroup" hidden>
+              <label class="form-label" for="coCfNotes">Anything else agreed (optional)</label>
+              <textarea class="form-textarea" id="coCfNotes" maxlength="300" aria-describedby="coCfNotesErr"></textarea>
+              <p class="co-field-error" id="coCfNotesErr" hidden></p>
+            </div>
+
+            <div class="co-cf-group" id="coCfSureFields" hidden>
+              <label class="co-check" for="coCfReadBack"><input type="checkbox" id="coCfReadBack" /><span>I read the price back to them and they agreed to it</span></label>
+              <p class="co-field-error" id="coCfReadBackErr" hidden></p>
+              <label class="co-check" for="coCfSecond"><input type="checkbox" id="coCfSecond" /><span>Ask a StreetTasker administrator to call them back before the quote is sent (optional)</span></label>
+            </div>
+
+            <div class="co-form-actions" id="coCfActions" hidden>
+              <button type="submit" class="btn btn-primary" id="coCfSave">Save their answer</button>
+            </div>
+          </form>
+
+          <div id="coCfAttemptsBox" hidden>
+            <h3 class="co-cf-sub">Calls recorded</h3>
+            <ul class="co-bk-history" id="coCfAttempts"></ul>
+          </div>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coQt" hidden>
+        <section class="co-card" id="coQt" aria-labelledby="coQtTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coQtTitle">The quote</h2>
+          <p class="co-card-lead" id="coQtLead"></p>
+          <div class="co-banner" id="coQtError" role="alert" hidden><span id="coQtErrorText"></span></div>
+
+          <div id="coQtSummary" hidden>
+            <dl class="co-facts" id="coQtLines"></dl>
+            <p class="co-consent-meta" id="coQtStatusNote"></p>
+          </div>
+
+          <form class="co-form" id="coQtForm" novalidate hidden>
+            <dl class="co-facts" id="coQtFixed"></dl>
+            <p class="co-consent-meta" id="coQtFixedNote">This is the Local Tasker’s own price. You can’t change it here. If it has changed, go back to Actions and record a new answer from them.</p>
+            <div class="form-group">
+              <label class="form-label" for="coQtTransport">Transport (₦)</label>
+              <input class="form-input" type="text" id="coQtTransport" inputmode="decimal" autocomplete="off" aria-describedby="coQtTransportHelp coQtTransportErr" />
+              <p class="form-helper" id="coQtTransportHelp"></p>
+              <p class="co-field-error" id="coQtTransportErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtMaterials">Materials (₦)</label>
+              <input class="form-input" type="text" id="coQtMaterials" inputmode="decimal" autocomplete="off" aria-describedby="coQtMaterialsHelp coQtMaterialsErr" />
+              <p class="form-helper" id="coQtMaterialsHelp"></p>
+              <p class="co-field-error" id="coQtMaterialsErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtOtherLabel">Another agreed cost (optional)</label>
+              <input class="form-input" type="text" id="coQtOtherLabel" maxlength="60" autocomplete="off" placeholder="What it is for, e.g. Parking fee" aria-describedby="coQtOtherLabelErr" />
+              <p class="co-field-error" id="coQtOtherLabelErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtOther">Amount for it (₦)</label>
+              <input class="form-input" type="text" id="coQtOther" inputmode="decimal" autocomplete="off" aria-describedby="coQtOtherHelp coQtOtherErr" />
+              <p class="form-helper" id="coQtOtherHelp">Leave empty for none. At least ₦100, and no more than the service fee.</p>
+              <p class="co-field-error" id="coQtOtherErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coQtNote">Note for the customer (optional)</label>
+              <textarea class="form-textarea" id="coQtNote" maxlength="300" aria-describedby="coQtNoteErr"></textarea>
+              <p class="co-field-error" id="coQtNoteErr" hidden></p>
+            </div>
+            <dl class="co-facts co-qt-total"><dt class="co-fact-label">Total</dt><dd class="co-fact-value" id="coQtTotal"></dd></dl>
+            <p class="co-consent-meta">The customer approves quotes in the next update (Stage 5D). Payments are handled by StreetTasker.</p>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coQtSend">Send the quote</button>
+            </div>
+          </form>
+
+          <div id="coQtHistBox" hidden>
+            <h3 class="co-cf-sub">Earlier versions</h3>
+            <ul class="co-bk-history" id="coQtHist"></ul>
+          </div>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coXt" hidden>
+        <section class="co-card" id="coXt" aria-labelledby="coXtTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coXtTitle">Extra costs</h2>
+          <p class="co-card-lead" id="coXtLead"></p>
+          <div class="co-banner" id="coXtError" role="alert" hidden><span id="coXtErrorText"></span></div>
+          <ul class="co-bk-history" id="coXtList"></ul>
+          <form class="co-form" id="coXtForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coXtKind">What is the extra cost for?</label>
+              <select class="form-select" id="coXtKind" aria-describedby="coXtKindErr">
+                <option value="">Choose one</option>
+                <option value="additional_cost">Extra work</option>
+                <option value="materials">Materials</option>
+                <option value="transport">Transport</option>
+              </select>
+              <p class="co-field-error" id="coXtKindErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtAmount">Amount (₦)</label>
+              <input class="form-input" type="text" inputmode="numeric" id="coXtAmount" autocomplete="off" aria-describedby="coXtAmountHelp coXtAmountErr" />
+              <p class="form-helper" id="coXtAmountHelp"></p>
+              <p class="co-field-error" id="coXtAmountErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtTitleIn">Short title the customer will see</label>
+              <input class="form-input" type="text" id="coXtTitleIn" maxlength="60" autocomplete="off" aria-describedby="coXtTitleInErr" />
+              <p class="co-field-error" id="coXtTitleInErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtDetails">Details the customer will see</label>
+              <textarea class="form-textarea" id="coXtDetails" maxlength="300" aria-describedby="coXtDetailsErr"></textarea>
+              <p class="co-field-error" id="coXtDetailsErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coXtHow">How did the Local Tasker confirm this cost to you?</label>
+              <select class="form-select" id="coXtHow" aria-describedby="coXtHowErr">
+                <option value="">Choose one</option>
+                <option value="phone_call">On a phone call</option>
+                <option value="in_person">In person</option>
+                <option value="message">By message</option>
+              </select>
+              <p class="co-field-error" id="coXtHowErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="co-check" for="coXtSure"><input type="checkbox" id="coXtSure" aria-describedby="coXtSureErr" /><span>The Local Tasker confirmed this cost. I understand the customer is asked to pay it and can decline.</span></label>
+              <p class="co-field-error" id="coXtSureErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coXtSubmit">Ask the customer to pay</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">The customer pays or declines in their Job Room. This never changes the agreed price and never moves money. To lower a price, report a problem so support can decide.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coRd" hidden>
+        <section class="co-card" id="coRd" aria-labelledby="coRdTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coRdTitle">Lower the price</h2>
+          <p class="co-card-lead" id="coRdLead"></p>
+          <div class="co-banner" id="coRdError" role="alert" hidden><span id="coRdErrorText"></span></div>
+          <ul class="co-bk-history" id="coRdList"></ul>
+          <form class="co-form" id="coRdForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coRdAmount">How much lower? (₦)</label>
+              <input class="form-input" type="text" inputmode="numeric" id="coRdAmount" autocomplete="off" aria-describedby="coRdAmountHelp coRdAmountErr" />
+              <p class="form-helper" id="coRdAmountHelp"></p>
+              <p class="co-field-error" id="coRdAmountErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRdWhy">Why does the price go down?</label>
+              <textarea class="form-textarea" id="coRdWhy" maxlength="300" aria-describedby="coRdWhyErr"></textarea>
+              <p class="co-field-error" id="coRdWhyErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRdHow">How did the Local Tasker confirm this to you?</label>
+              <select class="form-select" id="coRdHow" aria-describedby="coRdHowErr">
+                <option value="">Choose one</option>
+                <option value="phone_call">On a phone call</option>
+                <option value="in_person">In person</option>
+                <option value="message">By message</option>
+              </select>
+              <p class="co-field-error" id="coRdHowErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="co-check" for="coRdSure"><input type="checkbox" id="coRdSure" aria-describedby="coRdSureErr" /><span>The Local Tasker agreed to this lower price. I understand this opens a problem report for StreetTasker support and pauses payments on this job until support has decided.</span></label>
+              <p class="co-field-error" id="coRdSureErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRdSubmit">Report to support</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">Support decides and records any refund. This never refunds, never changes the agreed price and never moves money. You can withdraw the report until support starts on it.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coMs" hidden>
+        <section class="co-card" id="coMs" aria-labelledby="coMsTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coMsTitle">On the day</h2>
+          <p class="co-card-lead" id="coMsLead"></p>
+          <div class="co-banner" id="coMsError" role="alert" hidden><span id="coMsErrorText"></span></div>
+          <ul class="co-bk-history" id="coMsList"></ul>
+          <form class="co-form" id="coMsForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coMsWhen" id="coMsWhenLabel">When did it happen?</label>
+              <input class="form-input" type="datetime-local" id="coMsWhen" aria-describedby="coMsWhenHelp coMsWhenErr" />
+              <p class="form-helper" id="coMsWhenHelp">The time the Local Tasker told you. It can be up to 3 days back, and not before the step above.</p>
+              <p class="co-field-error" id="coMsWhenErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coMsNote">Note (optional)</label>
+              <input class="form-input" type="text" id="coMsNote" maxlength="300" autocomplete="off" aria-describedby="coMsNoteErr" />
+              <p class="co-field-error" id="coMsNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coMsSubmit">Record</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coMsFoot">Recording a step only writes it down. It never changes a payment, and it does not mark the job as done.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coRl" hidden>
+        <section class="co-card" id="coRl" aria-labelledby="coRlTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coRlTitle">Release the payment</h2>
+          <p class="co-card-lead" id="coRlLead"></p>
+          <div class="co-banner" id="coRlError" role="alert" hidden><span id="coRlErrorText"></span></div>
+          <div class="co-banner co-banner--info" id="coRlDone" role="status" hidden><span id="coRlDoneText"></span></div>
+          <form class="co-form" id="coRlForm" novalidate hidden>
+            <div class="form-group">
+              <label class="form-label" for="coRlCode">The customer’s 6-digit release code</label>
+              <input class="form-input co-rl-code" type="text" id="coRlCode" inputmode="numeric" maxlength="9" autocomplete="off" aria-describedby="coRlHelp coRlCodeErr" />
+              <p class="form-helper" id="coRlHelp">The customer sees this code in their Job Room once they are happy with the work. Never ask for it before the job is done.</p>
+              <p class="co-field-error" id="coRlCodeErr" hidden></p>
+            </div>
+            <p class="co-consent-meta" id="coRlAttempts" hidden></p>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRlSubmit">Release the payment</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coRlFoot">A wrong code uses one of three attempts. After three wrong codes the booking is locked and only a StreetTasker administrator can unlock it. Entering the right code releases the payment once. It can’t be undone.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coEx" hidden>
+        <section class="co-card" id="coEx" aria-labelledby="coExTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coExTitle">When something goes wrong</h2>
+          <p class="co-card-lead" id="coExLead"></p>
+          <div class="co-banner" id="coExError" role="alert" hidden><span id="coExErrorText"></span></div>
+          <ul class="co-bk-history" id="coExList"></ul>
+          <form class="co-form" id="coExForm" novalidate hidden>
+            <fieldset class="form-group co-fieldset" id="coExKinds">
+              <legend class="form-label">What happened?</legend>
+              <label class="co-check" for="coExUnreach"><input type="radio" name="coExKind" id="coExUnreach" value="customer_unreachable" /><span>I couldn’t reach the customer</span></label>
+              <p class="form-helper" id="coExUnreachWhy" hidden></p>
+              <label class="co-check" for="coExNoShow"><input type="radio" name="coExKind" id="coExNoShow" value="tasker_no_show" /><span>The Local Tasker didn’t come as agreed</span></label>
+              <p class="form-helper" id="coExNoShowWhy" hidden></p>
+              <p class="co-field-error" id="coExKindErr" hidden></p>
+            </fieldset>
+            <div class="form-group">
+              <label class="form-label" for="coExWhen">When did it happen?</label>
+              <input class="form-input" type="datetime-local" id="coExWhen" aria-describedby="coExWhenHelp coExWhenErr" />
+              <p class="form-helper" id="coExWhenHelp">It can be up to 3 days back, and not in the future.</p>
+              <p class="co-field-error" id="coExWhenErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coExNote">Note (optional)</label>
+              <input class="form-input" type="text" id="coExNote" maxlength="300" autocomplete="off" aria-describedby="coExNoteErr" />
+              <p class="co-field-error" id="coExNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coExSubmit">Record</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coExFoot">Recording this only writes it down. It never changes a payment and it does not cancel the booking. To cancel, or to report a problem, go back to Actions and choose “Cancel or report a problem”.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coCo" hidden>
+        <section class="co-card" id="coCo" aria-labelledby="coCoTitle" hidden>
+          <h2 class="co-card-title co-visually-hidden" id="coCoTitle">Cancel or report a problem</h2>
+          <p class="co-card-lead" id="coCoLead"></p>
+          <div class="co-banner" id="coCoError" role="alert" hidden><span id="coCoErrorText"></span></div>
+          <p class="co-card-lead" id="coCoCancelled" hidden></p>
+          <ul class="co-bk-history" id="coCoList"></ul>
+          <form class="co-form" id="coCoForm" novalidate hidden>
+            <fieldset class="form-group co-fieldset" id="coCoKinds">
+              <legend class="form-label">What do you want to do?</legend>
+              <label class="co-check" for="coCoCancel"><input type="radio" name="coCoKind" id="coCoCancel" value="cancel" /><span>Cancel this booking</span></label>
+              <p class="form-helper" id="coCoCancelWhy" hidden></p>
+              <label class="co-check" for="coCoReport"><input type="radio" name="coCoKind" id="coCoReport" value="report" /><span>Report a problem for the Local Tasker</span></label>
+              <p class="form-helper" id="coCoReportWhy" hidden></p>
+              <p class="co-field-error" id="coCoKindErr" hidden></p>
+            </fieldset>
+            <div id="coCoCancelFields" hidden>
+              <div class="form-group">
+                <label class="form-label" for="coCoReason">Why is it being cancelled?</label>
+                <select class="form-select" id="coCoReason" aria-describedby="coCoReasonErr">
+                  <option value="">Choose a reason</option>
+                  <option value="customer_asked">The customer asked to cancel</option>
+                  <option value="customer_unreachable">The customer could not be reached</option>
+                  <option value="tasker_unavailable">The Local Tasker is not available</option>
+                  <option value="tasker_no_show">The Local Tasker did not come</option>
+                  <option value="other">Something else</option>
+                </select>
+                <p class="co-field-error" id="coCoReasonErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCoNote">Note the customer will see (needed for “Something else”)</label>
+                <input class="form-input" type="text" id="coCoNote" maxlength="300" autocomplete="off" aria-describedby="coCoNoteErr" />
+                <p class="co-field-error" id="coCoNoteErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="co-check" for="coCoSure"><input type="checkbox" id="coCoSure" aria-describedby="coCoSureErr" /><span>I understand this ends the booking and tells the customer. It can’t be undone.</span></label>
+                <p class="co-field-error" id="coCoSureErr" hidden></p>
+              </div>
+            </div>
+            <div id="coCoReportFields" hidden>
+              <div class="form-group">
+                <label class="form-label" for="coCoCategory">What is the problem about?</label>
+                <select class="form-select" id="coCoCategory" aria-describedby="coCoCategoryErr">
+                  <option value="">Choose one</option>
+                  <option value="not_done">The work was not done</option>
+                  <option value="poor_quality">The work was poor quality</option>
+                  <option value="no_show">Someone did not turn up</option>
+                  <option value="wrong_amount">The amount is wrong</option>
+                  <option value="payment_issue">A payment problem</option>
+                  <option value="other">Something else</option>
+                </select>
+                <p class="co-field-error" id="coCoCategoryErr" hidden></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="coCoDesc">What happened?</label>
+                <textarea class="form-textarea" id="coCoDesc" maxlength="1000" aria-describedby="coCoDescHelp coCoDescErr"></textarea>
+                <p class="form-helper" id="coCoDescHelp">10 to 1000 characters. Support reads this and decides. The customer is told a report was opened, and payments on this booking are paused until it is decided.</p>
+                <p class="co-field-error" id="coCoDescErr" hidden></p>
+              </div>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coCoSubmit">Continue</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coCoFoot">Cancelling only works when nothing has been paid. It never moves money. A problem report is opened in the Local Tasker’s name and is decided by StreetTasker support.</p>
+        </section>
+              </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -190,6 +632,14 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-confirmation.js"></script>
+  <script src="js/coordinator-quote.js"></script>
+  <script src="js/coordinator-milestones.js"></script>
+  <script src="js/coordinator-exceptions.js"></script>
+  <script src="js/coordinator-release.js"></script>
+  <script src="js/coordinator-closeout.js"></script>
+  <script src="js/coordinator-extras.js"></script>
+  <script src="js/coordinator-reduction.js"></script>
   <script src="js/coordinator-chat.js"></script>
 </body>
 </html>

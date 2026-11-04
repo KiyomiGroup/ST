@@ -9,6 +9,13 @@
      coordinator_add_note        the ONLY way to write an internal note
      coordinator_chat_mark_read  clears the unread count
      local_booking_detail        the booking context panel (current coordinator only)
+   Job actions (Stage 6C): the composer's Actions button opens the coordinator's Request sheet. Each action is the SAME card, with the same checks and
+     the same database function, as on coordinator-booking.html (js/coordinator-confirmation / -quote / -extras / -reduction / -milestones / -release /
+     -exceptions / -closeout mount into the sheet). Reads and writes: local_booking_detail, local_booking_confirmations, local_booking_record_confirmation,
+     local_booking_quote, local_booking_send_quote, local_booking_extras, local_booking_request_extra, local_booking_cancel_extra, local_booking_reduction,
+     local_booking_request_reduction, local_booking_milestones, local_booking_record_milestone, local_booking_code_state, local_booking_submit_code,
+     local_booking_exceptions, local_booking_record_exception, local_booking_closeout, local_booking_withdraw_problem, local_booking_step. This page adds
+     no new database function and never touches a money table itself.
    Internal notes are drawn in their own block (lock, amber, "Not visible to the customer"), never as a bubble.
    Everything typed by a person is put on the page with textContent, never innerHTML. Runs on `coordinator:ready`.
    ============================================================ */
@@ -19,7 +26,8 @@
   var POLL_MS = 20000;
   var MAX_LEN = 2000;
   var S = { rows: [], filter: 'all', q: '', activeId: null, thread: null, detail: null, taskerPhone: '', mode: 'customer', online: navigator.onLine !== false,
-            sending: false, pending: null, drafts: {}, seq: 0, sig: '', timer: null, live: null, liveTimer: null };
+            sending: false, pending: null, drafts: {}, seq: 0, sig: '', timer: null, live: null, liveTimer: null,
+            pane: null, mountChain: Promise.resolve() };
 
   function $(id) { return document.getElementById(id); }
   function el(t, c, x) { return C.el(t, c, x); }
@@ -36,6 +44,31 @@
   /* Static icon markup only (never user text). */
   var ICON_LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
   var ICON_CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  function svgIcon(inner) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>'; }
+  var ICONS = {
+    phone: svgIcon('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>'),
+    tag: svgIcon('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'),
+    tool: svgIcon('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+    down: svgIcon('<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>'),
+    pin: svgIcon('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'),
+    check: svgIcon('<polyline points="20 6 9 17 4 12"/>'),
+    flag: svgIcon('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>'),
+    cancel: svgIcon('<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>')
+  };
+
+  /* The coordinator's Actions sheet. `pane` is the card (id in coordinator-chat.html); it is available when its module has not hidden it. */
+  var ACTIONS = [
+    { pane: 'coCf', group: 'Price and payment', icon: ICONS.phone,  label: 'Record the Local Tasker’s answer', hint: 'After you phone them: can they do it, and at what price' },
+    { pane: 'coQt', group: 'Price and payment', icon: ICONS.tag,    label: 'Send or change the quote',         hint: 'Send the price to the customer to approve and pay' },
+    { pane: 'coXt', group: 'Price and payment', icon: ICONS.tool,   label: 'Request an extra cost',            hint: 'More work, materials or transport. The customer can pay or decline' },
+    { pane: 'coRd', group: 'Price and payment', icon: ICONS.down,   label: 'Lower the price',                  hint: 'The Local Tasker agreed to less: report it to support' },
+    { pane: 'coMs', group: 'On the day',        icon: ICONS.pin,    label: 'Record progress',                  hint: 'Arrived, started or finished, as the Local Tasker told you' },
+    { pane: 'coRl', group: 'On the day',        icon: ICONS.check,  label: 'Release the payment',              hint: 'Enter the customer’s release code' },
+    { pane: 'coEx', group: 'Problems',          icon: ICONS.flag,   label: 'Write down something that went wrong', hint: 'Only a record. It changes nothing' },
+    { pane: 'coCo', group: 'Problems',          icon: ICONS.cancel, label: 'Cancel or report a problem',       hint: 'Cancel the booking or open a report for support' }
+  ];
+  var CARD_MODULES = ['STCoConfirm', 'STCoQuote', 'STCoMilestones', 'STCoRelease', 'STCoExceptions', 'STCoCloseout', 'STCoExtras', 'STCoReduction'];
 
   /* ── time ─────────────────────────────────────────────────── */
   function timeLabel(iso) {
@@ -170,6 +203,7 @@
     var call = $('ccCall'), ph = S.detail && S.detail.customer_phone ? String(S.detail.customer_phone).replace(/[^0-9+]/g, '') : '';
     call.hidden = !ph; if (ph) call.href = 'tel:' + ph;
     $('ccCtxRef').hidden = false; $('ccCtxRef').textContent = B.ref(r.booking_id);
+    renderBars();
   }
 
   function noteBlock(n, pending) {
@@ -248,6 +282,7 @@
         : 'You can read this conversation, but only the current coordinator can reply.';
     }
     setMode(S.mode, true);
+    renderBars();
   }
 
   function updateSend() {
@@ -263,6 +298,7 @@
     $('ccModeCustomer').classList.toggle('is-active', !note); $('ccModeCustomer').setAttribute('aria-selected', String(!note));
     $('ccModeNote').classList.toggle('is-active', note); $('ccModeNote').setAttribute('aria-selected', String(note));
     $('ccComposer').classList.toggle('is-note', note);
+    syncActionsBtn();
     $('ccHintText').textContent = note ? 'Only coordinators and administrators can see this. The customer never does.' : 'Visible to ' + firstName(r && r.customer_name) + '.';
     ta.placeholder = note ? 'Write an internal note…' : 'Write a message to ' + firstName(r && r.customer_name) + '…';
     $('ccInputLabel').textContent = note ? 'Internal note' : 'Message to the customer';
@@ -331,10 +367,113 @@
   }
   function closeSheet() { $('ccSheet').hidden = true; $('ccInfo').setAttribute('aria-expanded', 'false'); }
 
+
+  /* ── Job actions (the Request sheet) ──────────────────────── */
+  function syncActionsBtn() {
+    var b = $('ccActionsBtn'); if (!b) return;
+    b.hidden = !(canWrite() && S.mode !== 'note');
+  }
+
+  /* The slim "next step" row, the dot on the Actions button, and the problem bar */
+  function renderBars() {
+    var r = rowById(S.activeId), d = S.detail, can = canWrite();
+    var nb = $('ccNextBar'), nx = d ? B.nextAction(d) : null;
+    nb.hidden = !(can && nx);
+    if (can && nx) { $('ccNextText').textContent = nx.text; nb.classList.toggle('is-action', nx.tab === 'action'); }
+    $('ccActionsDot').hidden = !(can && nx && nx.tab === 'action');
+    var frozen = !!((d && d.frozen) || (r && r.frozen));
+    $('ccDisputeBar').hidden = !(S.activeId && frozen);
+    $('ccDisputeBtn').hidden = !can;
+    syncActionsBtn();
+  }
+
+  function paneAvailable(k) { var c = $(k); return !!(c && !c.hidden); }
+  function whyNot() {
+    var d = S.detail;
+    if (!d) return 'Loading the booking…';
+    if (!d.open && !d.frozen) return 'This booking is closed';
+    return 'Not available at this step';
+  }
+
+  function renderActionsMenu() {
+    var box = $('ccActionsMenu'); box.textContent = '';
+    var d = S.detail;
+    if (!d) { box.appendChild(el('div', 'jr-sheet-empty', 'Loading the booking…')); return; }
+    var nx = B.nextAction(d);
+    box.appendChild(el('div', 'jr-sheet-group', 'Next step'));
+    box.appendChild(el('p', 'cc-next' + (nx.tab === 'action' ? ' is-action' : ''), nx.text));
+    var group = '';
+    ACTIONS.forEach(function (a) {
+      if (a.group !== group) { group = a.group; box.appendChild(el('div', 'jr-sheet-group', group)); }
+      var ok = paneAvailable(a.pane);
+      var b = el('button', 'jr-sheet-item'); b.type = 'button'; b.disabled = !ok;
+      var ic = el('span', 'jr-sheet-item-icon'); ic.innerHTML = a.icon; b.appendChild(ic);
+      var tx = el('span', 'jr-sheet-item-text');
+      tx.appendChild(el('span', 'jr-sheet-item-label', a.label));
+      tx.appendChild(el('span', 'jr-sheet-item-hint', ok ? a.hint : whyNot()));
+      b.appendChild(tx);
+      b.addEventListener('click', function () { showPane(a.pane); });
+      box.appendChild(b);
+    });
+  }
+
+  function showMenu() {
+    S.pane = null;
+    $('ccActionsPanes').hidden = true; $('ccActionsMenu').hidden = false;
+    $('ccActionsTitle').textContent = 'Job actions';
+    renderActionsMenu();
+    $('ccActionsBody').scrollTop = 0;
+  }
+  function showPane(k) {
+    var a = ACTIONS.filter(function (x) { return x.pane === k; })[0]; if (!a) return;
+    S.pane = k;
+    Array.prototype.forEach.call($('ccActionsPanes').querySelectorAll('.cc-pane'), function (p) { p.hidden = p.getAttribute('data-pane') !== k; });
+    $('ccActionsMenu').hidden = true; $('ccActionsPanes').hidden = false;
+    $('ccActionsTitle').textContent = a.label;
+    $('ccActionsBody').scrollTop = 0;
+  }
+  function openActions(pane) {
+    if (!canWrite() || !S.activeId) return;
+    $('ccActions').hidden = false;
+    if (pane && paneAvailable(pane)) showPane(pane); else showMenu();
+    $('ccActionsClose').focus();
+  }
+  function closeActions() { $('ccActions').hidden = true; S.pane = null; }
+
+  /* Mount the eight cards for this booking. One at a time, and only for the booking that is still open on screen. */
+  function mountCards(d) {
+    S.mountChain = S.mountChain.then(function () {
+      if (!d || d.booking_id !== S.activeId) return null;
+      var reload = reloadDetail;
+      return Promise.all(CARD_MODULES.map(function (n) {
+        try { return window[n] && window[n].mount ? window[n].mount(d, { reload: reload }) : null; } catch (e) { return null; }
+      }));
+    }).catch(function () { /* a card that fails shows its own message */ }).then(function () {
+      if (!$('ccActions').hidden) {
+        if (S.pane && !paneAvailable(S.pane)) showMenu();   // the step moved on, so that form is not needed any more
+        else if (!S.pane) renderActionsMenu();
+      }
+    });
+    return S.mountChain;
+  }
+
+  /* Called by a card after it has saved something: refresh the booking, the cards, the conversation and the inbox. */
+  async function reloadDetail() {
+    var id = S.activeId, seq = S.seq; if (!id) return;
+    try {
+      var res = await sb().rpc('local_booking_detail', { p_booking: id });
+      if (seq !== S.seq) return;
+      if (!res.error && res.data) S.detail = res.data;
+    } catch (e) { /* the old details stay on screen */ }
+    renderHead(); renderContext();
+    await mountCards(S.detail);
+    reloadThread(false); loadList(true);
+  }
+
   /* ── open / reload a conversation ─────────────────────────── */
   function showRoom(on) {
     $('ccEmpty').hidden = on; $('ccHead').hidden = !on; $('ccStrip').hidden = !on;
-    if (!on) { $('ccBody').hidden = true; $('ccComposer').hidden = true; $('ccReadonly').hidden = true; $('ccJump').hidden = true; }
+    if (!on) { $('ccBody').hidden = true; $('ccComposer').hidden = true; $('ccReadonly').hidden = true; $('ccJump').hidden = true; $('ccNextBar').hidden = true; $('ccDisputeBar').hidden = true; }
     $('ccRoom').classList.toggle('open', on);
   }
 
@@ -354,6 +493,7 @@
     if (!r) { missing(); return; }
     if (S.activeId) S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value;
     var seq = ++S.seq;
+    closeActions();
     S.activeId = id; S.thread = null; S.detail = null; S.taskerPhone = ''; S.pending = null; S.sig = '';
     try { var u = new URL(window.location.href); u.searchParams.set('booking', id); history.replaceState(null, '', u.pathname + u.search); } catch (e) { /* not essential */ }
     renderList(); showRoom(true); renderHead(); renderContext();
@@ -376,7 +516,7 @@
   }
 
   function missing() {
-    S.activeId = null; showRoom(false); renderList();
+    S.activeId = null; closeActions(); showRoom(false); renderList();
     $('ccEmpty').lastElementChild.textContent = 'That conversation is not available to you. Pick one from the list.';
   }
 
@@ -392,6 +532,7 @@
     } catch (e) { /* the conversation works without the side panel */ }
     if (seq !== S.seq) return;
     renderHead(); renderContext();
+    if (S.detail) mountCards(S.detail);
   }
 
   async function markRead(id, force) {
@@ -477,7 +618,7 @@
     $('ccRefresh').addEventListener('click', function () { loadList(false).then(function () { if (S.activeId) reloadThread(false); }); });
     $('ccListRetry').addEventListener('click', function () { loadList(false); });
     $('ccSearch').addEventListener('input', function (e) { S.q = e.target.value; renderList(); });
-    $('ccBack').addEventListener('click', function () { S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value; S.activeId = null; S.seq++; showRoom(false); renderList(); closeSheet(); try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* ok */ } });
+    $('ccBack').addEventListener('click', function () { S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value; S.activeId = null; S.seq++; closeActions(); showRoom(false); renderList(); closeSheet(); try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* ok */ } });
     $('ccModeCustomer').addEventListener('click', function () { setMode('customer'); });
     $('ccModeNote').addEventListener('click', function () { setMode('note'); });
     var ta = $('ccInput');
@@ -489,8 +630,16 @@
     $('ccSend').addEventListener('click', onSend);
     $('ccWarnEdit').addEventListener('click', function () { $('ccWarn').hidden = true; ta.focus(); });
     $('ccInfo').addEventListener('click', openSheet); $('ccStrip').addEventListener('click', openSheet);
+    $('ccActionsBtn').addEventListener('click', function () { openActions(); });
+    $('ccNextBtn').addEventListener('click', function () { openActions(); });
+    $('ccDisputeBtn').addEventListener('click', function () { openActions('coCo'); });
+    $('ccActionsClose').addEventListener('click', closeActions); $('ccActionsBackdrop').addEventListener('click', closeActions);
+    $('ccActionsBack').addEventListener('click', showMenu);
     $('ccSheetClose').addEventListener('click', closeSheet); $('ccSheetBack').addEventListener('click', closeSheet); $('ccSheetBackdrop').addEventListener('click', closeSheet);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('ccSheet').hidden) closeSheet(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (!$('ccActions').hidden) closeActions(); else if (!$('ccSheet').hidden) closeSheet();
+    });
     $('ccJump').addEventListener('click', function () { var b = $('ccBody'); b.scrollTop = b.scrollHeight; $('ccJump').hidden = true; });
     $('ccBody').addEventListener('scroll', function () { var b = $('ccBody'); if (b.scrollHeight - b.scrollTop - b.clientHeight < 80) $('ccJump').hidden = true; });
     window.addEventListener('online', function () { S.online = true; setOffline(); refreshAll(true); });
