@@ -16,6 +16,8 @@
      local_booking_request_reduction, local_booking_milestones, local_booking_record_milestone, local_booking_code_state, local_booking_submit_code,
      local_booking_exceptions, local_booking_record_exception, local_booking_closeout, local_booking_withdraw_problem, local_booking_step. This page adds
      no new database function and never touches a money table itself.
+   Cards and side panels (Stage 6D-1): js/coordinator-cards.js draws the payment and request cards inside the conversation and the Payment history and
+     Activity blocks of the right-hand column, read only. It uses coordinator_chat_cards and coordinator_chat_activity (new in stage-6d1-core.sql).
    Internal notes are drawn in their own block (lock, amber, "Not visible to the customer"), never as a bubble.
    Everything typed by a person is put on the page with textContent, never innerHTML. Runs on `coordinator:ready`.
    ============================================================ */
@@ -219,7 +221,8 @@
 
   function systemLine(m) {
     var t = String(m.body || ''), pr = /^PAYMENT_REQUEST:[^:]*:(\d+)/.exec(t);
-    var text = pr ? 'Payment request sent to the customer: ₦' + Number(pr[1]).toLocaleString('en-NG') : (/^[A-Z_]{4,}:/.test(t) ? 'Job Room update' : t);
+    var fb = window.STCoCards ? window.STCoCards.fallbackText(m) : '';
+    var text = fb || (pr ? 'Payment request sent to the customer: ₦' + Number(pr[1]).toLocaleString('en-NG') : (/^[A-Z_]{4,}:/.test(t) ? 'Job Room update' : t));
     var row = el('div', 'jr-system'), chip = el('div', 'jr-system-chip'), ic = el('span', 'jr-system-icon'); ic.innerHTML = ICON_CHECK;
     chip.appendChild(ic); chip.appendChild(document.createTextNode(text)); row.appendChild(chip); row.appendChild(el('div', 'jr-system-time', timeLabel(m.created_at)));
     return row;
@@ -232,7 +235,9 @@
     var col = el('div', 'cc-bubble-col');
     if (who) col.appendChild(el('div', 'cc-who', who));
     var bb = el('div', 'msg-bubble');
-    bb.appendChild(el('span', 'msg-bubble-text', m.body || ''));
+    var A = window.STCoAttach;
+    if (A && A.isMedia(m)) { bb.appendChild(A.mediaFor(m)); bb.classList.add('cc-bubble-media'); }
+    else bb.appendChild(el('span', 'msg-bubble-text', m.body || ''));
     bb.appendChild(el('span', 'msg-bubble-time', pending ? (pending.failed ? '' : 'Sending…') : timeLabel(m.created_at)));
     col.appendChild(bb);
     if (pending && pending.failed) { var rb = el('button', 'msg-failed', 'Not sent. Tap to retry'); rb.type = 'button'; rb.addEventListener('click', function () { submit(pending); }); col.appendChild(rb); }
@@ -254,7 +259,11 @@
       var d = new Date(it.at), dk = dayKey(d);
       if (dk !== lastDay) { body.appendChild(el('div', 'msg-date-divider', dayLabel(it.at))); lastDay = dk; lastKey = ''; }
       if (it.k === 'n') { body.appendChild(noteBlock(it.v)); lastKey = ''; return; }
-      var m = it.v;
+      var m = it.v, CO = window.STCoCards;
+      if (CO && CO.isCardBody(m)) {
+        var cd = CO.cardFor(m, m.kind !== 'customer');
+        body.appendChild(cd || systemLine(m)); lastKey = ''; return;
+      }
       if (m.kind === 'local_tasker' || m.kind === 'other') { body.appendChild(systemLine(m)); lastKey = ''; return; }
       var key = m.kind + '|' + (m.author_name || ''), gap = d.getTime() - lastAt > 5 * 60 * 1000;
       var who = (key !== lastKey || gap) ? (m.kind === 'customer' ? ((r && r.customer_name) || 'Customer') : (m.author_name + (m.author_is_me ? ' (you)' : ''))) : '';
@@ -283,10 +292,11 @@
     }
     setMode(S.mode, true);
     renderBars();
+    if (window.STCoAttach) window.STCoAttach.sync();
   }
 
   function updateSend() {
-    var has = $('ccInput').value.trim().length > 0;
+    var att = window.STCoAttach && window.STCoAttach.has(), has = att || $('ccInput').value.trim().length > 0;
     $('ccSend').disabled = !has || S.sending || !S.online || !canWrite();
   }
 
@@ -305,6 +315,7 @@
     $('ccSend').setAttribute('aria-label', note ? 'Save note' : 'Send message');
     ta.value = S.drafts[S.activeId + '|' + mode] || '';
     $('ccWarn').hidden = true; autosize(); updateSend();
+    if (window.STCoAttach) window.STCoAttach.sync();
   }
   function autosize() { var ta = $('ccInput'); ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 100) + 'px'; }
 
@@ -357,6 +368,11 @@
     var cp = card('Payment (read only)'); dl = el('dl', 'cc-facts');
     fact(dl, 'Status', B.payLabel(r.payment_status)); fact(dl, 'Amount', B.naira(r.amount), { empty: 'Not set yet' }); cp.appendChild(dl);
     cp.appendChild(el('p', 'cc-card-note', 'Payments are handled by StreetTasker. You cannot change them.')); box.appendChild(cp);
+
+    if (window.STCoCards) {
+      var hb = window.STCoCards.historyBlock(S.activeId); if (hb) box.appendChild(hb);
+      var ab = window.STCoCards.activityBlock(S.activeId, renderContext); if (ab) box.appendChild(ab);
+    }
 
     if (d) { var open = el('a', 'btn btn-outline btn-full', 'Open full booking'); open.href = 'coordinator-booking.html?id=' + encodeURIComponent(r.booking_id); box.appendChild(open); }
   }
@@ -479,7 +495,7 @@
 
   function signature(t) {
     var m = t.messages, n = t.notes;
-    return [t.thread_id, t.access, t.total_messages, m.length ? m[m.length - 1].id : '', n.length ? n[n.length - 1].id : '', n.length].join('|');
+    return [t.thread_id, t.access, t.total_messages, m.length ? m[m.length - 1].id : '', n.length ? n[n.length - 1].id : '', n.length, window.STCoCards ? window.STCoCards.sig() : ''].join('|');
   }
 
   async function fetchThread(id) {
@@ -488,7 +504,14 @@
     return res;
   }
 
+  function cardsLoad(id) { return window.STCoCards ? window.STCoCards.load(id).catch(function () { return false; }) : Promise.resolve(false); }
+  function sideLoad(id, seq) {
+    if (!window.STCoCards) return;
+    window.STCoCards.loadActivity(id).catch(function () { return false; }).then(function () { if (seq === S.seq && id === S.activeId) renderContext(); });
+  }
+
   async function openBooking(id) {
+    if (window.STCoAttach && S.activeId !== id) window.STCoAttach.clear();
     var r = rowById(id);
     if (!r) { missing(); return; }
     if (S.activeId) S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value;
@@ -499,12 +522,13 @@
     renderList(); showRoom(true); renderHead(); renderContext();
     var body = $('ccBody'); body.hidden = false; body.textContent = ''; body.appendChild(el('div', 'jr-thread-note', 'Loading the conversation…'));
     $('ccComposer').hidden = true; $('ccReadonly').hidden = true;
-    var res = await fetchThread(id);
+    var both = await Promise.all([fetchThread(id), cardsLoad(id)]), res = both[0];
     if (seq !== S.seq) return;
     if (res.error || !res.data) { threadError(id, hintOf(res.error) === 'not_found'); return; }
     S.thread = res.data; S.sig = signature(S.thread);
     renderTimeline('bottom'); renderComposer(); $('ccBody').scrollTop = $('ccBody').scrollHeight;
     if (S.thread.access === 'coordinator') loadContext(id, seq);
+    sideLoad(id, seq);
     markRead(id);
   }
 
@@ -547,12 +571,12 @@
   /* Refetch the open conversation. Quietly: only redraws when something changed. */
   async function reloadThread(quiet) {
     var id = S.activeId; if (!id) return;
-    var seq = S.seq, res = await fetchThread(id);
+    var seq = S.seq, both = await Promise.all([fetchThread(id), cardsLoad(id)]), res = both[0];
     if (seq !== S.seq || id !== S.activeId) return;
     if (res.error || !res.data) { if (!quiet) toast('Could not refresh the conversation.', true); return; }
     var sig = signature(res.data), changed = sig !== S.sig;
     S.thread = res.data; S.sig = sig;
-    if (changed) { renderTimeline(quiet ? 'new' : 'bottom'); renderComposer(); }
+    if (changed) { renderTimeline(quiet ? 'new' : 'bottom'); renderComposer(); sideLoad(id, seq); }
     if (changed && !document.hidden) markRead(id, true);
   }
 
@@ -589,6 +613,13 @@
 
   function onSend() {
     var ta = $('ccInput'), body = ta.value.trim();
+    if (window.STCoAttach && window.STCoAttach.has() && S.mode !== 'note') {
+      if (S.sending || !canWrite()) return;
+      if (!S.online) { toast('You are offline. Try again when you reconnect.', true); return; }
+      $('ccWarn').hidden = true;
+      window.STCoAttach.send(body).then(function (ok) { if (ok) { ta.value = ''; delete S.drafts[S.activeId + '|customer']; autosize(); } updateSend(); });
+      return;
+    }
     if (!body || S.sending || !canWrite()) return;
     var kind = S.mode === 'note' ? 'note' : 'message';
     ta.value = ''; autosize(); $('ccWarn').hidden = true;
@@ -618,7 +649,7 @@
     $('ccRefresh').addEventListener('click', function () { loadList(false).then(function () { if (S.activeId) reloadThread(false); }); });
     $('ccListRetry').addEventListener('click', function () { loadList(false); });
     $('ccSearch').addEventListener('input', function (e) { S.q = e.target.value; renderList(); });
-    $('ccBack').addEventListener('click', function () { S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value; S.activeId = null; S.seq++; closeActions(); showRoom(false); renderList(); closeSheet(); try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* ok */ } });
+    $('ccBack').addEventListener('click', function () { if (window.STCoAttach) window.STCoAttach.clear(); S.drafts[S.activeId + '|' + S.mode] = $('ccInput').value; S.activeId = null; S.seq++; closeActions(); showRoom(false); renderList(); closeSheet(); try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* ok */ } });
     $('ccModeCustomer').addEventListener('click', function () { setMode('customer'); });
     $('ccModeNote').addEventListener('click', function () { setMode('note'); });
     var ta = $('ccInput');
@@ -647,6 +678,14 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshAll(true); });
     setOffline();
   }
+
+  /* Small surface for js/coordinator-attach.js (Stage 6D-3). */
+  window.STCoChat = {
+    state: function () { return S; }, toast: toast, canWrite: canWrite, updateSend: updateSend,
+    setSending: function (v) { S.sending = !!v; updateSend(); },
+    showContactWarn: function () { $('ccWarn').hidden = false; },
+    reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList
+  };
 
   async function init() {
     bind();
