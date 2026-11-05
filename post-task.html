@@ -51,6 +51,7 @@
     <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 6v8"/><path d="M12 18h.01"/></symbol>
     <symbol id="i-asterisk" viewBox="0 0 24 24"><path d="M12 6v12"/><path d="M17.196 9 6.804 15"/><path d="m6.804 9 10.392 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
     </defs>
   </svg>
@@ -286,14 +287,23 @@
                   <span class="pt-urgent-icon" aria-hidden="true"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-asterisk"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-alert"/></svg></span>
                   <div class="pt-urgent-copy">
                     <div class="pt-urgent-title"><span class="pt-desk">Mark as Urgent</span><span class="pt-mob">Urgent Priority</span> <span class="pt-urgent-badge"><span class="pt-desk">URGENT</span><span class="pt-mob">TOP BUMP</span></span></div>
+                    <p class="pt-urgent-note" id="urgentNote" hidden></p>
+                    <p class="pt-urgent-lock" id="urgentLock" role="status" hidden><span id="urgentLockText">You need to verify your identity to use this feature.</span> <a class="pt-urgent-lock-link" id="urgentVerifyLink" href="verify.html">Verify now</a></p>
+                  </div>
+                  <div class="pt-urgent-side">
+                    <label class="pt-toggle" aria-label="Mark task as urgent for ₦1,500"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="pt-toggle-track"></span></label>
+                    <span class="pt-urgent-price-row">
+                      <span class="pt-urgent-price">₦1,500</span>
+                      <button type="button" class="pt-info-btn" id="urgentInfoBtn" aria-label="About the urgent fee" aria-expanded="false" aria-controls="urgentInfo"><svg class="pt-i" aria-hidden="true"><use href="#i-info"/></svg></button>
+                    </span>
+                  </div>
+                  <div class="pt-urgent-info" id="urgentInfo" role="region" aria-label="About the urgent fee" hidden>
                     <p class="pt-urgent-desc" id="urgentDesc">
                       <span class="pt-desk">Pay a one-time <strong>₦1,500</strong> fee to StreetTasker to bump your task to the very top of the tasker feed with push notifications.</span>
                       <span class="pt-mob">Pay a one-time <strong>₦1,500</strong> fee to prioritize your listing on nearby tasker feeds.</span>
                     </p>
-                    <p class="pt-urgent-note" id="urgentNote">Switching this on takes you to Paystack to pay. If you close it without paying, nothing is charged and urgent stays off.</p>
-                    <p class="pt-urgent-lock" id="urgentLock" role="status" hidden><span id="urgentLockText">You need to verify your identity to use this feature.</span> <a class="pt-urgent-lock-link" id="urgentVerifyLink" href="verify.html">Verify now</a></p>
+                    <p class="pt-urgent-desc">Switching this on takes you to Paystack to pay. If you close it without paying, nothing is charged and urgent stays off.</p>
                   </div>
-                  <label class="pt-toggle" aria-label="Mark task as urgent for ₦1,500"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="pt-toggle-track"></span></label>
                 </div>
               </div>
             </section>

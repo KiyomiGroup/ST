@@ -89,6 +89,7 @@ function initTaskForm() {
   wireWorkMode();
   wireUseLocation();
   wireUrgentToggle();
+  wireUrgentInfo();
   wirePhotos();
   wireTitleExamples();
   wireDraft();       /* restore first, then auto-save */
@@ -359,7 +360,7 @@ function setUrgentUI(state) {
   box.classList.toggle('is-locked', locked);
   const lock = $id('urgentLock');
   if (lock) lock.hidden = !locked;
-  if (note) note.hidden = locked;
+  if (note) note.hidden = locked || state === 'off';   /* off: the explanation lives behind the info button */
   box.classList.toggle('is-pending', state === 'pending');
   box.classList.toggle('is-paid', state === 'paid');
   if (note) {
@@ -367,8 +368,18 @@ function setUrgentUI(state) {
       ? '✓ ₦' + URGENT_FEE_NAIRA.toLocaleString() + ' paid. Your task will be bumped to the top when you post it.'
       : state === 'pending'
         ? 'Complete the ₦' + URGENT_FEE_NAIRA.toLocaleString() + ' payment in the Paystack window…'
-        : 'Switching this on takes you to Paystack to pay. If you close it without paying, nothing is charged and urgent stays off.';
+        : '';
   }
+}
+
+/* The (i) beside the ₦1,500 opens or closes the explanation of the fee */
+function wireUrgentInfo() {
+  const btn = $id('urgentInfoBtn');
+  const panel = $id('urgentInfo');
+  if (!btn || !panel) return;
+  const set = open => { panel.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+  btn.addEventListener('click', () => set(panel.hidden));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { set(false); btn.focus(); } });
 }
 
 /* Ask the SERVER (idv_can_publish) whether this person may use urgent. Returns 'ok', 'verify' or 'unavailable'.
