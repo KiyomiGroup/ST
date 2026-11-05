@@ -5418,8 +5418,8 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
      (none)        first load: visible, 12s CSS failsafe if JS never runs
      .st-loaded    hidden (fades out)
      .st-loading   shown again by ST.loader.show() / link clicks, JS-controlled
-   The coin is one image that swings edge-on and back, so the K and the word
-   StreetTasker never mirror. It only appears after --loader-show-delay.
+   The coin is one image that turns a full 360 degrees (front, back, front).
+   It only appears after --loader-show-delay.
    Pages that must not show it (back-office, fixtures) add class
    st-loader-off to <html>, or are matched in the opt-out rule below.
    ============================================================ */
@@ -5481,14 +5481,15 @@ html:has(script[src*="messages-fixtures"])::after,
 html:has(script[src*="messages-cards-demo"])::before,
 html:has(script[src*="messages-cards-demo"])::after { display: none; }
 
-/* one flip: ease in to edge-on, swap sides while it is a sliver, ease out */
+/* one full turn: front -> back -> front. A plain 3D rotation of one image, so the
+   back is the mirror of the front (like the reference GIF). Each half eases in and
+   out, so it is smooth with no jumps, and the coin rises a little at the half-way. */
 @keyframes st-coin-flip {
-  0%      { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg);
-            animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.6); }
-  50%     { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(90deg); }
-  50.01%  { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(-90deg);
-            animation-timing-function: cubic-bezier(0.1, 0.4, 0.55, 1); }
-  100%    { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg); }
+  0%   { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg);
+         animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+  50%  { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(180deg);
+         animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+  100% { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(360deg); }
 }
 /* soft fade-in on filter, so it never fights the opacity fade-out */
 @keyframes st-coin-in {
