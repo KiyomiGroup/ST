@@ -79,6 +79,7 @@ function initTaskForm() {
   const form = $id('postTaskForm');
   if (!form) return;
 
+  if (window.TaskDrafts) TaskDrafts.init();
   populateCategorySelect();
   setMinDeadline();
   wireCategoryChips();
@@ -89,6 +90,7 @@ function initTaskForm() {
   wireUseLocation();
   wireUrgentToggle();
   wirePhotos();
+  wireTitleExamples();
   wireDraft();       /* restore first, then auto-save */
   applyUrgentGate();  /* after the draft is restored: grey out urgent if verification is needed */
   window.addEventListener('pageshow', (e) => { if (e.persisted) applyUrgentGate(); });  /* back from verify.html */
@@ -111,6 +113,24 @@ function syncAll() {
   syncBudgetPresets();
   updateCharCounter();
   updateProgress();
+}
+
+/* ── Task title examples: short everyday jobs, shown one after another while the box is empty ── */
+const TITLE_EXAMPLES = ['Wash my shoes', 'Fix my generator', 'Wash my clothes', 'Clean my house'];
+
+function wireTitleExamples() {
+  const input = $id('taskTitle');
+  if (!input) return;
+  let i = 0;
+  const show = () => { input.placeholder = 'e.g. ' + TITLE_EXAMPLES[i]; };
+  show();
+  /* People who prefer less motion get the first example and no rotation */
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setInterval(() => {
+    if (input.value || document.activeElement === input) return;   /* never change it while someone is typing */
+    i = (i + 1) % TITLE_EXAMPLES.length;
+    show();
+  }, 2500);
 }
 
 /* ── Category: select + chips ───────────────────────────────── */
@@ -593,12 +613,36 @@ function wireDraft() {
 
   const discard = $id('discardDraftBtn');
   if (discard) discard.addEventListener('click', discardDraft);
-  const saveBtn = $id('saveDraftBtn');
-  if (saveBtn) saveBtn.addEventListener('click', () => {
-    saveDraft();
-    showToast('Draft saved. It will be here when you come back.');
-  });
+  /* Save as Draft: desktop and phone buttons both carry data-save-draft */
+  document.querySelectorAll('[data-save-draft]').forEach(btn => btn.addEventListener('click', saveDraftToList));
+  refreshDraftCount();
   setInterval(updateDraftAgo, 30000);
+}
+
+/* Save as Draft: keeps this task in the list on the Drafts page, and the form keeps updating it from then on */
+async function saveDraftToList() {
+  saveDraft();   /* brings taskDraft up to date with the form */
+  if (!window.TaskDrafts || !TaskDrafts.hasContent(taskDraft)) {
+    showToast('Add a title or a few details first, then save your draft.');
+    return;
+  }
+  await TaskDrafts.init();
+  if (!taskDraft.draftId) taskDraft.draftId = TaskDrafts.newId();
+  taskDraft.savedToList = true;
+  const ok = TaskDrafts.upsert(taskDraft.draftId, taskDraft);
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(taskDraft)); } catch (e) { /* ignore */ }
+  refreshDraftCount();
+  showToast(ok ? 'Draft saved. Find it under My drafts.' : 'Could not save the draft on this device. Please free some space and try again.');
+}
+
+/* "My drafts (2)": the count beside the quiet link, hidden when there are none */
+async function refreshDraftCount() {
+  if (!window.TaskDrafts) return;
+  await TaskDrafts.init();
+  const n = TaskDrafts.count();
+  document.querySelectorAll('[data-drafts-count]').forEach(el => {
+    el.textContent = n ? '(' + n + ')' : '';
+  });
 }
 
 function readDraftFromForm() {
@@ -624,6 +668,8 @@ function saveDraft() {
   draftSavedAt = Date.now();
   taskDraft.savedAt = draftSavedAt;
   try { localStorage.setItem(DRAFT_KEY, JSON.stringify(taskDraft)); } catch (e) { /* storage full or blocked */ }
+  /* A draft already saved to the list keeps following the form, so Continue always opens the latest version */
+  if (taskDraft.savedToList && taskDraft.draftId && window.TaskDrafts) TaskDrafts.upsert(taskDraft.draftId, taskDraft);
   updateDraftAgo();
 }
 
@@ -678,6 +724,9 @@ function updateDraftAgo() {
 }
 
 function clearDraft() {
+  /* Posting or discarding also removes the saved copy from the Drafts list */
+  const savedId = taskDraft.draftId;
+  if (savedId && window.TaskDrafts) TaskDrafts.init().then(() => { TaskDrafts.remove(savedId); refreshDraftCount(); });
   try { localStorage.removeItem(DRAFT_KEY); sessionStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
   taskDraft = {};
   const banner = $id('draftBanner');

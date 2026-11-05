@@ -387,6 +387,15 @@
   background: var(--pt-field-strong); color: var(--pt-ink); font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600; cursor: pointer;
 }
 .pt-draft-btn:hover { background: var(--pt-field-icon); }
+
+/* "My drafts": a quiet text link, not a button. Desktop sits after the back button, phone sits opposite the eyebrow pill. */
+.pt-drafts-link {
+  margin-right: auto; color: var(--pt-ink-muted); text-decoration: none; white-space: nowrap;
+  font-family: var(--font-heading); font-size: var(--text-base-sm); font-weight: 600;
+}
+.pt-drafts-link:hover { color: var(--pt-ink); text-decoration: underline; }
+.pt-drafts-link:focus-visible { outline: 0; box-shadow: var(--shadow-focus); border-radius: var(--radius-form); }
+.pt-eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .pt-submit-note { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); font-size: var(--text-xs); color: var(--pt-ink); }
 .pt-submit-note .pt-i { width: 16px; height: 16px; color: var(--pt-green); }
 .pt-submit-note a { color: var(--pt-ink); text-decoration: underline; }
@@ -598,7 +607,9 @@
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
     padding: var(--space-4) calc(var(--space-4) + var(--space-1)) var(--space-3); border-radius: var(--radius-form); box-shadow: var(--shadow-pt-bar);
   }
-  .pt-post-btn { width: 100%; height: 52px; background: var(--color-primary); font-weight: 700; box-shadow: var(--shadow-primary-md); }
+  .pt-post-btn { flex: 1 1 auto; min-width: 0; height: 52px; background: var(--color-primary); font-weight: 700; box-shadow: var(--shadow-primary-md); }
+  .pt-submit-row { gap: var(--space-3); }
+  .pt-draft-btn-m { flex: 0 0 auto; padding: 0 var(--space-4); }
   .pt-post-btn:hover { background: var(--color-primary-hover); }
   .pt-submit-note { justify-content: center; margin-top: var(--space-2); font-size: var(--text-sm); color: var(--pt-ink-muted); }
   .pt-dot { background: var(--pt-ink-muted); }

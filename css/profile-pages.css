@@ -478,8 +478,8 @@
   .cp-page .pg-hero { margin-bottom: var(--space-4); padding-bottom: var(--space-5); }
   .cp-back { display: inline-grid; }
   .cp-meta-dot { display: none; }
-  .cp-actions { flex-direction: row; align-items: stretch; width: 100%; min-width: 0; }
-  .cp-actions > * { flex: 1; }
+  .cp-actions { flex-direction: row; flex-wrap: wrap; align-items: stretch; width: 100%; min-width: 0; }
+  .cp-actions > * { flex: 1 1 calc(50% - var(--space-3)); min-width: max-content; }
   .cp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   /* One column, in the phone reference order: About, scorecard, hiring categories, proposal, active tasks, history, reviews, escrow card */

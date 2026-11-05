@@ -277,7 +277,10 @@
 .ep-hero-save:disabled { opacity: 0.7; cursor: progress; }
 .ep-hero .pg-hero-stack { min-width: 168px; }
 .ep-hero .pg-hero-btn { justify-content: center; }
+/* Phones: stack the hero buttons full width. Side by side, the Save button's min-width squeezed the pale
+   "View Public ..." pill until its label spilled out of it. */
 @media (max-width: 768px) {
-  .ep-hero .pg-hero-stack { width: 100%; min-width: 0; }
-  .ep-hero .pg-hero-stack > * { flex: 1; }
+  .ep-hero .pg-hero-stack { flex-direction: column; align-items: stretch; width: 100%; min-width: 0; }
+  .ep-hero .pg-hero-stack > * { flex: none; width: 100%; min-width: 0; }
+  .ep-hero .pg-hero-btn { padding: 0 var(--space-4); }
 }

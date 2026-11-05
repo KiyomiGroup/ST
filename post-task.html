@@ -61,6 +61,7 @@
       <!-- ── Top bar (desktop) ──────────────────────────────────── -->
       <div class="pt-topbar pt-desk">
         <a class="pt-back" href="dashboard-customer.html"><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Back to Dashboard</a>
+        <a class="pt-drafts-link" href="drafts.html">My drafts <span data-drafts-count></span></a>
         <div class="pt-step-pill" role="status" aria-live="polite">
           <span>Task Step <span id="progressStepNumDesktop">1 of 4</span></span>
           <span class="pt-step-sep" aria-hidden="true"></span>
@@ -91,7 +92,10 @@
           <button type="button" class="pt-draft-discard" id="discardDraftBtn"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-trash"/></svg>Discard</button>
         </div>
         <div class="pt-header-copy">
-          <span class="pt-eyebrow"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-plus-circle"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-zap"/></svg>Post Your Task</span>
+          <div class="pt-eyebrow-row">
+            <span class="pt-eyebrow"><svg class="pt-i pt-desk" aria-hidden="true"><use href="#i-plus-circle"/></svg><svg class="pt-i pt-mob" aria-hidden="true"><use href="#i-zap"/></svg>Post Your Task</span>
+            <a class="pt-drafts-link pt-mob" href="drafts.html">My drafts <span data-drafts-count></span></a>
+          </div>
           <h1 class="pt-title">What needs doing?</h1>
           <p class="pt-lede">Describe your task and verified taskers near you will send their best offers <span class="pt-desk">within minutes.</span><span class="pt-mob">shortly.</span></p>
         </div>
@@ -151,10 +155,10 @@
               <div class="pt-group pt-group-title">
                 <div class="pt-label-row">
                   <label class="pt-label" for="taskTitle">Task Title <span class="pt-req" aria-hidden="true">*</span></label>
-                  <span class="pt-hint"><span class="pt-desk">Be specific to get accurate quotes</span><span class="pt-mob">Be specific</span></span>
+                  <span class="pt-hint"><span class="pt-desk">Keep it short and simple</span><span class="pt-mob">Be specific</span></span>
                 </div>
                 <div class="pt-field">
-                  <input type="text" id="taskTitle" name="title" class="pt-input" placeholder="e.g. Deep clean 3-bedroom apartment with balcony in Lekki" maxlength="120" required data-field="title" autocomplete="off" />
+                  <input type="text" id="taskTitle" name="title" class="pt-input" placeholder="e.g. Wash my shoes" maxlength="120" required data-field="title" autocomplete="off" />
                   <svg class="pt-i pt-field-check" id="titleCheck" aria-hidden="true"><use href="#i-check-circle"/></svg>
                 </div>
                 <span class="pt-error" id="titleError" role="alert"></span>
@@ -326,7 +330,8 @@
             <div class="pt-submit">
               <div class="pt-submit-row">
                 <button type="submit" class="pt-post-btn" id="taskSubmitBtn"><span class="pt-post-label">Post My Task</span><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
-                <button type="button" class="pt-draft-btn pt-desk" id="saveDraftBtn">Save as Draft</button>
+                <button type="button" class="pt-draft-btn pt-desk" id="saveDraftBtn" data-save-draft>Save as Draft</button>
+                <button type="button" class="pt-draft-btn pt-draft-btn-m pt-mob" id="saveDraftBtnMobile" data-save-draft>Save draft</button>
               </div>
               <p class="pt-submit-note pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>By posting you agree to our <a href="terms.html">Terms</a>. Task goes live to nearby taskers instantly. 100% Escrow Protected.</span></p>
               <p class="pt-submit-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><span>Free to post</span><span class="pt-dot" aria-hidden="true"></span><span>Instant local offers</span><span class="pt-dot" aria-hidden="true"></span><span>No hidden fees</span></p>
@@ -435,7 +440,9 @@
   <script src="js/app.js"></script>
   <script src="js/verify.js"></script>
   <script src="js/payments.js"></script>
+  <script src="js/task-drafts.js"></script>
   <script src="js/tasks.js"></script>
+  <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
   <script>
     function initPage() {

@@ -115,6 +115,15 @@ const _AREAS = [
   'GRA, Enugu','Independence Layout, Enugu',
 ];
 
+/* Nigeria-wide list from js/ng-places.js (load it before this file): every state, every local government area,
+   every Lagos neighbourhood and the main areas of the bigger cities. Added AFTER the entries above, so the
+   six "popular" shortcuts shown on focus stay the same. Skipped quietly if the file is missing. */
+(function () {
+  const extra = window.NG_PLACES || [];
+  const have  = new Set(_AREAS.concat(_STREETS).map(s => s.toLowerCase()));
+  extra.forEach(p => { const k = p.toLowerCase(); if (!have.has(k)) { have.add(k); _AREAS.push(p); } });
+})();
+
 /* ── Format Nominatim result ───────────────────────────────── */
 function _fmt(r, precise) {
   const a      = r.address || {};
@@ -145,14 +154,20 @@ function _isStreetLevel(label) {
     /\b(street|st[,\s]|road|rd[,\s]|avenue|ave|way|drive|dr[,\s]|close|crescent|lane|boulevard|blvd|layout|estate|phase|express|expressway)\b/i.test(label);
 }
 
+/* True when any word of the label starts with the typed text (words split on space, comma, slash, hyphen) */
+function _wordStarts(label, ql) {
+  return label.toLowerCase().split(/[\s,\/\-]+/).some(w => w.startsWith(ql));
+}
+
 /* ── Instant local match — street-level from 1st character ── */
 function _instant(q, precise) {
   const ql    = q.toLowerCase();
   const list  = precise ? [..._STREETS, ..._AREAS] : [..._AREAS, ..._STREETS];
-  /* startsWith first, then contains */
+  /* startsWith first, then a word that starts with it ("Ota" -> "Ado-Odo/Ota"), then contains */
   const starts   = list.filter(s => s.toLowerCase().startsWith(ql));
-  const contains = list.filter(s => !s.toLowerCase().startsWith(ql) && s.toLowerCase().includes(ql));
-  const merged   = [...starts, ...contains].slice(0, 8);
+  const words    = list.filter(s => !s.toLowerCase().startsWith(ql) && _wordStarts(s, ql));
+  const contains = list.filter(s => !s.toLowerCase().startsWith(ql) && !_wordStarts(s, ql) && s.toLowerCase().includes(ql));
+  const merged   = [...starts, ...words, ...contains].slice(0, 8);
   return merged.map(label => ({
     label, lat: null, lon: null,
     precise: _isStreetLevel(label), instant: true,
@@ -253,7 +268,7 @@ function _looksLikeStreet(text) {
 /* Nominatim address -> "Area, City" (never a road or a house number) */
 function _areaLabel(a) {
   a = a || {};
-  const area  = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.residential || '';
+  const area  = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.residential || a.locality || a.hamlet || '';
   const city  = a.city || a.town || a.village || a.municipality || a.county || a.state_district || '';
   const state = a.state || '';
   const raw = (area && city) ? [area, city] : [area || city, state];
@@ -272,9 +287,10 @@ function _instantAreas(q) {
   if (!ql) return [];
   const rows = [..._AREAS, ..._STREETS].map(l => ({ src: l.toLowerCase(), area: _areaOf(l) }));
   const starts   = rows.filter(r => r.src.startsWith(ql));
-  const contains = rows.filter(r => !r.src.startsWith(ql) && r.src.includes(ql));
+  const words    = rows.filter(r => !r.src.startsWith(ql) && _wordStarts(r.src, ql));
+  const contains = rows.filter(r => !r.src.startsWith(ql) && !_wordStarts(r.src, ql) && r.src.includes(ql));
   const seen = new Set(), out = [];
-  [...starts, ...contains].forEach(r => {
+  [...starts, ...words, ...contains].forEach(r => {
     if (seen.has(r.area)) return; seen.add(r.area);
     out.push({ label: r.area, lat: null, lon: null, precise: false, instant: true, area: true });
   });
@@ -303,15 +319,21 @@ async function _nominatimAreas(query) {
   } catch (e) { return _instantAreas(query); }
 }
 
-/* Reverse lookup at neighbourhood level only (zoom 14 never returns a street or house) */
+/* Reverse lookup at neighbourhood level only (zoom 14 never returns a street or house).
+   Outside the big cities the map may know no neighbourhood at that zoom, so it widens
+   step by step (town, then local government area) instead of giving up: GPS works anywhere in Nigeria. */
 async function _reverseArea(lat, lon) {
-  const params = new URLSearchParams({ lat, lon, format: 'json', addressdetails: '1', zoom: '14', 'accept-language': 'en' });
-  try {
-    const res = await fetch(NOMINATIM_REVERSE + '?' + params);
-    if (!res.ok) return '';
-    const data = await res.json();
-    return _areaLabel(data.address);
-  } catch (e) { return ''; }
+  for (const zoom of ['14', '12', '10']) {
+    const params = new URLSearchParams({ lat, lon, format: 'json', addressdetails: '1', zoom, 'accept-language': 'en' });
+    try {
+      const res = await fetch(NOMINATIM_REVERSE + '?' + params);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const label = _areaLabel(data.address);
+      if (label) return label;
+    } catch (e) { /* try the wider zoom */ }
+  }
+  return '';
 }
 
 /* Ask the browser for a position. Network/Wi-Fi position first (works on laptops and is fast),
