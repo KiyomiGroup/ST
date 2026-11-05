@@ -545,7 +545,7 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
   /* Fallback: pull from taskers table (rating column is TEXT — can't sort numerically).
      Public read: name the columns. phone and whatsapp are private (logged-out visitors
      cannot read them), so select('*') would fail for them. */
-  const TASKER_PUBLIC_COLS = 'id, user_id, services, rating, location, subscription_status, created_at, available, service_name, category, price, description, photo, bio, photo_url, rate, free_limit, subscription_plan, rate_value, service, rate_unit, business_name, is_verified, verified_at, business_lat, business_lon, business_address, banner_color, banner_img, name, specialties, availability_status, verified, profile_details';
+  const TASKER_PUBLIC_COLS = 'id, user_id, services, rating, location, created_at, available, service_name, category, price, description, photo, bio, photo_url, rate, rate_value, service, rate_unit, business_name, is_verified, verified_at, business_lat, business_lon, business_address, banner_color, banner_img, name, specialties, availability_status, verified, profile_details';
   let tq = window.supabase.from('taskers').select(TASKER_PUBLIC_COLS)
     .eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) tq = tq.eq('category', category);

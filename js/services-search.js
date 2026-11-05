@@ -112,6 +112,11 @@ async function svcLoad() {
       });
     }
   } catch (e) { /* label is optional */ }
+
+  /* Membership labels (S4i): one question for everyone on the page; Local Taskers are left out. No answer = no label. */
+  try {
+    if (window.STMembership) await STMembership.load(SVC_ALL.filter(x => !x.isLocal).map(x => x.user_id));
+  } catch (e) { /* label is optional */ }
 }
 
 /* ── Filtering ───────────────────────────────────────────────── */
@@ -220,7 +225,7 @@ function svcBuildCard(s) {
     service_name: s.service_name, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
-    turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal,
+    turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id,
   });
 }
 

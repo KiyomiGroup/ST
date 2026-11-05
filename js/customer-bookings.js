@@ -147,6 +147,8 @@
     var tasks = await lookup('tasks', ['id,title,description,budget,location,category'], unique(rows, 'task_id'), 'id');
     var services = await lookup('services', ['*'], unique(rows, 'service_id'), 'id');
     if (window.STCustQuote) await window.STCustQuote.load();   /* never throws: a page without quotes still works */
+    /* Membership labels (S4i): one question for every provider; no answer = no label. */
+    if (window.STMembership) { try { await window.STMembership.load(providerIds); } catch (e) { /* label is optional */ } }
     return rows.map(function (b) {
       var t = tasks[b.task_id] || {};
       var s = services[b.service_id] || {};
@@ -337,7 +339,7 @@
       '<div class="bk-card-top"><div class="bk-card-head">' +
         '<div class="bk-card-id"><span class="bk-ref">#' + esc(v.ref) + '</span>' + badge(v) + when + '</div>' +
         '<h2 class="bk-card-title" id="bkt-' + esc(v.id) + '">' + esc(v.title) + '</h2>' +
-        '<div class="bk-person">' + avatar(v) + '<div class="bk-person-body"><span class="bk-person-name">' + esc(v.provider) + '</span>' +
+        '<div class="bk-person">' + avatar(v) + '<div class="bk-person-body"><span class="bk-person-name">' + esc(v.provider) + (window.STMembership ? window.STMembership.html(v.taskerId, { small: true }) : '') + '</span>' +
           '<div class="bk-person-sub">' + (v.location ? '<span>' + icon('pin') + esc(v.location) + '</span>' : '') +
           (v.category ? '<span>' + esc(v.category) + '</span>' : '') + '</div></div></div></div>' +
         '<div class="bk-card-amount">' + (shown ? '<span class="bk-amount">' + naira(shown) + '</span>' : '') + moneyTag(v) + '</div></div>' +

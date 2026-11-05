@@ -91,6 +91,8 @@
       } catch (e) { /* fall back to ids */ }
     }
     rows.forEach(function (a) { offersPerTask[a.task_id] = (offersPerTask[a.task_id] || 0) + 1; });
+    /* Membership labels (S4i): one question for every applicant; no answer = no label. */
+    if (window.STMembership) { try { await window.STMembership.load(ids); } catch (e) { /* label is optional */ } }
 
     state.apps = rows.map(function (a) {
       var p = profiles[a.tasker_id] || {}, u = users[a.tasker_id] || {};
@@ -190,7 +192,7 @@
 
     return '<article class="ap-card" data-id="' + esc(a.id) + '"><div class="ap-card-top">' + badge(a) +
       '<span class="ap-meta">' + icon('clock') + 'Applied ' + esc(ago(a.created)) + '</span></div>' +
-      '<div class="ap-person">' + avatar + '<div><h2 class="ap-person-name">' + esc(a.name) + '</h2><div class="ap-card-sub">' + sub.join('') + '</div></div></div>' +
+      '<div class="ap-person">' + avatar + '<div><h2 class="ap-person-name">' + esc(a.name) + (window.STMembership ? window.STMembership.html(a.taskerId, { small: true }) : '') + '</h2><div class="ap-card-sub">' + sub.join('') + '</div></div></div>' +
       '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + arrival + proofs + actions + '</article>';
   }
 

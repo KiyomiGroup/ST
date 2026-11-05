@@ -381,14 +381,16 @@ function stTaskCard(t) {
 /* ── Service card ────────────────────────────────────────────
    Reads: service_name, category label (s.categoryLabel), description, photo,
    provider, location, price, unit, rating, reviews_count, turnaround,
-   perk (e.g. "Includes Doorstep Pickup"), href. */
+   perk (e.g. "Includes Doorstep Pickup"), href, user_id (provider; only used for the membership label). */
 function stServiceCard(s) {
   const e = window.escapeHtml || (x => String(x));
   const rating = Number(s.rating);
   const reviews = Number(s.reviews_count);
   const ratingHtml = rating > 0
     ? `<span class="st-rating">${ST_ICON.star}${rating.toFixed(2).replace(/0$/, '')}${reviews > 0 ? ` <small>(${reviews}${reviews >= 100 ? '+' : ''})</small>` : ''}</span>` : '';
-  const eyebrow = s.perk || [s.provider, s.location].filter(Boolean).join(' · ');
+  /* PRO / PREMIUM label (S4i): AFTER the provider name, only when the card shows the name (no perk line), never for Local Taskers. */
+  const memb = (!s.perk && s.provider && !s.isLocal && s.user_id && window.STMembership) ? window.STMembership.html(s.user_id, { small: true }) : '';
+  const eyebrowHtml = s.perk ? e(s.perk) : [s.provider ? e(s.provider) + memb : '', s.location ? e(s.location) : ''].filter(Boolean).join(' · ');
   const media = s.photo
     ? `<img src="${e(s.photo)}" alt="${e(s.service_name)}" loading="lazy" data-emoji="${e(s.emoji || '')}" />`
     : `<div class="st-card-media-fallback" aria-hidden="true">${s.emoji || ST_CAT_EMOJI.other}</div>`;
@@ -400,7 +402,7 @@ function stServiceCard(s) {
       ${s.turnaround ? `<span class="st-chip st-chip--dark st-card-media-tag st-card-media-tag--br">${ST_ICON.truck}${e(s.turnaround)}</span>` : ''}
     </div>
     <div class="st-card-pad">
-      <div class="st-card-top"><span class="st-card-eyebrow">${e(eyebrow)}</span>${ratingHtml}</div>
+      <div class="st-card-top"><span class="st-card-eyebrow">${eyebrowHtml}</span>${ratingHtml}</div>
       ${s.isLocal ? stLocalTags() : ''}
       <h3 class="st-card-title">${e(s.service_name)}</h3>
       ${s.description ? `<p class="st-card-desc">${e(s.description)}</p>` : ''}

@@ -299,6 +299,7 @@ All in `css/tokens.css`.
 - S4h: build labels with `js/membership-labels.js` (`STMembership.load(ids)` once per page, then `html(userId, { small: true })` or `node(label, opts)`); never write the label classes by hand. It asks the server once, draws only PRO or PREMIUM and draws nothing on any failure.
 - `.membership-label--on-dark` for dark surfaces such as the tasker profile hero: PRO is outlined mint, PREMIUM is solid mint, so the two still differ.
 - Place the label after the name and after the identity tick; it never replaces or touches the tick.
+- S4i: labels are also drawn on service cards (`stServiceCard`, after the provider name in the eyebrow line, only when the card shows the name, never on a perk line or a Local Tasker), the customer's offers list (`customer-applications.html`, after the applicant's name) and the customer's bookings list (`customer-bookings.html`, after the provider's name). A page that draws labels links `css/membership.css` and loads `js/membership-labels.js` before its page script, then calls `STMembership.load(ids)` once.
 
 ---
 
