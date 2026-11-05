@@ -2611,6 +2611,8 @@ img { max-width: 100%; height: auto; }
 .pgtd-thumb-2 { background-image: url('../images/lt-tasker-rasheed.jpg'); background-size: cover; background-position: center top; }
 .pgtd-thumb-3 { background-image: url('../images/lt-tasker-baba.jpg'); background-size: cover; background-position: center top; }
 .pgtd-thumb-4 { background-image: url('../images/lt-tasker-emmanuel.jpg'); background-size: cover; background-position: center top; }
+/* Task with no uploaded photo: the StreetTasker logo, centred on the muted card colour. */
+.pgtd-thumb--logo { background-image: url('../images/favicon.png'); background-repeat: no-repeat; background-size: auto 45%; background-position: center; }
 
 .pgtd-head {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-1) var(--space-3);

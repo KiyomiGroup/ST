@@ -395,7 +395,7 @@
       </div>
       <div class="pgtd-grid fade-up d1" id="tasksList">
         <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="pgtd-thumb pgtd-thumb-1"></div>
+          <div class="pgtd-thumb pgtd-thumb--logo"></div>
           <span class="pgtd-cat">Furniture</span>
           <div class="pgtd-head">
             <h3 class="pgtd-title">Assemble a wardrobe</h3>
@@ -413,7 +413,7 @@
           </div>
         </div>
         <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="pgtd-thumb pgtd-thumb-2"></div>
+          <div class="pgtd-thumb pgtd-thumb--logo"></div>
           <span class="pgtd-cat">Cleaning</span>
           <div class="pgtd-head">
             <h3 class="pgtd-title">Deep clean an apartment</h3>
@@ -431,7 +431,7 @@
           </div>
         </div>
         <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="pgtd-thumb pgtd-thumb-3"></div>
+          <div class="pgtd-thumb pgtd-thumb--logo"></div>
           <span class="pgtd-cat">Delivery</span>
           <div class="pgtd-head">
             <h3 class="pgtd-title">Deliver a package</h3>
@@ -449,7 +449,7 @@
           </div>
         </div>
         <div class="pgtd-card" onclick="window.location.href='explore-tasks.html'">
-          <div class="pgtd-thumb pgtd-thumb-4"></div>
+          <div class="pgtd-thumb pgtd-thumb--logo"></div>
           <span class="pgtd-cat">Plumbing</span>
           <div class="pgtd-head">
             <h3 class="pgtd-title">Fix leaking kitchen sink</h3>
@@ -808,7 +808,8 @@
       { title:'Fix leaking kitchen sink', offers:5, category:'plumber', location:'Surulere', budget:15000, when:'Mon | 8:00 am', ago:'3 days ago', description:'Kitchen sink has been dripping for a week. Need a plumber to fix it asap.' },
     ];
 
-    const PGTD_THUMBS = ['pgtd-thumb-1','pgtd-thumb-2','pgtd-thumb-3','pgtd-thumb-4'];
+    /* A task with no uploaded photo shows the StreetTasker logo, never someone else's picture. */
+    const PGTD_NO_PHOTO = 'pgtd-thumb--logo';
     const PGTD_CLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
     const PGTD_PIN = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
@@ -841,7 +842,7 @@
       const safeDesc  = escapeHtml(t.description || '');
       const _tImgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
       const _tImg  = _tImgs[0] || null;
-      const thumbClass = _tImg ? '' : PGTD_THUMBS[i % PGTD_THUMBS.length];
+      const thumbClass = _tImg ? '' : PGTD_NO_PHOTO;
       const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
       const posted = escapeHtml(t.ago || pgtdAgo(t.created_at) || 'recently');
       const when   = escapeHtml(t.when || pgtdWhen(t.deadline));
