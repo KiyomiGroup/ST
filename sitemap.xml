@@ -80,4 +80,11 @@
     <priority>0.5</priority>
   </url>
 
+  <url>
+    <loc>https://streettasker.com/contact.html</loc>
+    <lastmod>2026-11-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
 </urlset>

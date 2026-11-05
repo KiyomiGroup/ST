@@ -568,7 +568,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .tasker-split p { font-size: var(--text-base); line-height: 1.7; margin-bottom: 26px; max-width: 440px; }
 .tasker-split-visual {
   background: var(--gray-100); border-radius: var(--radius-xl);
-  min-height: 340px; position: relative; overflow: hidden;
+  aspect-ratio: 16 / 9; position: relative; overflow: hidden;
 }
 .tasker-split-visual .hero-pill-float { position: absolute; top: 24px; right: 24px; }
 
@@ -1013,7 +1013,9 @@ p  { color: var(--text-secondary); font-weight: 400; }
   padding: 20px 0; display: flex; align-items: center;
   justify-content: space-between; flex-wrap: wrap; gap: 12px;
 }
+.footer-bottom { flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .footer-bottom p { color: var(--text-muted); font-size: var(--text-xs); }
+.footer-bottom .footer-credit { font-weight: 600; color: var(--text-secondary); }
 .footer-sprint   { display: none; }
 
 /* ── Toast ───────────────────────────────────────────────────── */
@@ -2667,7 +2669,8 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 480px) { .pgtd-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Tasker split visual — crop the photo to fill its half ── */
-.tasker-split-visual img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Photo fills the box edge to edge (box ratio matches the photo, so no grey strip underneath) */
+.tasker-split-visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 
 /* ── Final CTA — stays on-brand green at every breakpoint ── */
 .final-cta {
