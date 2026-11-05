@@ -1108,6 +1108,19 @@ body.msg-page {
 }
 .msg-input-wrap { flex: 1; }
 
+/* Closed job room (stage M5): history stays readable, the composer is replaced by one line of text */
+.msg-input-bar.is-closed { padding: 0; border-top: 0; }
+.msg-input-bar.is-closed > * { display: none; }
+.jr-closed-note {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .msg-input {
   display: block;
   width: 100%;

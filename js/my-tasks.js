@@ -48,7 +48,7 @@
   }
   function appGroup(status) {
     if (status === 'accepted' || status === 'completed') return 'accepted';
-    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn') return 'declined';
+    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn' || status === 'cancelled') return 'declined';   /* cancelled = accepted, then cancelled by the customer (M3/M5) */
     return 'pending';
   }
   function taskGroup(status) {
@@ -255,6 +255,10 @@
     } else if ((t.group === 'progress' || t.group === 'completed') && t.hired) {
       a += '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + (t.group === 'completed' ? 'View Chat' : 'Message Tasker') + '</button>' +
         '<a class="ap-btn" href="' + profile + '">View Profile</a>';
+      /* M5: cancel the accepted offer only while the job is in progress and nothing is paid (the database enforces it too) */
+      if (t.group === 'progress' && t.hired.status === 'accepted' && window.STOfferCancel && window.STOfferCancel.canCancel(t.booking)) {
+        a += '<button type="button" class="ap-btn ap-btn-quiet" data-act="cancel-offer" data-id="' + id + '">Cancel Accepted Offer</button>';
+      }
     }
     return a ? '<div class="ap-actions">' + a + '</div>' : '';
   }
@@ -346,6 +350,18 @@
     var t = findTask(b.getAttribute('data-id')); if (!t) return;
     current = t;
     if (act === 'message') { openChat(t); return; }
+    if (act === 'cancel-offer') {
+      if (!t.hired || !window.STOfferCancel) { toast('Cancelling is not available right now. Please refresh the page.'); return; }
+      window.STOfferCancel.open({
+        applicationId: t.hired.id, taskerName: t.hired.name, taskTitle: t.title,
+        onDone: function () {
+          toast('Offer cancelled. The chat is closed and your task is open for offers again.');
+          $('mtList').setAttribute('aria-busy', 'true');
+          load().catch(function (x) { renderError(x && x.message ? x.message : 'Something went wrong.'); });   /* reload: the task is open again */
+        }
+      });
+      return;
+    }
     if (act === 'close') {
       var n = t.offers.length;
       $('mtClText').textContent = '\u201C' + t.title + '\u201D will stop appearing to taskers.' +

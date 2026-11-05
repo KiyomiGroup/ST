@@ -23,7 +23,7 @@
   function group(status) {
     if (status === 'accepted') return 'accepted';
     if (status === 'completed') return 'completed';
-    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn') return 'declined';
+    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn' || status === 'cancelled') return 'declined';   /* cancelled = the customer cancelled the accepted offer (M3/M5): shown under Declined */
     return 'pending';
   }
 
@@ -165,7 +165,7 @@
     var map = {
       pending:   ['ap-badge-pending',   '<span class="ap-badge-dot"></span>Pending Review'],
       accepted:  ['ap-badge-accepted',  icon('circle-check') + 'Accepted \u2022 Ready to Start'],
-      declined:  ['ap-badge-declined',  'Declined'],
+      declined:  ['ap-badge-declined',  a.status === 'cancelled' ? 'Cancelled by Customer' : 'Declined'],
       completed: ['ap-badge-completed', icon('circle-check') + 'Completed'],
     }[a.group];
     return '<span class="ap-badge ' + map[0] + '">' + map[1] + '</span>';
@@ -192,6 +192,9 @@
     } else {
       body += '<div class="ap-figures"><div><div class="ap-fig-label">' + (g === 'completed' ? 'Payout' : 'Agreed Contract Price') + '</div>' +
         '<div class="ap-fig-value is-offer">' + (a.offer ? naira(a.offer) : '\u2014') + '</div></div></div>';
+    }
+    if (a.status === 'cancelled') {
+      body += '<div class="ap-fig-text">The customer cancelled your accepted offer. The chat is closed and you cannot send another offer on this task.</div>';
     }
     if (a.pitch) {
       body += '<div><div class="ap-proposal-head"><span class="ap-fig-label">Your Submitted Proposal</span></div>' +

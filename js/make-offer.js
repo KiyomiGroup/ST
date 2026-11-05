@@ -852,6 +852,9 @@
     if (state.myApplication && String(state.myApplication.status || '').toLowerCase() === 'withdrawn') state.myApplication = null;   /* a withdrawn offer can be sent again (the database revives it) */
     var mine = state.myApplication;
     if (state.edit && !mine) state.edit = false;   /* nothing to edit: treat the link as a new offer */
+    if (mine && String(mine.status || '').toLowerCase() === 'cancelled') {
+      return showError('Your accepted offer was cancelled', 'The customer cancelled it, so you cannot send another offer on this task. You can see it in My Applications.', 'applications.html', 'View My Applications');
+    }
     if (mine && !state.edit) {
       return showError('You have already sent an offer', 'Your offer for this task is waiting for the customer. You can follow it, change it or withdraw it from My Applications.', 'applications.html', 'View My Applications');
     }

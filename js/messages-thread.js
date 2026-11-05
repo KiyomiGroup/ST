@@ -59,6 +59,7 @@
   var S = {
     thread: null, user: null, role: 'customer', onChange: null,
     lastDay: null, sending: false, bound: false,
+    roomClosed: false,               /* stage M5: the job room is closed or not allowed: history only, no sending */
     requests: {}, requestsFailed: false,
     money: {}, moneyFailed: false,
     removed: {}                      /* storage paths support removed (Stage 10) */
@@ -948,6 +949,8 @@
     if (input) input.placeholder = S.role === 'tasker' ? 'Reply to customer…' : 'Type a message…';
     hideWarn();
     clearAttach();
+    applyRoomState('open');                            /* reset from the previous thread, then ask the database */
+    syncRoomState(token);
     var jump = $('jrJump'); if (jump) jump.hidden = true;
 
     placeholder(body, ICON_SPIN + ' Loading…');
@@ -1085,6 +1088,7 @@
   async function send(text) {
     text = (text || '').trim();
     if (!text || !S.thread || !S.user || S.sending) return false;
+    if (S.roomClosed) { toast('This chat is closed. You can read it but not send messages.', 'error'); return false; }
 
     if (hasContactInfo(text)) {
       showWarn();
@@ -1422,7 +1426,44 @@
   /* ── composer wiring ─────────────────────────────────────── */
   function syncSendState() {
     var input = $('msgInput'), btn = $('msgSendBtn');
-    if (btn && input) btn.disabled = !!S.uploading || (S.attach ? false : !input.value.trim());
+    if (btn && input) btn.disabled = !!S.roomClosed || !!S.uploading || (S.attach ? false : !input.value.trim());
+  }
+
+  /* ── closed room (stage M5) ─────────────────────────────────
+     The database (stage M2) refuses messages in a closed room. This asks it for the room state so the page can say so
+     and switch the composer off instead of letting the person type and fail. If the check cannot run (the helper
+     chat_room_status is not installed, or the network fails) nothing changes: the composer stays as it was. */
+  function applyRoomState(state) {
+    var bar = $('inputBar'), input = $('msgInput');
+    var closed = state === 'closed' || state === 'not_yet' || state === 'none';
+    S.roomClosed = closed;
+    if (bar) bar.classList.toggle('is-closed', closed);
+    if (input) {
+      input.disabled = closed;
+      if (closed) input.placeholder = 'This chat is closed';
+      else input.placeholder = S.role === 'tasker' ? 'Reply to customer\u2026' : 'Type a message\u2026';
+    }
+    var note = $('jrClosedNote');
+    if (closed && bar && !note) {
+      note = el('div', 'jr-closed-note'); note.id = 'jrClosedNote'; note.setAttribute('role', 'status');
+      bar.parentNode.insertBefore(note, bar);
+    }
+    if (note) {
+      note.hidden = !closed;
+      note.textContent = state === 'closed'
+        ? 'This chat is closed because the job was cancelled or completed. You can still read the conversation.'
+        : 'Chat is not open for this job. You can still read the conversation.';
+    }
+    syncSendState();
+  }
+
+  async function syncRoomState(threadId) {
+    try {
+      var r = await window.supabase.rpc('chat_room_status', { p_thread: threadId });
+      if (r.error || !S.thread || S.thread.id !== threadId) return;
+      if (r.data == null) return;                      /* not a room of mine, or unknown: leave it alone */
+      applyRoomState(String(r.data));
+    } catch (e) { /* the database still refuses messages in a closed room */ }
   }
 
   async function submitFromInput() {

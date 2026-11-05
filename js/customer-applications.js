@@ -22,7 +22,7 @@
 
   function group(status) {
     if (status === 'accepted' || status === 'completed') return 'accepted';
-    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn') return 'declined';
+    if (status === 'rejected' || status === 'closed' || status === 'declined' || status === 'withdrawn' || status === 'cancelled') return 'declined';   /* cancelled = accepted, then cancelled by the customer (M3/M5) */
     return 'pending';
   }
   function ago(iso) {
@@ -94,6 +94,18 @@
     /* Membership labels (S4i): one question for every applicant; no answer = no label. */
     if (window.STMembership) { try { await window.STMembership.load(ids); } catch (e) { /* label is optional */ } }
 
+    /* M5: is anything paid for an accepted job? Optional: if it cannot be read the button still shows and the database decides. */
+    var bookingByJob = {};
+    if (rows.some(function (a) { return a.status === 'accepted'; })) {
+      try {
+        var bk = await window.supabase.from('bookings').select('task_id, tasker_id, status, payment_status').eq('customer_id', user.id);
+        (bk.data || []).forEach(function (b) {
+          if (b.status === 'cancelled') return;
+          bookingByJob[String(b.task_id) + '|' + String(b.tasker_id)] = b;
+        });
+      } catch (e) { /* no payment info */ }
+    }
+
     state.apps = rows.map(function (a) {
       var p = profiles[a.tasker_id] || {}, u = users[a.tasker_id] || {};
       var msg = parseMessage(a.message), task = byTask[a.task_id] || {};
@@ -103,6 +115,7 @@
         name: name, service: p.service || p.service_name || '', location: p.location || '',
         rating: p.rating ? parseFloat(p.rating) : null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
         pitch: msg.pitch, arrival: msg.arrival, proofs: msg.proofs, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
+        booking: bookingByJob[String(a.task_id) + '|' + String(a.tasker_id)] || null,
       };
     });
     buildTaskOptions();
@@ -141,7 +154,7 @@
   }
 
   function badge(a) {
-    var label = { rejected: 'Declined', closed: 'Closed', completed: 'Completed' }[a.status];
+    var label = { rejected: 'Declined', closed: 'Closed', completed: 'Completed', cancelled: 'Cancelled' }[a.status];
     var map = {
       pending:  ['ap-badge-pending',  '<span class="ap-badge-dot"></span>Needs Review'],
       accepted: ['ap-badge-accepted', icon('circle-check') + (label || 'Accepted')],
@@ -185,15 +198,24 @@
     } else if (a.group === 'accepted') {
       actions += '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Tasker</button>' +
         '<a class="ap-btn" href="' + profile + '">View Profile</a>';
+      /* M5: cancel only before payment (the database enforces it too). After payment: Report a problem in the chat. */
+      if (a.status === 'accepted' && window.STOfferCancel && window.STOfferCancel.canCancel(a.booking)) {
+        actions += '<button type="button" class="ap-btn ap-btn-quiet" data-act="cancel-offer" data-id="' + id + '">Cancel Accepted Offer</button>';
+      }
     } else {
       actions += '<a class="ap-btn" href="' + profile + '">View Profile</a>';
     }
     actions += '</div>';
+    var note = '';
+    if (a.status === 'cancelled') note = '<div class="ap-fig-text">You cancelled this accepted offer. The chat is closed.</div>';
+    else if (a.status === 'accepted' && a.booking && window.STOfferCancel && !window.STOfferCancel.canCancel(a.booking)) {
+      note = '<div class="ap-fig-text">Payment has been made, so this offer can no longer be cancelled here. If something is wrong, use Report a problem in the chat.</div>';
+    }
 
     return '<article class="ap-card" data-id="' + esc(a.id) + '"><div class="ap-card-top">' + badge(a) +
       '<span class="ap-meta">' + icon('clock') + 'Applied ' + esc(ago(a.created)) + '</span></div>' +
       '<div class="ap-person">' + avatar + '<div><h2 class="ap-person-name">' + esc(a.name) + (window.STMembership ? window.STMembership.html(a.taskerId, { small: true }) : '') + '</h2><div class="ap-card-sub">' + sub.join('') + '</div></div></div>' +
-      '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + arrival + proofs + actions + '</article>';
+      '<p class="ap-for">For <strong>' + esc(t.title || 'your task') + '</strong></p>' + figures + pitch + arrival + proofs + note + actions + '</article>';
   }
 
   function renderMetrics() {
@@ -282,6 +304,17 @@
     current = a;
     var act = b.getAttribute('data-act');
     if (act === 'message') { openChat(a); return; }
+    if (act === 'cancel-offer') {
+      if (!window.STOfferCancel) { toast('Cancelling is not available right now. Please refresh the page.'); return; }
+      window.STOfferCancel.open({
+        applicationId: a.id, taskerName: a.name, taskTitle: a.task.title || '',
+        onDone: function () {
+          a.status = 'cancelled'; a.group = 'declined'; a.task.status = 'open';
+          render(); toast('Offer cancelled. The chat is closed and your task is open for offers again.');
+        }
+      });
+      return;
+    }
     if (act === 'accept') {
       var taken = state.apps.some(function (x) { return x.task.id === a.task.id && x.group === 'accepted'; });
       if (taken) { toast('You already hired someone for this task.'); return; }

@@ -120,7 +120,7 @@
       var r = await sb.from('task_applications').select('*').eq('task_id', taskId).neq('status', 'withdrawn').order('created_at', { ascending: false }).limit(50);   /* withdrawn offers are kept but not shown */
       if (r.error) return res;
       res.readable = true;
-      var rows = r.data || [];
+      var rows = (r.data || []).filter(function (a) { return a.status !== 'cancelled'; });   /* M5: a cancelled accepted offer is not listed */
       var ids = rows.map(function (a) { return a.tasker_id; }).filter(Boolean).map(String);
       var byId = {};
       if (ids.length) {
@@ -368,6 +368,12 @@
       return;
     }
     if (!open) { setOffer('No longer taking offers', 'No longer taking offers', true); return; }
+    if (applied && state.myApplication.status === 'cancelled') {
+      /* M5: the customer cancelled the accepted offer. The task is open again, but this tasker cannot offer on it again. */
+      setOffer('Offer Cancelled', 'Offer Cancelled', true);
+      note.hidden = false; note.textContent = 'The customer cancelled your accepted offer, so you cannot send another offer on this task.';
+      return;
+    }
     if (applied) {
       setOffer('Offer Sent', 'Offer Sent', true);
       /* Chat rule (stage M4): the tasker can message only after the customer accepts the offer */
