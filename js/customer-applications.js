@@ -298,15 +298,8 @@
     var btn = this, a = current, err = $('apAcError'); btn.disabled = true; err.hidden = true;
     try {
       var rpc = await window.supabase.rpc('accept_application', { p_application_id: String(a.id) });
-      if (rpc.error) {
-        /* Function not installed yet: use the original three-step flow */
-        if (!/could not find the function|does not exist|PGRST202|42883/i.test((rpc.error.code || '') + ' ' + (rpc.error.message || ''))) throw new Error(rpc.error.message);
-        await window.updateApplicationStatus(a.id, 'accepted');        /* also notifies the tasker */
-        var closed = await window.supabase.from('task_applications').update({ status: 'closed' })
-          .eq('task_id', a.task.id).eq('status', 'pending').neq('id', a.id);
-        var tk = await window.supabase.from('tasks').update({ status: 'in_progress' }).eq('id', a.task.id);
-        if (closed.error || tk.error) toast('Hired, but some follow-up updates failed. Please refresh.');
-      }
+      /* Stage M3: accepting goes only through accept_application; the database refuses direct status changes. */
+      if (rpc.error) throw new Error(rpc.error.message);
       a.status = 'accepted'; a.group = 'accepted';
       state.apps.forEach(function (x) { if (x !== a && x.task.id === a.task.id && x.group === 'pending') { x.status = 'closed'; x.group = 'declined'; } });
       a.task.status = 'in_progress';

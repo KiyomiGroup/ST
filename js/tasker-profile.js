@@ -765,13 +765,9 @@
       $('tpAccept').onclick = async function () {
         this.disabled = true; this.textContent = 'Accepting\u2026';
         try {
-          await sb.from('task_applications').update({ status: 'accepted' }).eq('id', appId);
-          await sb.from('task_applications').update({ status: 'closed' }).eq('task_id', taskId).eq('status', 'pending').neq('id', appId);
-          await sb.from('tasks').update({ status: 'in_progress' }).eq('id', taskId);
-          try {
-            await sb.from('notifications').insert({ user_id: String(state.id), type: 'application_accepted', title: 'Application Accepted!',
-              message: 'Your application was accepted. The customer will contact you.', data: { task_id: taskId }, is_read: false });
-          } catch (e2) { /* courtesy notification */ }
+          /* Stage M3: one accept path. accept_application accepts this offer, closes the others, starts the job and tells the tasker. */
+          var acc = await sb.rpc('accept_application', { p_application_id: String(appId) });
+          if (acc.error) throw new Error(acc.error.message);
           decisionDone('Application accepted', appId, custId);
         } catch (err) {
           this.disabled = false; this.textContent = 'Accept Application';
