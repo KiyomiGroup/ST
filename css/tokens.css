@@ -504,3 +504,19 @@
   --membership-font-size:     var(--text-xs);
   --membership-tracking:      0.06em;
 }
+
+/* ── Page loader (css/styles.css "PAGE LOADER", js/page-loader.js) ── */
+:root {
+  --loader-bg:           var(--color-primary-soft);   /* mint wash behind the coin */
+  --loader-size:         104px;                       /* coin, desktop */
+  --loader-size-sm:      88px;                        /* coin, phones (480px and below) */
+  --loader-perspective:  640px;
+  --loader-lift:         -10px;                       /* coin rises this far at the edge-on moment */
+  --loader-flip:         1.3s;                        /* one flip cycle */
+  --loader-show-delay:   160ms;                       /* coin waits this long so fast pages never flash it */
+  --loader-fade-in:      200ms;
+  --loader-fade:         350ms;                       /* fade-out once the page is ready */
+  --loader-failsafe:     12s;                         /* CSS-only backstop if JS never runs */
+  --loader-shadow:       rgba(15, 61, 38, 0.22);
+  --z-loader:            10000;                       /* above toasts (9999) */
+}

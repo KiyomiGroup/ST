@@ -5408,3 +5408,120 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
 .st-confirm-text { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; }
 .st-confirm-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-2); }
 @media (max-width: 768px) { .st-confirm-actions .btn { flex: 1 1 0; } }
+
+
+/* ============================================================
+   PAGE LOADER  (js/page-loader.js, tokens: --loader-* in css/tokens.css)
+   Drawn with html::before (wash) and html::after (coin) so it is on screen
+   from the very first paint, with no markup on any page. Pages are covered
+   until js/page-loader.js adds html.st-loaded. States:
+     (none)        first load: visible, 12s CSS failsafe if JS never runs
+     .st-loaded    hidden (fades out)
+     .st-loading   shown again by ST.loader.show() / link clicks, JS-controlled
+   The coin is one image that swings edge-on and back, so the K and the word
+   StreetTasker never mirror. It only appears after --loader-show-delay.
+   Pages that must not show it (back-office, fixtures) add class
+   st-loader-off to <html>, or are matched in the opt-out rule below.
+   ============================================================ */
+html::before,
+html::after {
+  content: "";
+  position: fixed;
+  z-index: var(--z-loader);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--loader-fade-in) ease, visibility 0s;
+  animation: st-loader-failsafe 1s linear var(--loader-failsafe) forwards;
+}
+html::before {
+  inset: 0;
+  background: var(--loader-bg);
+}
+html::after {
+  inset: 0;
+  margin: auto;
+  width: var(--loader-size);
+  height: var(--loader-size);
+  background: url("../images/loader-coin.png") center / contain no-repeat;
+  pointer-events: none;
+  will-change: transform;
+  animation:
+    st-coin-flip var(--loader-flip) linear infinite,
+    st-coin-in 300ms ease var(--loader-show-delay) both,
+    st-loader-failsafe 1s linear var(--loader-failsafe) forwards;
+}
+
+/* hidden: fade, then drop out of hit-testing */
+html.st-loaded::before,
+html.st-loaded::after {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--loader-fade) ease, visibility 0s linear var(--loader-fade);
+}
+
+/* shown again by script: no failsafe, JS decides when it ends */
+html.st-loading::before { animation: none; }
+html.st-loading::after {
+  animation:
+    st-coin-flip var(--loader-flip) linear infinite,
+    st-coin-in 300ms ease var(--loader-show-delay) both;
+}
+
+/* pages that opt out: back-office and test fixtures. Two rules on purpose: a browser
+   without :has() drops only the second one, never the explicit class. */
+html.st-loader-off::before,
+html.st-loader-off::after { display: none; }
+html:has(link[href*="coordinator"])::before,
+html:has(link[href*="coordinator"])::after,
+html:has(link[href*="design-system.css"])::before,
+html:has(link[href*="design-system.css"])::after,
+html:has(script[src*="messages-fixtures"])::before,
+html:has(script[src*="messages-fixtures"])::after,
+html:has(script[src*="messages-cards-demo"])::before,
+html:has(script[src*="messages-cards-demo"])::after { display: none; }
+
+/* one flip: ease in to edge-on, swap sides while it is a sliver, ease out */
+@keyframes st-coin-flip {
+  0%      { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg);
+            animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.6); }
+  50%     { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(90deg); }
+  50.01%  { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(-90deg);
+            animation-timing-function: cubic-bezier(0.1, 0.4, 0.55, 1); }
+  100%    { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg); }
+}
+/* soft fade-in on filter, so it never fights the opacity fade-out */
+@keyframes st-coin-in {
+  from { filter: opacity(0) drop-shadow(0 10px 14px var(--loader-shadow)); }
+  to   { filter: opacity(1) drop-shadow(0 10px 14px var(--loader-shadow)); }
+}
+@keyframes st-coin-breathe {
+  0%, 100% { transform: scale(0.94); }
+  50%      { transform: scale(1); }
+}
+@keyframes st-loader-failsafe {
+  to { opacity: 0; visibility: hidden; }
+}
+
+@media (max-width: 480px) {
+  html::after { width: var(--loader-size-sm); height: var(--loader-size-sm); }
+}
+/* no spinning for people who ask for less motion: the coin gently breathes */
+@media (prefers-reduced-motion: reduce) {
+  html::after,
+  html.st-loading::after {
+    animation:
+      st-coin-breathe 2s ease-in-out infinite,
+      st-coin-in 300ms ease var(--loader-show-delay) both,
+      st-loader-failsafe 1s linear var(--loader-failsafe) forwards;
+  }
+  html.st-loading::after {
+    animation:
+      st-coin-breathe 2s ease-in-out infinite,
+      st-coin-in 300ms ease var(--loader-show-delay) both;
+  }
+}
+@media print {
+  html::before,
+  html::after { display: none; }
+}

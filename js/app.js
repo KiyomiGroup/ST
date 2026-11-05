@@ -7,6 +7,17 @@
 
 'use strict';
 
+/* ── Page loader ────────────────────────────────────────────────
+ * css/styles.css covers the page with the coin from the first paint.
+ * js/page-loader.js fades it out once this file has finished booting
+ * (the "st:app-ready" event at the bottom of the DOMContentLoaded handler). */
+window.ST_LOADER_WAIT_APP = true;
+(function () {
+  const loaderScript = document.createElement('script');
+  loaderScript.src = 'js/page-loader.js';
+  document.head.appendChild(loaderScript);
+})();
+
 /* ── Component Loader ───────────────────────────────────────── */
 /**
  * Fetches and injects HTML components (navbar, footer) into the page.
@@ -189,7 +200,17 @@ function setActiveNavLink() {
  * Entry point — runs after DOM is ready.
  * Loads shared components and then calls page-specific init.
  */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  /* Whatever happens while booting, tell the page loader we are done. */
+  stBoot()
+    .catch(err => console.error('[StreetTasker] Boot error', err))
+    .then(() => {
+      window.ST_APP_READY = true; /* page-loader.js may still be downloading: it reads this flag */
+      window.dispatchEvent(new Event('st:app-ready'));
+    });
+});
+
+async function stBoot() {
 
   /* Step 1: Load navbar HTML. A page can opt into a different nav component
      with data-nav-src on the placeholder (landing/onboarding use nav-landing.html);
@@ -228,8 +249,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadBottomNav();
 
   /* Step 4: Run page-specific init */
+  let pageInit;
   if (typeof initPage === 'function') {
-    initPage();
+    pageInit = initPage();
   }
 
   /* Step 5: Init animations */
@@ -257,7 +279,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.body.appendChild(gateScript);
 
   console.log('[StreetTasker] App ready ✓');
-});
+
+  /* The page loader waits for the page's own data too (initPage may return a promise). */
+  return pageInit;
+}
 
 /* ── Scroll Animations ───────────────────────────────────────── */
 /**
