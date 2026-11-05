@@ -216,47 +216,35 @@ function syncModeUI() {
   if (loc) loc.classList.toggle('is-hidden', mode === 'remote');
 }
 
-/* ── Use current location (GPS) ─────────────────────────────── */
+/* ── Use current location → AREA only ───────────────────────── */
+/* GPS is turned into an area name ("Lekki Phase 1, Lagos"). Coordinates and street are never put in the form. */
 function wireUseLocation() {
   const btn = $id('useLocationBtn');
   const input = $id('taskLocation');
   if (!btn || !input) return;
-  btn.addEventListener('click', () => {
-    if (!navigator.geolocation) { showToast('GPS not available on this device.'); return; }
+  btn.addEventListener('click', async () => {
+    if (typeof getCurrentArea !== 'function') { showToast('Location is not available right now. Please choose your area.'); return; }
     btn.disabled = true;
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        const { latitude: lat, longitude: lon } = pos.coords;
-        let result = null;
-        if (typeof _reverse === 'function') result = await _reverse(lat, lon);
-        if (result) {
-          input.value = result.label;
-          input.dataset.lat = result.lat;
-          input.dataset.lon = result.lon;
-          input.dataset.precise = result.precise ? '1' : '0';
-        } else {
-          input.value = lat.toFixed(5) + ', ' + lon.toFixed(5);
-          input.dataset.lat = lat;
-          input.dataset.lon = lon;
-          input.dataset.precise = '1';
-        }
-        btn.disabled = false;
-        clearFieldError(input);
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        saveDraft();
-        updateProgress();
-      },
-      err => {
-        btn.disabled = false;
-        const msgs = {
-          1: 'Location permission denied. Please type your address.',
-          2: 'Could not detect your location.',
-          3: 'Location request timed out.',
-        };
-        showToast(msgs[err.code] || 'GPS failed. Please type your address.');
-      },
-      { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
-    );
+    const label = btn.querySelector('.pt-desk');
+    const before = label ? label.textContent : '';
+    if (label) label.textContent = 'Finding your area\u2026';
+    try {
+      const r = await getCurrentArea();
+      if (!r.ok) { showToast(r.error); return; }
+      input.value = r.label;
+      delete input.dataset.lat; delete input.dataset.lon;
+      input.dataset.area = '1'; input.dataset.precise = '0';
+      clearFieldError(input);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dataset.area = '1';   /* the input handler clears it, set it again */
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      saveDraft();
+      updateProgress();
+      showToast('Area set to ' + r.label + '. Your exact spot is not shown.');
+    } finally {
+      btn.disabled = false;
+      if (label) label.textContent = before;
+    }
   });
 }
 
@@ -624,9 +612,9 @@ function readDraftFromForm() {
   d.workMode  = radioValue('workMode') || 'in_person';
   d.urgency   = radioValue('urgency') || 'flexible';
   d.timeOfDay = radioValue('timeOfDay') || '';
-  if (loc && loc.dataset.lat) {
-    d.lat = loc.dataset.lat; d.lon = loc.dataset.lon; d.precise = loc.dataset.precise || '0';
-  } else { delete d.lat; delete d.lon; delete d.precise; }
+  /* never keep coordinates; only remember whether the area was confirmed */
+  delete d.lat; delete d.lon; delete d.precise;
+  d.locArea = (loc && loc.dataset.area === '1') ? '1' : '0';
   return d;
 }
 
@@ -656,7 +644,11 @@ function restoreDraft() {
 
   Object.keys(DRAFT_TEXT_FIELDS).forEach(k => {
     const el = $id(DRAFT_TEXT_FIELDS[k]);
-    if (el && draft[k]) el.value = draft[k];
+    if (!el || !draft[k]) return;
+    /* An old draft may hold a street address: only an area that was confirmed comes back */
+    if (k === 'location' && draft.locArea !== '1') return;
+    el.value = draft[k];
+    if (k === 'location') { el.dataset.area = '1'; el.dataset.precise = '0'; }
   });
   if (draft.frequency) setRadio('frequency', draft.frequency);
   if (draft.workMode)  setRadio('workMode', draft.workMode);
@@ -664,9 +656,6 @@ function restoreDraft() {
   if (draft.timeOfDay) setRadio('timeOfDay', draft.timeOfDay);
 
   const loc = $id('taskLocation');
-  if (loc && draft.lat && draft.lon) {
-    loc.dataset.lat = draft.lat; loc.dataset.lon = draft.lon; loc.dataset.precise = draft.precise || '0';
-  }
   const budget = $id('taskBudget');
   if (budget && draft.budget) budget.value = formatBudget(parseBudget(draft.budget));
 
@@ -705,7 +694,7 @@ function discardDraft() {
   const form = $id('postTaskForm');
   if (form) form.reset();
   const loc = $id('taskLocation');
-  if (loc) { delete loc.dataset.lat; delete loc.dataset.lon; delete loc.dataset.precise; }
+  if (loc) { delete loc.dataset.lat; delete loc.dataset.lon; delete loc.dataset.precise; delete loc.dataset.area; }
   while (taskPhotos.length) { const p = taskPhotos.pop(); if (p.objectUrl) URL.revokeObjectURL(p.objectUrl); }
   renderPhotos();
   document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
@@ -889,7 +878,7 @@ async function handleTaskSubmit(e) {
 
   /* Location is needed for in-person work and must be confirmed (list or GPS) */
   if (workMode === 'in_person' && typeof validateLocation === 'function') {
-    const locCheck = validateLocation('taskLocation', 'precise');
+    const locCheck = validateLocation('taskLocation', 'area-only');
     if (!locCheck.ok) {
       setFieldError(locInput, null, '');
       showToast(locCheck.error);

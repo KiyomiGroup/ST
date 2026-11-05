@@ -17,7 +17,6 @@ const GOOGLE_PLACES_KEY = '';   /* e.g. 'AIzaSy...' */
 
 const NOMINATIM_BASE    = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse';
-const NOMINATIM_UA      = 'StreetTasker/1.0 (streettasker.com)';
 const _debounceTimers   = {};
 const _cache            = {};
 
@@ -169,9 +168,7 @@ async function _nominatim(query, precise) {
     limit: '8', countrycodes: 'ng', 'accept-language': 'en',
   });
   try {
-    const res  = await fetch(NOMINATIM_BASE + '?' + params, {
-      headers: { 'User-Agent': NOMINATIM_UA },
-    });
+    const res  = await fetch(NOMINATIM_BASE + '?' + params);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const seen = new Set();
@@ -226,14 +223,137 @@ async function _reverse(lat, lon) {
     zoom: '18', 'accept-language': 'en',
   });
   try {
-    const res  = await fetch(NOMINATIM_REVERSE + '?' + params, {
-      headers: { 'User-Agent': NOMINATIM_UA },
-    });
+    const res  = await fetch(NOMINATIM_REVERSE + '?' + params);
     if (!res.ok) return null;
     const data  = await res.json();
     const label = _fmt(data, true);
     return { label, lat, lon, precise: _isStreetLevel(label) };
   } catch(e) { return null; }
+}
+
+
+/* ============================================================
+   AREA-ONLY MODE ('area-only')  — used where a customer posts a task.
+   A customer's street or house must never be shown publicly, so this
+   mode only ever stores an AREA such as "Lekki Phase 1, Lagos":
+   - suggestions are areas (a street name suggests the area it is in)
+   - GPS is turned into an area; coordinates are never kept or shown
+   - a typed street address is converted to its area, or refused
+   ============================================================ */
+
+/* True when the text looks like a street address or a house, not an area.
+   "Lekki Phase 1" and "Wuse 2" are areas, so a digit alone is fine. */
+const _STREETY = /\b(street|road|rd|avenue|ave|close|crescent|lane|boulevard|blvd|drive|dr|way|expressway|highway|house|flat|plot|block|opposite|opp|behind|beside|junction|bus\s?stop)\b/i;
+function _looksLikeStreet(text) {
+  const t = String(text || '').trim();
+  if (!t) return false;
+  return /^\d/.test(t) || /\b(house|flat|plot|block|no\.?|number)\s*\d/i.test(t) || _STREETY.test(t);
+}
+
+/* Nominatim address -> "Area, City" (never a road or a house number) */
+function _areaLabel(a) {
+  a = a || {};
+  const area  = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.residential || '';
+  const city  = a.city || a.town || a.village || a.municipality || a.county || a.state_district || '';
+  const state = a.state || '';
+  const raw = (area && city) ? [area, city] : [area || city, state];
+  const seen = new Set();
+  return raw.filter(p => p && !seen.has(p.toLowerCase()) && seen.add(p.toLowerCase())).join(', ');
+}
+
+/* The local street list, turned into areas ("Allen Avenue, Ikeja, Lagos" -> "Ikeja, Lagos") */
+function _areaOf(label) {
+  const parts = label.split(',').map(p => p.trim());
+  while (parts.length > 2 && _looksLikeStreet(parts[0])) parts.shift();
+  return parts.join(', ');
+}
+function _instantAreas(q) {
+  const ql = String(q || '').toLowerCase().replace(/^\d+[a-z]?[,\s]+/, '').trim();
+  if (!ql) return [];
+  const rows = [..._AREAS, ..._STREETS].map(l => ({ src: l.toLowerCase(), area: _areaOf(l) }));
+  const starts   = rows.filter(r => r.src.startsWith(ql));
+  const contains = rows.filter(r => !r.src.startsWith(ql) && r.src.includes(ql));
+  const seen = new Set(), out = [];
+  [...starts, ...contains].forEach(r => {
+    if (seen.has(r.area)) return; seen.add(r.area);
+    out.push({ label: r.area, lat: null, lon: null, precise: false, instant: true, area: true });
+  });
+  return out.slice(0, 8);
+}
+
+async function _nominatimAreas(query) {
+  const ck = query + '|area-only';
+  if (_cache[ck]) return _cache[ck];
+  const params = new URLSearchParams({
+    q: query.replace(/^\d+[a-z]?[,\s]+/, '') + ', Nigeria', format: 'json', addressdetails: '1',
+    limit: '8', countrycodes: 'ng', 'accept-language': 'en',
+  });
+  try {
+    const res = await fetch(NOMINATIM_BASE + '?' + params);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const seen = new Set(), out = [];
+    data.forEach(r => {
+      const label = _areaLabel(r.address);
+      if (!label || seen.has(label)) return; seen.add(label);
+      out.push({ label, lat: null, lon: null, precise: false, instant: false, area: true });
+    });
+    _cache[ck] = out.length ? out : _instantAreas(query);
+    return _cache[ck];
+  } catch (e) { return _instantAreas(query); }
+}
+
+/* Reverse lookup at neighbourhood level only (zoom 14 never returns a street or house) */
+async function _reverseArea(lat, lon) {
+  const params = new URLSearchParams({ lat, lon, format: 'json', addressdetails: '1', zoom: '14', 'accept-language': 'en' });
+  try {
+    const res = await fetch(NOMINATIM_REVERSE + '?' + params);
+    if (!res.ok) return '';
+    const data = await res.json();
+    return _areaLabel(data.address);
+  } catch (e) { return ''; }
+}
+
+/* Ask the browser for a position. Network/Wi-Fi position first (works on laptops and is fast),
+   then one high-accuracy try (phones with GPS). Resolves { lat, lon } or { error: code }. */
+function _getPosition() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve({ error: 0 });
+    const ask = (opts, next) => navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      err => { if (err.code === 1 || !next) return resolve({ error: err.code }); next(); },
+      opts);
+    ask({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+        () => ask({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }, null));
+  });
+}
+
+/* Public: current area. Resolves { ok:true, label } or { ok:false, error:'message' }. Coordinates are not returned. */
+async function getCurrentArea() {
+  if (!window.isSecureContext && location.hostname !== 'localhost') {
+    return { ok: false, error: 'Location needs a secure (https) connection. Please choose your area from the list.' };
+  }
+  const pos = await _getPosition();
+  if (pos.error !== undefined) {
+    const msgs = {
+      0: 'This device cannot share its location. Please choose your area from the list.',
+      1: 'Location is blocked for this site. Allow it in your browser settings, or choose your area from the list.',
+      2: 'We could not find your location. Please choose your area from the list.',
+      3: 'Finding your location took too long. Please choose your area from the list.',
+    };
+    return { ok: false, error: msgs[pos.error] || msgs[2] };
+  }
+  const label = await _reverseArea(pos.lat, pos.lon);
+  if (!label) return { ok: false, error: 'We found you but could not work out the area name. Please choose it from the list.' };
+  return { ok: true, label };
+}
+
+/* Typed text that looks like a street -> the area it is in (or '' when unknown) */
+async function _textToArea(text) {
+  const local = _instantAreas(text);
+  if (local.length) return local[0].label;
+  const found = await _nominatimAreas(text);
+  return found.length ? found[0].label : '';
 }
 
 /* ── SVGs ──────────────────────────────────────────────────── */
@@ -255,10 +375,16 @@ function _hint(input, mode) {
   const ok  = input.dataset.lat && input.dataset.lon;
   const str = input.dataset.precise === '1';
   if (!val) {
-    el.textContent = mode === 'precise'
+    el.textContent = mode === 'area-only' ? '' : mode === 'precise'
       ? '🔍 Type a street name or tap GPS for your exact location'
       : '';
     el.style.color = 'var(--text-muted)'; return;
+  }
+  if (mode === 'area-only') {
+    if (input.dataset.area === '1') { el.textContent = '\u2713 Area set. Only this is shown on your task.'; el.style.color = 'var(--green)'; }
+    else if (_looksLikeStreet(val))  { el.textContent = 'That looks like a street address. We only show the area, so pick your area from the list.'; el.style.color = 'var(--amber)'; }
+    else                              { el.textContent = 'Pick your area from the list.'; el.style.color = 'var(--text-muted)'; }
+    return;
   }
   if (mode === 'precise') {
     if (ok && str) { el.textContent = '✓ Street-level confirmed'; el.style.color = 'var(--green)'; }
@@ -279,7 +405,7 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
     row.className = 'loc-row loc-row-gps';
     row.innerHTML =
       '<span class="loc-row-icon loc-row-icon-gps">' + _GPS + '</span>' +
-      '<span class="loc-row-text"><span class="loc-row-primary">Use my current location' +
+      '<span class="loc-row-text"><span class="loc-row-primary">' + (mode === 'area-only' ? 'Use my current area' : 'Use my current location') +
       (mode === 'precise' ? ' <span style="font-size:var(--text-xs);opacity:0.7">(street-level)</span>' : '') +
       '</span></span>';
     row.addEventListener('mousedown', e => {
@@ -315,7 +441,10 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
     row.addEventListener('mousedown', e => {
       e.preventDefault();
       input.value = r.label;
-      if (r.lat) {
+      if (mode === 'area-only') {
+        delete input.dataset.lat; delete input.dataset.lon;
+        input.dataset.area = '1'; input.dataset.precise = '0';
+      } else if (r.lat) {
         input.dataset.lat     = r.lat;
         input.dataset.lon     = r.lon;
         input.dataset.precise = r.precise ? '1' : '0';
@@ -333,6 +462,7 @@ function _build(dropdown, input, suggs, onSelect, showGps, mode) {
 
 /* ── GPS handler ───────────────────────────────────────────── */
 function _gps(input, dropdown, row, onSelect, mode) {
+  if (mode === 'area-only') return _gpsArea(input, dropdown, row, onSelect, mode);
   if (!navigator.geolocation) {
     if (typeof showToast === 'function') showToast('GPS not available on this device.');
     return;
@@ -376,6 +506,26 @@ function _gps(input, dropdown, row, onSelect, mode) {
   );
 }
 
+/* Area-only GPS: fills the field with the area name and nothing else */
+async function _gpsArea(input, dropdown, row, onSelect, mode) {
+  if (row) {
+    row.innerHTML =
+      '<span class="loc-row-icon loc-row-icon-gps">' + _SPIN + '</span>' +
+      '<span class="loc-row-text"><span class="loc-row-primary">Finding your area\u2026</span></span>';
+    row.style.pointerEvents = 'none';
+  }
+  const r = await getCurrentArea();
+  _close(dropdown);
+  if (!r.ok) { if (typeof showToast === 'function') showToast(r.error); return r; }
+  input.value = r.label;
+  delete input.dataset.lat; delete input.dataset.lon;
+  input.dataset.area = '1'; input.dataset.precise = '0';
+  _hint(input, mode);
+  if (typeof onSelect === 'function') onSelect({ label: r.label, area: true });
+  if (typeof showToast === 'function') showToast('Area set to ' + r.label + '. Your exact spot is not shown.');
+  return r;
+}
+
 function _close(d) { if (d) { d.style.display = 'none'; d.innerHTML = ''; } }
 
 /* ── Public: initLocationInput ─────────────────────────────── */
@@ -389,6 +539,9 @@ function initLocationInput(cfg) {
   const mode    = cfg.mode || 'any';
   const useGps  = cfg.gps !== false;
   const precise = mode === 'precise';
+  const areaOnly = mode === 'area-only';
+  const popular = () => _AREAS.slice(0, 6).map(l => ({ label: l, lat: null, lon: null, precise: false, instant: true, area: true }));
+  const instant = v => areaOnly ? _instantAreas(v) : _instant(v, precise);
 
   /* Placeholders */
   if (precise && !input.placeholder)
@@ -403,11 +556,9 @@ function initLocationInput(cfg) {
     const val = input.value.trim();
     if (!val) {
       /* Show GPS + popular areas immediately */
-      _build(dropdown, input, _AREAS.slice(0, 6).map(l => ({
-        label: l, lat: null, lon: null, precise: false, instant: true,
-      })), cfg.onSelect, useGps, mode);
+      _build(dropdown, input, popular(), cfg.onSelect, useGps, mode);
     } else {
-      _build(dropdown, input, _instant(val, precise), cfg.onSelect, false, mode);
+      _build(dropdown, input, instant(val), cfg.onSelect, false, mode);
     }
   });
 
@@ -416,29 +567,32 @@ function initLocationInput(cfg) {
     if (input.dataset.lat) {
       delete input.dataset.lat; delete input.dataset.lon; input.dataset.precise = '0';
     }
+    if (areaOnly) delete input.dataset.area;
     _hint(input, mode);
     if (typeof cfg.onChange === 'function') cfg.onChange(val);
     clearTimeout(_debounceTimers[inputId]);
 
     if (!val) {
-      _build(dropdown, input, _AREAS.slice(0, 6).map(l => ({
-        label: l, lat: null, lon: null, precise: false, instant: true,
-      })), cfg.onSelect, useGps, mode);
+      _build(dropdown, input, popular(), cfg.onSelect, useGps, mode);
       return;
     }
 
     /* Show instant local results immediately (from first character) */
-    _build(dropdown, input, _instant(val, precise), cfg.onSelect, val.length === 0 && useGps, mode);
+    _build(dropdown, input, instant(val), cfg.onSelect, val.length === 0 && useGps, mode);
 
     /* Debounce Nominatim / Google for richer results */
     _debounceTimers[inputId] = setTimeout(async () => {
       if (input.value.trim() !== val) return;
       let results = null;
-      if (GOOGLE_PLACES_KEY) {
-        results = await _googlePlaces(val);
-      }
-      if (!results || !results.length) {
-        results = await _nominatim(val, precise);
+      if (areaOnly) {
+        results = await _nominatimAreas(val);
+      } else {
+        if (GOOGLE_PLACES_KEY) {
+          results = await _googlePlaces(val);
+        }
+        if (!results || !results.length) {
+          results = await _nominatim(val, precise);
+        }
       }
       if (input.value.trim() === val) {
         _build(dropdown, input, results, cfg.onSelect, false, mode);
@@ -446,7 +600,19 @@ function initLocationInput(cfg) {
     }, 350);
   });
 
-  input.addEventListener('blur',    () => setTimeout(() => _close(dropdown), 200));
+  input.addEventListener('blur', () => setTimeout(async () => {
+    _close(dropdown);
+    /* Area-only: someone typed a street address and walked away. Swap it for the area it is in. */
+    if (!areaOnly) return;
+    const val = input.value.trim();
+    if (!val || input.dataset.area === '1' || !_looksLikeStreet(val)) return;
+    const area = await _textToArea(val);
+    if (!area || input.value.trim() !== val) return;
+    input.value = area; input.dataset.area = '1'; input.dataset.precise = '0';
+    _hint(input, mode);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    if (typeof showToast === 'function') showToast('We only show your area, so we used ' + area + '.');
+  }, 200));
   input.addEventListener('keydown', e  => { if (e.key === 'Escape') _close(dropdown); });
 }
 
@@ -456,6 +622,12 @@ function validateLocation(inputId, mode) {
   if (!input) return { ok: false, error: 'Location field not found.' };
   const val   = (input.value || '').trim();
   const hasCo = input.dataset.lat && input.dataset.lon;
+  if (mode === 'area-only') {
+    if (!val) return { ok: false, error: 'Please choose your area.' };
+    if (input.dataset.area === '1') return { ok: true };
+    if (_looksLikeStreet(val)) return { ok: false, error: 'Please choose just your area from the list (for example Lekki Phase 1, Lagos). We never show street addresses.' };
+    return { ok: true };   /* plain area name that is not in our list, e.g. a small town */
+  }
   if (!val) return { ok: false, error: 'Please enter your location.' };
   if (mode === 'precise' && !hasCo && !input.dataset.precise) {
     return {
@@ -494,6 +666,7 @@ function selectLocationSuggestion(val, containerId) {
 }
 
 window.initLocationInput        = initLocationInput;
+window.getCurrentArea           = getCurrentArea;
 window.validateLocation         = validateLocation;
 window.fetchLocationSuggestions = fetchLocationSuggestions;
 window.selectLocationSuggestion = selectLocationSuggestion;

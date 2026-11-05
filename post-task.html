@@ -203,15 +203,15 @@
 
               <div class="pt-group pt-group-location" id="locationGroup">
                 <div class="pt-label-row">
-                  <label class="pt-label" for="taskLocation"><span class="pt-desk">Location Address</span><span class="pt-mob">Task Location</span> <span class="pt-req" aria-hidden="true">*</span></label>
-                  <button type="button" class="pt-link" id="useLocationBtn"><svg class="pt-i" aria-hidden="true"><use href="#i-locate"/></svg><span class="pt-desk">Use current location</span><span class="pt-mob">Use Current</span></button>
+                  <label class="pt-label" for="taskLocation"><span class="pt-desk">Task Area</span><span class="pt-mob">Task Area</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                  <button type="button" class="pt-link" id="useLocationBtn"><svg class="pt-i" aria-hidden="true"><use href="#i-locate"/></svg><span class="pt-desk">Use my current area</span><span class="pt-mob">Use Current</span></button>
                 </div>
                 <div class="pt-field pt-loc-wrap">
                   <svg class="pt-i pt-field-icon" aria-hidden="true"><use href="#i-pin"/></svg>
-                  <input type="text" id="taskLocation" name="location" class="pt-input" placeholder="e.g. Admiralty Way, Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
+                  <input type="text" id="taskLocation" name="location" class="pt-input" placeholder="Search your area, e.g. Lekki Phase 1, Lagos" required data-field="location" autocomplete="off" />
                   <div id="taskLocationSuggestions" class="location-suggestions"></div>
                 </div>
-                <div id="locationPrivacyNote" class="pt-help pt-loc-hint">Your exact address is only shared with the confirmed tasker you choose to hire.</div>
+                <div id="locationPrivacyNote" class="pt-help pt-loc-hint">Only your area is shown on your task. Please don't type your street or house number. Once you hire someone, you can share your exact address with them in chat.</div>
               </div>
 
               <div class="pt-group pt-group-when">
@@ -344,7 +344,7 @@
             <ul class="pt-tip-list">
               <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Be specific:</strong> Detail the task clearly. Better instructions consistently attract higher-quality offers.</p></li>
               <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Set a realistic budget:</strong> Fair pricing ensures enthusiastic, prompt bids from experienced pros.</p></li>
-              <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Include your precise area:</strong> Local taskers can calculate travel time and confirm same-day dispatch.</p></li>
+              <li><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><p><strong>Choose your area:</strong> Taskers see only your neighbourhood, so they can tell how far they are. Your street stays private.</p></li>
             </ul>
           </section>
 
@@ -445,7 +445,7 @@
         inputId:    'taskLocation',
         dropdownId: 'taskLocationSuggestions',
         gps: true,
-        mode: 'precise',
+        mode: 'area-only',
       });
     }
   </script>
