@@ -5,7 +5,6 @@ Allow: /
 # Public pages — crawl freely
 Allow: /index.html
 Allow: /find-taskers.html
-Allow: /explore-tasks.html
 Allow: /signup.html
 Allow: /login.html
 Allow: /gift-cards.html

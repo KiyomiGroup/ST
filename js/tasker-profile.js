@@ -1,14 +1,14 @@
 /* ============================================================
    STREETTASKER — tasker-profile.js
-   Public Tasker Profile (tasker-profile.html?id=<auth user id>, or ?demo=<id> for sample providers).
+   Public Tasker Profile (tasker-profile.html?id=<auth user id>).
 
    Reads:  taskers.*  (incl. profile_details jsonb written by edit-profile-tasker.js),
            users(name, bio, business_name, avatar_url, location), verifications, feed_posts,
            bookings (completed count + repeat clients), reviews (only if the table exists).
    Keeps:  booking request, request quote / message, application decision bar (?task=&app=),
-           owner view (Edit My Page), demo providers.
+           owner view (Edit My Page).
    Every section hides itself when its data is empty. All user text is escaped.
-   Needs:  supabaseClient.js, sanitize.js (escapeHtml), auth.js, ui.js (showToast), tasker-profile-demo.js.
+   Needs:  supabaseClient.js, sanitize.js (escapeHtml), auth.js, ui.js (showToast).
    ============================================================ */
 (function () {
   'use strict';
@@ -396,18 +396,6 @@
     } catch (e) { /* no reviews table yet: section stays hidden */ }
   }
 
-  /* ── data: demo providers (?demo=d1) ─────────────────────── */
-  function loadDemo(demoId) {
-    var svc = (window.TP_DEMO || []).filter(function (s) { return s.id === demoId; })[0];
-    if (!svc) return fail();
-    state.demo = svc;
-    renderAll(buildModel({
-      name: svc.provider_name, first: svc.provider_name.split(' ')[0], service: svc.service_name, headline: svc.service_name,
-      location: svc.location, verified: true, rating: svc.rating, reviewCount: svc.reviews,
-      rateValue: svc.price, rateUnit: svc.rate_unit || '/job', available: true, bio: svc.description, isDemo: true
-    }));
-  }
-
   /* ── dialogs ─────────────────────────────────────────────── */
   function openDialog(dlg) { if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', ''); }
   function closeDialog(dlg) { if (dlg.open) dlg.close(); }
@@ -572,7 +560,6 @@
     if (!user) return toLogin();
     if (await blockIfTasker(user)) return;
     var m = state.model; if (!m) return;
-    if (state.demo) return openDemoBooking();
     if (!state.id) return;
 
     var today = new Date().toISOString().split('T')[0];
@@ -702,7 +689,6 @@
     var user = await currentUser();
     if (!user) return toLogin();
     if (await blockIfTasker(user)) return;
-    if (state.demo) return openDemoBooking();
     try {
       var ex = await window.supabase.from('bookings').select('id').eq('customer_id', user.id).eq('tasker_id', state.id).in('status', ['pending', 'confirmed']).maybeSingle();
       if (ex.data && ex.data.id) {
@@ -712,27 +698,6 @@
       }
     } catch (e) { /* fall through to the request form */ }
     openBooking('quote');
-  }
-
-  async function openDemoBooking() {
-    var user = await currentUser();
-    if (!user) return toLogin();
-    var svc = state.demo, body = $('tpBookBody');
-    body.innerHTML = '<div class="tp-dialog-done"><h2 class="tp-dialog-title" id="tpBookTitle">Sending request\u2026</h2><p class="tp-dialog-lead">Contacting ' + esc(svc.provider_name) + '</p></div>';
-    openDialog($('tpBookDialog'));
-    setTimeout(async function () {
-      try {
-        await window.supabase.from('notifications').insert({
-          user_id: user.id, type: 'booking_declined', title: 'Booking Unavailable',
-          message: svc.provider_name + ' is not currently taking new bookings through Street Taskers. Try another provider or post a task instead.', is_read: false
-        });
-      } catch (e) { /* notification is a courtesy */ }
-      body.innerHTML =
-        '<div class="tp-dialog-done"><h2 class="tp-dialog-title">Provider unavailable</h2>' +
-        '<p class="tp-dialog-lead">' + esc(svc.provider_name) + ' is not currently taking new bookings. You have been notified in your dashboard.</p>' +
-        '<a href="find-taskers.html?category=' + encodeURIComponent(svc.category) + '" class="btn btn-primary tp-dialog-submit">Find other ' + esc(svc.service_name) + 's</a>' +
-        '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
-    }, 2000);
   }
 
   /* ── Applications decision bar (?task=&app=) ─────────────── */
@@ -883,10 +848,8 @@
   async function init() {
     wire();
     var params = new URLSearchParams(window.location.search);
-    var demoId = params.get('demo');
     state.id = params.get('id');
 
-    if (demoId) return loadDemo(demoId);
     if (!state.id) return fail();
 
     try {

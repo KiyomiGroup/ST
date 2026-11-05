@@ -271,7 +271,7 @@ function openMessagesPanel() {
             </nav>
             <div class="sidebar-cta-wrap tdb-actions-col">
               <a href="post-service.html" class="btn btn-primary btn-full tdb-center">+ Post Service</a>
-              <a href="explore-tasks.html" class="btn btn-ghost btn-full tdb-center">Browse Tasks</a>
+              <a href="find-tasks.html" class="btn btn-ghost btn-full tdb-center">Browse Tasks</a>
             </div>
           </aside>
 
@@ -563,7 +563,7 @@ function openMessagesPanel() {
 
             <!-- Find Tasks -->
             <div id="panel-find-tasks" class="dashboard-panel">
-              <div class="panel-header"><h2>Open Tasks Near You</h2><a href="explore-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
+              <div class="panel-header"><h2>Open Tasks Near You</h2><a href="find-tasks.html" class="btn btn-ghost btn-sm">Browse all</a></div>
               <p class="tdb-sub">Tasks posted by customers. Apply to get hired.</p>
               <div id="findTasksList"><div class="db-state">Loading tasks...</div></div>
             </div>
@@ -1064,7 +1064,7 @@ function openMessagesPanel() {
             '<div class="task-row-content"><div class="task-row-title">' + (t.title||'Task') + '</div>' +
             '<div class="task-row-meta"><span>' + (t.location||'Lagos') + '</span>' + (t.category?'<span>'+t.category+'</span>':'') + '<span class="db-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</span></div>' +
             (t.description?'<p class="db-desc">' + t.description.slice(0,100) + (t.description.length>100?'…':'') + '</p>':'') +
-            '</div><div class="tdb-noshrink"><a href="explore-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
+            '</div><div class="tdb-noshrink"><a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
         }).join('');
       } catch(e) {
         el.innerHTML = '<p class="db-text-sm db-text-danger">Could not load tasks: ' + e.message + '</p>';

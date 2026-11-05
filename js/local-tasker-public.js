@@ -131,8 +131,8 @@
       if (live) show(chip.textContent.trim() === 'All Crafts' ? '' : chip.textContent.trim());
     });
     return cards(12).then(function (rows) {
-      if (!rows.length) return 0;            /* nobody published: keep the sample cards */
-      live = rows; show(''); return rows.length;
+      live = rows; show('');                 /* nobody published: the grid is empty and the note says so */
+      return rows.length;
     });
   }
 

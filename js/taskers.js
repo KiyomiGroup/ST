@@ -4,107 +4,6 @@
    ============================================================ */
 'use strict';
 
-const DUMMY_SERVICES = [
-  /* Electricians */
-  { id:'d1',  user_id:'demo', provider_name:'Adebayo Okafor',    service_name:'Electrician',        category:'electrician', location:'Lekki Phase 1, Lagos',       price:6000,  rating:4.9, reviews:48,  description:'Certified electrician with 8 years experience. Wiring, installations, repairs and maintenance.' },
-  { id:'d2',  user_id:'demo', provider_name:'Emeka Electrical',  service_name:'Electrician',        category:'electrician', location:'Ikeja GRA, Lagos',            price:5500,  rating:4.7, reviews:31,  description:'Residential and commercial electrical work. Fast response, quality guaranteed.' },
-  { id:'d3',  user_id:'demo', provider_name:'Bright Nwosu',      service_name:'Electrician',        category:'electrician', location:'Wuse 2, Abuja',               price:7000,  rating:4.8, reviews:22,  description:'Specialised in solar installations, inverters, and general electrical repairs.' },
-  /* Barbers */
-  { id:'d4',  user_id:'demo', provider_name:'Chidi Cuts',        service_name:'Barber',             category:'barber',      location:'Victoria Island, Lagos',      price:3500,  rating:4.8, reviews:112, description:'Professional barber. Fades, lineups, beard grooming. Home visits available.' },
-  { id:'d5',  user_id:'demo', provider_name:'Style King Barbers', service_name:'Barber',            category:'barber',      location:'Surulere, Lagos',             price:2500,  rating:4.6, reviews:87,  description:'Classic and modern cuts. Walk-ins welcome or book in advance.' },
-  { id:'d6',  user_id:'demo', provider_name:'Taiwo Ojo',         service_name:'Barber',             category:'barber',      location:'Maitama, Abuja',              price:4000,  rating:4.7, reviews:44,  description:'Mobile barber. I come to you. All styles, all hair types.' },
-  /* Cleaners */
-  { id:'d7',  user_id:'demo', provider_name:'Fatima Cleaning Co', service_name:'House Cleaner',     category:'cleaning',    location:'Ikeja, Lagos',                price:8000,  rating:4.7, reviews:73,  description:'Deep cleaning, move-in/move-out, post-construction cleaning. Trusted and thorough.' },
-  { id:'d8',  user_id:'demo', provider_name:'Sparkle Homes',     service_name:'House Cleaner',      category:'cleaning',    location:'Lekki, Lagos',                price:10000, rating:4.9, reviews:56,  description:'Full home cleaning service. Eco-friendly products. Weekly, bi-weekly or one-off.' },
-  { id:'d9',  user_id:'demo', provider_name:'Chisom Uzor',       service_name:'Office Cleaner',     category:'cleaning',    location:'Garki, Abuja',                price:12000, rating:4.5, reviews:18,  description:'Office and commercial space cleaning. Flexible scheduling including weekends.' },
-  /* Plumbers */
-  { id:'d10', user_id:'demo', provider_name:'Kingsley Plumbing', service_name:'Plumber',            category:'plumber',     location:'Yaba, Lagos',                 price:5000,  rating:4.5, reviews:34,  description:'All plumbing work: pipes, boreholes, water heaters, blocked drains. 24hr emergency.' },
-  { id:'d11', user_id:'demo', provider_name:'Tunde Pipes',       service_name:'Plumber',            category:'plumber',     location:'Gbagada, Lagos',              price:4500,  rating:4.4, reviews:21,  description:'Residential plumbing specialist. Free assessment for new clients.' },
-  /* Mechanics */
-  { id:'d12', user_id:'demo', provider_name:'Emeka AutoCare',    service_name:'Mechanic',           category:'mechanic',    location:'Surulere, Lagos',             price:8000,  rating:4.6, reviews:29,  description:'Foreign and local cars. Diagnostics, engine repair, AC regas, brake service.' },
-  { id:'d13', user_id:'demo', provider_name:'Oga Mechanic',      service_name:'Mobile Mechanic',    category:'mechanic',    location:'Wuse, Abuja',                 price:6000,  rating:4.5, reviews:17,  description:'I come to your location. Quick diagnosis and repair for all car brands.' },
-  /* Beauty */
-  { id:'d14', user_id:'demo', provider_name:'Sadia Beauty Studio', service_name:'Make-up Artist',  category:'beauty',      location:'Ajah, Lagos',                 price:15000, rating:5.0, reviews:91,  description:'Bridal, aso-ebi, editorial makeup. Book early for weekends. Portfolio on request.' },
-  { id:'d15', user_id:'demo', provider_name:'Glam by Amaka',     service_name:'Make-up Artist',    category:'beauty',      location:'VI, Lagos',                   price:20000, rating:4.9, reviews:63,  description:'Luxury makeup for weddings, photoshoots, and events. International techniques.' },
-  { id:'d16', user_id:'demo', provider_name:'Precious Nails',    service_name:'Nail Technician',   category:'beauty',      location:'Lekki, Lagos',                price:7000,  rating:4.7, reviews:108, description:'Gel, acrylic, nail art, manicure and pedicure. Home service available.' },
-  { id:'d17', user_id:'demo', provider_name:'Hairitage Braids',  service_name:'Hair Stylist',       category:'beauty',      location:'Gbagada, Lagos',              price:9000,  rating:4.8, reviews:77,  description:'Box braids, knotless braids, cornrows, twists. Natural hair specialist.' },
-  /* Painting */
-  { id:'d18', user_id:'demo', provider_name:'Colour Pro Painters', service_name:'Painter',         category:'painting',    location:'Ikeja, Lagos',                price:25000, rating:4.6, reviews:15,  description:'Interior and exterior painting. Quality finishes, neat work. Per room quotes available.' },
-  { id:'d19', user_id:'demo', provider_name:'Ade Painters Ltd',  service_name:'Painter',            category:'painting',    location:'Lugbe, Abuja',                price:20000, rating:4.4, reviews:9,   description:'Residential and commercial painting. Textured finishes and epoxy floors.' },
-  /* Laundry */
-  { id:'d20', user_id:'demo', provider_name:'FreshPress Laundry', service_name:'Laundry & Ironing', category:'laundry',    location:'Yaba, Lagos',                 price:500,   rating:4.7, reviews:142, description:'Per item pricing. 24hr turnaround. Pickup and delivery available in your area.' },
-  { id:'d21', user_id:'demo', provider_name:'Clean Threads',     service_name:'Dry Cleaning',       category:'laundry',    location:'Asokoro, Abuja',              price:1500,  rating:4.5, reviews:34,  description:'Dry cleaning, alterations, suit pressing. Professional grade equipment.' },
-  /* Tutoring */
-  { id:'d22', user_id:'demo', provider_name:'Mr Bello Maths',    service_name:'Maths Tutor',        category:'tutoring',    location:'Lekki, Lagos',               price:5000,  rating:4.9, reviews:38,  description:'O-Level, JAMB, WAEC maths. Online or in-person. Proven track record.' },
-  { id:'d23', user_id:'demo', provider_name:'EduBright Tutors',  service_name:'Home Tutor',         category:'tutoring',    location:'Maitama, Abuja',              price:7000,  rating:4.8, reviews:25,  description:'Primary, secondary and tertiary tutoring. All subjects. Flexible hours.' },
-  /* Cooking */
-  { id:'d24', user_id:'demo', provider_name:'Mama Cooks',        service_name:'Personal Chef',      category:'cooking',     location:'Victoria Island, Lagos',      price:20000, rating:4.9, reviews:19,  description:'Home cooked Nigerian and continental meals. Events, parties, weekly meal prep.' },
-  { id:'d25', user_id:'demo', provider_name:'Chef Dara',         service_name:'Catering',           category:'cooking',     location:'Ikeja GRA, Lagos',            price:50000, rating:4.7, reviews:12,  description:'Party catering from 20–500 guests. Jollof, pepper soup, egusi, and more.' },
-  /* Security */
-  { id:'d26', user_id:'demo', provider_name:'SafeGuard Security', service_name:'Security Guard',    category:'security',    location:'Lekki Phase 2, Lagos',        price:40000, rating:4.3, reviews:8,   description:'Licensed security officers. Estate, office, event security. Monthly contracts available.' },
-  /* Photography */
-  { id:'d27', user_id:'demo', provider_name:'Lens by Seun',      service_name:'Photographer',       category:'photography', location:'Ikoyi, Lagos',                price:50000, rating:4.9, reviews:54,  description:'Weddings, portraits, events, brand shoots. Drone photography also available.' },
-  { id:'d28', user_id:'demo', provider_name:'Capture Lagos',     service_name:'Videographer',       category:'photography', location:'Surulere, Lagos',             price:60000, rating:4.8, reviews:31,  description:'Wedding films, music videos, corporate videos. Cinematic quality delivery.' },
-  /* Moving */
-  { id:'d29', user_id:'demo', provider_name:'Swift Movers',      service_name:'Moving & Packing',   category:'moving',      location:'Lagos Mainland',              price:30000, rating:4.5, reviews:23,  description:'House and office relocation. We pack, load, transport and unpack. Insured.' },
-  /* AC / Appliances */
-  { id:'d30', user_id:'demo', provider_name:'Cool Air Services', service_name:'AC Technician',      category:'appliances',  location:'Lekki, Lagos',                price:8000,  rating:4.6, reviews:41,  description:'AC installation, servicing, gas recharge, fault repair. All brands covered.' },
-
-  /* ── Electricians ×7 more ── */
-  { id:'d31', user_id:'demo', provider_name:'Wole Sparks',         service_name:'Electrician',        category:'electrician', location:'Ajah, Lagos',                 price:5000,  rating:4.6, reviews:19,  description:'Domestic wiring, generator changeover, security lighting. Always punctual.' },
-  { id:'d32', user_id:'demo', provider_name:'Chukwu Electric',     service_name:'Electrician',        category:'electrician', location:'Asokoro, Abuja',              price:6500,  rating:4.7, reviews:27,  description:'Industrial and domestic electrical work. Qualified and insured. Free quotes.' },
-  { id:'d33', user_id:'demo', provider_name:'Femi Power',          service_name:'Electrician',        category:'electrician', location:'Ibadan, Oyo',                 price:4500,  rating:4.5, reviews:14,  description:'Meter bypass, inverter installation, fault diagnosis. Affordable rates.' },
-  { id:'d34', user_id:'demo', provider_name:'Lagos Electric Pro',  service_name:'Electrician',        category:'electrician', location:'Oshodi, Lagos',               price:5500,  rating:4.4, reviews:11,  description:'New installations, rewiring, outdoor lighting. Same-day service available.' },
-  { id:'d35', user_id:'demo', provider_name:'Abuja Wiring Xperts', service_name:'Electrician',        category:'electrician', location:'Kubwa, Abuja',                price:5000,  rating:4.6, reviews:16,  description:'Complete electrical solutions for homes and offices. 24/7 emergency.' },
-  { id:'d36', user_id:'demo', provider_name:'Smart Volt NG',       service_name:'Solar Installer',    category:'electrician', location:'Ikoyi, Lagos',                price:80000, rating:4.8, reviews:33,  description:'Solar panels, inverters, battery backup systems. Site assessment included.' },
-  { id:'d37', user_id:'demo', provider_name:'Nnamdi Electrical',   service_name:'Electrician',        category:'electrician', location:'Enugu, Enugu',                price:4000,  rating:4.5, reviews:8,   description:'All electrical repairs and installations. Neat work, fair price.' },
-
-  /* ── Barbers ×7 more ── */
-  { id:'d38', user_id:'demo', provider_name:'Fresh Cutz',          service_name:'Barber',             category:'barber',      location:'Ikorodu, Lagos',              price:2000,  rating:4.5, reviews:63,  description:'Classic cuts, fades, line-ups. Walk-in or appointment. Fast and precise.' },
-  { id:'d39', user_id:'demo', provider_name:'The Barb Shop',       service_name:'Barber',             category:'barber',      location:'Wuse 2, Abuja',               price:3000,  rating:4.6, reviews:41,  description:'Premium grooming. Shave, trim, beard shaping. Refreshments served.' },
-  { id:'d40', user_id:'demo', provider_name:'Tunde Mobile Barber', service_name:'Mobile Barber',      category:'barber',      location:'Ikeja, Lagos',                price:3500,  rating:4.8, reviews:88,  description:'I come to your house, office or event. All ages, all styles.' },
-  { id:'d41', user_id:'demo', provider_name:'Fade Factory NG',     service_name:'Barber',             category:'barber',      location:'Port Harcourt, Rivers',       price:2500,  rating:4.7, reviews:55,  description:'Specialist in taper fades, skin fades and afro styling.' },
-  { id:'d42', user_id:'demo', provider_name:'Oga Scissors',        service_name:'Barber',             category:'barber',      location:'Agege, Lagos',                price:1500,  rating:4.3, reviews:29,  description:'Affordable quality cuts. Kids welcome. Fast service.' },
-  { id:'d43', user_id:'demo', provider_name:'Kings Barbing Salon', service_name:'Barber',             category:'barber',      location:'Kaduna, Kaduna',              price:2000,  rating:4.4, reviews:17,  description:'Classic and modern barbering. Beard work and hair design.' },
-  { id:'d44', user_id:'demo', provider_name:'CleanLine Barbers',   service_name:'Barber',             category:'barber',      location:'Lekki Phase 2, Lagos',        price:4000,  rating:4.9, reviews:72,  description:'Precision cuts, hot towel shaves, luxury grooming packages.' },
-
-  /* ── Cleaners ×7 more ── */
-  { id:'d45', user_id:'demo', provider_name:'Mama Clean',          service_name:'House Cleaner',      category:'cleaning',    location:'Ajah, Lagos',                 price:6000,  rating:4.6, reviews:44,  description:'Thorough home cleaning. Kitchen, bathrooms, bedrooms. Weekly slots available.' },
-  { id:'d46', user_id:'demo', provider_name:'Abuja Clean Squad',   service_name:'House Cleaner',      category:'cleaning',    location:'Wuse, Abuja',                 price:9000,  rating:4.7, reviews:28,  description:'Professional domestic cleaning. Eco products, background-checked staff.' },
-  { id:'d47', user_id:'demo', provider_name:'ShineRight NG',       service_name:'Deep Cleaner',       category:'cleaning',    location:'VI, Lagos',                   price:15000, rating:4.8, reviews:19,  description:'Post-construction, end-of-tenancy, party cleanup. Industrial equipment.' },
-  { id:'d48', user_id:'demo', provider_name:'Ibadan Cleaners',     service_name:'House Cleaner',      category:'cleaning',    location:'Bodija, Ibadan',              price:5000,  rating:4.4, reviews:12,  description:'Reliable and affordable home cleaning. Morning or evening slots.' },
-  { id:'d49', user_id:'demo', provider_name:'Spotless Pro',        service_name:'Office Cleaner',     category:'cleaning',    location:'Ibeju Lekki, Lagos',          price:18000, rating:4.5, reviews:9,   description:'Daily, weekly or monthly office cleaning contracts. Staff provided.' },
-  { id:'d50', user_id:'demo', provider_name:'Fresh Home Services', service_name:'House Cleaner',      category:'cleaning',    location:'Kano, Kano',                  price:4500,  rating:4.3, reviews:7,   description:'Trusted local cleaner. Weekends available. References on request.' },
-  { id:'d51', user_id:'demo', provider_name:'GleamClean Lagos',    service_name:'House Cleaner',      category:'cleaning',    location:'Surulere, Lagos',             price:7500,  rating:4.7, reviews:36,  description:'Full home refresh. We bring equipment and supplies. Trusted by 100+ homes.' },
-
-  /* ── Plumbers ×8 more ── */
-  { id:'d52', user_id:'demo', provider_name:'Emeka Plumbing Co',   service_name:'Plumber',            category:'plumber',     location:'Abuja, FCT',                  price:6000,  rating:4.6, reviews:18,  description:'All plumbing faults fixed fast. Boreholes, pumps, tanks, pipework.' },
-  { id:'d53', user_id:'demo', provider_name:'WaterTech NG',        service_name:'Plumber',            category:'plumber',     location:'Lekki, Lagos',                price:7000,  rating:4.7, reviews:24,  description:'Water treatment, filtration, borehole drilling and maintenance.' },
-  { id:'d54', user_id:'demo', provider_name:'Olu Plumber',         service_name:'Plumber',            category:'plumber',     location:'Ibadan, Oyo',                 price:3500,  rating:4.3, reviews:9,   description:'Residential plumbing. Leak repair, tap replacement, blocked drains.' },
-  { id:'d55', user_id:'demo', provider_name:'AquaFix Lagos',       service_name:'Plumber',            category:'plumber',     location:'Oshodi, Lagos',               price:4000,  rating:4.5, reviews:15,  description:'24-hour emergency plumber. Burst pipes, flooding, no water issues.' },
-  { id:'d56', user_id:'demo', provider_name:'PH Plumbing',         service_name:'Plumber',            category:'plumber',     location:'Port Harcourt, Rivers',       price:5500,  rating:4.6, reviews:11,  description:'Borehole specialist. Submersible pumps, overhead tanks, water supply.' },
-  { id:'d57', user_id:'demo', provider_name:'Abuja Waterworks',    service_name:'Plumber',            category:'plumber',     location:'Garki, Abuja',                price:5000,  rating:4.4, reviews:13,  description:'Professional plumbing for homes and offices. Clean workmanship.' },
-  { id:'d58', user_id:'demo', provider_name:'Lagos Pipe Pro',      service_name:'Plumber',            category:'plumber',     location:'Mushin, Lagos',               price:3000,  rating:4.2, reviews:6,   description:'Quick fix plumber. Leaks, blockages, new installations. Fair pricing.' },
-  { id:'d59', user_id:'demo', provider_name:'FlowRight Plumbing',  service_name:'Plumber',            category:'plumber',     location:'Gwagwalada, Abuja',           price:4500,  rating:4.5, reviews:10,  description:'All plumbing services. Bathroom fitting, kitchen plumbing, pipe replacement.' },
-
-  /* ── Mechanics ×8 more ── */
-  { id:'d60', user_id:'demo', provider_name:'Auto Doctor NG',      service_name:'Mechanic',           category:'mechanic',    location:'Ikeja, Lagos',                price:10000, rating:4.7, reviews:38,  description:'Computerised diagnostics, engine overhaul, transmission, AC. All brands.' },
-  { id:'d61', user_id:'demo', provider_name:'Toyin Roadside Fix',  service_name:'Mobile Mechanic',    category:'mechanic',    location:'Gbagada, Lagos',              price:5000,  rating:4.5, reviews:22,  description:'Breakdown rescue and roadside repairs. Come to you anywhere in Lagos.' },
-  { id:'d62', user_id:'demo', provider_name:'Abuja Auto Centre',   service_name:'Mechanic',           category:'mechanic',    location:'Gwarinpa, Abuja',             price:8000,  rating:4.6, reviews:15,  description:'Full service workshop. Servicing, repairs, tyre change, wheel alignment.' },
-  { id:'d63', user_id:'demo', provider_name:'Chief Mechanic',      service_name:'Mechanic',           category:'mechanic',    location:'Enugu, Enugu',                price:7000,  rating:4.4, reviews:11,  description:'Japanese and American car specialist. Toyota, Honda, Ford, Lexus expert.' },
-  { id:'d64', user_id:'demo', provider_name:'SpeedFix Autos',      service_name:'Mechanic',           category:'mechanic',    location:'Surulere, Lagos',             price:6000,  rating:4.5, reviews:19,  description:'Oil change, brake pads, plugs, filter replacement. Quick turnaround.' },
-  { id:'d65', user_id:'demo', provider_name:'Kano Auto Repairs',   service_name:'Mechanic',           category:'mechanic',    location:'Kano, Kano',                  price:5500,  rating:4.3, reviews:8,   description:'Reliable mechanic. Honest pricing. No unnecessary repairs.' },
-  { id:'d66', user_id:'demo', provider_name:'PHC Motorworks',      service_name:'Mechanic',           category:'mechanic',    location:'Port Harcourt, Rivers',       price:9000,  rating:4.7, reviews:27,  description:'Car AC repairs, electrical faults, suspension. Workshop experience.' },
-  { id:'d67', user_id:'demo', provider_name:'Nationwide Tyres',    service_name:'Tyre & Alignment',   category:'mechanic',    location:'Oshodi, Lagos',               price:12000, rating:4.6, reviews:33,  description:'New and used tyres, balancing, wheel alignment. Fast fitting service.' },
-
-  /* ── Beauty ×6 more ── */
-  { id:'d68', user_id:'demo', provider_name:'Lola Beauty Hub',     service_name:'Make-up Artist',     category:'beauty',      location:'Ikeja, Lagos',                price:12000, rating:4.8, reviews:47,  description:'Everyday and bridal makeup. Airbrush available. Home service weekends.' },
-  { id:'d69', user_id:'demo', provider_name:'Abuja Glow Studio',   service_name:'Make-up Artist',     category:'beauty',      location:'Maitama, Abuja',              price:18000, rating:4.9, reviews:82,  description:'Celebrity makeup artist. Editorial, bridal, and red carpet looks.' },
-  { id:'d70', user_id:'demo', provider_name:'Zara Nails',          service_name:'Nail Technician',    category:'beauty',      location:'Yaba, Lagos',                 price:5000,  rating:4.6, reviews:93,  description:'Gel, SNS, acrylic, nail extensions. 100+ designs. Walk-ins welcome.' },
-  { id:'d71', user_id:'demo', provider_name:'Tress Queen',         service_name:'Hair Stylist',       category:'beauty',      location:'Ajah, Lagos',                 price:8000,  rating:4.7, reviews:61,  description:'All braids, weaves, natural hair. Mobile service available citywide.' },
-  { id:'d72', user_id:'demo', provider_name:'SpaBliss NG',         service_name:'Masseur',            category:'beauty',      location:'VI, Lagos',                   price:15000, rating:4.8, reviews:28,  description:'Swedish, deep tissue, couples massage. Home visits available. Fully mobile.' },
-  { id:'d73', user_id:'demo', provider_name:'Skincare by Yemi',    service_name:'Skincare Therapist', category:'beauty',      location:'Lekki, Lagos',                price:10000, rating:4.9, reviews:39,  description:'Facials, chemical peels, acne treatments, glow sessions. Results-driven.' },
-];
 
 async function loadServices() {
   try {
@@ -125,7 +24,6 @@ async function loadServices() {
       specialties: s.specialties, availability_status: s.availability_status, verified: s.verified,
     }));
     if (services && services.length > 0) {
-      /* Live services first, then dummy data to fill out the page */
       const liveIds = new Set(services.map(s => String(s.user_id)));
       const liveMapped = services.map((s, i) => ({
         id:            String(s.id || `s${i}`),
@@ -175,15 +73,13 @@ async function loadServices() {
           await STMembership.loadFeatured(null);   /* S4i-2: the server's fair-rotation order; no answer = normal order */
         }
       } catch (_me) { /* label is optional */ }
-      /* Append dummies — mark them so Book button is hidden */
-      ALL = [...liveMapped.map(normalizeServiceCard), ...DUMMY_SERVICES.map(normalizeServiceCard)];
-      console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);
+      ALL = liveMapped.map(normalizeServiceCard);
     } else {
-      ALL = DUMMY_SERVICES.map(normalizeServiceCard);
+      ALL = [];
     }
   } catch (e) {
-    console.warn('[Taskers] Load failed, using demo data:', e.message);
-    ALL = DUMMY_SERVICES.map(normalizeServiceCard);
+    console.warn('[Taskers] Load failed:', e.message);
+    ALL = [];
   }
 }
 
@@ -222,8 +118,6 @@ function initTaskersPage() {
     const locInp = document.getElementById('taskerLocationInput');
     if (locInp) locInp.value = urlLocation;
   }
-  /* Show dummy data immediately so page never looks empty while Supabase loads */
-  ALL = DUMMY_SERVICES.map(normalizeServiceCard);
   updateTaskerFilterCounts();
   render();
   wireAll();
@@ -294,9 +188,8 @@ function render(page = 1) {
 
 
 function buildCard(s) {
-  const safeId     = escapeHtml(s.id || '');
   const safeUserId = escapeHtml(s.user_id || '');
-  const href = (s.user_id === 'demo') ? `tasker-profile.html?demo=${safeId}` : (safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html');
+  const href = safeUserId ? `tasker-profile.html?id=${safeUserId}` : 'find-taskers.html';
   /* Card markup lives in js/ui.js (stTaskerCard). */
   return stTaskerCard({ ...s, href });
 }
@@ -492,13 +385,6 @@ async function handleBookingSubmit(e) {
     const time = form.bookingTime?.value || '09:00';
     const scheduled = date ? `${date}T${time}` : null;
 
-    /* Demo listings simulate a booking without touching the DB */
-    if (svc && svc.user_id === 'demo') {
-      closeBookingModal();
-      showToast(`Booking request sent to ${svc.provider_name}! Sign up to manage bookings.`);
-      form.reset();
-      return;
-    }
 
     const _bSess = await window.supabase.auth.getSession();
     const _bUser = _bSess.data.session && _bSess.data.session.user;
