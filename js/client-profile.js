@@ -205,15 +205,11 @@
 
   function renderAbout(u, d) {
     var ps = paras(u.bio);
-    var tagline = text(d.tagline);
-    var prefs = list(d.preferences).map(text).filter(Boolean).slice(0, 6);
     var cats = list(d.categories).map(text).filter(Boolean).slice(0, 6);
     setText('cpFirst', state.first);
     $('cpBio').innerHTML = ps.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-    var tg = $('cpTagline'); tg.textContent = tagline; tg.hidden = !tagline;
-    $('cpPrefs').innerHTML = prefs.map(function (p) { return '<span class="cp-pill">' + icon('check') + esc(p) + '</span>'; }).join('');
     $('cpCats').innerHTML = cats.map(function (c) { return '<span class="cp-pill cp-pill-cat">' + esc(c) + '</span>'; }).join('');
-    $('secAbout').hidden = !(ps.length || prefs.length || tagline);
+    $('secAbout').hidden = !(ps.length || cats.length);
     return cats;
   }
 

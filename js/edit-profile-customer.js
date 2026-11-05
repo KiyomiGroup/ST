@@ -4,7 +4,7 @@
    Same data the dashboard's old Profile panel used:
      users -> name, bio, location, avatar_url
    plus users.profile_details (jsonb, see docs/profile-details-migration.sql):
-     tagline, working preferences, usual hiring categories.
+     usual hiring categories. (Tagline and working preferences were removed 2026-11-05; any old values stay in the database untouched.)
    Email comes from the sign-in session (public.users has no email), so it is read-only here.
    ============================================================ */
 (function () {
@@ -13,8 +13,7 @@
   var $ = EP.$;
   var BIO_MAX = 600;
   var S = { user: null, verified: false, details: {} };
-  var prefs, cats;
-  var PREF_PRESETS = ['Clear briefing', 'Instant sign-off', 'Safe community gate access', 'Materials ready on arrival', 'Prompt escrow release', 'Flexible scheduling'];
+  var cats;
   /* Same categories as Post a Task */
   var CAT_PRESETS = ['Home & Office Cleaning', 'Electrician', 'Plumber', 'Mechanic / Auto', 'Carpentry', 'Barber / Hair', 'Make-up / Beauty', 'Delivery', 'Moving', 'Painting'];
 
@@ -28,7 +27,6 @@
       tick: S.verified,
       location: EP.val('epLocation'),
       chips: [
-        EP.val('epTagline'),
         S.verified ? 'ID Verified' : 'ID not verified yet',
         'Escrow protected'
       ]
@@ -49,11 +47,10 @@
     if ($('epHeroName')) paintHero();
     EP.renderStrength([
       { label: 'Account created',      pct: 10, done: true },
-      { label: 'Profile photo',        pct: 10, done: EP.hasPhoto() },
-      { label: 'Name & tagline',       pct: 10, done: !!(EP.val('epName') && EP.val('epTagline')) },
+      { label: 'Profile photo',        pct: 15, done: EP.hasPhoto() },
+      { label: 'Name',                 pct: 10, done: !!EP.val('epName') },
       { label: 'Location',             pct: 15, done: !!EP.val('epLocation') },
-      { label: 'About you',            pct: 15, done: !!EP.val('epBio') },
-      { label: 'How you work',         pct: 10, done: !!(prefs && prefs.get().length) },
+      { label: 'About you',            pct: 20, done: !!EP.val('epBio') },
       { label: 'Services you hire for', pct: 5, done: !!(cats && cats.get().length) },
       { label: 'Identity (NIN / BVN)', pct: 25, done: S.verified }
     ]);
@@ -76,8 +73,6 @@
     $('epBio').value      = ud.bio || '';
     var d = (ud.profile_details && typeof ud.profile_details === 'object') ? ud.profile_details : {};
     S.details = d;
-    $('epTagline').value = d.tagline || '';
-    prefs.set(d.preferences);
     cats.set(d.categories);
     EP.photo.url = ud.avatar_url || '';
 
@@ -98,7 +93,7 @@
     var name = EP.val('epName');
     if (!name) { EP.say('Enter your full name.', 'error'); $('epName').focus(); return; }
 
-    EP.flushChips([prefs, cats]);
+    EP.flushChips([cats]);
     EP.busy(true);
     var extraFailed = false;
     try {
@@ -115,7 +110,7 @@
       if (r.error) throw r.error;
 
       /* Extra details go in one jsonb column; if the database has not been updated yet the core profile is still saved. */
-      var details = Object.assign({}, S.details, { tagline: EP.val('epTagline'), preferences: prefs.get(), categories: cats.get() });
+      var details = Object.assign({}, S.details, { categories: cats.get() });
       var x = await window.supabase.from('users').update({ profile_details: details }).eq('id', uid);
       if (x.error) { extraFailed = true; console.error('[edit-profile-customer] profile_details not saved:', x.error); }
       else S.details = details;
@@ -144,7 +139,6 @@
 
   function boot() {
     paintBio = EP.bindCounter('epBio', 'epBioCount', BIO_MAX);
-    prefs = EP.chips({ host: $('epPrefs'), max: 6, presets: PREF_PRESETS, placeholder: 'Add your own', onChange: strength });
     cats  = EP.chips({ host: $('epCats'),  max: 6, presets: CAT_PRESETS,  placeholder: 'Add another service', onChange: strength });
     EP.initPhoto({ getName: function () { return EP.val('epName'); }, onChange: strength });
 
