@@ -637,3 +637,10 @@ body.co-drawer-open { overflow: hidden; }
 #coRl .co-rl-code { max-width: 14rem; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
 #coRl .co-form .co-consent-meta { margin-top: 0; }
 #coRl[hidden], #coRlForm[hidden], #coRlAttempts[hidden], #coRlDone[hidden] { display: none; }
+
+/* Stage M6: "Review the customer" card (the coordinator leaves the Local Tasker's review) */
+#coRv .co-banner { margin-bottom: var(--space-4); }
+#coRv .co-form-actions .btn { min-height: 44px; }
+#coRv .co-consent-meta { margin-top: var(--space-4); }
+#coRv .co-rv-scale { display: flex; flex-wrap: wrap; column-gap: var(--space-5); }
+#coRv[hidden], #coRvForm[hidden], #coRvDone[hidden], #coRvFoot[hidden] { display: none; }

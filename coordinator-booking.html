@@ -263,6 +263,35 @@
           <p class="co-consent-meta" id="coRlFoot">A wrong code uses one of three attempts. After three wrong codes the booking is locked and only a StreetTasker administrator can unlock it. Entering the right code releases the payment once. It can’t be undone.</p>
         </section>
 
+        <section class="co-card" id="coRv" aria-labelledby="coRvTitle" hidden>
+          <h2 class="co-card-title" id="coRvTitle">Review the customer</h2>
+          <p class="co-card-lead" id="coRvLead"></p>
+          <div class="co-banner" id="coRvError" role="alert" hidden><span id="coRvErrorText"></span></div>
+          <div class="co-banner co-banner--info" id="coRvDone" role="status" hidden><span id="coRvDoneText"></span></div>
+          <form class="co-form" id="coRvForm" novalidate hidden>
+            <fieldset class="form-group co-fieldset" aria-describedby="coRvHelp coRvRatingErr">
+              <legend class="form-label">How was the customer to work with?</legend>
+              <div class="co-rv-scale">
+                <label class="co-check" for="coRvR1"><input type="radio" name="coRvRate" id="coRvR1" value="1" /><span>1 star</span></label>
+                <label class="co-check" for="coRvR2"><input type="radio" name="coRvRate" id="coRvR2" value="2" /><span>2 stars</span></label>
+                <label class="co-check" for="coRvR3"><input type="radio" name="coRvRate" id="coRvR3" value="3" /><span>3 stars</span></label>
+                <label class="co-check" for="coRvR4"><input type="radio" name="coRvRate" id="coRvR4" value="4" /><span>4 stars</span></label>
+                <label class="co-check" for="coRvR5"><input type="radio" name="coRvRate" id="coRvR5" value="5" /><span>5 stars</span></label>
+              </div>
+              <p class="form-helper" id="coRvHelp">1 is poor, 5 is excellent.</p>
+              <p class="co-field-error" id="coRvRatingErr" hidden></p>
+            </fieldset>
+            <div class="form-group">
+              <label class="form-label" for="coRvComment">Comment (optional)</label>
+              <textarea class="form-textarea" id="coRvComment" maxlength="1000"></textarea>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRvSubmit">Record the review</button>
+            </div>
+          </form>
+          <p class="co-consent-meta" id="coRvFoot">One review per booking. Once recorded it can’t be edited or removed here.</p>
+        </section>
+
         <section class="co-card" id="coEx" aria-labelledby="coExTitle" hidden>
           <h2 class="co-card-title" id="coExTitle">When something goes wrong</h2>
           <p class="co-card-lead" id="coExLead"></p>
@@ -494,6 +523,7 @@
   <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-exceptions.js"></script>
   <script src="js/coordinator-release.js"></script>
+  <script src="js/coordinator-review.js"></script>
   <script src="js/coordinator-closeout.js"></script>
   <script src="js/coordinator-extras.js"></script>
   <script src="js/coordinator-reduction.js"></script>
