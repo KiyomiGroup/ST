@@ -127,6 +127,3 @@ When the owner sends files to work with (a new zip, a project snapshot) and does
 
 
 ## UPDATE (S4i-2, 2026-11-05): S4i-1 recorded as deployed. S4i-2 written (see `handoffs/sub-S4i-2.md`; it SUPERSEDES the NEXT STAGE text above). Confirmed signatures: `featured_taskers(p_category text, p_limit int) -> jsonb`, `membership_for_users(p_user_ids uuid[]) -> jsonb`; both empty today. Featured people float up on Find Taskers only in the default order. "Verified Tasker Pro" is now "Verified Tasker". NEXT STAGE: **S4j** (analytics dashboard; read `01-stage-plan.md` row S4j and S3g's handoff; privacy line default is proposed in `sub-S4i-2.md`, owner to confirm), then S4k (deferrable), S5h note, S7a-S7d. Owner cannot run console steps: ask only for SQL-editor queries with no placeholders.
-
-
-## UPDATE (S4i-fix, 2026-11-05): homepage no-photo tasks show the logo (`handoffs/sub-S4i-fix.md`). NEXT STAGE is still **S4j**.
