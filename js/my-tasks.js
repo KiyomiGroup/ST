@@ -253,7 +253,7 @@
       if (t.offers.length) a += '<a class="ap-btn ap-btn-primary" href="customer-applications.html?task=' + encodeURIComponent(t.id) + '">Review Offers (' + t.offers.length + ')</a>';
       a += '<button type="button" class="ap-btn ' + (t.offers.length ? 'ap-btn-quiet' : '') + '" data-act="close" data-id="' + id + '">Close Post</button>';
     } else if ((t.group === 'progress' || t.group === 'completed') && t.hired) {
-      a += '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Tasker</button>' +
+      a += '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + (t.group === 'completed' ? 'View Chat' : 'Message Tasker') + '</button>' +
         '<a class="ap-btn" href="' + profile + '">View Profile</a>';
     }
     return a ? '<div class="ap-actions">' + a + '</div>' : '';

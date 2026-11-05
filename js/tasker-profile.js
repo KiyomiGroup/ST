@@ -680,14 +680,13 @@
         });
       } catch (e) { /* the notification is a courtesy: the request itself is saved */ }
 
-      sessionStorage.setItem('st_chat_context', JSON.stringify({ contextType: 'booking', contextId: bookingId, taskerId: state.id, customerId: user.id }));
-
       body.innerHTML =
         '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
         '<h2 class="tp-dialog-title">Request sent</h2>' +
         '<p class="tp-dialog-lead">Your request for <strong>' + esc(jobVal) + '</strong> in <strong>' + esc(areaVal) + '</strong> has been sent for <strong>' + esc(dateVal + (timeVal ? ' (' + timeVal + ')' : '')) + '</strong>' + (urgencyVal === 'Urgent' ? ' and marked urgent' : '') + (photoUrls.length ? ', with ' + photoUrls.length + (photoUrls.length === 1 ? ' photo' : ' photos') : '') + '. The tasker will respond shortly.</p>' +
         (addressSaved ? '' : '<p class="ap-error">We could not save your street address. Please send it to the tasker in chat once they reply.</p>') +
-        '<a href="messages.html" class="btn btn-primary tp-dialog-submit">' + icon('chat') + 'Message Provider</a>' +
+        '<p class="tp-dialog-lead">You can chat with the provider once they accept your request. We will notify you.</p>' +
+        '<a href="customer-bookings.html" class="btn btn-primary tp-dialog-submit">View My Bookings</a>' +
         '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
     } catch (e) {
       body.innerHTML =
@@ -697,17 +696,23 @@
     }
   }
 
-  /* Request Quote / Message: messages hang off a booking, so reuse an open one or start a request. */
+  /* Request Quote: chat opens only after the provider ACCEPTS a booking (stage M4), so this starts a request,
+     or sends the customer to the job room of a booking that is already accepted. */
   async function openQuote() {
     var user = await currentUser();
     if (!user) return toLogin();
     if (await blockIfTasker(user)) return;
     if (state.demo) return openDemoBooking();
     try {
-      var ex = await window.supabase.from('bookings').select('id').eq('customer_id', user.id).eq('tasker_id', state.id).in('status', ['pending', 'confirmed']).maybeSingle();
-      if (ex.data && ex.data.id) {
-        sessionStorage.setItem('st_chat_context', JSON.stringify({ contextType: 'booking', contextId: ex.data.id, taskerId: state.id, customerId: user.id }));
+      var ex = await window.supabase.from('bookings').select('id, status').eq('customer_id', user.id).eq('tasker_id', state.id).in('status', ['pending', 'confirmed']).limit(1);
+      var row = ex.data && ex.data[0];
+      if (row && row.status === 'confirmed') {
+        sessionStorage.setItem('st_chat_context', JSON.stringify({ contextType: 'booking', contextId: row.id, taskerId: state.id, customerId: user.id }));
         window.location.href = 'messages.html';
+        return;
+      }
+      if (row && row.status === 'pending') {
+        if (window.showToast) window.showToast('Your request is waiting for the provider to accept. You can chat once they do.');
         return;
       }
     } catch (e) { /* fall through to the request form */ }

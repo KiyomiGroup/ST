@@ -319,6 +319,8 @@
 
   /* ONE button. Everything else (pay, review, release code, report a problem) lives in the job room. */
   function actions(v) {
+    /* Chat rule (stage M4): no job room until the tasker accepts, and none for a cancelled booking */
+    if (v.group === 'pending' || v.group === 'cancelled') return '';
     var id = esc(v.id), needsPay = (v.group === 'progress' && !isPaid(v.raw) && !v.disputed) || (!v.disputed && !!window.STCustQuote && window.STCustQuote.needsPay(v.id));
     var primary = needsPay || (v.group === 'signoff' && !v.disputed);
     return '<button type="button" class="bk-btn' + (primary ? ' bk-btn-primary' : '') + '" data-act="room" data-id="' + id + '">' + icon(needsPay ? 'lock' : 'chat') +

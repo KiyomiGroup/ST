@@ -370,11 +370,11 @@
     if (!open) { setOffer('No longer taking offers', 'No longer taking offers', true); return; }
     if (applied) {
       setOffer('Offer Sent', 'Offer Sent', true);
-      msgBtn.hidden = false; barMsg.hidden = false;
+      /* Chat rule (stage M4): the tasker can message only after the customer accepts the offer */
+      if (state.myApplication && state.myApplication.status === 'accepted') { msgBtn.hidden = false; barMsg.hidden = false; }
       return;
     }
     setOffer('Make an Offer', budget ? 'Apply for ' + budget : 'Make an Offer', false);
-    if (state.isTasker) { msgBtn.hidden = false; barMsg.hidden = false; }
   }
 
   /* ── actions ─────────────────────────────────────────────── */
@@ -386,12 +386,12 @@
     window.location.href = 'make-offer.html?task=' + encodeURIComponent(state.task.id);
   }
 
-  /* Messages hang off a task application, so a tasker can message once they have made an offer */
+  /* Chat rule (stage M4): a tasker can message the customer only after the customer ACCEPTS their offer */
   async function messagePoster() {
     var user = await currentUser();
     if (!user) return toLogin();
     var app = state.myApplication && state.myApplication.id ? state.myApplication : await loadMyApplication(window.supabase, state.task.id, user);
-    if (app && app.id) {
+    if (app && app.id && app.status === 'accepted') {
       sessionStorage.setItem('st_chat_context', JSON.stringify({
         contextType: 'task_application', contextId: String(app.id), taskerId: String(user.id),
         customerId: String(state.posterId || ''), senderRole: 'tasker'
@@ -399,7 +399,7 @@
       window.location.href = 'messages.html';
       return;
     }
-    toast('Make an offer on this task to start a conversation.');
+    toast(app && app.id ? 'You can chat once the customer accepts your offer.' : 'Make an offer on this task first. You can chat once the customer accepts it.');
   }
 
   async function shareTask() {
