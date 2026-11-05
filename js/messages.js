@@ -234,25 +234,10 @@ async function getOrCreateThread(customerId, taskerId, contextType, contextId) {
   if (!rp.error && rp.data) return rp.data;
   if (rp.error && !/could not find the function|does not exist|PGRST202|42883/i.test((rp.error.code || '') + ' ' + (rp.error.message || ''))) throw rp.error;
 
-  /* open_thread not installed yet: the original lookup */
-  const existing = await safeQuery(() =>
-    window.supabase.from('message_threads').select('id')
-      .eq('customer_id', customerId).eq('tasker_id', taskerId).eq('context_id', contextId)
-      .maybeSingle()
-  );
-  if (existing.error) throw existing.error;
-  if (existing.data) return existing.data.id;
-
-  const created = await safeQuery(() =>
-    window.supabase.from('message_threads').insert({
-      customer_id: customerId, tasker_id: taskerId,
-      context_type: contextType, context_id: contextId,
-      last_message: null, last_message_at: new Date().toISOString(),
-      customer_unread: 0, tasker_unread: 0,
-    }).select('id').single()
-  );
-  if (created.error) throw created.error;
-  return created.data.id;
+  /* Chat rule (stage M2): a room is made ONLY by open_thread, and the database refuses unless the offer or booking is
+     accepted. There is no direct insert into message_threads any more. */
+  if (rp.error) throw rp.error;
+  throw new Error('Chat is not available for this job yet.');
 }
 
 /* ── Mark messages as read ── */
