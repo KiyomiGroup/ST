@@ -1,0 +1,7 @@
+{
+  "name": "streettasker-site",
+  "private": true,
+  "description": "Static site. This file only exists so the task-link preview function can install sharp (server/task-share-core.js).",
+  "engines": { "node": ">=18" },
+  "dependencies": { "sharp": "^0.33.5" }
+}

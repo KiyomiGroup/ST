@@ -92,7 +92,8 @@
     var cta = $('tdErrorCta'); cta.href = href || 'find-tasks.html'; cta.textContent = lab || 'Browse Tasks';
     $('tdError').hidden = false;
   }
-  function shareUrl() { return window.location.origin + window.location.pathname + '?id=' + encodeURIComponent(state.id); }
+  /* /t/<id> is the link that shows a preview card (title, budget, picture) in WhatsApp and similar apps; it opens this page */
+  function shareUrl() { return window.location.origin + '/t/' + encodeURIComponent(state.id); }
 
   /* ── data ────────────────────────────────────────────────── */
   async function loadPosterStats(sb, posterId) {
@@ -404,7 +405,7 @@
   async function shareTask() {
     var url = shareUrl();
     if (navigator.share) {
-      try { await navigator.share({ title: text(state.task.title) + ' \u2014 StreetTasker', text: 'A task on StreetTasker', url: url }); return; }
+      try { await navigator.share({ title: text(state.task.title) + ' \u2014 StreetTasker', text: 'Apply as a tasker or post your own task on StreetTasker', url: url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
     }
     copyLink();

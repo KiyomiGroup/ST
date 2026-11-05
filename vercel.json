@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/t/:id/image.png", "destination": "/api/task-share?id=:id&img=1" },
+    { "source": "/t/:id", "destination": "/api/task-share?id=:id" }
+  ]
+}

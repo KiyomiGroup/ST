@@ -1071,8 +1071,34 @@ async function showTaskSuccessModal(payload) {
     if (alreadyVerified) alreadyVerified.style.display = 'none';
   }
 
+  /* The live task gets a shareable link: /t/<id> shows the task as a preview card in WhatsApp and similar apps */
+  if (isVerified && payload.id) setupTaskShare(payload);
+
   modal.classList.add('modal-open');
   document.body.style.overflow = 'hidden';
+}
+
+/* Share box on the "Task is live" screen. Link: https://streettasker.com/t/<task id> (see server/task-share-core.js) */
+function setupTaskShare(payload) {
+  const box = document.getElementById('taskShareBox');
+  const input = document.getElementById('taskShareUrl');
+  if (!box || !input) return;
+  const url = window.location.origin + '/t/' + encodeURIComponent(payload.id);
+  const money = Number(payload.budget) > 0 ? ' for \u20a6' + Math.round(Number(payload.budget)).toLocaleString('en-NG') : '';
+  const message = 'I need a tasker for ' + payload.title + money + '. Apply as a tasker or post your own task: ' + url;
+  input.value = url;
+  const wa = document.getElementById('taskShareWa');
+  if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(message);
+  const copy = document.getElementById('taskShareCopy');
+  if (copy && !copy.dataset.wired) {
+    copy.dataset.wired = '1';
+    copy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); showToast('Task link copied'); }
+      catch (e) { input.focus(); input.select(); showToast('Press Ctrl+C to copy the link'); }
+    });
+    input.addEventListener('focus', () => input.select());
+  }
+  box.hidden = false;
 }
 
 function saveDraftTask() {

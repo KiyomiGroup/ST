@@ -430,6 +430,14 @@
         <div class="modal-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         <h2>Task is live!</h2>
         <p>Your task "<span data-task-title></span>" is now live. Taskers will apply shortly.</p>
+        <div class="pt-share" id="taskShareBox" hidden>
+          <p class="pt-share-title">Share your task link to get more offers from taskers</p>
+          <div class="pt-share-row">
+            <input type="text" class="pt-share-input" id="taskShareUrl" readonly aria-label="Your task link" />
+            <button type="button" class="btn btn-outline pt-share-copy" id="taskShareCopy">Copy link</button>
+          </div>
+          <a class="btn btn-primary pt-share-wa" id="taskShareWa" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+        </div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="closeTaskModal();window.location.href='my-tasks.html'">Go to Dashboard</button>
           <button class="btn btn-outline" onclick="closeTaskModal()">Post Another</button>
