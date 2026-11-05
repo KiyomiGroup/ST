@@ -188,7 +188,6 @@
     else chips.push(['shield', 'Escrow Protected']);
     $('cpChips').innerHTML = chips.map(function (c) { return '<span class="pp-hero-chip cp-chip">' + icon(c[0]) + esc(c[1]) + '</span>'; }).join('');
 
-    $('cpContact').hidden = !(state.isTasker && !state.isOwner);
     $('cpEdit').hidden = !state.isOwner;
   }
 
@@ -334,53 +333,16 @@
   }
 
   function renderActions() {
-    var tasker = state.isTasker && !state.isOwner;
-    $('secProposal').hidden = !tasker;
-    setText('cpFirstProposal', state.first);
-    setText('cpProposalLabel', 'Message ' + state.first);
-
     var barTasks = $('cpBarTasks');
     setText('cpBarTasksLabel', 'All Tasks (' + state.posted + ')');
     barTasks.hidden = state.posted === 0;
-    var msg = $('cpBarMsg'); msg.hidden = !tasker;
-    setText('cpBarMsgLabel', 'Message ' + state.first);
-    $('cpActionbar').hidden = state.isOwner || (state.posted === 0 && !tasker);
+    $('cpActionbar').hidden = state.isOwner || state.posted === 0;
   }
 
   /* ── actions ─────────────────────────────────────────────── */
   function scrollToTasks() {
     var target = !$('secTasks').hidden ? $('secTasks') : (!$('secHistory').hidden ? $('secHistory') : null);
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  /* Messages hang off a task application or a booking, so reuse the one this tasker already has with the client. */
-  async function contactClient() {
-    var user = await currentUser();
-    if (!user) return toLogin();
-    var sb = window.supabase, ctx = null;
-    try {
-      if (state.allTaskIds.length) {
-        var a = await sb.from('task_applications').select('id').in('task_id', state.allTaskIds).eq('tasker_id', user.id).neq('status', 'withdrawn').limit(1);
-        if (a.data && a.data[0]) ctx = { contextType: 'task_application', contextId: String(a.data[0].id) };
-      }
-      if (!ctx) {
-        var b = await sb.from('bookings').select('id, status').eq('customer_id', state.id).eq('tasker_id', user.id).limit(10);
-        var ok = (b.data || []).filter(function (x) { return NOT_STARTED.slice(1).indexOf(String(x.status || '').toLowerCase()) === -1; })[0];
-        if (ok) ctx = { contextType: 'booking', contextId: String(ok.id) };
-      }
-    } catch (e) { /* fall through to the hint */ }
-    if (ctx) {
-      ctx.taskerId = String(user.id); ctx.customerId = String(state.id); ctx.senderRole = 'tasker';
-      sessionStorage.setItem('st_chat_context', JSON.stringify(ctx));
-      window.location.href = 'messages.html';
-      return;
-    }
-    if (state.openTasks.length) {
-      toast('Make an offer on one of ' + state.first + '\u2019s open tasks to start a conversation.');
-      scrollToTasks();
-    } else {
-      toast(state.first + ' has no open tasks right now. You can message once you have an offer or booking together.');
-    }
   }
 
   async function shareProfile() {
@@ -395,9 +357,6 @@
 
   function wire() {
     $('cpShare').addEventListener('click', shareProfile);
-    $('cpContact').addEventListener('click', contactClient);
-    $('cpProposalBtn').addEventListener('click', contactClient);
-    $('cpBarMsg').addEventListener('click', contactClient);
     $('cpBarTasks').addEventListener('click', scrollToTasks);
     $('cpHistoryMore').addEventListener('click', function () { state.histShown += HISTORY_PAGE; renderHistory(); });
 

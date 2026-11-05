@@ -448,14 +448,6 @@
 .cp-legend-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .cp-legend-pct { font-weight: 700; }
 
-.cp-proposal { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-card); background: var(--color-forest-800); }
-.cp-proposal-top { display: flex; align-items: center; gap: var(--space-3); }
-.cp-proposal-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: var(--hero-chip-bg); color: var(--color-text-on-primary); }
-.cp-page .cp-proposal-title { font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-on-primary); }
-.cp-page .cp-proposal-text { font-size: var(--text-xs); color: var(--hero-text-muted); }
-.cp-proposal-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 48px; cursor: pointer; border: 0; border-radius: var(--radius-pill); background: var(--pt-mint); color: var(--color-forest-900); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; transition: background var(--t) var(--ease); }
-.cp-proposal-btn:hover { background: var(--color-bg); }
-.cp-proposal-btn:focus-visible { outline: 2px solid var(--hero-dot); outline-offset: 2px; }
 .cp-ledger { padding: 0 var(--space-2); text-align: center; font-size: var(--text-xs); line-height: 1.6; color: var(--pt-ink-muted); }
 
 /* Escrow card (phones only) */
@@ -482,14 +474,13 @@
   .cp-actions > * { flex: 1 1 calc(50% - var(--space-3)); min-width: max-content; }
   .cp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  /* One column, in the phone reference order: About, scorecard, hiring categories, proposal, active tasks, history, reviews, escrow card */
+  /* One column, in the phone reference order: About, scorecard, hiring categories, active tasks, history, reviews, escrow card */
   .cp-layout { display: flex; flex-direction: column; gap: var(--space-4); }
   .cp-main, .cp-side { display: contents; }
   .cp-main > .cp-empty { order: 0; }
   .cp-main > #secAbout { order: 1; }
   .cp-side > .cp-score { order: 2; }
   .cp-side > .cp-cats { order: 3; }
-  .cp-side > .cp-proposal { order: 4; }
   .cp-main > #secTasks { order: 5; }
   .cp-main > #secHistory { order: 6; }
   .cp-main > #secReviews { order: 7; }
@@ -513,11 +504,10 @@
   .cp-page .cp-escrow-title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-on-primary); }
   .cp-page .cp-escrow-text { font-size: var(--text-sm); line-height: 1.6; color: var(--hero-text-muted); }
 
-  /* All Tasks + Message bar floats at the bottom of the screen (this page has no bottom tab bar). */
+  /* All Tasks bar floats at the bottom of the screen (this page has no bottom tab bar). */
   .cp-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
   .cp-bar-tasks { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-5); cursor: pointer; border: 0; border-radius: var(--radius-pill); background: var(--color-bg); color: var(--pt-ink); box-shadow: var(--shadow-lg); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
   .cp-bar-tasks:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
-  .cp-bar-msg { flex: 1; min-width: 0; height: 52px; justify-content: center; gap: var(--space-2); box-shadow: var(--shadow-lg); }
 }
 
 /* ── Booking pop-up (Stage 1): centred, scrolls inside the screen, job details + urgency ── */
