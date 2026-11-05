@@ -32,3 +32,12 @@
 
 /* Compact: cards, search rows, anywhere the name is already small. */
 .membership-label--sm { padding: 2px var(--space-2); }
+
+/* On a dark surface (the tasker profile hero is dark forest). The two labels stay clearly different:
+   PRO = outlined mint, PREMIUM = solid mint. Added in S4h; tokens only. */
+.membership-label--on-dark.membership-label--pro {
+  background: transparent; color: var(--membership-premium-ink); border-color: var(--membership-premium-ink);
+}
+.membership-label--on-dark.membership-label--premium {
+  background: var(--membership-premium-ink); color: var(--membership-premium-bg); border-color: var(--membership-premium-ink);
+}

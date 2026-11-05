@@ -58,7 +58,8 @@
       rateValue: Number(src.rateValue) || 0, rateUnit: text(src.rateUnit) || '/hour', priceNote: text(src.priceNote),
       available: src.available !== false, nextOpening: text(src.nextOpening),
       bio: text(src.bio), offers: [], services: [], portfolio: [], certs: [],
-      radius: Number(src.radius) || 0, areas: [], emergency: { enabled: false, text: '' }, isDemo: !!src.isDemo, isLocal: !!src.isLocal
+      radius: Number(src.radius) || 0, areas: [], emergency: { enabled: false, text: '' }, isDemo: !!src.isDemo, isLocal: !!src.isLocal,
+      membership: (window.STMembership && !src.isDemo && !src.isLocal) ? STMembership.clean(src.membership) : ''
     };
     m.offers = list(src.offers).filter(function (o) { return o && text(o.title); });
     m.services = list(src.services).filter(function (o) { return o && text(o.title); });
@@ -80,10 +81,24 @@
     } else { el.textContent = initials(m.name); }
   }
 
+  /* PRO / PREMIUM label AFTER the name (S4h). Comes from the server answer only (membership_for_users); none for Free,
+     Starter, Local Taskers or demo profiles. It sits in the name, never beside the identity tick on the avatar. */
+  function paintMembership(m) {
+    var host = $('tpName');
+    if (!host || !m.membership || !window.STMembership) return;
+    var lab = STMembership.node(m.membership, { onDark: true });
+    if (!lab) return;
+    var wrap = document.createElement('span'); wrap.className = 'membership-name';
+    var t = document.createElement('span'); t.className = 'membership-name__text'; t.textContent = m.name;
+    wrap.appendChild(t); wrap.appendChild(document.createTextNode(' ')); wrap.appendChild(lab);
+    host.textContent = ''; host.appendChild(wrap);
+  }
+
   function renderHero(m) {
     document.title = m.name + ' \u2014 StreetTasker';
     paintAvatar(m);
     setText('tpName', m.name);
+    paintMembership(m);
     $('tpTick').hidden = !m.verified;
 
     var tag = $('tpTag');
@@ -279,7 +294,7 @@
   async function loadReal(id) {
     var sb = window.supabase;
     /* Public page: name the columns. phone and whatsapp are private, so select('*') would fail when logged out. */
-    var PUBLIC_COLS = 'id, user_id, services, rating, location, subscription_status, created_at, available, service_name, category, price, description, photo, bio, photo_url, rate, free_limit, subscription_plan, rate_value, service, rate_unit, business_name, is_verified, verified_at, business_lat, business_lon, business_address, banner_color, banner_img, name, specialties, availability_status, verified, profile_details';
+    var PUBLIC_COLS = 'id, user_id, services, rating, location, created_at, available, service_name, category, price, description, photo, bio, photo_url, rate, rate_value, service, rate_unit, business_name, is_verified, verified_at, business_lat, business_lon, business_address, banner_color, banner_img, name, specialties, availability_status, verified, profile_details';
     var t1 = await sb.from('taskers').select(PUBLIC_COLS).eq('user_id', String(id)).maybeSingle();
     var tasker = t1.data;
     if (!tasker) { var t2 = await sb.from('taskers').select(PUBLIC_COLS).eq('id', String(id)).maybeSingle(); tasker = t2.data; }
@@ -306,7 +321,9 @@
     var results = await Promise.all([
       sb.from('verifications').select('status, business_name, business_address').eq('user_id', id).maybeSingle(),
       sb.from('feed_posts').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(24),
-      sb.from('bookings').select('customer_id, status').eq('tasker_id', id).limit(1000)
+      sb.from('bookings').select('customer_id, status').eq('tasker_id', id).limit(1000),
+      /* Membership label (S4h): asked of the server, never read from a column. Never rejects; no answer = no label. */
+      (window.STMembership && !isLocal) ? STMembership.load([String(tasker.user_id || id)]) : null
     ]);
     var verification = results[0].data, posts = results[1].data, bookings = results[2].data;
     var d = parseDetails(tasker.profile_details);
@@ -352,7 +369,8 @@
       available: tasker.available, nextOpening: d.next_opening,
       bio: (userRow && userRow.bio) || tasker.bio || '',
       offers: d.offers, services: d.services, portfolio: portfolio, certs: d.certifications,
-      radius: cov.radius_km, areas: cov.areas, emergency: d.emergency
+      radius: cov.radius_km, areas: cov.areas, emergency: d.emergency,
+      membership: (window.STMembership && !isLocal) ? STMembership.get(tasker.user_id || id) : ''
     });
 
     renderAll(model);

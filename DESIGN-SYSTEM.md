@@ -296,6 +296,9 @@ All in `css/tokens.css`.
 - The label is subscription membership only. Never add a check mark, shield or the word "verified" to it, and never put it where the identity-verification mark goes. Every user is identity verified; the label means nothing about that.
 - The label text comes from the server (`membership_for_users`, S3f), never from `taskers.subscription_plan`.
 - Tokens: `--membership-{pro,premium}-{bg,ink,border}`, `--membership-gap`, `--membership-font-size`, `--membership-tracking`. All alias existing tokens.
+- S4h: build labels with `js/membership-labels.js` (`STMembership.load(ids)` once per page, then `html(userId, { small: true })` or `node(label, opts)`); never write the label classes by hand. It asks the server once, draws only PRO or PREMIUM and draws nothing on any failure.
+- `.membership-label--on-dark` for dark surfaces such as the tasker profile hero: PRO is outlined mint, PREMIUM is solid mint, so the two still differ.
+- Place the label after the name and after the identity tick; it never replaces or touches the tick.
 
 ---
 

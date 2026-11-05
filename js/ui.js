@@ -416,7 +416,8 @@ function stServiceCard(s) {
 /* ── Tasker card ─────────────────────────────────────────────
    Reads: provider_name, service_name, location, rating, reviews, verified,
    availability_status, photo, specialties[], portfolio[{image_url}],
-   price, rate_unit, href, id. */
+   price, rate_unit, href, id, user_id. The PRO / PREMIUM label (js/membership-labels.js, S4h) is drawn AFTER the name
+   and after the identity tick; none for Free / Starter / Local Taskers / demo cards. */
 /* Local Tasker labels (stage 4C-2). Only built when the caller says isLocal, which comes from the
    database function local_tasker_public_info via js/local-tasker-public.js. Regular cards are unchanged. */
 function stLocalTags() {
@@ -444,7 +445,7 @@ function stTaskerCard(s) {
       </div>
       <div class="st-tasker-head">
         <div class="st-tasker-id">
-          <h3 class="st-card-title st-tasker-name"><span>${e(name)}</span>${s.verified ? `<span title="Verified">${ST_ICON.verified}</span>` : ''}</h3>
+          <h3 class="st-card-title st-tasker-name"><span>${e(name)}</span>${s.verified ? `<span title="Verified">${ST_ICON.verified}</span>` : ''}${window.STMembership && !s.isLocal ? window.STMembership.html(s.user_id, { small: true }) : ''}</h3>
           <p class="st-tasker-role">${e(s.service_name || '')}</p>
           <p class="st-tasker-loc">${ST_ICON.pin}${e(s.location || 'Lagos')}</p>
         </div>

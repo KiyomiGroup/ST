@@ -167,6 +167,13 @@ async function loadServices() {
           });
         }
       } catch (_le) { /* label is optional */ }
+      /* Membership labels (S4h): one question to the server for the whole list (membership_for_users).
+         Never read from a column. Local Taskers have no account, so they are not asked. No answer = no label. */
+      try {
+        if (window.STMembership) {
+          await STMembership.load(liveMapped.filter(m => !m.isLocal).map(m => m.user_id));
+        }
+      } catch (_me) { /* label is optional */ }
       /* Append dummies — mark them so Book button is hidden */
       ALL = [...liveMapped.map(normalizeServiceCard), ...DUMMY_SERVICES.map(normalizeServiceCard)];
       console.log(`[Taskers] ${liveMapped.length} live + ${DUMMY_SERVICES.length} demo services`);
