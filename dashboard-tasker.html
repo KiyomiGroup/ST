@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="stylesheet" href="css/booking-job.css" />
+  <link rel="stylesheet" href="css/tasker-analytics.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 
   <style>
@@ -257,6 +258,10 @@ function openMessagesPanel() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Notifications
                 <span class="tdb-badge" id="navNotifBadge" style="display:none;"></span>
+              </button>
+              <button class="dashboard-nav-item" data-panel="analytics" onclick="switchPanel('analytics',this);STAnalytics.load()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Analytics
               </button>
               <button class="dashboard-nav-item" data-panel="messages" onclick="window.location.href='messages.html'">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -574,6 +579,17 @@ function openMessagesPanel() {
               <div class="task-row-list" id="bookingsList"><p class="db-msg">Loading your bookings...</p></div>
             </div>
 
+            <!-- Analytics (js/tasker-analytics.js; the server decides what each plan sees) -->
+            <div id="panel-analytics" class="dashboard-panel">
+              <div class="panel-header">
+                <h2>Analytics</h2>
+                <label class="ta-head-tools"><span class="sr-only">Period</span>
+                  <select id="taRange" class="form-select"><option value="30">Last 30 days</option></select>
+                </label>
+              </div>
+              <div id="taRoot"><div class="db-state">Loading...</div></div>
+            </div>
+
             <!-- Notifications -->
             <div id="panel-notifications" class="dashboard-panel">
               <div class="panel-header">
@@ -889,6 +905,7 @@ function openMessagesPanel() {
   <script src="js/verify.js"></script>
   <script src="js/booking-job.js"></script>
   <script src="js/tasker-overview.js"></script>
+  <script src="js/tasker-analytics.js"></script>
   <script>
     'use strict';
     var PRICING_LABELS = { per_hour:'/hr', per_day:'/day', per_job:'/job', per_service:'/svc' };
@@ -901,7 +918,7 @@ function openMessagesPanel() {
        is active, regardless of how the switch was triggered. */
     var PANEL_LABELS = {
       'mypage': 'Overview', 'services': 'My Services', 'bookings': 'Bookings',
-      'find-tasks': 'Find Tasks', 'notifications': 'Notifications',
+      'find-tasks': 'Find Tasks', 'notifications': 'Notifications', 'analytics': 'Analytics',
       'messages': 'Messages', 'wallet': 'Wallet', 'profile': 'Profile'
     };
 
@@ -1247,7 +1264,7 @@ function openMessagesPanel() {
       if (startHash === 'verification') { window.location.replace('verify.html'); }
       if (startHash === 'wallet') { window.location.replace('wallet.html'); }
       if (startHash === 'my-applications') { window.location.replace('applications.html'); }
-      var validPanels = ['mypage','services','bookings','find-tasks','notifications','profile','messages'];
+      var validPanels = ['mypage','services','bookings','find-tasks','notifications','analytics','profile','messages'];
       if (startHash && validPanels.indexOf(startHash) !== -1) {
         switchPanel(startHash, document.querySelector('[data-panel="' + startHash + '"]'));
         if (startHash === 'messages') setTimeout(function(){ openMessagesPanel(); }, 100);
@@ -1256,6 +1273,7 @@ function openMessagesPanel() {
         else if (startHash === 'bookings') loadBookings();
         else if (startHash === 'find-tasks') loadFindTasks();
         else if (startHash === 'notifications') loadNotifications();
+        else if (startHash === 'analytics' && window.STAnalytics) STAnalytics.load();
       } else {
         switchPanel('mypage', document.querySelector('[data-panel="mypage"]'));
         loadMyPage();
@@ -2089,6 +2107,7 @@ function openMessagesPanel() {
       'bookings':        function () { loadBookings(); },
       'find-tasks':      function () { loadFindTasks(); },
       'notifications':   function () { loadNotifications(); },
+      'analytics':       function () { if (window.STAnalytics) STAnalytics.load(); },
       'profile':         function () { loadProfilePanel(); },
       'messages':        function () { openMessagesPanel(); }
     };

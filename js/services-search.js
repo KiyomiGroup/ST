@@ -225,7 +225,7 @@ function svcBuildCard(s) {
     service_name: s.service_name, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
-    turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id,
+    turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
   });
 }
 
@@ -311,8 +311,16 @@ function svcWire() {
   const grid = document.getElementById('servicesGrid');
   if (grid) {
     grid.addEventListener('click', e => {
-      if (e.target.closest('a')) return;
       const card = e.target.closest('[data-href]');
+      const link = e.target.closest('a');
+      /* S4j: opening a service (its card or its Book button) counts one service view; the server skips Local Taskers, own and paused services. */
+      const plain = e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+      const go = () => { window.location.href = link ? link.href : (card && card.dataset.href); };
+      if (card && window.STActivity) {
+        const counted = window.STActivity.service(card.dataset.serviceId);
+        if (plain) { e.preventDefault(); window.STActivity.thenGo(counted, go); return; }
+      }
+      if (link) return;
       if (card) window.location.href = card.dataset.href;
     });
     /* Broken photo → category emoji (error events don't bubble, so capture) */

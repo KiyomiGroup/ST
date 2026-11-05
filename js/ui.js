@@ -395,7 +395,7 @@ function stServiceCard(s) {
     ? `<img src="${e(s.photo)}" alt="${e(s.service_name)}" loading="lazy" data-emoji="${e(s.emoji || '')}" />`
     : `<div class="st-card-media-fallback" aria-hidden="true">${s.emoji || ST_CAT_EMOJI.other}</div>`;
   const priced = Number(s.price) > 0;
-  return `<article class="st-card st-card--service fade-up" data-href="${e(s.href)}">
+  return `<article class="st-card st-card--service fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
     <div class="st-card-media">
       ${media}
       <span class="st-chip st-chip--glass st-card-media-tag st-card-media-tag--tl">${e(s.categoryLabel || '')}</span>

@@ -893,6 +893,8 @@
       var user = await currentUser();
       state.isOwner = !!(user && user.id === state.id);
       await loadReal(state.id);
+      /* S4j: count this profile view (the server skips the tasker's own views and counts one per person per day). */
+      if (window.STActivity && !state.isOwner && state.tasker && state.tasker.user_id) STActivity.profile(state.tasker.user_id);
     } catch (err) {
       console.error('[tasker-profile]', err);
       fail();
