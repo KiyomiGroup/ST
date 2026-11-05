@@ -10,8 +10,7 @@
 
   var ALLOWED = { PRO: 'pro', PREMIUM: 'premium' };
   var RPC = 'membership_for_users';
-  /* The argument name of the S3f function was not in the S4h session's files, so a few names are tried once
-     and the one that works is remembered for the page. */
+  /* Confirmed from the database (S4i-2): membership_for_users(p_user_ids uuid[]) returns jsonb. The other names are only a safety net. */
   var ARG_NAMES = ['p_user_ids', 'user_ids', 'p_users', 'ids'];
   var WAIT_MS = 3000;                       // a slow answer must not hold a page back; no label is the safe result
   var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -96,6 +95,46 @@
     } catch (e) { /* label is optional */ }
   }
 
+  /* Featured order (S4i-2): featured_taskers(p_category text, p_limit int) returns jsonb. Its row shape was empty when checked,
+     so ids are read from rows {user_id | id | tasker_id}, plain id strings, or an object holding such a list.
+     Only the ORDER is used. Nothing here computes relevance and no boost number is read. */
+  var featuredIds = [];
+  function parseFeatured(data) {
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch (e) { return []; } }
+    if (data && !Array.isArray(data) && typeof data === 'object') {
+      var k, found = null;
+      for (k in data) { if (Array.isArray(data[k])) { found = data[k]; break; } }
+      data = found || [];
+    }
+    if (!Array.isArray(data)) return [];
+    var out = [], seen = Object.create(null);
+    data.forEach(function (row) {
+      var id = typeof row === 'string' ? row : (row && typeof row === 'object' ? (row.user_id || row.id || row.tasker_id) : '');
+      id = String(id || '');
+      if (UUID.test(id) && !seen[id]) { seen[id] = 1; out.push(id); }
+    });
+    return out;
+  }
+  async function loadFeatured(category) {
+    featuredIds = [];
+    try {
+      var sb = root.supabase;
+      if (!sb || typeof sb.rpc !== 'function') return;
+      var res = await withTimeout(Promise.resolve(sb.rpc('featured_taskers', { p_category: category || null, p_limit: null })));
+      if (!res || res.error) return;
+      featuredIds = parseFeatured(res.data);
+    } catch (e) { featuredIds = []; }
+  }
+  /* floatFeatured(list, getId): featured people first in the server's order, everyone else in their existing order. */
+  function floatFeatured(list, getId) {
+    if (!featuredIds.length || !Array.isArray(list)) return list;
+    var rank = Object.create(null); featuredIds.forEach(function (id, i) { rank[id] = i; });
+    var top = [], rest = [];
+    list.forEach(function (x) { var id = String(getId(x) || ''); (id in rank ? top : rest).push(x); });
+    top.sort(function (a, b) { return rank[String(getId(a))] - rank[String(getId(b))]; });
+    return top.concat(rest);
+  }
+
   function get(id) { return labels[String(id == null ? '' : id)] || ''; }
 
   function classes(label, opts) {
@@ -122,7 +161,7 @@
     return el;
   }
 
-  var api = { load: load, get: get, html: html, node: node, parse: parse, clean: clean };
+  var api = { load: load, get: get, html: html, node: node, parse: parse, clean: clean, loadFeatured: loadFeatured, parseFeatured: parseFeatured, floatFeatured: floatFeatured };
   root.STMembership = api;
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 })(typeof window !== 'undefined' ? window : globalThis);

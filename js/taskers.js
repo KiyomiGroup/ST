@@ -172,6 +172,7 @@ async function loadServices() {
       try {
         if (window.STMembership) {
           await STMembership.load(liveMapped.filter(m => !m.isLocal).map(m => m.user_id));
+          await STMembership.loadFeatured(null);   /* S4i-2: the server's fair-rotation order; no answer = normal order */
         }
       } catch (_me) { /* label is optional */ }
       /* Append dummies — mark them so Book button is hidden */
@@ -256,6 +257,8 @@ function filtered() {
   if (sortBy === 'price_asc')  list.sort((a,b) => a.price - b.price);
   if (sortBy === 'price_desc') list.sort((a,b) => b.price - a.price);
   if (sortBy === 'reviews')    list.sort((a,b) => (b.reviews||0) - (a.reviews||0));
+  /* S4i-2: featured people float up only in the default "recent" order; an explicit sort by rating, price or reviews is never overridden. */
+  if (sortBy === 'recent' && window.STMembership) list = STMembership.floatFeatured(list, x => x.user_id);
   return list;
 }
 

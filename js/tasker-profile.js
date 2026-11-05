@@ -102,7 +102,7 @@
     $('tpTick').hidden = !m.verified;
 
     var tag = $('tpTag');
-    var tagText = m.verified ? 'Verified Tasker Pro' : (m.pending ? 'Verification Pending' : '');
+    var tagText = m.verified ? 'Verified Tasker' : (m.pending ? 'Verification Pending' : '');
     tag.textContent = tagText; tag.hidden = !tagText;
 
     setText('tpLoc', m.location); $('tpLocWrap').hidden = !m.location;
