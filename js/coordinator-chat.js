@@ -18,6 +18,9 @@
      no new database function and never touches a money table itself.
    Cards and side panels (Stage 6D-1): js/coordinator-cards.js draws the payment and request cards inside the conversation and the Payment history and
      Activity blocks of the right-hand column, read only. It uses coordinator_chat_cards and coordinator_chat_activity (new in stage-6d1-core.sql).
+   Job actions for the Local Tasker (Stage 6D-4b): js/coordinator-jobactions.js adds "Send an update", "Propose a new time" and "Send proof of work" to the
+     Actions sheet, and "Send update", "Send proof" and "Mark as done" to the customer's own pending asks. Database functions: coordinator_send_update,
+     coordinator_propose_reschedule, coordinator_send_proof_file, coordinator_fulfil_request (stage-6d4a-core.sql, stage-6d4b-core.sql).
    Internal notes are drawn in their own block (lock, amber, "Not visible to the customer"), never as a bubble.
    Everything typed by a person is put on the page with textContent, never innerHTML. Runs on `coordinator:ready`.
    ============================================================ */
@@ -56,11 +59,21 @@
     pin: svgIcon('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'),
     check: svgIcon('<polyline points="20 6 9 17 4 12"/>'),
     flag: svgIcon('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>'),
+    chat: svgIcon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+    clock: svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+    photo: svgIcon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'),
     cancel: svgIcon('<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>')
   };
 
   /* The coordinator's Actions sheet. `pane` is the card (id in coordinator-chat.html); it is available when its module has not hidden it. */
+  var JOB = function () { return window.STCoJob; };
   var ACTIONS = [
+    { pane: 'coUp', group: 'Tell the customer', icon: ICONS.chat,  label: 'Send an update',                   hint: 'On my way, arrived, finished, or a short note from the Local Tasker',
+      avail: function () { return !!(JOB() && JOB().available('coUp')); }, why: function () { return JOB() ? JOB().why('coUp') : whyNot(); } },
+    { pane: 'coRs', group: 'Tell the customer', icon: ICONS.clock, label: 'Propose a new time',               hint: 'The customer accepts or declines. The job keeps its time until they accept',
+      avail: function () { return !!(JOB() && JOB().available('coRs')); }, why: function () { return JOB() ? JOB().why('coRs') : whyNot(); } },
+    { pane: 'coPf', group: 'Tell the customer', icon: ICONS.photo, label: 'Send proof of work',               hint: 'Photos, video or files for the customer’s request',
+      avail: function () { return !!(JOB() && JOB().available('coPf')); }, why: function () { return JOB() ? JOB().why('coPf') : whyNot(); } },
     { pane: 'coCf', group: 'Price and payment', icon: ICONS.phone,  label: 'Record the Local Tasker’s answer', hint: 'After you phone them: can they do it, and at what price' },
     { pane: 'coQt', group: 'Price and payment', icon: ICONS.tag,    label: 'Send or change the quote',         hint: 'Send the price to the customer to approve and pay' },
     { pane: 'coXt', group: 'Price and payment', icon: ICONS.tool,   label: 'Request an extra cost',            hint: 'More work, materials or transport. The customer can pay or decline' },
@@ -70,7 +83,7 @@
     { pane: 'coEx', group: 'Problems',          icon: ICONS.flag,   label: 'Write down something that went wrong', hint: 'Only a record. It changes nothing' },
     { pane: 'coCo', group: 'Problems',          icon: ICONS.cancel, label: 'Cancel or report a problem',       hint: 'Cancel the booking or open a report for support' }
   ];
-  var CARD_MODULES = ['STCoConfirm', 'STCoQuote', 'STCoMilestones', 'STCoRelease', 'STCoExceptions', 'STCoCloseout', 'STCoExtras', 'STCoReduction'];
+  var CARD_MODULES = ['STCoConfirm', 'STCoQuote', 'STCoMilestones', 'STCoRelease', 'STCoExceptions', 'STCoCloseout', 'STCoExtras', 'STCoReduction', 'STCoJob'];
 
   /* ── time ─────────────────────────────────────────────────── */
   function timeLabel(iso) {
@@ -403,7 +416,11 @@
     syncActionsBtn();
   }
 
-  function paneAvailable(k) { var c = $(k); return !!(c && !c.hidden); }
+  function paneAvailable(k) {
+    var a = ACTIONS.filter(function (x) { return x.pane === k; })[0];
+    if (a && a.avail) return a.avail();     /* the Stage 6D-4b forms are always in the page; the module says when they can be used */
+    var c = $(k); return !!(c && !c.hidden);
+  }
   function whyNot() {
     var d = S.detail;
     if (!d) return 'Loading the booking…';
@@ -426,7 +443,7 @@
       var ic = el('span', 'jr-sheet-item-icon'); ic.innerHTML = a.icon; b.appendChild(ic);
       var tx = el('span', 'jr-sheet-item-text');
       tx.appendChild(el('span', 'jr-sheet-item-label', a.label));
-      tx.appendChild(el('span', 'jr-sheet-item-hint', ok ? a.hint : whyNot()));
+      tx.appendChild(el('span', 'jr-sheet-item-hint', ok ? a.hint : (a.why ? a.why() : whyNot())));
       b.appendChild(tx);
       b.addEventListener('click', function () { showPane(a.pane); });
       box.appendChild(b);
@@ -447,6 +464,7 @@
     $('ccActionsMenu').hidden = true; $('ccActionsPanes').hidden = false;
     $('ccActionsTitle').textContent = a.label;
     $('ccActionsBody').scrollTop = 0;
+    if (JOB() && JOB().onShow) JOB().onShow(k);
   }
   function openActions(pane) {
     if (!canWrite() || !S.activeId) return;
@@ -684,7 +702,9 @@
     state: function () { return S; }, toast: toast, canWrite: canWrite, updateSend: updateSend,
     setSending: function (v) { S.sending = !!v; updateSend(); },
     showContactWarn: function () { $('ccWarn').hidden = false; },
-    reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList
+    reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList,
+    openActions: openActions, closeActions: closeActions,
+    redraw: function () { if (S.thread) renderTimeline(); }
   };
 
   async function init() {

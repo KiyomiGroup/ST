@@ -7,6 +7,7 @@
    Locations go through coordinator_send_location. The database function checks who you are and the real file rules again.
    Everything from the database is put on the page with textContent / properties, never innerHTML (only fixed icon markup below).
    Public API (window.STCoAttach): has(), clear(), send(caption), sync(), isMedia(message), mediaFor(message), sig()
+     Stage 6D-4b (for the proof sheet, js/coordinator-jobactions.js): prepareFile(file), uploadPrepared(prepared), newId()
    Needs window.STCoChat (set by coordinator-chat.js).
    ============================================================ */
 'use strict';
@@ -259,6 +260,22 @@
     });
   }
 
-  window.STCoAttach = { has: function () { return !!A; }, busy: function () { return !!(A && A.busy); }, clear: function () { drop(); renderPreview(); }, send: send, sync: sync, isMedia: isMedia, mediaFor: mediaFor, sig: sig, bind: bind };
+  /* Stage 6D-4b: the proof sheet sends several files, each through coordinator_send_proof_file. Same checks and the same re-encoding as one attachment.
+     prepareFile -> { kind, mime, blob, name, size }, or throws an Error whose message can be shown. uploadPrepared -> the storage path. */
+  async function prepareFile(file) {
+    var c = classify(file); if (c.error) throw new Error(c.error);
+    var blob = file;
+    if (c.reencode) { blob = await reencodeImage(file); if (blob.size > LIMITS.photo) throw new Error('This file is too large (max 10 MB).'); }
+    return { kind: c.kind, mime: c.mime, blob: blob, name: safeName(file.name || 'File', c.mime), size: blob.size };
+  }
+  async function uploadPrepared(p) {
+    var tid = await threadId(chat().state()), path = tid + '/' + newId() + '-' + p.name;
+    var up = await sb().storage.from(BUCKET).upload(path, p.blob, { contentType: p.mime, upsert: false, cacheControl: '3600' });
+    if (up.error) throw up.error;
+    return path;
+  }
+
+  window.STCoAttach = { has: function () { return !!A; }, busy: function () { return !!(A && A.busy); }, clear: function () { drop(); renderPreview(); }, send: send, sync: sync, isMedia: isMedia, mediaFor: mediaFor, sig: sig, bind: bind,
+                        prepareFile: prepareFile, uploadPrepared: uploadPrepared, newId: newId };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 })();

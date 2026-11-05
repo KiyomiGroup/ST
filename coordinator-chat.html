@@ -214,6 +214,86 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
                     All actions
                   </button>
+              <!-- Stage 6D-4b: what the coordinator tells the customer for the Local Tasker (js/coordinator-jobactions.js wires these three forms) -->
+              <div class="cc-pane" data-pane="coUp" hidden>
+        <section class="co-card" id="coUp" aria-labelledby="coUpTitle">
+          <h2 class="co-card-title co-visually-hidden" id="coUpTitle">Send an update</h2>
+          <p class="co-card-lead">Tell the customer how the job is going, as the Local Tasker told you. They see it as an update from the Local Tasker.</p>
+          <div class="co-banner" id="coUpError" role="alert" hidden><span id="coUpErrorText"></span></div>
+          <div class="cc-quick" role="group" aria-label="Quick updates">
+            <button type="button" class="btn btn-outline btn-sm" data-quick="on_my_way" aria-pressed="false">On my way</button>
+            <button type="button" class="btn btn-outline btn-sm" data-quick="arrived" aria-pressed="false">I have arrived</button>
+            <button type="button" class="btn btn-outline btn-sm" data-quick="finished" aria-pressed="false">The work is finished</button>
+          </div>
+          <p class="co-consent-meta" id="coUpQuickNote" hidden></p>
+          <form class="co-form" id="coUpForm" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="coUpText">Or write an update</label>
+              <textarea class="form-input" id="coUpText" rows="3" maxlength="300" autocomplete="off" aria-describedby="coUpTextHelp coUpTextErr"></textarea>
+              <p class="form-helper" id="coUpTextHelp">3 to 300 characters. No phone numbers, emails or links.</p>
+              <p class="co-field-error" id="coUpTextErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coUpSubmit">Send update</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">An update is only a message to the customer. It does not change the booking step, a payment or the release code. Use Record progress for that.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coRs" hidden>
+        <section class="co-card" id="coRs" aria-labelledby="coRsTitle">
+          <h2 class="co-card-title co-visually-hidden" id="coRsTitle">Propose a new time</h2>
+          <p class="co-card-lead">Agree the new time with the Local Tasker first. The customer then accepts or declines it. The job keeps its current time until they accept.</p>
+          <div class="co-banner" id="coRsError" role="alert" hidden><span id="coRsErrorText"></span></div>
+          <form class="co-form" id="coRsForm" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="coRsDate">New date</label>
+              <input class="form-input" type="date" id="coRsDate" aria-describedby="coRsDateErr" />
+              <p class="co-field-error" id="coRsDateErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRsTime">Time</label>
+              <input class="form-input" type="time" id="coRsTime" aria-describedby="coRsTimeErr" />
+              <p class="co-field-error" id="coRsTimeErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coRsReason">Why does the time need to change?</label>
+              <textarea class="form-input" id="coRsReason" rows="2" maxlength="300" autocomplete="off" aria-describedby="coRsReasonErr"></textarea>
+              <p class="co-field-error" id="coRsReasonErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coRsSubmit">Send new time</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">Only one new time can wait for the customer at a time. It never changes a payment.</p>
+        </section>
+              </div>
+              <div class="cc-pane" data-pane="coPf" hidden>
+        <section class="co-card" id="coPf" aria-labelledby="coPfTitle">
+          <h2 class="co-card-title co-visually-hidden" id="coPfTitle">Send proof of work</h2>
+          <p class="co-card-lead" id="coPfLead"></p>
+          <div class="co-banner" id="coPfError" role="alert" hidden><span id="coPfErrorText"></span></div>
+          <div class="co-banner co-banner--info" id="coPfInfo" role="status" hidden><span id="coPfInfoText"></span></div>
+          <form class="co-form" id="coPfForm" novalidate hidden>
+            <div class="form-group">
+              <button type="button" class="btn btn-outline" id="coPfAdd">Add photos, video or a file</button>
+              <input type="file" id="coPfFiles" multiple accept="image/*,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" hidden />
+              <ul class="jr-proof-files" id="coPfList"></ul>
+              <p class="form-helper">Up to 5 files. Photos are resized and their location data is removed. They are private: only the customer and StreetTasker support can open them.</p>
+              <p class="co-field-error" id="coPfFilesErr" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coPfNote">Note (optional with files)</label>
+              <textarea class="form-input" id="coPfNote" rows="3" maxlength="500" autocomplete="off" aria-describedby="coPfNoteErr"></textarea>
+              <p class="co-field-error" id="coPfNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coPfSubmit">Send proof</button>
+            </div>
+          </form>
+          <p class="co-consent-meta">Sending proof marks the customer’s request as done. Nothing is compulsory: you can also use Mark as done on the request without sending anything.</p>
+        </section>
+              </div>
               <div class="cc-pane" data-pane="coCf" hidden>
         <section class="co-card" id="coCf" aria-labelledby="coCfTitle" hidden>
           <h2 class="co-card-title co-visually-hidden" id="coCfTitle">The Local Tasker’s answer</h2>
@@ -670,6 +750,7 @@
   <script src="js/coordinator-reduction.js"></script>
   <script src="js/coordinator-cards.js"></script>
   <script src="js/coordinator-attach.js"></script>
+  <script src="js/coordinator-jobactions.js"></script>
   <script src="js/coordinator-chat.js"></script>
 </body>
 </html>

@@ -149,3 +149,7 @@ a.jr-icon-btn[hidden] { display: none; }
 .cc-actions-body .cc-next { margin: 0 0 var(--space-2); }
 .cc-pane .co-card { padding: 0; background: none; border-radius: 0; box-shadow: none; }
 .cc-pane .co-card[hidden] { display: none; }
+
+/* ── Stage 6D-4b: quick update lines in the Send an update form ── */
+.cc-quick { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.cc-quick .btn[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }

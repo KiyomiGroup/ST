@@ -9,6 +9,8 @@
    (the only innerHTML is the fixed icon markup below). Same classes as the Job Room (css/messages.css); no new colours.
    Public API (window.STCoCards): load(id), loadActivity(id), has(id), sig(), cardFor(message, mine), fallbackText(message),
                                   historyBlock(id), activityBlock(id), clear()
+   Stage 6D-4b: setHooks({ actionsFor(request) -> [{ label, primary, run() }] }) lets js/coordinator-jobactions.js put "Send update", "Send proof" and
+   "Mark as done" on the customer's own pending asks; pending(kind) and find(id) read what is loaded. Without hooks the cards stay read only.
    ============================================================ */
 'use strict';
 
@@ -16,6 +18,7 @@
   var D = { id: null, ok: false, payments: {}, requests: {}, receipts: [], list: [], sigText: '' };
   var A = { id: null, ok: false, rows: [], showAll: false, sigText: '' };
   var SHOW = 6;
+  var H = null;      /* hooks from coordinator-jobactions.js (Stage 6D-4b) */
 
   function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   function svg(inner) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>'; }
@@ -139,6 +142,20 @@
       if (!isNaN(wd.getTime())) card.appendChild(el('div', 'jr-req-when', 'New time: ' + wd.toLocaleString('en-NG', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })));
     }
     if (req.note) card.appendChild(el('div', 'jr-req-note', req.note));
+    /* Stage 6D-4b: buttons on the customer's own pending ask (the database function checks who you are and what the request is) */
+    var acts = (H && H.actionsFor && !mine && status === 'pending' && req.by === 'customer') ? H.actionsFor(req) : null;
+    if (acts && acts.length) {
+      var row = el('div', 'jr-req-actions');
+      acts.forEach(function (a) {
+        var b = el('button', 'jr-req-btn' + (a.primary ? ' jr-req-btn--primary' : ''), a.label); b.type = 'button';
+        b.addEventListener('click', function () {
+          b.disabled = true;
+          Promise.resolve().then(function () { return a.run(); }).catch(function () { /* the action shows its own message */ }).then(function () { b.disabled = false; });
+        });
+        row.appendChild(b);
+      });
+      card.appendChild(row);
+    }
     wrap.appendChild(card); wrap.appendChild(el('div', 'msg-time', timeLabel(m.created_at)));
     return wrap;
   }
@@ -217,6 +234,10 @@
     return c;
   }
 
-  window.STCoCards = { load: load, loadActivity: loadActivity, has: has, sig: sig, cardFor: cardFor, fallbackText: fallbackText, isCardBody: isCardBody,
+  function pending(kind) { return (D.ok ? Object.keys(D.requests) : []).map(function (k) { return D.requests[k]; }).filter(function (r) { return r.kind === kind && r.status === 'pending'; }); }
+  function find(id) { return D.ok ? (D.requests[id] || null) : null; }
+  function setHooks(h) { H = h || null; }
+
+  window.STCoCards = { pending: pending, find: find, setHooks: setHooks, load: load, loadActivity: loadActivity, has: has, sig: sig, cardFor: cardFor, fallbackText: fallbackText, isCardBody: isCardBody,
                        historyBlock: historyBlock, activityBlock: activityBlock, clear: clear };
 })();
