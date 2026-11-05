@@ -297,3 +297,19 @@
   .mo-draft-btn { display: none; }   /* phones auto-save instead, as Post a Task does */
   .mo-photos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
 }
+
+/* ── Offer allowance (S4g) ───────────────────────────────── */
+.mo-allow { display: flex; flex-direction: column; gap: var(--space-3); }
+.mo-allow-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.mo-allow-title { margin: 0; font-size: var(--text-base); font-weight: 700; }
+.mo-allow-value { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); }
+.mo-allow-bar { display: block; width: 100%; height: var(--space-2); border: none; border-radius: var(--radius-pill); background: var(--color-bg-subtle); overflow: hidden; appearance: none; -webkit-appearance: none; }
+.mo-allow-bar::-webkit-progress-bar { background: var(--color-bg-subtle); border-radius: var(--radius-pill); }
+.mo-allow-bar::-webkit-progress-value { background: var(--color-primary); border-radius: var(--radius-pill); }
+.mo-allow-bar::-moz-progress-bar { background: var(--color-primary); border-radius: var(--radius-pill); }
+.mo-allow-note { margin: 0; }
+.mo-allow-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.mo-allow--blocked { border-color: var(--tone-warning-border); background: var(--tone-warning-bg); }
+.mo-allow[hidden], .mo-allow-bar[hidden], .mo-allow-actions[hidden], .mo-done-allow[hidden] { display: none; }
+@media (max-width: 480px) { .mo-allow-actions .btn { width: 100%; } }
+

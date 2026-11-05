@@ -43,7 +43,7 @@
   var FEE_RATE = 0.12;         /* mirrors PLATFORM_COMMISSION in js/payments.js; used only if calculateAmounts is missing */
 
   var state = { id: null, edit: false, task: null, viewer: null, isTasker: false, posterId: null, poster: null, rating: null, myApplication: null,
-    amount: null, pitch: '', date: '', window: '', sending: false,
+    amount: null, pitch: '', date: '', window: '', sending: false, blocked: false,
     photos: [], draftKey: '', draftSavedAt: 0, done: false };   /* photos: { file, objectUrl, url } */   /* the offer in naira (whole number) or null while empty or invalid */
 
   /* ── helpers ─────────────────────────────────────────────── */
@@ -603,7 +603,9 @@
   function paintSubmit() {
     if (state.sending) return;
     var verb = state.edit ? 'Save Changes' : 'Submit Offer';
-    setText('moSubmitLabel', state.amount ? verb + ' for ' + money(state.amount) : verb);
+    var blocked = !!state.blocked && !state.edit;
+    $('moSubmit').disabled = blocked;
+    setText('moSubmitLabel', blocked ? (state.allowLabel || 'No offers left') : (state.amount ? verb + ' for ' + money(state.amount) : verb));
   }
   function showSubmitError(msg, linkHref, linkText) {
     var el = $('moSubmitErr');
@@ -658,6 +660,8 @@
     } else {
       $('moDoneText').innerHTML = 'Your proposal was sent to <strong>' + esc(shortName(who) || first) + '</strong> for <strong>' + esc(title) + '</strong>.';
     }
+    $('moDoneAllow').hidden = true;
+    if (!state.edit) readAllowance().then(function (v) { if (v && v.doneText) { setText('moDoneAllow', v.doneText); $('moDoneAllow').hidden = false; } });
     $('moDoneRef').lastChild.textContent = appId ? 'Ref #' + appId.slice(0, 8).toUpperCase() : (state.edit ? 'Offer updated' : 'Offer sent');
     setText('moDoneTaskId', 'Task #' + String(t.id || state.id).replace(/-/g, '').slice(0, 8).toUpperCase());
     $('moWhoDone').innerHTML = $('moWhoPhone').innerHTML;
@@ -681,6 +685,7 @@
   }
   async function submitOffer() {
     if (state.sending) return;
+    if (state.blocked && !state.edit) return;   /* no offers left: the allowance panel above says so; the server would refuse anyway */
     showSubmitError('');
     var ok = validateAll();
     var agreed = $('moTerms').checked;
@@ -716,6 +721,7 @@
       state.sending = false; btn.disabled = false; paintSubmit();
       /* A coded answer from the database is final: the next try is a new request. No code means the outcome is unknown, so the id is kept */
       if (code) state.requestId = null;
+      if (code === 'offer_limit_reached' || code === 'fair_use_daily' || code === 'fair_use_monthly') loadAllowance();
       var mine = 'applications.html', mineLabel = 'View My Applications';
       if (code === 'offer_not_pending' || code === 'application_not_found') showSubmitError('This offer can no longer be edited. It may have been answered or withdrawn.', mine, mineLabel);
       else if (code === 'already_offered') showSubmitError('You have already applied for this task.', mine, mineLabel);
@@ -753,6 +759,68 @@
       if ($('moTerms').checked) { $('moTermsErr').hidden = true; $('moTerms').setAttribute('aria-invalid', 'false'); }
     });
   }
+
+  /* ── Offer allowance (S4g) ────────────────────────────────
+     Shows how many offers are left this period, from get_my_entitlements() (the server's own answer for this tasker). When none are left
+     the Submit button is switched off and the plans are offered; a draft can still be saved. This is only a courtesy: submit_offer on the
+     server still decides, and its refusal (offer_limit_reached, fair_use_*) is shown by the submit handler as before. No number is written
+     here; an unreadable answer shows nothing and blocks nothing. */
+  function allowDate(v) {
+    var d = new Date(v);
+    if (!v || isNaN(d.getTime())) return '';
+    try { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Lagos' }); } catch (e) { return ''; }
+  }
+  function offersWord(n) { return n + (n === 1 ? ' offer' : ' offers'); }
+  function describeAllowance(e) {
+    var o = e && e.offers;
+    if (!o || typeof o !== 'object') return null;
+    var when = allowDate(e.period_end), again = when ? ' Your offers start again on ' + when + '.' : '';
+    if (o.unlimited) {
+      if (o.fair_use_remaining != null && Number(o.fair_use_remaining) <= 0) {
+        return { state: 'fair', blocked: true, title: 'You have reached the fair-use limit for now', value: '', max: null, used: 0, plans: false,
+                 note: 'Fair use keeps offers fair for everyone. Please try again later.', submitLabel: 'Fair-use limit reached',
+                 doneText: '' };
+      }
+      return { state: 'unlimited', blocked: false, title: 'Your plan has no monthly offer limit', value: '', max: null, used: 0, plans: false,
+               note: 'Fair use applies, so one account cannot flood the platform.', submitLabel: '', doneText: '' };
+    }
+    var left = Number(o.total_remaining), allowance = Number(o.allowance), used = Number(o.used);
+    if (!isFinite(left) || !isFinite(allowance) || allowance < 0) return null;
+    var extra = Number(o.credits) > 0 ? ' This includes ' + offersWord(Number(o.credits)) + ' of extra credit.' : '';
+    if (left <= 0) {
+      return { state: 'exhausted', blocked: true, title: 'You have used all your offers for this period', value: '0 left',
+               max: allowance, used: allowance, plans: true, submitLabel: 'No offers left',
+               note: 'To send more now, choose a higher plan.' + again,
+               doneText: 'That was your last offer for this period.' + again };
+    }
+    return { state: 'ok', blocked: false, title: 'Offers this period', value: offersWord(left) + ' left',
+             max: allowance, used: isFinite(used) ? used : 0, plans: false, submitLabel: '',
+             note: 'Sending this offer uses one.' + again + extra,
+             doneText: 'You have ' + offersWord(left) + ' left this period.' };
+  }
+  async function readAllowance() {
+    try {
+      var r = await window.supabase.rpc('get_my_entitlements');
+      if (r.error || !r.data) return null;
+      return describeAllowance(r.data);
+    } catch (e) { return null; }
+  }
+  function paintAllowance(v) {
+    var box = $('moAllow');
+    state.blocked = !!(v && v.blocked);
+    state.allowLabel = v ? v.submitLabel : '';
+    if (!v || state.edit) { box.hidden = true; state.blocked = false; paintSubmit(); return; }
+    setText('moAllowTitle', v.title); setText('moAllowValue', v.value); setText('moAllowNote', v.note);
+    var bar = $('moAllowBar');
+    if (v.max != null && v.max > 0) { bar.max = v.max; bar.value = Math.min(v.used, v.max); bar.setAttribute('aria-label', v.title + (v.value ? ': ' + v.value : '')); bar.hidden = false; }
+    else bar.hidden = true;
+    $('moAllowActions').hidden = !v.plans;
+    box.classList.toggle('mo-allow--blocked', !!v.blocked);
+    box.hidden = false;
+    paintSubmit();
+  }
+  async function loadAllowance() { paintAllowance(await readAllowance()); }
+  window.StOfferAllowance = { describe: describeAllowance };
 
   /* ── load ────────────────────────────────────────────────── */
   async function load() {
@@ -795,6 +863,7 @@
     renderPhotos();
     if (state.edit) prefillFromOffer(mine);
     else { state.draftKey = 'st_offer_draft_' + state.viewer.id + '_' + state.id; restoreDraft(); }
+    if (!state.edit) await loadAllowance();
 
     $('moLoading').hidden = true;
     $('moContent').hidden = false;

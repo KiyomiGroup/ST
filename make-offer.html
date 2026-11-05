@@ -81,6 +81,20 @@
 
             <div class="mo-form" id="moForm">
 
+              <!-- Offer allowance (S4g): filled by js/make-offer.js from get_my_entitlements; stays hidden when it cannot be read or when an offer is being edited -->
+              <section class="ap-card td-card mo-allow" id="moAllow" aria-labelledby="moAllowTitle" aria-live="polite" hidden>
+                <div class="mo-allow-top">
+                  <h2 class="mo-allow-title" id="moAllowTitle"></h2>
+                  <span class="mo-allow-value" id="moAllowValue"></span>
+                </div>
+                <progress class="mo-allow-bar" id="moAllowBar" hidden></progress>
+                <p class="mo-help mo-allow-note" id="moAllowNote"></p>
+                <div class="mo-allow-actions" id="moAllowActions" hidden>
+                  <a class="btn btn-primary" href="subscription.html">See plans</a>
+                  <a class="btn btn-ghost" href="my-subscription.html">My Subscription</a>
+                </div>
+              </section>
+
               <!-- Shown when a saved draft was put back on the page (Stage 7) -->
               <div class="mo-draft" id="moDraft" role="status" hidden>
                 <svg class="ap-i" aria-hidden="true"><use href="#i-history"/></svg>
@@ -197,6 +211,7 @@
                   </div>
                   <h2 class="td-title mo-done-title" id="moDoneTitle">Offer submitted!</h2>
                   <p class="mo-done-text" id="moDoneText"></p>
+                  <p class="mo-help mo-done-allow" id="moDoneAllow" hidden></p>
                 </div>
               </section>
 
