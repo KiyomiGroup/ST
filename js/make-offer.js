@@ -190,7 +190,7 @@
     if (state.rating) meta.push(icon('star') + '<b>' + state.rating.avg.toFixed(1) + '</b>');
     if (text(u && u.location)) meta.push(esc(text(u.location)));
     var html = '<div class="td-avatar-wrap"><span class="td-avatar" aria-hidden="true">' + av + '</span>' +
-      (verified ? '<span class="td-avatar-tick">' + icon('check') + '</span>' : '') + '</div>' +
+      '</div>' +
       '<div class="mo-who-text"><p class="mo-who-name">' + esc(shortName(name)) + '<span class="td-tag">Customer</span></p>' +
       (meta.length ? '<p class="mo-who-meta">' + meta.join('<span aria-hidden="true">\u2022</span>') + '</p>' : '') + '</div>';
     $('moWhoPhone').innerHTML = html; $('moWhoCard').innerHTML = html;

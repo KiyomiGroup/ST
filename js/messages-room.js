@@ -203,12 +203,6 @@
       sub.textContent = '';
       sub.appendChild(el('span', 'msg-chat-head-lead', o.isCustomer ? 'With ' : 'Customer: '));
       sub.appendChild(el('span', 'msg-chat-head-person', name));
-      if (o.isCustomer && profile && profile.verified) {
-        var vb = svgSpan('jr-verified', ICON_CHECK);
-        vb.title = 'Verified';
-        vb.setAttribute('aria-label', 'Verified');
-        sub.appendChild(vb);
-      }
       /* M10b: the other person's rating badge (a tasker when the viewer is the customer, else the customer); empty when they have no reviews */
       if (o.id) {
         var rb = el('span', 'msg-chat-head-rating');

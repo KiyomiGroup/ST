@@ -177,8 +177,8 @@
     } else { av.textContent = initials(state.name); }
 
     setText('cpName', state.name);
-    $('cpTick').hidden = !verified;
-    var tag = $('cpTag'); tag.textContent = verified ? 'Verified Customer' : ''; tag.hidden = !verified;
+    $('cpTick').hidden = true;   /* owner rule: no verified mark anywhere */
+    var tag = $('cpTag'); tag.textContent = ''; tag.hidden = true;
 
     var meta = [];
     if (text(u.location)) meta.push('<span class="cp-meta-item">' + icon('pin') + esc(u.location) + '</span>');
@@ -187,7 +187,6 @@
     var m = $('cpMeta'); m.innerHTML = meta.join('<span class="cp-meta-dot" aria-hidden="true"></span>'); m.hidden = !meta.length;
 
     var chips = [];
-    if (verified) chips.push(['id', 'ID & Bank Verified']);
     if (score.started > 0 && score.funded === score.started) chips.push(['wallet', '100% Escrow Funded']);
     else chips.push(['shield', 'Escrow Protected']);
     $('cpChips').innerHTML = chips.map(function (c) { return '<span class="pp-hero-chip cp-chip">' + icon(c[0]) + esc(c[1]) + '</span>'; }).join('');

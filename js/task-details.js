@@ -313,7 +313,7 @@
       img.addEventListener('error', function () { av.textContent = initials(name); });
       av.appendChild(img);
     } else av.textContent = initials(name);
-    $('tdAvatarTick').hidden = !verified;
+    $('tdAvatarTick').hidden = true;   /* owner rule: no verified mark anywhere */
     setText('tdPosterName', shortName(name));
 
     var meta = [];
@@ -335,7 +335,6 @@
     $('tdPosterStats').innerHTML = cells.map(function (c) { return '<div class="td-stat"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[0]) + '</span></div>'; }).join('');
 
     var ver = [];
-    if (verified) ver.push(['id', 'ID verified']);
     $('tdPosterVerify').innerHTML = ver.map(function (v) { return '<li>' + icon(v[0]) + esc(v[1]) + '</li>'; }).join('');
 
     var link = $('tdProfileLink');

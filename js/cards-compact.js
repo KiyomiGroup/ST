@@ -89,7 +89,7 @@
       var c = fromHtml(root.stTaskCard({
         id: t.id, title: t.title, budget: t.budget, location: t.location, created_at: t.created_at,
         offers_count: t.offers_count, distance_km: t.distance_km, description: t.description, category: t.category,
-        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, statusText: opts.status || '', urgency: opts.urgent === true ? 'immediate' : undefined
+        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, urgency: opts.urgent === true ? 'immediate' : undefined
       }));
       if (c) { wireOpen(c, h); return c; }
     }
@@ -173,7 +173,6 @@
     var h = el('h3', 'cc-title cc-name');
     var nameNode = href ? (function () { var a = el('a', 'cc-link', name); a.href = href; return a; })() : el('span', '', name);
     h.appendChild(nameNode);
-    if (s.verified) { var v = el('span', 'cc-verified'); v.setAttribute('title', 'Verified'); v.appendChild(icon('verified')); h.appendChild(v); }
     card.appendChild(h);
 
     var line = el('div', 'cc-line');

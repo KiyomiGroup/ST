@@ -99,11 +99,10 @@
     paintAvatar(m);
     setText('tpName', m.name);
     paintMembership(m);
-    $('tpTick').hidden = !m.verified;
+    $('tpTick').hidden = true;   /* owner rule: no verified mark anywhere */
 
     var tag = $('tpTag');
-    var tagText = m.verified ? 'Verified Tasker' : (m.pending ? 'Verification Pending' : '');
-    tag.textContent = tagText; tag.hidden = !tagText;
+    tag.textContent = ''; tag.hidden = true;
 
     setText('tpLoc', m.location); $('tpLocWrap').hidden = !m.location;
 
@@ -124,7 +123,6 @@
     var chips = [];
     /* Local Tasker labels (stage 4C-2): shown only when the database says this person is a published Local Tasker. */
     if (m.isLocal) { chips.push(['user', (window.STLocal && STLocal.LABEL) || 'Local Tasker']); chips.push(['chat', (window.STLocal && STLocal.LABEL_PHONE) || 'Phone Assisted']); }
-    if (m.verified) chips.push(['id', 'Govt ID Verified']);
     if (m.certs.length) chips.push(['award', 'Credentials Listed']);
     chips.push(['shield', 'Escrow Protected']);
     $('tpTrust').innerHTML = chips.map(function (c) { return '<span class="pp-hero-chip tp-chip">' + icon(c[0]) + esc(c[1]) + '</span>'; }).join('');
@@ -319,7 +317,7 @@
     } catch (_l) { isLocal = false; }
 
     var results = await Promise.all([
-      sb.from('verifications').select('status, business_name, business_address').eq('user_id', id).maybeSingle(),
+      sb.from('verifications').select('business_name, business_address').eq('user_id', id).maybeSingle(),
       sb.from('feed_posts').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(24),
       sb.from('bookings').select('customer_id, status').eq('tasker_id', id).limit(1000),
       /* Membership label (S4h): asked of the server, never read from a column. Never rejects; no answer = no label. */
@@ -330,7 +328,6 @@
 
     var name = (verification && verification.business_name) || tasker.business_name || (userRow && userRow.business_name) || (userRow && userRow.name) || tasker.name || 'Service Provider';
     var person = (userRow && userRow.name) || tasker.name || name;
-    var verified = !!(tasker.is_verified || (verification && verification.status === 'approved'));
 
     var completed = null, repeatPct = null;
     if (bookings) {
@@ -363,7 +360,7 @@
       service: tasker.service || tasker.service_name || '', headline: d.headline,
       location: tasker.business_address || tasker.location || (userRow && userRow.location) || '',
       photo: isLocal ? localCover : (tasker.photo_url || tasker.photo || (userRow && userRow.avatar_url) || null), isLocal: isLocal,
-      verified: verified, pending: !verified && !!(verification && verification.status === 'pending'),
+      verified: false, pending: false,
       rating: revData.count > 0 ? revData.avg : 0, reviewCount: revData.count, completed: completed, repeatPct: repeatPct,
       years: d.years_experience, expNote: d.experience_note,
       rateValue: tasker.rate_value, rateUnit: tasker.rate_unit, priceNote: d.price_note,
@@ -406,7 +403,7 @@
     state.demo = svc;
     renderAll(buildModel({
       name: svc.provider_name, first: svc.provider_name.split(' ')[0], service: svc.service_name, headline: svc.service_name,
-      location: svc.location, verified: true, rating: svc.rating, reviewCount: svc.reviews,
+      location: svc.location, verified: false, rating: svc.rating, reviewCount: svc.reviews,
       rateValue: svc.price, rateUnit: svc.rate_unit || '/job', available: true, bio: svc.description, isDemo: true
     }));
   }
