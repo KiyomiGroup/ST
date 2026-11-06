@@ -849,6 +849,11 @@
     if (m && (m.type === 'image' || m.type === 'video' || m.type === 'file' || m.type === 'location')) m = withMeta(m);
     var isMine = !!(S.user && m.sender_id === S.user.id);
     var node;
+    /* the docked next-step panel (messages-dock.js) stops asking for a location once one was shared in this chat */
+    if (m.type === 'location' && S.thread && S.locationFor !== S.thread.id) {
+      S.locationFor = S.thread.id;
+      window.setTimeout(function () { if (window.JRFlow) window.JRFlow.update(); }, 0);
+    }
     if (m.type === 'system') node = buildSystem(m);
     else if (m.type === 'safety') node = buildSafety(m);
     else if (m.type === 'payment_request') node = buildPaymentRequest(m, isMine);
@@ -1525,6 +1530,15 @@
     moneyRows: moneyRows,
     pendingDecision: pendingDecision,
     answerDecision: function (id, accept) { return respondToDecision(id, accept); },
+    /* the docked panel (messages-dock.js): one tap shares the current location as a chat message, the same as Attach > Location > Send */
+    shareLocation: function () {
+      var i = $('msgInput'), draft = i ? i.value : '';     /* the location must not take the typed draft as its caption */
+      if (i) i.value = '';
+      showAttach('location', null);
+      return sendAttachment().then(function (ok) { if (i && draft && !i.value) i.value = draft; return ok; });
+    },
+    locationShared: function () { return !!(S.thread && S.locationFor === S.thread.id); },
+    isClosed: function () { return !!S.roomClosed; },
     /* Stage 15: messages-work.js and messages-forms.js call reload() after an action; it was never exported, so they silently did nothing */
     reload: function () {
       return S.thread ? open({ thread: S.thread, user: S.user, role: S.role, onChange: S.onChange }) : Promise.resolve();

@@ -367,9 +367,21 @@
       return;
     }
 
-    /* tasker: the code box, from the moment the customer has paid */
+    /* tasker: the code box now lives in the docked panel above the message box (messages-dock.js); this panel only
+       keeps it when that file is not loaded */
+    if (window.JRDock) { host.hidden = true; return; }
+    codeEntry(host, v);
+  }
+
+  /* The tasker's code box: "ask the customer for the 6-digit code once the job is done, enter it here to get paid".
+     Drawn into any host element (the dock uses it). Same server call as before: ST.payments.submitCompletionCode. */
+  function codeEntry(host, v) {
+    v = v || view();
+    var inDock = host.id === 'jrDock' || !!host.closest('#jrDock');
     host.appendChild(el('div', 'jr-wp-title', 'Enter the release code'));
-    host.appendChild(el('div', 'jr-wp-text', 'The customer has paid and holds a 6-digit release code. When the job is done, ask them for it and enter it here to get paid.'));
+    host.appendChild(el('div', 'jr-wp-text', inDock
+      ? 'When the job is done, ask the customer for their 6-digit release code and enter it here to get paid.'
+      : 'The customer has paid and holds a 6-digit release code. When the job is done, ask them for it and enter it here to get paid.'));
     var form = el('div', 'jr-wp-form');
     var input = el('input', 'jr-code-input');
     input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'one-time-code';
@@ -429,6 +441,6 @@
     probe().then(function () { update(); });
   }
 
-  window.JRWork = { init: init, update: update };
+  window.JRWork = { init: init, update: update, codeEntry: codeEntry };
 
 })();

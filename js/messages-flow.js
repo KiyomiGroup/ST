@@ -170,7 +170,7 @@
     var copy = el('button', 'jr-flow-link', 'Copy'); copy.type = 'button'; copy.hidden = true;
     line.appendChild(show); line.appendChild(copy);
     wrap.appendChild(line);
-    wrap.appendChild(el('div', 'jr-flow-code-note', 'Keep it private until the work is finished. Never send it in the chat.'));
+    wrap.appendChild(el('div', 'jr-flow-code-note', 'Only give this code to the tasker once the job is done and you are happy with it. Never type it in the chat.'));
 
     function paint() {
       var visible = S.shown && S.shownFor === v.bookingId && S.code;
@@ -293,9 +293,11 @@
     if (!host || !bar) return;
     bind();
     host.textContent = '';
-    if (!S.ctx || !S.ctx.thread) { bar.hidden = true; host.hidden = true; return; }
+    if (!S.ctx || !S.ctx.thread) { bar.hidden = true; host.hidden = true; if (window.JRDock) window.JRDock.update(null, null); return; }
     var v = read();
     var p = plan(v);
+    /* the docked panel above the message box (messages-dock.js) now carries the buttons, the code and the code box */
+    var dock = window.JRDock ? window.JRDock.update(v, p) : false;
     if (!p) { bar.hidden = true; host.hidden = true; setOpen(false); return; }
     bar.hidden = false; host.hidden = false;
     host.className = 'jr-flow' + (p.closed ? ' jr-flow--closed' : '') + (p.compact ? ' jr-flow--compact' : '');
@@ -304,7 +306,8 @@
     $('jrJobTitle').textContent = p.title;
     $('jrJobAmount').textContent = p.amount ? naira(p.amount) : '';
     var quick = $('jrJobQuick'); quick.textContent = '';
-    var qdef = p.primary || (p.compact ? { label: v.role === 'customer' ? 'Review work' : 'Details', open: true } : null);
+    var qdef = dock ? (p.compact ? { label: v.role === 'customer' ? 'Review work' : 'Details', open: true } : null)
+                    : (p.primary || (p.compact ? { label: v.role === 'customer' ? 'Review work' : 'Details', open: true } : null));
     if (qdef) quick.appendChild(button(Object.assign({}, qdef, { label: qdef.short || qdef.label }), 'jr-flow-btn--primary jr-jobbar-btn'));
 
     /* the dropdown: stepper, explanation, code, the same buttons */
@@ -315,8 +318,8 @@
     if (p.text) txt.appendChild(el('div', 'jr-flow-text', p.text));
     head.appendChild(txt);
     host.appendChild(head);
-    if (p.code) host.appendChild(codeBox(v));
-    if (p.primary || p.secondary) {
+    if (p.code && !dock) host.appendChild(codeBox(v));
+    if ((p.primary || p.secondary) && !dock) {
       var row = el('div', 'jr-flow-actions');
       if (p.primary) row.appendChild(button(p.primary, 'jr-flow-btn--primary'));
       if (p.secondary) row.appendChild(button(p.secondary, ''));
@@ -334,5 +337,12 @@
     paint();
   }
 
-  window.JRFlow = { update: update, codeNode: function (bookingId) { return codeBox({ bookingId: bookingId }); } };
+  /* for messages-dock.js: the same buttons (they call the same server functions) and the same code box */
+  window.JRFlow = {
+    update: update,
+    codeNode: function (bookingId) { return codeBox({ bookingId: bookingId }); },
+    button: button,
+    openBar: function () { setOpen(true); },
+    repaint: paint
+  };
 })();

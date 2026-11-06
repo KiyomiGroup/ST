@@ -2221,3 +2221,49 @@ body.msg-page {
   cursor: pointer;
 }
 @media (min-width: 1044px) { .jr-jobdrop-full { display: none; } }   /* the details column is already open there */
+
+/* ── Docked next-step panel (js/messages-dock.js): always visible right above the message box ── */
+.jr-dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 45vh;                   /* never push the conversation off a small screen */
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+.jr-dock[hidden] { display: none; }
+.jr-dock-card {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+}
+.jr-dock-card--notice { border-color: var(--color-warning-border); background: var(--color-warning-soft); }
+.jr-dock-card--code { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.jr-dock-title { font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; color: var(--color-forest-800); }
+.jr-dock-text { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+.jr-dock-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.jr-dock-form { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.jr-dock-input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  outline: none;
+}
+.jr-dock-input:focus { border-color: var(--color-primary); }
+.jr-dock-input--text { display: block; width: 100%; margin-top: var(--space-2); font-weight: 400; }
+.jr-dock-card .jr-flow-code { background: var(--color-bg); }
+.jr-dock-card .jr-wp-form { margin-top: var(--space-2); }
+.jr-dock-card .jr-wp-title { font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; color: var(--color-forest-800); }
+.jr-dock-card .jr-wp-text { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
