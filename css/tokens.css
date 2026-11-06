@@ -508,16 +508,14 @@
 /* ── Page loader (css/styles.css "PAGE LOADER", js/page-loader.js) ── */
 :root {
   --loader-bg:           var(--color-bg);             /* white behind the coin */
-  --loader-size:         104px;                       /* coin, desktop */
-  --loader-size-sm:      88px;                        /* coin, phones (480px and below) */
-  --loader-perspective:  640px;
-  --loader-lift:         -14px;                       /* coin rises this far while showing its back */
-  --loader-flip:         1.6s;                        /* one full turn: front, back, front */
+  --loader-size:         154px;                       /* frame box, desktop: the coin itself is 78% of it (about 120px) */
+  --loader-size-sm:      123px;                       /* frame box, phones (480px and below): coin about 96px */
+  --loader-frames:       32;                          /* frames in images/loader-coin-sheet.png (the steps() in styles.css must match) */
+  --loader-turn:         1.8s;                        /* one full turn of the coin */
   --loader-show-delay:   160ms;                       /* coin waits this long so fast pages never flash it */
   --loader-fade-in:      200ms;
   --loader-fade:         350ms;                       /* fade-out once the page is ready */
   --loader-failsafe:     12s;                         /* CSS-only backstop if JS never runs */
-  --loader-shadow:       rgba(15, 61, 38, 0.22);
   --z-loader:            10000;                       /* above toasts (9999) */
 }
 
@@ -532,4 +530,13 @@
   --cc-category-width-sm:  128px;
   --cc-avatar-size:        56px;    /* tasker photo and category bubble */
   --cc-arrow-size:         40px;    /* desktop scroll arrows */
+}
+
+/* ── Install banner (css/styles.css "INSTALL BANNER", js/pwa-install.js) ── */
+:root {
+  --install-gap:        var(--space-3);               /* space above the screen edge or the bottom nav */
+  --install-nav-offset: 97px;                         /* bottom nav: 10px off the edge + 77px tall + 10px air */
+  --install-icon:       44px;
+  --install-radius:     var(--radius-form);
+  --install-z:          960;                          /* above the bottom nav (950), below toasts and the loader */
 }

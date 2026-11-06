@@ -5420,7 +5420,9 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
      (none)        first load: visible, 12s CSS failsafe if JS never runs
      .st-loaded    hidden (fades out)
      .st-loading   shown again by ST.loader.show() / link clicks, JS-controlled
-   The coin is one image that turns a full 360 degrees (front, back, front).
+   The coin is a strip of 32 pre-drawn frames (images/loader-coin-sheet.png: a 3D coin with a
+   thick edge and a shadow, the K on both faces) played with steps(). The strip covers a half
+   turn; both faces are the same, so the half turn repeated is a full turn.
    It only appears after --loader-show-delay.
    Pages that must not show it (back-office, fixtures) add class
    st-loader-off to <html>, or are matched in the opt-out rule below.
@@ -5444,11 +5446,12 @@ html::after {
   margin: auto;
   width: var(--loader-size);
   height: var(--loader-size);
-  background: url("../images/loader-coin.png") center / contain no-repeat;
+  content: "";
+  content: "" / "Loading";   /* alt text for screen readers; browsers that do not know it keep the line above */
+  background: url("../images/loader-coin-sheet.png") 0 0 / calc(var(--loader-frames) * 100%) 100% no-repeat;
   pointer-events: none;
-  will-change: transform;
   animation:
-    st-coin-flip var(--loader-flip) linear infinite,
+    st-coin-spin calc(var(--loader-turn) / 2) steps(32, jump-none) infinite,   /* 32 = --loader-frames */
     st-coin-in 300ms ease var(--loader-show-delay) both,
     st-loader-failsafe 1s linear var(--loader-failsafe) forwards;
 }
@@ -5466,7 +5469,7 @@ html.st-loaded::after {
 html.st-loading::before { animation: none; }
 html.st-loading::after {
   animation:
-    st-coin-flip var(--loader-flip) linear infinite,
+    st-coin-spin calc(var(--loader-turn) / 2) steps(32, jump-none) infinite,   /* 32 = --loader-frames */
     st-coin-in 300ms ease var(--loader-show-delay) both;
 }
 
@@ -5483,24 +5486,15 @@ html:has(script[src*="messages-fixtures"])::after,
 html:has(script[src*="messages-cards-demo"])::before,
 html:has(script[src*="messages-cards-demo"])::after { display: none; }
 
-/* one full turn: front -> back -> front. A plain 3D rotation of one image, so the
-   back is the mirror of the front (like the reference GIF). Each half eases in and
-   out, so it is smooth with no jumps, and the coin rises a little at the half-way. */
-@keyframes st-coin-flip {
-  0%   { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(0deg);
-         animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95); }
-  50%  { transform: perspective(var(--loader-perspective)) translateY(var(--loader-lift)) rotateY(180deg);
-         animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95); }
-  100% { transform: perspective(var(--loader-perspective)) translateY(0) rotateY(360deg); }
+/* walks the strip from the first frame to the last (the half turn); the loop is seamless */
+@keyframes st-coin-spin {
+  from { background-position: 0 0; }
+  to   { background-position: 100% 0; }
 }
 /* soft fade-in on filter, so it never fights the opacity fade-out */
 @keyframes st-coin-in {
-  from { filter: opacity(0) drop-shadow(0 10px 14px var(--loader-shadow)); }
-  to   { filter: opacity(1) drop-shadow(0 10px 14px var(--loader-shadow)); }
-}
-@keyframes st-coin-breathe {
-  0%, 100% { transform: scale(0.94); }
-  50%      { transform: scale(1); }
+  from { filter: opacity(0); }
+  to   { filter: opacity(1); }
 }
 @keyframes st-loader-failsafe {
   to { opacity: 0; visibility: hidden; }
@@ -5509,22 +5503,56 @@ html:has(script[src*="messages-cards-demo"])::after { display: none; }
 @media (max-width: 480px) {
   html::after { width: var(--loader-size-sm); height: var(--loader-size-sm); }
 }
-/* no spinning for people who ask for less motion: the coin gently breathes */
+/* no spinning for people who ask for less motion: the coin stands still, front face */
 @media (prefers-reduced-motion: reduce) {
-  html::after,
-  html.st-loading::after {
+  html::after {
     animation:
-      st-coin-breathe 2s ease-in-out infinite,
       st-coin-in 300ms ease var(--loader-show-delay) both,
       st-loader-failsafe 1s linear var(--loader-failsafe) forwards;
   }
   html.st-loading::after {
-    animation:
-      st-coin-breathe 2s ease-in-out infinite,
-      st-coin-in 300ms ease var(--loader-show-delay) both;
+    animation: st-coin-in 300ms ease var(--loader-show-delay) both;
   }
 }
 @media print {
   html::before,
   html::after { display: none; }
 }
+
+
+/* ============================================================
+   INSTALL BANNER  (js/pwa-install.js, tokens: --install-* in css/tokens.css)
+   "Add StreetTasker to your home screen". Phones only; the script decides
+   whether to show it. Sits above the floating bottom nav when logged in.
+   ============================================================ */
+.st-install {
+  position: fixed;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--install-gap);
+  bottom: calc(var(--install-gap) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--install-z);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--install-radius);
+  box-shadow: var(--shadow-toast);
+}
+body.st-logged-in .st-install {
+  bottom: calc(var(--install-nav-offset) + env(safe-area-inset-bottom, 0px));
+}
+.st-install-icon { flex: 0 0 auto; width: var(--install-icon); height: var(--install-icon); border-radius: var(--radius-card-btn); }
+.st-install-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.st-install-title { font-size: var(--text-sm); font-weight: 700; line-height: 1.25; color: var(--color-text); }
+.st-install-sub { font-size: var(--text-xs); line-height: 1.3; color: var(--color-text-secondary); }
+.st-install-actions { flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); }
+.st-install-steps { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+/* room so the banner never hides the last bit of the page */
+body.st-install-open { padding-bottom: 160px; }
+@media (min-width: 769px) { .st-install { display: none; } }
+@media print { .st-install { display: none; } }

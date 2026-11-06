@@ -1,0 +1,33 @@
+/* offline.html only. Tokens come from css/tokens.css. Kept tiny on purpose: the service worker stores it. */
+.offline-page {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.offline-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 360px;
+  text-align: center;
+}
+.offline-logo { width: 96px; height: 96px; border-radius: var(--radius-card-media); }
+.offline-title { margin: 0; font-size: var(--text-lg); font-weight: 800; letter-spacing: -0.02em; }
+.offline-text { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; }
+.offline-btn {
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+.offline-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }

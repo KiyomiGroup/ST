@@ -18,6 +18,15 @@ window.ST_LOADER_WAIT_APP = true;
   document.head.appendChild(loaderScript);
 })();
 
+/* ── Add to home screen: catch the browser's install offer early ──────────
+ * Chrome can fire "beforeinstallprompt" before the rest of this file has booted,
+ * so it is caught here and handed to js/pwa-install.js (loaded at the end of boot). */
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  window.ST_INSTALL_EVENT = e;
+  if (window.ST && window.ST.pwa && window.ST.pwa.onPrompt) window.ST.pwa.onPrompt(e);
+});
+
 /* ── Component Loader ───────────────────────────────────────── */
 /**
  * Fetches and injects HTML components (navbar, footer) into the page.
@@ -277,6 +286,13 @@ async function stBoot() {
   gateScript.src = 'js/verify-gate.js';
   gateScript.defer = true;
   document.body.appendChild(gateScript);
+
+  /* Add to home screen: registers the offline service worker and shows the install banner (phones, a few pages).
+     Loaded here so the pages that run app.js need no edit. */
+  const pwaScript = document.createElement('script');
+  pwaScript.src = 'js/pwa-install.js';
+  pwaScript.defer = true;
+  document.body.appendChild(pwaScript);
 
   console.log('[StreetTasker] App ready ✓');
 
