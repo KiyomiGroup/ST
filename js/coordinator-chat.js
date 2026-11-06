@@ -414,6 +414,7 @@
     $('ccDisputeBar').hidden = !(S.activeId && frozen);
     $('ccDisputeBtn').hidden = !can;
     syncActionsBtn();
+    if (window.STCoDock) window.STCoDock.update();      /* the docked next-step panel above the message box */
   }
 
   function paneAvailable(k) {
@@ -702,7 +703,9 @@
     state: function () { return S; }, toast: toast, canWrite: canWrite, updateSend: updateSend,
     setSending: function (v) { S.sending = !!v; updateSend(); },
     showContactWarn: function () { $('ccWarn').hidden = false; },
-    reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList,
+    reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList, reloadDetail: reloadDetail,
+    /* the docked panel's "Ask in the chat": a plain customer-visible message, sent the normal way */
+    sendText: function (body) { submit({ requestId: uuid(), body: body, kind: 'message', failed: false }); },
     openActions: openActions, closeActions: closeActions,
     redraw: function () { if (S.thread) renderTimeline(); }
   };

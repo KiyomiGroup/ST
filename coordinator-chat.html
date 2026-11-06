@@ -133,6 +133,9 @@
             <span id="ccReadonlyText">You can read this conversation, but only the current coordinator can reply.</span>
           </div>
 
+          <!-- Docked next-step panel right above the message box (built by js/coordinator-dock.js) -->
+          <div class="jr-dock" id="ccDock" hidden></div>
+
           <div class="cc-composer" id="ccComposer" hidden>
             <div class="cc-mode" role="tablist" aria-label="Who is this for?">
               <button class="cc-mode-btn is-active" type="button" role="tab" id="ccModeCustomer" aria-selected="true" aria-controls="ccInput">
@@ -755,6 +758,7 @@
   <script src="js/coordinator-cards.js"></script>
   <script src="js/coordinator-attach.js"></script>
   <script src="js/coordinator-jobactions.js"></script>
+  <script src="js/coordinator-dock.js"></script>
   <script src="js/coordinator-chat.js"></script>
 </body>
 </html>
