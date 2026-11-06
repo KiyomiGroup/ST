@@ -194,13 +194,13 @@
 
   function renderReviews(m, reviews) {
     if (!reviews.length) { $('secReviews').hidden = true; return; }
-    setText('tpReviewsSub', 'Based on ' + (m.reviewCount || reviews.length) + ' confirmed escrow assignment' + ((m.reviewCount || reviews.length) === 1 ? '' : 's'));
+    setText('tpReviewsSub', (m.reviewCount || reviews.length) + ' review' + ((m.reviewCount || reviews.length) === 1 ? '' : 's') + (reviews.length < m.reviewCount ? ' (latest ' + reviews.length + ' shown)' : ''));
     $('tpScore').innerHTML = m.rating > 0 ? '<span class="tp-score-n">' + esc(m.rating.toFixed(1)) + '</span>' + stars(m.rating) : '';
     $('tpReviews').innerHTML = reviews.map(function (r) {
       return '<article class="tp-review"><div class="tp-review-top"><span class="tp-review-av">' + esc(initials(r.name)) + '</span>' +
         '<div class="tp-review-who"><strong>' + esc(r.name || 'StreetTasker client') + '</strong>' + (r.rating ? stars(r.rating) : '') + '</div>' +
         '<span class="tp-review-when">' + esc(timeAgo(r.date)) + '</span></div>' +
-        '<p class="tp-review-text">' + esc(r.text) + '</p><span class="tp-verified">' + icon('check') + 'Verified Task Booking</span></article>';
+        (r.text ? '<p class="tp-review-text">' + esc(r.text) + '</p>' : '') + '<span class="tp-verified">' + icon('check') + 'Verified Task Booking</span></article>';
     }).join('');
     $('secReviews').hidden = false;
     buildTabs(); syncEmpty();
@@ -356,6 +356,7 @@
       portfolio = localPhotos.map(function (p) { return { image_url: p.url, title: p.caption, description: '', location: '' }; });
     }
 
+    var revData = await fetchReviews(tasker.user_id || id);
     var cov = (d.coverage && typeof d.coverage === 'object') ? d.coverage : {};
     var model = buildModel({
       name: name, first: String(person).trim().split(/\s+/)[0] || name,
@@ -363,7 +364,7 @@
       location: tasker.business_address || tasker.location || (userRow && userRow.location) || '',
       photo: isLocal ? localCover : (tasker.photo_url || tasker.photo || (userRow && userRow.avatar_url) || null), isLocal: isLocal,
       verified: verified, pending: !verified && !!(verification && verification.status === 'pending'),
-      rating: tasker.rating, reviewCount: tasker.review_count, completed: completed, repeatPct: repeatPct,
+      rating: revData.count > 0 ? revData.avg : 0, reviewCount: revData.count, completed: completed, repeatPct: repeatPct,
       years: d.years_experience, expNote: d.experience_note,
       rateValue: tasker.rate_value, rateUnit: tasker.rate_unit, priceNote: d.price_note,
       available: tasker.available, nextOpening: d.next_opening,
@@ -374,26 +375,28 @@
     });
 
     renderAll(model);
-    loadReviews(id, model);
+    renderReviews(model, revData.reviews);
     loadDecisionBar();
   }
 
-  /* Reviews: shown only when a reviews table exists and has rows for this tasker. Nothing is invented. */
-  async function loadReviews(id, model) {
+  /* Reviews about this person AS A TASKER, from the database function profile_reviews (reviews + rating_summary only).
+     Runs BEFORE the page is drawn so the header rating is the real one. Any failure gives an empty result:
+     the section stays hidden and the header says "New". Nothing is invented. */
+  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  async function fetchReviews(userId) {
+    var empty = { reviews: [], avg: 0, count: 0 };
+    if (!userId || !UUID_RE.test(String(userId))) return empty;
     try {
-      var r = await window.supabase.from('reviews').select('*').eq('reviewee_id', id).order('created_at', { ascending: false }).limit(20);
-      if (r.error || !r.data || !r.data.length) return;
-      var ids = r.data.map(function (x) { return x.reviewer_id; }).filter(Boolean);
-      var names = {};
-      if (ids.length) {
-        var us = await window.supabase.from('users').select('id, name').in('id', ids);
-        (us.data || []).forEach(function (x) { names[x.id] = x.name; });
-      }
-      var rows = r.data.map(function (x) {
-        return { name: x.reviewer_name || names[x.reviewer_id] || '', rating: Number(x.rating) || 0, text: text(x.comment || x.review || x.text), date: x.created_at };
-      }).filter(function (x) { return x.text; });
-      renderReviews(model, rows);
-    } catch (e) { /* no reviews table yet: section stays hidden */ }
+      var r = await window.supabase.rpc('profile_reviews', { p_user: String(userId), p_role: 'tasker', p_limit: 50, p_offset: 0 });
+      if (r.error || !r.data) return empty;
+      var rows = Array.isArray(r.data.reviews) ? r.data.reviews : [];
+      return {
+        avg: Number(r.data.avg) || 0, count: Number(r.data.count) || 0,
+        reviews: rows.map(function (x) {
+          return { name: text(x.reviewer_name), rating: Number(x.rating) || 0, text: text(x.comment), date: x.created_at };
+        }).filter(function (x) { return x.text || x.rating; })
+      };
+    } catch (e) { return empty; }
   }
 
   /* ── data: demo providers (?demo=d1) ─────────────────────── */

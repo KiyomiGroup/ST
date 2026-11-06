@@ -15,7 +15,7 @@
      Escrow Funding = started bookings whose payment is in escrow or released, divided by started bookings
                       (started = not pending, declined, cancelled or rejected).
      Dispute Rate   = disputed started bookings divided by started bookings.
-     Customer rating= average of reviews written about this user (reviews.reviewee_id), when that table has rows.
+     Customer rating= rating_summary average for this user as a customer (through profile_reviews), when there are reviews.
    Needs:  supabaseClient.js, sanitize.js (escapeHtml), auth.js, db.js, ui.js (showToast). "Make an Offer" opens make-offer.html?task=<id>.
    ============================================================ */
 (function () {
@@ -103,24 +103,28 @@
       return r.error ? [] : (r.data || []);
     } catch (e) { return []; }
   }
+  /* Reviews about this person AS A CUSTOMER, from the database function profile_reviews (reviews + rating_summary only).
+     Returns { reviews, avg, count }; any failure gives an empty result, so the section stays hidden and nothing is invented. */
   async function loadReviews(sb, id) {
+    var empty = { reviews: [], avg: 0, count: 0 };
     try {
-      var r = await sb.from('reviews').select('*').eq('reviewee_id', id).order('created_at', { ascending: false }).limit(20);
-      if (r.error || !r.data || !r.data.length) return [];
-      var ids = r.data.map(function (x) { return x.reviewer_id; }).filter(Boolean);
-      var names = {}, svc = {};
+      var r = await sb.rpc('profile_reviews', { p_user: id, p_role: 'customer', p_limit: 50, p_offset: 0 });
+      if (r.error || !r.data) return empty;
+      var rows = Array.isArray(r.data.reviews) ? r.data.reviews : [];
+      var ids = rows.map(function (x) { return x.reviewer_id; }).filter(Boolean);
+      var svc = {};
       if (ids.length) {
-        var us = await sb.from('users').select('id, name, avatar_url').in('id', ids);
-        (us.data || []).forEach(function (x) { names[x.id] = x; });
         var ts = await sb.from('taskers').select('user_id, service').in('user_id', ids.map(String));
         (ts.data || []).forEach(function (x) { svc[x.user_id] = x.service; });
       }
-      return r.data.map(function (x) {
-        var u = names[x.reviewer_id] || {};
-        return { name: shortName(x.reviewer_name || u.name), avatar: safeUrl(u.avatar_url), service: text(svc[x.reviewer_id]),
-          rating: Number(x.rating) || 0, text: text(x.comment || x.review || x.text), date: x.created_at };
-      }).filter(function (x) { return x.text || x.rating; });
-    } catch (e) { return []; }
+      return {
+        avg: Number(r.data.avg) || 0, count: Number(r.data.count) || 0,
+        reviews: rows.map(function (x) {
+          return { name: shortName(x.reviewer_name), avatar: safeUrl(x.reviewer_avatar), service: text(svc[x.reviewer_id]),
+            rating: Number(x.rating) || 0, text: text(x.comment), date: x.created_at };
+        }).filter(function (x) { return x.text || x.rating; })
+      };
+    } catch (e) { return empty; }
   }
   async function loadBids(sb, taskIds) {
     var out = { counts: {}, mine: {} };
@@ -377,7 +381,7 @@
     if (String(u.role || '').toLowerCase() === 'tasker') { window.location.replace('tasker-profile.html?id=' + encodeURIComponent(id)); return; }
 
     var res = await Promise.all([loadTasks(sb, id), loadBookings(sb, id), loadReviews(sb, id)]);
-    var tasks = res[0], bookings = res[1], reviews = res[2];
+    var tasks = res[0], bookings = res[1], revData = res[2], reviews = revData.reviews;
     var d = parseDetails(u.profile_details);
 
     var real = tasks.filter(function (t) { return taskGroup(t.status) !== 'draft'; });
@@ -394,12 +398,12 @@
     var score = computeScore(bookings);
     var verified = u.is_verified === true;
     var joined = u.created_at || (state.isOwner && state.viewer && state.viewer.created_at) || '';
-    var rated = reviews.filter(function (r) { return r.rating; });
     var model = {
       posted: real.length, open: state.openTasks.length,
       completed: real.filter(function (t) { return taskGroup(t.status) === 'completed'; }).length,
       hireRate: decided >= 3 ? Math.round(hired / decided * 100) : null,
-      rating: rated.length ? rated.reduce(function (n, r) { return n + r.rating; }, 0) / rated.length : 0, reviewCount: rated.length
+      /* The rating comes from rating_summary (through profile_reviews), never from the 20 or 50 rows shown */
+      rating: revData.count > 0 ? revData.avg : 0, reviewCount: revData.count
     };
 
     /* completed history: completed bookings first (they know the tasker), then completed tasks without a booking */

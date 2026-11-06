@@ -187,6 +187,8 @@
 .ap-tips li { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--pt-ink-muted); }
 .ap-tips strong { font-family: var(--font-heading); color: var(--pt-ink); }
 .ap-escrow { padding: var(--space-5); border-radius: var(--radius-card); background: var(--pt-green); color: var(--color-text-on-primary); }
+/* White text on the green card: the global h2 and p colours (dark) would otherwise win over the card's inherited colour */
+.ap-escrow, .ap-escrow p, .ap-escrow .ap-panel-title, .ap-escrow .ap-i { color: var(--color-text-on-primary); }
 .ap-escrow p { font-size: var(--text-sm); line-height: 22px; }
 .ap-help { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .ap-help strong { display: block; font-family: var(--font-heading); font-size: var(--text-sm); }
