@@ -150,6 +150,11 @@
   --card-padding-phone:       var(--space-3);   /* 12px */
   --card-media-ratio-phone:   16 / 9;
   --card-cta-height-phone:    32px;
+
+  /* Task cards with two buttons (View Details + Make an Offer) in the scrolling rows: a little wider than the other cards so
+     both buttons stay side by side. The buttons themselves are smaller (text-xs, tight padding) so the card does not grow much. */
+  --cc-task-card-width-phone:   224px;
+  --cc-task-card-width-desktop: 268px;
 }
 
 /* ── Post-a-task page tokens (post-task.html) ──

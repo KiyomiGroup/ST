@@ -323,6 +323,24 @@ function stCatPic(cat) {
   return '<img class="st-logo-ph" src="images/logo-mark.png" alt="" />';
 }
 
+/* Placeholder photo for a task card with no client photo: one picture per category (images/placeholders/), with the small
+   StreetTasker logo at the top right so people know it is a placeholder and not the client's own photo. Categories with
+   no picture (Other, unknown) keep the logo-only fallback. Cleaning has two pictures; the task id picks one so cards differ. */
+const ST_TASK_PH = {
+  cleaning: ['cleaning', 'cleaning-2'], grooming: ['grooming'], automotive: ['automotive'], handyman: ['handyman'],
+  landscaping: ['landscaping'], hospitality: ['hospitality'], business: ['business'], it_tech: ['it_tech'], creative: ['creative'],
+  logistics: ['logistics'], health: ['health'], pet: ['pet'], education: ['education'], financial: ['financial'], legal: ['legal'],
+  events: ['events']
+};
+function stTaskPhUrl(cat, id) {
+  if (!window.STCat || !cat) return '';
+  const files = ST_TASK_PH[window.STCat.resolve(cat).value];
+  if (!files) return '';
+  const key = String(id || '');
+  let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return 'images/placeholders/task-' + files[h % files.length] + '.jpg';
+}
+
 /* "20m ago" / "3h ago" / "2d ago" */
 function stAgo(iso) {
   if (!iso) return '';
@@ -341,27 +359,31 @@ const stLabel = v => String(v || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.
 function stTaskCard(t) {
   const e = window.escapeHtml || (x => String(x));
   const urg   = t.urgency || 'flexible';
-  const ago   = stAgo(t.created_at);
   const chipCls = urg === 'immediate' ? 'st-chip--urgent' : (urg === 'scheduled' ? 'st-chip--soon' : '');
   const chipTxt = urg === 'immediate' ? 'Urgent' : (urg === 'scheduled' ? 'Scheduled' : 'Flexible');
-  /* t.compact: the caller does not know the urgency or category (home pages), so nothing is invented: no "Flexible", no "Other". */
+  /* t.compact: the caller does not know the urgency or category (home pages), so nothing is invented: no "Flexible", no "Other".
+     No posted date anywhere on the card, and none inside the Urgent tag. */
   const urgChip = t.compact && urg !== 'immediate'
-    ? (ago ? `<span class="st-chip">Posted ${ago}</span>` : '')
-    : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}${ago ? ' • ' + ago : ''}</span>`;
+    ? ''
+    : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}</span>`;
   const cat   = t.category || 'other';
   const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(cat) : stLabel(cat))}</span>`;
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
   const emoji = stCatPic(cat);
+  const phUrl = (t.compact && !t.category) ? '' : stTaskPhUrl(cat, t.id);
   const media = photos.length
     ? `<div class="st-card-media"><img src="${e(photos[0])}" alt="" loading="lazy" />
          <span class="st-chip st-chip--glass st-card-media-tag">${ST_ICON.image}${photos.length} Client Photo${photos.length > 1 ? 's' : ''}</span></div>`
-    : `<div class="st-card-media"><div class="st-card-media-fallback" aria-hidden="true">${emoji}</div></div>`;
+    : (phUrl
+      ? `<div class="st-card-media st-card-media--ph" data-ph="${e(window.STCat.resolve(cat).value)}"><img src="${e(phUrl)}" alt="" loading="lazy" />
+           <img class="st-card-ph-logo" src="images/favicon.png" alt="" aria-hidden="true" /></div>`
+      : `<div class="st-card-media"><div class="st-card-media-fallback" aria-hidden="true">${emoji}</div></div>`);
   const remote = (t.task_type || '') === 'remote';
   const dist = typeof t.distance_km === 'number' ? `<li><span class="st-dot" aria-hidden="true">•</span>${t.distance_km.toFixed(1)} km</li>` : '';
   const offers = Number(t.offers_count);
   const offersNote = Number.isFinite(offers) && offers > 0 ? `<span class="st-card-foot-note">${offers} offer${offers === 1 ? '' : 's'} submitted</span>` : '';
   const desc = (t.description || '').trim();
-  return `<article class="st-card st-card--task fade-up" data-task-id="${e(t.id)}">
+  return `<article class="st-card st-card--task${t.hideOffer ? '' : ' st-card--duo'} fade-up" data-task-id="${e(t.id)}">
     <div class="st-card-pad">
       <div class="st-card-top">
         <div class="st-card-chips">

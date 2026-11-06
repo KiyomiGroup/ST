@@ -5,7 +5,7 @@
    Icons are inline SVG that use currentColor, so the page colour tokens style them (no hex here).
    Old saved values (electrician, plumber, barber, mechanic...) still resolve to a group via ALIASES.
    Exposes window.STCat: list, get(value), resolve(value), matches(rowCategory, groupValue),
-                         iconHtml(value, cls), label(value), emoji(value)
+                         iconHtml(value, cls), label(value), emoji(value), detect(title, description)
    ============================================================ */
 (function (root) {
   'use strict';
@@ -104,7 +104,64 @@
     return out;
   }
 
+  /* ── Detect a category from what the person wrote (used when they pick "Other") ──────────────────────────────────
+     Each word is matched at the START of a word ("plumb" finds plumber, plumbing). A trailing "!" means the whole word
+     (plural "s" allowed): "car!" finds car and cars but not card or carpet; "cat!" does not find category.
+     A word in the title counts 3, in the description 1 (each word once). A category needs 2 or more to win, so one passing
+     mention in the description is not enough. Two categories tied: the one mentioned first wins. Still unclear: null (stays Other). */
+  var KEYWORDS = {
+    cleaning:    ['clean', 'laundry', 'ironing', 'mop!', 'mopping', 'scrub', 'dusting', 'disinfect', 'sanitis', 'sanitiz', 'housekeep', 'house help', 'maid!', 'carpet wash', 'wash my clothes', 'wash clothes', 'washing clothes', 'janitor'],
+    grooming:    ['haircut', 'hair cut', 'barber', 'braid', 'hairstyl', 'hair style', 'hair!', 'wig!', 'beard', 'manicure', 'pedicure', 'gel nail', 'nail tech', 'nails done', 'makeup', 'make-up', 'facial!', 'massage', 'waxing', 'eyelash', 'eyebrow', 'lash extension', 'dreadlock', 'salon'],
+    automotive:  ['car wash', 'car repair', 'car service', 'car!', 'mechanic', 'tyre', 'tire!', 'brake', 'engine', 'oil change', 'vulcaniz', 'panel beat', 'windscreen', 'windshield', 'towing', 'vehicle', 'gearbox', 'radiator', 'jump start', 'wheel alignment', 'suspension', 'auto electrician'],
+    handyman:    ['plumb', 'leak', 'pipe!', 'toilet', 'faucet', 'borehole', 'electrician', 'wiring', 'rewire', 'socket!', 'circuit breaker', 'generator', 'inverter', 'ac repair', 'air condition', 'fridge repair', 'freezer repair', 'appliance', 'carpent', 'furniture assembl', 'assemble', 'paint', 'drywall', 'pop ceiling', 'tiling', 'tiler', 'roofing', 'roof!', 'locksmith', 'door lock', 'pest control', 'cockroach', 'termite', 'rodent', 'fumigat', 'welding', 'welder', 'curtain rod', 'handyman', 'washing machine repair'],
+    landscaping: ['lawn', 'garden', 'grass', 'tree!', 'hedge', 'landscap', 'irrigation', 'pressure wash', 'paving', 'interlock', 'gutter', 'flower bed', 'weeding', 'compound sweep'],
+    hospitality: ['catering', 'caterer', 'cook!', 'cooking', 'chef!', 'bartend', 'waiter', 'waitress', 'waitstaff', 'small chops', 'jollof', 'buffet', 'canape', 'food for', 'party food', 'party rice', 'meal prep', 'cocktail'],
+    business:    ['virtual assistant', 'hr!', 'human resource', 'business plan', 'business strateg', 'translat', 'interpret', 'secretar', 'office admin', 'company registration', 'cac registration', 'consultant', 'consulting', 'data entry', 'bookkeeper for my business', 'proposal writing', 'pitch deck'],
+    it_tech:     ['website', 'web site', 'web develop', 'web design', 'app develop', 'mobile app', 'software', 'laptop', 'computer', 'pc!', 'phone repair', 'screen repair', 'wifi', 'wi-fi', 'router', 'network', 'cctv', 'cyber', 'data recovery', 'install windows', 'programmer', 'developer', 'wordpress', 'tech support', 'printer', 'it support', 'hosting', 'domain name'],
+    creative:    ['logo!', 'graphic', 'flyer', 'branding', 'copywrit', 'social media', 'seo!', 'video edit', 'animation', 'illustrat', 'voiceover', 'voice over', 'content writ', 'poster', 'banner', '3d model', 'photo edit', 'photoshop', 'canva', 'jingle'],
+    logistics:   ['moving', 'move my', 'relocat', 'dispatch', 'courier', 'deliver', 'pick up', 'pickup', 'haulage', 'freight', 'truck', 'van hire', 'luggage', 'parcel', 'junk removal', 'warehous', 'carry my', 'shipping', 'bike rider', 'errand'],
+    health:      ['physio', 'fitness', 'personal trainer', 'gym!', 'nurse!', 'nursing', 'therap', 'nutrition', 'dietitian', 'diet plan', 'counsel', 'caregiver', 'elderly care', 'midwife', 'lactation', 'yoga', 'blood pressure', 'injection', 'home care', 'workout'],
+    pet:         ['dog!', 'puppy', 'puppies', 'cat!', 'kitten', 'pet!', 'vet!', 'veterinar', 'walk my dog', 'aquarium', 'fish tank', 'pet groom', 'pet sit', 'parrot'],
+    education:   ['tutor', 'lesson', 'teach', 'maths', 'mathematics', 'english class', 'jamb', 'waec', 'neco', 'ielts', 'exam prep', 'coaching class', 'learn to', 'driving lesson', 'driving school', 'piano', 'guitar', 'homework', 'french class', 'coding class', 'music lesson'],
+    financial:   ['accountant', 'accounting', 'bookkeep', 'tax!', 'tax return', 'audit', 'financial plan', 'invoic', 'payroll', 'vat!', 'financial statement'],
+    legal:       ['lawyer', 'solicitor', 'barrister', 'legal', 'contract!', 'agreement!', 'notar', 'affidavit', 'court!', 'tenancy agreement', 'land title', 'will drafting', 'mediation', 'litigation', 'power of attorney', 'attorney'],
+    events:      ['event!', 'event planner', 'wedding', 'party', 'parties', 'photograph', 'videograph', 'dj!', 'mc!', 'decor', 'bridal', 'birthday', 'usher', 'bouncer', 'bodyguard', 'security guard', 'sound system', 'canopy', 'tent!', 'chairs for', 'live band', 'anniversary', 'burial', 'naming ceremony']
+  };
+  var KW_RX = null;
+  function kwRegexes() {
+    if (KW_RX) return KW_RX;
+    KW_RX = {};
+    Object.keys(KEYWORDS).forEach(function (g) {
+      KW_RX[g] = KEYWORDS[g].map(function (w) {
+        var whole = /!$/.test(w);
+        var src = w.replace(/!$/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+        return new RegExp('(?:^|[^a-z0-9])' + src + (whole ? '(?:s|es)?(?![a-z0-9])' : ''), 'i');
+      });
+    });
+    return KW_RX;
+  }
+
+  /* title + description -> a group value, or null when it is not clear */
+  function detect(title, description) {
+    var t = String(title || ''), d = String(description || '');
+    if (!t.trim() && !d.trim()) return null;
+    var rx = kwRegexes(), best = null, bestScore = 0, bestFirst = Infinity, tie = false;
+    Object.keys(rx).forEach(function (g) {
+      var score = 0, first = Infinity;
+      rx[g].forEach(function (r) {
+        var tm = r.exec(t), dm = r.exec(d);
+        if (tm) { score += 3; first = Math.min(first, tm.index); }
+        if (dm) { score += 1; if (!tm) first = Math.min(first, 1000 + dm.index); }
+      });
+      if (score < 2) return;
+      if (score > bestScore || (score === bestScore && first < bestFirst)) { best = g; bestScore = score; bestFirst = first; tie = false; }
+      else if (score === bestScore && first === bestFirst) { tie = true; }
+    });
+    return tie ? null : best;
+  }
+
   root.STCat = {
+    detect: detect,
     expand: expand,
     list: LIST, icons: I, resolve: resolve, matches: matches, iconHtml: iconHtml,
     get: function (v) { return resolve(v); },

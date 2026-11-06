@@ -142,3 +142,14 @@ a.cc-retry { display: inline-block; text-decoration: none; }
   .cc-track > .st-card--service > .st-card-media, .hf-row > .st-card--service > .st-card-media { margin: var(--space-1) var(--space-1) 0; }
   .cc-track > .st-card .st-tasker-avatar, .hf-row > .st-card .st-tasker-avatar { --card-avatar-size: 48px; }
 }
+
+/* Two-button task cards in the scrolling rows: a little wider than the other cards so View Details and Make an Offer stay side by side. */
+@media (min-width: 769px) {
+  .cc-track > .st-card--duo, .hf-row > .st-card--duo { width: var(--cc-task-card-width-desktop); flex-basis: var(--cc-task-card-width-desktop); }
+}
+@media (max-width: 640px) {
+  .cc-track > .st-card--duo, .hf-row > .st-card--duo { width: var(--cc-task-card-width-phone); flex: 0 0 var(--cc-task-card-width-phone); }
+  .cc-track > .st-card--duo .st-card-actions, .hf-row > .st-card--duo .st-card-actions { flex-direction: row; align-items: center; gap: var(--space-1); }
+  .cc-track > .st-card--duo .st-card-cta, .hf-row > .st-card--duo .st-card-cta { padding: 0 var(--space-2); }
+  .cc-track > .st-card--duo .st-card-top:not(:has(.st-chip)), .hf-row > .st-card--duo .st-card-top:not(:has(.st-chip)) { display: none; }
+}

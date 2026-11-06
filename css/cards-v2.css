@@ -178,3 +178,16 @@
   .st-card--service > .st-card-media { margin: var(--space-2) var(--space-2) 0; }
   .st-tasker-avatar { --card-avatar-size: 64px; }
 }
+
+/* Task card placeholder photo (no client photo): the category picture, with the small StreetTasker logo top right so it reads as a placeholder. */
+.st-card-media .st-card-ph-logo {
+  position: absolute; top: var(--space-2); right: var(--space-2); width: var(--space-5); height: var(--space-5);
+  padding: var(--space-1); box-sizing: border-box; object-fit: contain; border-radius: 50%;
+  background: var(--card-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-xs);
+}
+.st-card-media--ph[data-ph="pet"] > img:first-child { object-position: center 85%; }   /* tall photo: keep the dog in the crop */
+
+/* Task cards with two buttons: smaller buttons, side by side. */
+.st-card--duo .st-card-actions { flex-wrap: nowrap; gap: var(--space-2); }
+.st-card--duo .st-card-actions .st-card-cta { flex: 1 1 0; min-width: 0; padding: 0 var(--space-3); font-size: var(--text-xs); gap: var(--space-1); }
+.st-card--duo .st-card-actions .st-card-cta svg { display: none; }   /* no arrow: the label alone keeps the button small */

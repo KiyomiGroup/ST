@@ -983,6 +983,13 @@ async function handleTaskSubmit(e) {
     urgentPaymentRef: taskDraft.urgentPaid ? (taskDraft.urgentRef || null) : null,
   };
 
+  /* The person chose "Other" but the task clearly belongs to a category (title and description): post it under that category. */
+  let autoCategory = '';
+  if ((taskPayload.category === 'other' || !taskPayload.category) && window.STCat && typeof window.STCat.detect === 'function') {
+    const found = window.STCat.detect(taskPayload.title, taskPayload.description);
+    if (found && found !== 'other') { taskPayload.category = found; autoCategory = found; }
+  }
+
   setPostLoading(submitBtn, true);
 
   try {
@@ -1056,6 +1063,7 @@ async function handleTaskSubmit(e) {
     clearDraft();
     console.log('[Tasks] Task inserted into Supabase ✓');
     showTaskSuccessModal(taskPayload);
+    if (autoCategory && typeof showToast === 'function') showToast('We filed your task under ' + window.STCat.label(autoCategory) + '.');
 
   } catch (err) {
     console.error('[Tasks] Insert error:', err);
