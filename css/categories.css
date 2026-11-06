@@ -1,7 +1,6 @@
 /* StreetTasker: category icons and the Browse by category grid (js/categories.js). Tokens only. */
 .st-cat-ico { display: inline-block; width: 1em; height: 1em; color: var(--color-primary); flex: 0 0 auto; vertical-align: middle; }
 .cc-cat-icon .st-cat-ico { width: 62%; height: 62%; }
-.st-card-media-fallback .st-cat-ico--card { width: 40%; height: 40%; }
 .filter-chip .st-cat-ico, .hf-chip .st-cat-ico, .pt-chip .st-cat-ico { width: var(--text-base); height: var(--text-base); margin-right: var(--space-1); }
 .hf-chip.active .st-cat-ico, .filter-chip.active .st-cat-ico { color: currentColor; }
 .pt-chip .st-cat-ico { width: 1.1em; height: 1.1em; }
@@ -17,7 +16,11 @@
 .st-cattile-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.25; }
 .st-cattile-sub { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.3; }
 
-/* StreetTasker logo shown where a tasker photo or task picture is missing */
+/* StreetTasker logo shown where a tasker photo or task picture is missing. images/logo-mark.png is transparent and cropped to the mark,
+   so it always sits on the surface behind it (no white box) and every card shows it at the same size. */
 .st-logo-ph { width: 40%; height: 40%; object-fit: contain; display: block; margin: auto; }
 .st-tasker-avatar > .st-logo-ph, .cc-avatar > .st-logo-ph { position: absolute; inset: 0; width: 56%; height: 56%; }
 .hf-media-ph .st-logo-ph { width: 36%; height: 36%; }
+/* Service and task cards: the placeholder is centred with white space all round, never stretched or tiny */
+.st-card-media-fallback .st-logo-ph { width: auto; height: 55%; max-width: 55%; aspect-ratio: 1 / 1; margin: 0; }
+.st-card-media-fallback .st-cat-ico--card { width: auto; height: 55%; max-width: 55%; aspect-ratio: 1 / 1; }

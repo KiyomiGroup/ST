@@ -320,7 +320,7 @@ const ST_CAT_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechan
 function stCatPic(cat) {
   /* a known category -> its green icon; no category / unknown -> the StreetTasker logo (never a generic wrench) */
   if (window.STCat && cat && window.STCat.resolve(cat).value !== 'other') return window.STCat.iconHtml(cat, 'st-cat-ico--card');
-  return '<img class="st-logo-ph" src="images/favicon.png" alt="" />';
+  return '<img class="st-logo-ph" src="images/logo-mark.png" alt="" />';
 }
 
 /* "20m ago" / "3h ago" / "2d ago" */
@@ -461,7 +461,7 @@ function stTaskerCard(s) {
           <p class="st-tasker-role">${e(s.service_name || '')}</p>
           <p class="st-tasker-loc">${ST_ICON.pin}${e(s.location || 'Lagos')}</p>
         </div>
-        <div class="st-tasker-avatar"><img class="st-logo-ph" src="images/favicon.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+        <div class="st-tasker-avatar"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
       ${s.isLocal ? stLocalTags() : ''}
       ${shown.length ? `<div class="st-tasker-skills"><span class="st-card-label">Skills</span>

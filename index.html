@@ -604,6 +604,7 @@
       try {
         const live = await window.ST.db.fetchServices({ limit: 6 });
         allServices = live || [];
+        if (window.STLocal) await STLocal.decorate(allServices, ['user_id'], ['photo']);   /* Local Taskers show their cover photo */
         renderServices(allServices);
       } catch(e) {
         console.warn('[ST] loadServicesSection error:', e);
@@ -728,11 +729,13 @@
 
         /* Filter: must have a non-empty service string */
         const taskers = (rawTaskers || []).filter(t => t.service && t.service.trim()).slice(0, 6);
+        if (window.STLocal) await STLocal.decorate(taskers, ['user_id', 'id'], ['photo_url']);   /* Local Taskers show their cover photo */
 
         /* If still empty, fall through to fetchServices as backup */
         if (!taskers.length) {
           try {
             const svcList = await window.ST.db.fetchServices({ limit: 6 });
+            if (window.STLocal) await STLocal.decorate(svcList, ['user_id'], ['photo']);
             if (svcList.length) {
               el.innerHTML = svcList.map(s => {
                 const uid = s.user_id ? String(s.user_id) : '';

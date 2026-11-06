@@ -57,7 +57,7 @@
   border-radius: var(--radius-card-media); background: var(--color-bg-muted);
 }
 .st-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.st-card-media-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--text-2xl); background: var(--tone-success-bg); }
+.st-card-media-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--text-2xl); box-sizing: border-box; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }   /* placeholder: centred with white space all round */
 .st-card-media-tag { position: absolute; left: var(--space-3); bottom: var(--space-3); }
 .st-card-media-tag--tl { top: var(--space-3); bottom: auto; }
 .st-card-media-tag--br { left: auto; right: var(--space-3); }

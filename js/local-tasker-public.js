@@ -48,6 +48,24 @@
     }
   }
 
+  /* Give published Local Taskers their cover photo on any list of cards. rows: objects; idKeys: fields that hold the person's user id (first one
+     present is used); photoKeys: fields to fill with the signed cover link. Rows that are not published Local Taskers are left alone. Never throws. */
+  async function decorate(rows, idKeys, photoKeys) {
+    try {
+      var list = rows || [];
+      function idOf(r) { for (var i = 0; i < idKeys.length; i++) { if (r && r[idKeys[i]]) return String(r[idKeys[i]]); } return ''; }
+      await load(list.map(idOf));
+      list.forEach(function (r) {
+        var id = idOf(r);
+        if (!id || !info[id]) return;
+        r.isLocal = true;
+        var url = info[id].coverUrl;
+        if (url) photoKeys.forEach(function (k) { r[k] = url; });
+      });
+    } catch (e) { /* cards keep their own photo or the placeholder */ }
+    return rows;
+  }
+
   /* Photos of ONE published person: [{ url, caption, isCover }] */
   async function photos(id) {
     if (!sb() || !UUID.test(String(id))) return [];
@@ -142,6 +160,7 @@
     /* Plain-text note shown on a Local Tasker's profile. No fee, donation or percentage is stated here. */
     NOTE: 'This is a Local Tasker. A StreetTasker coordinator talks to them by phone to confirm your job, so skilled people who are not online can still take work. Making room for people without a smartphone is part of how StreetTasker is built.',
     load: load,
+    decorate: decorate,
     isLocal: function (id) { return !!info[String(id)]; },
     coverUrl: function (id) { return (info[String(id)] && info[String(id)].coverUrl) || null; },
     photos: photos,

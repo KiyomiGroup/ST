@@ -498,6 +498,7 @@
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/local-tasker-public.js"></script>
   <script src="js/cards-compact.js"></script>
   <script src="js/referral-data.js"></script>
   <script src="js/app.js"></script>
@@ -704,7 +705,7 @@
       const init = String(p.name).replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
       const body = p.photo
         ? '<img src="' + escapeHtml(p.photo) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" onerror="this.remove()" />'
-        : '<div class="hf-media-ph ' + p.av + '"><img class="st-logo-ph" src="images/favicon.png" alt="" /></div>';
+        : '<div class="hf-media-ph ' + p.av + '"><img class="st-logo-ph" src="images/logo-mark.png" alt="" /></div>';
       return '<div class="hf-card-media">' + body + badgesHtml + '</div>';
     }
 
@@ -879,6 +880,8 @@
         return;
       }
       if (!_cuLive(host, tok)) return;
+      if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);   /* Local Taskers show their cover photo */
+      if (!_cuLive(host, tok)) return;
       host.textContent = '';
       CU_TIERS.forEach(([key, label]) => {
         const list = rows.filter(r => r.tier === key);
@@ -902,7 +905,9 @@
         if (!pt) { row.stShowMessage('We could not find that place on our map yet. Try a nearby area.', 'Choose another location', '#'); _cuWirePicker(row); return; }
         const rows = await _tkRpc('homepage_nearby_taskers', { p_lat: pt.lat, p_lon: pt.lon, p_exclude: [], p_limit: CU.limit });
         if (!_cuLive(host, tok)) return;
-        row.stSetItems(rows.map(_cuTaskerCard));   /* none found: the row hides itself */
+        if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);
+        if (!_cuLive(host, tok)) return;
+        row.stSetItems(rows.map(r => _cuTaskerCard(r, r.isLocal === true)));   /* none found: the row hides itself */
       } catch (e) {
         if (!_cuLive(host, tok)) return;
         row.stOnRetry(() => _cuNear(host));
@@ -918,6 +923,7 @@
       host.appendChild(row);
       try {
         const raw = await window.ST.db.fetchServices({ limit: 48 });
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);   /* Local Taskers show their cover photo */
         if (!_cuLive(host, tok)) return;
         const list = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
           .sort((a, b) => (b.score - a.score) || (a.i - b.i)).slice(0, CU.limit).map(x => x.p);
@@ -1338,6 +1344,7 @@
       let list = [];
       try {
         const raw = await window.ST.db.fetchServices({ limit: 40 });
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
         list = await _enrichProviders((raw || []).map(_normProvider));
       } catch (e) { list = []; }
       const seen = new Set();
