@@ -18,74 +18,122 @@
   <div id="navbar-placeholder"></div>
 
   <main class="rf-main" id="rfMain">
-    <header class="rf-head">
-      <h1 class="rf-title" id="rfTitle">Invite friends. Earn rewards.</h1>
-      <p class="rf-lead" id="rfLead">Share your personal link. When a friend signs up and verifies their email, you earn points.</p>
-    </header>
-
     <p class="rf-state" id="rfState" role="status">Loading your referral details…</p>
 
     <div class="rf-tabs" id="rfTabs" role="tablist" aria-label="Referral programme" hidden></div>
 
-    <div class="rf-body-grid" id="rfApp" hidden>
+    <div class="rf-app" id="rfApp" hidden>
 
-      <section class="rf-card rf-card--points" aria-labelledby="rfPtsH">
-        <h2 class="rf-h" id="rfPtsH">Your points</h2>
-        <p class="rf-big" id="rfPoints">0</p>
-        <p class="rf-note">Points are added when a friend you invited has verified their email. They are never taken away.</p>
-      </section>
+      <!-- Hero -->
+      <header class="rf-hero">
+        <div class="rf-hero-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>
+        <span class="rf-hero-chip"><span class="rf-dot"></span>Referral rewards</span>
+        <h1 class="rf-title" id="rfTitle">Invite friends. Earn rewards.</h1>
+        <p class="rf-lead" id="rfLead">Share your personal link. When a friend signs up and verifies their email, you earn points.</p>
+        <p class="rf-hero-note">Friends who join with your code or link also start with 5 points.</p>
+      </header>
 
-      <section class="rf-card rf-card--link" aria-labelledby="rfLinkH">
-        <h2 class="rf-h" id="rfLinkH">Your personal link</h2>
-        <label class="rf-label" for="rfLinkInput">Share this link</label>
-        <div class="rf-link-row">
-          <input class="form-input rf-link-input" id="rfLinkInput" type="text" readonly />
-          <button type="button" class="btn btn-primary" id="rfCopy">Copy link</button>
+      <!-- Share -->
+      <section class="rf-card rf-card--share" aria-labelledby="rfLinkH">
+        <h2 class="rf-eyebrow" id="rfLinkH">Your referral code</h2>
+        <div class="rf-code-box">
+          <strong class="rf-code" id="rfCode"></strong>
         </div>
-        <div class="rf-share-row">
-          <a class="btn btn-outline" id="rfWhatsapp" target="_blank" rel="noopener">Share on WhatsApp</a>
-          <button type="button" class="btn btn-outline" id="rfShare" hidden>More ways to share</button>
+        <div class="rf-btn-row">
+          <button type="button" class="btn btn-mint btn-lg" id="rfCopyCode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy code</span></button>
+          <button type="button" class="btn btn-primary btn-lg" id="rfCopy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>Copy link</span></button>
         </div>
-        <p class="rf-note">Your code: <strong id="rfCode"></strong>. Only people who sign up from your link count. Clicks alone earn nothing.</p>
+        <label class="rf-label" for="rfLinkInput">Direct share link</label>
+        <input class="form-input rf-link-input" id="rfLinkInput" type="text" readonly />
+        <a class="btn btn-primary btn-lg btn-full rf-wa" id="rfWhatsapp" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg><span>Share on WhatsApp</span></a>
+        <div class="rf-chips" aria-label="More ways to share">
+          <a class="rf-chip" id="rfSms"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>SMS</span></a>
+          <a class="rf-chip" id="rfTelegram" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg><span>Telegram</span></a>
+          <a class="rf-chip" id="rfTwitter" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l16 16"/><path d="M20 4 4 20"/></svg><span>X / Twitter</span></a>
+          <button type="button" class="rf-chip" id="rfShare" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></svg><span>More</span></button>
+        </div>
+        <p class="rf-note">Only people who sign up from your link or code count. Clicks alone earn nothing.</p>
       </section>
 
-      <section class="rf-card" aria-labelledby="rfProgH">
-        <h2 class="rf-h" id="rfProgH">Reward progress</h2>
-        <p class="rf-progress-text" id="rfProgText"></p>
-        <progress class="rf-progress" id="rfProgBar" value="0" max="1"></progress>
-        <p class="rf-note" id="rfProgNote"></p>
-      </section>
+      <!-- Rewards -->
+      <section class="rf-card" aria-labelledby="rfPtsH">
+        <div class="rf-card-head">
+          <h2 class="rf-h" id="rfPtsH">Your rewards</h2>
+          <span class="rf-pill">Points never expire</span>
+        </div>
+        <div class="rf-tiles">
+          <div class="rf-tile rf-tile--big">
+            <span class="rf-tile-label">Total points</span>
+            <strong class="rf-big" id="rfPoints">0</strong>
+          </div>
+          <div class="rf-tile">
+            <span class="rf-tile-label">Friends joined</span>
+            <strong class="rf-tile-value" id="rfStSigned">0</strong>
+          </div>
+        </div>
 
-      <section class="rf-card" aria-labelledby="rfStatH">
-        <h2 class="rf-h" id="rfStatH">Statistics</h2>
-        <dl class="rf-stats">
-          <div class="rf-stat"><dt>Link visits</dt><dd id="rfStVisits">0</dd></div>
-          <div class="rf-stat"><dt>Signed up</dt><dd id="rfStSigned">0</dd></div>
-          <div class="rf-stat"><dt>Verified</dt><dd id="rfStVerified">0</dd></div>
-          <div class="rf-stat"><dt>Points earned</dt><dd id="rfStPoints">0</dd></div>
+        <div class="rf-goal" aria-labelledby="rfProgH">
+          <h3 class="rf-goal-title" id="rfProgH">Reward progress</h3>
+          <p class="rf-progress-text" id="rfProgText"></p>
+          <progress class="rf-progress" id="rfProgBar" value="0" max="1"></progress>
+          <p class="rf-goal-note" id="rfProgNote"></p>
+        </div>
+
+        <dl class="rf-stats" aria-label="Statistics">
+          <div class="rf-stat"><span class="rf-stat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><div><dt>Link visits</dt><dd id="rfStVisits">0</dd></div></div>
+          <div class="rf-stat"><span class="rf-stat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><polyline points="22 4 12 14 9 11"/></svg></span><div><dt>Verified</dt><dd id="rfStVerified">0</dd></div></div>
+          <div class="rf-stat"><span class="rf-stat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg></span><div><dt>Points earned</dt><dd id="rfStPoints">0</dd></div></div>
         </dl>
       </section>
 
-      <section class="rf-card rf-card--wide" aria-labelledby="rfHistH">
-        <h2 class="rf-h" id="rfHistH">Referral history</h2>
+      <!-- How it works -->
+      <section class="rf-section" aria-labelledby="rfHowH">
+        <div class="rf-section-head">
+          <h2 class="rf-h2" id="rfHowH">How it works</h2>
+          <span class="rf-meta">3 simple steps</span>
+        </div>
+        <ol class="rf-steps">
+          <li class="rf-step"><span class="rf-step-n">1</span><div><strong>Share your code or link</strong><p>Send it on WhatsApp or anywhere your friends are.</p></div></li>
+          <li class="rf-step"><span class="rf-step-n">2</span><div><strong>Your friend signs up</strong><p>They use your link, or type your code when they register, and start with 5 points.</p></div></li>
+          <li class="rf-step"><span class="rf-step-n">3</span><div><strong>You earn points</strong><p>Once they verify their email, your points are added.</p></div></li>
+        </ol>
+        <p class="rf-note" id="rfHowReward"></p>
+      </section>
+
+      <!-- Invited friends -->
+      <section class="rf-card" aria-labelledby="rfHistH">
+        <h2 class="rf-h" id="rfHistH">Invited friends</h2>
+        <p class="rf-sub">Live updates from your network</p>
         <p class="rf-empty" id="rfHistEmpty" hidden>No one has signed up from your link yet.</p>
         <ul class="rf-list" id="rfHist"></ul>
       </section>
 
-      <section class="rf-card rf-card--wide" aria-labelledby="rfRewH">
+      <section class="rf-card" aria-labelledby="rfRewH">
         <h2 class="rf-h" id="rfRewH">Rewards history</h2>
         <p class="rf-empty" id="rfRewEmpty" hidden>No rewards yet.</p>
         <ul class="rf-list" id="rfRew"></ul>
       </section>
 
-      <section class="rf-card rf-card--wide" aria-labelledby="rfHowH">
-        <h2 class="rf-h" id="rfHowH">How it works</h2>
-        <ol class="rf-steps">
-          <li>Copy your personal link and send it to a friend.</li>
-          <li>Your friend signs up from your link.</li>
-          <li>When they verify their email, you earn points.</li>
-          <li id="rfHowReward"></li>
-        </ol>
+      <!-- FAQ -->
+      <section class="rf-card" aria-labelledby="rfFaqH">
+        <h2 class="rf-h2" id="rfFaqH">Frequently asked questions</h2>
+        <details class="rf-faq-item">
+          <summary>When do I earn points?<span class="rf-faq-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></summary>
+          <p>When a friend you invited has signed up and verified their email. Points are never taken away.</p>
+        </details>
+        <details class="rf-faq-item">
+          <summary>How does my friend get their 5 points?<span class="rf-faq-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></summary>
+          <p>They sign up with your link, or type your referral code in the optional box on the sign-up page. The points appear in their own referral rewards.</p>
+        </details>
+        <details class="rf-faq-item">
+          <summary>Do clicks on my link earn anything?<span class="rf-faq-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></summary>
+          <p>No. Only people who sign up count.</p>
+        </details>
+        <details class="rf-faq-item">
+          <summary>Can I use my own code?<span class="rf-faq-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></summary>
+          <p>No. A code only works for someone else’s new account.</p>
+        </details>
+
       </section>
     </div>
   </main>

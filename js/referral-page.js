@@ -25,6 +25,7 @@
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function num(n) { return Number(n || 0).toLocaleString('en-NG'); }
   function day(iso) { try { return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } }
+  function initials(n) { var p = String(n).trim().split(/\s+/); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function toast(msg) { if (window.showToast) window.showToast(msg); }
   function state(msg) { var s = $('rfState'); s.textContent = msg || ''; s.hidden = !msg; }
 
@@ -98,8 +99,10 @@
     $('rfHistEmpty').hidden = items.length > 0;
     items.forEach(function (h) {
       var li = el('li', 'rf-item');
-      var left = el('div');
-      left.appendChild(el('div', 'rf-item-main', h.who || 'New member'));
+      var who = h.who || 'New member';
+      li.appendChild(el('span', 'rf-avatar', initials(who)));
+      var left = el('div', 'rf-item-text');
+      left.appendChild(el('div', 'rf-item-main', who));
       left.appendChild(el('div', 'rf-item-sub', 'Signed up ' + day(h.referred_on)));
       li.appendChild(left);
       var done = h.status === 'converted';
@@ -117,7 +120,7 @@
     var label = { saved: 'Saved', active: 'Active', used: 'Used' };
     items.forEach(function (r) {
       var li = el('li', 'rf-item');
-      var left = el('div');
+      var left = el('div', 'rf-item-text');
       left.appendChild(el('div', 'rf-item-main', 'Free 30 days of Starter'));
       left.appendChild(el('div', 'rf-item-sub', 'Milestone ' + num(r.points_threshold) + ' points · ' + day(r.created_at)));
       li.appendChild(left);
@@ -150,7 +153,11 @@
 
     var url = D.shareUrl(row.code);
     $('rfLinkInput').value = url; $('rfCode').textContent = row.code;
-    $('rfWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent('Join me on StreetTasker: ' + url);
+    var msg = 'Join me on StreetTasker. Use my code ' + row.code + ': ' + url;
+    $('rfWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    $('rfSms').href = 'sms:?&body=' + encodeURIComponent(msg);
+    $('rfTelegram').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('Join me on StreetTasker. Use my code ' + row.code);
+    $('rfTwitter').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent('Join me on StreetTasker. Use my code ' + row.code) + '&url=' + encodeURIComponent(url);
     $('rfPoints').textContent = num(row.points);
     renderProgress(row);
 
@@ -173,6 +180,10 @@
     try { ROWS = await D.summary(); } catch (e) { state('We could not load your referral details. Please refresh and try again.'); return; }
     if (!ROWS.length) { state('Your referral link is not ready yet. Finish setting up your account and check back soon.'); return; }
     $('rfCopy').addEventListener('click', function () { copy($('rfLinkInput').value); });
+    $('rfCopyCode').addEventListener('click', async function () {
+      var code = $('rfCode').textContent;
+      try { await navigator.clipboard.writeText(code); toast('Code copied'); } catch (e) { toast('Press and hold the code to copy it'); }
+    });
     if (navigator.share) {
       var sb = $('rfShare'); sb.hidden = false;
       sb.addEventListener('click', function () { navigator.share({ title: 'StreetTasker', text: 'Join me on StreetTasker', url: $('rfLinkInput').value }).catch(function () {}); });

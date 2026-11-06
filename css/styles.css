@@ -2288,6 +2288,18 @@ img { max-width: 100%; height: auto; }
 .av2-check-row label { font-size: var(--text-xs); color: var(--auth-body); line-height: 1.4; cursor: pointer; }
 .av2-check-row a { color: var(--auth-green); font-weight: 600; }
 
+/* Optional referral code on the sign-up forms */
+.av2-ref { margin-bottom: var(--space-4); }
+.av2-ref-toggle { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0; border: 0; background: none; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; color: var(--auth-green); cursor: pointer; }
+.av2-ref-toggle em { font-style: normal; font-weight: 500; color: var(--auth-muted); }
+.av2-ref-toggle:hover span { text-decoration: underline; }
+.av2-ref-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
+.av2-ref-box { margin-top: var(--space-3); }
+.av2-ref-box[hidden] { display: none; }
+.av2-ref-box .av2-field { margin-bottom: 0; }
+.av2-ref-box input { letter-spacing: 0.08em; font-weight: 600; text-transform: uppercase; }
+.av2-ref-hint { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--auth-muted); }
+
 .av2-submit-btn {
   width: 100%; justify-content: center;
   background: var(--auth-green); color: var(--white);

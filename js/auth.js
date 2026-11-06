@@ -774,14 +774,23 @@ async function _handleRoleSwitchClick(el) {
 }
 
 /* ── Auth operations ─────────────────────────────────────────── */
-async function signUpUser({ name, email, password, role, phone = '' }) {
+async function signUpUser({ name, email, password, role, phone = '', refCode = '' }) {
   /* Same rules the live checklist shows, enforced here so every sign-up form gets them */
   const problem = passwordProblem(password);
   if (problem) throw new Error(problem);
   /* Supabase silently resends confirmation for duplicate emails instead of erroring.
      Detect this by checking identities array on the returned user object. */
   /* Referral (M14): pass the stored visit id so the database can credit the person who invited them once the email is verified */
-  const refVisit = (window.STReferral && window.STReferral.visitId()) || null;
+  let refVisit = (window.STReferral && window.STReferral.visitId()) || null;
+  /* A code typed into the optional "Referral code" field: turn it into a visit the same way a link does. The database still decides
+     (real code, inside the window, not your own). A wrong code stops here so the person can fix it; an empty field changes nothing. */
+  const typed = String(refCode || '').trim().toUpperCase();
+  if (typed) {
+    if (!/^ST[A-Z0-9]{6}$/.test(typed)) throw new Error('That referral code does not look right. It starts with ST and has 8 characters.');
+    const r = await window.supabase.rpc('referral_track_visit', { p_code: typed });
+    if (r.error || !r.data || typeof r.data !== 'string') throw new Error('We could not find that referral code. Check it, or clear the box to sign up without one.');
+    refVisit = r.data;
+  }
   const { data, error } = await window.supabase.auth.signUp({
     email, password,
     options: {
