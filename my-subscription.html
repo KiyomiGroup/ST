@@ -27,12 +27,10 @@
        The listing chooser calls the server function choose_active_listings. -->
   <main class="mysub-page">
 
-    <section class="mysub-hero" aria-labelledby="mysubTitle">
-      <div class="container mysub-hero-inner">
-        <span class="eyebrow mysub-eyebrow">Your account</span>
-        <h1 id="mysubTitle" class="mysub-title">My Subscription</h1>
-        <p class="mysub-lead">See your plan, when it ends, and how much of your monthly allowance you have used.</p>
-      </div>
+    <section class="container mysub-head" aria-labelledby="mysubTitle">
+      <span class="mysub-chip"><span class="mysub-dot"></span>Your account</span>
+      <h1 id="mysubTitle" class="mysub-title">My Subscription</h1>
+      <p class="mysub-lead">See your plan, when it ends, and how much of your monthly allowance you have used.</p>
     </section>
 
     <div class="container mysub-body">
@@ -75,7 +73,7 @@
           </div>
         </section>
 
-        <section class="mysub-card" aria-labelledby="mysubUsageTitle">
+        <section class="mysub-card mysub-card--bare" aria-labelledby="mysubUsageTitle">
           <h2 class="mysub-card-title" id="mysubUsageTitle">This period&rsquo;s usage</h2>
           <div class="mysub-meters" id="mysubMeters"></div>
         </section>
