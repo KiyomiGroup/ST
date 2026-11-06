@@ -115,7 +115,8 @@
   <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
   <!-- Critical CSS inline load -->
   <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/categories.css?v=1" />
+  <link rel="stylesheet" href="css/categories.css?v=2" />
+  <link rel="stylesheet" href="css/coordinator-apply.css?v=1" />
   <link rel="stylesheet" href="css/cards-v2.css?v=2" />
   <link rel="stylesheet" href="css/local-tasker-public.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -499,6 +500,18 @@
     </div>
   </section>
 
+  <!-- FOR COORDINATORS -->
+  <section class="section section-flush-top" id="become-coordinator">
+    <div class="container-home">
+      <div class="co-cta fade-up">
+        <div class="co-cta-eyebrow">For Coordinators</div>
+        <h2>Don't have any skills?</h2>
+        <p>Apply to be a coordinator. Coordinate local Taskers in your area and earn for every task they complete.</p>
+        <a href="coordinator-apply.html" class="btn btn-white btn-lg">Apply to be a Coordinator</a>
+      </div>
+    </div>
+  </section>
+
   <!-- FINAL CTA -->
   <section class="section-sm">
     <div class="container-home">
@@ -532,9 +545,8 @@
       var ul = document.getElementById('stCatGrid');
       if (!ul || !window.STCat) return;
       ul.innerHTML = STCat.list.filter(function (c) { return c.value !== 'other'; }).map(function (c) {
-        var sub = c.services.slice(0, 3).join(', ');
-        return '<li><a class="st-cattile" href="find-services.html?category=' + c.value + '">' + STCat.iconHtml(c.value) +
-          '<span class="st-cattile-label">' + c.label.replace('&', '&amp;') + '</span><span class="st-cattile-sub">' + sub.replace('&', '&amp;') + '</span></a></li>';
+        return '<li><a class="st-cattile" href="find-services.html?category=' + c.value + '">' +
+          '<span class="st-cattile-label">' + c.label.replace('&', '&amp;') + '</span></a></li>';
       }).join('');
     })();
   </script>

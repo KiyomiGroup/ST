@@ -5,16 +5,20 @@
 .hf-chip.active .st-cat-ico, .filter-chip.active .st-cat-ico { color: currentColor; }
 .pt-chip .st-cat-ico { width: 1.1em; height: 1.1em; }
 
-/* Browse by category: 16 icon tiles (logged-out home) */
-.st-catgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
-@media (min-width: 480px) { .st-catgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 768px) { .st-catgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); } }
-.st-cattile { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-4) var(--space-3); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); text-align: center; text-decoration: none; color: var(--color-text); transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease); }
-.st-cattile:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); transform: translateY(-2px); }
+/* Browse by category: small heading-only cards (logged-out home).
+   Desktop and tablet: centred, wrapping. Phones: one row, swipe sideways. */
+.st-catgrid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.st-cattile { display: inline-flex; align-items: center; justify-content: center; padding: var(--space-2) var(--space-4); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-pill); text-align: center; text-decoration: none; color: var(--color-text); white-space: nowrap; transition: border-color var(--t) var(--ease), color var(--t) var(--ease), background var(--t) var(--ease); }
+.st-cattile:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft); }
 .st-cattile:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.st-cattile .st-cat-ico { width: var(--space-8); height: var(--space-8); }
 .st-cattile-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.25; }
-.st-cattile-sub { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.3; }
+@media (max-width: 768px) {
+  .st-catgrid { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 calc(-1 * var(--home-pad, var(--space-5))); padding: var(--space-1) var(--home-pad, var(--space-5)); }
+  .st-catgrid::-webkit-scrollbar { display: none; }
+  .st-catgrid > li { flex: 0 0 auto; scroll-snap-align: start; }
+  .st-cattile { padding: var(--space-1) var(--space-3); }
+  .st-cattile-label { font-size: var(--text-xs); }
+}
 
 /* StreetTasker logo shown where a tasker photo or task picture is missing. images/logo-mark.png is transparent and cropped to the mark,
    so it always sits on the surface behind it (no white box) and every card shows it at the same size. */
