@@ -628,6 +628,17 @@
         var postUser = sessRes.data.session && sessRes.data.session.user;
         if (!postUser) throw new Error('Session expired. Please log in again.');
 
+        /* NEW listing only (editing one you already have is not counted): say plainly when every active listing your plan allows is used.
+           The numbers come from the server; the database still makes the real decision when the save is sent. */
+        /* LISTING-PRECHECK-START */
+        if (!savedServiceId) {
+          var slots = (window.ST && window.ST.db && window.ST.db.fetchMyListingSlots) ? await window.ST.db.fetchMyListingSlots() : null;
+          if (slots && typeof slots.limit === 'number' && typeof slots.active === 'number' && slots.active >= slots.limit) {
+            throw new Error('Your plan allows ' + slots.limit + ' active listing' + (slots.limit === 1 ? '' : 's') + ' and you are using ' + (slots.limit === 1 ? 'it' : 'all of them') + '. To add another, pause or delete one, or upgrade your plan on the Subscription page.');
+          }
+        }
+        /* LISTING-PRECHECK-END */
+
         /* Verified = the SERVER says VERIFIED (idv_my_status). The old checks (verifications.status,
            users.is_verified) are browser-writable and are no longer trusted. If the read fails: not verified. */
         var isVerified = false;
