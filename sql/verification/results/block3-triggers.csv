@@ -1,2 +1,0 @@
-table_name,trigger_name,event_manipulation,action_timing,action_statement
-local_tasker_profiles,local_tasker_profiles_touch_updated_at,UPDATE,BEFORE,EXECUTE FUNCTION local_tasker_touch_updated_at()
