@@ -55,7 +55,7 @@
 
     { id: 'posting-tasks', role: 'customer', title: 'Posting a task',
       summary: 'Tell taskers exactly what you need.',
-      tours: ['customer-post-task'],
+      tours: ['customer-post-task', 'customer-offers'],
       steps: [
         'Choose Post a task, then pick the Service Category that fits the job.',
         'Give the task a clear Task Title, and describe the work in the details.',
@@ -105,7 +105,7 @@
 
     { id: 'payments', role: 'both', title: 'Payments and additional costs',
       summary: 'How money moves, and how extra costs are approved.',
-      tours: ['payments-guide'],
+      tours: ['payments-guide', 'customer-expenses'],
       steps: [
         'The customer pays inside the Job Room, securely through Paystack.',
         'Paid money is held by StreetTasker. It is not released to the tasker until the job is complete.',

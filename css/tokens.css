@@ -136,6 +136,20 @@
   --card-icon-col:      20px;          /* fixed icon column so pin and clock align */
   --card-icon-gap:      6px;
   --text-card-title:    var(--text-md);   /* 20px */
+
+  /* Cards v2 on desktop (769px and up): smaller than on phones. Used only inside the desktop media query in css/cards-v2.css. */
+  --card-padding-desktop:     var(--space-4);   /* 16px, was 20px */
+  --card-media-ratio-desktop: 2 / 1;            /* shorter photo, was 16 / 10 */
+  --radius-card-desktop:      var(--radius-2xl);
+  --card-cta-height-desktop:  36px;             /* was 44px */
+  --card-grid-min-desktop:    232px;            /* narrowest task / service card in the results grids, was 280px */
+  --cc-card-width-desktop:    248px;            /* v2 cards inside the scrolling rows, was 280px */
+
+  /* Cards v2 inside the scrolling rows on phones (640px and under): small enough that about two cards show at once. */
+  --cc-card-width-phone:      176px;            /* was 256px */
+  --card-padding-phone:       var(--space-3);   /* 12px */
+  --card-media-ratio-phone:   16 / 9;
+  --card-cta-height-phone:    32px;
 }
 
 /* ── Post-a-task page tokens (post-task.html) ──

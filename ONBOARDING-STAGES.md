@@ -8,8 +8,8 @@ Spec: ST onboarding spec (uploaded as a .md with the ST-Real-Main zip). One stag
 | 2 | Safety Reminder above the chat input (customers and taskers, every conversation, mobile) | delivered |
 | 3 | First-login tours, customer and tasker, run on the logged-in homepage (home-feed.html) | delivered |
 | 4 | Help / Learn centre, nav entry, replay; compact dark tour card; card clears the mobile tab bar | delivered |
-| 5 | Customer tutorials: post a task, book a service, offers, additional expenses | next |
-| 6 | Tasker tutorials: find and apply, respond to bookings, manage work | |
+| 5 | Customer tutorials: post a task, book a service, offers, additional expenses | delivered |
+| 6 | Tasker tutorials: find and apply, respond to bookings, manage work | next |
 | 7 | Chat tutorials for both roles + the Actions guide (#requestBtn / #jrSheet) | |
 | 8 | QA pass against the spec's test list, design-system check, handoff | |
 
@@ -40,3 +40,18 @@ Home tours (Stage 3): js/onboarding-tours-home.js registers 'customer-home' and 
 - Tour card is now compact and dark (see DESIGN-SYSTEM.md). Counter reads 1/6. Phones: card sits above .st-bottom-nav (engine measures it).
 - Chat tutorial note for Stage 7: the spec's "More Actions" is the Request button (#requestBtn / #jrSheet) in this codebase.
 - Tests: node --test tests/onboarding.test.js tests/onboarding-tours.test.js tests/learn.test.js tests/onboarding-replay.test.js
+
+## Stage 5 (customer tutorials)
+- File: js/onboarding-tours-customer.js registers four tours (all role customer, auto: false, so they never start by themselves; a customer starts them from Help / Learn, which opens the page with ?tour=<id>):
+  | Tour id | Page | Topic on learn.html |
+  |---|---|---|
+  | customer-post-task | post-task.html | Posting a task |
+  | customer-offers | customer-applications.html | Posting a task (offers) |
+  | customer-book-service | find-services.html | Booking a service |
+  | customer-expenses | messages.html | Payments and additional costs |
+- Host pages (post-task, find-services, customer-applications, messages) load css/onboarding.css, js/onboarding.js and the tours file. The tours file starts the tour itself when the address has ?tour=<id> (no page code changed). learn.html loads the tours file so it can list and replay them.
+- Steps for screens that may be empty (offers list, services grid) or pop-ups that are closed (the booking form, the extra-cost card) use fallback: 'center', so they show as a plain card instead of being skipped.
+- Nothing is submitted or changed by a tour. No fee wording anywhere in customer copy (tests check this).
+- The book-service tour stays on find-services.html and explains the booking pop-up in centred cards (the pop-up lives on tasker-profile.html and needs a real tasker id, so it cannot be a replay target).
+- Tests: node --test tests/onboarding-tours-customer.test.js (also checks every selector exists in the page or the script that draws it).
+- Stage 6 must do the same on each host page: load the tours file after js/onboarding.js, and add the tours file to learn.html. Reserved ids still open: tasker-apply-task, manage-work, customer-chat, tasker-chat, payments-guide.

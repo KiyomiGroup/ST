@@ -249,6 +249,8 @@ Built from the card references. Markup comes from three builders in `js/ui.js`; 
 
 Optional fields (rating, distance, offers, turnaround, perk, portfolio) render **only when the data has them**. A card never shows an invented number. Shared parts: `.st-chip` (`--urgent`, `--soon`, `--category`, `--available`, `--glass`, `--dark`, `--skill`, `--mode`), `.st-card-save`, `.st-card-media`, `.st-card-foot`, `.st-card-cta`, `.st-rating`. Tokens: `--card-*`, `--color-card-*`, `--radius-card`.
 
+**Card text limits and desktop size (2026-11-06).** Every text line in a v2 card is capped so one long entry never makes a card taller than its neighbours: titles and descriptions stop at two lines, the eyebrow, location, role, tasker name and chips stop at one line, each ending in an ellipsis (…). The full text is on the details page. From 769px up the cards are smaller: tokens `--card-padding-desktop`, `--card-media-ratio-desktop`, `--radius-card-desktop`, `--card-cta-height-desktop`, `--card-grid-min-desktop` (results grids on find-tasks and find-services) and `--cc-card-width-desktop` (scrolling rows). Phones: inside the scrolling rows only, cards are about 176px wide (`--cc-card-width-phone`, `--card-padding-phone`, `--card-media-ratio-phone`, `--card-cta-height-phone`) so roughly two show at once; the buttons stack and the save bookmark is hidden. The service card stack uses a smaller gap so there is no empty band above the Book Service strip.
+
 The static marketing cards (`.lt-tasker-card` on the homepage and Local Taskers) and the owner-side `.task-row-card` rows on the dashboards are not part of v2.
 
 ### 4.8 Toasts

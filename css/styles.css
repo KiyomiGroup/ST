@@ -2436,6 +2436,7 @@ img { max-width: 100%; height: auto; }
 
 /* result cards — shared skeleton for both task cards and tasker cards */
 .spg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
+@media (min-width: 769px) { #tasksGrid.spg-grid, #servicesGrid.spg-grid { grid-template-columns: repeat(auto-fill, minmax(var(--card-grid-min-desktop), 1fr)); gap: var(--space-4); } }
 .spg-card {
   background: var(--white); border: 1px solid var(--border); border-radius: 20px;
   overflow: hidden; display: flex; flex-direction: column; transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);

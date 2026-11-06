@@ -117,3 +117,28 @@ a.cc-retry { display: inline-block; text-decoration: none; }
 .hf-row > .st-card { flex: 0 0 var(--cc-task-width); }
 .hf-row-stack > .st-card { flex: none; }
 @media (max-width: 640px) { .hf-row > .st-card { flex-basis: var(--cc-task-width-sm); } }
+
+/* Desktop: the v2 cards in the scrolling rows are narrower (769px and up) */
+@media (min-width: 769px) {
+  .cc-track > .st-card { width: var(--cc-card-width-desktop); }
+  .cc-grid > .st-card { width: auto; }
+  .hf-row > .st-card { flex-basis: var(--cc-card-width-desktop); }
+  .hf-row-stack > .st-card { flex: none; }
+}
+
+/* Phones: much smaller v2 cards in the scrolling rows so more of them fit across the screen (about two at once).
+   Only the rows are touched; the full-width cards on the Find pages keep their size. */
+@media (max-width: 640px) {
+  .cc-track > .st-card, .hf-row > .st-card { width: var(--cc-card-width-phone); flex: 0 0 var(--cc-card-width-phone); --card-padding: var(--card-padding-phone); --card-media-ratio: var(--card-media-ratio-phone); border-radius: var(--radius-2xl); }
+  .cc-grid > .st-card { width: auto; flex: none; }
+  .cc-track > .st-card .st-card-pad, .hf-row > .st-card .st-card-pad { gap: var(--space-2); }
+  .cc-track > .st-card .st-card-title, .hf-row > .st-card .st-card-title { font-size: var(--text-sm); }
+  .cc-track > .st-card .st-card-desc, .hf-row > .st-card .st-card-desc { font-size: var(--text-xs); line-height: 1.35; }
+  .cc-track > .st-card .st-card-save, .hf-row > .st-card .st-card-save { display: none; }
+  .cc-track > .st-card .st-card-foot, .hf-row > .st-card .st-card-foot { padding: var(--space-2) var(--card-padding) var(--space-3); gap: var(--space-2); }
+  .cc-track > .st-card .st-card-price, .hf-row > .st-card .st-card-price { font-size: var(--text-sm); }
+  .cc-track > .st-card .st-card-actions, .hf-row > .st-card .st-card-actions { flex-direction: column; align-items: stretch; gap: var(--space-1); }
+  .cc-track > .st-card .st-card-cta, .hf-row > .st-card .st-card-cta { min-height: var(--card-cta-height-phone); padding: 0 var(--space-2); font-size: var(--text-xs); }
+  .cc-track > .st-card--service > .st-card-media, .hf-row > .st-card--service > .st-card-media { margin: var(--space-1) var(--space-1) 0; }
+  .cc-track > .st-card .st-tasker-avatar, .hf-row > .st-card .st-tasker-avatar { --card-avatar-size: 48px; }
+}
