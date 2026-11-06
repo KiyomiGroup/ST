@@ -190,6 +190,8 @@ Nav buttons are a fixed exception, defined in section 5.
 ### 4.2 Badges
 `.badge` with `.badge-blue` (to be renamed `.badge-primary`), `.badge-green`, `.badge-amber`, `.badge-gray`. Pill, `--text-xs`, 3 / 8 padding.
 
+`.rating-badge` (stage M9, `css/rating-badge.css`, `js/rating-badge.js`): the one rating display, a star, the average to one decimal and the review count, e.g. ★ 4.5 (12). Never hand-build a rating. Put `<span data-rating-user="<uuid>" data-rating-role="tasker|customer"></span>` where the rating belongs (add `data-rating-new` to show "New" when there are no reviews; otherwise it stays empty). It reads `rating_summary` only, through `rating_summaries()`. Never show `taskers.rating`, `taskers.review_count` or `services.rating`.
+
 ### 4.3 Cards
 `.card`: white, 1px `--color-border`, `--radius-lg`. Hover lifts 2px with `--shadow-lg`. Page-specific cards (`.tc-*`, `.task-row-card`, dashboard panels) should be built on `.card` and add layout only.
 
@@ -280,6 +282,20 @@ All in `css/tokens.css`.
 | Toast | `--shadow-toast`, `--shadow-notice`, `--toast-max-width`, `--toast-badge-size`, `--toast-close-size`, `--toast-hit-size` |
 | Cards | `--card-surface`, `--card-surface-tint`, `--card-chip-glass`, `--card-chip-dark`, `--card-cta-bg(-hover)`, `--card-skill-bg`, `--card-media-ratio`, `--card-avatar-size`, `--card-thumb-size`, `--shadow-card-hover` |
 | Profile prompt | `--pp-dark-*`, `--pp-accent(-hover/-ink)`, `--pp-light-*`, `--pp-fill`, `--pp-icon-size`, `--pp-track-height`, `--pp-track-width` (most alias existing greens) |
+
+### 4.13 Compact card system (horizontal scrollers)
+
+`js/cards-compact.js` (global `STCompact`) and `css/cards-compact.css`; tokens `--cc-*` in `css/tokens.css`. Added in stage M11. Used by the tasker and customer homepages (M12b, M13b). Do not hand-write these cards in a page.
+
+| Builder | Shows |
+|---|---|
+| `STCompact.row({ title, viewAllHref, skeleton, emptyText, hideWhenEmpty })` | Header, View All link, desktop arrows (hover devices, 768px and up, only when the row scrolls), swipe, hidden scrollbar, arrow-key / Home / End on the focused track. Only the track scrolls sideways, never the page. States: `stSetState('loading' / 'empty' / 'error')`, `stSetItems(nodes)`, `stOnRetry(fn)`. An empty row hides itself unless `hideWhenEmpty: false`. |
+| `STCompact.taskCard(task, { urgent })` | Title, budget, location, posted time, offer count, optional distance, Urgent badge. The badge shows only when the caller passes `urgent: true`; distance only when `distance_km` is a real number. |
+| `STCompact.taskerCard(tasker)` | Photo (initials fallback), name, verified tick, rating badge, PRO / PREMIUM label, main service, location and distance. The rating is a `data-rating-user` span filled by `js/rating-badge.js` in one batch per row; nothing is read from `taskers.rating`. |
+| `STCompact.categoryCard({ label, emoji, href, count })` | Category tile. |
+| `STCompact.referralStrip({ title, text, cta, href, show })` | Placeholder strip, hidden unless `show: true` (M15 supplies the real text). |
+
+Pages that use it load `css/cards-compact.css`, `js/rating-badge.js` and `css/rating-badge.css`, and (optional) `js/membership-labels.js` and `css/membership.css`. All text is set with `textContent`.
 
 ### 4.12 Membership labels (PRO, PREMIUM)
 

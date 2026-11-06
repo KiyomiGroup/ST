@@ -520,3 +520,16 @@
   --loader-shadow:       rgba(15, 61, 38, 0.22);
   --z-loader:            10000;                       /* above toasts (9999) */
 }
+
+/* ── Compact card system tokens (stage M11, js/cards-compact.js) ──
+   Sizes of the horizontal-scroller cards. Component-specific: do not reuse elsewhere without a design decision. */
+:root {
+  --cc-task-width:         280px;
+  --cc-tasker-width:       240px;
+  --cc-category-width:     148px;
+  --cc-task-width-sm:      256px;   /* phones: narrower so the next card peeks in */
+  --cc-tasker-width-sm:    220px;
+  --cc-category-width-sm:  128px;
+  --cc-avatar-size:        56px;    /* tasker photo and category bubble */
+  --cc-arrow-size:         40px;    /* desktop scroll arrows */
+}
