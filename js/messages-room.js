@@ -13,7 +13,7 @@
      taskers          service, category, location, photo_url, is_verified
      bookings         count of completed jobs for the tasker (customer view)
      tasks            title, location
-   Rating is NOT shown: there is no ratings table in the data yet.
+   The rating badge (js/rating-badge.js) is drawn after the other person's name (M10b).
 
    No inline styles, no raw colours: classes live in css/messages.css.
    ============================================================ */
@@ -209,10 +209,17 @@
         vb.setAttribute('aria-label', 'Verified');
         sub.appendChild(vb);
       }
+      /* M10b: the other person's rating badge (a tasker when the viewer is the customer, else the customer); empty when they have no reviews */
+      if (o.id) {
+        var rb = el('span', 'msg-chat-head-rating');
+        rb.setAttribute('data-rating-user', String(o.id));
+        rb.setAttribute('data-rating-role', o.isCustomer ? 'tasker' : 'customer');
+        sub.appendChild(rb);
+      }
     }
 
     /* meta line: status pill, then service + completed jobs (customer view) and job location.
-       Rating is not shown: there is no usable ratings table yet (spec 2 asks for it; see handoff). */
+       The rating badge sits after the name in the sub line above (M10b). */
     var meta = $('chatHeadMeta');
     if (meta) {
       meta.textContent = '';

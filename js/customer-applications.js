@@ -6,7 +6,7 @@
    Stage 3: Accept uses the accept_application() database function when it exists (atomic),
    otherwise falls back to the three separate updates.
    Stage 2: sidebar snapshot, Accept / Decline (with confirmation), Message Tasker.
-   Data: tasks -> task_applications -> taskers + users (names, photos, ratings).
+   Data: tasks -> task_applications -> taskers + users (names, photos) and rating_summary (ratings, through STRating).
    ============================================================ */
 (function () {
   'use strict';
@@ -82,7 +82,7 @@
     if (ids.length) {
       try {
         var t = await window.supabase.from('taskers')
-          .select('user_id, name, service, service_name, location, rating, photo_url, business_name').in('user_id', ids);
+          .select('user_id, name, service, service_name, location, photo_url, business_name').in('user_id', ids);
         (t.data || []).forEach(function (r) { profiles[r.user_id] = r; });
       } catch (e) { /* fall back to users */ }
       try {
@@ -90,6 +90,9 @@
         (u.data || []).forEach(function (r) { users[r.id] = r; });
       } catch (e) { /* fall back to ids */ }
     }
+    /* M10a/b: the tasker's rating from rating_summary, never taskers.rating (users can write it) */
+    var ratingMap = {};
+    try { if (window.STRating && ids.length) ratingMap = await STRating.load(ids, 'tasker'); } catch (e) { /* no rating shown */ }
     rows.forEach(function (a) { offersPerTask[a.task_id] = (offersPerTask[a.task_id] || 0) + 1; });
     /* Membership labels (S4i): one question for every applicant; no answer = no label. */
     if (window.STMembership) { try { await window.STMembership.load(ids); } catch (e) { /* label is optional */ } }
@@ -113,7 +116,7 @@
       return {
         id: a.id, taskerId: a.tasker_id, task: task, status: a.status, group: group(a.status), created: a.created_at,
         name: name, service: p.service || p.service_name || '', location: p.location || '',
-        rating: p.rating ? parseFloat(p.rating) : null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
+        rating: (ratingMap[String(a.tasker_id).toLowerCase()] || {}).avg || null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
         pitch: msg.pitch, arrival: msg.arrival, proofs: msg.proofs, offer: msg.rate != null ? msg.rate : null, offers: offersPerTask[a.task_id] || 0,
         booking: bookingByJob[String(a.task_id) + '|' + String(a.tasker_id)] || null,
       };

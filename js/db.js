@@ -228,7 +228,7 @@ async function applyToTask({ taskId, message = '', phone = null, whatsapp = null
 
 async function fetchTaskApplications(taskId) {
   const { data, error } = await window.supabase.from('task_applications')
-    .select('*, taskers:tasker_id(name, service, location, rating, photo_url, user_id, business_name)')
+    .select('*, taskers:tasker_id(name, service, location, photo_url, user_id, business_name)')
     .eq('task_id', taskId).neq('status', 'withdrawn').order('created_at', { ascending: false });
   if (error) return [];
   const rows = data || [];
@@ -556,7 +556,7 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
     pricing_type: 'per_job', price: t.rate_value, rate_unit: t.rate_unit || '/hour',
     location: t.location, description: t.bio, photo: t.photo_url,
     user_id: t.user_id || t.id, available: t.available !== false,
-    provider_name: t.business_name || t.name || 'Provider', rating: t.rating,
+    provider_name: t.business_name || t.name || 'Provider',   /* M10b: no rating here; taskers.rating is a text column users can write. Pages ask rating_summary (STRating) */
   }));
 }
 
@@ -602,7 +602,7 @@ async function fetchMatchingServices({ category, location, limit = 5 }) {
     .order('created_at', { ascending: false }).limit(limit * 2);
   if (error || !data?.length) {
     const { data: td } = await window.supabase.from('taskers').select('*')
-      .eq('category', category).eq('available', true).order('rating', { ascending: false }).limit(limit);
+      .eq('category', category).eq('available', true).order('created_at', { ascending: false }).limit(limit);
     return (td || []).slice(0, limit).map(t => ({
       id: String(t.id), service_name: t.service, category: t.category,
       pricing_type: 'per_job', price: t.rate_value, location: t.location,

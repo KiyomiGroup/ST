@@ -14,7 +14,7 @@
    and Save as Draft (same approach as Post a Task: saved on this device in localStorage, restored with a banner,
    auto-saved as you type). See MAKE-OFFER-HANDOFF.md.
 
-   Reads:  tasks (the row), users (the customer), reviews (their rating, if the table exists),
+   Reads:  tasks (the row), users (the customer), rating_summary (their customer rating, through STRating),
            task_applications (has this tasker already made an offer?).
    Nothing is invented. A section or figure with no data hides itself.
    Needs: supabaseClient.js, sanitize.js (escapeHtml), auth.js, db.js, ui.js, app.js.
@@ -110,11 +110,11 @@
     } catch (e) { return null; }
   }
   async function loadRating(sb, posterId) {
+    /* M10b: the customer's rating AS A CUSTOMER from rating_summary (before, every review about the person counted, tasker reviews included) */
     try {
-      var v = await sb.from('reviews').select('rating').eq('reviewee_id', posterId).limit(200);
-      var rows = (v.error ? [] : (v.data || [])).filter(function (x) { return Number(x.rating) > 0; });
-      if (!rows.length) return null;
-      return { avg: rows.reduce(function (n, r) { return n + Number(r.rating); }, 0) / rows.length, count: rows.length };
+      if (!window.STRating) return null;
+      var rs = await STRating.load([posterId], 'customer');
+      return rs[String(posterId).toLowerCase()] || null;
     } catch (e) { return null; }
   }
 

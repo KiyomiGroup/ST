@@ -99,7 +99,7 @@
     if (ids.length) {
       try {
         var tk = await window.supabase.from('taskers')
-          .select('user_id, name, service, service_name, location, rating, photo_url, business_name').in('user_id', ids);
+          .select('user_id, name, service, service_name, location, photo_url, business_name').in('user_id', ids);
         (tk.data || []).forEach(function (r) { profiles[r.user_id] = r; });
       } catch (e) { /* fall back to users */ }
       try {
@@ -107,6 +107,10 @@
         (us.data || []).forEach(function (r) { users[r.id] = r; });
       } catch (e) { /* fall back to ids */ }
     }
+
+    /* M10b: the tasker's rating from rating_summary, never taskers.rating (users can write it) */
+    var ratingMap = {};
+    try { if (window.STRating && ids.length) ratingMap = await STRating.load(ids, 'tasker'); } catch (e) { /* no rating shown */ }
 
     /* Escrow bookings are optional: a failure here must not hide the tasks */
     var bookings = [];
@@ -124,7 +128,7 @@
         id: a.id, taskId: a.task_id, taskerId: a.tasker_id, status: a.status, group: appGroup(a.status),
         name: p.business_name || u.business_name || p.name || u.name || ('Tasker #' + String(a.tasker_id || '').slice(0, 6).toUpperCase()),
         service: p.service || p.service_name || '', location: p.location || '',
-        rating: p.rating ? parseFloat(p.rating) : null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
+        rating: (ratingMap[String(a.tasker_id).toLowerCase()] || {}).avg || null, photo: safeUrl(p.photo_url || u.avatar_url || ''),
         rate: parseRate(a.message)
       };
     });
