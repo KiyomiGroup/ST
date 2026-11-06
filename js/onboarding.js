@@ -13,7 +13,9 @@
        ]
      });
      ST.onboarding.autoStart('customer-home');      // first visit only
-     ST.onboarding.start('customer-home');          // replay (Help / Learn)
+     ST.onboarding.start('customer-home');          // replay on this page
+     ST.onboarding.replay('customer-home');         // replay from any page (Help / Learn): goes to the tour's page first
+     ST.onboarding.consumeReplay();                 // host pages call this on load: starts the tour named in ?tour=<id>
 
    Step options: id, title, description (string or fn), target (selector or list of selectors), placement
    (auto|top|bottom|left|right), fallback ('center' shows the card when the target never appears; default skips the
@@ -69,7 +71,9 @@
        tip     { width, height }
        vp      { width, height }
      Returns { mode: 'center' | 'sheet' | 'float', side, left, top, arrow }
-     'sheet' = phones: a full-width card pinned to the bottom or top edge, whichever does not cover the target. */
+     'sheet' = phones: a full-width card pinned to the bottom or top edge, whichever does not cover the target.
+     insetBottom (optional): height of anything fixed to the bottom of the screen, such as the mobile tab bar. A card
+     pinned to the bottom edge sits above it instead of covering it. */
   function placeTooltip(o) {
     var vp = o.vp, tip = o.tip, t = o.target, gap = o.gap == null ? 12 : o.gap, edge = o.edge == null ? 12 : o.edge;
     var mobileMax = o.mobileMax == null ? 768 : o.mobileMax;
@@ -78,7 +82,8 @@
     if (!t) return { mode: 'center', side: 'none', left: clamp((vp.width - tip.width) / 2, edge, maxLeft), top: clamp((vp.height - tip.height) / 2, edge, maxTop), arrow: null };
 
     if (vp.width <= mobileMax) {
-      var bottomTop = maxTop, topTop = edge;
+      var inset = Math.max(0, o.insetBottom || 0);
+      var bottomTop = Math.max(edge, vp.height - inset - tip.height - edge), topTop = edge;
       var targetBottom = t.top + t.height, coversBottom = targetBottom + gap > bottomTop && t.top < bottomTop + tip.height;
       var top = !coversBottom ? bottomTop : (t.top - gap >= topTop + tip.height ? topTop : bottomTop);
       return { mode: 'sheet', side: 'none', left: edge, top: top, arrow: null };
@@ -189,7 +194,21 @@
     };
   }
 
-  var pure = { validateTour: validateTour, placeTooltip: placeTooltip, decideAutoStart: decideAutoStart, createStore: createStore, STATUSES: STATUSES };
+  /* Replay from Help / Learn. A tour lives on one page (tour.page). From any other page the person is sent there with
+       ?tour=<id> and the page starts it on arrival (api.consumeReplay). Returns { mode: 'here' } or { mode: 'goto', url }. */
+  function replayPlan(tour, currentPage) {
+    if (!tour) return { mode: 'none' };
+    var pg = (tour.steps[0] && tour.steps[0].page) || tour.page;
+    if (!pg || pg === currentPage) return { mode: 'here' };
+    return { mode: 'goto', url: pg + '?tour=' + encodeURIComponent(tour.id) };
+  }
+  /* Reads ?tour=<id> from a location.search string; only plain ids are accepted. */
+  function readReplayParam(search) {
+    var m = /(?:^|[?&])tour=([A-Za-z0-9_-]{1,64})(?:&|$)/.exec(search || '');
+    return m ? m[1] : null;
+  }
+
+  var pure = { validateTour: validateTour, placeTooltip: placeTooltip, decideAutoStart: decideAutoStart, createStore: createStore, replayPlan: replayPlan, readReplayParam: readReplayParam, STATUSES: STATUSES };
 
   /* ════════════════ browser runtime ════════════════ */
 
@@ -304,17 +323,22 @@
       ui.cover = el('div', 'st-tour-hole-cover'); ui.ring = el('div', 'st-tour-ring');
       ui.tip = el('div', 'st-tour-tip'); ui.tip.setAttribute('role', 'dialog'); ui.tip.setAttribute('aria-modal', 'true'); ui.tip.tabIndex = -1;
       ui.arrow = el('div', 'st-tour-arrow'); ui.arrow.setAttribute('aria-hidden', 'true');
-      ui.count = el('p', 'st-tour-step'); ui.title = el('h2', 'st-tour-title'); ui.title.id = 'stTourTitle';
+      ui.count = el('span', 'st-tour-step'); ui.title = el('h2', 'st-tour-title'); ui.title.id = 'stTourTitle';
+      ui.head = el('div', 'st-tour-head');
+      ui.close = el('button', 'st-tour-close'); ui.close.type = 'button'; ui.close.setAttribute('aria-label', 'Skip tour');
+      ui.close.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+      ui.head.append(ui.title, ui.close);
       ui.body = el('p', 'st-tour-body'); ui.body.id = 'stTourBody'; ui.hint = el('p', 'st-tour-hint');
       ui.progress = el('div', 'st-tour-progress'); ui.progress.setAttribute('role', 'progressbar'); ui.progress.setAttribute('aria-valuemin', '0'); ui.progress.appendChild(el('span'));
       ui.actions = el('div', 'st-tour-actions');
-      ui.skip = el('button', 'btn btn-text btn-sm st-tour-skip', 'Skip tour'); ui.skip.type = 'button';
-      ui.back = el('button', 'btn btn-outline btn-sm', 'Back'); ui.back.type = 'button';
-      ui.next = el('button', 'btn btn-primary btn-sm', 'Next'); ui.next.type = 'button';
-      ui.actions.append(ui.skip, ui.back, ui.next);
+      ui.skip = el('button', 'btn btn-sm st-tour-btn st-tour-skip', 'Skip'); ui.skip.type = 'button'; ui.skip.setAttribute('aria-label', 'Skip tour');
+      ui.back = el('button', 'btn btn-sm st-tour-btn', 'Back'); ui.back.type = 'button';
+      ui.next = el('button', 'btn btn-primary btn-sm', 'Next step'); ui.next.type = 'button';
+      ui.buttons = el('div', 'st-tour-buttons'); ui.buttons.append(ui.back, ui.skip, ui.next);
+      ui.actions.append(ui.count, ui.buttons);
       ui.tip.setAttribute('aria-labelledby', 'stTourTitle'); ui.tip.setAttribute('aria-describedby', 'stTourBody');
       ui.scroll = el('div', 'st-tour-scroll');   /* scrolls on short screens; the pointer sits outside it so it is not clipped */
-      ui.scroll.append(ui.count, ui.title, ui.body, ui.hint, ui.progress, ui.actions);
+      ui.scroll.append(ui.head, ui.body, ui.hint, ui.actions);   /* ui.progress stays detached: it only carries the aria values */
       ui.tip.append(ui.arrow, ui.scroll);
       ui.root.append(ui.top, ui.bottom, ui.left, ui.right, ui.cover, ui.ring, ui.tip);
       return ui;
@@ -357,10 +381,17 @@
       var tipW = Math.min(cssNum('--tour-tip-width', 340), vw - 2 * cssNum('--tour-edge', 12));
       if (vw <= 768) tipW = vw - 2 * cssNum('--tour-edge', 12);
       ui.tip.style.setProperty('--tip-w', tipW + 'px');
+      /* The floating tab bar on phones: keep the card above it (it is only there while it is displayed) */
+      var inset = 0, bn = vw <= 768 ? doc.querySelector('.st-bottom-nav') : null;
+      if (bn) {
+        var bcs = win.getComputedStyle(bn), br = bn.getBoundingClientRect();
+        if (bcs.display !== 'none' && bcs.visibility !== 'hidden' && br.height > 0) inset = Math.max(0, vh - br.top);
+      }
+      ui.tip.style.setProperty('--tour-inset', inset + 'px');
       var tipH = ui.tip.offsetHeight;
       var spot = placeTooltip({
         target: box, tip: { width: tipW, height: tipH }, vp: { width: vw, height: vh }, pref: run.step.placement || 'auto',
-        gap: cssNum('--tour-tip-gap', 12), edge: cssNum('--tour-edge', 12), mobileMax: 768
+        gap: cssNum('--tour-tip-gap', 12), edge: cssNum('--tour-edge', 12), mobileMax: 768, insetBottom: inset
       });
       ui.tip.style.setProperty('--tip-x', Math.round(spot.left) + 'px'); ui.tip.style.setProperty('--tip-y', Math.round(spot.top) + 'px');
       ui.tip.setAttribute('data-side', spot.side); ui.tip.setAttribute('data-mode', spot.mode);
@@ -392,7 +423,7 @@
         if ((e.key === 'ArrowLeft') && (inTip || neutral)) { e.preventDefault(); goBack(); return; }
         if (e.key === 'Enter' && !inTip && !r.interactive) { e.preventDefault(); e.stopPropagation(); return; }   /* no accidental form submits */
         if (e.key === 'Tab' && !r.interactive) {
-          var f = [ui.skip, ui.back, ui.next].filter(function (b) { return !b.hidden && b.getAttribute('aria-disabled') !== 'true'; });
+          var f = [ui.close, ui.back, ui.skip, ui.next].filter(function (b) { return !b.hidden && b.getAttribute('aria-disabled') !== 'true'; });
           if (!f.length) { e.preventDefault(); return; }
           var i = f.indexOf(doc.activeElement);
           if (e.shiftKey) { if (i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } }
@@ -418,6 +449,7 @@
       ui.next.addEventListener('click', function () { goNext(); });
       ui.back.addEventListener('click', function () { goBack(); });
       ui.skip.addEventListener('click', function () { skip(); });
+      ui.close.addEventListener('click', function () { skip(); });
 
       function persist(patch) { return store.save(role, tour.id, Object.assign({ version: tour.version || 1 }, patch)); }
 
@@ -483,14 +515,14 @@
 
       function renderStep(step, i) {
         var total = tour.steps.length, last = i === total - 1;
-        ui.count.textContent = 'Step ' + (i + 1) + ' of ' + total;
+        ui.count.textContent = (i + 1) + '/' + total; ui.count.setAttribute('aria-label', 'Step ' + (i + 1) + ' of ' + total);
         ui.title.textContent = step.title;
         ui.body.textContent = typeof step.description === 'function' ? step.description(ctxOf()) : step.description;
         ui.hint.textContent = step.hint || (r.interactive && step.interact.gate ? 'Try it to continue.' : ''); ui.hint.hidden = !ui.hint.textContent;
         ui.progress.setAttribute('aria-valuemax', String(total)); ui.progress.setAttribute('aria-valuenow', String(i + 1));
         ui.progress.style.setProperty('--progress', Math.round(((i + 1) / total) * 100) + '%');
-        ui.back.hidden = i === 0; ui.skip.hidden = last;
-        ui.next.textContent = last ? 'Finish' : 'Next';
+        ui.back.hidden = i === 0; ui.skip.hidden = last; ui.close.hidden = last;
+        ui.next.textContent = last ? 'Finish' : 'Next step';
         setGate(false);
         r.gateOff && r.gateOff(); r.gateOff = null;
         if (r.interactive) {
@@ -581,6 +613,34 @@
           var from = opts.fromStep != null ? clamp(opts.fromStep, 0, tour.steps.length - 1) : 0;
           run(tour, from, role); return true;
         });
+      },
+
+      /* Replay button (Help / Learn): starts the tour here if it belongs to this page, otherwise goes to its page, which
+         starts it on arrival through consumeReplay(). Resolves true if it started or navigated. */
+      replay: function (id) {
+        return ready().then(function (w) {
+          var tour = registry[id];
+          if (!w || !store || !tour) return false;
+          var plan = replayPlan(tour, pageName());
+          if (plan.mode === 'goto') { win.location.assign(plan.url); return true; }
+          return api.start(id);
+        });
+      },
+      /* Pages that host tours call this once on load (after the role is known). If the address carries ?tour=<id> for a
+         tour on this page and this person's role, it removes the parameter, starts that tour from step 1 and resolves
+         true. Anything else resolves false, so it is safe to call on every visit. */
+      consumeReplay: function () {
+        var id = readReplayParam(win.location.search);
+        if (!id) return Promise.resolve(false);
+        try {
+          var u = new win.URL(win.location.href); u.searchParams.delete('tour');
+          win.history.replaceState(win.history.state, '', u.pathname + (u.search || '') + u.hash);
+        } catch (e) {}
+        var tour = registry[id];
+        if (!tour) return Promise.resolve(false);
+        var plan = replayPlan(tour, pageName());
+        if (plan.mode !== 'here') return Promise.resolve(false);
+        return api.start(id);
       },
 
       /* Starts a tour by itself only when this person has not seen it (or is part-way through). */

@@ -547,7 +547,7 @@
   --tour-scrim:       rgba(15, 26, 22, 0.62);   /* dim wash over everything except the highlighted element */
   --tour-blur:        2px;                      /* soft blur on the dimmed area */
   --tour-pad:         var(--space-2);           /* air between the element and its highlight ring */
-  --tour-tip-width:   340px;                    /* tooltip width on desktop */
+  --tour-tip-width:   300px;                    /* tooltip width on desktop (compact dark card) */
   --tour-tip-gap:     var(--space-3);           /* space between the highlight and the tooltip */
   --tour-edge:        var(--space-3);           /* closest the tooltip may get to a screen edge */
   --tour-dur:         200ms;                    /* move / fade time; 0 when the person prefers reduced motion */

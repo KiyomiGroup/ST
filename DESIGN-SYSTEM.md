@@ -410,3 +410,11 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 
 ### Dashboards (2026-10-29)
 Both dashboards use `css/dashboard.css` (prefix `db-` for shared, `tdb-` for tasker-only) instead of inline styles. Only `display:none` start states that the page script toggles stay inline. The banner colour palette on the tasker dashboard is user data (`data-color` on each swatch, painted by script), so those hex values stay.
+
+## Guided tours (onboarding Stage 1)
+
+Added to `css/tokens.css` for `js/onboarding.js` and `css/onboarding.css`: `--tour-scrim` (dim wash; **guessed**: the dark ink from the card shadows at 62%), `--tour-blur`, `--tour-pad`, `--tour-tip-width`, `--tour-tip-gap`, `--tour-edge`, `--tour-dur`, `--tour-arrow`, `--z-tour` (9000: above the nav drawer and install banner, below toasts). The tour card (Stage 4) is small and dark: `--color-dark` background, `--color-dark-border`, `--color-dark-raised` / `--color-dark-chip` for the Back and Skip buttons, `--color-text-on-primary` and `--hero-text-muted` for text, `--pt-mint` for hints, `--tour-tip-width` is now 300px. Layout: title with a close button, one or two lines of text, then the step count (`1/6`) on the left and Back / Skip / Next step on the right. Next step uses `.btn-primary`; the others use `.btn` with `.st-tour-btn`. On phones the card sits above the floating tab bar (`.st-bottom-nav`); the engine measures the bar and passes it to `placeTooltip` as `insetBottom`.
+
+## Help / Learn page (onboarding Stage 4)
+
+`learn.html` + `css/learn.css` follow the referrals page pattern: `--pt-page` background, forest hero (`--color-forest-900/700`), white panels (`--radius-hero`), tinted rows (`--pt-field`, `--radius-form`), pill tabs, `.btn-mint` and `.btn-primary`. Status chips use the `--tone-*` tokens. No new tokens.

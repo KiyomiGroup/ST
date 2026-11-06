@@ -1,0 +1,69 @@
+/* StreetTasker Help / Learn page (learn.html). Same look as the referrals page: forest hero, large white panels on --pt-page.
+   Tokens and existing components only (.btn). Layout lives here; no new colours or sizes.
+   Corner rule: 16 (--radius-form) for tiles and rows; 999 (--radius-full) for pills, buttons and chips; 32 (--radius-hero) for the hero. */
+.ln-body { background: var(--pt-page); min-height: 100vh; }
+.ln-main { width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); display: grid; gap: var(--space-5); }
+
+.ln-hero { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-6) var(--space-5); border-radius: var(--radius-hero); color: var(--color-text-on-primary);
+  background: radial-gradient(ellipse 90% 120% at 75% 0%, var(--color-forest-700) 0%, transparent 62%), var(--color-forest-900); }
+.ln-chip { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--pt-mint); color: var(--color-forest-900); font-size: var(--text-xs); font-weight: 600; }
+.ln-dot { width: var(--nav-dot-size); height: var(--nav-dot-size); border-radius: 50%; background: var(--color-primary); }
+.ln-title { margin: 0; font-size: var(--text-h1-sm); color: var(--color-text-on-primary); }
+.ln-lead { margin: 0; max-width: 56ch; font-size: var(--text-base); color: var(--hero-text-muted); }
+
+.ln-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.ln-tab { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--pt-field-strong); background: var(--color-bg); color: var(--color-text); cursor: pointer; }
+.ln-tab:hover { background: var(--pt-field); }
+.ln-tab[aria-selected="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-on-primary); }
+.ln-tab:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.ln-panel { display: grid; gap: var(--space-5); }
+.ln-section { padding: var(--space-5); border-radius: var(--radius-hero); background: var(--color-bg); border: 1px solid var(--color-border); display: grid; gap: var(--space-4); }
+.ln-h2 { margin: 0; font-size: var(--text-xl); }
+.ln-note { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.ln-state { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.ln-state[hidden], .ln-tours[hidden], .ln-btn[hidden] { display: none; }
+
+/* Tours */
+.ln-tours { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.ln-tour { display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-form); background: var(--pt-field); }
+.ln-tour-name { margin: 0; font-size: var(--text-base); }
+.ln-tour-desc { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.ln-tour-meta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted); }
+.ln-status { padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-weight: 600; background: var(--color-bg-muted); color: var(--color-text-secondary); }
+.ln-status[data-status="completed"] { background: var(--tone-success-bg); color: var(--tone-success-ink); }
+.ln-status[data-status="in_progress"] { background: var(--tone-info-bg); color: var(--tone-info-ink); }
+.ln-status[data-status="skipped"] { background: var(--tone-warning-bg); color: var(--tone-warning-ink); }
+.ln-tour .btn { justify-self: start; }
+
+/* Guides and FAQ: one <details> per item */
+.ln-guides { display: grid; gap: var(--space-3); }
+.ln-item { border-radius: var(--radius-form); background: var(--pt-field); }
+.ln-item > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); cursor: pointer; border-radius: var(--radius-form); }
+.ln-item > summary::-webkit-details-marker { display: none; }
+.ln-item > summary:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ln-item-title { margin: 0; font-size: var(--text-base); font-weight: 600; }
+.ln-item-sub { display: block; margin-top: var(--space-1); font-size: var(--text-sm); font-weight: 400; color: var(--color-text-secondary); }
+.ln-chevron { flex: none; transition: transform var(--tour-dur) ease; color: var(--color-text-muted); }
+.ln-item[open] > summary .ln-chevron { transform: rotate(180deg); }
+.ln-item-body { display: grid; gap: var(--space-3); padding: 0 var(--space-4) var(--space-4); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+.ln-item-body p { margin: 0; }
+.ln-steps { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-2); }
+.ln-tips { margin: 0; padding: var(--space-3) var(--space-4); list-style: none; display: grid; gap: var(--space-2); border-radius: var(--radius-form); background: var(--tone-success-bg); border: 1px solid var(--tone-success-border); color: var(--tone-success-ink); }
+.ln-item-body .btn { justify-self: start; }
+
+.ln-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-4) var(--space-5); border-radius: var(--radius-hero); background: var(--color-bg); border: 1px solid var(--color-border); }
+.ln-contact-text { margin: 0; font-weight: 600; }
+
+@media (min-width: 769px) {
+  .ln-hero { padding: var(--space-8) var(--space-7); }
+  .ln-title { font-size: var(--text-h1); }
+  .ln-tour { grid-template-columns: 1fr auto; align-items: center; }
+  .ln-tour .btn { justify-self: end; }
+}
+@media (max-width: 768px) {
+  .ln-main { width: calc(100% - 2 * var(--space-4)); padding-top: calc(var(--nav-height) + var(--space-4)); }
+  .ln-section { padding: var(--space-4); }
+}
+@media (prefers-reduced-motion: reduce) { .ln-chevron { transition: none; } }
+.ln-item { scroll-margin-top: calc(var(--nav-height) + var(--space-4)); }

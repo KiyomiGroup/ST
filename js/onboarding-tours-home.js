@@ -114,7 +114,10 @@
   function start() {
     var ob = typeof window !== 'undefined' && window.ST && window.ST.onboarding;
     if (!ob) return Promise.resolve(false);
-    return ob.autoStartFirst([CUSTOMER_ID, TASKER_ID]).catch(function () { return false; });
+    /* A replay sent from Help / Learn (?tour=<id>) goes first; otherwise the first-visit rule applies. */
+    return ob.consumeReplay().then(function (replayed) {
+      return replayed || ob.autoStartFirst([CUSTOMER_ID, TASKER_ID]);
+    }).catch(function () { return false; });
   }
 
   return { TOURS: TOURS, CUSTOMER_ID: CUSTOMER_ID, TASKER_ID: TASKER_ID, start: start };

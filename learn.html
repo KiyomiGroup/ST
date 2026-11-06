@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Help / Learn — Street Taskers</title>
+  <meta name="description" content="Learn how to post tasks, book services, send offers, chat and get paid on StreetTasker. Replay the guided tours any time." />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/onboarding.css" />
+  <link rel="stylesheet" href="css/learn.css" />
+</head>
+<body class="ln-body">
+  <div id="navbar-placeholder"></div>
+
+  <main class="ln-main" id="lnMain">
+    <header class="ln-hero">
+      <span class="ln-chip"><span class="ln-dot"></span>Help / Learn</span>
+      <h1 class="ln-title">How can we help?</h1>
+      <p class="ln-lead">Short guides for posting tasks, booking services, sending offers, chatting and getting paid. Guided tours show you around the real pages, and you can skip or replay them any time.</p>
+    </header>
+
+    <!-- Customers / Taskers. The person's own role is selected first. -->
+    <div class="ln-tabs" id="lnTabs" role="tablist" aria-label="Guides for">
+      <button type="button" class="ln-tab" role="tab" id="lnTabCustomer" data-role="customer" aria-selected="true" aria-controls="lnPanel">Customers</button>
+      <button type="button" class="ln-tab" role="tab" id="lnTabTasker" data-role="tasker" aria-selected="false" aria-controls="lnPanel" tabindex="-1">Taskers</button>
+    </div>
+
+    <div class="ln-panel" id="lnPanel" role="tabpanel" aria-live="polite">
+
+      <section class="ln-section" aria-labelledby="lnToursH">
+        <h2 class="ln-h2" id="lnToursH">Guided tours</h2>
+        <p class="ln-note" id="lnToursNote">Each tour highlights the real buttons and explains them. Choose Skip tour (or press Esc) to leave a tour at any time.</p>
+        <ul class="ln-tours" id="lnTours"></ul>
+        <p class="ln-state" id="lnToursState" role="status" hidden></p>
+      </section>
+
+      <section class="ln-section" aria-labelledby="lnGuidesH">
+        <h2 class="ln-h2" id="lnGuidesH">Guides</h2>
+        <div class="ln-guides" id="lnGuides"></div>
+      </section>
+
+      <section class="ln-section" aria-labelledby="lnFaqH">
+        <h2 class="ln-h2" id="lnFaqH">Frequently asked questions</h2>
+        <div class="ln-guides" id="lnFaq"></div>
+      </section>
+
+      <section class="ln-contact">
+        <p class="ln-contact-text">Still stuck? Our team is happy to help.</p>
+        <a class="btn btn-mint" href="contact.html">Contact us</a>
+      </section>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/onboarding.js"></script>
+  <script src="js/onboarding-tours-home.js"></script>
+  <!-- Each later stage adds its tours file here so Help / Learn can list and replay them -->
+  <script src="js/learn-content.js"></script>
+  <script src="js/learn.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
