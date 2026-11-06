@@ -324,8 +324,8 @@ function stCatPic(cat) {
 }
 
 /* Placeholder photo for a task card with no client photo: one picture per category (images/placeholders/), with the small
-   StreetTasker logo at the top right so people know it is a placeholder and not the client's own photo. Categories with
-   no picture (Other, unknown) keep the logo-only fallback. Cleaning has two pictures; the task id picks one so cards differ. */
+   StreetTasker logo at the top right so people know it is a placeholder and not the client's own photo. Other, unknown and
+   uncategorised tasks get the general TASK picture. Cleaning has two pictures; the task id picks one so cards differ. */
 const ST_TASK_PH = {
   cleaning: ['cleaning', 'cleaning-2'], grooming: ['grooming'], automotive: ['automotive'], handyman: ['handyman'],
   landscaping: ['landscaping'], hospitality: ['hospitality'], business: ['business'], it_tech: ['it_tech'], creative: ['creative'],
@@ -333,9 +333,9 @@ const ST_TASK_PH = {
   events: ['events']
 };
 function stTaskPhUrl(cat, id) {
-  if (!window.STCat || !cat) return '';
-  const files = ST_TASK_PH[window.STCat.resolve(cat).value];
-  if (!files) return '';
+  /* Other, unknown or no category: the general "TASK" picture */
+  const group = (window.STCat && cat) ? window.STCat.resolve(cat).value : 'other';
+  const files = ST_TASK_PH[group] || ['general'];
   const key = String(id || '');
   let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return 'images/placeholders/task-' + files[h % files.length] + '.jpg';
@@ -370,12 +370,12 @@ function stTaskCard(t) {
   const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(cat) : stLabel(cat))}</span>`;
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
   const emoji = stCatPic(cat);
-  const phUrl = (t.compact && !t.category) ? '' : stTaskPhUrl(cat, t.id);
+  const phUrl = stTaskPhUrl(cat, t.id);
   const media = photos.length
     ? `<div class="st-card-media"><img src="${e(photos[0])}" alt="" loading="lazy" />
          <span class="st-chip st-chip--glass st-card-media-tag">${ST_ICON.image}${photos.length} Client Photo${photos.length > 1 ? 's' : ''}</span></div>`
     : (phUrl
-      ? `<div class="st-card-media st-card-media--ph" data-ph="${e(window.STCat.resolve(cat).value)}"><img src="${e(phUrl)}" alt="" loading="lazy" />
+      ? `<div class="st-card-media st-card-media--ph" data-ph="${e(window.STCat ? window.STCat.resolve(cat).value : 'other')}"><img src="${e(phUrl)}" alt="" loading="lazy" />
            <img class="st-card-ph-logo" src="images/favicon.png" alt="" aria-hidden="true" /></div>`
       : `<div class="st-card-media"><div class="st-card-media-fallback" aria-hidden="true">${emoji}</div></div>`);
   const remote = (t.task_type || '') === 'remote';

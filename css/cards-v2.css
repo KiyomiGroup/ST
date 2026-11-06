@@ -186,6 +186,7 @@
   background: var(--card-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-xs);
 }
 .st-card-media--ph[data-ph="pet"] > img:first-child { object-position: center 85%; }   /* tall photo: keep the dog in the crop */
+.st-card-media--ph[data-ph="other"] > img:first-child { object-position: center 78%; }   /* general TASK picture: keep the letter blocks in the crop */
 
 /* Task cards with two buttons: smaller buttons, side by side. */
 .st-card--duo .st-card-actions { flex-wrap: nowrap; gap: var(--space-2); }
