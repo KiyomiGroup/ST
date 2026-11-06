@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/categories.css?v=1" />
   <link rel="stylesheet" href="css/cards-compact.css" />
   <link rel="stylesheet" href="css/cards-v2.css?v=1" />
+  <link rel="stylesheet" href="css/onboarding.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <style>
@@ -310,13 +311,13 @@
             </div>
             <div class="pg-hero-stack fade-up d3">
               <div data-role-only="customer">
-                <a href="post-task.html" class="pg-hero-btn">Post a Task</a>
-                <a href="find-taskers.html" class="pg-hero-btn">Browse Services</a>
+                <a href="post-task.html" class="pg-hero-btn" data-tour="home-post-task">Post a Task</a>
+                <a href="find-taskers.html" class="pg-hero-btn" data-tour="home-browse">Browse Services</a>
                 <a href="my-tasks.html" class="pg-hero-btn pg-hero-desktop-only">My Tasks</a>
               </div>
               <div data-role-only="tasker">
-                <a href="post-service.html" class="pg-hero-btn hf-btn-post">Post a Service</a>
-                <a href="find-tasks.html" class="pg-hero-btn hf-btn-find">Find Work</a>
+                <a href="post-service.html" class="pg-hero-btn hf-btn-post" data-tour="home-post-service">Post a Service</a>
+                <a href="find-tasks.html" class="pg-hero-btn hf-btn-find" data-tour="home-find-work">Find Work</a>
                 <a href="bookings.html" class="pg-hero-btn pg-hero-desktop-only">My Bookings</a>
               </div>
             </div>
@@ -347,7 +348,7 @@
     <div class="hf-top-spacer" aria-hidden="true"></div>
 
     <!-- CATEGORY CHIPS — filter the feed (wired to the sections in Steps 3-5) -->
-    <nav class="hf-chips" aria-label="Filter by category">
+    <nav class="hf-chips" aria-label="Filter by category" data-tour="home-categories">
       <div class="container">
         <div class="hf-chips-row" id="catScrollInner">
           <button type="button" class="hf-chip active" data-cat="" aria-pressed="true">All</button>
@@ -504,6 +505,8 @@
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
+  <script src="js/onboarding.js"></script>
+  <script src="js/onboarding-tours-home.js"></script>
 
   <script>
     /* ═══════════════════════════════════════════════════════════
@@ -538,6 +541,9 @@
       else initCustomerFeed();
 
       loadLiveCount();
+
+      /* First-login tour (customer or tasker). Starts only on a first visit; see js/onboarding-tours-home.js */
+      if (window.ST && window.ST.homeTours) window.ST.homeTours.start();
     }
 
     /* Real count of open tasks. If it can't be read, hide the chip rather than guess. */
