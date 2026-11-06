@@ -130,6 +130,19 @@
         <!-- Attachment preview chip (UI only until Stage 9: nothing is uploaded or sent) -->
         <div class="jr-attach-preview" id="jrAttachPreview" hidden></div>
 
+        <!-- StreetTasker Safety Reminder: always above the message input, for customers and taskers, in every conversation.
+             Not dismissible. Shown with the conversation (js below, where #inputBar is revealed). Wording is fixed by the spec. -->
+        <aside class="jr-reminder" id="jrSafetyReminder" aria-labelledby="jrSafetyReminderTitle" data-tour="chat-safety-reminder" hidden>
+          <span class="jr-reminder-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          </span>
+          <div class="jr-reminder-text">
+            <strong id="jrSafetyReminderTitle">StreetTasker Safety Reminder</strong>
+            <p>Keep all communication, agreements and payments on StreetTasker. Taking transactions off-platform violates our policies and may result in a permanent account ban.</p>
+            <p class="jr-reminder-note">Applies to both Customers and Taskers.</p>
+          </div>
+        </aside>
+
         <div class="msg-input-bar" id="inputBar" hidden>
           <div class="jr-menu-wrap">
             <button class="jr-icon-btn jr-icon-btn--plus" id="attachBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="attachMenu" aria-label="Attach" title="Attach">
@@ -371,6 +384,7 @@
     document.getElementById('chatHead').style.display   = 'flex';
     document.getElementById('chatBody').style.display   = 'flex';
     document.getElementById('inputBar').style.display   = 'flex';
+    document.getElementById('jrSafetyReminder').hidden  = false;   /* every conversation, both roles */
     document.getElementById('msgChat').classList.add('open');
 
     /* Header + task status banner (js/messages-room.js) */
