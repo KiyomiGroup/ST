@@ -313,6 +313,7 @@
       [!!f.early_access, 'Early access to new features'],
       [!!f.expanded_portfolio, 'Expanded portfolio']
     ];
+    if (f.portfolio_max != null && isFinite(Number(f.portfolio_max))) rows.push([true, plural(Number(f.portfolio_max), 'portfolio photo', 'portfolio photos')]);
     rows.forEach(function (r) {
       var li = el('li', 'mysub-include' + (r[0] ? '' : ' mysub-include--off'));
       li.appendChild(el('span', 'mysub-sr', r[0] ? 'Included: ' : 'Not included: '));

@@ -36,6 +36,7 @@
     lines.push({ on: !!f.priority_support, text: 'Priority support' });
     lines.push({ on: !!f.early_access, text: 'Early access to new features' });
     lines.push({ on: !!f.expanded_portfolio, text: 'Expanded portfolio' });
+    if (f.portfolio_max != null && isFinite(Number(f.portfolio_max))) lines.push({ on: true, text: plural(Number(f.portfolio_max), 'portfolio photo', 'portfolio photos') });
     return lines;
   }
 
@@ -148,6 +149,7 @@
     ['Priority support', function (p) { return flag((p.features || {}).priority_support); }],
     ['Early access to new features', function (p) { return flag((p.features || {}).early_access); }],
     ['Expanded portfolio', function (p) { return flag((p.features || {}).expanded_portfolio); }],
+    ['Portfolio photos', function (p) { var n = (p.features || {}).portfolio_max; return n == null || !isFinite(Number(n)) ? { on: false, plain: true, text: '-' } : { on: true, plain: true, text: String(Number(n)) }; }],
     ['Membership label', function (p) { return { on: !!p.membership_label, plain: true, text: p.membership_label || 'None', label: p.membership_label || null }; }]
   ];
 

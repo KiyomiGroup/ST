@@ -18,7 +18,8 @@
   var $ = EP.$;
   var FEE_RATE = 0.12; /* same platform fee the Overview uses (js/tasker-overview.js) */
   var BIO_MAX = 1000;
-  var PORTFOLIO_MAX = 12;
+  var PORTFOLIO_FEED_MAX = 12; /* only for the one-time import of old feed posts below; NOT the plan limit */
+  var portfolioMax = 12;       /* until the server answers; the real limit is the plan's (get_my_entitlements features.portfolio_max) and the database enforces it */
   var offers, services, certs, areas;
 
   var S = {
@@ -163,7 +164,7 @@
       card.appendChild(rm);
       host.appendChild(card);
     });
-    if (S.portfolio.length < PORTFOLIO_MAX) {
+    if (canAddPhoto()) {
       var add = document.createElement('button');
       add.type = 'button';
       add.className = 'ep-work-add';
@@ -171,8 +172,29 @@
       add.addEventListener('click', openWorkDialog);
       host.appendChild(add);
     }
-    $('epWorkAddTop').hidden = S.portfolio.length >= PORTFOLIO_MAX;
+    $('epWorkAddTop').hidden = !canAddPhoto();
+    paintLimit();
     strength();
+  }
+
+  /* S4k: the plan's photo limit. The number comes from the server; nothing here knows a plan or a figure. */
+  function canAddPhoto() { return S.portfolio.length < portfolioMax; }
+  function paintLimit() {
+    var p = $('epWorkLimit');
+    if (!p) return;
+    p.textContent = '';
+    var n = S.portfolio.length;
+    if (n > portfolioMax) p.appendChild(document.createTextNode('You have ' + n + ' photos, more than your current plan allows (' + portfolioMax + '). They all stay on your profile. To add another, remove some or choose a bigger plan. '));
+    else p.appendChild(document.createTextNode(n + ' of ' + portfolioMax + ' photos used. ' + (n >= portfolioMax ? 'You have reached your plan\u2019s limit. ' : '')));
+    if (n >= portfolioMax) { var a = document.createElement('a'); a.href = 'subscription.html'; a.textContent = 'See plans'; p.appendChild(a); }
+    p.hidden = false;
+  }
+  async function loadLimit() {
+    try {
+      var r = await window.supabase.rpc('get_my_entitlements');
+      var v = r && !r.error && r.data && r.data.features ? Number(r.data.features.portfolio_max) : NaN;
+      if (isFinite(v) && v >= 0) portfolioMax = Math.floor(v);
+    } catch (e) { /* keep the fallback; the database still enforces the real limit on save */ }
   }
 
   function openWorkDialog() {
@@ -191,6 +213,7 @@
       if (!f) { err.textContent = 'Choose a photo first.'; err.hidden = false; return; }
       var check = window.validateUpload ? window.validateUpload(f, { allowedTypes: EP.TYPES, maxBytes: EP.MAX_BANNER }) : { ok: true };
       if (!check.ok) { err.textContent = check.error; err.hidden = false; return; }
+      if (!canAddPhoto()) { err.textContent = 'You have reached your plan\u2019s photo limit.'; err.hidden = false; return; }
       btn.disabled = true; btn.textContent = 'Uploading...';
       try {
         var url = await EP.upload(f, 'portfolio', S.user.id);
@@ -247,7 +270,7 @@
     } else {
       /* first time on this page: bring over work photos already posted */
       var posts = (await safe(window.supabase.from('feed_posts').select('image_url,image,caption,content')
-        .eq('user_id', user.id).order('created_at', { ascending: false }).limit(PORTFOLIO_MAX))) || [];
+        .eq('user_id', user.id).order('created_at', { ascending: false }).limit(PORTFOLIO_FEED_MAX))) || [];
       S.portfolio = posts.filter(function (x) { return x.image_url || x.image; }).map(function (x) {
         return { image_url: x.image_url || x.image, title: x.caption || x.content || '', location: '', description: '' };
       });
@@ -265,6 +288,8 @@
 
     paintBio();
     strength();
+    await loadLimit();
+    if (S.portfolio.length > portfolioMax && !Array.isArray(d.portfolio)) S.portfolio = S.portfolio.slice(0, portfolioMax); /* imported feed photos only fill free slots */
     renderPortfolio();
     loadTrack(user.id);
   }
@@ -281,7 +306,7 @@
 
     EP.flushChips([areas]);
     EP.busy(true);
-    var extraFailed = false;
+    var extraFailed = false, limitMsg = '';
     try {
       var uid = S.user.id;
       var ex = S.existing || {};
@@ -334,18 +359,22 @@
         emergency:       { enabled: $('epEmergency').checked, text: EP.val('epEmergencyText') }
       });
       var x = await window.supabase.from('taskers').update({ profile_details: details }).eq('user_id', String(uid));
-      if (x.error) { extraFailed = true; console.error('[edit-profile-tasker] profile_details not saved:', x.error); }
+      var limitHit = x.error && /portfolio_limit:(\d+)/.exec(String(x.error.message || ''));
+      if (limitHit) { portfolioMax = parseInt(limitHit[1], 10); limitMsg = 'Core details saved, but your plan allows ' + portfolioMax + ' portfolio photos, so the extra details were not saved. Remove some photos, or choose a bigger plan, then save again.'; renderPortfolio(); }
+      else if (x.error) { extraFailed = true; console.error('[edit-profile-tasker] profile_details not saved:', x.error); }
       else S.details = details;
 
       /* Saved: the new files are now the stored ones */
       if (EP.photo.objectUrl) URL.revokeObjectURL(EP.photo.objectUrl);
       EP.photo.url = avatarUrl || ''; EP.photo.file = null; EP.photo.objectUrl = ''; EP.photo.removed = false;
       S.existing = Object.assign({}, ex, { photo_url: avatarUrl, available: $('epAvailable').checked });
-      if (!extraFailed) EP.clean();
+      if (!extraFailed && !limitMsg) EP.clean();
       EP.repaintPhoto();
 
       EP.refreshNav(name, avatarUrl);
-      if (extraFailed) {
+      if (limitMsg) {
+        EP.say(limitMsg, 'error');
+      } else if (extraFailed) {
         EP.say('Core details saved, but the extra profile details could not be stored yet. The database needs the profile_details update (docs/profile-details-migration.sql).', 'error');
       } else {
         EP.say('Profile updated successfully.', 'ok');
