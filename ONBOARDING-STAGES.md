@@ -10,8 +10,8 @@ Spec: ST onboarding spec (uploaded as a .md with the ST-Real-Main zip). One stag
 | 4 | Help / Learn centre, nav entry, replay; compact dark tour card; card clears the mobile tab bar | delivered |
 | 5 | Customer tutorials: post a task, book a service, offers, additional expenses | delivered |
 | 6 | Tasker tutorials: find and apply, respond to bookings, manage work | delivered |
-| 7 | Chat tutorials for both roles + the Actions guide (#requestBtn / #jrSheet) | next |
-| 8 | QA pass against the spec's test list, design-system check, handoff | |
+| 7 | Chat tutorials for both roles + the Actions guide (#requestBtn / #jrSheet) | delivered |
+| 8 | QA pass against the spec's test list, design-system check, handoff | next |
 
 ## Decisions
 - No staging: SQL and changes go straight to the live project. Every stage's SQL must be safe to run once on live (idempotent, no destructive statements) and say plainly what it touches.
@@ -67,3 +67,18 @@ Home tours (Stage 3): js/onboarding-tours-home.js registers 'customer-home' and 
 - The apply tour stays on find-tasks.html and explains make-offer.html in centred cards (that page needs a real task id, so it cannot be a replay target). The tasker sees the fee line there, so the copy may mention the platform fee; customer copy never does.
 - Tests: node --test tests/onboarding-tours-tasker.test.js (also checks every selector exists).
 - Stage 7 (chat tours) hosts on messages.html: add its tours file after js/onboarding.js there and on learn.html. Reserved ids still open: customer-chat, tasker-chat, payments-guide.
+
+## Stage 7 (chat tutorials + Actions guide)
+- File: js/onboarding-tours-chat.js registers three tours on messages.html (all auto: false; started from Help / Learn through ?tour=<id>, same as Stages 5 and 6):
+  | Tour id | Role | Topic on learn.html |
+  |---|---|---|
+  | customer-chat | customer | Chat and offers |
+  | tasker-chat | tasker | Chat and offers |
+  | payments-guide | any | Payments and additional costs |
+- The Actions guide lives inside the two chat tours: a step on the Actions button (#requestBtn; there is no #jrSheet id in the page, the sheet layer is #jrSheetLayer) and a centred "What is inside Actions for you" card per role. The tours never open the sheet, so nothing can be sent.
+- The chat tours follow the docked next-step panel (#jrDock, js/messages-dock.js): tasker proposes a price, customer accepts and pays, customer gets the release code and a Share location button, tasker is told to ask for location and time, tasker enters the release code. The panel only shows when the job needs something, so its steps use fallback: 'center'.
+- Host pages: messages.html and learn.html load the tours file after js/onboarding.js. messages.html now has two tour files (customer, chat); both call consumeReplay on load, the first one removes ?tour=, the second finds nothing, so a tour starts once.
+- Copy: customer-chat and payments-guide never mention the platform fee (test checks this). Chat tours cover messages.html only, not coordinator-chat.html.
+- Tests: node --test tests/onboarding-tours-chat.test.js (also checks every selector exists in messages.html or the dock script).
+- Stage 8 note: the "Chat and offers" and "Payments and additional costs" guide text in js/learn-content.js still describes the older release flow (tasker marks complete, customer taps Get Release Code). The tours teach the new docked flow, so align the guide text in Stage 8.
+
