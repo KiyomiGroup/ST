@@ -540,3 +540,17 @@
   --install-radius:     var(--radius-form);
   --install-z:          960;                          /* above the bottom nav (950), below toasts and the loader */
 }
+
+/* ── Guided tours (js/onboarding.js, css/onboarding.css) ──
+   New in onboarding Stage 1. --tour-scrim is a guess: the dark ink used in the card shadows (15, 26, 22) at 62%. */
+:root {
+  --tour-scrim:       rgba(15, 26, 22, 0.62);   /* dim wash over everything except the highlighted element */
+  --tour-blur:        2px;                      /* soft blur on the dimmed area */
+  --tour-pad:         var(--space-2);           /* air between the element and its highlight ring */
+  --tour-tip-width:   340px;                    /* tooltip width on desktop */
+  --tour-tip-gap:     var(--space-3);           /* space between the highlight and the tooltip */
+  --tour-edge:        var(--space-3);           /* closest the tooltip may get to a screen edge */
+  --tour-dur:         200ms;                    /* move / fade time; 0 when the person prefers reduced motion */
+  --tour-arrow:       12px;                     /* tooltip pointer size */
+  --z-tour:           9000;                     /* above the nav drawer (2000) and install banner (960), below toasts (9999) */
+}

@@ -1,0 +1,76 @@
+/* ============================================================
+   Guided tours — spotlight, tooltip, progress.
+   Engine: js/onboarding.js. Tokens: css/tokens.css "Guided tours".
+   ============================================================ */
+
+.st-tour { position: fixed; inset: 0; z-index: var(--z-tour); pointer-events: none; }
+
+/* Four panels around the highlighted element make the dim wash, so the element itself stays sharp and clickable
+   when a step asks the person to use it. Positions arrive as --x / --y / --w / --h from the engine. */
+.st-tour-panel {
+  position: fixed; pointer-events: auto;
+  left: var(--x, 0px); top: var(--y, 0px); width: var(--w, 0px); height: var(--h, 0px);
+  background: var(--tour-scrim);
+  -webkit-backdrop-filter: blur(var(--tour-blur)); backdrop-filter: blur(var(--tour-blur));
+  transition: left var(--tour-dur) ease, top var(--tour-dur) ease, width var(--tour-dur) ease, height var(--tour-dur) ease;
+}
+/* Transparent cover over the highlighted element when the step is "look only", so it cannot be clicked by accident */
+.st-tour-hole-cover { position: fixed; pointer-events: auto; left: var(--x, 0px); top: var(--y, 0px); width: var(--w, 0px); height: var(--h, 0px); }
+.st-tour-hole-cover[hidden] { display: none; }
+
+.st-tour-ring {
+  position: fixed; pointer-events: none;
+  left: var(--x, 0px); top: var(--y, 0px); width: var(--w, 0px); height: var(--h, 0px);
+  border-radius: var(--radius-form);
+  box-shadow: 0 0 0 2px var(--color-primary), 0 0 0 5px var(--color-bg);
+  transition: left var(--tour-dur) ease, top var(--tour-dur) ease, width var(--tour-dur) ease, height var(--tour-dur) ease, opacity var(--tour-dur) ease;
+}
+.st-tour-ring.is-empty { opacity: 0; }
+
+.st-tour-tip {
+  position: fixed; pointer-events: auto; box-sizing: border-box;
+  left: var(--tip-x, 0px); top: var(--tip-y, 0px);
+  width: var(--tip-w, var(--tour-tip-width)); max-width: calc(100vw - 2 * var(--tour-edge));
+  padding: var(--space-4); border-radius: var(--radius-form);
+  background: var(--color-bg); border: 1px solid var(--color-border); box-shadow: var(--shadow-xl);
+  color: var(--color-text); font-family: var(--font-body);
+  opacity: 0; transition: opacity var(--tour-dur) ease, left var(--tour-dur) ease, top var(--tour-dur) ease;
+}
+.st-tour-scroll { max-height: calc(100vh - 2 * var(--tour-edge) - 2 * var(--space-4)); overflow-y: auto; }
+.st-tour-tip.is-shown { opacity: 1; }
+.st-tour-tip:focus { outline: none; }
+.st-tour-tip:focus-visible { box-shadow: var(--shadow-xl), var(--shadow-focus); }
+
+.st-tour-arrow {
+  position: absolute; width: var(--tour-arrow); height: var(--tour-arrow);
+  background: var(--color-bg); border: 1px solid var(--color-border);
+  transform: rotate(45deg); display: none;
+}
+.st-tour-tip[data-side="bottom"] .st-tour-arrow { display: block; top: calc(var(--tour-arrow) / -2 - 1px); left: var(--arrow, 50%); margin-left: calc(var(--tour-arrow) / -2); border-right: 0; border-bottom: 0; }
+.st-tour-tip[data-side="top"]    .st-tour-arrow { display: block; bottom: calc(var(--tour-arrow) / -2 - 1px); left: var(--arrow, 50%); margin-left: calc(var(--tour-arrow) / -2); border-left: 0; border-top: 0; }
+.st-tour-tip[data-side="right"]  .st-tour-arrow { display: block; left: calc(var(--tour-arrow) / -2 - 1px); top: var(--arrow, 50%); margin-top: calc(var(--tour-arrow) / -2); border-right: 0; border-top: 0; }
+.st-tour-tip[data-side="left"]   .st-tour-arrow { display: block; right: calc(var(--tour-arrow) / -2 - 1px); top: var(--arrow, 50%); margin-top: calc(var(--tour-arrow) / -2); border-left: 0; border-bottom: 0; }
+
+.st-tour-step { margin: 0 0 var(--space-2); font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); }
+.st-tour-title { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+.st-tour-body { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+.st-tour-hint { margin: var(--space-3) 0 0; font-size: var(--text-xs); font-weight: 600; color: var(--color-primary); }
+
+.st-tour-progress { height: 4px; margin: var(--space-4) 0; border-radius: var(--radius-full); background: var(--color-bg-muted); overflow: hidden; }
+.st-tour-progress > span { display: block; height: 100%; width: var(--progress, 0%); border-radius: inherit; background: var(--color-primary); transition: width var(--tour-dur) ease; }
+
+.st-tour-actions { display: flex; align-items: center; gap: var(--space-2); }
+.st-tour-actions .st-tour-skip { margin-right: auto; padding-left: 0; }
+.st-tour-actions .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+
+/* Phones: the tooltip becomes a full-width card pinned to the top or bottom edge (the engine picks the side that
+   does not cover the highlighted element). */
+@media (max-width: 768px) {
+  .st-tour-tip { width: calc(100vw - 2 * var(--tour-edge)); }
+  .st-tour-tip[data-mode="sheet"] .st-tour-arrow { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-tour { --tour-dur: 0ms; }
+  .st-tour-panel, .st-tour-ring, .st-tour-tip, .st-tour-progress > span { transition: none; }
+}
