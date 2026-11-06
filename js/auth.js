@@ -780,10 +780,12 @@ async function signUpUser({ name, email, password, role, phone = '' }) {
   if (problem) throw new Error(problem);
   /* Supabase silently resends confirmation for duplicate emails instead of erroring.
      Detect this by checking identities array on the returned user object. */
+  /* Referral (M14): pass the stored visit id so the database can credit the person who invited them once the email is verified */
+  const refVisit = (window.STReferral && window.STReferral.visitId()) || null;
   const { data, error } = await window.supabase.auth.signUp({
     email, password,
     options: {
-      data: { name, role },
+      data: refVisit ? { name, role, ref_visit: refVisit } : { name, role },
       /* Where the "Confirm your email" link in the message sends them back to */
       emailRedirectTo: window.location.origin + '/login.html',
     },
@@ -807,6 +809,7 @@ async function signUpUser({ name, email, password, role, phone = '' }) {
       { onConflict: 'id' }
     );
   }
+  if (window.STReferral) window.STReferral.clear(); /* the visit id now lives on the new account */
   /* needsVerification = Supabase wants the email confirmed before login.
      If the project has "Confirm email" switched off it hands back a live
      session instead; drop it so the person lands on the log-in page and

@@ -122,6 +122,7 @@
   <!-- Supabase CDN — must load before supabaseClient.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/referral-capture.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
@@ -243,6 +244,11 @@
             }).catch(() => {});
             localStorage.setItem('st_role', oauthRole);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
+            /* Referral (M14): Google has no sign-up form, so hand the stored visit id to the database once. It decides; a failure changes nothing. */
+            try {
+              const refVisit = window.STReferral && window.STReferral.visitId();
+              if (refVisit) { await window.supabase.rpc('referral_claim', { p_visit: refVisit }); window.STReferral.clear(); }
+            } catch (e) {}
             /* First time in: where they clicked before signing up, else their first-time page */
             const backTo = takeRememberedRedirect();
             await window.ST.auth.markWelcomed();
