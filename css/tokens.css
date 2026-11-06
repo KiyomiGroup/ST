@@ -155,6 +155,11 @@
      both buttons stay side by side. The buttons themselves are smaller (text-xs, tight padding) so the card does not grow much. */
   --cc-task-card-width-phone:   224px;
   --cc-task-card-width-desktop: 268px;
+
+  /* Explore popular tasks (homepage): photo cards, a dark green fade over the left side for the text */
+  --pop-card-height:     190px;
+  --pop-card-height-sm:  140px;   /* phones and small tablets: smaller cards */
+  --pop-photo-share:     72%;     /* how much of the card (from the right) the photo fills */
 }
 
 /* ── Post-a-task page tokens (post-task.html) ──

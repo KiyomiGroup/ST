@@ -483,23 +483,34 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .pop-card p  { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
 .pop-card.pop-more { justify-content: center; }
 
-/* Illustrated card variant (illustration on the right) */
-.pop-card--illus {
-  position: relative; overflow: hidden; min-height: 190px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-forest-800));
-  border-color: transparent;
+/* Photo card variant: the category photo on the right, a dark green fade over the left for the text, white "Learn More" pill. */
+.pop-card--photo {
+  position: relative; overflow: hidden; isolation: isolate; min-height: var(--pop-card-height);
+  background: var(--color-forest-900); border: 2px solid var(--white); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg); padding: var(--space-5);
 }
-.pop-card--illus:hover { border-color: transparent; }
-.pop-card--dark { background: linear-gradient(135deg, var(--color-forest-800), var(--color-forest-950)); }
-.pop-card--dark p { color: var(--color-mint-border); }
-.pop-card--illus .pop-text { position: relative; z-index: 1; max-width: 55%; }
-.pop-card--illus h3 { color: var(--white); font-size: var(--text-lg); }
-.pop-card--illus p  { color: var(--color-primary-soft); }
-.pop-card--illus .pop-link {
-  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: var(--space-2);
-  font-size: var(--text-sm); font-weight: 600; color: var(--color-primary-soft);
+.pop-card--photo:hover { border-color: var(--white); box-shadow: var(--shadow-lg); }
+.pop-card--photo::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(90deg, var(--color-forest-900) 0%, var(--color-forest-900) 30%, transparent 85%);
 }
-.pop-illus { position: absolute; right: -2%; bottom: -4%; height: 108%; width: auto; max-width: none; pointer-events: none; }
+.pop-photo { position: absolute; top: 0; right: 0; width: var(--pop-photo-share); height: 100%; max-width: none; object-fit: cover; z-index: -1; pointer-events: none; }
+.pop-card--photo .pop-text { position: relative; z-index: 1; max-width: 55%; }
+.pop-card--photo h3 { color: var(--white); font-size: var(--text-lg); }
+.pop-card--photo p  { color: var(--color-mint-border); }
+.pop-card--photo .pop-link {
+  position: relative; z-index: 1; align-self: flex-start; display: inline-flex; align-items: center; justify-content: center;
+  min-height: var(--space-6); padding: 0 var(--space-5); border-radius: var(--radius-pill);
+  background: var(--white); color: var(--color-forest-900); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
+}
+@media (max-width: 768px) {
+  /* Phones: smaller cards (shorter, tighter, smaller type and button) */
+  .pop-card--photo { min-height: var(--pop-card-height-sm); padding: var(--space-4); border-radius: var(--radius-2xl); }
+  .pop-card--photo .pop-text { max-width: 60%; }
+  .pop-card--photo h3 { font-size: var(--text-base); margin-bottom: var(--space-1); }
+  .pop-card--photo p { font-size: var(--text-xs); line-height: 1.4; }
+  .pop-card--photo .pop-link { min-height: var(--space-5); padding: 0 var(--space-4); font-size: var(--text-xs); }
+}
 .pop-more-link { display: flex; align-items: center; justify-content: space-between; color: var(--blue); font-weight: 700; }
 
 /* ── Getting help / steps (simple) ──────────────────────────────── */
