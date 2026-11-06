@@ -69,8 +69,8 @@ function svcNormalize(row, user) {
     availability: row.availability_status || 'available_this_week',
     created_at: row.created_at || null,
     provider: (user && (user.business_name || user.name)) || 'Provider',
-    rating: Number(row.rating) || 0,
-    reviews_count: Number(row.reviews_count) || 0,
+    rating: 0,          /* M10a: never services.rating (users can write it); the real value is filled from rating_summary in svcLoad */
+    reviews_count: 0,
     turnaround: row.turnaround || '',
     perk: row.perk || '',
   };
@@ -112,6 +112,14 @@ async function svcLoad() {
       });
     }
   } catch (e) { /* label is optional */ }
+
+  /* Real ratings (M10a): rating_summary through STRating. No reviews or no answer = no number on the card. */
+  try {
+    if (window.STRating) {
+      const rs = await STRating.load(SVC_ALL.filter(x => !x.isLocal).map(x => x.user_id), 'tasker');
+      SVC_ALL.forEach(x => { const r = rs[String(x.user_id).toLowerCase()]; if (r) { x.rating = r.avg; x.reviews_count = r.count; } });
+    }
+  } catch (e) { /* ratings are optional */ }
 
   /* Membership labels (S4i): one question for everyone on the page; Local Taskers are left out. No answer = no label. */
   try {

@@ -97,7 +97,7 @@
 
   /* ── data ────────────────────────────────────────────────── */
   async function loadPosterStats(sb, posterId) {
-    var out = { tasks: [], bookings: [], reviews: [] };
+    var out = { tasks: [], bookings: [], rating: null };
     try {
       var r = await sb.from('tasks').select('id, status').or('customer_id.eq.' + posterId + ',user_id.eq.' + posterId).limit(200);
       if (r.error) r = await sb.from('tasks').select('id, status').eq('user_id', posterId).limit(200);
@@ -108,8 +108,8 @@
       out.bookings = b.error ? [] : (b.data || []);
     } catch (e) { /* hidden */ }
     try {
-      var v = await sb.from('reviews').select('rating').eq('reviewee_id', posterId).limit(200);
-      out.reviews = (v.error ? [] : (v.data || [])).filter(function (x) { return Number(x.rating) > 0; });
+      /* M10a: the poster's rating AS A CUSTOMER from rating_summary (before, this read every review about the person, tasker reviews included) */
+      if (window.STRating) { var rs = await STRating.load([posterId], 'customer'); out.rating = rs[String(posterId).toLowerCase()] || null; }
     } catch (e) { /* hidden */ }
     return out;
   }
@@ -125,7 +125,7 @@
       var byId = {};
       if (ids.length) {
         try {
-          var t = await sb.from('taskers').select('user_id, name, business_name, rating, photo_url').in('user_id', ids);
+          var t = await sb.from('taskers').select('user_id, name, business_name, photo_url').in('user_id', ids);
           (t.data || []).forEach(function (x) { byId[String(x.user_id)] = x; });
         } catch (e) { /* names stay generic */ }
         var missing = ids.filter(function (i) { return !byId[i]; });
@@ -136,11 +136,14 @@
           } catch (e) { /* names stay generic */ }
         }
       }
+      /* M10a: each offer's tasker rating from rating_summary, never taskers.rating */
+      var summ = {};
+      try { if (window.STRating) summ = await STRating.load(ids, 'tasker'); } catch (e) { /* no rating shown */ }
       res.rows = rows.map(function (a) {
         var tk = byId[String(a.tasker_id)] || {}, p = parseMessage(a.message);
         return {
           id: a.id, taskerId: a.tasker_id, name: text(tk.business_name) || text(tk.name) || 'StreetTasker tasker',
-          photo: safeUrl(text(tk.photo_url)), rating: Number(tk.rating) || 0, pitch: p.pitch, rate: p.rate, status: a.status,
+          photo: safeUrl(text(tk.photo_url)), rating: (summ[String(a.tasker_id).toLowerCase()] || {}).avg || 0, pitch: p.pitch, rate: p.rate, status: a.status,
           mine: !!(state.viewer && String(a.tasker_id) === String(state.viewer.id))
         };
       });
@@ -328,10 +331,7 @@
     var cells = [];
     if (real.length) cells.push(['Tasks posted', String(real.length)]);
     if (decided >= 3) cells.push(['Hire rate', Math.round(hired / decided * 100) + '%']);
-    if (stats.reviews.length) {
-      var avg = stats.reviews.reduce(function (n, r) { return n + Number(r.rating); }, 0) / stats.reviews.length;
-      cells.push(['Rating', avg.toFixed(1) + ' \u2605 (' + stats.reviews.length + ')']);
-    }
+    if (stats.rating) cells.push(['Rating', stats.rating.avg.toFixed(1) + ' \u2605 (' + stats.rating.count + ')']);
     $('tdPosterStats').innerHTML = cells.map(function (c) { return '<div class="td-stat"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[0]) + '</span></div>'; }).join('');
 
     var ver = [];
@@ -485,7 +485,7 @@
     /* Poster, their summary, offers and my own offer load together; each can fail without breaking the page */
     var results = await Promise.all([
       state.posterId ? sb.from('users').select('*').eq('id', state.posterId).maybeSingle().then(function (x) { return x.data; }, function () { return null; }) : Promise.resolve(null),
-      state.posterId ? loadPosterStats(sb, state.posterId) : Promise.resolve({ tasks: [], bookings: [], reviews: [] }),
+      state.posterId ? loadPosterStats(sb, state.posterId) : Promise.resolve({ tasks: [], bookings: [], rating: null }),
       loadOffers(sb, t.id),
       state.isOwner ? Promise.resolve(null) : loadMyApplication(sb, t.id, state.viewer)
     ]);

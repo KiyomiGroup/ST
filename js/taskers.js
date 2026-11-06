@@ -121,7 +121,6 @@ async function loadServices() {
       user_id: s.user_id,
       provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider',
       available: s.available, fromServices: true,
-      rating: s.rating, reviews_count: s.reviews_count,
       specialties: s.specialties, availability_status: s.availability_status, verified: s.verified,
     }));
     if (services && services.length > 0) {
@@ -136,8 +135,8 @@ async function loadServices() {
         location:      s.location || 'Lagos',
         price:         parseFloat(s.price || s.rate_value || 5000),
         rate:          s.rate || `₦${Number(s.price || 5000).toLocaleString()}/session`,
-        rating:        parseFloat(s.rating || 4.5),
-        reviews:       parseInt(s.reviews || s.reviews_count || 0),
+        rating:        0,   /* M10a: real ratings come from rating_summary below; the services.rating column and the old 4.5 default are never shown */
+        reviews:       0,
         description:   s.description || s.bio || '',
         photo:         s.photo || s.photo_url || null,
         specialties:   s.specialties, availability_status: s.availability_status, verified: s.verified,
@@ -167,6 +166,14 @@ async function loadServices() {
           });
         }
       } catch (_le) { /* label is optional */ }
+      /* Real ratings (M10a): rating_summary through STRating, for real people only (Local Taskers have none). No reviews = 0, so no number is shown
+         and the rating filter and sort use real values. If the lookup fails every live card simply shows no rating. */
+      try {
+        if (window.STRating) {
+          const rs = await STRating.load(liveMapped.filter(m => !m.isLocal).map(m => m.user_id), 'tasker');
+          liveMapped.forEach(m => { const r = rs[String(m.user_id).toLowerCase()]; if (r) { m.rating = r.avg; m.reviews = r.count; } });
+        }
+      } catch (_re) { /* ratings are optional */ }
       /* Membership labels (S4h): one question to the server for the whole list (membership_for_users).
          Never read from a column. Local Taskers have no account, so they are not asked. No answer = no label. */
       try {
@@ -431,7 +438,7 @@ function _openBookingModal(svcId) {
   if (nameEl)    nameEl.textContent    = s.provider_name;
   if (serviceEl) serviceEl.textContent = s.service_name;
   if (rateEl)    rateEl.textContent    = `₦${Number(s.price).toLocaleString()}/session`;
-  if (ratingEl)  ratingEl.textContent  = `${s.rating.toFixed(1)} ★`;
+  if (ratingEl)  ratingEl.textContent  = s.rating > 0 ? `${s.rating.toFixed(1)} ★` : 'New';
   if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
 
   /* Avatar: photo or initials */
