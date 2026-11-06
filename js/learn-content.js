@@ -97,8 +97,8 @@
       tours: ['customer-chat', 'tasker-chat'],
       steps: [
         'Open Messages and choose the job conversation. Talk through the requirements before you agree anything.',
-        'Use the Request button for everything beyond chatting, such as asking for a price, an update, proof of work or a new date and time. Only the actions that fit the job right now are shown.',
-        'The tasker can propose the agreed price. The customer accepts or declines it.',
+        'The panel above the message box always shows your next step. The tasker proposes the agreed price, and the customer accepts or declines it there.',
+        'Use the Actions button for everything beyond chatting, such as asking for an update, proof of work or a new date and time. Only the actions that fit the job right now are shown.',
         'Look for the StreetTasker Safety Reminder above the message box. It is shown in every conversation.'
       ],
       tips: ['Do not share phone numbers or take the deal off the platform. Moving a job off StreetTasker breaks our policies and can lead to a permanent ban.'] },
@@ -111,8 +111,9 @@
         'Paid money is held by StreetTasker. It is not released to the tasker until the job is complete.',
         'Taskers should start work only after StreetTasker shows the payment as confirmed.',
         'Need transport, materials or another extra cost? The tasker sends it as a request in the chat. The customer pays it or declines it, and nothing is added to the job without the customer’s say-so.',
-        'When the work is done, the tasker marks it complete. The customer reviews it, then taps Get Release Code and shares the 6-digit code with the tasker.',
-        'The tasker enters the code and the payment is released. If something is wrong, the customer can choose Request Changes or Report an Issue instead.'
+        'After paying, the customer taps Share location so the tasker knows where to come, and agrees the time in the chat.',
+        'Once the customer has paid they get a 6-digit release code. When the job is done and they are happy, they give it to the tasker, who enters it above the message box. The payment is then released.',
+        'If something is wrong, the customer can choose Request Changes or Report an Issue from Actions instead of sharing the code.'
       ],
       tips: ['Only share the release code once you are happy with the work.'] },
 
