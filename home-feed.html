@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Street Taskers — Home</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/cards-compact.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <style>
     /* ── Feed Layout ──────────────────────────────────────────── */
@@ -471,50 +468,35 @@
           <a href="dashboard-tasker.html?setup=1" class="st-pp-cta"><span class="st-pp-long">Complete Profile</span><span class="st-pp-short">Boost Now</span></a>
         </aside>
 
-        <section class="hf-sec" aria-labelledby="hfTNearbyTitle">
+        <!-- M12b: Urgent, Near You and Matching rows are built by initTaskerFeed() with STCompact.row (js/cards-compact.js) -->
+        <div id="hfTkRows"></div>
+
+        <section class="hf-sec" id="hfAllSec" aria-labelledby="hfAllTitle" hidden>
           <div class="hf-sec-head">
             <div>
-              <h2 id="hfTNearbyTitle"><span class="hf-live-dot" aria-hidden="true"></span>Nearby Tasks</h2>
-              <p class="hf-sec-sub">Fresh requests close to your saved area</p>
+              <h2 id="hfAllTitle">All Available Tasks</h2>
+              <p class="hf-sec-sub" id="hfAllSub">Every open task, newest first</p>
             </div>
             <a href="find-tasks.html">Find work <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
           </div>
-          <div class="hf-tgrid" id="hfTaskNearby">
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            </div>
+          <form class="cc-tools" id="hfAllTools" role="search" novalidate>
+            <input type="search" class="form-input" id="hfAllSearch" placeholder="Search all tasks" aria-label="Search all available tasks" maxlength="80" autocomplete="off" />
+            <select class="form-select" id="hfAllSort" aria-label="Sort tasks">
+              <option value="newest">Newest first</option>
+              <option value="nearest" hidden disabled>Nearest first</option>
+              <option value="budget_high">Highest budget</option>
+            </select>
+          </form>
+          <div class="cc-grid" id="hfAllGrid" role="list"></div>
+          <div class="cc-msg" id="hfAllMsg" role="status" hidden>
+            <p class="cc-msg-text" id="hfAllMsgText"></p>
+            <button type="button" class="cc-retry" id="hfAllRetry" hidden>Try again</button>
+          </div>
+          <div class="cc-more"><button type="button" class="btn btn-outline" id="hfAllMore" hidden>Load More</button></div>
         </section>
 
-        <section class="hf-sec" aria-labelledby="hfTUrgentTitle">
-          <div class="hf-sec-head">
-            <div>
-              <h2 id="hfTUrgentTitle">Urgent Tasks</h2>
-              <p class="hf-sec-sub">Customers who need help right now</p>
-            </div>
-            <a href="find-tasks.html">See all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-          </div>
-          <div class="hf-tgrid" id="hfTaskUrgent">
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            </div>
-        </section>
-
-        <section class="hf-sec" aria-labelledby="hfTMatchTitle">
-          <div class="hf-sec-head">
-            <div>
-              <h2 id="hfTMatchTitle">Tasks matching your skills</h2>
-              <p class="hf-sec-sub"><span id="hfMatchSub">Based on the service on your profile</span></p>
-            </div>
-            <a href="find-tasks.html">Find work <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-          </div>
-          <div class="hf-tgrid" id="hfTaskMatch">
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            <div class="hf-tcard hf-card-skel" aria-hidden="true"><div class="skel hf-skel-line"></div><div class="skel hf-skel-line hf-skel-short"></div></div>
-            </div>
-        </section>
+        <!-- Referral CTA: placeholder, stays hidden until stage M15 supplies the real link and text -->
+        <div id="hfTkReferral"></div>
 
         <section class="hf-sec" aria-labelledby="hfJobsTitle">
           <div class="hf-sec-head">
@@ -568,6 +550,7 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/cards-compact.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
@@ -935,76 +918,199 @@
       renderCustomerFeed();
     }
 
-    /* ── Tasker feed (Step 4) ────────────────────────────────── */
-    let _tkTasks   = [];
+    /* ── Tasker feed (M12b) ──────────────────────────────────────
+       Order: Urgent -> Tasks Near You -> Matching Your Services -> All Available -> Referral CTA (hidden until M15).
+       Every list comes from a database function (sql/location/m12a-core.sql, m12b-core.sql) and each call gets the ids already shown
+       above it, so no task appears twice. Distances are real or absent. Nothing is invented. */
     let _tkCat     = '';
-    let _tkError   = false;
-    let _tkProfile;   /* undefined = still loading, false = lookup failed */
+    let _tkProfile;   /* undefined = still loading, false = lookup failed, object = loaded */
+    let _tkPoint   = null;   /* { lat, lon } of the tasker's SAVED PROFILE location, never the hero chip */
+    let _tkPlace   = '';     /* the saved place text */
     const JOB_DONE = ['completed', 'cancelled', 'canceled', 'closed', 'done', 'expired', 'rejected', 'declined'];
+    const TK_PROFILE_HREF = 'edit-profile-tasker.html';
+    const TK = { limit: 12, rows: null, seen: new Set(), run: 0,
+                 all: { items: [], offset: 0, more: false, busy: false, token: 0, search: '', sort: 'newest', timer: 0, wired: false } };
 
-    function _isUrgent(t) { return !!t.urgent || String(t.urgency || '').toLowerCase() === 'immediate'; }
+    async function _tkRpc(name, args) {
+      const { data, error } = await window.supabase.rpc(name, args);
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+    function _tkPointArgs() { return _tkPoint ? { p_lat: _tkPoint.lat, p_lon: _tkPoint.lon } : { p_lat: null, p_lon: null }; }
+    function _tkCard(r) {
+      return STCompact.taskCard({
+        id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at,
+        offers_count: Number(r.offers_count),
+        distance_km: (typeof r.distance_km === 'number' && isFinite(r.distance_km)) ? r.distance_km : null,
+        href: 'find-tasks.html?task=' + encodeURIComponent(r.id),   /* opens Find Work with the apply form (it owns the eligibility rules) */
+      }, { urgent: r.is_urgent === true });
+    }
+    function _tkRemember(rows) { rows.forEach(r => TK.seen.add(String(r.id))); }
+    function _tkSeenList() { return Array.from(TK.seen); }
 
-    /* Opens Find Work with the apply form for this task already open */
-    function _taskUrl(t) { return 'find-tasks.html?task=' + encodeURIComponent(t.id || ''); }
-    function _locScore(t) { return _locScoreText(t.location); }
-
+    /* Words from the tasker's service for the Matching row: letters only, first 5 letters of each word, no filler words */
+    const TK_STOP = ['and', 'the', 'for', 'with', 'service', 'services', 'general', 'work', 'home', 'professional', 'expert', 'other'];
     function _skillKeys() {
       if (!_tkProfile) return [];
-      return [_tkProfile.category, _tkProfile.service, _tkProfile.service_name]
-        .map(v => String(v || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 5))
-        .filter((v, i, a) => v.length >= 3 && a.indexOf(v) === i);
+      const words = [_tkProfile.category, _tkProfile.service, _tkProfile.service_name]
+        .join(' ').toLowerCase().split(/[^a-z]+/).filter(w => w.length >= 3 && !TK_STOP.includes(w));
+      return words.map(w => w.slice(0, 5)).filter((w, i, a) => a.indexOf(w) === i).slice(0, 6);
     }
 
-    function taskFeedCardHtml(t) {
-      const urgent = _isUrgent(t);
-      const flags = (t.category ? '<span class="hf-task-cat">' + escapeHtml(t.category) + '</span>' : '')
-        + (urgent ? '<span class="hf-tflag-urgent">Urgent</span>' : '');
-      return '<a class="hf-tcard" href="' + _taskUrl(t) + '">'
-        + '<div class="hf-tcard-top"><div class="hf-tflags">' + flags + '</div>'
-        + '<div class="hf-tbudget">₦' + Number(t.budget || 0).toLocaleString() + '</div></div>'
-        + '<div class="hf-tcard-title">' + escapeHtml(t.title || 'Task') + '</div>'
-        + (t.description ? '<div class="hf-card-desc">' + escapeHtml(t.description) + '</div>' : '')
-        + '<div class="hf-tcard-foot">'
-        + '<div class="hf-tmeta"><span>' + PIN_SVG + escapeHtml(t.location || 'Lagos') + '</span><span>' + _timeAgo(t.created_at) + '</span>'
-        + (t._offers > 0 ? '<span>' + t._offers + (t._offers === 1 ? ' offer' : ' offers') + '</span>' : '') + '</div>'
-        + '<span class="hf-offer">Offer</span></div></a>';
+    function _tkBuildRows() {
+      const mount = document.getElementById('hfTkRows');
+      if (!mount) return null;
+      mount.textContent = '';
+      const mk = (title, extra) => {
+        const r = STCompact.row(Object.assign({ title, skeleton: 'task', viewAllHref: 'find-tasks.html', viewAllLabel: 'View All' }, extra || {}));
+        r.stOnRetry(() => loadTaskerHome());
+        mount.appendChild(r);
+        return r;
+      };
+      TK.rows = {
+        urgent: mk('Urgent Tasks', { errorText: 'We couldn\'t load urgent tasks right now.' }),
+        near:   mk('Tasks Near You', { errorText: 'We couldn\'t load nearby tasks right now.' }),
+        match:  mk('Matching Your Services', { errorText: 'We couldn\'t load matching tasks right now.' }),
+      };
+      /* Referral CTA: hidden placeholder (M15 turns it on) */
+      const ref = document.getElementById('hfTkReferral');
+      if (ref && !ref.firstChild) ref.appendChild(STCompact.referralStrip({ title: 'More People. More Tasks. More Opportunities.', show: false }));
+      return TK.rows;
     }
 
-    function _fillTasks(id, list, emptyHtml) {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = list.length ? list.map(taskFeedCardHtml).join('') : '<div class="hf-empty">' + emptyHtml + '</div>';
+    async function _tkFillRow(row, rpc, args) {
+      const rows = await _tkRpc(rpc, args);
+      _tkRemember(rows);
+      row.stSetItems(rows.map(_tkCard));   /* empty list hides the section */
     }
 
-    function renderTaskerFeed() {
-      if (_tkError) {
-        const e = _errHtml('We couldn\'t load tasks right now.');
-        ['hfTaskNearby', 'hfTaskUrgent', 'hfTaskMatch'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = e; });
-        return;
+    async function loadTaskerHome() {
+      const run = ++TK.run;
+      TK.seen = new Set();
+      const rows = TK.rows || _tkBuildRows();
+      if (!rows) return;
+      Object.keys(rows).forEach(k => rows[k].stSetState('loading'));
+      const pt = _tkPointArgs();
+      const stale = () => run !== TK.run;
+
+      /* 1. Urgent */
+      try { await _tkFillRow(rows.urgent, 'homepage_urgent_tasks', Object.assign({ p_exclude: [], p_limit: TK.limit }, pt)); }
+      catch (e) { console.warn('[home] urgent', e); if (!stale()) rows.urgent.stSetState('error'); }
+      if (stale()) return;
+
+      /* 2. Near you: saved profile location only */
+      if (!_tkPoint) {
+        if (_tkProfile === undefined) { /* cannot happen: profile is loaded first */ }
+        const msg = _tkPlace
+          ? 'We couldn\'t place “' + _tkPlace + '” on the map yet. Choose a nearby area in your profile to see tasks near you.'
+          : 'Add your location to your profile to see tasks near you.';
+        rows.near.stShowMessage(msg, 'Update profile location', TK_PROFILE_HREF);
+      } else {
+        try { await _tkFillRow(rows.near, 'homepage_nearby_tasks', { p_lat: _tkPoint.lat, p_lon: _tkPoint.lon, p_exclude: _tkSeenList(), p_categories: null, p_limit: TK.limit }); }
+        catch (e) { console.warn('[home] near', e); if (!stale()) rows.near.stSetState('error'); }
       }
-      const base = _tkTasks.filter(t => _matchesCat({ category: t.category || '', service: t.title || '' }, _tkCat));
-      const none = _tkCat ? 'No tasks in this category right now. Try another one.' : 'No tasks right now. Check back soon.';
+      if (stale()) return;
 
-      /* Nearby: tasks in your saved area first, then newest */
-      const nearby = base.slice().sort((a, b) => _locScore(b) - _locScore(a)).slice(0, 6);
-      _fillTasks('hfTaskNearby', nearby, none);
-
-      _fillTasks('hfTaskUrgent', base.filter(_isUrgent).slice(0, 3),
-        _tkCat ? none : 'No urgent tasks right now.');
-
+      /* 3. Matching your services */
       const keys = _skillKeys();
-      const sub = document.getElementById('hfMatchSub');
-      if (!keys.length) {
-        const el = document.getElementById('hfTaskMatch');
-        if (!el || _tkProfile === undefined) return;   /* keep the skeleton until the profile is known */
-        el.innerHTML = _tkProfile === false
-          ? '<div class="hf-empty">We couldn\'t load your skills right now.</div>'
-          : '<div class="hf-empty">Add your service to your profile to see tasks that match your skills.<br /><a class="hf-empty-cta" href="dashboard-tasker.html?setup=1">Complete profile</a></div>';
-        return;
+      if (_tkProfile === false) {
+        rows.match.stSetState('error');
+      } else if (!keys.length) {
+        rows.match.stShowMessage('Add your service to your profile to see tasks that match your skills.', 'Complete profile', 'dashboard-tasker.html?setup=1');
+      } else {
+        try { await _tkFillRow(rows.match, 'homepage_matching_tasks', Object.assign({ p_keys: keys, p_exclude: _tkSeenList(), p_limit: TK.limit }, pt)); }
+        catch (e) { console.warn('[home] match', e); if (!stale()) rows.match.stSetState('error'); }
       }
-      const svc = _tkProfile.service || _tkProfile.service_name || _tkProfile.category;
-      if (sub && svc) sub.textContent = 'Matched to your service: ' + svc;
-      const match = base.filter(t => { const h = ((t.category || '') + ' ' + (t.title || '')).toLowerCase(); return keys.some(k => h.includes(k)); }).slice(0, 6);
-      _fillTasks('hfTaskMatch', match, 'No tasks match your skills right now. We\'ll show them here as they come in.');
+      if (stale()) return;
+
+      /* 4. All available (exclude list is now fixed for this load) */
+      TK.allExclude = _tkSeenList();
+      _tkAllReset();
+    }
+
+    /* ── All Available: search, sort, chip filter, Load More ── */
+    function _tkAllEl(id) { return document.getElementById(id); }
+    function _tkAllMsg(text, retry) {
+      const box = _tkAllEl('hfAllMsg'); if (!box) return;
+      _tkAllEl('hfAllMsgText').textContent = text || '';
+      _tkAllEl('hfAllRetry').hidden = !retry;
+      box.hidden = !text;
+    }
+    function _tkAllWire() {
+      if (TK.all.wired) return;
+      TK.all.wired = true;
+      const s = _tkAllEl('hfAllSearch'), o = _tkAllEl('hfAllSort'), f = _tkAllEl('hfAllTools');
+      if (f) f.addEventListener('submit', e => { e.preventDefault(); clearTimeout(TK.all.timer); _tkAllReset(); });
+      if (s) s.addEventListener('input', () => { clearTimeout(TK.all.timer); TK.all.timer = setTimeout(_tkAllReset, 350); });
+      if (o) o.addEventListener('change', _tkAllReset);
+      _tkAllEl('hfAllMore').addEventListener('click', () => _tkAllLoad(false));
+      _tkAllEl('hfAllRetry').addEventListener('click', () => _tkAllLoad(TK.all.items.length === 0));
+    }
+    function _tkAllReset() {
+      _tkAllWire();
+      const A = TK.all;
+      A.items = []; A.offset = 0; A.more = false;
+      const sEl = _tkAllEl('hfAllSearch'), oEl = _tkAllEl('hfAllSort');
+      A.search = ((sEl && sEl.value) || '').trim();
+      /* "Nearest" only makes sense when the tasker's own point is known */
+      const near = oEl && oEl.querySelector('option[value="nearest"]');
+      if (near) { near.hidden = !_tkPoint; near.disabled = !_tkPoint; }
+      A.sort = (oEl && oEl.value === 'nearest' && !_tkPoint) ? 'newest' : ((oEl && oEl.value) || 'newest');
+      if (oEl && oEl.value !== A.sort) oEl.value = A.sort;
+      const sub = _tkAllEl('hfAllSub');
+      const chip = document.querySelector('#catScrollInner .hf-chip.active');
+      if (sub) sub.textContent = _tkCat ? 'Filtered by ' + ((chip && chip.textContent.trim()) || _tkCat) + ' (clear it with the All chip)' : 'Every open task, newest first';
+      if (sub && !_tkCat && A.sort === 'nearest') sub.textContent = 'Every open task, nearest first';
+      if (sub && !_tkCat && A.sort === 'budget_high') sub.textContent = 'Every open task, highest budget first';
+      _tkAllLoad(true);
+    }
+    async function _tkAllLoad(first) {
+      const A = TK.all, grid = _tkAllEl('hfAllGrid'), sec = _tkAllEl('hfAllSec'), more = _tkAllEl('hfAllMore');
+      if (!grid || !sec) return;
+      const token = ++A.token;
+      A.busy = true;
+      _tkAllMsg('');
+      more.hidden = true;
+      if (first) {
+        sec.hidden = false;
+        grid.hidden = false;
+        grid.textContent = '';
+        for (let i = 0; i < 6; i++) { const k = STCompact.skeleton('task'); k.setAttribute('role', 'listitem'); grid.appendChild(k); }
+        grid.setAttribute('aria-busy', 'true');
+      } else { more.disabled = true; }
+      try {
+        const cats = _tkCat ? (CAT_ALIASES[_tkCat] || [_tkCat]) : null;
+        /* ask for one extra row: it tells us whether Load More is needed without a second call */
+        const rows = await _tkRpc('homepage_all_tasks', Object.assign({
+          p_exclude: TK.allExclude || [], p_search: A.search || null, p_categories: cats, p_sort: A.sort,
+          p_limit: TK.limit + 1, p_offset: A.offset,
+        }, _tkPointArgs()));
+        if (token !== A.token) return;   /* a newer search replaced this one */
+        A.more = rows.length > TK.limit;
+        const page = rows.slice(0, TK.limit);
+        A.offset += page.length;
+        const have = new Set(A.items.map(r => String(r.id)));
+        page.forEach(r => { if (!have.has(String(r.id))) A.items.push(r); });
+        grid.removeAttribute('aria-busy');
+        if (first) grid.textContent = '';
+        page.filter(r => !have.has(String(r.id))).forEach(r => { const c = _tkCard(r); c.setAttribute('role', 'listitem'); grid.appendChild(c); });
+        const filtering = !!(A.search || _tkCat);
+        if (!A.items.length) {
+          grid.hidden = true;
+          if (filtering) { sec.hidden = false; _tkAllMsg(A.search ? 'No tasks match your search. Try different words.' : 'No tasks in this category right now. Try another one.'); }
+          else sec.hidden = true;   /* nothing else to show and nothing filtered: hide the empty section */
+        } else { grid.hidden = false; }
+        more.hidden = !A.more;
+      } catch (e) {
+        if (token !== A.token) return;
+        console.warn('[home] all tasks', e);
+        grid.removeAttribute('aria-busy');
+        if (first) { grid.textContent = ''; grid.hidden = true; }
+        _tkAllMsg('We couldn\'t load tasks right now.', true);
+        more.hidden = true;
+      } finally {
+        if (token === A.token) { A.busy = false; more.disabled = false; }
+      }
     }
 
     async function loadTaskerProfile() {
@@ -1012,6 +1118,20 @@
       try {
         const row = await window.ST.db.fetchMyTaskerProfile();
         _tkProfile = row || {};
+        _tkPlace = String(_tkProfile.location || '').trim();
+        /* Saved profile point: the tasker's own row first, then the user row (M12a puts both in the database) */
+        let lat = Number(_tkProfile.latitude), lon = Number(_tkProfile.longitude);
+        const okPt = (a, b) => _tkProfile.latitude != null && _tkProfile.longitude != null && isFinite(a) && isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180;
+        if (!okPt(lat, lon) && _userId) {
+          try {
+            const { data: u } = await window.supabase.from('users').select('latitude, longitude, location').eq('id', _userId).maybeSingle();
+            if (u && u.latitude != null && u.longitude != null && isFinite(Number(u.latitude)) && isFinite(Number(u.longitude))) {
+              lat = Number(u.latitude); lon = Number(u.longitude); _tkProfile.latitude = lat; _tkProfile.longitude = lon;
+            }
+            if (!_tkPlace && u && u.location) _tkPlace = String(u.location).trim();
+          } catch (e) { /* the columns may not exist yet: no point, the prompt shows */ }
+        }
+        _tkPoint = okPt(lat, lon) ? { lat, lon } : null;
         /* Same completeness check as login.html: a service and a location */
         const complete = !!((_tkProfile.service || _tkProfile.service_name) && _tkProfile.location);
         if (card) {
@@ -1034,7 +1154,6 @@
       } catch (e) {
         _tkProfile = false;   /* unknown: don't nag */
       }
-      renderTaskerFeed();
     }
 
     async function loadTaskerJobs() {
@@ -1092,17 +1211,13 @@
       window.addEventListener('st:category-change', e => {
         if (_userRole !== 'tasker') return;
         _tkCat = (e.detail && e.detail.category) || '';
-        renderTaskerFeed();
+        if (TK.allExclude) _tkAllReset();   /* the chips filter All Available */
       });
-      window.addEventListener('st:location-change', () => { if (_userRole === 'tasker') renderTaskerFeed(); });
-      loadTaskerProfile();
+      _tkBuildRows();
       loadTaskerJobs();
       loadTopRatedTaskers();
-      try {
-        _tkTasks = (await window.ST.db.fetchTasks({ limit: 50 })) || [];
-        await _attachOfferCounts(_tkTasks);
-      } catch (e) { _tkError = true; }
-      renderTaskerFeed();
+      await loadTaskerProfile();   /* the profile gives the saved point and the service words the rows need */
+      loadTaskerHome();
     }
 
     /* ── Utilities ───────────────────────────────────────────── */

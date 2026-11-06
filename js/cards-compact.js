@@ -194,7 +194,7 @@
   /* ── Row (the scroller) ──
      o: { title, viewAllHref, viewAllLabel, ariaLabel, skeleton: 'task'|'tasker'|'category', skeletonCount,
           emptyText, errorText, hideWhenEmpty, items: [Node], state }
-     Returns the section element with:  el.stSetItems(nodes), el.stSetState('loading'|'ready'|'empty'|'error'), el.stOnRetry(fn)
+     Returns the section element with:  el.stSetItems(nodes), el.stSetState('loading'|'ready'|'empty'|'error'), el.stShowMessage(text, linkLabel, linkHref), el.stOnRetry(fn)
      Empty: the whole section is hidden by default (the homepage rule); pass hideWhenEmpty: false to show emptyText instead. */
   function row(o) {
     o = o || {};
@@ -263,7 +263,9 @@
     else { root.addEventListener('resize', updateArrows); }
 
     function clear() { while (track.firstChild) track.removeChild(track.firstChild); }
+    function dropLink() { var old = msg.querySelector('.cc-msg-link'); if (old) msg.removeChild(old); }
     function setState(state) {
+      dropLink();
       sec.setAttribute('data-state', state);
       msg.hidden = true; retry.hidden = true; view.hidden = false; sec.hidden = false;
       track.removeAttribute('aria-busy');
@@ -294,6 +296,18 @@
       if (root.STRating && root.STRating.decorate) { try { root.STRating.decorate(track); } catch (e) { /* badges stay empty */ } }
       root.requestAnimationFrame(updateArrows);
     }
+    /* M12b: a plain message with an optional link (for example "Add your location" -> profile). Text is set with textContent; the link goes through safeHref. */
+    function showMessage(text, linkLabel, linkHref) {
+      clear(); dropLink();
+      sec.hidden = false; view.hidden = true; retry.hidden = true;
+      sec.setAttribute('data-state', 'message');
+      track.removeAttribute('aria-busy');
+      msgText.textContent = String(text || ''); msg.hidden = false;
+      var h = safeHref(linkHref);
+      if (h && linkLabel) { var a = el('a', 'cc-retry cc-msg-link', linkLabel); a.href = h; msg.appendChild(a); }
+      root.requestAnimationFrame(updateArrows);
+    }
+    sec.stShowMessage = showMessage;
     sec.stSetItems = setItems;
     sec.stSetState = setState;
     sec.stOnRetry = function (fn) { retryFn = typeof fn === 'function' ? fn : null; };

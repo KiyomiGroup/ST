@@ -94,3 +94,14 @@
   .cc-card--tasker { width: var(--cc-tasker-width-sm); }
   .cc-card--category { width: var(--cc-category-width-sm); }
 }
+
+/* M12b: wrapping grid ("All Available" on the tasker homepage), its tools and Load More */
+.cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--cc-task-width-sm), 1fr)); gap: var(--space-3); min-width: 0; }
+.cc-grid > .cc-card--task { width: auto; }
+.cc-grid[hidden], .cc-more[hidden] { display: none; }
+.cc-tools { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.cc-tools .form-input { flex: 1 1 var(--cc-task-width-sm); min-width: 0; }
+.cc-tools .form-select { flex: 0 1 auto; min-width: 0; width: auto; }
+.cc-more { display: flex; justify-content: center; margin-top: var(--space-4); }
+.cc-more .btn[hidden] { display: none; }
+a.cc-retry { display: inline-block; text-decoration: none; }
