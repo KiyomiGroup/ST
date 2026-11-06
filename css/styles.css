@@ -503,6 +503,12 @@ p  { color: var(--text-secondary); font-weight: 400; }
   min-height: var(--space-6); padding: 0 var(--space-5); border-radius: var(--radius-pill);
   background: var(--white); color: var(--color-forest-900); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
 }
+.pop-card--photo.pop-more { justify-content: space-between; }
+.pop-card--more .pop-photo { object-position: center 78%; }   /* general TASK picture: keep the letter blocks in the crop */
+.pop-go {
+  position: relative; z-index: 1; align-self: flex-start; display: inline-flex; align-items: center; justify-content: center;
+  width: var(--space-7); height: var(--space-7); border-radius: 50%; background: var(--white); color: var(--color-forest-900);
+}
 @media (max-width: 768px) {
   /* Phones: smaller cards (shorter, tighter, smaller type and button) */
   .pop-card--photo { min-height: var(--pop-card-height-sm); padding: var(--space-4); border-radius: var(--radius-2xl); }
@@ -510,6 +516,8 @@ p  { color: var(--text-secondary); font-weight: 400; }
   .pop-card--photo h3 { font-size: var(--text-base); margin-bottom: var(--space-1); }
   .pop-card--photo p { font-size: var(--text-xs); line-height: 1.4; }
   .pop-card--photo .pop-link { min-height: var(--space-5); padding: 0 var(--space-4); font-size: var(--text-xs); }
+  .pop-go { width: var(--space-6); height: var(--space-6); }
+  .pop-go svg { width: var(--text-base); height: var(--text-base); }
 }
 .pop-more-link { display: flex; align-items: center; justify-content: space-between; color: var(--blue); font-weight: 700; }
 
