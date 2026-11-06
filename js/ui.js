@@ -317,7 +317,11 @@ window.ST_ICON = ST_ICON;
 const ST_NGN = n => '₦' + Number(n || 0).toLocaleString('en-NG');
 const ST_CAT_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechanic:'🔧', plumber:'🚰', plumbing:'🚰', beauty:'💄', other:'🛠️' };
 /* Category picture for a card: the green icon from js/categories.js when it is loaded, else the old emoji */
-function stCatPic(cat) { return window.STCat ? window.STCat.iconHtml(cat, 'st-cat-ico--card') : (ST_CAT_EMOJI[cat] || ST_CAT_EMOJI.other); }
+function stCatPic(cat) {
+  /* a known category -> its green icon; no category / unknown -> the StreetTasker logo (never a generic wrench) */
+  if (window.STCat && cat && window.STCat.resolve(cat).value !== 'other') return window.STCat.iconHtml(cat, 'st-cat-ico--card');
+  return '<img class="st-logo-ph" src="images/favicon.png" alt="" />';
+}
 
 /* "20m ago" / "3h ago" / "2d ago" */
 function stAgo(iso) {
@@ -371,7 +375,7 @@ function stTaskCard(t) {
       ${desc ? `<p class="st-card-desc">${e(desc)}</p>` : ''}
       <ul class="st-card-meta">
         <li>${ST_ICON.pin}<strong>${e(t.location || 'Location TBD')}</strong></li>${dist}
-        <li><span class="st-chip st-chip--mode">${remote ? ST_ICON.globe + 'Remote' : ST_ICON.wrench + 'In-Person'}</span></li>
+        <li><span class="st-chip st-chip--mode">${remote ? ST_ICON.globe + 'Remote' : (t.category && window.STCat ? window.STCat.iconHtml(t.category) : '') + 'In-Person'}</span></li>
       </ul>
     </div>
     <div class="st-card-foot">
@@ -457,7 +461,7 @@ function stTaskerCard(s) {
           <p class="st-tasker-role">${e(s.service_name || '')}</p>
           <p class="st-tasker-loc">${ST_ICON.pin}${e(s.location || 'Lagos')}</p>
         </div>
-        <div class="st-tasker-avatar"><span aria-hidden="true">${initials}</span>${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+        <div class="st-tasker-avatar"><img class="st-logo-ph" src="images/favicon.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
       ${s.isLocal ? stLocalTags() : ''}
       ${shown.length ? `<div class="st-tasker-skills"><span class="st-card-label">Skills</span>

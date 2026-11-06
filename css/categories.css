@@ -16,3 +16,8 @@
 .st-cattile .st-cat-ico { width: var(--space-8); height: var(--space-8); }
 .st-cattile-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.25; }
 .st-cattile-sub { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.3; }
+
+/* StreetTasker logo shown where a tasker photo or task picture is missing */
+.st-logo-ph { width: 40%; height: 40%; object-fit: contain; display: block; margin: auto; }
+.st-tasker-avatar > .st-logo-ph, .cc-avatar > .st-logo-ph { position: absolute; inset: 0; width: 56%; height: 56%; }
+.hf-media-ph .st-logo-ph { width: 36%; height: 36%; }

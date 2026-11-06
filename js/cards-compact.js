@@ -160,7 +160,7 @@
     var name = s.provider_name || 'Tasker';
 
     var av = el('div', 'cc-avatar');
-    av.appendChild(el('span', 'cc-avatar-init', initials(name)));
+    var ph = el('img', 'st-logo-ph'); ph.src = 'images/favicon.png'; ph.alt = ''; av.appendChild(ph);   /* StreetTasker logo until a photo loads */
     var photo = safeHref(s.photo);
     if (photo) {
       var img = el('img');

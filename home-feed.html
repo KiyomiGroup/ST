@@ -704,7 +704,7 @@
       const init = String(p.name).replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
       const body = p.photo
         ? '<img src="' + escapeHtml(p.photo) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" onerror="this.remove()" />'
-        : '<div class="hf-media-ph ' + p.av + '">' + escapeHtml(init) + '</div>';
+        : '<div class="hf-media-ph ' + p.av + '"><img class="st-logo-ph" src="images/favicon.png" alt="" /></div>';
       return '<div class="hf-card-media">' + body + badgesHtml + '</div>';
     }
 
@@ -977,7 +977,7 @@
         const rows = await _tkRpc('homepage_my_tasks', { p_limit: CU.limit });
         if (!_cuLive(host, tok)) return;
         p.row.stSetItems(rows.map(r => STCompact.taskCard({
-          id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.pending_offers)
+          id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.pending_offers), category: r.category, photo_urls: r.photo_urls
         }, { urgent: r.is_urgent === true, noOffer: true, status: r.status === 'in_progress' ? 'In progress' : 'Open' })));
       } catch (e) {
         if (!_cuLive(host, tok)) return;
@@ -996,7 +996,7 @@
         const rows = await _tkRpc('homepage_other_tasks', { p_lat: pt ? pt.lat : null, p_lon: pt ? pt.lon : null, p_exclude: [], p_limit: CU.limit, p_offset: 0 });
         if (!_cuLive(host, tok)) return;
         p.row.stSetItems(rows.map(r => STCompact.taskCard({
-          id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.offers_count),
+          id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.offers_count), category: r.category, photo_urls: r.photo_urls,
           distance_km: (r.distance_km != null && isFinite(Number(r.distance_km))) ? Number(r.distance_km) : null
         }, { urgent: r.is_urgent === true, noOffer: true })));
       } catch (e) {
@@ -1067,13 +1067,23 @@
     async function _tkRpc(name, args) {
       const { data, error } = await window.supabase.rpc(name, args);
       if (error) throw error;
-      return Array.isArray(data) ? data : [];
+      const rows = Array.isArray(data) ? data : [];
+      /* Task rows from the homepage functions do not carry the category or client photos: fetch them in one query (best effort) */
+      if (rows.length && rows[0] && 'budget' in rows[0] && 'title' in rows[0] && rows[0].photo_urls === undefined) {
+        try {
+          const ids = rows.map(r => r.id).filter(Boolean);
+          const { data: extra } = await window.supabase.from('tasks').select('id, category, photo_urls').in('id', ids);
+          const by = {}; (extra || []).forEach(x => { by[String(x.id)] = x; });
+          rows.forEach(r => { const x = by[String(r.id)]; if (x) { r.category = r.category || x.category; r.photo_urls = x.photo_urls; } });
+        } catch (e) { /* cards just show the logo placeholder */ }
+      }
+      return rows;
     }
     function _tkPointArgs() { return _tkPoint ? { p_lat: _tkPoint.lat, p_lon: _tkPoint.lon } : { p_lat: null, p_lon: null }; }
     function _tkCard(r) {
       return STCompact.taskCard({
         id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at,
-        offers_count: Number(r.offers_count),
+        offers_count: Number(r.offers_count), category: r.category, photo_urls: r.photo_urls,
         distance_km: (typeof r.distance_km === 'number' && isFinite(r.distance_km)) ? r.distance_km : null,
         href: 'find-tasks.html?task=' + encodeURIComponent(r.id),   /* opens Find Work with the apply form (it owns the eligibility rules) */
       }, { urgent: r.is_urgent === true });
