@@ -8,18 +8,8 @@
 'use strict';
 
 /* Same category values as the post-service.html dropdown */
-const SVC_CATEGORIES = [
-  { value: 'barber',      label: 'Barber / Hair',     emoji: '💈' },
-  { value: 'electrician', label: 'Electrician',       emoji: '⚡' },
-  { value: 'cleaning',    label: 'House Cleaning',    emoji: '🧹' },
-  { value: 'mechanic',    label: 'Mechanic / Auto',   emoji: '🔧' },
-  { value: 'plumber',     label: 'Plumber',           emoji: '🚰' },
-  { value: 'beauty',      label: 'Make-up / Beauty',  emoji: '💄' },
-  { value: 'carpentry',   label: 'Carpentry',         emoji: '🪚' },
-  { value: 'painting',    label: 'Painting',          emoji: '🎨' },
-  { value: 'moving',      label: 'Moving / Delivery', emoji: '📦' },
-  { value: 'other',       label: 'Other',             emoji: '🛠️' },
-];
+/* Categories come from js/categories.js (shared with the post pages); each keeps value / label / emoji */
+const SVC_CATEGORIES = (window.STCat ? window.STCat.list : [{ value: 'other', label: 'Other', emoji: '🛠️' }]).map(c => ({ value: c.value, label: c.label, short: c.short || c.label, emoji: c.emoji }));
 const SVC_KNOWN = new Set(SVC_CATEGORIES.map(c => c.value));
 const SVC_UNIT_LABEL = { hour: 'Per hour', job: 'Per job', day: 'Per day', session: 'Per session', visit: 'Per visit', week: 'Per week', month: 'Per month' };
 const SVC_AVAIL_LABEL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
@@ -36,7 +26,8 @@ function svcDefaultFilters() {
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 function svcCategoryMeta(value) {
-  const hit = SVC_CATEGORIES.find(c => c.value === value);
+  /* old saved values (electrician, barber...) resolve to their group; custom text under Other keeps its own label */
+  const hit = SVC_CATEGORIES.find(c => c.value === value) || (window.STCat && STCat.list.find(c => c.value === STCat.resolve(value).value && STCat.resolve(value).value !== 'other'));
   if (hit) return hit;
   /* Custom categories typed under "Other" are saved as snake_case */
   const label = String(value || 'other').replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
@@ -145,7 +136,7 @@ function svcFiltered() {
   }
   if (f.location) list = list.filter(s => s.location.toLowerCase().includes(f.location.toLowerCase()));
   if (f.category) {
-    list = list.filter(s => f.category === 'other' ? !SVC_KNOWN.has(s.category) || s.category === 'other' : s.category === f.category);
+    list = list.filter(s => window.STCat ? STCat.matches(s.category, f.category) : s.category === f.category);
   }
   if (f.units.length)        list = list.filter(s => f.units.includes(s.unit));
   if (f.availability.length) list = list.filter(s => f.availability.includes(s.availability));
@@ -163,7 +154,7 @@ function svcBuildCategoryChips() {
   const wrap = document.getElementById('svcCategoryChips');
   if (!wrap) return;
   wrap.innerHTML = SVC_CATEGORIES.map(c =>
-    `<button type="button" class="filter-chip${SVC_FILTERS.category === c.value ? ' active' : ''}" data-category="${c.value}">${c.label}</button>`
+    `<button type="button" class="filter-chip${SVC_FILTERS.category === c.value ? ' active' : ''}" data-category="${c.value}">${window.STCat ? STCat.iconHtml(c.value) : ''}${c.short}</button>`
   ).join('');
 }
 
@@ -230,7 +221,7 @@ function svcBuildCard(s) {
   const href = s.user_id ? `tasker-profile.html?id=${encodeURIComponent(s.user_id)}` : 'find-services.html';
   /* Card markup lives in js/ui.js (stServiceCard). Rating, turnaround and perk only show when the row has them. */
   return stServiceCard({
-    service_name: s.service_name, categoryLabel: cat.label, emoji: cat.emoji,
+    service_name: s.service_name, category: s.category, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
     turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
@@ -351,7 +342,7 @@ function initServicesPage() {
   const urlCat    = params.get('category') || '';
   if (urlSearch) { SVC_FILTERS.search = urlSearch; const i = document.getElementById('serviceSearchInput'); if (i) i.value = urlSearch; }
   if (urlLoc)    { SVC_FILTERS.location = urlLoc;  const i = document.getElementById('serviceLocationInput'); if (i) i.value = urlLoc; }
-  if (urlCat)    { SVC_FILTERS.category = urlCat; }
+  if (urlCat)    { SVC_FILTERS.category = window.STCat ? STCat.resolve(urlCat).value : urlCat; }
 
   svcBuildCategoryChips();
   svcWire();

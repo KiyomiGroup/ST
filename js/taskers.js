@@ -120,6 +120,8 @@ function initTaskersPage() {
   const params = new URLSearchParams(window.location.search);
   const urlService  = params.get('service')  || '';
   const urlLocation = params.get('location') || '';
+  const urlCategory = params.get('category') || '';   /* from the Home category chips and tiles */
+  if (urlCategory) FILTERS.category = window.STCat ? STCat.resolve(urlCategory).value : urlCategory;
   if (urlService) {
     FILTERS.search = urlService;
     const inp = document.getElementById('taskerSearchInput');
@@ -153,7 +155,7 @@ function filtered() {
       (s.description || '').toLowerCase().includes(q)
     );
   }
-  if (category)          list = list.filter(s => s.category === category);
+  if (category)          list = list.filter(s => window.STCat ? STCat.matches(s.category, category) : s.category === category);
   if (FILTERS.location)  list = list.filter(s => (s.location || '').toLowerCase().includes(FILTERS.location.toLowerCase()));
   if (maxPrice < 999999) list = list.filter(s => s.price <= maxPrice);
   if (minRating)         list = list.filter(s => s.rating >= minRating);

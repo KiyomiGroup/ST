@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Post a Service — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/categories.css?v=1" />
   <link rel="stylesheet" href="css/post-task.css" />
   <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -125,15 +126,22 @@
               <div class="pt-field pt-select-wrap">
                 <select id="svcCategory" class="pt-input pt-select" required>
                   <option value="">Select a category...</option>
-                  <option value="barber">Barber / Hair</option>
-                  <option value="electrician">Electrician</option>
-                  <option value="cleaning">House Cleaning</option>
-                  <option value="mechanic">Mechanic / Auto</option>
-                  <option value="plumber">Plumber</option>
-                  <option value="beauty">Make-up / Beauty</option>
-                  <option value="carpentry">Carpentry &amp; Tailoring Crafts</option>
-                  <option value="painting">Painting</option>
-                  <option value="moving">Moving / Delivery</option>
+                  <option value="cleaning">Cleaning Services</option>
+                  <option value="grooming">Grooming &amp; Barber</option>
+                  <option value="automotive">Automotive Services</option>
+                  <option value="handyman">Handyman &amp; Trades</option>
+                  <option value="landscaping">Landscaping</option>
+                  <option value="hospitality">Hospitality &amp; Catering</option>
+                  <option value="business">Business &amp; Professional</option>
+                  <option value="it_tech">IT &amp; Tech Support</option>
+                  <option value="creative">Creative &amp; Marketing</option>
+                  <option value="logistics">Logistics &amp; Freight</option>
+                  <option value="health">Health &amp; Wellness</option>
+                  <option value="pet">Pet Services</option>
+                  <option value="education">Education &amp; Tutoring</option>
+                  <option value="financial">Financial Services</option>
+                  <option value="legal">Legal &amp; Advocacy</option>
+                  <option value="events">Event Planning</option>
                   <option value="other">Other</option>
                 </select>
                 <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
@@ -141,7 +149,7 @@
 
               <div class="ps-other" id="otherCategoryWrap" hidden>
                 <div class="pt-field">
-                  <input type="text" id="svcCategoryOther" class="pt-input" placeholder="Describe your category (e.g. Pet Care, Event Planning)..." maxlength="60" autocomplete="off" />
+                  <input type="text" id="svcCategoryOther" class="pt-input" placeholder="Describe your category (e.g. Tailoring, Drone Services)..." maxlength="60" autocomplete="off" />
                 </div>
               </div>
 
@@ -406,6 +414,7 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/categories.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
@@ -444,8 +453,28 @@
     function onCategoryChange(val) {
       var wrap = document.getElementById('otherCategoryWrap');
       if (wrap) wrap.hidden = val !== 'other';
+      /* a short "includes" line so providers see what the category covers */
+      var sel = document.getElementById('svcCategory');
+      var hint = document.getElementById('svcCategoryIncludes');
+      if (!hint && sel && sel.closest('.ps-group-category')) {
+        hint = document.createElement('p'); hint.id = 'svcCategoryIncludes'; hint.className = 'pt-help';
+        sel.closest('.pt-field').insertAdjacentElement('afterend', hint);
+      }
+      if (hint && window.STCat) {
+        var svcs = (STCat.get(val).services || []);
+        hint.textContent = svcs.length ? 'Includes: ' + svcs.slice(0, 6).join(', ') + (svcs.length > 6 ? ' and more' : '') : '';
+        hint.hidden = !svcs.length;
+      }
     }
     window.onCategoryChange = onCategoryChange;
+    /* Quick Select chips: first eight categories with their icons (the dropdown has all of them) */
+    (function () {
+      var box = document.getElementById('svcChips');
+      if (!box || !window.STCat) return;
+      box.innerHTML = STCat.list.filter(function (c) { return c.value !== 'other'; }).slice(0, 8).map(function (c) {
+        return '<button type="button" class="pt-chip" data-category="' + c.value + '" aria-pressed="false">' + STCat.iconHtml(c.value) + '<span>' + c.short + '</span></button>';
+      }).join('');
+    })();
 
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
@@ -480,7 +509,9 @@
           savedServiceId = draft.id;
           if (draft.service_name) document.getElementById('svcName').value        = draft.service_name;
           if (draft.category) {
-            var knownCats = ['barber','electrician','cleaning','mechanic','plumber','beauty','carpentry','painting','moving','other'];
+            var knownCats = window.STCat ? STCat.list.map(function (c) { return c.value; }) : ['other'];
+            /* a draft saved with an old value (barber, plumber...) opens on its group */
+            if (window.STCat && draft.category && !knownCats.includes(draft.category) && STCat.resolve(draft.category).value !== 'other') draft.category = STCat.resolve(draft.category).value;
             if (knownCats.includes(draft.category)) {
               document.getElementById('svcCategory').value = draft.category;
             } else {

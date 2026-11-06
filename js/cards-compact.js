@@ -89,7 +89,7 @@
       var c = fromHtml(root.stTaskCard({
         id: t.id, title: t.title, budget: t.budget, location: t.location, created_at: t.created_at,
         offers_count: t.offers_count, distance_km: t.distance_km, description: t.description, category: t.category,
-        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, urgency: opts.urgent === true ? 'immediate' : undefined
+        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, hideOffer: opts.noOffer === true, urgency: opts.urgent === true ? 'immediate' : undefined
       }));
       if (c) { wireOpen(c, h); return c; }
     }
@@ -205,11 +205,26 @@
     var card = el(href ? 'a' : 'div', 'cc-card cc-card--category');
     if (href) card.href = href;
     var bubble = el('span', 'cc-cat-icon'); bubble.setAttribute('aria-hidden', 'true');
-    bubble.textContent = c.emoji || '\uD83D\uDEE0\uFE0F';
+    if (root.STCat && c.value) bubble.innerHTML = root.STCat.iconHtml(c.value);   /* static markup from js/categories.js, no user text */
+    else bubble.textContent = c.emoji || '\uD83D\uDEE0\uFE0F';
     card.appendChild(bubble);
     card.appendChild(el('span', 'cc-cat-label', c.label || 'Category'));
     var n = Number(c.count);
     if (isFinite(n) && n > 0) card.appendChild(el('span', 'cc-cat-count', n + (n === 1 ? ' service' : ' services')));
+    return card;
+  }
+
+  /* ── Service card ── same card as the Services page (stServiceCard in js/ui.js), opens the provider's page.
+     v: { service_name, category, categoryLabel, description, photo, provider, location, price, unit, rating, href, user_id } */
+  function serviceCard(v) {
+    v = v || {};
+    var href = safeHref(v.href);
+    if (typeof root.stServiceCard === 'function') {
+      var sc = fromHtml(root.stServiceCard(Object.assign({}, v, { href: href || '#' })));
+      if (sc) { wireOpen(sc, href); return sc; }
+    }
+    var card = el('article', 'cc-card cc-card--task');
+    card.appendChild(el('h3', 'cc-title', v.service_name || 'Service'));
     return card;
   }
 
@@ -355,6 +370,6 @@
     return sec;
   }
 
-  root.STCompact = { row: row, taskCard: taskCard, taskerCard: taskerCard, categoryCard: categoryCard, referralStrip: referralStrip, skeleton: skeleton };
+  root.STCompact = { row: row, taskCard: taskCard, taskerCard: taskerCard, categoryCard: categoryCard, serviceCard: serviceCard, referralStrip: referralStrip, skeleton: skeleton };
   if (typeof module !== 'undefined' && module.exports) { module.exports = root.STCompact; }
 })(typeof window !== 'undefined' ? window : this);

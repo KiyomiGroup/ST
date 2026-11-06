@@ -10,6 +10,7 @@
   <title>Find Tasks Near You — StreetTasker</title>
   <link rel="canonical" href="https://streettasker.com/find-tasks.html" />
   <link rel="stylesheet" href="css/styles.css?v=22" />
+  <link rel="stylesheet" href="css/categories.css?v=1" />
   <link rel="stylesheet" href="css/tasks.css?v=22" />
   <link rel="stylesheet" href="css/cards-v2.css?v=1" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -149,6 +150,7 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/categories.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
@@ -208,6 +210,18 @@
         renderTasks();
       }));
 
+      /* Category chips (multi-select): every category from js/categories.js, with its icon */
+      const _cloud = document.getElementById('taskCategoryChips');
+      if (_cloud && window.STCat) {
+        _cloud.innerHTML = STCat.list.map(c =>
+          '<button type="button" class="filter-chip" data-tcat="' + c.value + '">' + STCat.iconHtml(c.value) + c.short + '</button>').join('');
+        /* a link like find-tasks.html?category=cleaning opens with that chip on */
+        const _c0 = (new URLSearchParams(window.location.search).get('category') || '').trim();
+        if (_c0) {
+          const g = STCat.resolve(_c0).value, chip = _cloud.querySelector('[data-tcat="' + g + '"]');
+          if (chip) { chip.classList.add('active'); TASK_FILTERS.category = [g]; renderTasks(); }
+        }
+      }
       /* Category chips (multi-select) */
       document.querySelectorAll('#taskCategoryChips [data-tcat]').forEach(chip => chip.addEventListener('click', () => {
         chip.classList.toggle('active');
@@ -255,7 +269,7 @@
         const q = TASK_FILTERS.search.toLowerCase();
         f = f.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
       }
-      if (TASK_FILTERS.category && TASK_FILTERS.category.length) f = f.filter(t => TASK_FILTERS.category.includes(t.category));
+      if (TASK_FILTERS.category && TASK_FILTERS.category.length) f = f.filter(t => window.STCat ? TASK_FILTERS.category.some(g => STCat.matches(t.category, g)) : TASK_FILTERS.category.includes(t.category));
       if (TASK_FILTERS.location) {
         const loc = TASK_FILTERS.location.toLowerCase();
         f = f.filter(t => (t.location||'').toLowerCase().includes(loc));

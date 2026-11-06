@@ -22,19 +22,10 @@
 'use strict';
 
 /* ── Constants ───────────────────────────────────────────────── */
-const TASK_CATEGORIES = [
-  { value: 'cleaning',    label: 'Home & Office Cleaning', icon: 'i-brush' },
-  { value: 'electrician', label: 'Electrician',            icon: 'i-zap' },
-  { value: 'plumber',     label: 'Plumber',                icon: 'i-faucet' },
-  { value: 'mechanic',    label: 'Mechanic / Auto',        icon: 'i-wrench' },
-  { value: 'carpentry',   label: 'Carpentry',              icon: 'i-hammer' },
-  { value: 'barber',      label: 'Barber / Hair',          icon: 'i-scissors' },
-  { value: 'beauty',      label: 'Make-up / Beauty',       icon: 'i-sprout' },
-  { value: 'delivery',    label: 'Delivery',               icon: 'i-truck' },
-  { value: 'moving',      label: 'Moving',                 icon: 'i-truck' },
-  { value: 'painting',    label: 'Painting',               icon: 'i-brush' },
-  { value: 'other',       label: 'Other',                  icon: 'i-wrench' },
-];
+/* From js/categories.js (shared with the services pages). Falls back to Other if that file did not load. */
+const TASK_CATEGORIES = window.STCat
+  ? window.STCat.list.map(c => ({ value: c.value, label: c.label, short: c.short, services: c.services }))
+  : [{ value: 'other', label: 'Other', short: 'Other', services: [] }];
 
 const MAX_DESCRIPTION_LENGTH = 1000;
 const MIN_DESCRIPTION_LENGTH = 20;
@@ -148,6 +139,12 @@ function populateCategorySelect() {
 }
 
 function wireCategoryChips() {
+  /* Quick chips: the first eight categories with their icons (the dropdown has all of them) */
+  const chipBox = document.querySelector('.pt-chips[aria-label="Popular categories"]');
+  if (chipBox && window.STCat) {
+    chipBox.innerHTML = STCat.list.filter(c => c.value !== 'other').slice(0, 8).map(c =>
+      '<button type="button" class="pt-chip" data-category="' + c.value + '" aria-pressed="false">' + STCat.iconHtml(c.value) + '<span>' + c.short + '</span></button>').join('');
+  }
   document.querySelectorAll('[data-category]').forEach(chip => {
     chip.addEventListener('click', () => {
       const select = $id('taskCategory');
@@ -169,8 +166,13 @@ function syncCategoryUI() {
     chip.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   const cat = TASK_CATEGORIES.find(c => c.value === select.value);
-  const use = document.querySelector('#categoryIcon use');
-  if (cat && use) use.setAttribute('href', '#' + cat.icon);
+  /* the field icon becomes the category's own icon (static markup from js/categories.js) */
+  const ico = document.getElementById('categoryIcon');
+  if (cat && ico && window.STCat) { ico.innerHTML = STCat.icons[cat.value] || STCat.icons.other; ico.setAttribute('viewBox', '0 0 64 64'); ico.setAttribute('fill', 'currentColor'); }
+  /* a short "includes" line under the dropdown, so people see what each category covers */
+  let hint = document.getElementById('categoryIncludes');
+  if (!hint && select.closest('.pt-group')) { hint = document.createElement('p'); hint.id = 'categoryIncludes'; hint.className = 'pt-help'; select.closest('.pt-group').appendChild(hint); }
+  if (hint) { const list = (cat && cat.services || []).slice(0, 6); hint.textContent = list.length ? 'Includes: ' + list.join(', ') + (cat.services.length > 6 ? ' and more' : '') : ''; hint.hidden = !list.length; }
 }
 
 /* ── Minimum date ───────────────────────────────────────────── */

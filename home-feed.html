@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Street Taskers — Home</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/categories.css?v=1" />
   <link rel="stylesheet" href="css/cards-compact.css" />
   <link rel="stylesheet" href="css/cards-v2.css?v=1" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -371,7 +372,7 @@
     <main class="hf-feed hf-feed-customer" aria-label="Customer home feed">
       <div class="container">
 
-        <!-- M13b: Featured Taskers (4 rows) -> Taskers Near You -> Explore Services -> My Active Tasks (A own, B others) are built by loadCustomerHome() with STCompact.row (js/cards-compact.js) -->
+        <!-- M13b: Featured Taskers (4 rows) -> Taskers Near You -> Explore Services -> Services -> My Active Tasks (A own, B others) are built by loadCustomerHome() with STCompact.row (js/cards-compact.js) -->
         <div id="hfCuRows"></div>
 
         <!-- M13b: Referral CTA placeholder (hidden; M15 turns it on) -->
@@ -495,6 +496,7 @@
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/categories.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cards-compact.js"></script>
   <script src="js/referral-data.js"></script>
@@ -629,6 +631,12 @@
 
       /* Category chips: each feed listens for st:category-change */
       const row = document.getElementById('catScrollInner');
+      if (row && window.STCat) {
+        /* every category from js/categories.js, with its icon (Other is left off the chip bar) */
+        row.innerHTML = '<button type="button" class="hf-chip active" data-cat="" aria-pressed="true">All</button>' +
+          STCat.list.filter(c => c.value !== 'other').map(c =>
+            '<button type="button" class="hf-chip" data-cat="' + c.value + '" aria-pressed="false">' + STCat.iconHtml(c.value) + c.short + '</button>').join('');
+      }
       if (row) {
         row.addEventListener('click', e => {
           const chip = e.target.closest('.hf-chip');
@@ -739,6 +747,7 @@
     /* Exact category first; only items with no category fall back to their text */
     function _matchesCat(p, cat) {
       if (!cat) return true;
+      if (window.STCat && (p.category || '').trim()) return STCat.matches(p.category, cat);
       const keys = CAT_ALIASES[cat] || [cat];
       const c = String(p.category || '').toLowerCase().replace(/[^a-z]/g, '');
       if (c) return keys.some(k => c === k || c.startsWith(k));
@@ -901,17 +910,46 @@
       }
     }
 
+    /* Services row: same look and scroller as the task rows. Listings in the customer's chosen area come first. */
+    async function _cuServices(host) {
+      const tok = _cuStamp(host);
+      host.textContent = '';
+      const row = STCompact.row({ title: 'Services', skeleton: 'task', viewAllHref: 'find-services.html', viewAllLabel: 'View All', errorText: 'We could not load services. Please try again.' });
+      host.appendChild(row);
+      try {
+        const raw = await window.ST.db.fetchServices({ limit: 48 });
+        if (!_cuLive(host, tok)) return;
+        const list = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
+          .sort((a, b) => (b.score - a.score) || (a.i - b.i)).slice(0, CU.limit).map(x => x.p);
+        row.stSetItems(list.map(p => STCompact.serviceCard({
+          service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
+          description: String(p.desc || '').slice(0, 90), photo: p.photo, provider: p.name, location: p.location,
+          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _profileUrl(p), user_id: p.uid
+        })));   /* none found: the row hides itself */
+      } catch (e) {
+        if (!_cuLive(host, tok)) return;
+        row.stOnRetry(() => _cuServices(host));
+        row.stSetState('error');
+      }
+    }
+
     async function _cuExplore(host) {
       const tok = _cuStamp(host);
       host.textContent = '';
-      const row = STCompact.row({ title: 'Explore Services', skeleton: 'category', skeletonCount: 6, errorText: 'We could not load the categories. Please try again.' });
+      const row = STCompact.row({ title: 'Explore Services', skeleton: 'category', skeletonCount: 8, viewAllHref: 'find-services.html', viewAllLabel: 'View All', errorText: 'We could not load the categories. Please try again.' });
       host.appendChild(row);
       try {
-        const rows = await _tkRpc('homepage_service_categories', {});
+        /* Every category is shown (so the row is never narrower than the list); counts are real listings, best effort */
+        const counts = {};
+        try {
+          const rows = await _tkRpc('homepage_service_categories', {});
+          rows.forEach(r => { const k = window.STCat ? STCat.resolve(r.category).value : r.category; counts[k] = (counts[k] || 0) + Number(r.service_count || 0); });
+        } catch (e) { /* counts are optional */ }
         if (!_cuLive(host, tok)) return;
-        row.stSetItems(rows.map(r => STCompact.categoryCard({
-          label: _cuTitle(r.category), emoji: _cuEmoji(r.category), count: Number(r.service_count),
-          href: 'find-taskers.html?category=' + encodeURIComponent(r.category)
+        const cats = window.STCat ? STCat.list.filter(c => c.value !== 'other' || counts.other) : [];
+        row.stSetItems(cats.map(c => STCompact.categoryCard({
+          label: c.label, value: c.value, emoji: c.emoji, count: counts[c.value],
+          href: 'find-services.html?category=' + encodeURIComponent(c.value)
         })));
       } catch (e) {
         if (!_cuLive(host, tok)) return;
@@ -940,7 +978,7 @@
         if (!_cuLive(host, tok)) return;
         p.row.stSetItems(rows.map(r => STCompact.taskCard({
           id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.pending_offers)
-        }, { urgent: r.is_urgent === true, status: r.status === 'in_progress' ? 'In progress' : 'Open' })));
+        }, { urgent: r.is_urgent === true, noOffer: true, status: r.status === 'in_progress' ? 'In progress' : 'Open' })));
       } catch (e) {
         if (!_cuLive(host, tok)) return;
         p.row.stOnRetry(() => _cuMine(host));
@@ -960,7 +998,7 @@
         p.row.stSetItems(rows.map(r => STCompact.taskCard({
           id: r.id, title: r.title, budget: Number(r.budget), location: r.location, created_at: r.created_at, offers_count: Number(r.offers_count),
           distance_km: (r.distance_km != null && isFinite(Number(r.distance_km))) ? Number(r.distance_km) : null
-        }, { urgent: r.is_urgent === true })));
+        }, { urgent: r.is_urgent === true, noOffer: true })));
       } catch (e) {
         if (!_cuLive(host, tok)) return;
         p.row.stOnRetry(() => _cuOthers(host));
@@ -988,8 +1026,8 @@
       if (!root) return;
       root.textContent = '';
       CU.pointP = _cuResolvePoint();
-      const hosts = { feat: _cuHost(root, 'hfCuFeatured'), near: _cuHost(root, 'hfCuNear'), explore: _cuHost(root, 'hfCuExplore'), mine: _cuHost(root, 'hfCuMine'), others: _cuHost(root, 'hfCuOthers') };
-      _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuMine(hosts.mine); _cuOthers(hosts.others);
+      const hosts = { feat: _cuHost(root, 'hfCuFeatured'), near: _cuHost(root, 'hfCuNear'), explore: _cuHost(root, 'hfCuExplore'), services: _cuHost(root, 'hfCuServices'), mine: _cuHost(root, 'hfCuMine'), others: _cuHost(root, 'hfCuOthers') };
+      _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuServices(hosts.services); _cuMine(hosts.mine); _cuOthers(hosts.others);
       const ref = document.getElementById('hfCuReferral');
       _wireReferral(ref, 'customer', 'Invite Friends. Earn Rewards.');
     }
@@ -1005,7 +1043,8 @@
       window.addEventListener('st:location-change', () => {
         if (_userRole === 'tasker') return;
         CU.pointP = _cuResolvePoint();
-        const near = document.getElementById('hfCuNear'), others = document.getElementById('hfCuOthers');
+        const near = document.getElementById('hfCuNear'), others = document.getElementById('hfCuOthers'), svcs = document.getElementById('hfCuServices');
+        if (svcs) _cuServices(svcs);
         if (near) _cuNear(near);
         if (others) _cuOthers(others);
       });
@@ -1173,7 +1212,7 @@
         grid.setAttribute('aria-busy', 'true');
       } else { more.disabled = true; }
       try {
-        const cats = _tkCat ? (CAT_ALIASES[_tkCat] || [_tkCat]) : null;
+        const cats = _tkCat ? (window.STCat ? STCat.expand(_tkCat) : (CAT_ALIASES[_tkCat] || [_tkCat])) : null;
         /* ask for one extra row: it tells us whether Load More is needed without a second call */
         const rows = await _tkRpc('homepage_all_tasks', Object.assign({
           p_exclude: TK.allExclude || [], p_search: A.search || null, p_categories: cats, p_sort: A.sort,

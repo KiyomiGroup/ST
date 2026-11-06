@@ -316,6 +316,8 @@ window.ST_ICON = ST_ICON;
 
 const ST_NGN = n => '₦' + Number(n || 0).toLocaleString('en-NG');
 const ST_CAT_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechanic:'🔧', plumber:'🚰', plumbing:'🚰', beauty:'💄', other:'🛠️' };
+/* Category picture for a card: the green icon from js/categories.js when it is loaded, else the old emoji */
+function stCatPic(cat) { return window.STCat ? window.STCat.iconHtml(cat, 'st-cat-ico--card') : (ST_CAT_EMOJI[cat] || ST_CAT_EMOJI.other); }
 
 /* "20m ago" / "3h ago" / "2d ago" */
 function stAgo(iso) {
@@ -342,10 +344,10 @@ function stTaskCard(t) {
   const urgChip = t.compact && urg !== 'immediate'
     ? (ago ? `<span class="st-chip">Posted ${ago}</span>` : '')
     : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}${ago ? ' • ' + ago : ''}</span>`;
-  const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(stLabel(cat))}</span>`;
   const cat   = t.category || 'other';
+  const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(cat) : stLabel(cat))}</span>`;
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
-  const emoji = ST_CAT_EMOJI[cat] || ST_CAT_EMOJI.other;
+  const emoji = stCatPic(cat);
   const media = photos.length
     ? `<div class="st-card-media"><img src="${e(photos[0])}" alt="" loading="lazy" />
          <span class="st-chip st-chip--glass st-card-media-tag">${ST_ICON.image}${photos.length} Client Photo${photos.length > 1 ? 's' : ''}</span></div>`
@@ -376,7 +378,7 @@ function stTaskCard(t) {
       <div class="st-card-foot-info"><span class="st-card-foot-label">Client Budget</span><span class="st-card-price">${ST_NGN(t.budget)}</span>${offersNote}</div>
       <div class="st-card-actions">
         <a class="st-card-cta st-card-cta--ghost" href="task-details.html?id=${encodeURIComponent(t.id)}">View Details</a>
-        <button type="button" class="st-card-cta">Make an Offer ${ST_ICON.arrow}</button>
+        ${t.hideOffer ? '' : `<button type="button" class="st-card-cta">Make an Offer ${ST_ICON.arrow}</button>`}
       </div>
     </div>
   </article>`;
@@ -397,7 +399,7 @@ function stServiceCard(s) {
   const eyebrowHtml = s.perk ? e(s.perk) : [s.provider ? e(s.provider) + memb : '', s.location ? e(s.location) : ''].filter(Boolean).join(' · ');
   const media = s.photo
     ? `<img src="${e(s.photo)}" alt="${e(s.service_name)}" loading="lazy" data-emoji="${e(s.emoji || '')}" />`
-    : `<div class="st-card-media-fallback" aria-hidden="true">${s.emoji || ST_CAT_EMOJI.other}</div>`;
+    : `<div class="st-card-media-fallback" aria-hidden="true">${s.category ? stCatPic(s.category) : (s.emoji || ST_CAT_EMOJI.other)}</div>`;
   const priced = Number(s.price) > 0;
   return `<article class="st-card st-card--service fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
     <div class="st-card-media">
