@@ -9,8 +9,8 @@ Spec: ST onboarding spec (uploaded as a .md with the ST-Real-Main zip). One stag
 | 3 | First-login tours, customer and tasker, run on the logged-in homepage (home-feed.html) | delivered |
 | 4 | Help / Learn centre, nav entry, replay; compact dark tour card; card clears the mobile tab bar | delivered |
 | 5 | Customer tutorials: post a task, book a service, offers, additional expenses | delivered |
-| 6 | Tasker tutorials: find and apply, respond to bookings, manage work | next |
-| 7 | Chat tutorials for both roles + the Actions guide (#requestBtn / #jrSheet) | |
+| 6 | Tasker tutorials: find and apply, respond to bookings, manage work | delivered |
+| 7 | Chat tutorials for both roles + the Actions guide (#requestBtn / #jrSheet) | next |
 | 8 | QA pass against the spec's test list, design-system check, handoff | |
 
 ## Decisions
@@ -55,3 +55,15 @@ Home tours (Stage 3): js/onboarding-tours-home.js registers 'customer-home' and 
 - The book-service tour stays on find-services.html and explains the booking pop-up in centred cards (the pop-up lives on tasker-profile.html and needs a real tasker id, so it cannot be a replay target).
 - Tests: node --test tests/onboarding-tours-customer.test.js (also checks every selector exists in the page or the script that draws it).
 - Stage 6 must do the same on each host page: load the tours file after js/onboarding.js, and add the tours file to learn.html. Reserved ids still open: tasker-apply-task, manage-work, customer-chat, tasker-chat, payments-guide.
+
+## Stage 6 (tasker tutorials)
+- File: js/onboarding-tours-tasker.js registers three tours (role tasker, auto: false; started from Help / Learn through ?tour=<id>, same as Stage 5):
+  | Tour id | Page | Topic on learn.html |
+  |---|---|---|
+  | tasker-apply-task | find-tasks.html | Finding and accepting tasks |
+  | tasker-bookings | bookings.html | Managing bookings and jobs |
+  | manage-work | bookings.html | Managing bookings and jobs |
+- Host pages (find-tasks, bookings) load css/onboarding.css, js/onboarding.js and the tours file; learn.html loads it too. No page code changed.
+- The apply tour stays on find-tasks.html and explains make-offer.html in centred cards (that page needs a real task id, so it cannot be a replay target). The tasker sees the fee line there, so the copy may mention the platform fee; customer copy never does.
+- Tests: node --test tests/onboarding-tours-tasker.test.js (also checks every selector exists).
+- Stage 7 (chat tours) hosts on messages.html: add its tours file after js/onboarding.js there and on learn.html. Reserved ids still open: customer-chat, tasker-chat, payments-guide.

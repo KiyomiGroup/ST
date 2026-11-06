@@ -118,7 +118,7 @@
 
     { id: 'managing-bookings', role: 'both', title: 'Managing bookings and jobs',
       summary: 'Keep a job moving from start to finish.',
-      tours: ['manage-work'],
+      tours: ['tasker-bookings', 'manage-work'],
       steps: [
         'Find your jobs under Bookings. Open the job’s conversation for the latest status.',
         'Taskers update progress in the chat: on my way, arrived, start work, pause or resume, then mark work complete.',

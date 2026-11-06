@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Guided tour engine: demo (not part of the site)</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/onboarding.css" />
+  <style>
+    .demo-bar { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; padding: var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-bg-subtle); }
+    .demo-bar .demo-status { margin-left: auto; font-size: var(--text-sm); color: var(--color-text-secondary); }
+    .demo-nav { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-4); }
+    .demo-main { display: grid; gap: var(--space-5); padding: var(--space-5) var(--space-4) var(--space-8); max-width: 960px; margin: 0 auto; }
+    .demo-card { padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+    .demo-menu { display: none; gap: var(--space-2); flex-direction: column; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-form); }
+    .demo-menu.is-open { display: flex; }
+    .demo-tall { height: 70vh; }
+    .demo-foot { position: sticky; bottom: var(--space-3); display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="demo-bar">
+    <strong>Tour engine demo</strong>
+    <button class="btn btn-primary btn-sm" id="dStart" type="button">Start tour</button>
+    <button class="btn btn-outline btn-sm" id="dReset" type="button">Reset progress</button>
+    <label>Account <select id="dRole" class="form-select"><option value="customer">Customer</option><option value="tasker">Tasker</option></select></label>
+    <span class="demo-status" id="dStatus" role="status">loading…</span>
+  </div>
+
+  <div class="demo-nav">
+    <button class="btn btn-primary" type="button" data-tour="post-task">Post a Task</button>
+    <a href="#browse" class="btn btn-outline" data-tour="browse-services">Browse Services</a>
+    <button class="btn btn-ghost" type="button" id="dMenuBtn" data-tour="more-menu" aria-expanded="false">More</button>
+  </div>
+
+  <main class="demo-main">
+    <div class="demo-menu" id="dMenu" data-tour="menu-open"><a href="#a">Help / Learn</a><a href="#b">Settings</a></div>
+
+    <section class="demo-card">
+      <h2>Search</h2>
+      <form id="dForm"><input class="form-input" data-tour="search" placeholder="Service or tasker name…" aria-label="Search" />
+      <button class="btn btn-outline btn-sm" type="submit">Submit (must not fire during a tour)</button></form>
+      <p id="dSubmits">Form submits: 0</p>
+    </section>
+
+    <section class="demo-card" id="dLate"><h2>Content that loads late</h2><p>A card appears here after 1.5 seconds.</p></section>
+    <div class="demo-tall"></div>
+    <section class="demo-card" data-tour="far-down"><h2>Far down the page</h2><p>The tour scrolls here by itself.</p></section>
+    <div class="demo-foot"><button class="btn btn-primary" type="button" data-tour="sticky-bottom">Sticky bottom button</button></div>
+  </main>
+
+  <script src="../js/onboarding.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); }, submits = 0;
+      $('dForm').addEventListener('submit', function (e) { e.preventDefault(); submits++; $('dSubmits').textContent = 'Form submits: ' + submits; });
+      $('dMenuBtn').addEventListener('click', function () { var o = $('dMenu').classList.toggle('is-open'); this.setAttribute('aria-expanded', o); });
+      setTimeout(function () { var c = document.createElement('div'); c.className = 'demo-card'; c.setAttribute('data-tour', 'late-card'); c.innerHTML = '<h3>I loaded late</h3>'; $('dLate').appendChild(c); }, 1500);
+
+      var TOUR = {
+        id: 'demo-customer', role: 'customer', version: 1, title: 'Demo tour', auto: false,
+        steps: [
+          { id: 'welcome', title: 'Welcome to StreetTasker!', description: 'A card with no target is centred over a dimmed page.' },
+          { id: 'post', target: "[data-tour='post-task']", placement: 'bottom', title: 'Post a Task', description: 'Look-only step: the button is highlighted but cannot be clicked.' },
+          { id: 'search', target: "[data-tour='search']", placement: 'right', title: 'Try the search box', description: 'Interactive step: click the box to continue.', interact: { event: 'focus', gate: true } },
+          { id: 'menu', target: "[data-tour='menu-open']", placement: 'bottom', title: 'A menu opened for you', description: 'beforeShow opened this menu.',
+            beforeShow: function () { $('dMenu').classList.add('is-open'); }, onNext: function () { $('dMenu').classList.remove('is-open'); } },
+          { id: 'missing', target: "[data-tour='does-not-exist']", title: 'You should never see this', description: 'Missing targets are skipped.' },
+          { id: 'late', target: "[data-tour='late-card']", placement: 'top', title: 'Content that loads late', description: 'The engine waited for this card to exist.' },
+          { id: 'far', target: "[data-tour='far-down']", placement: 'auto', title: 'Scrolled into view', description: 'Off-screen targets are scrolled to.' },
+          { id: 'bottom', target: ["[data-tour='nope']", "[data-tour='sticky-bottom']"], placement: 'bottom', title: 'No room below', description: 'The tooltip flips above; on phones it moves to the top edge.' }
+        ]
+      };
+      var E = window.ST.onboarding; E.register(TOUR);
+      var DUAL = { id: 'demo-tasker', role: 'tasker', version: 1, title: 'Tasker demo', auto: false, steps: [{ id: 'w', title: 'Tasker tour', description: 'Only taskers see this one.' }] };
+      E.register(DUAL);
+
+      function setRole(role) { E.configure({ id: 'demo', role: role, remote: null, storage: window.localStorage }); refresh(); }
+      function refresh() {
+        E.list($('dRole').value).then(function (l) { $('dStatus').textContent = l.map(function (t) { return t.id + ': ' + t.status + (t.status === 'in_progress' ? ' (step ' + (t.step + 1) + ')' : ''); }).join('  |  '); });
+      }
+      $('dRole').addEventListener('change', function () { setRole(this.value); });
+      $('dStart').addEventListener('click', function () { E.start($('dRole').value === 'customer' ? 'demo-customer' : 'demo-tasker'); });
+      $('dReset').addEventListener('click', function () { E.reset('demo-customer').then(function () { return E.reset('demo-tasker'); }).then(refresh); });
+      E.onChange(function () { setTimeout(refresh, 50); });
+      setRole('customer');
+      if (location.hash === '#auto') { E.autoStart('demo-customer'); }
+    })();
+  </script>
+</body>
+</html>
