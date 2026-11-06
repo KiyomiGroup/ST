@@ -496,6 +496,7 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cards-compact.js"></script>
+  <script src="js/referral-data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
@@ -975,6 +976,20 @@
       _cuSyncPart(p);
     }
 
+    /* Referral CTA (M15): stays hidden until the person's own referral details load; no code yet or an error = nothing is shown. */
+    function _wireReferral(host, programme, title) {
+      if (!host || host.firstChild) return;
+      host.appendChild(STCompact.referralStrip({ title: title, show: false }));
+      if (!window.STReferralData) return;
+      STReferralData.mine(programme).then(function (row) {
+        if (!row) return;
+        const pts = Number(row.points || 0);
+        const text = pts > 0 ? 'You have ' + pts.toLocaleString('en-NG') + ' referral points.' : 'Share your link and earn points when friends join.';
+        host.textContent = '';
+        host.appendChild(STCompact.referralStrip({ title: title, text: text, cta: 'Invite friends', href: 'referrals.html', show: true }));
+      }).catch(function () {});
+    }
+
     function loadCustomerHome() {
       const root = document.getElementById('hfCuRows');
       if (!root) return;
@@ -983,7 +998,7 @@
       const hosts = { feat: _cuHost(root, 'hfCuFeatured'), near: _cuHost(root, 'hfCuNear'), explore: _cuHost(root, 'hfCuExplore'), mine: _cuHost(root, 'hfCuMine'), others: _cuHost(root, 'hfCuOthers') };
       _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuMine(hosts.mine); _cuOthers(hosts.others);
       const ref = document.getElementById('hfCuReferral');
-      if (ref && !ref.firstChild) ref.appendChild(STCompact.referralStrip({ title: 'Invite Friends. Earn Rewards.', show: false }));
+      _wireReferral(ref, 'customer', 'Invite Friends. Earn Rewards.');
     }
 
     function initCustomerFeed() {
@@ -1060,7 +1075,7 @@
       };
       /* Referral CTA: hidden placeholder (M15 turns it on) */
       const ref = document.getElementById('hfTkReferral');
-      if (ref && !ref.firstChild) ref.appendChild(STCompact.referralStrip({ title: 'More People. More Tasks. More Opportunities.', show: false }));
+      _wireReferral(ref, 'tasker', 'More People. More Tasks. More Opportunities.');
       return TK.rows;
     }
 

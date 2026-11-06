@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Invite friends, earn rewards — Street Taskers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/referrals.css" />
+</head>
+<body class="rf-body">
+  <div id="navbar-placeholder"></div>
+
+  <main class="rf-main" id="rfMain">
+    <header class="rf-head">
+      <h1 class="rf-title" id="rfTitle">Invite friends. Earn rewards.</h1>
+      <p class="rf-lead" id="rfLead">Share your personal link. When a friend signs up and verifies their email, you earn points.</p>
+    </header>
+
+    <p class="rf-state" id="rfState" role="status">Loading your referral details…</p>
+
+    <div class="rf-tabs" id="rfTabs" role="tablist" aria-label="Referral programme" hidden></div>
+
+    <div class="rf-body-grid" id="rfApp" hidden>
+
+      <section class="rf-card rf-card--points" aria-labelledby="rfPtsH">
+        <h2 class="rf-h" id="rfPtsH">Your points</h2>
+        <p class="rf-big" id="rfPoints">0</p>
+        <p class="rf-note">Points are added when a friend you invited has verified their email. They are never taken away.</p>
+      </section>
+
+      <section class="rf-card rf-card--link" aria-labelledby="rfLinkH">
+        <h2 class="rf-h" id="rfLinkH">Your personal link</h2>
+        <label class="rf-label" for="rfLinkInput">Share this link</label>
+        <div class="rf-link-row">
+          <input class="form-input rf-link-input" id="rfLinkInput" type="text" readonly />
+          <button type="button" class="btn btn-primary" id="rfCopy">Copy link</button>
+        </div>
+        <div class="rf-share-row">
+          <a class="btn btn-outline" id="rfWhatsapp" target="_blank" rel="noopener">Share on WhatsApp</a>
+          <button type="button" class="btn btn-outline" id="rfShare" hidden>More ways to share</button>
+        </div>
+        <p class="rf-note">Your code: <strong id="rfCode"></strong>. Only people who sign up from your link count. Clicks alone earn nothing.</p>
+      </section>
+
+      <section class="rf-card" aria-labelledby="rfProgH">
+        <h2 class="rf-h" id="rfProgH">Reward progress</h2>
+        <p class="rf-progress-text" id="rfProgText"></p>
+        <progress class="rf-progress" id="rfProgBar" value="0" max="1"></progress>
+        <p class="rf-note" id="rfProgNote"></p>
+      </section>
+
+      <section class="rf-card" aria-labelledby="rfStatH">
+        <h2 class="rf-h" id="rfStatH">Statistics</h2>
+        <dl class="rf-stats">
+          <div class="rf-stat"><dt>Link visits</dt><dd id="rfStVisits">0</dd></div>
+          <div class="rf-stat"><dt>Signed up</dt><dd id="rfStSigned">0</dd></div>
+          <div class="rf-stat"><dt>Verified</dt><dd id="rfStVerified">0</dd></div>
+          <div class="rf-stat"><dt>Points earned</dt><dd id="rfStPoints">0</dd></div>
+        </dl>
+      </section>
+
+      <section class="rf-card rf-card--wide" aria-labelledby="rfHistH">
+        <h2 class="rf-h" id="rfHistH">Referral history</h2>
+        <p class="rf-empty" id="rfHistEmpty" hidden>No one has signed up from your link yet.</p>
+        <ul class="rf-list" id="rfHist"></ul>
+      </section>
+
+      <section class="rf-card rf-card--wide" aria-labelledby="rfRewH">
+        <h2 class="rf-h" id="rfRewH">Rewards history</h2>
+        <p class="rf-empty" id="rfRewEmpty" hidden>No rewards yet.</p>
+        <ul class="rf-list" id="rfRew"></ul>
+      </section>
+
+      <section class="rf-card rf-card--wide" aria-labelledby="rfHowH">
+        <h2 class="rf-h" id="rfHowH">How it works</h2>
+        <ol class="rf-steps">
+          <li>Copy your personal link and send it to a friend.</li>
+          <li>Your friend signs up from your link.</li>
+          <li>When they verify their email, you earn points.</li>
+          <li id="rfHowReward"></li>
+        </ol>
+      </section>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/referral-data.js"></script>
+  <script src="js/referral-page.js"></script>
+</body>
+</html>
