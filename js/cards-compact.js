@@ -70,7 +70,7 @@
 
   /* ── Task card ──
      t: { id, title, budget, location, created_at, offers_count, distance_km, href }
-     opts: { urgent: true }  (caller decides; never read from a browser-writable column here) */
+     opts: { urgent: true, status: 'In progress' }  (caller decides; never read from a browser-writable column here; status is plain text, M13b) */
   function taskCard(t, opts) {
     t = t || {};
     opts = opts || {};
@@ -85,6 +85,7 @@
       u.appendChild(doc.createTextNode('Urgent'));
       top.appendChild(u);
     }
+    if (opts.status) top.appendChild(el('span', 'cc-badge cc-badge--status', opts.status));
     var posted = ago(t.created_at);
     if (posted) top.appendChild(el('span', 'cc-posted', 'Posted ' + posted));
     if (top.childNodes.length) card.appendChild(top);
