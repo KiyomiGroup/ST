@@ -200,15 +200,12 @@ async function acceptPaymentRequest(requestId, threadId, contextType, contextId,
   throw new Error('Payment system not loaded. Please refresh and try again.');
 }
 
-/* ── Contact violation handler ── */
+/* ── Contact violation handler ──
+   The count and the flag are kept by the database (report_contact_violation uses the signed-in
+   person, not the id passed in). The browser can no longer write these columns itself. */
 async function handleContactViolation(userId) {
   try {
-    const { data: u } = await window.supabase.from('users').select('contact_violations').eq('id', userId).maybeSingle();
-    const violations = ((u && u.contact_violations) || 0) + 1;
-    await window.supabase.from('users').update({ contact_violations: violations }).eq('id', userId);
-    if (violations >= MAX_VIOLATIONS) {
-      await window.supabase.from('users').update({ is_flagged: true, flagged_reason: 'Repeated contact sharing violations' }).eq('id', userId);
-    }
+    await window.supabase.rpc('report_contact_violation');
   } catch (e) {}
 }
 
