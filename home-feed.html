@@ -808,7 +808,7 @@
        -> Explore Services (categories of real listings) -> My Active Tasks (Part A: yours, Part B: other customers', view only) -> Referral CTA (hidden until M15).
        Every list comes from a database function (m13a-core.sql, m13a2-core.sql, m13b-core.sql). Nothing is invented; an empty row is not drawn. */
     const CU = { limit: 12, pointP: null };
-    const CU_TIERS = [['premium', 'Premium'], ['pro', 'Pro'], ['starter', 'Starter'], ['standard', 'Standard']];
+    const CU_TIERS = [['premium', 'Premium'], ['pro', 'Pro'], ['starter', 'Starter'], ['standard', 'Standard'], ['local', 'Local']];
     const CU_EMOJI = [['electric', '\u26A1'], ['plumb', '\uD83D\uDD27'], ['clean', '\uD83E\uDDF9'], ['barber', '\u2702\uFE0F'], ['beauty', '\uD83D\uDC84'],
                       ['mechanic', '\uD83D\uDD29'], ['photo', '\uD83D\uDCF7'], ['tutor', '\uD83D\uDCDA'], ['paint', '\uD83C\uDFA8'], ['moving', '\uD83D\uDE9A'],
                       ['deliver', '\uD83D\uDCE6'], ['garden', '\uD83C\uDF3F'], ['cook', '\uD83C\uDF73'], ['repair', '\uD83D\uDEE0\uFE0F']];
@@ -837,14 +837,14 @@
       return null;
     }
 
-    function _cuTaskerCard(r) {
+    function _cuTaskerCard(r, isLocal) {
       const uid = String(r.user_id || r.tasker_user_id || '');
       const dist = Number(r.distance_km);
       return STCompact.taskerCard({
         id: uid || r.tasker_id || r.id, user_id: uid,
         provider_name: r.name || r.provider_name, service_name: r.service_name || r.service, location: r.location,
         distance_km: (r.distance_km != null && isFinite(dist)) ? dist : null,
-        photo: r.photo_url || r.photo,
+        photo: r.photo_url || r.photo, isLocal: isLocal === true,
         href: uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : ''
       });
     }
@@ -880,8 +880,8 @@
       CU_TIERS.forEach(([key, label]) => {
         const list = rows.filter(r => r.tier === key);
         if (!list.length) return;          /* an empty tier is skipped */
-        const row = STCompact.row({ title: 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View All' });
-        row.stSetItems(list.map(_cuTaskerCard));
+        const row = STCompact.row({ title: key === 'local' ? 'Local Taskers' : 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View All' });
+        row.stSetItems(list.map(r => _cuTaskerCard(r, key === 'local')));
         host.appendChild(row);
       });
     }
