@@ -174,13 +174,11 @@
       ((user.user_metadata && user.user_metadata.name) ? String(user.user_metadata.name).split(' ')[0] : '');
     state.location = (tasker && tasker.location) || '';
     state.openTasks = results[6] || [];
-    if (tasker) {
-      var r = parseFloat(tasker.rating);
-      state.rating = isFinite(r) && r > 0 ? r : null;
-      var rc = tasker.review_count != null ? tasker.review_count
-        : tasker.reviews_count != null ? tasker.reviews_count : null;
-      state.reviews = rc != null && isFinite(Number(rc)) ? Number(rc) : null;
-    }
+    /* M10c: the tasker's own rating from rating_summary (STRating), never taskers.rating / review_count (users can write them) */
+    var mine = null;
+    try { if (window.STRating) mine = (await STRating.load([user.id], 'tasker'))[String(user.id).toLowerCase()] || null; } catch (e) { /* no rating shown */ }
+    state.rating = mine ? mine.avg : null;
+    state.reviews = mine ? mine.count : null;
 
     rows.forEach(function (b) {
       var t = tasks[b.task_id] || null, s = svcs[b.service_id] || null, u = custs[b.customer_id] || null;

@@ -559,6 +559,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/rating-badge.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
@@ -736,7 +737,6 @@
     const TICK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 2.1 3.2-.3 1 3 2.8 1.6-.9 3.1.9 3.1-2.8 1.6-1 3-3.2-.3L12 22l-2.4-2.1-3.2.3-1-3-2.8-1.6.9-3.1-.9-3.1 2.8-1.6 1-3 3.2.3z"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8" fill="none" stroke="var(--white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     function _normProvider(s, i) {
-      const rating = parseFloat(s.rating);
       return {
         id:   String(s.id || ''),
         uid:  String(s.user_id || s.uid || ''),
@@ -747,7 +747,7 @@
         price: Number(s.price || s.rate_value || s.rate || 0),
         unit:  s.rate_unit || s.rateUnit || '',
         photo: s.photo || s.photo_url || '',
-        rating: isNaN(rating) || rating <= 0 ? null : rating,   /* real ratings only */
+        rating: null,   /* M10c: filled from rating_summary in _enrichProviders; never from services.rating or taskers.rating */
         verified: !!(s.is_verified || s.verified),
         desc: s.description || '',
         av:   s.av || AV[i % AV.length],
@@ -828,14 +828,14 @@
       return '<div class="hf-empty">' + msg + '<br /><a class="hf-empty-cta" href="home-feed.html">Try again</a></div>';
     }
 
-    /* Ratings and verified flags live on the taskers / users rows, not in fetchServices().
+    /* Verified flags live on the taskers / users rows, ratings in rating_summary (STRating); none of them are in fetchServices().
        Best effort: a blocked query just leaves those badges off. Nothing is invented. */
     async function _enrichProviders(list) {
       const uids = [...new Set(list.map(p => p.uid).filter(Boolean))];
       if (!uids.length) return list;
       try {
         const [t, u] = await Promise.all([
-          window.supabase.from('taskers').select('user_id, rating, is_verified').in('user_id', uids),
+          window.supabase.from('taskers').select('user_id, is_verified').in('user_id', uids),
           window.supabase.from('users').select('id, is_verified').in('id', uids),
         ]);
         const tMap = {}; (t.data || []).forEach(r => { tMap[String(r.user_id)] = r; });
@@ -843,9 +843,15 @@
         list.forEach(p => {
           const tr = tMap[p.uid], ur = uMap[p.uid];
           if (!p.verified) p.verified = !!((tr && tr.is_verified) || (ur && ur.is_verified));
-          if (!p.rating && tr) { const r = parseFloat(tr.rating); if (!isNaN(r) && r > 0) p.rating = r; }
         });
       } catch (e) { /* leave as is */ }
+      /* M10c: real ratings from rating_summary (STRating); no reviews or no answer = no rating badge on the card */
+      try {
+        if (window.STRating) {
+          const rs = await STRating.load(uids, 'tasker');
+          list.forEach(p => { const r = rs[String(p.uid).toLowerCase()]; if (r) p.rating = r.avg; });
+        }
+      } catch (e) { /* ratings are optional */ }
       return list;
     }
 

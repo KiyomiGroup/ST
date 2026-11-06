@@ -183,6 +183,12 @@
     (look[1] || []).forEach(function (u) { users[u.id] = u; });
     (look[2] || []).forEach(function (v) { svcs[v.id] = v; });
 
+    /* M10c: each tasker's rating from rating_summary (STRating), never taskers.rating (users can write it) */
+    var ratingMap = {};
+    try {
+      if (window.STRating) ratingMap = await STRating.load(requests.map(function (r) { return r.booking && r.booking.tasker_id; }).filter(Boolean), 'tasker');
+    } catch (e) { /* no rating shown */ }
+
     requests.forEach(function (r) {
       var b = r.booking, t = r.task;
       var sv = (b && b.service_id && svcs[b.service_id]) || null;
@@ -193,10 +199,9 @@
       r.category = (t && t.category) || (sv && sv.category) || (p && (p.service || p.service_name)) || '';
       r.location = (t && t.location) || (sv && sv.location) || (p && p.location) || '';
       r.tasker = b ? ((p && (p.business_name || p.name)) || (u && ((u.first_name && u.last_name) ? u.first_name + ' ' + u.last_name : u.name)) || 'Tasker') : '';
-      var rt = p ? parseFloat(p.rating) : NaN;
-      r.rating = isFinite(rt) && rt > 0 ? rt : null;
-      var rc = p ? (p.review_count != null ? p.review_count : p.reviews_count) : null;
-      r.reviews = rc != null && isFinite(Number(rc)) ? Number(rc) : null;
+      var rm = (b && b.tasker_id && ratingMap[String(b.tasker_id).toLowerCase()]) || null;
+      r.rating = rm ? rm.avg : null;
+      r.reviews = rm ? rm.count : null;
       r.addons = b && Array.isArray(b.add_ons) ? b.add_ons : [];
     });
 
