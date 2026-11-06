@@ -424,6 +424,19 @@ async function applyUrgentGate() {
   showUrgentLock(state);
 }
 
+/* M19: ask the server to check the urgent fee with Paystack. Returns true only when it is confirmed. Never throws. */
+async function confirmUrgentPayment(reference, tries) {
+  if (!reference || !window.supabase || !window.supabase.functions) return false;
+  for (let i = 0; i < (tries || 1); i++) {
+    try {
+      const res = await window.supabase.functions.invoke('urgent-verify', { body: { reference: reference } });
+      if (res && res.data && res.data.ok === true) return true;
+    } catch (e) { /* try again */ }
+    if (i < (tries || 1) - 1) await new Promise(function (r) { setTimeout(r, 2000); });
+  }
+  return false;
+}
+
 async function startUrgentPayment() {
   if (taskDraft.urgentPaid) { setUrgentUI('paid'); return; }
   if (urgentLocked) return;
@@ -472,7 +485,11 @@ async function startUrgentPayment() {
       taskDraft.urgentRef = response.reference || reference;
       saveDraft();
       setUrgentUI('paid');
-      showToast('Urgent fee paid. Your task will be bumped to the top.');
+      showToast('Urgent fee paid. Confirming your payment...');
+      /* M19: the server asks Paystack; the task is urgent only if this check passes (it is repeated when the task is posted) */
+      confirmUrgentPayment(taskDraft.urgentRef, 3).then(function (ok) {
+        showToast(ok ? 'Urgent fee confirmed. Your task will be bumped to the top.' : 'Payment received. We will confirm it when you post your task.');
+      });
     },
     onClose: function () {
       if (settled) return;
@@ -979,6 +996,8 @@ async function handleTaskSubmit(e) {
     }
 
     if (window.ST && window.ST.db && window.ST.db.postTask) {
+      /* M19: confirm the urgent fee with the server right before saving (a repeat of the check done after payment; safe to repeat) */
+      if (taskPayload.urgentPaid && taskPayload.urgentPaymentRef) await confirmUrgentPayment(taskPayload.urgentPaymentRef, 2);
       let photos = [];
       try { photos = await uploadTaskPhotos(); } catch (err) { console.warn('Photo upload skipped:', err.message); }
 
@@ -1004,6 +1023,10 @@ async function handleTaskSubmit(e) {
       /* V6b: what the server decided, for the success modal */
       taskPayload.id = created && created.id;
       taskPayload.needsVerification = !(created && created._needs_verification === false);
+      /* M19: the database decides if the task is urgent. An explicit false means the payment could not be confirmed. */
+      if (taskPayload.urgentPaid && created && created.urgent_paid === false) {
+        showToast('We could not confirm your urgent payment, so your task was posted without the urgent tag. Your reference: ' + taskPayload.urgentPaymentRef + '. Contact support and we will sort it out.');
+      }
     } else {
       /* Fallback: direct insert if db.js not loaded */
       const { data: { user } } = await window.supabase.auth.getUser();

@@ -837,6 +837,8 @@ async function loginUser(email, password) {
 }
 
 async function logoutUser() {
+  /* M19: this device stops getting this person's phone notifications (needs the session, so it runs first) */
+  try { if (window.STPush && window.STPush.forgetDevice) await window.STPush.forgetDevice(); } catch (e) {}
   /* Clear ALL cached auth state */
   try {
     localStorage.removeItem('st_role');

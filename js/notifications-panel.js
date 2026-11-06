@@ -225,6 +225,8 @@
       var el = document.getElementById(id); if (el) el.hidden = !on;
     });
     var m = document.getElementById('navMobileNotifDot'); if (m) m.style.display = on ? '' : 'none';
+    /* M19: the red dot on the app icon follows the real unread number */
+    if (window.STPush && window.STPush.refreshBadge) window.STPush.refreshBadge();
   }
 
   /* ── data ────────────────────────────────────────────────── */
@@ -290,6 +292,7 @@
       '<div class="np-list" data-np-list></div>';
     document.body.appendChild(backdrop);
     document.body.appendChild(panel);
+    if (window.STPush && window.STPush.mountPrompt) window.STPush.mountPrompt(panel);   /* M19: phone notifications row */
     syncSoundBtn();
 
     backdrop.addEventListener('click', close);
@@ -472,6 +475,11 @@
     try {
       var uid = await getUser();
       if (!uid) return;
+      /* M19: phone notifications and the app-icon dot (separate file, loaded once, signed-in people only) */
+      if (!window.STPush && !document.getElementById('stPushJs')) {
+        var ps = document.createElement('script'); ps.id = 'stPushJs'; ps.src = '/js/push.js'; ps.async = true;
+        document.head.appendChild(ps);
+      }
       await check();                                         /* prime known{} before any live event can ring */
       connect();
       schedulePoll();

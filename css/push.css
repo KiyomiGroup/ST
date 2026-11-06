@@ -1,0 +1,16 @@
+/* M19: the "phone notifications" row inside the notifications panel. Tokens only. */
+.np-push {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border);
+}
+.np-push[hidden] { display: none; }
+.np-push-text { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+.np-push-btn {
+  flex: none; padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-pill);
+  background: var(--pt-green); color: var(--white); font: inherit; font-size: var(--text-sm); font-weight: 700; cursor: pointer;
+}
+.np-push-btn:disabled { opacity: 0.6; cursor: default; }
+.np-push-link {
+  flex: none; padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-sm);
+  color: var(--color-text-muted); cursor: pointer; text-decoration: underline;
+}
