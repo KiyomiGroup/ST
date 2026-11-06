@@ -6,6 +6,7 @@
   <title>Street Taskers — Home</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/cards-compact.css" />
+  <link rel="stylesheet" href="css/cards-v2.css?v=1" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <style>
@@ -711,27 +712,19 @@
     function _profileUrl(p) { return p.uid ? 'tasker-profile.html?id=' + encodeURIComponent(p.uid) : 'find-taskers.html'; }
 
     function taskerCardHtml(p) {
-      return '<a class="hf-card" href="' + _profileUrl(p) + '">'
-        + _mediaHtml(p, _ratingBadge(p))
-        + '<div class="hf-card-body">'
-        + '<div class="hf-card-name">' + escapeHtml(p.name) + '</div>'
-        + (p.service ? '<div class="hf-card-trade">' + escapeHtml(p.service) + '</div>' : '')
-        + '<div class="hf-card-loc">' + PIN_SVG + escapeHtml(p.location) + '</div>'
-        + '<div class="hf-card-foot">' + _priceHtml(p) + '<span class="hf-book">Book</span></div>'
-        + '</div></a>';
+      /* Card design: js/ui.js (stTaskerCard). Rating and price only when the row has them; no verified tick, no invented availability. */
+      return stTaskerCard({
+        id: p.uid || p.id, user_id: p.uid, provider_name: p.name, service_name: p.service, location: p.location,
+        rating: p.rating, photo: p.photo, price: p.price, rate_unit: p.unit, href: _profileUrl(p), hideAvailability: true
+      });
     }
 
     function serviceCardHtml(p) {
-      const pro = '';   /* no "verified" tag anywhere: nobody can use the site without verifying */
-      return '<a class="hf-card" href="' + _profileUrl(p) + '">'
-        + _mediaHtml(p, pro + _ratingBadge(p))
-        + '<div class="hf-card-body">'
-        + (p.category ? '<div class="hf-card-kicker">' + escapeHtml(p.category) + '</div>' : '')
-        + '<div class="hf-card-name">' + escapeHtml(p.service || p.name) + '</div>'
-        + (p.desc ? '<div class="hf-card-desc">' + escapeHtml(p.desc) + '</div>' : '')
-        + '<div class="hf-card-loc">' + PIN_SVG + escapeHtml(p.location) + '</div>'
-        + '<div class="hf-card-foot">' + _priceHtml(p) + '<span class="hf-book">Book</span></div>'
-        + '</div></a>';
+      return stServiceCard({
+        service_name: p.service || p.name, categoryLabel: p.category, description: p.desc, photo: p.photo,
+        provider: p.name, location: p.location, price: p.price, unit: String(p.unit || '').replace('/', ''),
+        rating: p.rating, href: _profileUrl(p), user_id: p.uid
+      });
     }
 
     /* Chip value -> category values stored by post-task / post-service (and older free text) */

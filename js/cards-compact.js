@@ -71,9 +71,28 @@
   /* ── Task card ──
      t: { id, title, budget, location, created_at, offers_count, distance_km, href }
      opts: { urgent: true, status: 'In progress' }  (caller decides; never read from a browser-writable column here; status is plain text, M13b) */
+  function fromHtml(html) { var d = doc.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; }
+  /* Whole card opens its page; the save bookmark and real links keep their own clicks. */
+  function wireOpen(card, href) {
+    if (!href) return;
+    card.addEventListener('click', function (ev) {
+      if (ev.target.closest && (ev.target.closest('.st-card-save') || ev.target.closest('a'))) return;
+      root.location.href = href;
+    });
+  }
+
   function taskCard(t, opts) {
     t = t || {};
     opts = opts || {};
+    if (typeof root.stTaskCard === 'function') {
+      var h = safeHref(t.href) || (t.id != null && t.id !== '' ? 'task-details.html?id=' + encodeURIComponent(t.id) : '');
+      var c = fromHtml(root.stTaskCard({
+        id: t.id, title: t.title, budget: t.budget, location: t.location, created_at: t.created_at,
+        offers_count: t.offers_count, distance_km: t.distance_km, description: t.description, category: t.category,
+        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, urgency: opts.urgent === true ? 'immediate' : undefined
+      }));
+      if (c) { wireOpen(c, h); return c; }
+    }
     var href = safeHref(t.href) || (t.id != null && t.id !== '' ? 'task-details.html?id=' + encodeURIComponent(t.id) : '');
     var card = el('article', 'cc-card cc-card--task');
     if (t.id != null) card.setAttribute('data-task-id', String(t.id));
@@ -117,6 +136,25 @@
      The rating is a data-rating-user span: js/rating-badge.js fills it from rating_summary, or leaves it empty. */
   function taskerCard(s, opts) {
     s = s || {};
+    if (typeof root.stTaskerCard === 'function') {
+      var th = safeHref(s.href) || (s.id != null && s.id !== '' ? 'tasker-profile.html?id=' + encodeURIComponent(s.id) : '');
+      /* No rating and no verified tick passed in: the rating comes from a data-rating-user span (js/rating-badge.js), never from a column. */
+      var tc = fromHtml(root.stTaskerCard({
+        id: s.id, user_id: s.user_id, provider_name: s.provider_name, service_name: s.service_name,
+        location: s.location, photo: s.photo, isLocal: s.isLocal, href: th, hideAvailability: true, price: s.price, rate_unit: s.rate_unit
+      }));
+      if (tc) {
+        var top = tc.querySelector('.st-tasker-top');
+        if (top && isUuid(s.user_id)) {
+          var rs = el('span'); rs.setAttribute('data-rating-user', String(s.user_id)); rs.setAttribute('data-rating-role', 'tasker');
+          top.appendChild(rs);
+        }
+        var pill = tc.querySelector('.st-price-pill');
+        if (pill && !(Number(s.price) > 0)) pill.remove();
+        wireOpen(tc, th);
+        return tc;
+      }
+    }
     var href = safeHref(s.href) || (s.id != null && s.id !== '' ? 'tasker-profile.html?id=' + encodeURIComponent(s.id) : '');
     var card = el('article', 'cc-card cc-card--tasker');
     var name = s.provider_name || 'Tasker';

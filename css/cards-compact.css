@@ -113,3 +113,11 @@ a.cc-retry { display: inline-block; text-decoration: none; }
 .cc-part--own { border-inline-start-color: var(--color-primary); }
 .cc-part-label { margin: 0; font-size: var(--text-sm); font-weight: 700; color: var(--color-text-secondary); }
 .cc-part .cc-row { margin-block: var(--space-2); }
+
+/* Cards v2 inside the scrolling rows (task and tasker cards come from js/ui.js) */
+.cc-track > .st-card { width: var(--cc-task-width); }
+.cc-grid > .st-card { width: auto; }
+@media (max-width: 640px) { .cc-track > .st-card { width: var(--cc-task-width-sm); } }
+.hf-row > .st-card { flex: 0 0 var(--cc-task-width); }
+.hf-row-stack > .st-card { flex: none; }
+@media (max-width: 640px) { .hf-row > .st-card { flex-basis: var(--cc-task-width-sm); } }

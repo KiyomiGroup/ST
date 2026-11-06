@@ -2594,7 +2594,7 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── "People are getting things done" cards (v3 — matches Figma HousePaintingCard) ── */
-.pgtd-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.pgtd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .pgtd-card {
   display: flex; flex-direction: column; text-align: left; cursor: pointer;
   background: var(--color-bg); border: 1px solid var(--color-card-border);
@@ -5070,7 +5070,7 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
     padding-bottom: var(--space-1); scrollbar-width: none; -webkit-overflow-scrolling: touch;
   }
   .pgtd-grid::-webkit-scrollbar { display: none; }
-  .pgtd-card { flex: 0 0 78%; scroll-snap-align: start; }
+  .pgtd-card, .pgtd-grid > .st-card { flex: 0 0 78%; scroll-snap-align: start; }
   .pgtd-desc, .pgtd-actions, .pgtd-posted,
   .pgtd-meta-row .pgtd-icon, .pgtd-meta-time > span:nth-child(2) { display: none; }
   .pgtd-cat, .pgtd-offers {

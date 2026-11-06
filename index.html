@@ -115,6 +115,7 @@
   <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
   <!-- Critical CSS inline load -->
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/cards-v2.css?v=1" />
   <link rel="stylesheet" href="css/local-tasker-public.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -140,7 +141,7 @@
     .dual-cta-card.dark .dual-cta-action { color:rgba(255,255,255,0.7); }
 
     /* Live service cards */
-    .live-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .live-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
     .live-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; transition:box-shadow var(--t) var(--ease),transform var(--t) var(--ease); }
     .live-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
     .live-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
@@ -594,38 +595,18 @@
           <a href="post-service.html" class="btn btn-primary btn-sm">Be the first to list</a></div>`;
         return;
       }
-      el.innerHTML = list.slice(0,6).map((s, i) => {
-        const safeName  = escapeHtml(s.provider_name || 'Provider');
-        const safeDesc  = escapeHtml((s.description||'').slice(0,80)) + ((s.description||'').length>80?'&hellip;':'');
-        const safeLoc   = escapeHtml(s.location||'Lagos');
-        const safeCat   = escapeHtml((s.category||'other').replace('_',' '));
-        const safePhoto = escapeHtml(s.photo||'');
-        const safeId    = escapeHtml(s.user_id||'');
-        const init      = safeName.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-        const av        = AV_COLORS[i % AV_COLORS.length];
-        const type      = PRICING_LABELS[s.pricing_type] || '/job';
-        const profileUrl = safeId ? 'tasker-profile.html?id=' + safeId : 'find-taskers.html';
-        /* Full-width image at top of card when the service has a photo */
-        const svcImgHtml = safePhoto
-          ? '<div style="margin:-16px -16px 12px;overflow:hidden;height:150px;border-radius:10px 10px 0 0;"><img src="' + safePhoto + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.display=\'none\'"/></div>'
-          : '';
-        const avatarHtml = safePhoto
-          ? ''
-          : '<div class="live-avatar ' + av + '">' + init + '</div>';
-        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
-          + svcImgHtml
-          + '<div class="live-card-top">'
-          + avatarHtml
-          + '<div style="text-align:right;' + (safePhoto ? 'margin-left:auto;' : '') + '"><div class="live-price">&#8358;' + Number(s.price||0).toLocaleString() + '</div><div class="live-price-type">' + type + '</div></div>'
-          + '</div>'
-          + '<div class="live-name">' + safeName + '</div>'
-          + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + safeLoc + '</div>'
-          + '<div class="live-cat">' + safeCat + '</div>'
-          + (safeDesc ? '<p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + safeDesc + '</p>' : '')
-          + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
-          + '</div>';
+      /* Card design: js/ui.js (stServiceCard). Rating, turnaround and perk only show when the row has them. */
+      el.innerHTML = list.slice(0,6).map(s => {
+        const uid = s.user_id ? String(s.user_id) : '';
+        return stServiceCard({
+          service_name: s.service_name || s.provider_name || 'Service', categoryLabel: (s.category || '').replace(/_/g, ' '),
+          description: (s.description || '').slice(0, 90), photo: s.photo || '', provider: s.provider_name || '', location: s.location || 'Lagos',
+          price: s.price, unit: String(PRICING_LABELS[s.pricing_type] || '/job').replace('/', ''),
+          href: uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : 'find-taskers.html', user_id: uid
+        });
       }).join('');
     }
+    window.renderServices = renderServices;
 
     function filterCat(btn, cat) {
       document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
@@ -662,42 +643,20 @@
       return day + ' | ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
     }
 
-    function renderPgtdCard(t, i) {
-      const safeTitle = escapeHtml(t.title || 'Untitled task');
-      const safeLoc   = escapeHtml(t.location || 'Lagos');
-      const safeDesc  = escapeHtml(t.description || '');
-      const _tImgs = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
-      const _tImg  = _tImgs[0] || null;
-      const thumbClass = _tImg ? '' : PGTD_NO_PHOTO;
-      const thumbStyle = _tImg ? ('background-image:url(\'' + escapeHtml(_tImg) + '\');background-size:cover;background-position:center;') : '';
-      const posted = escapeHtml(t.ago || pgtdAgo(t.created_at) || 'recently');
-      const when   = escapeHtml(t.when || pgtdWhen(t.deadline));
-      const _safeId = t.id ? String(t.id).replace(/[^\w-]/g, '') : '';
-      const detailsHref = _safeId ? 'task-details.html?id=' + _safeId : 'find-tasks.html';
-      return '<div class="pgtd-card fade-up" style="animation-delay:' + (i*0.07) + 's;" onclick="window.location.href=\'' + detailsHref + '\'">'
-        + '<div class="pgtd-thumb ' + thumbClass + '" style="' + thumbStyle + '"></div>'
-        + '<span class="pgtd-cat">' + escapeHtml(t.category || 'Task') + '</span>'
-        + '<div class="pgtd-head"><h3 class="pgtd-title">' + safeTitle + '</h3>'
-        + '<span class="pgtd-posted">' + PGTD_CLOCK + ' Posted ' + posted + '</span></div>'
-        + '<p class="pgtd-desc">' + safeDesc + '</p>'
-        + '<div class="pgtd-meta">'
-        + '<div class="pgtd-meta-row"><span class="pgtd-icon">' + PGTD_PIN + '</span><span>' + safeLoc + '</span></div>'
-        + '<div class="pgtd-meta-row pgtd-meta-time"><span class="pgtd-icon">' + PGTD_CLOCK + '</span><span>' + when + '</span>'
-        + '<span class="pgtd-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</span></div>'
-        + '</div>'
-        + (t.offers ? '<span class="pgtd-offers">' + Number(t.offers) + (Number(t.offers) === 1 ? ' offer' : ' offers') + '</span>' : '')
-        + '<div class="pgtd-actions">'
-        + '<a class="pgtd-btn pgtd-btn-secondary" href="' + detailsHref + '" onclick="event.stopPropagation()">View Task</a>'
-        + '<a class="pgtd-btn pgtd-btn-primary" href="' + detailsHref + '" onclick="event.stopPropagation()">Apply</a>'
-        + '</div>'
-        + '</div>';
+    /* Card design: js/ui.js (stTaskCard). The home list does not know urgency or category unless the row has them. */
+    function renderPgtdCard(t) {
+      return stTaskCard({
+        id: t.id, title: t.title, description: t.description, category: t.category, location: t.location,
+        budget: t.budget, created_at: t.created_at, photo_urls: t.photo_urls, offers_count: t.offers,
+        task_type: t.task_type, urgency: t.urgency, compact: !t.urgency
+      });
     }
 
     async function loadTasksSection() {
       try {
-        const tasks = await window.ST.db.fetchTasks({ limit: 5 });
+        const tasks = await window.ST.db.fetchTasks({ limit: 6 });
         const el    = document.getElementById('tasksList');
-        const combined = (tasks || []).slice(0, 5);
+        const combined = (tasks || []).slice(0, 6);
         if (!combined.length) {
           el.innerHTML = `<div style="text-align:center;padding:40px 24px;">
             <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:16px;">No open tasks yet. Post the first one!</p>
@@ -705,6 +664,15 @@
           return;
         }
         el.innerHTML = combined.map(renderPgtdCard).join('');
+        if (!el.dataset.cardsWired) {
+          el.dataset.cardsWired = '1';
+          el.addEventListener('click', ev => {
+            if (ev.target.closest('.st-card-save') || ev.target.closest('a')) return;
+            const card = ev.target.closest('.st-card--task'); if (!card) return;
+            const id = encodeURIComponent(card.dataset.taskId || '');
+            window.location.href = ev.target.closest('.st-card-cta') ? 'find-tasks.html?task=' + id : 'task-details.html?id=' + id;
+          });
+        }
       } catch(e) {
         console.warn('[ST] loadTasksSection error:', e);
         const el = document.getElementById('tasksList');
@@ -741,24 +709,14 @@
           try {
             const svcList = await window.ST.db.fetchServices({ limit: 6 });
             if (svcList.length) {
-              el.innerHTML = svcList.map((s, i) => {
-                const safeName = escapeHtml(s.provider_name || 'Provider');
-                const safeSvc  = escapeHtml(s.service_name || '');
-                const safeLoc  = escapeHtml(s.location || 'Lagos');
-                const av = ['av-1','av-2','av-3','av-4','av-5','av-6'][i % 6];
-                const uid = escapeHtml(s.user_id || '');
-                const profileUrl = uid ? 'tasker-profile.html?id=' + uid : 'find-taskers.html';
-                const rate = s.price ? '&#8358;' + Number(s.price).toLocaleString() : '';
-                return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
-                  + '<div class="live-card-top"><div class="live-avatar ' + av + '">' + (safeName[0]||'S') + (safeName[1]||'T') + '</div>'
-                  + '<div style="text-align:right;">' + (rate ? '<div class="live-price">' + rate + '</div><div class="live-price-type">' + escapeHtml(s.rate_unit||'/hr') + '</div>' : '') + '</div></div>'
-                  + '<div class="live-name">' + safeName + '</div>'
-                  + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + safeLoc + '</div>'
-                  + (safeSvc ? '<div class="live-cat">' + safeSvc + '</div>' : '')
-                  + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
-                  + '</div>';
+              el.innerHTML = svcList.map(s => {
+                const uid = s.user_id ? String(s.user_id) : '';
+                return stTaskerCard({
+                  id: uid, user_id: uid, provider_name: s.provider_name || 'Provider', service_name: s.service_name || '',
+                  location: s.location || 'Lagos', photo: s.photo || '', price: s.price, rate_unit: s.rate_unit || '/hr',
+                  href: uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : 'find-taskers.html', hideAvailability: true
+                });
               }).join('');
-              return;
             }
           } catch(e2) { /* fall through to dummy */ }
           el.innerHTML = '';
@@ -766,17 +724,11 @@
         }
 
         const AV = ['av-1','av-2','av-3','av-4','av-5','av-6'];
-        renderFeaturedCards(taskers.map((t, i) => ({
-          uid:      escapeHtml(t.user_id || t.id || ''),
-          name:     escapeHtml(t.business_name || t.service || 'Provider'),
-          service:  escapeHtml(t.service || t.service_name || ''),
-          loc:      escapeHtml(t.location || 'Lagos'),
-          bio:      escapeHtml((t.bio || '').slice(0, 75)) + ((t.bio||'').length > 75 ? '&hellip;' : ''),
-          photo:    escapeHtml(t.photo_url || ''),
-          rate:     t.rate_value ? '&#8358;' + Number(t.rate_value).toLocaleString() : '',
-          rateUnit: escapeHtml(t.rate_unit || '/hour'),
-          verified: t.is_verified,
-          av:       AV[i % 6],
+        /* Raw values: stTaskerCard escapes them itself. No verified tick (nobody can use the site unverified). */
+        renderFeaturedCards(taskers.map(t => ({
+          uid: String(t.user_id || t.id || ''), name: t.business_name || t.service || 'Provider',
+          service: t.service || t.service_name || '', loc: t.location || 'Lagos', photo: t.photo_url || '',
+          rate: t.rate_value, rateUnit: t.rate_unit || '/hour'
         })), el);
       } catch(e) {
         if (el) el.innerHTML = '';
@@ -784,26 +736,11 @@
     }
 
     function renderFeaturedCards(cards, el) {
-      el.innerHTML = cards.map((c, i) => {
-        const profileUrl = c.uid ? 'tasker-profile.html?id=' + c.uid : 'find-taskers.html';
-        const init = c.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'ST';
-        const photoHtml = c.photo
-          ? '<img src="' + c.photo + '" alt="' + c.name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'" />'
-          : init;
-        return '<div class="live-card fade-up" style="animation-delay:' + (i*0.06) + 's;cursor:pointer;" onclick="window.location.href=\'' + profileUrl + '\'">'
-          + '<div class="live-card-top">'
-          + '<div class="live-avatar ' + c.av + '" style="border-radius:50%;' + (c.photo?'background:var(--gray-100);padding:0;overflow:hidden;':'') + '">' + photoHtml + '</div>'
-          + '<div style="text-align:right;">'
-          + (c.rate ? '<div class="live-price">' + c.rate + '</div><div class="live-price-type">' + c.rateUnit + '</div>' : '')
-          + (c.verified ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:var(--text-xs);font-weight:700;color:var(--green);margin-top:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : '')
-          + '</div></div>'
-          + '<div class="live-name">' + c.name + '</div>'
-          + '<div class="live-sub"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + c.loc + '</div>'
-          + (c.service ? '<div class="live-cat">' + c.service + '</div>' : '')
-          + (c.bio ? '<p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + c.bio + '</p>' : '')
-          + '<a href="' + profileUrl + '" class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="event.stopPropagation()">View Profile</a>'
-          + '</div>';
-      }).join('');
+      el.innerHTML = cards.map(c => stTaskerCard({
+        id: c.uid, user_id: c.uid, provider_name: c.name, service_name: c.service, location: c.loc, photo: c.photo,
+        price: c.rate, rate_unit: c.rateUnit, hideAvailability: true,
+        href: c.uid ? 'tasker-profile.html?id=' + encodeURIComponent(c.uid) : 'find-taskers.html'
+      })).join('');
     }
 
     /* ── Service search autocomplete ─────────────────────────── */

@@ -339,6 +339,11 @@ function stTaskCard(t) {
   const ago   = stAgo(t.created_at);
   const chipCls = urg === 'immediate' ? 'st-chip--urgent' : (urg === 'scheduled' ? 'st-chip--soon' : '');
   const chipTxt = urg === 'immediate' ? 'Urgent' : (urg === 'scheduled' ? 'Scheduled' : 'Flexible');
+  /* t.compact: the caller does not know the urgency or category (home pages), so nothing is invented: no "Flexible", no "Other". */
+  const urgChip = t.compact && urg !== 'immediate'
+    ? (ago ? `<span class="st-chip">Posted ${ago}</span>` : '')
+    : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}${ago ? ' • ' + ago : ''}</span>`;
+  const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(stLabel(cat))}</span>`;
   const cat   = t.category || 'other';
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
   const emoji = ST_CAT_EMOJI[cat] || ST_CAT_EMOJI.other;
@@ -355,8 +360,8 @@ function stTaskCard(t) {
     <div class="st-card-pad">
       <div class="st-card-top">
         <div class="st-card-chips">
-          <span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}${ago ? ' • ' + ago : ''}</span>
-          <span class="st-chip st-chip--category">${e(stLabel(cat))}</span>
+          ${urgChip}
+          ${catChip}
         </div>
         <button type="button" class="st-card-save" aria-label="Save task" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.bookmark}</button>
       </div>
@@ -442,7 +447,7 @@ function stTaskerCard(s) {
   return `<article class="st-card st-card--tasker fade-up" id="svc-${e(s.id)}">
     <div class="st-card-pad">
       <div class="st-tasker-top">
-        <span class="st-chip ${av[1] ? 'st-chip--available' : ''}">${av[1] ? '<span class="st-chip-dot"></span>' : ''}${av[0]}</span>
+        ${s.hideAvailability ? '<span></span>' : `<span class="st-chip ${av[1] ? 'st-chip--available' : ''}">${av[1] ? '<span class="st-chip-dot"></span>' : ''}${av[0]}</span>`}
         ${rating > 0 ? `<span class="st-rating">${ST_ICON.star}${rating.toFixed(1)}${reviews > 0 ? ` <small>(${reviews})</small>` : ''}</span>` : ''}
       </div>
       <div class="st-tasker-head">
