@@ -54,15 +54,43 @@
       var next = Number(row.next_milestone || 0);
       if (next > 0) { text.textContent = num(pts) + ' of ' + num(next) + ' points to your next free gift'; bar.max = next; bar.value = Math.min(pts, next); }
       note.textContent = 'Reaching a milestone saves one free 30-day Starter gift. Each milestone is further away than the last.';
-      if (Number(row.gifts_saved || 0) > 0) note.textContent += ' A saved gift can be used once your current plan has ended. Using gifts opens soon.';
+      if (Number(row.gifts_saved || 0) > 0) note.textContent += ' A saved gift can be used once your current plan has ended.';
     } else {
       var into = pts % 1000, earned = Math.floor(pts / 1000);
       text.textContent = num(into) + ' of 1,000 points to your next N200 credit';
       bar.max = 1000; bar.value = into;
       note.textContent = earned > 0
-        ? 'You have reached ' + earned + ' credit' + (earned === 1 ? '' : 's') + ' of N200. Adding credit to your wallet opens soon.'
-        : 'Every full 1,000 points earns N200 wallet credit. Part of a thousand does not count yet.';
+        ? 'You have reached ' + earned + ' credit' + (earned === 1 ? '' : 's') + ' of N200. Add it to your gift card balance below.'
+        : 'Every full 1,000 points earns N200 gift card credit. Part of a thousand does not count yet.';
     }
+    renderCreditButton(row);
+  }
+
+  /* Customer credit: the button shows only when credit is waiting; the database decides everything when it is pressed. */
+  async function renderCreditButton(row) {
+    var host = $('rfCreditBox');
+    if (!host) { host = el('div', 'rf-credit'); host.id = 'rfCreditBox'; $('rfProgNote').insertAdjacentElement('afterend', host); }
+    host.textContent = ''; host.hidden = true;
+    if (row.programme !== 'customer') return;
+    var my = RUN;
+    var s = null;
+    try { s = await D.creditStatus(); } catch (e) { return; }
+    if (my !== RUN || !s) return;
+    if (Number(s.accepted_naira) > 0) host.appendChild(el('p', 'rf-note', 'Your gift card balance: N' + num(s.balance)));
+    if (Number(s.available_naira) > 0) {
+      var b = el('button', 'btn btn-primary', 'Add \u20A6' + num(s.available_naira) + ' to my gift balance');
+      b.type = 'button';
+      b.addEventListener('click', async function () {
+        b.disabled = true;
+        try {
+          var r = await D.creditAccept();
+          toast(r.ok ? '\u20A6' + num(r.credited) + ' was added to your gift card balance.' : (r.message || 'We could not add the credit. Please try again.'));
+        } catch (e) { toast('We could not add the credit. Please try again.'); }
+        show('customer');
+      });
+      host.appendChild(b);
+    }
+    host.hidden = host.childNodes.length === 0;
   }
 
   function renderHistory(items) {
@@ -84,7 +112,7 @@
   function renderRewards(programme, items) {
     var ul = $('rfRew'); ul.textContent = '';
     var empty = $('rfRewEmpty');
-    empty.textContent = programme === 'customer' ? 'Wallet credits will appear here once you add them to your wallet.' : 'No rewards yet.';
+    empty.textContent = programme === 'customer' ? 'Credits you add to your gift card balance are shown in your gift card history.' : 'No rewards yet.';
     empty.hidden = items.length > 0;
     var label = { saved: 'Saved', active: 'Active', used: 'Used' };
     items.forEach(function (r) {
@@ -93,7 +121,21 @@
       left.appendChild(el('div', 'rf-item-main', 'Free 30 days of Starter'));
       left.appendChild(el('div', 'rf-item-sub', 'Milestone ' + num(r.points_threshold) + ' points · ' + day(r.created_at)));
       li.appendChild(left);
-      li.appendChild(el('span', 'rf-item-badge', label[r.status] || r.status));
+      if (r.status === 'saved' && r.id) {
+        var gb = el('button', 'btn btn-primary', 'Activate my free Starter month');
+        gb.type = 'button';
+        gb.addEventListener('click', async function () {
+          gb.disabled = true;
+          try {
+            var res = await D.rewardAccept(r.id);
+            toast(res.ok ? 'Your free Starter month is active.' : (res.message || 'We could not activate this reward. Please try again.'));
+          } catch (e) { toast('We could not activate this reward. Please try again.'); }
+          show('tasker');
+        });
+        li.appendChild(gb);
+      } else {
+        li.appendChild(el('span', 'rf-item-badge', label[r.status] || r.status));
+      }
       ul.appendChild(li);
     });
   }

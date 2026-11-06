@@ -337,7 +337,7 @@ function svcWire() {
       if (!img || img.tagName !== 'IMG') return;
       const badge = document.createElement('div');
       badge.className = 'st-card-media-fallback';
-      badge.textContent = img.dataset.emoji || '🛠️';
+      badge.innerHTML = '<img class="st-card-logo" src="/images/favicon.png" alt="" aria-hidden="true" />';
       img.replaceWith(badge);
     }, true);
   }

@@ -156,3 +156,7 @@
 @media (prefers-reduced-motion: reduce) { .st-card, .st-card:hover { transition: none; transform: none; } }
 .st-tick { stroke: var(--color-text-on-primary); }
 .st-tasker-avatar img { position: absolute; inset: 0; }
+
+/* Placeholder when there is no photo: the site favicon logo */
+.st-card-media-fallback .st-card-logo { width: 22%; max-width: 88px; height: auto; object-fit: contain; border-radius: var(--radius-md); }
+.st-tasker-avatar img.st-card-logo { box-sizing: border-box; object-fit: contain; padding: var(--space-2); border-radius: var(--radius-md); }

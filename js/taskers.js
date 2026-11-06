@@ -203,13 +203,13 @@ const PAGE_SIZE = 8;
    the migration (or demo rows) so the new filters have something to
    work with, without overwriting real values that ARE present. */
 function normalizeServiceCard(s) {
-  const seed = String(s.id || s.provider_name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const availabilityOptions = ['available_now', 'available_today', 'available_this_week'];
   return {
     ...s,
     specialties: (s.specialties && s.specialties.length) ? s.specialties : (s.service_name ? [s.service_name] : []),
-    availability_status: s.availability_status || availabilityOptions[seed % availabilityOptions.length],
-    verified: typeof s.verified === 'boolean' ? s.verified : (s.rating || 0) >= 4.8,
+    /* M17: no invented data. Availability is shown only when the tasker set it; verified only when the row says so (never guessed from a rating). */
+    availability_status: s.availability_status || null,
+    hideAvailability: !s.availability_status,
+    verified: s.verified === true,
     reviews: s.reviews ?? s.reviews_count ?? 0,
   };
 }

@@ -921,20 +921,20 @@
     }
 
     /* My Active Tasks: two labelled parts inside one wrapper each, so they look different and a hidden row hides its label too */
-    function _cuPart(host, own, label, rowOpts) {
+    /* Same look as every other row: no side line, no caption; the row title is the heading. */
+    function _cuPart(host, own, rowOpts) {
       host.textContent = '';
       const wrap = document.createElement('section');
-      wrap.className = 'cc-part' + (own ? ' cc-part--own' : '');
-      const cap = document.createElement('p'); cap.className = 'cc-part-label'; cap.textContent = label;
+      wrap.className = 'cc-part';
       const row = STCompact.row(rowOpts);
-      wrap.appendChild(cap); wrap.appendChild(row); host.appendChild(wrap);
+      wrap.appendChild(row); host.appendChild(wrap);
       return { wrap, row };
     }
     function _cuSyncPart(p) { p.wrap.hidden = p.row.hidden; }
 
     async function _cuMine(host) {
       const tok = _cuStamp(host);
-      const p = _cuPart(host, true, 'Part A \u00B7 Tasks you posted', { title: 'My Active Tasks', skeleton: 'task', viewAllHref: 'my-tasks.html', viewAllLabel: 'My Tasks', errorText: 'We could not load your tasks. Please try again.' });
+      const p = _cuPart(host, true, { title: 'Your Tasks', skeleton: 'task', viewAllHref: 'my-tasks.html', viewAllLabel: 'My Tasks', errorText: 'We could not load your tasks. Please try again.' });
       try {
         const rows = await _tkRpc('homepage_my_tasks', { p_limit: CU.limit });
         if (!_cuLive(host, tok)) return;
@@ -951,7 +951,7 @@
 
     async function _cuOthers(host) {
       const tok = _cuStamp(host);
-      const p = _cuPart(host, false, 'Part B \u00B7 Other customers\u2019 tasks (view only)', { title: 'Tasks From Other Customers', skeleton: 'task', errorText: 'We could not load these tasks. Please try again.' });
+      const p = _cuPart(host, false, { title: 'Other Tasks', skeleton: 'task', errorText: 'We could not load these tasks. Please try again.' });
       try {
         const pt = await CU.pointP;
         if (!_cuLive(host, tok)) return;

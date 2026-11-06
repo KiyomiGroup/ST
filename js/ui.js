@@ -341,16 +341,15 @@ function stTaskCard(t) {
   const chipTxt = urg === 'immediate' ? 'Urgent' : (urg === 'scheduled' ? 'Scheduled' : 'Flexible');
   /* t.compact: the caller does not know the urgency or category (home pages), so nothing is invented: no "Flexible", no "Other". */
   const urgChip = t.compact && urg !== 'immediate'
-    ? (ago ? `<span class="st-chip">Posted ${ago}</span>` : '')
+    ? (t.statusText || ago ? `<span class="st-chip">${t.statusText ? e(t.statusText) + (ago ? ' • ' + ago : '') : 'Posted ' + ago}</span>` : '')
     : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}${ago ? ' • ' + ago : ''}</span>`;
   const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(stLabel(cat))}</span>`;
   const cat   = t.category || 'other';
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
-  const emoji = ST_CAT_EMOJI[cat] || ST_CAT_EMOJI.other;
-  const media = photos.length
+    const media = photos.length
     ? `<div class="st-card-media"><img src="${e(photos[0])}" alt="" loading="lazy" />
          <span class="st-chip st-chip--glass st-card-media-tag">${ST_ICON.image}${photos.length} Client Photo${photos.length > 1 ? 's' : ''}</span></div>`
-    : `<div class="st-card-media"><div class="st-card-media-fallback" aria-hidden="true">${emoji}</div></div>`;
+    : `<div class="st-card-media"><div class="st-card-media-fallback" aria-hidden="true"><img class="st-card-logo" src="/images/favicon.png" alt="" aria-hidden="true" /></div></div>`;
   const remote = (t.task_type || '') === 'remote';
   const dist = typeof t.distance_km === 'number' ? `<li><span class="st-dot" aria-hidden="true">•</span>${t.distance_km.toFixed(1)} km</li>` : '';
   const offers = Number(t.offers_count);
@@ -398,7 +397,7 @@ function stServiceCard(s) {
   const eyebrowHtml = s.perk ? e(s.perk) : [s.provider ? e(s.provider) + memb : '', s.location ? e(s.location) : ''].filter(Boolean).join(' · ');
   const media = s.photo
     ? `<img src="${e(s.photo)}" alt="${e(s.service_name)}" loading="lazy" data-emoji="${e(s.emoji || '')}" />`
-    : `<div class="st-card-media-fallback" aria-hidden="true">${s.emoji || ST_CAT_EMOJI.other}</div>`;
+    : `<div class="st-card-media-fallback" aria-hidden="true"><img class="st-card-logo" src="/images/favicon.png" alt="" aria-hidden="true" /></div>`;
   const priced = Number(s.price) > 0;
   return `<article class="st-card st-card--service fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
     <div class="st-card-media">
@@ -435,7 +434,6 @@ const ST_AVAIL = { available_now: ['Available', true], available_today: ['Availa
 function stTaskerCard(s) {
   const e = window.escapeHtml || (x => String(x));
   const name = s.provider_name || 'Provider';
-  const initials = name.replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
   const av = ST_AVAIL[s.availability_status] || ST_AVAIL.available_this_week;
   const rating = Number(s.rating);
   const reviews = Number(s.reviews);
@@ -456,7 +454,7 @@ function stTaskerCard(s) {
           <p class="st-tasker-role">${e(s.service_name || '')}</p>
           <p class="st-tasker-loc">${ST_ICON.pin}${e(s.location || 'Lagos')}</p>
         </div>
-        <div class="st-tasker-avatar"><span aria-hidden="true">${initials}</span>${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+        <div class="st-tasker-avatar"><img class="st-card-logo" src="/images/favicon.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
       ${s.isLocal ? stLocalTags() : ''}
       ${shown.length ? `<div class="st-tasker-skills"><span class="st-card-label">Skills</span>

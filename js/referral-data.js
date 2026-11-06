@@ -27,9 +27,26 @@
     if (p.error) throw p.error;
     if (!p.data) return [];
     const { data, error } = await db().from('referral_rewards')
-      .select('milestone_index, points_threshold, kind, status, created_at').eq('profile_id', p.data.id).order('created_at', { ascending: false });
+      .select('id, milestone_index, points_threshold, kind, status, created_at, ends_at').eq('profile_id', p.data.id).order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
+  }
+  /* customer credit waiting: {points, earned_naira, accepted_naira, available_naira, balance, ...} or null */
+  async function creditStatus() {
+    const { data, error } = await db().rpc('referral_customer_credit_status');
+    if (error) throw error;
+    return (Array.isArray(data) && data[0]) || null;
+  }
+  /* the database does all the checking; these only pass the press along. Result: {ok, reason, message, credited, balance, ends_at} */
+  async function creditAccept() {
+    const { data, error } = await db().rpc('referral_customer_credit_accept');
+    if (error) throw error;
+    return data || { ok: false };
+  }
+  async function rewardAccept(id) {
+    const { data, error } = await db().rpc('referral_reward_accept', { p_reward: id });
+    if (error) throw error;
+    return data || { ok: false };
   }
   /* which programme the person is acting as right now */
   function activeProgramme() {
@@ -41,5 +58,5 @@
     return rows.find(function (r) { return r.programme === programme; }) || null;
   }
 
-  root.STReferralData = { shareUrl: shareUrl, summary: summary, stats: stats, history: history, rewards: rewards, activeProgramme: activeProgramme, mine: mine };
+  root.STReferralData = { shareUrl: shareUrl, summary: summary, stats: stats, history: history, rewards: rewards, activeProgramme: activeProgramme, mine: mine, creditStatus: creditStatus, creditAccept: creditAccept, rewardAccept: rewardAccept };
 })(window);

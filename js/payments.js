@@ -290,6 +290,14 @@ async function payForSubscription(planKey, userEmail) {
   if (!user) { var e0 = new Error('Please log in first.'); e0.code = 'init'; throw e0; }
   if (typeof planKey !== 'string' || !planKey) { var ep = new Error('Please choose a plan.'); ep.code = 'init'; throw ep; }
 
+  /* A free reward month (referral gift) ends when a plan is paid for: say so first. The database ends it; this only warns. */
+  try {
+    var rw = await window.supabase.from('referral_rewards').select('id').eq('status', 'active').gt('ends_at', new Date().toISOString()).limit(1);
+    if (!rw.error && rw.data && rw.data.length && !window.confirm('You are on a free Starter month. Paying now ends it. Continue?')) {
+      var ec = new Error('You chose not to continue.'); ec.code = 'init'; throw ec;
+    }
+  } catch (ew) { if (ew && ew.code === 'init') throw ew; }
+
   var init = await _callFn('payment-init', { purpose: 'subscription', plan: planKey });
   if (!init.ok || !init.data || !init.data.reference || !init.data.amountKobo) {
     var msg = init.data && typeof init.data.error === 'string' && init.data.error.length <= 200 ? init.data.error : 'We could not start the payment. Nothing was charged.';
