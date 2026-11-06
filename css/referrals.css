@@ -1,7 +1,7 @@
 /* StreetTasker referrals page. Styled like the other Figma-built pages (post-task, gift cards): --pt-* palette, forest hero, pill buttons, large rounded cards.
    Tokens and existing components only (.btn, .form-input). Layout lives here; no new colours or sizes. */
 .rf-body { background: var(--pt-page); min-height: 100vh; }
-.rf-main { max-width: 720px; margin: 0 auto; padding: calc(var(--nav-height) + var(--space-5)) var(--space-4) var(--space-8); }
+.rf-main { width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
 .rf-state { margin: var(--space-5) 0; color: var(--color-text-secondary); }
 .rf-state[hidden], .rf-tabs[hidden], .rf-app[hidden], .rf-empty[hidden], .rf-chip[hidden] { display: none; }
 
@@ -104,9 +104,26 @@
 .rf-faq-item[open] .rf-faq-ico { transform: rotate(180deg); }
 .rf-faq-item p { margin: 0 0 var(--space-4); font-size: var(--text-sm); color: var(--pt-ink-muted); }
 
-@media (min-width: 768px) {
-  .rf-main { padding-left: var(--space-5); padding-right: var(--space-5); }
-  .rf-hero { padding: var(--space-7) var(--space-6); }
+/* Same side margin as the other pages: 60px, then 20px once the screen is under 1164px */
+@media (max-width: 1164px) { .rf-main { width: calc(100% - 2 * (var(--space-4) + var(--space-1))); } }
+
+/* Desktop: hero beside the share card, rewards in two halves, three steps in a row */
+@media (min-width: 769px) {
+  .rf-app { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+  .rf-app > .rf-section, .rf-app > .rf-card--rewards, .rf-app > .rf-card--faq { grid-column: 1 / -1; }
+  .rf-hero { align-items: flex-start; justify-content: center; text-align: left; padding: var(--space-7); gap: var(--space-4); }
+  .rf-title { font-size: var(--text-hero); }
+  .rf-lead { max-width: 44ch; font-size: var(--text-lg); }
+  .rf-card { padding: var(--space-6); }
+  .rf-card--rewards { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-5); align-items: start; }
+  .rf-card--rewards > .rf-card-head { grid-column: 1 / -1; }
+  .rf-card--rewards > .rf-tiles { grid-column: 1; }
+  .rf-card--rewards > .rf-goal { grid-column: 2; grid-row: 2 / span 2; margin-top: 0; height: 100%; }
+  .rf-card--rewards > .rf-stats { grid-column: 1; }
+  .rf-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+  .rf-step { flex-direction: column; align-items: flex-start; padding: var(--space-5); }
+  .rf-faq-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-6); }
+  .rf-faq-list .rf-faq-item:nth-child(2) { border-top: 0; }
 }
 @media (max-width: 480px) {
   .rf-stats { grid-template-columns: 1fr; }

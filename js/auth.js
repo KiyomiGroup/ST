@@ -78,6 +78,9 @@ function _applyNavState(loggedIn, role, name) {
        Avatar -> profile edit */
     const panelUrl = (panel) => dashUrl + '?panel=' + panel;
     const profileUrl = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html'; /* own pages, not a dashboard panel */
+    /* Avatar opens the person's own profile page. A tasker's profile needs their id (cached at sign-in); until it is cached, fall back to the edit page. */
+    let uid = ''; try { uid = localStorage.getItem('st_uid') || ''; } catch (e) {}
+    const viewProfileUrl = isTasker ? (uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : profileUrl) : 'client-profile.html';
     const setHref  = (id, url) => { const el = $(id); if (el) el.href = url; };
     setHref('navIconPending',  isTasker ? 'bookings.html' : 'my-tasks.html');
     setHref('navIconMessages', 'messages.html');
@@ -95,7 +98,7 @@ function _applyNavState(loggedIn, role, name) {
     const av = $('navAvatar');
     const avInit = $('navAvatarInitial');
     if (avInit) avInit.textContent = initials;
-    if (av)     av.href = profileUrl;
+    if (av)     av.href = viewProfileUrl;
 
     /* Mobile: hide + / show account icons */
     const mPlus = $('nav-mobile-plus-btn');
@@ -158,7 +161,10 @@ function _syncNavDrawer(loggedIn, role, name, initials) {
     const isTasker = role === 'tasker';
     const dashUrl  = isTasker ? 'dashboard-tasker.html' : 'dashboard-customer.html';
     const user = $('navDrawerUser');
-    if (user) user.href = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html';
+    if (user) {
+      let duid = ''; try { duid = localStorage.getItem('st_uid') || ''; } catch (e) {}
+      user.href = isTasker ? (duid ? 'tasker-profile.html?id=' + encodeURIComponent(duid) : 'edit-profile-tasker.html') : 'client-profile.html';
+    }
 
     const nameEl = $('navDrawerName');
     if (nameEl) nameEl.textContent = name || 'My account';
@@ -417,6 +423,7 @@ async function syncNavbarAuthState() {
       localStorage.setItem('st_role',    role);
       localStorage.setItem('st_name',    name);
       localStorage.setItem('st_session', '1');
+      if (user.id) localStorage.setItem('st_uid', user.id);
       if (user.email) localStorage.setItem('st_email', user.email);
     } catch(e) {}
 
@@ -826,7 +833,7 @@ async function signUpUser({ name, email, password, role, phone = '', refCode = '
   const needsVerification = !data.user.email_confirmed_at;
   if (data.session) { try { await window.supabase.auth.signOut(); } catch (e) {} }
   try {
-    ['st_role', 'st_name', 'st_session', 'st_email', 'st_avatar'].forEach(k => localStorage.removeItem(k));
+    ['st_role', 'st_name', 'st_session', 'st_email', 'st_avatar', 'st_uid'].forEach(k => localStorage.removeItem(k));
   } catch (e) {}
   return { user: data.user, needsVerification };
 }
@@ -841,6 +848,7 @@ async function loginUser(email, password) {
     localStorage.setItem('st_role',    role);
     localStorage.setItem('st_name',    name);
     localStorage.setItem('st_session', '1');
+    if (data.user?.id) localStorage.setItem('st_uid', data.user.id);
   } catch(e) {}
   return { user: data.user, session: data.session };
 }
@@ -856,6 +864,7 @@ async function logoutUser() {
     localStorage.removeItem('st_plan');
     localStorage.removeItem('st_email');
     localStorage.removeItem('st_avatar');
+    localStorage.removeItem('st_uid');
     /* Also clear any Supabase persisted session keys */
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('sb-') || k.startsWith('supabase')) localStorage.removeItem(k);

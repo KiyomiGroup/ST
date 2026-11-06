@@ -110,14 +110,15 @@
           <a href="post-service.html" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>Post a Service</a>
           <a href="my-services.html" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>My Services</a>
           <a href="my-subscription.html" class="nav-menu-item" role="menuitem" data-nav-role="tasker" hidden>Subscription</a>
+          <a href="referrals.html" class="nav-menu-item" id="navMenuReferrals" role="menuitem">Invite &amp; Earn</a>
           <a href="edit-profile-customer.html" class="nav-menu-item" id="navMenuSettings" role="menuitem">Settings</a>
           <button type="button" class="nav-menu-item" id="navMenuSwitchRole" role="menuitem" data-nav-switch-role hidden><span data-switch-label>Switch account</span></button>
           <button type="button" class="nav-menu-item nav-menu-item-danger" id="navMenuLogout" role="menuitem" data-nav-logout>Log out</button>
         </div>
       </div>
-      <!-- Avatar with online dot — goes to profile edit -->
+      <!-- Avatar with online dot — opens the profile page (href set in auth.js) -->
       <div class="nav-avatar-wrap">
-        <a href="edit-profile-customer.html" class="nav-avatar" id="navAvatar" title="Edit profile" aria-label="Edit profile">
+        <a href="edit-profile-customer.html" class="nav-avatar" id="navAvatar" title="My profile" aria-label="My profile">
           <span id="navAvatarInitial">?</span>
           <img id="navAvatarImg" alt="" style="display:none;" />
         </a>
@@ -263,6 +264,9 @@
       <li><a href="gift-cards.html" class="nav-drawer-link">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>
         <span>Gift Cards</span></a></li>
+      <li><a href="referrals.html" class="nav-drawer-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Invite &amp; Earn</span></a></li>
       <li><a href="redeem.html" class="nav-drawer-link">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="13" y1="5" x2="13" y2="7"/><line x1="13" y1="17" x2="13" y2="19"/><line x1="13" y1="11" x2="13" y2="13"/></svg>
         <span>Redeem gift card</span></a></li>
