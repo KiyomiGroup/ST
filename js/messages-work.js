@@ -379,7 +379,10 @@
       if (code.length !== 6) { err.textContent = 'Enter the 6-digit code.'; err.hidden = false; return; }
       err.hidden = true; go.disabled = true; go.textContent = 'Checking…';
       pay().submitCompletionCode(v.bookingId, code).then(function () {
-        return after('Code accepted. Payment released to your wallet.');
+        return after('Code accepted. Payment released to your wallet.').then(function () {
+          /* M7: ask for the review right now (the database still decides; a closed chat does not matter) */
+          if (window.STReview) window.STReview.open({ bookingId: v.bookingId });
+        });
       }).catch(function (e) {
         err.textContent = (e && e.message) || 'Could not release the payment.'; err.hidden = false;
         go.disabled = false; go.textContent = 'Confirm completion'; input.value = '';

@@ -194,12 +194,13 @@
     var role = null;
     try { role = await window.ST.auth.getUserRole(user); } catch (e) { /* fall back to cache */ }
     role = role || localStorage.getItem('st_role');
-    if (role === 'tasker') { window.location.replace('bookings.html'); return; }
+    if (role === 'tasker') { window.location.replace('bookings.html' + window.location.search); return; }   /* M7: keeps ?review= */
 
     state.rows = await fetchAll();
     fillCategories();
     showTotal();
     render();
+    if (window.STReview) window.STReview.promptFromUrl();   /* M7: the notification link carries ?review=<booking id> */
   }
 
   /* Re-read everything from the database (after a payment) and redraw, keeping the filters */
@@ -335,6 +336,7 @@
     var h = hint(v);
     var links = actions(v);
     if (v.taskerId) links += '<a class="bk-btn bk-btn-text" href="tasker-profile.html?id=' + encodeURIComponent(v.taskerId) + '">View Provider' + icon('arrow-right') + '</a>';
+    if (v.group === 'completed' && window.STReview) links += window.STReview.button(v.id, 'bk-btn bk-btn-text');
     if (v.group === 'completed') links += '<a class="bk-btn bk-btn-text" href="wallet.html">' + icon('wallet') + 'View in Wallet</a>';
 
     return '<article class="bk-card is-' + v.group + (v.disputed ? ' is-disputed' : '') + '" data-id="' + esc(v.id) + '" tabindex="-1" aria-labelledby="bkt-' + esc(v.id) + '">' +
@@ -431,6 +433,7 @@
     list.innerHTML = all.slice(0, state.shown).map(card).join('');
     $('bkMore').hidden = all.length <= state.shown;
     announce(all.length + (all.length === 1 ? ' booking' : ' bookings') + ' shown');
+    if (window.STReview) window.STReview.decorate(list);   /* M7: reviewed jobs show "Reviewed", others keep "Leave a review" */
   }
 
   function renderError(msg) {

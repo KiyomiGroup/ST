@@ -190,6 +190,8 @@
     var tasker = role() === 'tasker';
     if (d.url) return d.url;
     /* Stage 15: anything that belongs to a conversation opens THAT conversation (messages.html reads ?thread=) */
+    /* M7: "Job Completed! Please leave a review" opens the review dialog for that booking */
+    if (t === 'job_completed' && d.booking_id) return 'customer-bookings.html?review=' + encodeURIComponent(d.booking_id);
     if (d.thread_id) return 'messages.html?thread=' + encodeURIComponent(d.thread_id);
     if (t.indexOf('message') > -1 || t.indexOf('payment_request') > -1 || t.indexOf('job_update') > -1) return 'messages.html';
     if (t.indexOf('dispute') > -1) return 'messages.html';          /* Stage 12: problem-report updates (opened, review, decision, refund) */

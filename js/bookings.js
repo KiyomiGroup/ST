@@ -220,6 +220,7 @@
     $('bkTotal').textContent = state.rows.length;
     $('bkTotal').hidden = !state.rows.length;
     render();
+    if (window.STReview) window.STReview.promptFromUrl();   /* M7: a customer who lands here with a ?review= link */
   }
 
   /* ── Filtering ────────────────────────────────────────── */
@@ -344,6 +345,7 @@
     var h = (v.group === 'completed' || v.group === 'cancelled') ? null : hint(v);
     var links = actions(v);
     if (v.taskId) links += '<a class="bk-btn bk-btn-text" href="find-tasks.html?task=' + encodeURIComponent(v.taskId) + '">View Task Details' + icon('arrow-right') + '</a>';
+    if (v.group === 'completed' && window.STReview) links += window.STReview.button(v.id, 'bk-btn bk-btn-text');
     if (v.group === 'completed') links += '<a class="bk-btn bk-btn-text" href="wallet.html">' + icon('wallet') + 'View in Wallet</a>';
 
     return '<article class="bk-card is-' + v.group + (v.disputed ? ' is-disputed' : '') + '" data-id="' + esc(v.id) + '" tabindex="-1" aria-labelledby="bkt-' + esc(v.id) + '">' +
@@ -432,6 +434,7 @@
     list.innerHTML = all.slice(0, state.shown).map(card).join('');
     $('bkMore').hidden = all.length <= state.shown;
     announce(all.length + (all.length === 1 ? ' booking' : ' bookings') + ' shown');
+    if (window.STReview) window.STReview.decorate(list);   /* M7: reviewed jobs show "Reviewed", others keep "Leave a review" */
   }
 
   function renderError(msg) {
