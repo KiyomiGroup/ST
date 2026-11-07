@@ -44,7 +44,6 @@
     wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
     pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
     check: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
-    phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
     globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
     shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
     bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
@@ -202,7 +201,7 @@
     state.qrOk = !!markup;
     if (markup) code.innerHTML = markup;   /* generated here from our own link */
     card.appendChild(code); qr.appendChild(card);
-    var label = el('div', 'fl-qr-label'); label.appendChild(icon('phone')); label.appendChild(el('span', null, COPY.scan));
+    var label = el('div', 'fl-qr-label'); label.appendChild(el('span', null, COPY.scan));
     qr.appendChild(label); t.appendChild(qr);
 
     /* E. Benefits */
@@ -280,6 +279,16 @@
       var r = new FileReader(); r.onload = function () { resolve(String(r.result)); }; r.onerror = function () { reject(r.error); }; r.readAsDataURL(blob);
     });
   }
+  function inlineImage(img) {
+    var src = img.currentSrc || img.src;
+    var swap = /^data:/.test(src) ? Promise.resolve() : fetch(src).then(function (r) {
+      if (!r.ok) throw new Error('img ' + r.status);
+      return r.blob();
+    }).then(readAsDataUrl).then(function (url) {
+      return new Promise(function (resolve) { img.onload = resolve; img.onerror = resolve; img.src = url; });
+    });
+    return swap.catch(function () {}).then(function () { return img.decode ? img.decode().catch(function () {}) : null; });
+  }
   function png(data) {
     var lib = root.htmlToImage;
     if (!lib || typeof lib.toCanvas !== 'function') return Promise.reject(new Error('png-unavailable'));
@@ -296,7 +305,14 @@
       return r.ready.then(function () {
         /* html-to-image does not carry a CSS fill (fill: var(--fl-green)) onto SVG paths: the waves came out black. Write the colour on each path. */
         Array.prototype.forEach.call(r.el.querySelectorAll('.fl-bg path'), function (p) { p.setAttribute('fill', getComputedStyle(p).fill); });
-        return lib.toCanvas(r.el, { pixelRatio: 1, width: 154 * u, height: 216 * u });
+        /* Phones (iOS Safari above all) often leave out images that were not already inline when the picture is taken, which is how the
+           logo went missing. So: turn every picture into a data link first, wait until each is decoded, and take the picture twice
+           (the first pass warms the browser up and is thrown away). */
+        var imgs = Array.prototype.slice.call(r.el.querySelectorAll('img'));
+        return Promise.all(imgs.map(inlineImage)).then(function () {
+          var opts = { pixelRatio: 1, width: 154 * u, height: 216 * u };
+          return lib.toCanvas(r.el, opts).then(function () { return lib.toCanvas(r.el, opts); });
+        });
       }).then(function (full) {
         var out = document.createElement('canvas'); out.width = 148 * u; out.height = 210 * u;
         out.getContext('2d').drawImage(full, -3 * u, -3 * u);

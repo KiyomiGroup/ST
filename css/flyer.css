@@ -52,8 +52,7 @@
 .fl-qr { position: absolute; left: calc(99.5 * var(--u)); top: calc(110.5 * var(--u)); width: calc(41.5 * var(--u)); height: calc(48 * var(--u)); border-radius: calc(6 * var(--u)); background: var(--fl-green); overflow: hidden; }
 .fl-qr-card { position: absolute; left: calc(2.2 * var(--u)); top: calc(2.2 * var(--u)); width: calc(37.1 * var(--u)); height: calc(37.1 * var(--u)); padding: calc(2.6 * var(--u)); border-radius: calc(4.4 * var(--u)); background: var(--fl-white); }
 .fl-qr-code, .fl-qr-code svg { display: block; width: 100%; height: 100%; }
-.fl-qr-label { position: absolute; left: 0; right: 0; bottom: 0; height: calc(6.9 * var(--u)); display: flex; align-items: center; justify-content: center; gap: calc(1.6 * var(--u)); color: var(--fl-white); font-size: calc(3.1 * var(--u)); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.fl-qr-label .fl-ico { flex: 0 0 calc(3.6 * var(--u)); width: calc(3.6 * var(--u)); height: calc(3.6 * var(--u)); }
+.fl-qr-label { position: absolute; left: 0; right: 0; bottom: 0; height: calc(6.9 * var(--u)); display: flex; align-items: center; justify-content: center; color: var(--fl-white); font-size: calc(3.1 * var(--u)); font-weight: 700; letter-spacing: 0.08em; text-indent: 0.08em; text-align: center; text-transform: uppercase; }   /* text-indent balances the letter-spacing after the last letter, so the words sit dead centre */
 
 /* E. Benefits */
 .fl-benefits { position: absolute; left: calc(11 * var(--u)); top: calc(167 * var(--u)); width: calc(127 * var(--u)); height: calc(12 * var(--u)); margin: 0; padding: 0; list-style: none; display: flex; align-items: center; }
