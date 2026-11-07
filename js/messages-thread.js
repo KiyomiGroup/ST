@@ -1485,8 +1485,7 @@
         if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitFromInput(); }
       });
       input.addEventListener('input', function () {
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+        fitInput(input);
         syncSendState();
         var w = $('jrComposeWarn');
         if (w && !w.hidden && !hasContactInfo(input.value)) hideWarn();
@@ -1499,6 +1498,17 @@
       jump.addEventListener('click', function () { scrollToBottom(body); jump.hidden = true; });
     }
     syncSendState();
+  }
+
+  /* The message box keeps its width. It grows one line at a time up to 5 lines (128px with padding and border),
+     then stays that size and the text scrolls inside it, so the line you are typing is always visible. */
+  function fitInput(input) {
+    var MAX = 128;
+    input.style.height = 'auto';
+    var border = input.offsetHeight - input.clientHeight;
+    var want = input.scrollHeight + border;
+    input.style.height = Math.min(want, MAX) + 'px';
+    input.style.overflowY = want > MAX ? 'auto' : 'hidden';
   }
 
   window.JRThread = {

@@ -1144,7 +1144,8 @@ body.msg-page {
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
 }
-.msg-input-wrap { flex: 1; }
+/* min-width: 0 keeps the box at its full width however long the text gets */
+.msg-input-wrap { flex: 1 1 0; min-width: 0; }
 
 /* Closed job room (stage M5): history stays readable, the composer is replaced by one line of text */
 .msg-input-bar.is-closed { padding: 0; border-top: 0; }
@@ -1162,15 +1163,20 @@ body.msg-page {
 .msg-input {
   display: block;
   width: 100%;
-  max-height: 100px;
+  /* Like other chat apps: the box grows up to 5 lines, then stays that size and the text scrolls inside it
+     (5 lines x 20px + padding + border). messages-thread.js sets the height as you type. */
+  max-height: 128px;
   box-sizing: border-box;
   padding: var(--space-3) var(--space-4);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-xl);
   background: var(--color-bg-subtle);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  line-height: 1.4;
+  line-height: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
   resize: none;
   outline: none;
   transition: border-color var(--t) var(--ease);
