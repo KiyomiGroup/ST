@@ -88,6 +88,7 @@
                 <input type="range" class="filter-range" id="budgetRange" min="0" max="100000" value="0" step="500" />
                 <div class="range-labels"><span>₦0</span><span id="budgetVal">Any</span><span>₦100k</span></div>
               </div>
+              <label class="filter-opt"><input type="checkbox" id="noBudgetOnly" /> No budget only</label>
             </div>
 
             <div class="filter-group">
@@ -158,7 +159,7 @@
   <script src="js/location.js"></script>
   <script>
     let ALL_TASKS = [];
-    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0, types: [], urgencies: [] };
+    let TASK_FILTERS = { search: '', category: '', location: '', minBudget: 0, noBudgetOnly: false, types: [], urgencies: [] };
 
     async function initPage() {
       /* Older links (?task=ID, labelled "View Task Details") go straight to the task page */
@@ -240,9 +241,13 @@
         renderTasks();
       });
 
+      const nb = document.getElementById('noBudgetOnly');
+      if (nb) nb.addEventListener('change', () => { TASK_FILTERS.noBudgetOnly = nb.checked; renderTasks(); });
+
       /* Reset */
       document.getElementById('taskFilterReset')?.addEventListener('click', () => {
-        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0, types:[], urgencies:[] };
+        TASK_FILTERS = { search:'', category:'', location:'', minBudget:0, noBudgetOnly:false, types:[], urgencies:[] };
+        if (nb) nb.checked = false;
         if (si) si.value = '';
         const li = document.getElementById('taskLocationInput'); if (li) li.value = '';
         if (br) { br.value = 0; if (bv) bv.textContent = 'Any'; }
@@ -275,7 +280,8 @@
         const loc = TASK_FILTERS.location.toLowerCase();
         f = f.filter(t => (t.location||'').toLowerCase().includes(loc));
       }
-      if (TASK_FILTERS.minBudget > 0) f = f.filter(t => !(Number(t.budget) > 0) || t.budget >= TASK_FILTERS.minBudget); /* No budget tasks stay visible: the tasker names the price */
+      if (TASK_FILTERS.noBudgetOnly) f = f.filter(t => !(Number(t.budget) > 0));
+      else if (TASK_FILTERS.minBudget > 0) f = f.filter(t => !(Number(t.budget) > 0) || t.budget >= TASK_FILTERS.minBudget); /* No budget tasks stay visible: the tasker names the price */
       if (TASK_FILTERS.types.length) f = f.filter(t => TASK_FILTERS.types.includes(t.task_type || 'one_off'));
       if (TASK_FILTERS.urgencies.length) f = f.filter(t => TASK_FILTERS.urgencies.includes(t.urgency || 'flexible'));
 
