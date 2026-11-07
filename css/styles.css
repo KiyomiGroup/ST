@@ -1708,7 +1708,7 @@ input.has-gps-btn { padding-right: inherit !important; }
   .dashboard-grid     { display: block !important; }
   .dashboard-body .container { padding: 0 !important; }
   .dashboard-body { padding: 0 !important; }
-  main:not(.st-page) { padding: 10px 14px 80px !important; } /* legacy dashboard shell; new pages use .st-page and are exempt so the fixed nav never covers their heading */
+  main:not(.st-page):not(.rf-main):not(.ln-main):not(.verify-page) { padding: 10px 14px 80px !important; } /* legacy dashboard shell; pages with their own nav clearance (.st-page, referrals, learn, verify) are exempt so the fixed nav never covers their heading */
 }
 
 
@@ -2038,7 +2038,7 @@ img { max-width: 100%; height: auto; }
   }
 
   /* Panels must not overflow viewport */
-  main:not(.st-page) {
+  main:not(.st-page):not(.rf-main):not(.ln-main):not(.verify-page) {
     overflow-x: hidden !important;
     padding: 14px 12px 80px !important; /* 80px for bottom bar; .st-page is exempt (see PAGE SHELL) */
   }
