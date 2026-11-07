@@ -1,25 +1,38 @@
 /* StreetTasker: category icons and the Browse by category grid (js/categories.js). Tokens only. */
-.st-cat-ico { display: inline-block; width: 1em; height: 1em; color: var(--color-primary); flex: 0 0 auto; vertical-align: middle; }
+.st-cat-ico { display: inline-block; width: 1em; height: 1em; color: var(--home-cat-icon); flex: 0 0 auto; vertical-align: middle; }
 .cc-cat-icon .st-cat-ico { width: 62%; height: 62%; }
 .filter-chip .st-cat-ico, .hf-chip .st-cat-ico, .pt-chip .st-cat-ico { width: var(--text-base); height: var(--text-base); margin-right: var(--space-1); }
 .hf-chip.active .st-cat-ico, .filter-chip.active .st-cat-ico { color: currentColor; }
 .pt-chip .st-cat-ico { width: 1.1em; height: 1.1em; }
 
-/* Browse by category: small cards, icon above the heading, no description (logged-out home).
-   Desktop and tablet: centred, wrapping. Phones: one row, swipe sideways. */
-.st-catgrid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
-.st-cattile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); width: 120px; min-height: 88px; padding: var(--space-3) var(--space-2); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); text-align: center; text-decoration: none; color: var(--color-text); box-shadow: var(--shadow-xs); transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease); }
-.st-cattile:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); transform: translateY(-2px); }
-.st-cattile:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.st-cattile .st-cat-ico { width: var(--space-5); height: var(--space-5); }
-.st-cattile-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.25; }
+/* THE category tile (one style for the whole site; the logged-in homepage row and the landing page grid both use it):
+   white tile, small dark-green icon top-left, pale quarter ring in the top-right corner, bold label at the bottom, no count.
+   Row spacing is --home-cat-gap (normal spacing). Do not restyle it in a page. DESIGN-SYSTEM.md 4.16. */
+.st-catgrid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--home-cat-gap); margin: 0; padding: 0; list-style: none; }
+.st-cattile, .cc-card.cc-card--category {
+  position: relative; overflow: hidden; box-sizing: border-box;
+  flex: 0 0 var(--home-cat-w); width: var(--home-cat-w); height: var(--home-cat-h); padding: 0 var(--space-1) var(--home-cat-pad-bottom);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0; text-align: center; text-decoration: none;
+  background: var(--color-bg); border: 0; border-radius: var(--home-cat-radius); box-shadow: var(--home-cat-shadow); color: var(--home-cat-label);
+  transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.st-cattile:hover, .cc-card.cc-card--category:hover { background: var(--color-bg); box-shadow: var(--home-cat-shadow-hover); transform: translateY(-2px); }
+.st-cattile:focus-visible, .cc-card.cc-card--category:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.st-cattile::before, .cc-card.cc-card--category::before {   /* quarter ring centred on the top-right corner */
+  content: ""; position: absolute; top: var(--home-cat-ring-top); right: var(--home-cat-ring-right); width: var(--home-cat-ring-size); height: var(--home-cat-ring-size); box-sizing: border-box;
+  border: var(--home-cat-ring-width) solid var(--home-cat-ring); border-radius: 50%; pointer-events: none;
+}
+.st-cattile > .st-cat-ico, .cc-card.cc-card--category .cc-cat-icon { position: absolute; top: var(--home-cat-icon-top); left: var(--home-cat-icon-left); width: var(--home-cat-icon-size); height: var(--home-cat-icon-size); }
+.cc-card.cc-card--category .cc-cat-icon { border-radius: 0; background: none; color: var(--home-cat-icon); font-size: var(--home-cat-icon-size); line-height: 1; }
+.cc-card.cc-card--category .cc-cat-icon .st-cat-ico { width: 100%; height: 100%; display: block; }
+.st-cattile-label, .cc-card.cc-card--category .cc-cat-label { position: relative; font-family: var(--font-heading); font-size: var(--home-cat-label-size); font-weight: 700; line-height: 1.15; color: var(--home-cat-label); overflow-wrap: normal; }
+.cc-card.cc-card--category .cc-cat-count { display: none; }
+.cc-card.cc-card--category.cc-skel { background: var(--color-bg); }
 @media (max-width: 768px) {
-  .st-catgrid { flex-wrap: nowrap; justify-content: flex-start; gap: var(--space-2); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 calc(-1 * var(--home-pad, var(--space-5))); padding: var(--space-1) var(--home-pad, var(--space-5)) var(--space-2); }
+  /* phones: one row, swipe sideways; same tile, same gap */
+  .st-catgrid { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 calc(-1 * var(--home-pad, var(--space-5))); padding: var(--space-1) var(--home-pad, var(--space-5)) var(--space-2); }
   .st-catgrid::-webkit-scrollbar { display: none; }
   .st-catgrid > li { flex: 0 0 auto; scroll-snap-align: start; }
-  .st-cattile { width: 88px; min-height: 72px; padding: var(--space-2); gap: var(--space-1); border-radius: var(--radius-md); }
-  .st-cattile .st-cat-ico { width: var(--space-4); height: var(--space-4); }
-  .st-cattile-label { font-size: var(--text-xs); }
 }
 
 /* StreetTasker logo shown where a tasker photo or task picture is missing. images/logo-mark.png is transparent and cropped to the mark,

@@ -604,9 +604,20 @@
   --home-cat-w:               96px;
   --home-cat-h:               84px;
   --home-cat-radius:          20px;
-  --home-cat-gap:             30px;       /* space between tiles in the reference */
+  --home-cat-gap:             var(--space-3); /* normal spacing between category tiles, everywhere (was 30px) */
   --home-cat-inset:           10px;       /* tiles start 26px from the edge, headings 16px */
   --home-cat-icon:            #0B322D;    /* icon green */
   --home-cat-label:           #11151E;    /* label ink */
   --home-cat-ring:            #F2F2F4;    /* quarter ring in the top-right corner */
+  --home-cat-shadow:          0 1px 6px rgba(15, 61, 38, .06);
+  --home-cat-shadow-hover:    0 2px 10px rgba(15, 61, 38, .10);
+  --home-cat-pad-bottom:      13px;       /* space under the label */
+  --home-cat-icon-size:       20px;
+  --home-cat-icon-top:        21px;
+  --home-cat-icon-left:       17px;
+  --home-cat-label-size:      11px;
+  --home-cat-ring-size:       80px;
+  --home-cat-ring-width:      13px;
+  --home-cat-ring-top:        -38px;
+  --home-cat-ring-right:      -40px;
 }

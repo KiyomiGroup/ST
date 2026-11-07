@@ -11,7 +11,7 @@
    ============================================================ */
 'use strict';
 
-var VERSION = 'st-pwa-v3';
+var VERSION = 'st-pwa-v4';
 var PRECACHE = [
   '/offline.html',
   '/css/tokens.css',
