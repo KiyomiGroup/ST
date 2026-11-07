@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/categories.css?v=1" />
   <link rel="stylesheet" href="css/cards-compact.css" />
   <link rel="stylesheet" href="css/cards-v2.css?v=2" />
-  <link rel="stylesheet" href="css/home-cards.css?v=1" />
+  <link rel="stylesheet" href="css/home-cards.css?v=2" />
   <link rel="stylesheet" href="css/onboarding.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -107,6 +107,11 @@
       .hf-hero-dt .pg-hero-meta.fade-up { animation: none; opacity: 1; transform: none; }
       /* The search pill floats over the hero's bottom edge, inside its dark area */
       .hf-search .spg-searchbar { margin: -76px 4px 0; }
+    }
+
+    /* Stage 2 (tasker phones): the search pill is one field with a round arrow button, as in the Figma */
+    @media (max-width: 768px) {
+      body.role-tasker .hf-search .spg-searchbar-location-wrap { display: none; }
     }
 
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
@@ -419,6 +424,15 @@
 
         <!-- M12b: Urgent, Near You and Matching rows are built by initTaskerFeed() with STCompact.row (js/cards-compact.js) -->
         <div id="hfTkRows"></div>
+
+        <!-- Stage 2: Taskers, Service Categories, Gift strip and Services follow the Figma order -->
+        <div id="hfTkTaskers"></div>
+        <div id="hfTkCats"></div>
+        <section class="hf-strip" aria-label="Gift cards">
+          <h2 class="hf-strip-title">Gift Loved Ones</h2>
+          <a href="gift-cards.html" class="hf-strip-cta">Buy Giftcard</a>
+        </section>
+        <div id="hfTkServices"></div>
 
         <section class="hf-sec" id="hfAllSec" aria-labelledby="hfAllTitle" hidden>
           <div class="hf-sec-head">
@@ -1113,24 +1127,85 @@
       return words.map(w => w.slice(0, 5)).filter((w, i, a) => a.indexOf(w) === i).slice(0, 6);
     }
 
+    /* Dark strip with one button (Figma: Win More Offers) */
+    function _tkStrip(title, cta, href) {
+      const sec = document.createElement('section'); sec.className = 'hf-strip'; sec.setAttribute('aria-label', title);
+      const h = document.createElement('h2'); h.className = 'hf-strip-title'; h.textContent = title; sec.appendChild(h);
+      const a = document.createElement('a'); a.className = 'hf-strip-cta'; a.href = href; a.textContent = cta; sec.appendChild(a);
+      return sec;
+    }
+
+    /* Taskers row: other taskers (never the person's own card) */
+    async function _tkTaskers() {
+      const host = document.getElementById('hfTkTaskers'); if (!host) return;
+      host.textContent = '';
+      const row = STCompact.row({ title: 'Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all', errorText: 'We could not load taskers. Please try again.' });
+      host.appendChild(row);
+      try {
+        let rows = await _tkRpc('homepage_featured_taskers', {});
+        rows = rows.filter(r => String(r.user_id || r.tasker_user_id || '') !== String(_userId || ''));
+        if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);
+        row.stSetItems(rows.slice(0, TK.limit).map(r => _cuTaskerCard(r, r.tier === 'local')));   /* none found: the row hides itself */
+      } catch (e) { row.stOnRetry(_tkTaskers); row.stSetState('error'); }
+    }
+
+    /* Service Categories row: every category, counts are real listings (best effort) */
+    async function _tkCategories() {
+      const host = document.getElementById('hfTkCats'); if (!host) return;
+      host.textContent = '';
+      const row = STCompact.row({ title: 'Service Categories', skeleton: 'category', skeletonCount: 8, viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load the categories. Please try again.' });
+      host.appendChild(row);
+      try {
+        const counts = {};
+        try {
+          const rows = await _tkRpc('homepage_service_categories', {});
+          rows.forEach(r => { const k = window.STCat ? STCat.resolve(r.category).value : r.category; counts[k] = (counts[k] || 0) + Number(r.service_count || 0); });
+        } catch (e) { /* counts are optional */ }
+        const cats = window.STCat ? STCat.list.filter(c => c.value !== 'other' || counts.other) : [];
+        row.stSetItems(cats.map(c => STCompact.categoryCard({
+          label: c.label, value: c.value, emoji: c.emoji, count: counts[c.value],
+          href: 'find-services.html?category=' + encodeURIComponent(c.value)
+        })));
+      } catch (e) { row.stOnRetry(_tkCategories); row.stSetState('error'); }
+    }
+
+    /* Services row: other people's listings (never the person's own) */
+    async function _tkServices() {
+      const host = document.getElementById('hfTkServices'); if (!host) return;
+      host.textContent = '';
+      const row = STCompact.row({ title: 'Services', skeleton: 'task', viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load services. Please try again.' });
+      host.appendChild(row);
+      try {
+        const raw = await window.ST.db.fetchServices({ limit: 48 });
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
+        const list = raw.map(_normProvider).filter(p => p.uid !== _userId).slice(0, TK.limit);
+        row.stSetItems(list.map(p => STCompact.serviceCard({
+          service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
+          description: String(p.desc || '').slice(0, 90), photo: p.photo, provider: p.name, location: p.location,
+          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _profileUrl(p), user_id: p.uid
+        })));
+      } catch (e) { row.stOnRetry(_tkServices); row.stSetState('error'); }
+    }
+
     function _tkBuildRows() {
       const mount = document.getElementById('hfTkRows');
       if (!mount) return null;
       mount.textContent = '';
       const mk = (title, extra) => {
-        const r = STCompact.row(Object.assign({ title, skeleton: 'task', viewAllHref: 'find-tasks.html', viewAllLabel: 'View All' }, extra || {}));
+        const r = STCompact.row(Object.assign({ title, skeleton: 'task', viewAllHref: 'find-tasks.html', viewAllLabel: 'View all' }, extra || {}));
         r.stOnRetry(() => loadTaskerHome());
         mount.appendChild(r);
         return r;
       };
-      TK.rows = {
-        urgent: mk('Urgent Tasks', { errorText: 'We couldn\'t load urgent tasks right now.' }),
-        near:   mk('Tasks Near You', { errorText: 'We couldn\'t load nearby tasks right now.' }),
-        match:  mk('Matching Your Services', { errorText: 'We couldn\'t load matching tasks right now.' }),
-      };
-      /* Referral CTA: hidden placeholder (M15 turns it on) */
+      /* Figma order: Tasks, Win More Offers strip, Tasks near you (then Matching Your Services, kept from before) */
+      TK.rows = {};
+      TK.rows.urgent = mk('Tasks', { errorText: 'We couldn\'t load tasks right now.' });
+      mount.appendChild(_tkStrip('Win More Offers', 'Invite friends', 'referrals.html'));
+      TK.rows.near  = mk('Tasks near you', { errorText: 'We couldn\'t load nearby tasks right now.' });
+      TK.rows.match = mk('Matching Your Services', { errorText: 'We couldn\'t load matching tasks right now.' });
+      /* Referral CTA: stays hidden until the person's own referral details load */
       const ref = document.getElementById('hfTkReferral');
-      _wireReferral(ref, 'tasker', 'More People. More Tasks. More Opportunities.');
+      _wireReferral(ref, 'tasker', 'Invite friends. Earn rewards.');
       return TK.rows;
     }
 
@@ -1372,7 +1447,7 @@
       });
       _tkBuildRows();
       loadTaskerJobs();
-      loadTopRatedTaskers();
+      _tkTaskers(); _tkCategories(); _tkServices();
       await loadTaskerProfile();   /* the profile gives the saved point and the service words the rows need */
       loadTaskerHome();
     }

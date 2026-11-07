@@ -331,6 +331,10 @@ Task, service and tasker cards for the logged-in homepage (`home-feed.html`), bu
 
 Rules kept from 4.7: a missing rating, distance, offer count, skill or verified flag is left out, never invented. Fonts follow the scale (nothing under 12px), so text is larger than in Figma. Sizes: 224px wide on phones, 264px from 769px up; the **+** is 36px for a usable tap target. The tasker video play button is not built (no video field). The "available" green dot on the service card is not built (no availability field).
 
+### 4.16 Home strips and tasker homepage order (homepage redesign, Stage 2)
+
+Dark strips (`.hf-strip`, title `.hf-strip-title`, button `.hf-strip-cta`) are in `css/home-cards.css`: "Win More Offers" (built by `_tkStrip()` in `home-feed.html`, links to `referrals.html`) and "Gift Loved Ones" (links to `gift-cards.html`). The tasker referral card is the existing `.cc-referral`, set to uppercase on the tasker feed. Tasker homepage order (Figma): profile prompt, Tasks, Win More Offers, Tasks near you, Matching Your Services, Taskers, Service Categories, Gift strip, Services, All Available Tasks, referral, Your active jobs, Post a Service banner.
+
 ### 4.14 Page shell (2026-11-06): the frame for every new page
 
 **Rule: every new page must use it.** It gives the same look as `learn.html` and `referrals.html` (forest hero, white panels on `--pt-page`) and guarantees the fixed nav never covers the heading.

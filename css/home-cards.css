@@ -102,3 +102,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .st-home-plus, .st-home-view { transition: none; } }
+
+/* ── Stage 2: dark strips (Win More Offers, Gift Loved Ones) and the tasker referral card, DESIGN-SYSTEM.md 4.15 ── */
+.hf-strip { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-block: var(--space-5); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5); border-radius: var(--radius-lg); background: var(--color-forest-800); color: var(--color-text-on-primary); }
+.hf-strip-title { margin: 0; font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 800; color: inherit; }
+.hf-strip-cta { flex-shrink: 0; display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--color-primary-soft); color: var(--color-forest-900); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; text-decoration: none; }
+.hf-strip-cta:hover { background: var(--color-primary-soft-hover); }
+.hf-strip-cta:focus-visible { outline: 2px solid var(--color-primary-soft); outline-offset: 2px; }
+.hf-feed-tasker .cc-referral { flex-direction: column; align-items: flex-start; }
+.hf-feed-tasker .cc-referral-title { text-transform: uppercase; }

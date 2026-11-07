@@ -526,8 +526,8 @@ document.addEventListener('click', function (ev) {
 function stTaskCardHome(t) {
   const e = window.escapeHtml || (x => String(x));
   const urgent = (t.urgency || '') === 'immediate';
-  const when = stAgo(t.created_at);
-  const urgChip = urgent ? `<span class="st-chip st-chip--urgent">${ST_ICON.urgent}Urgent${when ? ' • ' + e(when) : ''}</span>` : '';
+  /* No posted date inside the Urgent tag (or anywhere on the home card). */
+  const urgChip = urgent ? `<span class="st-chip st-chip--urgent">${ST_ICON.urgent}Urgent</span>` : '';
   const catChip = t.category ? `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(t.category) : stLabel(t.category))}</span>` : '';
   const cat = t.category || 'other';
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
