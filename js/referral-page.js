@@ -137,11 +137,13 @@
 
     var url = D.shareUrl(row.code);
     $('rfLinkInput').value = url; $('rfCode').textContent = row.code;
-    var msg = 'Join me on StreetTasker. Use my code ' + row.code + ': ' + url;
+    var perk = programme === 'tasker' ? ' to get a premium account' : ' to get gift cards';
+    var head = 'Earn money or get things done on StreetTasker. Use my code ' + row.code + perk;
+    var msg = head + ': ' + url;
     $('rfWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     $('rfSms').href = 'sms:?&body=' + encodeURIComponent(msg);
-    $('rfTelegram').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('Join me on StreetTasker. Use my code ' + row.code);
-    $('rfTwitter').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent('Join me on StreetTasker. Use my code ' + row.code) + '&url=' + encodeURIComponent(url);
+    $('rfTelegram').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(head);
+    $('rfTwitter').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(head) + '&url=' + encodeURIComponent(url);
     $('rfPoints').textContent = num(row.points);
     renderProgress(row);
 
@@ -170,7 +172,7 @@
     });
     if (navigator.share) {
       var sb = $('rfShare'); sb.hidden = false;
-      sb.addEventListener('click', function () { navigator.share({ title: 'StreetTasker', text: 'Join me on StreetTasker', url: $('rfLinkInput').value }).catch(function () {}); });
+      sb.addEventListener('click', function () { navigator.share({ title: 'StreetTasker', text: 'Earn money or get things done on StreetTasker', url: $('rfLinkInput').value }).catch(function () {}); });
     }
     /* One programme per account type: a tasker sees the tasker referral, a customer sees the customer referral. No switch. */
     var want = D.activeProgramme();

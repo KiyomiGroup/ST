@@ -3,7 +3,8 @@
 (function (root) {
   'use strict';
   function db() { return root.supabase; }
-  function shareUrl(code) { return root.location.origin + '/signup.html?ref=' + encodeURIComponent(code); }
+  /* /r/CODE is the link with the logo preview (api/referral-share.js); it sends the visitor on to signup.html?ref=CODE */
+  function shareUrl(code) { return root.location.origin + '/r/' + encodeURIComponent(code); }
 
   /* [{programme, code, points, converted_count, pending_count, gifts_saved, next_milestone}] ; [] when nothing is set up ; throws on a database error */
   async function summary() {
