@@ -5631,3 +5631,10 @@ body.st-shell { background: var(--pt-page); min-height: 100vh; }
   .pg-hero-chips .pg-hero-chip { height: 32px; padding: 0 var(--space-3); gap: var(--space-1); font-size: var(--text-xs); font-weight: 600; }
   .pg-hero-chips .pg-hero-chip-n { min-width: 18px; padding: 0 var(--space-1); font-size: var(--text-xs); line-height: 18px; }
 }
+
+/* ================================================================
+   HERO DROPDOWNS (trade category, sort, date) — smaller text on desktop and phones.
+   Two classes so it beats each page's own .ap-select / .bk-select size (14px, or 16px on phones).
+   ================================================================ */
+.pg-hero-bar .pg-hero-select,
+.pg-hero-page .pg-hero-select { font-size: var(--text-xs); font-weight: 500; }
