@@ -30,6 +30,13 @@
       border-radius: var(--radius-pill);
       font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink);
     }
+    .hf-loc-btn { cursor: pointer; font-family: inherit; text-align: left; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3); gap: var(--space-2); }
+    .hf-loc-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .hf-loc-label { font-size: 10px; font-weight: 500; color: var(--pt-ink-muted); }
+    .hf-loc-value { font-size: var(--text-xs); font-weight: 700; color: var(--pt-ink); }
+    .hf-loc-pin { color: var(--color-primary); flex-shrink: 0; }
+    .hf-loc-chev { flex-shrink: 0; }
+    .hf-loc-btn:focus-visible { outline: 2px solid var(--pt-green); outline-offset: 2px; }
     .hf-loc-change { background: none; border: none; padding: var(--space-3) 0; margin: calc(-1 * var(--space-3)) 0; font: inherit; color: var(--pt-ink-muted); cursor: pointer; }   /* padding grows the tap area, margin keeps the layout */
     .hf-loc-change:hover { color: var(--pt-green); text-decoration: underline; }
     .hf-loc-pop {
@@ -305,7 +312,7 @@
                 </span>
                 <span data-role-only="customer">
               <div class="hf-loc-wrap">
-                    <span class="hf-loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="liveLocation">Lagos</span> · <button type="button" class="hf-loc-change" id="hfLocChange" aria-expanded="false" aria-controls="hfLocPop">Change</button></span>
+                    <button type="button" class="hf-loc hf-loc-btn" id="hfLocChange" aria-expanded="false" aria-controls="hfLocPop" aria-label="Change your location"><svg class="hf-loc-pin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="hf-loc-text"><span class="hf-loc-label">Your location</span><span id="liveLocation" class="hf-loc-value">Lagos</span></span><svg class="hf-loc-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
                     <div class="hf-loc-pop" id="hfLocPop" hidden>
                       <input type="text" class="hf-loc-input" id="hfLocInput" placeholder="e.g. Lekki Phase 1, Lagos" autocomplete="off" aria-label="Your area" />
                       <div id="hfLocSuggestions" class="location-suggestions"></div>
@@ -640,7 +647,7 @@
           if (open) input.focus();
         });
         document.addEventListener('click', e => {
-          if (!pop.hidden && !pop.contains(e.target) && e.target !== changeBtn) closePop();
+          if (!pop.hidden && !pop.contains(e.target) && !changeBtn.contains(e.target)) closePop();
         });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
         if (typeof initLocationInput === 'function') {
@@ -907,7 +914,7 @@
       CU_TIERS.forEach(([key, label]) => {
         const list = rows.filter(r => r.tier === key);
         if (!list.length) return;          /* an empty tier is skipped */
-        const row = STCompact.row({ title: key === 'local' ? 'Local Taskers' : 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View All' });
+        const row = STCompact.row({ title: key === 'local' ? 'Local Taskers' : 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
         row.stSetItems(list.map(r => _cuTaskerCard(r, key === 'local')));
         host.appendChild(row);
       });
@@ -916,7 +923,7 @@
     async function _cuNear(host) {
       const tok = _cuStamp(host);
       host.textContent = '';
-      const row = STCompact.row({ title: 'Taskers Near You', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View All', errorText: 'We could not load taskers near you. Please try again.' });
+      const row = STCompact.row({ title: 'Taskers near you', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all', errorText: 'We could not load taskers near you. Please try again.' });
       host.appendChild(row);
       const place = _cuPlace();
       if (!place) { row.stShowMessage('Choose a location to see taskers near you.', 'Choose a location', '#'); _cuWirePicker(row); return; }
@@ -940,7 +947,7 @@
     async function _cuServices(host) {
       const tok = _cuStamp(host);
       host.textContent = '';
-      const row = STCompact.row({ title: 'Services', skeleton: 'task', viewAllHref: 'find-services.html', viewAllLabel: 'View All', errorText: 'We could not load services. Please try again.' });
+      const row = STCompact.row({ title: 'Services', skeleton: 'task', viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load services. Please try again.' });
       host.appendChild(row);
       try {
         const raw = await window.ST.db.fetchServices({ limit: 48 });
@@ -963,7 +970,8 @@
     async function _cuExplore(host) {
       const tok = _cuStamp(host);
       host.textContent = '';
-      const row = STCompact.row({ title: 'Explore Services', skeleton: 'category', skeletonCount: 8, viewAllHref: 'find-services.html', viewAllLabel: 'View All', errorText: 'We could not load the categories. Please try again.' });
+      const row = STCompact.row({ title: 'Service Categories', skeleton: 'category', skeletonCount: 8, viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load the categories. Please try again.' });
+      row.classList.add('cc-row--cats');
       host.appendChild(row);
       try {
         /* Every category is shown (so the row is never narrower than the list); counts are real listings, best effort */
@@ -999,7 +1007,7 @@
 
     async function _cuMine(host) {
       const tok = _cuStamp(host);
-      const p = _cuPart(host, true, { title: 'Your Tasks', skeleton: 'task', viewAllHref: 'my-tasks.html', viewAllLabel: 'My Tasks', errorText: 'We could not load your tasks. Please try again.' });
+      const p = _cuPart(host, true, { title: 'Tasks', skeleton: 'task', viewAllHref: 'my-tasks.html', viewAllLabel: 'View all', errorText: 'We could not load your tasks. Please try again.' });
       try {
         const rows = await _tkRpc('homepage_my_tasks', { p_limit: CU.limit });
         if (!_cuLive(host, tok)) return;
@@ -1053,7 +1061,16 @@
       if (!root) return;
       root.textContent = '';
       CU.pointP = _cuResolvePoint();
-      const hosts = { feat: _cuHost(root, 'hfCuFeatured'), near: _cuHost(root, 'hfCuNear'), explore: _cuHost(root, 'hfCuExplore'), services: _cuHost(root, 'hfCuServices'), mine: _cuHost(root, 'hfCuMine'), others: _cuHost(root, 'hfCuOthers') };
+      /* Figma order: Taskers, Win Free Giftcards strip, Taskers near you, Service Categories, Gift strip, Services, Tasks */
+      const hosts = {};
+      hosts.feat = _cuHost(root, 'hfCuFeatured');
+      root.appendChild(_tkStrip('Win Free Giftcards!', 'Invite friends', 'referrals.html'));
+      hosts.near = _cuHost(root, 'hfCuNear');
+      hosts.explore = _cuHost(root, 'hfCuExplore');
+      root.appendChild(_tkStrip('Gift Loved Ones', 'Buy Giftcard', 'gift-cards.html'));
+      hosts.services = _cuHost(root, 'hfCuServices');
+      hosts.mine = _cuHost(root, 'hfCuMine');
+      hosts.others = _cuHost(root, 'hfCuOthers');
       _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuServices(hosts.services); _cuMine(hosts.mine); _cuOthers(hosts.others);
       const ref = document.getElementById('hfCuReferral');
       _wireReferral(ref, 'customer', 'Invite Friends. Earn Rewards.');
@@ -1154,6 +1171,7 @@
       const host = document.getElementById('hfTkCats'); if (!host) return;
       host.textContent = '';
       const row = STCompact.row({ title: 'Service Categories', skeleton: 'category', skeletonCount: 8, viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load the categories. Please try again.' });
+      row.classList.add('cc-row--cats');
       host.appendChild(row);
       try {
         const counts = {};

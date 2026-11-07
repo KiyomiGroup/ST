@@ -335,6 +335,8 @@ Rules kept from 4.7: a missing rating, distance, offer count, skill or verified 
 
 Dark strips (`.hf-strip`, title `.hf-strip-title`, button `.hf-strip-cta`) are in `css/home-cards.css`: "Win More Offers" (built by `_tkStrip()` in `home-feed.html`, links to `referrals.html`) and "Gift Loved Ones" (links to `gift-cards.html`). The tasker referral card is the existing `.cc-referral`, set to uppercase on the tasker feed. Tasker homepage order (Figma): profile prompt, Tasks, Win More Offers, Tasks near you, Matching Your Services, Taskers, Service Categories, Gift strip, Services, All Available Tasks, referral, Your active jobs, Post a Service banner.
 
+**Service category tile (Stage 3, strict Figma match).** `.cc-card--category` inside `.hf-feed` is 96 x 84px, 20px radius, white, soft shadow; icon 20px top-left (`--home-cat-icon`), pale quarter ring in the top-right corner (`--home-cat-ring`), bold label at the bottom (`--home-cat-label`), no service count. Rows with `.cc-row--cats` use a 30px gap. Tokens `--home-cat-*` in `css/tokens.css`. Do not restyle it in a page.
+
 ### 4.14 Page shell (2026-11-06): the frame for every new page
 
 **Rule: every new page must use it.** It gives the same look as `learn.html` and `referrals.html` (forest hero, white panels on `--pt-page`) and guarantees the fixed nav never covers the heading.

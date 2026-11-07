@@ -598,4 +598,13 @@
   --home-tasker-cta-bg:       var(--color-forest-900);
   --home-tasker-cta-bg-hover: var(--color-forest-800);
   --home-divider:             var(--color-bg-muted);
+  /* Service category tile (Figma, sampled from the homepage reference at 401px wide) */
+  --home-cat-w:               96px;
+  --home-cat-h:               84px;
+  --home-cat-radius:          20px;
+  --home-cat-gap:             30px;       /* space between tiles in the reference */
+  --home-cat-inset:           10px;       /* tiles start 26px from the edge, headings 16px */
+  --home-cat-icon:            #0B322D;    /* icon green */
+  --home-cat-label:           #11151E;    /* label ink */
+  --home-cat-ring:            #F2F2F4;    /* quarter ring in the top-right corner */
 }
