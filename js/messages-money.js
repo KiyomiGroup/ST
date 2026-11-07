@@ -474,14 +474,24 @@
         toast('Payment confirmed. ' + naira(result && result.amount) + ' added to escrow.');
       }
 
-      /* Show what the server did: the request is paid, and the confirmation message is in the chat */
+      /* The server already confirmed this payment (the call above only returns after that), so show the paid
+         state and the release code RIGHT NOW. The slower refreshes below happen behind it. */
       try {
-        var fr = await sb.from('payment_requests').select('*').eq('id', id).maybeSingle();
-        if (fr.data) window.JRThread.onMoneyChange(fr.data);
-      } catch (_f) {}
-      try { await window.JRThread.reload(); } catch (_r0) {}
-      try { if (window.JRList) await window.JRList.refreshOne(t, c.role); } catch (_r) {}
-      changed();
+        if (result && result.bookingId && window.JRFlow && window.JRFlow.hintBooking) window.JRFlow.hintBooking(t.id, result.bookingId);
+        window.JRThread.onMoneyChange(Object.assign({}, local, { status: 'paid', _busy: false }));
+        if (window.JRFlow) window.JRFlow.update();
+      } catch (_o) {}
+
+      /* Then catch up with what the server did: the request row, the confirmation message, the list. Not awaited. */
+      (async function () {
+        try {
+          var fr = await sb.from('payment_requests').select('*').eq('id', id).maybeSingle();
+          if (fr.data) window.JRThread.onMoneyChange(fr.data);
+        } catch (_f) {}
+        try { await window.JRThread.reload(); } catch (_r0) {}
+        try { if (window.JRList) await window.JRList.refreshOne(t, c.role); } catch (_r) {}
+        changed();
+      })();
       return true;
     } catch (e) {
       var msg = (e && e.message) || 'Payment failed. Please try again.';

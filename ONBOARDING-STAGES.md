@@ -76,7 +76,7 @@ Home tours (Stage 3): js/onboarding-tours-home.js registers 'customer-home' and 
   | tasker-chat | tasker | Chat and offers |
   | payments-guide | any | Payments and additional costs |
 - The Actions guide lives inside the two chat tours: a step on the Actions button (#requestBtn; there is no #jrSheet id in the page, the sheet layer is #jrSheetLayer) and a centred "What is inside Actions for you" card per role. The tours never open the sheet, so nothing can be sent.
-- The chat tours follow the docked next-step panel (#jrDock, js/messages-dock.js): tasker proposes a price, customer accepts and pays, customer gets the release code and a Share location button, tasker is told to ask for location and time, tasker enters the release code. The panel only shows when the job needs something, so its steps use fallback: 'center'.
+- The chat tours follow the docked next-step panel (#jrDock, js/messages-dock.js): tasker proposes a price, customer accepts and pays, customer gets the release code straight away, tasker enters the release code. Location is only shared from the chat's plus button. The panel only shows when the job needs something, so its steps use fallback: 'center'.
 - Host pages: messages.html and learn.html load the tours file after js/onboarding.js. messages.html now has two tour files (customer, chat); both call consumeReplay on load, the first one removes ?tour=, the second finds nothing, so a tour starts once.
 - Copy: customer-chat and payments-guide never mention the platform fee (test checks this). Chat tours cover messages.html only, not coordinator-chat.html.
 - Tests: node --test tests/onboarding-tours-chat.test.js (also checks every selector exists in messages.html or the dock script).

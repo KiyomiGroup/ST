@@ -4,16 +4,15 @@
    walks the normal job in order:
 
      Tasker   from the start: a box to propose a price
-              customer paid: notice to ask for the customer's location and time
               customer paid: the release-code box ("ask the customer for it once the job is done")
      Customer the tasker's price: Accept / Decline, then Pay
-              customer paid: the release code, with the note to give it only after the job is done
-              customer paid: a Share location button (one tap, sends the pin in the chat)
+              customer paid: the release code, shown at once, with the note to give it only after the job is done
 
    Public API (window.JRDock), called by messages-flow.js on every refresh:
      JRDock.update(v, p)   v = job state, p = plan (both from messages-flow.js)  ->  true when the dock is showing
    This file never writes money or status itself. It only shows the right box and calls the server functions
-   that already exist (price_propose, JRMoney.pay, ST.payments.submitCompletionCode, JRThread.shareLocation).
+   that already exist (price_propose, JRMoney.pay, ST.payments.submitCompletionCode).
+   Sharing a location is only in the chat's plus (attach) button. It is never asked for here.
    No inline styles, no raw colours: classes live in css/messages.css.
    ============================================================ */
 'use strict';
@@ -31,11 +30,6 @@
   }
   function naira(n) { return window.JRMoney ? window.JRMoney.naira(n) : '₦' + Number(n || 0).toLocaleString(); }
   function toast(m, t) { if (window.JRThread && window.JRThread.toast) window.JRThread.toast(m, t); }
-
-  /* "Got it" on the location notice is remembered per chat in this browser (nothing is saved on the server) */
-  function noticeKey(v) { return 'st.dock.loc.' + (v.thread && v.thread.id); }
-  function noticeDone(v) { try { return window.localStorage.getItem(noticeKey(v)) === '1'; } catch (_e) { return false; } }
-  function noticeDismiss(v) { try { window.localStorage.setItem(noticeKey(v), '1'); } catch (_e) { /* private mode: it just shows again */ } }
 
   function card(tone, title, text) {
     var c = el('section', 'jr-dock-card' + (tone ? ' jr-dock-card--' + tone : ''));
@@ -99,39 +93,14 @@
     return c;
   }
 
-  /* ── paid: code + location ───────────────────────────────── */
+  /* ── paid: release code ──────────────────────────────────── */
   function customerPaid(host, v, p) {
-    var loc = card('', window.JRThread.locationShared() ? 'Location shared' : 'Share your location',
-      window.JRThread.locationShared()
-        ? 'Tasker has it. Agree the time in the chat.'
-        : 'So the tasker can find you.');
-    var la = actions(loc);
-    var share = plainBtn(window.JRThread.locationShared() ? 'Share location again' : 'Share location', !window.JRThread.locationShared(), function () {
-      if (S.busy) return;
-      S.busy = true; share.disabled = true; share.textContent = 'Getting location…';
-      Promise.resolve(window.JRThread.shareLocation()).catch(function () {})
-        .then(function () { S.busy = false; window.JRFlow.repaint(); });
-    });
-    la.appendChild(share);
-    host.appendChild(loc);
-
     var code = card('code', 'Your release code', naira(v.sm.paid) + ' is held safely. Give this code only AFTER the job is done.');
     code.appendChild(window.JRFlow.codeNode(v.bookingId));
     host.appendChild(code);
   }
 
   function taskerPaid(host, v, p) {
-    if (!window.JRThread.locationShared() && !noticeDone(v)) {
-      var n = card('notice', 'Customer has paid', 'Ask for their location and the time to come.');
-      var na = actions(n);
-      na.appendChild(plainBtn('Ask in the chat', true, function () {
-        Promise.resolve(window.JRThread.send('I have seen your payment. Please share your location and tell me what time you want me to come.'));
-      }));
-      na.appendChild(plainBtn('Got it', false, function () { noticeDismiss(v); window.JRFlow.repaint(); }));
-      host.appendChild(n);
-    } else if (window.JRThread.locationShared()) {
-      host.appendChild(card('', 'Location received', 'Agree the time in the chat.'));
-    }
     var c = el('section', 'jr-dock-card jr-dock-card--code');
     if (window.JRWork && window.JRWork.codeEntry) window.JRWork.codeEntry(c, v);
     host.appendChild(c);
@@ -224,7 +193,7 @@
     /* only redraw when something that changes the dock changed, so a typed price is never wiped by a refresh */
     var d = v.decision;
     var sig = [th, v.role, v.status, v.paid, v.processing, d ? d.id + d.mine : '', v.waiting ? v.waiting.id + v.waiting.status : '',
-               v.sm.base, v.sm.paid, S.priceOpen, S.busy, window.JRThread.locationShared(), v.thread && noticeDone(v)].join('|');
+               v.sm.base, v.sm.paid, S.priceOpen, S.busy, v.bookingId || ''].join('|');
     if (sig === S.sig && !host.hidden) return true;
     S.sig = sig;
 

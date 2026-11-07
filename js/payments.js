@@ -119,12 +119,15 @@ function _openPaystack(init, email, meta) {
    to report a successful charge, so wait and retry briefly before giving up. */
 async function _verifyPayment(reference) {
   var last = null;
-  for (var attempt = 0; attempt < 6; attempt++) {
+  /* Ask again quickly at first (most payments are confirmed within a second or two), then slow down.
+     Total wait is about the same as before (about 11 seconds) but a normal payment no longer waits a flat 2 seconds. */
+  var WAITS = [600, 900, 1300, 2000, 2000, 2000, 2000];
+  for (var attempt = 0; attempt <= WAITS.length; attempt++) {
     var r = await _callFn('payment-verify', { reference: reference });
     if (r.ok && r.data && r.data.ok) return r.data;
     last = r;
-    if (r.status !== 202) break;                       /* 202 = not confirmed yet: wait and retry */
-    await new Promise(function(res){ setTimeout(res, 2000); });
+    if (r.status !== 202 || attempt === WAITS.length) break;   /* 202 = not confirmed yet: wait and retry */
+    await new Promise(function(res){ setTimeout(res, WAITS[attempt]); });
   }
   var msg = (last && last.data && last.data.error) || 'We could not confirm your payment yet.';
   if (last && last.status === 202) {

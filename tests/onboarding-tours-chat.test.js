@@ -61,9 +61,10 @@ test('the Actions guide is in both chat tours and points at the Actions button',
 test('the steps follow the docked next-step panel flow', () => {
   const text = (id) => byId[id].steps.map((s) => s.title + ' ' + (s.description || '')).join(' ').toLowerCase();
   assert.match(text('tasker-chat'), /propose one price/);
-  assert.match(text('tasker-chat'), /ask for their location/);
+  assert.doesNotMatch(text('tasker-chat'), /share location/);
   assert.match(text('tasker-chat'), /release code/);
-  assert.match(text('customer-chat'), /share location/);
+  assert.doesNotMatch(text('customer-chat'), /share location/);
+  assert.match(text('customer-chat'), /plus button/);
   assert.match(text('customer-chat'), /only after the job is done/);
   assert.ok(byId['customer-chat'].steps.some((s) => [].concat(s.target || []).includes('#jrDock')));
   assert.ok(byId['tasker-chat'].steps.some((s) => [].concat(s.target || []).includes('#jrDock')));

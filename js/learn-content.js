@@ -111,7 +111,7 @@
         'Paid money is held by StreetTasker. It is not released to the tasker until the job is complete.',
         'Taskers should start work only after StreetTasker shows the payment as confirmed.',
         'Need transport, materials or another extra cost? The tasker sends it as a request in the chat. The customer pays it or declines it, and nothing is added to the job without the customer’s say-so.',
-        'After paying, the customer taps Share location so the tasker knows where to come, and agrees the time in the chat.',
+        'To show the tasker where to come, the customer can send their location with the plus button in the chat.',
         'Once the customer has paid they get a 6-digit release code. When the job is done and they are happy, they give it to the tasker, who enters it above the message box. The payment is then released.',
         'If something is wrong, the customer can choose Request Changes or Report an Issue from Actions instead of sharing the code.'
       ],

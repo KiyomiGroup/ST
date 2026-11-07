@@ -6,8 +6,7 @@
      Start                phone the Local Tasker and record their answer          > opens that form
      Local Tasker yes     send the price (the quote) to the customer               > opens the quote form
      Quote sent / approved  waiting notices
-     Customer has paid    notice: ask the customer for their location and time    (+ "Ask in the chat")
-                          the release-code box: "ask the customer for the code once the job is done"
+     Customer has paid    the release-code box: "ask the customer for the code once the job is done"
 
    Data: only S.detail (local_booking_detail) and the open conversation, both already loaded by coordinator-chat.js, plus the
    database function that already powers the Release the payment card:
@@ -26,10 +25,6 @@
   function el(tag, cls, text) { return window.STCo.el(tag, cls, text); }
   function chat() { return window.STCoChat; }
 
-  function noticeKey(id) { return 'st.codock.loc.' + id; }
-  function noticeDone(id) { try { return window.localStorage.getItem(noticeKey(id)) === '1'; } catch (_e) { return false; } }
-  function noticeDismiss(id) { try { window.localStorage.setItem(noticeKey(id), '1'); } catch (_e) { /* shows again */ } }
-
   function card(tone, title, text) {
     var c = el('section', 'jr-dock-card' + (tone ? ' jr-dock-card--' + tone : ''));
     c.appendChild(el('div', 'jr-dock-title', title));
@@ -43,12 +38,6 @@
     return b;
   }
   function open(pane) { if (chat()) chat().openActions(pane); }
-
-  /* the customer shared a location in this conversation */
-  function locationShared() {
-    var t = chat() && chat().state().thread;
-    return !!(t && t.messages && t.messages.some(function (m) { return m && m.type === 'location' && m.kind === 'customer'; }));
-  }
 
   /* ── release code state (read only) ──────────────────────── */
   function loadCode(d) {
@@ -136,17 +125,6 @@
     var paid = d.payment_status === 'paid';
 
     if (paid) {
-      if (locationShared()) {
-        host.appendChild(card('', 'Location received', 'The customer shared their location in the chat. Agree the time with them there.'));
-      } else if (!noticeDone(d.booking_id)) {
-        var n = card('notice', 'The customer has paid', 'Now ask the customer for the job location and the time the Local Tasker should come. The customer has a Share location button in their chat.');
-        var na = actions(n);
-        na.appendChild(btn('Ask in the chat', true, function () {
-          if (chat()) chat().sendText('Thank you for paying. Please share your location and tell us what time you want the Local Tasker to come.');
-        }));
-        na.appendChild(btn('Got it', false, function () { noticeDismiss(d.booking_id); S.sig = ''; update(); }));
-        host.appendChild(n);
-      }
       host.appendChild(codeCard(d));
       return true;
     }
@@ -185,7 +163,7 @@
     var can = !!(c && c.canWrite() && d && d.booking_id && d.booking_id === st.activeId);
     if (!can || (!d.open && d.booking_status !== 'disputed') || d.frozen || d.booking_status === 'disputed') { host.hidden = true; host.textContent = ''; S.sig = ''; return; }
 
-    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, locationShared(), noticeDone(d.booking_id), S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : ''].join('|');
+    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : ''].join('|');
     if (sig === S.sig && !host.hidden) return;
     S.sig = sig;
     host.textContent = '';

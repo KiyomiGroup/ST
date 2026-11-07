@@ -24,7 +24,7 @@
 
   var STEPS = ['Price', 'Pay', 'Work', 'Release'];
   var MAIN_KINDS = ['payment', 'full_payment', 'remaining_payment'];
-  var S = { open: false, moreOpen: false, bound: false, ctx: null, code: null, codeFor: '', shown: false, shownFor: '', busy: false, copied: false };
+  var S = { open: false, moreOpen: false, bound: false, ctx: null, code: null, codeFor: '', hidden: false, busy: false, copied: false, loading: {}, hint: {} };
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) {
@@ -51,7 +51,7 @@
     }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); })[0] || null;
     var paid = !!(bk && bk.payment_status === 'paid') || sm.paidMain > 0;
     return {
-      role: c.role, thread: th, booking: bk, bookingId: (th.context_type === 'booking' && th.context_id) ? th.context_id : null,
+      role: c.role, thread: th, booking: bk, bookingId: (th.context_type === 'booking' && th.context_id) ? th.context_id : (S.hint[th.id] || null),
       sm: sm, status: st.key, stage: bk ? (bk.work_stage || null) : null, paid: paid,
       waiting: waiting, decision: window.JRThread && window.JRThread.pendingDecision ? window.JRThread.pendingDecision() : null,
       processing: !!sm.processing
@@ -159,6 +159,29 @@
     return ol;
   }
 
+  /* The release code is fetched the moment the job is paid (not when the customer taps something) and kept for this chat.
+     The server may need a moment to write it, so a "not there yet" answer is retried a few times, quickly. */
+  var CODE_RETRY_MS = [0, 400, 700, 1000, 1500, 2000];
+  function fetchCode(bookingId) {
+    if (!bookingId) return Promise.resolve(null);
+    if (S.codeFor === bookingId && S.code) return Promise.resolve(S.code);
+    if (S.loading[bookingId]) return S.loading[bookingId];
+    if (!pay() || !pay().getCompletionCode) return Promise.resolve(null);
+    var p = new Promise(function (resolve) {
+      var i = 0;
+      (function attempt() {
+        pay().getCompletionCode(bookingId).then(function (c) { return c ? String(c) : null; }, function () { return null; }).then(function (c) {
+          if (c) { S.code = c; S.codeFor = bookingId; resolve(c); return; }
+          i += 1;
+          if (i >= CODE_RETRY_MS.length) { resolve(null); return; }
+          window.setTimeout(attempt, CODE_RETRY_MS[i]);
+        });
+      })();
+    }).then(function (c) { delete S.loading[bookingId]; return c; });
+    S.loading[bookingId] = p;
+    return p;
+  }
+
   function codeBox(v) {
     var wrap = el('div', 'jr-flow-code');
     wrap.appendChild(el('div', 'jr-flow-code-label', 'Your release code'));
@@ -166,39 +189,36 @@
     var digits = el('span', 'jr-flow-code-digits', '••••••');
     digits.setAttribute('aria-live', 'polite');
     line.appendChild(digits);
-    var show = el('button', 'jr-flow-link', 'Show'); show.type = 'button';
+    var show = el('button', 'jr-flow-link', 'Hide'); show.type = 'button'; show.hidden = true;
     var copy = el('button', 'jr-flow-link', 'Copy'); copy.type = 'button'; copy.hidden = true;
     line.appendChild(show); line.appendChild(copy);
     wrap.appendChild(line);
     wrap.appendChild(el('div', 'jr-flow-code-note', 'Only give this code to the tasker once the job is done and you are happy with it. Never type it in the chat.'));
 
+    function have() { return !!(S.code && S.codeFor === v.bookingId); }
     function paint() {
-      var visible = S.shown && S.shownFor === v.bookingId && S.code;
-      digits.textContent = visible ? S.code : '••••••';
+      var ok = have();
+      var visible = ok && !S.hidden;
+      digits.textContent = visible ? S.code : (ok ? '••••••' : (S.failed === v.bookingId ? '—' : 'Getting your code…'));
+      show.hidden = !ok;
       show.textContent = visible ? 'Hide' : 'Show';
       copy.hidden = !visible;
       copy.textContent = S.copied ? 'Copied' : 'Copy';
     }
-    function load() {
-      if (S.codeFor === v.bookingId && S.code) return Promise.resolve(S.code);
-      if (!pay() || !pay().getCompletionCode) return Promise.reject(new Error('unavailable'));
-      return pay().getCompletionCode(v.bookingId).then(function (c) { S.code = c ? String(c) : null; S.codeFor = v.bookingId; return S.code; });
-    }
-    show.addEventListener('click', function () {
-      if (S.shown && S.shownFor === v.bookingId) { S.shown = false; paint(); return; }
-      show.disabled = true;
-      load().then(function (c) {
-        if (!c) throw new Error('none');
-        S.shown = true; S.shownFor = v.bookingId; S.copied = false; paint();
-      }).catch(function () { toast('The code is not available yet. Try again in a moment.', 'error'); })
-        .then(function () { show.disabled = false; });
-    });
+    show.addEventListener('click', function () { S.hidden = !S.hidden; paint(); });
     copy.addEventListener('click', function () {
       if (!S.code) return;
       var done = function () { S.copied = true; paint(); window.setTimeout(function () { S.copied = false; paint(); }, 1800); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(S.code).then(done).catch(function () {});
     });
     paint();
+    if (!have() && v.bookingId) {
+      S.failed = '';
+      fetchCode(v.bookingId).then(function (c) {
+        if (!c) { S.failed = v.bookingId; toast('Your code is taking longer than usual. Reopen this chat in a moment.', 'error'); }
+        paint();
+      });
+    }
     return wrap;
   }
 
@@ -296,6 +316,8 @@
     if (!S.ctx || !S.ctx.thread) { bar.hidden = true; host.hidden = true; if (window.JRDock) window.JRDock.update(null, null); return; }
     var v = read();
     var p = plan(v);
+    /* start fetching the release code as soon as the job counts as paid, before the card is even drawn */
+    if (v.role === 'customer' && v.paid && v.bookingId && !(S.codeFor === v.bookingId && S.code)) fetchCode(v.bookingId);
     /* the docked panel above the message box (messages-dock.js) now carries the buttons, the code and the code box */
     var dock = window.JRDock ? window.JRDock.update(v, p) : false;
     if (!p) { bar.hidden = true; host.hidden = true; setOpen(false); return; }
@@ -332,7 +354,7 @@
     if (ctx) {
       var changed = !S.ctx || S.ctx.thread.id !== ctx.thread.id;
       S.ctx = ctx;
-      if (changed) { S.shown = false; S.code = null; S.codeFor = ''; setOpen(false); }
+      if (changed) { S.hidden = false; S.code = null; S.codeFor = ''; setOpen(false); }
     }
     paint();
   }
@@ -343,6 +365,8 @@
     codeNode: function (bookingId) { return codeBox({ bookingId: bookingId }); },
     button: button,
     openBar: function () { setOpen(true); },
+    /* right after a payment: the booking id the server just returned, so the code can load before the thread is reloaded */
+    hintBooking: function (threadId, bookingId) { if (threadId && bookingId) S.hint[threadId] = bookingId; },
     repaint: paint
   };
 })();
