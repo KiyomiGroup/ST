@@ -84,10 +84,25 @@
       }
     } catch (e) { /* hide competition */ }
 
+    /* The application row stays "accepted" after the job is finished, so completion is read from the job itself:
+       the booking is completed or its payment was released, or the task is marked completed. */
+    var doneTasks = {};
+    try {
+      var acc = rows.filter(function (a) { return a.status === 'accepted' && a.tasks && a.tasks.id; }).map(function (a) { return a.tasks.id; });
+      if (acc.length) {
+        var bk = await window.supabase.from('bookings').select('task_id, status, payment_status').eq('tasker_id', user.id).in('task_id', acc);
+        (bk.data || []).forEach(function (b) {
+          if (b.status === 'completed' || b.payment_status === 'released') doneTasks[b.task_id] = true;
+        });
+      }
+    } catch (e) { /* fall back to the task status below */ }
+
     state.apps = rows.map(function (a) {
       var t = a.tasks || {}; var p = parseMessage(a.message);
+      var grp = group(a.status);
+      if (grp === 'accepted' && (doneTasks[t.id] || t.status === 'completed')) grp = 'completed';
       return {
-        id: a.id, raw: a, task: t, status: a.status, group: group(a.status), created: a.created_at,
+        id: a.id, raw: a, task: t, status: a.status, group: grp, created: a.created_at,
         pitch: p.pitch, offer: p.rate != null ? p.rate : (t.budget || null),
         ownerId: t.customer_id || t.user_id || null, customer: names[t.customer_id || t.user_id] || '', rivals: rivals[t.id] || 0,
       };
