@@ -783,7 +783,8 @@ async function _handleRoleSwitchClick(el) {
   el.disabled = true;
   try {
     if (el.dataset.hasRole === '1') await switchRole(target); else await addRole(target);
-    window.location.href = target === 'tasker' ? 'dashboard-tasker.html' : getHomeUrl();
+    /* Switching account always lands on the homepage, for both directions */
+    window.location.href = getHomeUrl();
   } catch (err) {
     el.disabled = false;
     if (window.showToast) window.showToast(err.message || 'Could not switch account. Please try again.');

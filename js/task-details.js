@@ -23,7 +23,6 @@
   var esc = function (s) { return escapeHtml(s); };
   var NAIRA = '\u20a6';
   var OFFERS_SHOWN = 3;
-  var SAVED_KEY = 'st_saved_task_ids';
   var ENDED = ['cancelled', 'canceled', 'closed', 'done', 'expired'];
   var NOT_STARTED = ['pending', 'declined', 'cancelled', 'canceled', 'rejected'];
 
@@ -421,19 +420,26 @@
     catch (e) { var i = $('tdShareUrl'); i.focus(); i.select(); toast('Press Ctrl+C to copy the link'); }
   }
 
-  function savedIds() {
-    try { var v = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  function taskSnapshot() {
+    var t = state.task || {};
+    var photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
+    return {
+      type: 'task', id: String(state.id), title: text(t.title) || 'Task',
+      href: 'task-details.html?id=' + encodeURIComponent(state.id),
+      price: Number(t.budget) > 0 ? money(t.budget) : '', place: text(t.location || t.city || ''),
+      category: window.STCat && t.category ? window.STCat.label(t.category) : '', image: photos[0] || ''
+    };
   }
   function paintSaved() {
-    var on = savedIds().indexOf(String(state.id)) !== -1, b = $('tdSave');
+    var on = !!(window.STSaved && window.STSaved.has('task', state.id)), b = $('tdSave');
     b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
   function toggleSaved() {
-    var ids = savedIds(), id = String(state.id), at = ids.indexOf(id);
-    if (at === -1) ids.push(id); else ids.splice(at, 1);
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(ids)); } catch (e) { toast('Could not save on this device.'); return; }
+    if (!window.STSaved) return;
+    var now = window.STSaved.toggle(taskSnapshot());
+    if (now === null) { toast('Could not save on this device.'); return; }
     paintSaved();
-    toast(at === -1 ? 'Task saved on this device' : 'Removed from saved tasks');
+    toast(now ? 'Task saved. Find it under Saved & Favourites in your profile' : 'Removed from saved tasks');
   }
 
   function wire() {

@@ -395,7 +395,7 @@ function stTaskCard(t) {
           ${urgChip}
           ${catChip}
         </div>
-        <button type="button" class="st-card-save" aria-label="Save task" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.bookmark}</button>
+        <button type="button" class="st-card-save" aria-label="Save task" aria-pressed="false">${ST_ICON.bookmark}</button>
       </div>
       ${media}
       <h3 class="st-card-title">${e(t.title || 'Untitled Task')}</h3>
@@ -545,7 +545,7 @@ function stTaskCardHome(t) {
   return `<article class="st-card st-card--task st-card--home fade-up" data-task-id="${e(t.id)}">
     <div class="st-home-media">${pic}
       <div class="st-home-chips">${urgChip}${catChip}</div>
-      <button type="button" class="st-home-save" aria-label="Save task" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.bookmark}</button>
+      <button type="button" class="st-home-save" aria-label="Save task" aria-pressed="false">${ST_ICON.bookmark}</button>
       ${photoTag}
     </div>
     <div class="st-home-body">
@@ -583,7 +583,7 @@ function stServiceCardHome(s) {
   return `<article class="st-card st-card--service st-card--home fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
     <div class="st-home-media">${media}
       ${s.categoryLabel ? `<div class="st-home-chips"><span class="st-chip st-chip--glass">${e(s.categoryLabel)}</span></div>` : ''}
-      <button type="button" class="st-home-save st-home-save--heart" aria-label="Save service" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.heart}</button>
+      <button type="button" class="st-home-save st-home-save--heart" aria-label="Save service" aria-pressed="false">${ST_ICON.heart}</button>
     </div>
     <div class="st-home-body">
       ${ratingHtml}

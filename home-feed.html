@@ -121,6 +121,18 @@
       body.role-tasker .hf-search .spg-searchbar-location-wrap { display: none; }
     }
 
+
+    /* ── Customer phone: the nav's menu button is gone and the location chip sits in its place ──
+       The chip is moved into the nav bar by the script at the end of this page (and back into the hero on wider screens). */
+    @media (max-width: 768px) {
+      body.hf-home.role-customer .nav-toggle { display: none; }
+      body.hf-home.role-customer .nav-loc-slot { order: 1; flex: 0 0 auto; min-width: 0; display: flex; align-items: center; }
+      body.hf-home.role-customer .nav-loc-slot .hf-loc { background: var(--hero-btn-bg); border-color: transparent; max-width: 148px; }
+      body.hf-home.role-customer .nav-loc-slot .hf-loc-label { display: none; }
+      body.hf-home.role-customer .nav-loc-slot .hf-loc-text { min-width: 0; }
+      body.hf-home.role-customer .nav-loc-slot .hf-loc-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
     .hf-feed-customer, .hf-feed-tasker { display: none; padding-bottom: var(--space-8); }
     body.role-customer .hf-feed-customer { display: block; }
@@ -283,7 +295,7 @@
     }
   </style>
 </head>
-<body class="pg-hero-page pg-hero-nav">
+<body class="pg-hero-page pg-hero-nav hf-home">
   <div id="navbar-placeholder"></div>
 
   <div class="feed-root">
@@ -521,6 +533,7 @@
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/saved.js"></script>
   <script src="js/local-tasker-public.js"></script>
   <script src="js/cards-compact.js"></script>
   <script src="js/referral-data.js"></script>
@@ -1505,5 +1518,33 @@
     }
   </script>
   <script src="js/pg-hero-fixed.js"></script>
+  <script>
+  /* Customer phone: put the location chip where the menu button used to be (top-left of the nav); on wider screens it returns to the hero. */
+  (function () {
+    var mq = window.matchMedia('(max-width: 768px)');
+    var wrap, home, marker, slot;
+    function place() {
+      wrap = wrap || document.querySelector('.hf-loc-wrap');
+      if (!wrap || !document.body.classList.contains('role-customer')) return;
+      var inner = document.querySelector('#navbar .nav-inner');
+      if (!home) { home = wrap.parentNode; marker = document.createComment('hf-loc-home'); home.insertBefore(marker, wrap); }
+      if (mq.matches && inner) {
+        if (!slot) { slot = document.createElement('div'); slot.className = 'nav-loc-slot'; }
+        if (!slot.parentNode) inner.insertBefore(slot, inner.firstChild);
+        if (wrap.parentNode !== slot) slot.appendChild(wrap);
+      } else if (wrap.parentNode !== home) {
+        home.insertBefore(wrap, marker.nextSibling);
+        if (slot && slot.parentNode) slot.parentNode.removeChild(slot);
+      }
+    }
+    function start() {
+      place();
+      /* the nav and the role class arrive after the page loads: keep trying until the chip is placed */
+      var tries = 0, t = setInterval(function () { place(); if (++tries > 40 || (slot && slot.parentNode && wrap.parentNode === slot) || (!mq.matches && tries > 6)) clearInterval(t); }, 150);
+      if (mq.addEventListener) mq.addEventListener('change', place); else if (mq.addListener) mq.addListener(place);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+  </script>
 </body>
 </html>

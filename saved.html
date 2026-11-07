@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saved &amp; Favourites — StreetTasker</title>
+  <script>window.ST_PAGE_TITLE = 'Saved & Favourites';</script>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/saved.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <div id="navbar-placeholder"></div>
+
+  <main class="st-page st-page--narrow sv-page" id="svPage">
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Your list</span>
+      <h1 class="st-hero-title">Saved &amp; Favourites</h1>
+      <p class="st-hero-lead">Tasks you bookmarked and services you hearted, all in one place.</p>
+    </section>
+
+    <section class="st-panel sv-panel" aria-labelledby="svTitle">
+      <h2 class="st-panel-title" id="svTitle">Your saved items</h2>
+
+      <div class="sv-tabs" role="tablist" aria-label="Filter saved items">
+        <button type="button" class="sv-tab is-on" role="tab" aria-selected="true" data-filter="all">All <span class="sv-count" id="svCountAll">0</span></button>
+        <button type="button" class="sv-tab" role="tab" aria-selected="false" data-filter="task">Tasks <span class="sv-count" id="svCountTask">0</span></button>
+        <button type="button" class="sv-tab" role="tab" aria-selected="false" data-filter="service">Services <span class="sv-count" id="svCountService">0</span></button>
+      </div>
+
+      <ul class="sv-list" id="svList" aria-live="polite"></ul>
+
+      <div class="sv-empty" id="svEmpty" hidden>
+        <h3 class="sv-empty-title" id="svEmptyTitle">Nothing saved yet</h3>
+        <p class="st-panel-note" id="svEmptyText">Tap the bookmark on a task or the heart on a service and it will wait for you here.</p>
+        <div class="sv-empty-actions">
+          <a class="btn btn-primary" href="find-tasks.html" id="svBrowseTasks">Browse tasks</a>
+          <a class="btn btn-ghost" href="find-services.html" id="svBrowseServices">Browse services</a>
+        </div>
+      </div>
+
+      <p class="st-panel-note sv-note">Saved items are kept on this device. If you sign in on another phone or computer, you will need to save them again there.</p>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/saved.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/saved-page.js"></script>
+</body>
+</html>

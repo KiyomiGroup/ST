@@ -229,6 +229,25 @@
     return card;
   }
 
+  /* Decorative icon for the big invite card: sofa + brush + wrench in mint, on a tilted glass tile. */
+  function referralIcon() {
+    var NS = 'http://www.w3.org/2000/svg';
+    var tile = el('div', 'cc-referral-icon');
+    tile.setAttribute('aria-hidden', 'true');
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 48 48');
+    svg.setAttribute('width', '48'); svg.setAttribute('height', '48');
+    svg.setAttribute('fill', 'currentColor');
+    [
+      'M14 8h20a4 4 0 0 1 4 4v5a4 4 0 0 1 4 4v8a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-8a4 4 0 0 1 4-4v-5a4 4 0 0 1 4-4z',
+      'M9 33h30v3a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2z',
+      'M14 41.5l5.5-5.5 2 2-3.5 6c-1.4 1.2-3.6.4-4-1.5z',
+      'M27 45l-2-2 6.5-6.5 2 2zM35 36l3-3a3 3 0 1 1 3 3l-3 3z'
+    ].forEach(function (d) { var p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.appendChild(p); });
+    tile.appendChild(svg);
+    return tile;
+  }
+
   /* ── Referral strip (placeholder) ──
      Not shown unless the caller passes show: true. M15 supplies the real text and link. */
   function referralStrip(o) {
@@ -240,6 +259,7 @@
     body.appendChild(el('h3', 'cc-referral-title', o.title || ''));
     if (o.text) body.appendChild(el('p', 'cc-referral-text', o.text));
     strip.appendChild(body);
+    if (o.icon !== false) { strip.classList.add('cc-referral--icon'); strip.appendChild(referralIcon()); }
     var href = safeHref(o.href);
     if (href && o.cta) { var a = el('a', 'cc-referral-cta', o.cta); a.href = href; strip.appendChild(a); }
     return strip;

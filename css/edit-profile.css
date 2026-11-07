@@ -175,9 +175,9 @@
   .ep-verify { flex-wrap: wrap; padding: var(--space-4); border-radius: var(--radius-xl); }
   .ep-verify .btn { width: 100%; }
 
-  /* Save bar sticks to the bottom of the screen (this page has no bottom tab bar). */
+  /* Save bar sticks to the screen, sitting just above the floating bottom tab bar (10px gap + 77px bar + 12px breathing room). */
   .ep-actions {
-    position: sticky; bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); z-index: 5;
+    position: sticky; bottom: calc(99px + env(safe-area-inset-bottom, 0px)); z-index: 5;
     justify-content: stretch; padding: 0;
   }
   .ep-actions .btn-primary { flex: 1 1 auto; width: 100%; height: 52px; box-shadow: var(--shadow-lg); }
