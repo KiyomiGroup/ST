@@ -79,6 +79,8 @@
   --space-nav: 10px;   /* nav container padding only */
 
   /* ── Layout ── */
+  --safe-bottom:    env(safe-area-inset-bottom, 0px);   /* the phone's home-bar area; 0 where there is none */
+  --corner-clear:   max(var(--safe-bottom), var(--space-5));   /* gap under anything pinned to the bottom, so rounded phone corners and the home bar never cut it off or block a tap (24px minimum) */
   --page-margin:    60px;     /* side margin on every page: a no-content area */
   --page-width:     1112px;   /* content width of every page wrapper (.ap-/.bk-/.pt-/.wl-container). .container is 1160 incl. 2x24 padding = 1112 content */
   --page-width-narrow: 720px;  /* content width of form and text pages built on .st-page--narrow (apply, quiz, legal) */
@@ -471,7 +473,7 @@
   --shadow-co-card:   0 1px 2px rgba(26, 28, 27, 0.04), 0 10px 28px -14px rgba(26, 28, 27, 0.10);   /* = --shadow-pt-card */
   --shadow-co-panel:  0 24px 48px -16px rgba(0, 0, 0, 0.35);   /* = --shadow-gc-card */
   --co-header-height: 72px;
-  --co-bottom-nav-height: 72px;
+  --co-bottom-nav-height: calc(72px + max(var(--safe-bottom), var(--space-3)));   /* 72px bar + the home-bar clearance */
 }
 
 /* ── Auth pages (login, signup, onboarding): colours that were raw in styles.css ──
@@ -560,7 +562,7 @@
 /* ── Install banner (css/styles.css "INSTALL BANNER", js/pwa-install.js) ── */
 :root {
   --install-gap:        var(--space-3);               /* space above the screen edge or the bottom nav */
-  --install-nav-offset: 97px;                         /* bottom nav: 10px off the edge + 77px tall + 10px air */
+  --install-nav-offset: calc(95px + var(--corner-clear));   /* bottom nav: 8px + corner clearance off the edge + 77px tall + 10px air */
   --install-icon:       44px;
   --install-radius:     var(--radius-form);
   --install-z:          960;                          /* above the bottom nav (950), below toasts and the loader */

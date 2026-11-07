@@ -616,12 +616,12 @@
   .pt-group-photos .pt-help { margin-top: var(--space-3); }
 
   /* Room above the sticky bar so the last card is never hidden behind it (no bottom tab bar on this page) */
-  body.pt-task, body.pt-task.st-logged-in { padding-bottom: calc(var(--space-9) + var(--space-7)); }
+  body.pt-task, body.pt-task.st-logged-in { padding-bottom: calc(var(--space-9) + var(--space-7) + var(--corner-clear)); }
 
   /* Sticky submit bar */
   .pt-submit {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
-    padding: var(--space-4) calc(var(--space-4) + var(--space-1)) var(--space-3); border-radius: var(--radius-form); box-shadow: var(--shadow-pt-bar);
+    padding: var(--space-4) calc(var(--space-4) + var(--space-1)) calc(var(--space-3) + var(--corner-clear)); border-radius: var(--radius-form); box-shadow: var(--shadow-pt-bar);
   }
   .pt-post-btn { flex: 1 1 auto; min-width: 0; height: 52px; background: var(--color-primary); font-weight: 700; box-shadow: var(--shadow-primary-md); }
   .pt-submit-row { gap: var(--space-3); }

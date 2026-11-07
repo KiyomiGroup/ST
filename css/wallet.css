@@ -614,7 +614,7 @@ html.wl-lock { overflow: hidden; }
 /* Phone: the popup becomes a bottom sheet; the buttons stay pinned under the scrolling body */
 @media (max-width: 768px) {
   .wl-modal { width: 100%; max-height: calc(100dvh - var(--space-5)); margin: auto 0 0; border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; }
-  .wl-modal-foot { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
+  .wl-modal-foot { padding-bottom: calc(var(--space-3) + var(--corner-clear)); }
   .wl-modal-close { width: 44px; height: 44px; }
   .wl-preset { height: 44px; }
   .wl-acct-set .wl-acct-add { width: 100%; height: 44px; }

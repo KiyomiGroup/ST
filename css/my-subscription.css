@@ -122,7 +122,7 @@
 /* Confirm dialog (S4f-2). tasks.css, which styles .modal-overlay elsewhere, is not loaded on this page, so the overlay is styled here. */
 #mysubModal { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center; padding: var(--space-5); background: var(--drawer-overlay); }
 #mysubModal.modal-open { display: flex; }
-.mysub-modal-box { background: var(--color-bg); border-radius: var(--radius-form); padding: var(--space-6); max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
+.mysub-modal-box { background: var(--color-bg); border-radius: var(--radius-form); padding: var(--space-6) var(--space-6) calc(var(--space-6) + var(--safe-bottom)); max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
 .mysub-modal-box h2 { font-size: var(--text-xl); }
 @media (max-width: 480px) { #mysubModal { align-items: flex-end; padding: 0; } .mysub-modal-box { border-bottom-left-radius: 0; border-bottom-right-radius: 0; } }
 .mysub-choices { display: flex; flex-direction: column; gap: var(--space-2); }

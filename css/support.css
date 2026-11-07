@@ -46,7 +46,7 @@
   background: var(--color-warning-soft); color: var(--color-text); }
 .sp-orphans { margin-top: var(--space-4); font-size: var(--text-sm); }
 .sp-orphan-body { padding-top: var(--space-2); }
-.sp-toast { position: fixed; left: 50%; bottom: var(--space-5); transform: translateX(-50%);
+.sp-toast { position: fixed; left: 50%; bottom: calc(var(--space-5) + var(--safe-bottom)); transform: translateX(-50%);
   padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill);
   background: var(--color-text); color: var(--color-text-on-primary); font-size: var(--text-sm); }
 

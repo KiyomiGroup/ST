@@ -353,6 +353,17 @@ Inside panels use `.btn`, `.form-group`, `.form-label`, `.form-input`, `.check-r
 
 **Why it exists:** a legacy rule `main { padding: ... !important }` inside the phone breakpoint overrode the top padding of every bare `<main>`, and the Privacy and Terms pages used a 48px gap under a 64px nav. Both are fixed; the shell stops it coming back. Pages older than the shell are listed in `tools/legacy-pages.json`; `tools/check-design-system.js` fails any other page that has the shared nav but no `.st-page`.
 
+### 4.16 Bottom safe area (2026-11-07): nothing pinned to the bottom may touch the phone's curve
+
+Phones have rounded screen corners and a home bar. Anything fixed or sticky to the bottom edge (composer, submit and buy bars, floating action bars, bottom nav, sheets, toasts) must clear them, or buttons get clipped and are hard to tap.
+
+| Token | Value | Use |
+|---|---|---|
+| `--safe-bottom` | `env(safe-area-inset-bottom, 0px)` | the home-bar area; 0 where there is none |
+| `--corner-clear` | `max(var(--safe-bottom), var(--space-5))` | the gap under a bottom-pinned element: at least 24px, more on iPhones |
+
+Rules: a bottom bar uses `padding-bottom: calc(<its normal padding> + var(--corner-clear))`; a floating bar uses `bottom: calc(<its normal gap> + var(--corner-clear))`; a toast or banner uses `+ var(--safe-bottom)`; the page that scrolls under it adds `var(--corner-clear)` to its own bottom padding. Every page's viewport tag carries `viewport-fit=cover`, otherwise the phone reports 0 for the safe area and only the 24px minimum applies.
+
 ## 9. Checklist for every new page
 
 1. `<body class="st-shell">`, `<main class="st-page">` (`st-page--narrow` for forms and text), `.st-hero`, `.st-panel` blocks.
@@ -361,6 +372,7 @@ Inside panels use `.btn`, `.form-group`, `.form-label`, `.form-input`, `.check-r
 4. Breakpoints 480 / 768 / 1044 only.
 5. View at 390px and 1280px: heading below the nav, no sideways scroll.
 6. `node tools/check-design-system.js` passes.
+7. Anything pinned to the bottom of the screen clears the phone's curve with `--corner-clear` (4.16), and the page has `viewport-fit=cover`.
 
 ---
 

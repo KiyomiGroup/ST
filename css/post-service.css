@@ -256,7 +256,7 @@
   /* Focused form: the floating tab bar would cover the sticky action bar, so it is hidden here (and its extra page padding removed) */
   body.ps-body.st-logged-in { padding-bottom: 0; }
   body.ps-body.st-logged-in .st-bottom-nav { display: none; }
-  .ps-submit { padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
+  .ps-submit { padding-bottom: calc(var(--space-3) + var(--corner-clear)); }
   .ps-quick { margin-top: var(--space-4); }
   .ps-header { margin-bottom: var(--space-4); }
   .ps-header .pt-title { margin-top: 0; }

@@ -346,7 +346,7 @@ body.co-drawer-open { overflow: hidden; }
 .co-bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
   display: grid; grid-template-columns: repeat(4, 1fr); align-items: center;
-  height: var(--co-bottom-nav-height); padding: 0 var(--space-2);
+  height: var(--co-bottom-nav-height); padding: 0 var(--space-2) max(var(--safe-bottom), var(--space-3));
   background: var(--color-bg); box-shadow: var(--shadow-pt-bar);
 }
 .co-bn-item {

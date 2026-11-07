@@ -307,7 +307,7 @@
   .tp-portfolio { grid-template-columns: minmax(0, 1fr); }
 
   /* Message button + Book bar floats at the bottom of the screen (this page has no bottom tab bar). */
-  .tp-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
+  .tp-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: calc(var(--space-3) + var(--corner-clear)); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
   .tp-actionbar-msg { display: grid; place-items: center; width: 52px; height: 52px; flex-shrink: 0; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--color-bg); color: var(--pt-green); box-shadow: var(--shadow-lg); }
   .tp-actionbar-msg:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
   .tp-actionbar-book { flex: 1; min-width: 0; height: 52px; justify-content: center; box-shadow: var(--shadow-lg); }
@@ -505,7 +505,7 @@
   .cp-page .cp-escrow-text { font-size: var(--text-sm); line-height: 1.6; color: var(--hero-text-muted); }
 
   /* All Tasks bar floats at the bottom of the screen (this page has no bottom tab bar). */
-  .cp-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
+  .cp-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: calc(var(--space-3) + var(--corner-clear)); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
   .cp-bar-tasks { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-5); cursor: pointer; border: 0; border-radius: var(--radius-pill); background: var(--color-bg); color: var(--pt-ink); box-shadow: var(--shadow-lg); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
   .cp-bar-tasks:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
 }

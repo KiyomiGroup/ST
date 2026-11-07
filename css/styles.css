@@ -1039,7 +1039,7 @@ p  { color: var(--text-secondary); font-weight: 400; }
 
 /* ── Toast ───────────────────────────────────────────────────── */
 .toast {
-  position: fixed; bottom: 28px; left: 50%;
+  position: fixed; bottom: calc(28px + var(--safe-bottom)); left: 50%;
   transform: translateX(-50%) translateY(80px);
   background: var(--charcoal); color: var(--white);
   font-size: var(--text-sm); font-weight: 500;
@@ -1681,7 +1681,7 @@ input.has-gps-btn { padding-right: inherit !important; }
   border-top: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 26px 26px 0 0;
   box-shadow: 0 -10px 30px rgba(11, 46, 28, 0.14);
-  padding: 10px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 4px calc(8px + var(--corner-clear));
   z-index: 100;
   justify-content: space-around;
 }
@@ -1911,6 +1911,7 @@ img { max-width: 100%; height: auto; }
     left: 0;
     right: 0;
     max-height: 92vh;
+    padding-bottom: calc(var(--space-6) + var(--safe-bottom));
   }
   .modal-overlay { align-items: flex-end; }
 
@@ -2834,12 +2835,12 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 768px) {
   /* Room for the floating pill so page content never sits behind it.
      Only added while logged in, since the nav only shows then. */
-  body.st-logged-in { padding-bottom: 112px; }
+  body.st-logged-in { padding-bottom: calc(96px + var(--corner-clear)); }   /* floating pill: 77px + 8px gap + corner clearance + room */
 
   body.st-logged-in .st-bottom-nav {
     display: flex; align-items: center; justify-content: space-around;
     position: fixed; left: 50%;
-    bottom: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--space-2) + var(--corner-clear));
     transform: translateX(-50%);
     width: 358px; max-width: calc(100% - 20px);
     height: 77px; z-index: 950;
@@ -5185,7 +5186,7 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
    Tones: success | info | warning | danger   (tokens: --tone-*)
    ============================================================ */
 .st-toast-stack {
-  position: fixed; left: 50%; bottom: var(--space-5); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(var(--space-5) + var(--safe-bottom)); transform: translateX(-50%);
   z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
   width: min(var(--toast-max-width), calc(100% - var(--space-5)));
   pointer-events: none;
@@ -5299,7 +5300,7 @@ body.cdash-page .ds-main-full > main > .dashboard-panel:not(#panel-overview) {
    Small dark card pinned to the bottom-right; full width on phones, above the sticky submit bar.
    ============================================================ */
 .st-pf {
-  position: fixed; z-index: 60; right: var(--space-5); bottom: var(--space-5);
+  position: fixed; z-index: 60; right: var(--space-5); bottom: calc(var(--space-5) + var(--safe-bottom));
   width: min(380px, calc(100% - var(--space-5) * 2));
   display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-3); row-gap: var(--space-3);
   padding: var(--space-4) var(--space-5) var(--space-4) var(--space-4);
@@ -5563,7 +5564,7 @@ html:has(script[src*="messages-cards-demo"])::after { display: none; }
   left: var(--space-3);
   right: var(--space-3);
   bottom: var(--install-gap);
-  bottom: calc(var(--install-gap) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--install-gap) + var(--safe-bottom));
   z-index: var(--install-z);
   display: flex;
   align-items: center;
@@ -5577,7 +5578,7 @@ html:has(script[src*="messages-cards-demo"])::after { display: none; }
   box-shadow: var(--shadow-toast);
 }
 body.st-logged-in .st-install {
-  bottom: calc(var(--install-nav-offset) + env(safe-area-inset-bottom, 0px));
+  bottom: var(--install-nav-offset);   /* already includes the home-bar clearance */
 }
 .st-install-icon { flex: 0 0 auto; width: var(--install-icon); height: var(--install-icon); border-radius: var(--radius-card-btn); }
 .st-install-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
@@ -5586,7 +5587,7 @@ body.st-logged-in .st-install {
 .st-install-actions { flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); }
 .st-install-steps { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
 /* room so the banner never hides the last bit of the page */
-body.st-install-open { padding-bottom: 160px; }
+body.st-install-open { padding-bottom: calc(160px + var(--safe-bottom)); }
 @media (min-width: 769px) { .st-install { display: none; } }
 @media print { .st-install { display: none; } }
 

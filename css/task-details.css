@@ -240,7 +240,7 @@
   .td-budget .td-cta-note { color: var(--pt-green); }
 
   /* Offer bar floats at the bottom of the screen (this page has no bottom tab bar) */
-  .td-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
+  .td-actionbar:not([hidden]) { position: fixed; left: var(--space-4); right: var(--space-4); bottom: calc(var(--space-3) + var(--corner-clear)); z-index: 40; display: flex; align-items: center; gap: var(--space-3); }
   .td-bar-msg { display: inline-grid; place-items: center; width: 52px; height: 52px; flex-shrink: 0; cursor: pointer; border: 0; border-radius: 50%; background: var(--color-bg); color: var(--pt-ink); box-shadow: var(--shadow-lg); }
   .td-bar-msg[hidden] { display: none; }
   .td-bar-msg:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }

@@ -230,10 +230,10 @@
 /* ── Phone: submit bar fixed to the bottom (Stage 5) ─────── */
 /* There is no bottom nav on this page (body.st-no-bottom-nav), so the bar sits at the very bottom edge. */
 @media (max-width: 768px) {
-  .mo-page { padding-bottom: calc(var(--space-9) * 2); }   /* room so the last card is not hidden behind the bar */
+  .mo-page { padding-bottom: calc(var(--space-9) * 2 + var(--corner-clear)); }   /* room so the last card is not hidden behind the bar */
   .mo-submit-sec {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; gap: var(--space-2);
-    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--corner-clear));
     border-radius: var(--radius-form) var(--radius-form) 0 0; box-shadow: var(--shadow-pt-bar);
   }
   .mo-terms { gap: var(--space-2); font-size: var(--text-xs); line-height: 1.4; }

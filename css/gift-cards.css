@@ -776,16 +776,16 @@
 .gc-buybar { display: none; }
 
 @media (max-width: 768px) {
-  .gc-cz-input, .gc-cz-custom-input { scroll-margin-bottom: 120px; }   /* keep a focused field clear of the buy bar */
+  .gc-cz-input, .gc-cz-custom-input { scroll-margin-bottom: calc(120px + var(--corner-clear)); }   /* keep a focused field clear of the buy bar */
   .gc-cz-checkout-error--panel:not([hidden]) { display: block; }
 
   /* Room for the bar so it never covers the footer */
-  body.page-gift-cards { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  body.page-gift-cards { padding-bottom: calc(96px + var(--corner-clear)); }
 
   .gc-buybar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--corner-clear));
     border-radius: var(--radius-gc-tile) var(--radius-gc-tile) 0 0;
     background: var(--color-bg); box-shadow: var(--shadow-pt-bar);
   }

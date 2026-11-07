@@ -862,7 +862,7 @@ body.msg-page {
   width: 100%;
   max-width: 480px;
   max-height: 85%;
-  padding: var(--space-3) var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-4) calc(var(--space-5) + var(--safe-bottom));
   box-sizing: border-box;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: var(--color-bg);
@@ -1118,7 +1118,7 @@ body.msg-page {
 .jr-toasts {
   position: fixed;
   left: 50%;
-  bottom: var(--space-9);
+  bottom: calc(var(--space-9) + var(--safe-bottom));
   z-index: 1200;
   display: flex;
   flex-direction: column;
@@ -1581,7 +1581,7 @@ body.msg-page {
   .jr-banner-amount { font-size: var(--text-base); }
 
   /* Composer clears the home indicator on phones */
-  .msg-input-bar { padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
+  .msg-input-bar { padding-bottom: calc(var(--space-3) + var(--corner-clear)); }
 }
 
 @media (max-width: 480px) {
