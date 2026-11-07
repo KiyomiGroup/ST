@@ -1,0 +1,21 @@
+/* Coordinator identity check page (.cid-*, Stage E-1). Layout only: colours, sizes and radii come from tokens and the shared components. */
+.st-page.cid-page [hidden] { display: none; }
+.cid-brand { display: inline-flex; align-self: start; justify-self: start; }
+.cid-brand img { display: block; height: var(--space-5); width: auto; }
+.cid-error:not([hidden]) { display: block; }
+.cid-text { font-size: var(--text-base); line-height: 1.7; color: var(--color-text-secondary); }
+.cid-title { margin-top: var(--space-3); }
+.cid-h2 { margin-top: var(--space-5); }
+.cid-status-msg { font-size: var(--text-lg); font-weight: 700; margin: var(--space-3) 0 var(--space-2); }
+.cid-status-sub { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; margin-bottom: var(--space-4); }
+.cid-list { list-style: disc; padding-left: var(--space-5); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; }
+.cid-list li { margin-bottom: var(--space-2); }
+.cid-list li:last-child { margin-bottom: 0; }
+.cid-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+.cid-consent-text { max-height: 16rem; overflow-y: auto; padding: var(--space-4); margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-form); }
+.cid-consent-text p { margin-bottom: var(--space-3); }
+.cid-consent-text p:last-child { margin-bottom: 0; }
+.cid-links { display: grid; gap: var(--space-2); justify-items: start; font-size: var(--text-sm); }
+.cid-links a, .cid-linkbtn { color: var(--color-text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+.cid-linkbtn { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+@media (max-width: 480px) { .cid-actions .btn { flex: 1 1 100%; } }

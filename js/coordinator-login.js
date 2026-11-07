@@ -13,6 +13,7 @@
   var SESSION_ONLY_KEY = 'st_co_session_only';
   var TAB_ALIVE_KEY    = 'st_co_tab_alive';
   var HOME = 'coordinator-dashboard.html';
+  var IDENTITY_PAGE = 'coordinator-identity.html';   /* a pending coordinator (identity check not passed yet) goes here */
   var lastFinishError = '';   /* why coordinator_finish_signup said no, for the message */
 
   function $(id) { return document.getElementById(id); }
@@ -76,21 +77,32 @@
     } catch (e) { /* storage blocked: session behaves as "remember me" */ }
   }
 
-  /* Returns 'active' | 'inactive' | 'no'. Throws if the server cannot answer.
+  /* Returns 'active' | 'pending' | 'inactive' | 'no'. Throws if the server cannot answer.
+     'pending' = a coordinator who has not passed the identity check yet (Stage E-1): they stay signed in and are sent to coordinator-identity.html.
      A brand-new coordinator who has just confirmed their email is not a coordinator yet: the database finishes the sign-up
      (coordinator_finish_signup, Stage D-1) the first time they get here, using the code saved at sign-up. It refuses any customer or tasker account. */
+  async function pendingOrInactive() {
+    var sb = window.supabase;
+    var u = await sb.auth.getUser();
+    var id = u && u.data && u.data.user && u.data.user.id;
+    if (!id) return 'inactive';
+    var row = await sb.from('coordinators').select('status').eq('user_id', id).maybeSingle();
+    if (row.error) throw row.error;
+    return (row.data && row.data.status === 'pending') ? 'pending' : 'inactive';
+  }
   async function coordinatorStatus() {
     var sb = window.supabase;
     var active = await sb.rpc('is_active_coordinator');
     if (active.error) throw active.error;
     if (active.data === true) return 'active';
     var isCo = await sb.rpc('is_coordinator');
-    if (!isCo.error && isCo.data === true) return 'inactive';
+    if (!isCo.error && isCo.data === true) return pendingOrInactive();
     lastFinishError = '';
     var fin = await sb.rpc('coordinator_finish_signup');
     if (!fin.error && fin.data && fin.data.ok === true) {
       var again = await sb.rpc('is_active_coordinator');
-      return (!again.error && again.data === true) ? 'active' : 'inactive';
+      if (!again.error && again.data === true) return 'active';
+      return pendingOrInactive();
     }
     if (fin.data && fin.data.error) lastFinishError = fin.data.error;
     return 'no';
@@ -109,7 +121,9 @@
     try {
       var res = await window.supabase.auth.getSession();
       if (!res.data || !res.data.session) return;
-      if ((await coordinatorStatus()) === 'active') window.location.replace(destination());
+      var st = await coordinatorStatus();
+      if (st === 'active') window.location.replace(destination());
+      else if (st === 'pending') window.location.replace(IDENTITY_PAGE);
     } catch (e) { /* stay on the form */ }
   }
 
@@ -177,6 +191,12 @@
           throw checkErr;
         }
 
+        if (status === 'pending') {
+          /* Not signed out: the identity check page needs this session. */
+          rememberChoice($('coRemember').checked);
+          window.location.replace(IDENTITY_PAGE);
+          return;
+        }
         if (status !== 'active') {
           try { await window.supabase.auth.signOut(); } catch (x) {}
           if (status === 'no') showNotCoordinator(); else showMsg(DENIED_TEXT[status]);

@@ -219,6 +219,15 @@
       if (active.data !== true) {
         /* Tell "has a coordinator record but not active" from "not a coordinator". */
         var isCo = await sb.rpc('is_coordinator');
+        if (!isCo.error && isCo.data === true) {
+          /* A coordinator who has not passed the identity check yet (status pending) is sent to that check, still signed in. */
+          var mine = await sb.from('coordinators').select('status').eq('user_id', session.user.id).maybeSingle();
+          if (!mine.error && mine.data && mine.data.status === 'pending' && !state.redirecting) {
+            state.redirecting = true;
+            window.location.replace('coordinator-identity.html');
+            return;
+          }
+        }
         goToLogin({ denied: (!isCo.error && isCo.data === true) ? 'inactive' : 'no' });
         return;
       }

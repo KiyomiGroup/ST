@@ -155,6 +155,7 @@ export async function handleCreateSession(req: Request, deps: Deps): Promise<Res
   }
 
   // 4. Which workflow. Customers have their own (stage V6); until it is configured they cannot start.
+  //    Coordinators use the same main workflow as taskers (owner's choice, Stage E-1).
   const wf = kind === "customer" ? customerWorkflowId : workflowId;
   if (!wf) return fail(req, deps, 503, "not_available", "Verification is not available for this account type yet.");
 
@@ -167,7 +168,9 @@ export async function handleCreateSession(req: Request, deps: Deps): Promise<Res
       body: JSON.stringify({
         workflow_id: wf,
         vendor_data: subjectUser,                 // our id of the person being verified, set by SQL, never the browser
-        callback: `${site}/verify.html`,          // a redirect is NOT proof; the page must read the server status
+        // a redirect is NOT proof; the page must read the server status. A coordinator comes back to their own page
+        // (coordinator accounts are separate and are turned away from verify.html).
+        callback: kind === "coordinator" ? `${site}/coordinator-identity.html` : `${site}/verify.html`,
         metadata: { verification_id: verificationId },
       }),
       signal: AbortSignal.timeout(DIDIT_TIMEOUT_MS),

@@ -220,6 +220,27 @@ test("Local Tasker and regular tasker use the main workflow even when a customer
   }
 });
 
+test("coordinator: same main workflow as taskers (even with a customer one configured) and the callback is the coordinator page", async () => {
+  const { calls, deps } = setup({ env: { DIDIT_WORKFLOW_ID_CUSTOMER: WF_CUST }, start: { subject_kind: "coordinator" } });
+  const r = await handleCreateSession(req(SELF), deps);
+  assert.equal(r.status, 200);
+  const d = find(calls, "https://verification.didit.me/v3/session/");
+  assert.equal(d.length, 1);
+  assert.deepEqual(bodyOf(d[0]), { workflow_id: WF, vendor_data: SUBJECT, callback: "https://streettasker.com/coordinator-identity.html", metadata: { verification_id: VID } });
+  assert.equal(bodyOf(find(calls, "/rpc/idv_attach_session")[0]).p_workflow_id, WF);
+});
+
+test("coordinator callback follows SITE_URL; every other kind still comes back to verify.html", async () => {
+  const a = setup({ env: { SITE_URL: "https://staging.example.com/" }, start: { subject_kind: "coordinator" } });
+  await handleCreateSession(req(SELF), a.deps);
+  assert.equal(bodyOf(find(a.calls, "https://verification.didit.me/v3/session/")[0]).callback, "https://staging.example.com/coordinator-identity.html");
+  for (const kind of ["tasker_regular", "tasker_local", "customer"]) {
+    const b = setup({ env: { DIDIT_WORKFLOW_ID_CUSTOMER: WF_CUST }, start: { subject_kind: kind } });
+    await handleCreateSession(req(SELF), b.deps);
+    assert.equal(bodyOf(find(b.calls, "https://verification.didit.me/v3/session/")[0]).callback, "https://streettasker.com/verify.html", kind);
+  }
+});
+
 test("Didit 403 (bad key), 500, network error, timeout-style throw, bad JSON -> 502 generic 'try later', nothing about configuration", async () => {
   for (const o of [{ diditStatus: 403 }, { diditStatus: 500 }, { diditThrows: true }, { diditText: "not json" }, { diditText: "null" }]) {
     const { calls, deps } = setup(o);

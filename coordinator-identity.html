@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Identity check — StreetTasker Coordinators</title>
+  <script>window.ST_PAGE_TITLE = 'Coordinator identity check';</script>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="canonical" href="https://streettasker.com/coordinator-identity.html" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator-identity.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <!-- Stage E-1. Coordinator accounts are separate from customer and tasker accounts: this page has no customer navbar or
+       footer, loads none of the customer site scripts, and links to no customer/tasker page. It also does NOT link to
+       privacy.html, terms.html or data-consent.html: those pages load the customer scripts, which sign a coordinator out.
+       The consent text is therefore written on this page.
+       It never sets a status itself: success is shown only from the server read idv_my_status() and coordinators.status. -->
+  <main class="st-page st-page--narrow cid-page" id="cidPage">
+    <a class="cid-brand" href="coordinator-login.html" aria-label="StreetTasker coordinator sign-in">
+      <img src="images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+    </a>
+
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
+      <h1 class="st-hero-title">Verify your identity</h1>
+      <p class="st-hero-lead">The last step before you can work as a coordinator. We check that you are the person on your ID, so Local Taskers and StreetTasker can trust who they are dealing with.</p>
+    </section>
+
+    <div class="form-error cid-error" id="cidError" role="alert" hidden></div>
+    <p class="form-helper cid-notice" id="cidNotice" role="status" hidden></p>
+
+    <!-- State: loading -->
+    <section class="st-panel cid-state" id="cidLoading" aria-live="polite">
+      <p class="cid-text">Checking your account…</p>
+    </section>
+
+    <!-- State: account is not able to continue (suspended / deactivated) -->
+    <section class="st-panel cid-state" id="cidBlocked" hidden>
+      <h2 class="st-panel-title">Your coordinator account is not active</h2>
+      <p class="cid-text">Please contact StreetTasker Coordinator Support.</p>
+      <div class="cid-actions">
+        <a class="btn btn-primary" href="mailto:support@streettasker.com">Contact support</a>
+        <button type="button" class="btn btn-outline" data-action="signout">Sign out</button>
+      </div>
+    </section>
+
+    <!-- State: account already active -->
+    <section class="st-panel cid-state" id="cidActive" hidden>
+      <span class="badge badge-green">Active</span>
+      <h2 class="st-panel-title cid-title">Your coordinator account is active</h2>
+      <p class="cid-text" id="cidActiveText">You can now meet and register your Local Taskers.</p>
+      <div class="cid-actions">
+        <a class="btn btn-primary" href="coordinator-dashboard.html">Open the coordinator page</a>
+      </div>
+    </section>
+
+    <!-- State: pending. Exactly ONE [data-status-panel] is shown. The first six messages are the same wording as the
+         customer and tasker verification page. -->
+    <section class="st-panel cid-state" id="cidPending" hidden>
+      <div data-status-panel="NOT_STARTED" hidden>
+        <span class="badge badge-gray">Not started</span>
+        <p class="cid-status-msg">Your identity verification has not been completed.</p>
+        <p class="cid-status-sub">Read what you agree to below, tick the box, then start. It uses your phone or computer camera.</p>
+      </div>
+      <div data-status-panel="IN_PROGRESS" hidden>
+        <span class="badge badge-amber">In progress</span>
+        <p class="cid-status-msg">Your identity verification is currently underway.</p>
+        <p class="cid-status-sub">If you left before finishing, you can continue where you stopped.</p>
+        <button type="button" class="btn btn-primary" data-action="resume">Continue verification</button>
+      </div>
+      <div data-status-panel="PENDING" hidden>
+        <span class="badge badge-amber">Pending</span>
+        <p class="cid-status-msg">We are waiting for the verification result.</p>
+        <p class="cid-status-sub">This page only shows a result once our server has confirmed it. You can leave and come back.</p>
+        <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+      </div>
+      <div data-status-panel="VERIFIED" hidden>
+        <span class="badge badge-green">Verified</span>
+        <p class="cid-status-msg">Your identity has been successfully verified.</p>
+        <p class="cid-status-sub">Your coordinator account is being switched on. Check again in a moment.</p>
+        <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+      </div>
+      <div data-status-panel="REVIEW_REQUIRED" hidden>
+        <span class="badge badge-amber">Needs attention</span>
+        <p class="cid-status-msg">Your verification requires additional attention.</p>
+        <p class="cid-status-sub">You do not need to submit again. We will notify you when there is an update.</p>
+        <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+      </div>
+      <div data-status-panel="FAILED" hidden>
+        <span class="badge badge-gray">Not completed</span>
+        <p class="cid-status-msg">Your verification could not be completed. Follow the instructions to try again or contact support.</p>
+        <ul class="cid-list">
+          <li>Use a valid ID that has not expired.</li>
+          <li>Place the ID on a plain surface in good light, with all four corners in view and no glare.</li>
+          <li>Look straight at the camera, and make sure your face is clearly visible.</li>
+        </ul>
+        <div class="cid-actions">
+          <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
+          <a class="btn btn-outline" href="mailto:support@streettasker.com">Contact support</a>
+        </div>
+      </div>
+      <div data-status-panel="RESUBMIT_REQUESTED" hidden>
+        <span class="badge badge-amber">Action required</span>
+        <p class="cid-status-msg">Action required: please redo the steps you are asked to repeat.</p>
+        <button type="button" class="btn btn-primary" data-action="resume">Continue verification</button>
+      </div>
+      <div data-status-panel="EXPIRED" hidden>
+        <span class="badge badge-gray">Expired</span>
+        <p class="cid-status-msg">Your verification has expired. Please verify again.</p>
+        <button type="button" class="btn btn-primary" data-action="retry">Verify again</button>
+      </div>
+    </section>
+
+    <!-- Start area: shown for NOT_STARTED, FAILED, EXPIRED -->
+    <section class="st-panel cid-state" id="cidStart" hidden>
+      <h2 class="st-panel-title">Why we verify</h2>
+      <p class="cid-text">You are the person who will meet and register Local Taskers, so we check that you are who you say you are before your coordinator account is switched on.</p>
+
+      <h2 class="st-panel-title cid-h2">What you need</h2>
+      <ul class="cid-list">
+        <li>A valid government-issued ID.</li>
+        <li>A phone or computer with a camera.</li>
+        <li>A few minutes in a well-lit place.</li>
+      </ul>
+
+      <h2 class="st-panel-title cid-h2">What you agree to</h2>
+      <!-- Consent version "coordinator-v1" (data-consent-version must equal idv_coordinator_consent_version() in the database).
+           If the meaning changes, change this text, that function and this attribute together (coordinator-v2) so older consents stop counting.
+           Wording adapted from the customer/tasker Data Consent Notice (v1). NOT legal text: a lawyer must approve it before launch. -->
+      <div class="cid-consent" id="cidConsentBlock" data-consent-version="coordinator-v1">
+        <div class="cid-consent-text" tabindex="0" role="region" aria-label="What you agree to">
+          <p><strong>Who is responsible.</strong> StreetTasker decides why and how your verification information is used. Didit, our identity verification provider, carries out the check on our behalf and under our instructions.</p>
+          <p><strong>What is collected.</strong> A photo of your government-issued ID, including the details printed on it; a short live selfie check to show a real person is present; and a comparison of your face with the photo on your ID. This comparison uses <strong>biometric data</strong>, which is sensitive personal data.</p>
+          <p><strong>Why we use it.</strong> Only to confirm that you are the person on the ID, so that your coordinator account can be switched on and to help prevent fraud and impersonation. We do not use it for marketing and we do not sell it.</p>
+          <p><strong>Who handles it.</strong> Didit collects and processes your ID photo, selfie and face comparison, and may do so outside Nigeria. StreetTasker receives the result of the check (for example verified or not completed) and the dates. We do not receive your ID images and we do not ask you to type your ID number into StreetTasker. If a check needs a manual review, authorised StreetTasker staff may view the verification record in Didit. We do not share your verification information with anyone else, except where the law requires it.</p>
+          <p><strong>How long it is kept.</strong> We keep the result and dates while your account is active. Didit keeps your images only for a limited period set in our Didit account, and then deletes them.</p>
+          <p><strong>Your choice and your rights.</strong> Giving consent is your choice. The identity check is required to work as a coordinator, and without your consent we cannot verify you. You can withdraw your consent at any time by emailing support@streettasker.com. Withdrawing does not undo what has already happened. You can ask to see, correct or delete your information by emailing the same address, and you can complain to the Nigeria Data Protection Commission.</p>
+          <p><strong>Changes.</strong> If we change this in a way that matters, we will ask for your consent again before you verify.</p>
+        </div>
+        <div class="check-row" id="cidConsentSelf">
+          <input type="checkbox" id="cidConsentCheck" />
+          <label for="cidConsentCheck">I have read what I agree to above and I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity as a coordinator.</label>
+        </div>
+        <p class="cid-text" id="cidConsentDone" hidden>Your consent is recorded.</p>
+      </div>
+
+      <div class="cid-actions">
+        <button type="button" class="btn btn-primary btn-lg" id="cidStartBtn" data-action="start" disabled>Start verification</button>
+      </div>
+    </section>
+
+    <p class="cid-links" id="cidLinks">
+      <button type="button" class="cid-linkbtn" data-action="signout">Sign out</button>
+      <a href="mailto:support@streettasker.com">Need help? Contact support</a>
+    </p>
+  </main>
+
+  <!-- Only the Supabase client: none of the customer or tasker site scripts run on this page. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator-identity.js"></script>
+</body>
+</html>
