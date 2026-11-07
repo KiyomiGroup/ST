@@ -426,7 +426,7 @@
       const msg = document.getElementById(prefix + 'CoMsg');
       const code = input.value.trim();
       msg.hidden = true;
-      try { localStorage.removeItem('st_pending_coord_code'); } catch (e) {}
+      window.ST.auth.rememberCoordinatorCode('', '');   /* clear any older code first */
       if (!code) return true;
       const panel = document.getElementById(prefix + 'CoBox');
       let valid = false, failed = false;
@@ -435,7 +435,8 @@
         if (r.error) failed = true; else valid = r.data === true;
       } catch (e) { failed = true; }
       if (valid) {
-        try { localStorage.setItem('st_pending_coord_code', code); } catch (e) {}
+        const emailBox = document.getElementById(prefix === 'c' ? 'cEmail' : 'tEmail');
+        window.ST.auth.rememberCoordinatorCode(code, emailBox ? emailBox.value : '');
         return true;
       }
       panel.hidden = false;
@@ -473,6 +474,9 @@
          public.users row and picks the right onboarding screen for the role. */
       const r = role || 'customer';
       try { localStorage.setItem('st_pending_role', r); } catch (e) {}
+      /* A coordinator code typed in the box goes with the person through Google; the database checks it after they are signed in */
+      const coBox = document.getElementById(r === 'tasker' ? 'tCoCode' : 'cCoCode');
+      window.ST.auth.rememberCoordinatorCode(coBox ? coBox.value : '', '');
       window.ST.auth.rememberRedirect();   /* the Google round trip comes back to login.html, which opens this page */
       if (!window.supabase?.auth) { showToast('Sign-up is unavailable right now. Please refresh and try again.'); return; }
       const opts = { redirectTo: window.location.origin + '/login.html?oauth=1&role=' + r };
@@ -508,7 +512,11 @@
         if (!(await coordinatorCodeOk('c'))) { btn.disabled = false; btn.innerHTML = originalHTML; return; }
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'customer', refCode: document.getElementById('cRefCode').value });
         /* Email already had a login: the customer account was added to it and they are signed in */
-        if (res.roleAdded) { window.location.href = window.ST.auth.requestedRedirect() || window.ST.auth.getHomeUrl(); return; }
+        if (res.roleAdded) {
+          const co = await window.ST.auth.redeemPendingCoordinatorCode(res.user);
+          window.location.href = co.status === 'ready' ? window.ST.auth.COORDINATOR_HOME : (window.ST.auth.requestedRedirect() || window.ST.auth.getHomeUrl());
+          return;
+        }
         /* Send them to Log In with a "check your email" notice, keeping the page they were trying to reach */
         window.ST.auth.rememberSignupTarget(email);
         window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
@@ -547,7 +555,11 @@
         if (!(await coordinatorCodeOk('t'))) { btn.disabled = false; btn.innerHTML = originalHTML; return; }
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'tasker', refCode: document.getElementById('tRefCode').value });
         /* Email already had a login: the tasker account was added to it and they are signed in */
-        if (res.roleAdded) { window.location.href = window.ST.auth.requestedRedirect() || window.ST.auth.firstLoginUrl('tasker'); return; }
+        if (res.roleAdded) {
+          const co = await window.ST.auth.redeemPendingCoordinatorCode(res.user);
+          window.location.href = co.status === 'ready' ? window.ST.auth.COORDINATOR_HOME : (window.ST.auth.requestedRedirect() || window.ST.auth.firstLoginUrl('tasker'));
+          return;
+        }
         /* Send them to Log In with a "check your email" notice, keeping the page they were trying to reach */
         window.ST.auth.rememberSignupTarget(email);
         window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');

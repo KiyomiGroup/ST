@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coordinator test — StreetTasker</title>
+  <script>window.ST_PAGE_TITLE = 'Coordinator test';</script>
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://streettasker.com/coordinator-test.html" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator-test.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <div id="navbar-placeholder"></div>
+
+  <main class="st-page st-page--narrow cot-page" id="cotPage">
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
+      <h1 class="st-hero-title">Coordinator test</h1>
+      <p class="st-hero-lead">Pass this short test to receive your coordinator code. Every question comes from the Local Tasker and Coordinator Guide.</p>
+    </section>
+
+    <!-- State: checking the link -->
+    <section class="st-panel cot-state" id="cotLoading" aria-live="polite">
+      <p class="cot-text">Checking your link…</p>
+    </section>
+
+    <!-- State: no, wrong or expired link -->
+    <section class="st-panel cot-state" id="cotBad" hidden>
+      <h2 class="st-panel-title">This test link does not work</h2>
+      <p class="cot-text" id="cotBadText">The link is missing, wrong or has expired. Test links are sent by email after your application is accepted and last 14 days.</p>
+      <div class="cot-actions">
+        <a href="coordinator-apply.html" class="btn btn-primary">Apply to be a coordinator</a>
+        <a href="downloads/local-tasker-coordinator-guide.pdf" class="btn btn-outline" target="_blank" rel="noopener">Read the guide (PDF)</a>
+      </div>
+    </section>
+
+    <!-- State: intro -->
+    <section class="st-panel cot-state" id="cotIntro" hidden>
+      <h2 class="st-panel-title">Read the guide first</h2>
+      <p class="cot-text">Read the Local Tasker and Coordinator Guide before you start. It is a short PDF and all the test questions come from it.</p>
+      <div class="cot-actions">
+        <a href="downloads/local-tasker-coordinator-guide.pdf" class="btn btn-outline" target="_blank" rel="noopener">Open the guide (PDF)</a>
+      </div>
+      <ul class="cot-facts">
+        <li>10 questions, chosen at random from a bank of questions.</li>
+        <li>You need 80 percent to pass.</li>
+        <li>You can take the test 3 times a day. Each time you press Start counts as one try.</li>
+        <li>If you leave a test half way, you can carry on with it for 60 minutes without using another try.</li>
+      </ul>
+      <div class="form-error cot-error" id="cotIntroError" role="alert"></div>
+      <button type="button" class="btn btn-primary btn-lg" id="cotStart">Start the test</button>
+    </section>
+
+    <!-- State: questions -->
+    <section class="st-panel cot-state" id="cotQuiz" hidden>
+      <div class="cot-progress">
+        <p class="cot-progress-text" id="cotProgressText" aria-live="polite"></p>
+        <progress class="cot-bar" id="cotBar" max="10" value="0"></progress>
+      </div>
+      <h2 class="st-panel-title cot-question" id="cotQuestion" tabindex="-1"></h2>
+      <div class="cot-options" id="cotOptions" role="radiogroup" aria-labelledby="cotQuestion"></div>
+      <div class="form-error cot-error" id="cotQuizError" role="alert"></div>
+      <div class="cot-actions">
+        <button type="button" class="btn btn-outline" id="cotBack">Back</button>
+        <button type="button" class="btn btn-primary" id="cotNext" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- State: failed -->
+    <section class="st-panel cot-state" id="cotFail" hidden>
+      <h2 class="st-panel-title" id="cotFailTitle" tabindex="-1">Not passed this time</h2>
+      <p class="cot-score" id="cotFailScore"></p>
+      <p class="cot-text" id="cotFailText"></p>
+      <div class="cot-actions">
+        <button type="button" class="btn btn-primary" id="cotRetry">Try again</button>
+        <a href="downloads/local-tasker-coordinator-guide.pdf" class="btn btn-outline" target="_blank" rel="noopener">Read the guide again (PDF)</a>
+      </div>
+    </section>
+
+    <!-- State: passed -->
+    <section class="st-panel cot-state" id="cotPass" hidden>
+      <h2 class="st-panel-title" id="cotPassTitle" tabindex="-1">You passed</h2>
+      <p class="cot-score" id="cotPassScore"></p>
+      <p class="cot-text" id="cotPassText">This is your coordinator code. It can be used once and it expires, so use it soon. Press Sign up if you are new, or Log in if you already have an account. Your coordinator account is set up for you when you get in.</p>
+      <p class="cot-code" id="cotCode"></p>
+      <div class="cot-actions">
+        <button type="button" class="btn btn-outline" id="cotCopy">Copy code</button>
+        <button type="button" class="btn btn-primary" id="cotActivate" hidden>Activate my coordinator account</button>
+        <a href="signup.html" class="btn btn-primary" id="cotSignup">Sign up</a>
+        <a href="login.html" class="btn btn-outline" id="cotLogin">Log in</a>
+      </div>
+      <p class="cot-note" id="cotCopyNote" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/coordinator-test.js"></script>
+</body>
+</html>

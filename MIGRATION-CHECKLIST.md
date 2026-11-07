@@ -96,3 +96,9 @@ Visible changes in batch 1 (all small): buttons gain about 1px of height; Large 
 ## Known exceptions
 - Fixed nav sizes from your spec (133, 174, 40, 1312) stay literal.
 - Icon offsets and runtime-computed values (progress widths) may stay inline or literal.
+
+
+## Coordinator onboarding (S1 to S6, 2026-11-06)
+- [x] New pages `coordinator-apply.html` and `coordinator-test.html` use the page shell (`st-shell` / `st-page`); nav never covers a heading at 390, 768, 1280
+- [x] `node tools/check-design-system.js` passes
+- [ ] Owner has run `c1-coordinator-onboarding.sql` then `c4-quiz-questions.sql`, deployed the `coordinator-apply` function and pushed the files (see `docs/coordinator-onboarding/handoff-S6.md`)

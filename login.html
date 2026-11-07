@@ -195,6 +195,24 @@
       tick();
     }
 
+    /* Coordinator code waiting in this browser (typed at sign-up, or shown after the coordinator test).
+       true = they are now a coordinator and are being sent to the coordinator page. */
+    let coordinatorCheck = null;   /* one check per page load, so Google's two callbacks cannot redeem twice or send the person two ways */
+    function coordinatorAfterLogin(user) {
+      if (!coordinatorCheck) coordinatorCheck = coordinatorCheckNow(user);
+      return coordinatorCheck;
+    }
+    async function coordinatorCheckNow(user) {
+      const co = await window.ST.auth.redeemPendingCoordinatorCode(user);
+      if (co.status === 'ready') {
+        showToast('Your coordinator account is ready. Taking you to the coordinator page...');
+        setTimeout(() => { window.location.replace(window.ST.auth.COORDINATOR_HOME); }, 800);
+        return true;
+      }
+      if (co.status === 'invalid') showToast('That coordinator code has already been used or has expired, so it was not applied. You are signed in as normal.');
+      return false;
+    }
+
     function initPage() {
       /* A password-reset link that landed here instead of reset-password.html
          (Supabase falls back to the site URL if the redirect is not on its allow list).
@@ -252,6 +270,7 @@
             /* First time in: where they clicked before signing up, else their first-time page */
             const backTo = takeRememberedRedirect();
             await window.ST.auth.markWelcomed();
+            if (await coordinatorAfterLogin(session.user)) return;
             window.location.replace(backTo || window.ST.auth.firstLoginUrl(oauthRole));
           } else {
             /* Existing account — log them in to their correct dashboard */
@@ -268,6 +287,7 @@
             }
             localStorage.setItem('st_role', role);
             localStorage.setItem('st_name', session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User');
+            if (await coordinatorAfterLogin(session.user)) return;
             window.location.replace(takeRememberedRedirect() || window.ST.auth.getHomeUrl());
           }
         }
@@ -377,8 +397,9 @@
       }
 
       /* ── If already logged in, redirect away ── */
-      window.ST.auth.getSession().then(session => {
+      window.ST.auth.getSession().then(async session => {
         if (session) {
+          if (await coordinatorAfterLogin(session.user)) return;
           window.location.href = requestedRedirect() || window.ST.auth.getHomeUrl();
         }
       });
@@ -403,6 +424,9 @@
 
         try {
           const { user } = await window.ST.auth.loginUser(email, pwd);
+
+          /* A coordinator code from sign-up or the coordinator test: they become a coordinator and go to the coordinator page */
+          if (await coordinatorAfterLogin(user)) { if (window.ST.auth.isFirstLogin(user)) await window.ST.auth.markWelcomed(); return; }
 
           /* Where to: the page they came for, else (first log-in only) post a service / post a task, else home */
           const role     = await window.ST.auth.getUserRole(user);
