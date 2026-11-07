@@ -27,10 +27,15 @@
   var CLUSTER_JS  = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js';
   var CLUSTER_CSS = ['https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css',
                      'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css'];
-  var TILES  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  /* Tile provider. Default: OpenStreetMap's public server (light use only). To switch provider, set this BEFORE map-view.js loads:
+       window.ST_MAP_CONFIG = { tiles: 'https://…/{z}/{x}/{y}.png?key=…', attribution: '© …', maxZoom: 19 };
+     Keep the provider's required attribution text. */
+  var CFG    = window.ST_MAP_CONFIG || {};
+  var TILES  = CFG.tiles || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var ATTRIB = CFG.attribution || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   var LAGOS  = [6.5244, 3.3792];
 
-  var S = { lib: null, map: null, el: null, group: null, items: [], opts: {}, areaOn: false, busy: false, areaBtn: null, meDot: null };
+  var S = { lib: null, map: null, el: null, group: null, items: [], opts: {}, areaOn: false, busy: false, areaBtn: null, meDot: null, sheet: null };
 
   function loadLeaflet() {
     if (window.L && window.L.map) return Promise.resolve(window.L);
@@ -76,6 +81,35 @@
       box.appendChild(b);
     }
     return box;
+  }
+
+  var tileMsg = null;
+  function showTileMsg() {
+    if (tileMsg || !S.el) return;
+    tileMsg = document.createElement('div');
+    tileMsg.className = 'stmap-tilemsg'; tileMsg.setAttribute('role', 'status');
+    tileMsg.textContent = 'The map picture is not loading, but the pins are still here. Check your connection or use the list view.';
+    S.el.appendChild(tileMsg);
+  }
+  function hideTileMsg() { if (tileMsg) { tileMsg.remove(); tileMsg = null; } }
+
+  /* ---- phones: a card at the bottom of the map instead of a popup (a popup is small and hard to tap there) ---- */
+  function isPhone() { return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches); }
+
+  function closeSheet() { if (S.sheet) { S.sheet.remove(); S.sheet = null; } }
+
+  function openSheet(L, item) {
+    closeSheet();
+    var sheet = document.createElement('div');
+    sheet.className = 'stmap-sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', item.title || 'Details');
+    var x = document.createElement('button');
+    x.type = 'button'; x.className = 'stmap-sheet-close'; x.setAttribute('aria-label', 'Close'); x.textContent = '\u00D7';
+    x.addEventListener('click', closeSheet);
+    sheet.appendChild(x); sheet.appendChild(popup(item, S.opts));
+    S.el.appendChild(sheet);
+    if (L.DomEvent) { L.DomEvent.disableClickPropagation(sheet); if (L.DomEvent.disableScrollPropagation) L.DomEvent.disableScrollPropagation(sheet); }
+    S.sheet = sheet;
+    var first = sheet.querySelector('a, button.stmap-pop-pick'); if (first && first.focus) first.focus({ preventScroll: true });
   }
 
   function button(cls, text, onClick) {
@@ -133,13 +167,16 @@
 
   /* draw the pins (all, or only those in view) */
   function draw(L, items, keepView) {
-    S.group.clearLayers();
+    S.group.clearLayers(); closeSheet();
     var map = S.map, pts = [], n = 0;
     items.forEach(function (it) {
       if (!isFinite(it.lat) || !isFinite(it.lon)) return;
       if (S.areaOn && keepView && !inView(it, map)) return;
       var icon = L.divIcon({ className: 'stmap-pin' + (it.approx ? ' is-approx' : ''), html: '<span></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
-      L.marker([it.lat, it.lon], { icon: icon, title: it.title || '', keyboard: true }).bindPopup(popup(it, S.opts), { maxWidth: 240 }).addTo(S.group);
+      var m = L.marker([it.lat, it.lon], { icon: icon, title: it.title || '', keyboard: true });
+      if (isPhone()) m.on('click', (function (item) { return function () { openSheet(L, item); }; })(it));
+      else m.bindPopup(popup(it, S.opts), { maxWidth: 240 });
+      m.addTo(S.group);
       pts.push([it.lat, it.lon]); n++;
     });
     S.shown = n;
@@ -151,9 +188,15 @@
     if (S.map) { S.map.remove(); S.map = null; }
     S.el = el;
     S.map = L.map(el, { center: LAGOS, zoom: 11, zoomControl: true, scrollWheelZoom: false, attributionControl: true });
-    L.tileLayer(TILES, { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(S.map);
+    var tl = L.tileLayer(TILES, { maxZoom: CFG.maxZoom || 19, attribution: ATTRIB }).addTo(S.map);
+    /* tiles that never arrive (blocked, offline, key refused): say so instead of leaving a blank grey box */
+    var bad = 0, good = 0;
+    tl.on('tileload', function () { good++; hideTileMsg(); });
+    tl.on('tileerror', function () { bad++; if (bad >= 4 && !good) showTileMsg(); });
     S.group = (L.markerClusterGroup ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 48, spiderfyOnMaxZoom: true }) : L.layerGroup()).addTo(S.map);
     control(L, S.map);
+    S.map.on('click', closeSheet);
+    S.el.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
     S.map.on('moveend', function () {
       if (S.busy) return;
       if (S.areaBtn && !S.areaOn && S.items.length) S.areaBtn.hidden = false;      /* the person moved the map */
@@ -207,7 +250,7 @@
   }
 
   function refresh() { if (S.map) setTimeout(function () { S.map.invalidateSize(); }, 0); }
-  function destroy() { if (S.map) { S.map.remove(); S.map = null; S.group = null; S.el = null; S.areaBtn = null; S.meDot = null; } }
+  function destroy() { if (S.map) { S.map.remove(); S.map = null; S.group = null; S.el = null; S.areaBtn = null; S.meDot = null; S.sheet = null; hideTileMsg(); } }
 
   window.STMap = { show: show, refresh: refresh, destroy: destroy, nudge: nudge, areaPoint: areaPoint };
 })();
