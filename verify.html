@@ -2,6 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    /* Stage E-2: a coordinator's identity check for a Local Tasker now lives on coordinator-tasker-verify.html. This page loads the
+       customer scripts, which sign a coordinator-only login out, so old proxy links are sent on before anything else runs. */
+    (function () {
+      try {
+        var q = new URLSearchParams(window.location.search);
+        if (q.get('mode') === 'proxy') {
+          var id = q.get('id') || '';
+          window.location.replace('coordinator-tasker-verify.html' + (id ? '?id=' + encodeURIComponent(id) : ''));
+          /* Stop reading this page, so none of its scripts (which would sign a coordinator-only login out) run before the redirect. */
+          document.open(); document.write('<!DOCTYPE html><title>StreetTasker</title><p>Taking you to the coordinator page\u2026</p>'); document.close();
+        }
+      } catch (e) { /* stay on this page */ }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Verify Your Identity — StreetTasker</title>
   <link rel="stylesheet" href="css/styles.css" />

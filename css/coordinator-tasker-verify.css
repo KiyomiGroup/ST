@@ -1,0 +1,13 @@
+/* Coordinator: identity check for a Local Tasker (.cv-*, Stage E-2). Layout only: colours, sizes and radii come from tokens and the shared components. */
+.co-main [hidden] { display: none; }
+.cv-msg { font-size: var(--text-lg); font-weight: 700; margin: var(--space-3) 0 var(--space-2); }
+.cv-sub { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; margin-bottom: var(--space-4); }
+.cv-list { list-style: disc; padding-left: var(--space-5); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; margin-bottom: var(--space-4); }
+.cv-list li { margin-bottom: var(--space-2); }
+.cv-consent-text { max-height: 16rem; overflow-y: auto; padding: var(--space-4); margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-form); }
+.cv-consent-text p { margin-bottom: var(--space-3); }
+.cv-consent-text p:last-child { margin-bottom: 0; }
+.cv-linkbox { display: grid; gap: var(--space-3); margin-top: var(--space-5); }
+.cv-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+#cvStartBtn { margin-top: var(--space-2); }
+@media (max-width: 480px) { .cv-actions .btn, #cvStartBtn { flex: 1 1 100%; width: 100%; } }

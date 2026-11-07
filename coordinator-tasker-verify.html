@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Identity check for a Local Tasker — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="stylesheet" href="css/coordinator-tasker-verify.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main co-main--page" id="coMain">
+      <!-- Stage E-2. The identity check for a Local Tasker, done by their assigned coordinator, inside the coordinator portal.
+           It replaces verify.html?mode=proxy (verify.html loads the customer scripts, which sign a coordinator-only login out).
+           Nothing here links to a customer, tasker or legal page. It never sets a status: success is shown only from the server
+           read idv_local_status(). The server decides who may do this (active coordinator + assigned Local Tasker). -->
+      <a class="co-back" id="cvBack" href="coordinator-taskers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span id="cvBackText">My Local Taskers</span>
+      </a>
+
+      <section class="co-hero co-hero--page" aria-labelledby="cvTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Identity check</p>
+        <h1 id="cvTitle">Identity check for <span id="cvName">this Local Tasker</span></h1>
+        <p class="co-hero-sub">You start the check. The Local Tasker does it on their own phone. Only Didit's result can mark them verified; nothing on this page can.</p>
+      </section>
+
+      <div class="co-banner" id="cvError" role="alert" hidden></div>
+      <div class="co-banner co-banner--info" id="cvNotice" role="status" hidden></div>
+      <p class="co-loading" id="cvLoading">Loading…</p>
+
+      <div class="co-detail" id="cvMain" hidden>
+
+        <!-- Exactly ONE status panel is shown. Written about the Local Tasker (the customer page words are first person). -->
+        <section class="co-card" aria-label="Status" id="cvStatus">
+          <div data-status-panel="NOT_STARTED" hidden>
+            <span class="badge badge-gray">Not started</span>
+            <p class="cv-msg">Identity verification has not been completed for this Local Tasker.</p>
+            <p class="cv-sub">Explain what they agree to, record how they agreed, then start. They use their phone camera.</p>
+          </div>
+          <div data-status-panel="IN_PROGRESS" hidden>
+            <span class="badge badge-amber">In progress</span>
+            <p class="cv-msg">The identity verification is currently underway.</p>
+            <p class="cv-sub">If they left before finishing, they can continue with the same link. Use Check again to see the result.</p>
+            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+          </div>
+          <div data-status-panel="PENDING" hidden>
+            <span class="badge badge-amber">Pending</span>
+            <p class="cv-msg">We are waiting for the verification result.</p>
+            <p class="cv-sub">This page only shows a result once our server has confirmed it. You can leave and come back.</p>
+            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+          </div>
+          <div data-status-panel="VERIFIED" hidden>
+            <span class="badge badge-green">Verified</span>
+            <p class="cv-msg">This Local Tasker's identity has been successfully verified.</p>
+          </div>
+          <div data-status-panel="REVIEW_REQUIRED" hidden>
+            <span class="badge badge-amber">Needs attention</span>
+            <p class="cv-msg">The verification requires additional attention.</p>
+            <p class="cv-sub">They do not need to submit again. You will be notified when there is an update.</p>
+            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+          </div>
+          <div data-status-panel="FAILED" hidden>
+            <span class="badge badge-gray">Not completed</span>
+            <p class="cv-msg">The verification could not be completed. Follow the tips below and try again, or contact support.</p>
+            <ul class="cv-list">
+              <li>Use a valid ID that has not expired.</li>
+              <li>Place the ID on a plain surface in good light, with all four corners in view and no glare.</li>
+              <li>Look straight at the camera, and make sure the face is clearly visible.</li>
+            </ul>
+            <a class="btn btn-outline" href="mailto:support@streettasker.com">Contact support</a>
+          </div>
+          <div data-status-panel="RESUBMIT_REQUESTED" hidden>
+            <span class="badge badge-amber">Action required</span>
+            <p class="cv-msg">Action required: the Local Tasker needs to redo the steps they are asked to repeat.</p>
+            <p class="cv-sub">Give them the link again (Start below shows it), then use Check again.</p>
+          </div>
+          <div data-status-panel="EXPIRED" hidden>
+            <span class="badge badge-gray">Expired</span>
+            <p class="cv-msg">The verification has expired. Start it again below.</p>
+          </div>
+        </section>
+
+        <!-- Start area: shown for every state except VERIFIED, REVIEW_REQUIRED and PENDING (a link can still be re-shown for IN_PROGRESS / RESUBMIT) -->
+        <section class="co-card" id="cvStart" aria-labelledby="cvStartTitle" hidden>
+          <h2 class="co-card-title" id="cvStartTitle">Start the check</h2>
+
+          <div id="cvConsentFields">
+            <p class="cv-sub">Read or explain this to the Local Tasker first. It is the same notice customers and taskers see.</p>
+            <!-- NOT legal text: a lawyer must approve it before launch (same status as the customer Data Consent Notice v1).
+                 It is written here because data-consent.html loads the customer scripts and would sign a coordinator out. -->
+            <div class="cv-consent-text" tabindex="0" role="region" aria-label="What the Local Tasker agrees to">
+              <p><strong>Who is responsible.</strong> StreetTasker decides why and how the verification information is used. Didit, our identity verification provider, carries out the check on our behalf and under our instructions.</p>
+              <p><strong>What is collected.</strong> A photo of a government-issued ID, including the details printed on it; a short live selfie check to show a real person is present; and a comparison of the face with the photo on the ID. This comparison uses <strong>biometric data</strong>, which is sensitive personal data.</p>
+              <p><strong>Why it is used.</strong> Only to confirm that the person is the person on the ID, so that people on StreetTasker can trust who they are dealing with and to help prevent fraud and impersonation. It is not used for marketing and it is not sold.</p>
+              <p><strong>Who handles it.</strong> Didit collects and processes the ID photo, selfie and face comparison, and may do so outside Nigeria. StreetTasker receives the result of the check (for example verified or not completed) and the dates, not the ID images, and does not ask for an ID number. If a check needs a manual review, authorised StreetTasker staff may view the verification record in Didit. The information is not shared with anyone else, except where the law requires it.</p>
+              <p><strong>How long it is kept.</strong> StreetTasker keeps the result and dates while the account is active. Didit keeps the images only for a limited period set in our Didit account, and then deletes them.</p>
+              <p><strong>Their choice and rights.</strong> Giving consent is their choice. Verification is required to be offered on StreetTasker, and without consent we cannot verify them. They can withdraw consent at any time by emailing support@streettasker.com. Withdrawing does not undo what has already happened. They can ask to see, correct or delete their information by emailing the same address, and can complain to the Nigeria Data Protection Commission.</p>
+              <p><strong>Your part as coordinator.</strong> You explain this to them first, and you record that they agreed, how, and when. They do the check on their own phone.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cvMethod">How did the Local Tasker give consent?</label>
+              <select id="cvMethod" class="form-input">
+                <option value="">Select a method</option>
+                <option value="in_person">In person</option>
+                <option value="phone">By phone</option>
+                <option value="written">In writing</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cvEvidence">Reference (optional)</label>
+              <input type="text" id="cvEvidence" class="form-input" maxlength="200" autocomplete="off" />
+              <p class="form-helper">For example a note or message reference. Do not type ID numbers here.</p>
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="cvConsentCheck" />
+              <label for="cvConsentCheck">I explained the notice above and this Local Tasker agreed to the identity check.</label>
+            </div>
+          </div>
+          <p class="cv-sub" id="cvConsentDone" hidden>The Local Tasker's consent is already recorded.</p>
+
+          <button type="button" class="btn btn-primary" id="cvStartBtn" data-action="start" disabled>Start verification for this Local Tasker</button>
+
+          <div class="cv-linkbox" id="cvLinkBox" hidden>
+            <p class="cv-sub">Give this link to the Local Tasker. They open it on their own phone and follow the steps there. Do not send it to anyone else.</p>
+            <input type="text" id="cvLinkInput" class="form-input" readonly autocomplete="off" />
+            <div class="cv-actions">
+              <button type="button" class="btn btn-outline" id="cvCopyBtn">Copy link</button>
+              <a class="btn btn-primary" id="cvOpenLink" href="#" rel="noopener">Open on this device</a>
+            </div>
+            <p class="cv-sub">Come back and use Check again to see the result.</p>
+            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-tasker-verify.js"></script>
+</body>
+</html>

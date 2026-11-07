@@ -11,7 +11,7 @@
   var C = window.STCo;
   if (!C) return;
 
-  var BASE = 'verify.html?mode=proxy&id=';
+  var BASE = 'coordinator-tasker-verify.html?id=';
 
   /* status -> [label, tone, filter group, action label | null] */
   var MAP = {
