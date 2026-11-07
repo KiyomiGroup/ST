@@ -1,0 +1,104 @@
+/* StreetTasker homepage cards (DESIGN-SYSTEM.md 4.15). Markup: stTaskCardHome / stServiceCardHome / stTaskerCardHome in js/ui.js.
+   Load AFTER css/cards-compact.css and css/cards-v2.css. Tokens only. Scoped to .st-card--home, so no other page changes. */
+
+/* ── Shell and width inside the scrolling rows ── */
+.st-card--home { border-radius: var(--home-card-radius); border-color: var(--color-card-border); box-shadow: var(--shadow-md); }
+.cc-track > .st-card.st-card--home, .hf-row > .st-card.st-card--home { width: var(--home-card-width-phone); flex: 0 0 var(--home-card-width-phone); border-radius: var(--home-card-radius); }
+.cc-grid > .st-card.st-card--home { width: auto; flex: none; }
+@media (min-width: 769px) {
+  .cc-track > .st-card.st-card--home, .hf-row > .st-card.st-card--home { width: var(--home-card-width-desktop); flex-basis: var(--home-card-width-desktop); }
+}
+.st-card--home .st-chip { font-size: var(--text-xs); }
+
+/* ── Photo block (task + service) ── */
+.st-home-media { position: relative; aspect-ratio: var(--home-card-media-ratio); overflow: hidden; background: var(--color-bg-muted); }
+.st-home-media > img:first-child { width: 100%; height: 100%; object-fit: cover; display: block; }
+.st-home-media .st-card-media-fallback { box-shadow: none; }
+.st-home-media .st-card-ph-logo { position: absolute; right: var(--space-2); bottom: var(--space-2); width: var(--space-5); height: var(--space-5); padding: var(--space-1); box-sizing: border-box; object-fit: contain; border-radius: 50%; background: var(--card-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-xs); }
+.st-card-media--ph[data-ph="pet"] > img:first-child { object-position: center 85%; }
+.st-home-chips { position: absolute; top: var(--space-2); left: var(--space-2); right: calc(var(--home-save-size) + var(--space-3)); display: flex; flex-wrap: wrap; gap: var(--space-1); min-width: 0; }
+.st-home-save { position: absolute; top: var(--space-2); right: var(--space-2); width: var(--home-save-size); height: var(--home-save-size); display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: var(--card-chip-glass); color: var(--color-card-title); cursor: pointer; }
+.st-home-save:hover { color: var(--color-primary); }
+.st-home-save:focus-visible, .st-home-plus:focus-visible, .st-home-view:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.st-home-save svg { width: var(--text-base); height: var(--text-base); }
+.st-home-save.active { color: var(--color-primary); }
+.st-home-save.active svg { fill: currentColor; }
+.st-home-photo-tag { position: absolute; left: var(--space-2); bottom: var(--space-2); background: var(--card-chip-dark); color: var(--color-text-on-primary); }
+
+/* ── Body ── */
+.st-home-body { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--home-card-pad); flex: 1 1 auto; min-width: 0; }
+@media (min-width: 769px) { .st-home-body { padding: var(--home-card-pad-desktop); } }
+.st-home-title { margin: 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--color-card-title); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-home-title--svc { font-weight: 500; }
+.st-home-desc { margin: 0; font-size: var(--text-xs); line-height: 1.4; color: var(--color-card-desc); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-home-bottom { display: flex; flex-direction: column; gap: var(--space-2); margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--home-divider); }
+
+.st-home-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font-size: var(--text-xs); color: var(--color-card-meta); }
+.st-home-meta li { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; max-width: 100%; }
+.st-home-meta svg { width: var(--text-sm); height: var(--text-sm); color: var(--color-primary); flex-shrink: 0; }
+.st-home-loc strong { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-card-title); }
+.st-home-dist { color: var(--color-card-desc); }
+.st-home-meta .st-chip--mode svg { color: var(--color-card-meta); }
+
+.st-home-row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-2); }
+.st-home-info { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; flex: 1 1 auto; }
+.st-home-label { font-size: var(--text-xs); color: var(--color-card-meta-time); }
+.st-home-price { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 800; line-height: 1.2; color: var(--color-primary); white-space: nowrap; }
+.st-home-note { align-self: center; font-size: var(--text-xs); font-weight: 600; line-height: 1.25; color: var(--color-primary); text-align: left; max-width: 7ch; }
+.st-home-plus { flex: 0 0 auto; width: var(--home-plus-size); height: var(--home-plus-size); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--home-plus-radius); background: var(--color-primary-soft); color: var(--color-primary); text-decoration: none; transition: background var(--t) var(--ease), color var(--t) var(--ease); }
+.st-home-plus:hover { background: var(--color-primary); color: var(--color-text-on-primary); }
+.st-home-plus svg { width: var(--text-lg); height: var(--text-lg); }
+
+/* ── Service card ── */
+.st-home-rating { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-card-meta-time); }
+.st-home-rating strong { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--color-warning); }
+.st-home-star { display: inline-flex; color: var(--color-warning); }
+.st-home-star svg { width: var(--text-sm); height: var(--text-sm); fill: currentColor; }
+.st-home-provider { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.st-home-avatar { position: relative; flex: 0 0 auto; width: var(--home-provider-avatar); height: var(--home-provider-avatar); border-radius: 50%; overflow: hidden; background: var(--tone-success-bg); display: inline-flex; }
+.st-home-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.st-home-avatar > .st-logo-ph { inset: var(--space-1); width: calc(100% - 2 * var(--space-1)); height: calc(100% - 2 * var(--space-1)); object-fit: contain; }
+.st-home-provider-name { font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Tasker card ── */
+.st-card--tasker.st-card--home { background: var(--card-surface); }
+.st-home-body--tasker { gap: var(--space-3); }
+.st-home-lead { display: inline-flex; align-items: center; min-width: 0; }
+.st-home-lead:empty { display: none; }
+.st-card--home .st-tasker-top { min-height: var(--space-5); }
+.st-card--home .st-rating, .st-card--home .rating-badge { font-size: var(--text-sm); }
+.st-card--home .rating-badge-count { font-size: var(--text-xs); }
+.st-home-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.st-home-id { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; flex: 1 1 auto; }
+.st-home-name { margin: 0; display: flex; align-items: center; gap: var(--space-1); font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-card-title); min-width: 0; }
+.st-home-name > span:first-child { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-home-tick { display: inline-flex; flex: 0 0 auto; color: var(--color-primary); }
+.st-home-tick svg { width: var(--text-base); height: var(--text-base); }
+.st-home-role { margin: 0; font-size: var(--text-sm); line-height: 1.3; color: var(--color-card-meta); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-home-where { margin: 0; display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-card-desc); min-width: 0; }
+.st-home-where svg { width: var(--text-sm); height: var(--text-sm); flex-shrink: 0; }
+.st-home-where span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-home-photo { position: relative; flex: 0 0 auto; width: var(--home-avatar-w); height: var(--home-avatar-h); overflow: hidden; background: var(--tone-success-bg); border-radius: var(--radius-xl) var(--radius-md) var(--radius-md) var(--radius-2xl); }
+.st-home-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.st-home-photo > .st-logo-ph { inset: 22%; width: 56%; height: 56%; object-fit: contain; }
+.st-home-skills { display: flex; flex-direction: column; gap: var(--space-2); }
+.st-home-skills-label { font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-card-meta-time); }
+.st-home-skill-list { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.st-home-tasker-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: auto; }
+.st-home-pill { display: inline-flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; min-height: var(--toast-hit-size); padding: 0 var(--space-3); border-radius: var(--radius-pill); background: var(--color-bg-muted); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 800; color: var(--color-card-title); white-space: nowrap; }
+.st-home-pill i { align-self: stretch; margin: var(--space-3) 0; width: 1px; background: var(--color-border-strong); }
+.st-home-pill small { font-family: var(--font-body); font-size: var(--text-xs); font-weight: 600; color: var(--color-card-meta-time); }
+.st-home-view { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--toast-hit-size); padding: 0 var(--space-3); border-radius: var(--radius-pill); background: var(--home-tasker-cta-bg); color: var(--color-text-on-primary); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; text-decoration: none; white-space: nowrap; transition: background var(--t) var(--ease); }
+.st-home-view:hover { background: var(--home-tasker-cta-bg-hover); }
+.st-home-view svg { width: var(--text-base); height: var(--text-base); }
+
+/* Phones: the card is 224px, so the price pill and View Profile share one line only when they are compact */
+@media (max-width: 768px) {
+  .st-home-pill { gap: var(--space-1); padding: 0 var(--space-2); }
+  .st-home-pill i { margin: var(--space-3) 0; }
+  .st-home-tasker-foot { flex-wrap: nowrap; }
+  .st-home-view { padding: 0 var(--space-2); font-size: var(--text-xs); }
+  .st-home-view svg { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .st-home-plus, .st-home-view { transition: none; } }

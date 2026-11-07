@@ -76,7 +76,7 @@
   function wireOpen(card, href) {
     if (!href) return;
     card.addEventListener('click', function (ev) {
-      if (ev.target.closest && (ev.target.closest('.st-card-save') || ev.target.closest('a'))) return;
+      if (ev.target.closest && (ev.target.closest('.st-card-save') || ev.target.closest('.st-home-save') || ev.target.closest('a'))) return;
       root.location.href = href;
     });
   }
@@ -89,7 +89,7 @@
       var c = fromHtml(root.stTaskCard({
         id: t.id, title: t.title, budget: t.budget, location: t.location, created_at: t.created_at,
         offers_count: t.offers_count, distance_km: t.distance_km, description: t.description, category: t.category,
-        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, hideOffer: opts.noOffer === true, urgency: opts.urgent === true ? 'immediate' : undefined
+        photo_urls: t.photo_urls, task_type: t.task_type, compact: true, home: true, offerHref: h, hideOffer: opts.noOffer === true, urgency: opts.urgent === true ? 'immediate' : undefined
       }));
       if (c) { wireOpen(c, h); return c; }
     }
@@ -141,7 +141,8 @@
       /* No rating and no verified tick passed in: the rating comes from a data-rating-user span (js/rating-badge.js), never from a column. */
       var tc = fromHtml(root.stTaskerCard({
         id: s.id, user_id: s.user_id, provider_name: s.provider_name, service_name: s.service_name,
-        location: s.location, photo: s.photo, isLocal: s.isLocal, href: th, hideAvailability: true, price: s.price, rate_unit: s.rate_unit
+        location: s.location, photo: s.photo, isLocal: s.isLocal, href: th, hideAvailability: true, price: s.price, rate_unit: s.rate_unit,
+        home: true, verified: s.verified, specialties: s.specialties, rating: s.rating, reviews: s.reviews
       }));
       if (tc) {
         var top = tc.querySelector('.st-tasker-top');
@@ -220,7 +221,7 @@
     v = v || {};
     var href = safeHref(v.href);
     if (typeof root.stServiceCard === 'function') {
-      var sc = fromHtml(root.stServiceCard(Object.assign({}, v, { href: href || '#' })));
+      var sc = fromHtml(root.stServiceCard(Object.assign({}, v, { href: href || '#', home: true })));
       if (sc) { wireOpen(sc, href); return sc; }
     }
     var card = el('article', 'cc-card cc-card--task');

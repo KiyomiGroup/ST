@@ -319,6 +319,18 @@ Pages that use it load `css/cards-compact.css`, `js/rating-badge.js` and `css/ra
 - Place the label after the name and after the identity tick; it never replaces or touches the tick.
 - S4i: labels are also drawn on service cards (`stServiceCard`, after the provider name in the eyebrow line, only when the card shows the name, never on a perk line or a Local Tasker), the customer's offers list (`customer-applications.html`, after the applicant's name) and the customer's bookings list (`customer-bookings.html`, after the provider's name). A page that draws labels links `css/membership.css` and loads `js/membership-labels.js` before its page script, then calls `STMembership.load(ids)` once.
 
+### 4.15 Home cards (homepage design, Stage 1 of the homepage redesign)
+
+Task, service and tasker cards for the logged-in homepage (`home-feed.html`), built from the Figma homepage reference. Same three builders as 4.7, switched on with `{ home: true }` (`STCompact` passes it), so find-tasks, find-services and find-taskers are unchanged. Styles: `css/home-cards.css` (load after `cards-v2.css`); tokens `--home-*` in `css/tokens.css`. Scoped to `.st-card--home`.
+
+| Card | Shows |
+|---|---|
+| Task | Photo with Urgent chip (with how long ago), category chip, save bookmark and "N Client Photo(s)" on it; title, two-line description, location, distance, In-Person / Remote, Client Budget, offers submitted, green **+** (Make an Offer). No client photo: the category placeholder picture with the small StreetTasker logo. No **+** when `hideOffer` / no `offerHref` (the person's own tasks) |
+| Service | Photo with category chip and save heart; rating and reviews; title; provider photo (or the StreetTasker logo) and name with PRO / PREMIUM; price with unit; green **+** (Book Service) |
+| Tasker | PRO / PREMIUM or Local Tasker chip, rating; name with verified tick, role, location; portrait photo (the StreetTasker logo when there is none); skills (+N); price pill; dark **View Profile** |
+
+Rules kept from 4.7: a missing rating, distance, offer count, skill or verified flag is left out, never invented. Fonts follow the scale (nothing under 12px), so text is larger than in Figma. Sizes: 224px wide on phones, 264px from 769px up; the **+** is 36px for a usable tap target. The tasker video play button is not built (no video field). The "available" green dot on the service card is not built (no availability field).
+
 ### 4.14 Page shell (2026-11-06): the frame for every new page
 
 **Rule: every new page must use it.** It gives the same look as `learn.html` and `referrals.html` (forest hero, white panels on `--pt-page`) and guarantees the fixed nav never covers the heading.

@@ -579,3 +579,23 @@
   --tour-arrow:       12px;                     /* tooltip pointer size */
   --z-tour:           9000;                     /* above the nav drawer (2000) and install banner (960), below toasts (9999) */
 }
+
+/* ── Home cards (homepage design, DESIGN-SYSTEM.md 4.15, css/home-cards.css) ──
+   Sizes are taken from the Figma homepage reference (about 225px wide on a phone) and mapped to the type scale (nothing under 12px). */
+:root {
+  --home-card-width-phone:    224px;
+  --home-card-width-desktop:  264px;
+  --home-card-radius:         var(--radius-2xl);   /* 24px */
+  --home-card-pad:            var(--space-3);      /* 12px; 16px from 769px up */
+  --home-card-pad-desktop:    var(--space-4);
+  --home-card-media-ratio:    17 / 10;             /* reference photo: 225 x 132 */
+  --home-plus-size:           36px;                /* the green + button (reference 29px; 36px keeps a usable tap target) */
+  --home-plus-radius:         var(--radius-md);
+  --home-avatar-w:            88px;                /* tasker photo, portrait like the reference */
+  --home-avatar-h:            104px;
+  --home-provider-avatar:     28px;                /* service card: provider photo or logo */
+  --home-save-size:           36px;                /* bookmark and heart circle on the photo */
+  --home-tasker-cta-bg:       var(--color-forest-900);
+  --home-tasker-cta-bg-hover: var(--color-forest-800);
+  --home-divider:             var(--color-bg-muted);
+}

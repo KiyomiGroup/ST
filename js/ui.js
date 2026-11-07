@@ -310,6 +310,10 @@ const ST_ICON = (function () {
     alert:    `<svg ${a}><path d="m10.3 3.9-8.5 14.7A2 2 0 0 0 3.5 21.6h17a2 2 0 0 0 1.7-3l-8.5-14.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
     bolt:     `<svg ${a}><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></svg>`,
     check:    `<svg ${a}><path d="M20 6 9 17l-5-5"/></svg>`,
+    send:     `<svg ${a}><path d="M3 11 22 2l-9 19-2-8-8-2Z"/></svg>`,
+    plus:     `<svg ${a}><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+    heart:    `<svg ${a}><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5.7 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg>`,
+    urgent:   `<svg ${a}><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>`,
   };
 })();
 window.ST_ICON = ST_ICON;
@@ -357,6 +361,7 @@ const stLabel = v => String(v || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.
    handler (no inline JS built from user text). Reads: title, description, category, urgency, task_type, location,
    budget, created_at, photo_urls[], distance_km, offers_count. */
 function stTaskCard(t) {
+  if (t && t.home) return stTaskCardHome(t);   /* homepage design (Stage 1): see the HOME CARDS block at the end of this file */
   const e = window.escapeHtml || (x => String(x));
   const urg   = t.urgency || 'flexible';
   const chipCls = urg === 'immediate' ? 'st-chip--urgent' : (urg === 'scheduled' ? 'st-chip--soon' : '');
@@ -415,6 +420,7 @@ function stTaskCard(t) {
    provider, location, price, unit, rating, reviews_count, turnaround,
    perk (e.g. "Includes Doorstep Pickup"), href, user_id (provider; only used for the membership label). */
 function stServiceCard(s) {
+  if (s && s.home) return stServiceCardHome(s);
   const e = window.escapeHtml || (x => String(x));
   const rating = Number(s.rating);
   const reviews = Number(s.reviews_count);
@@ -460,6 +466,7 @@ function stLocalTags() {
 }
 const ST_AVAIL = { available_now: ['Available', true], available_today: ['Available today', true], available_this_week: ['This week', false] };
 function stTaskerCard(s) {
+  if (s && s.home) return stTaskerCardHome(s);
   const e = window.escapeHtml || (x => String(x));
   const name = s.provider_name || 'Provider';
   const initials = name.replace(/[^a-zA-Z ]/g, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
@@ -508,3 +515,125 @@ document.addEventListener('click', function (ev) {
   const strip = b.closest('.st-portfolio').querySelector('.st-portfolio-strip');
   strip.scrollBy({ left: Number(b.dataset.stStrip) * strip.clientWidth * 0.8, behavior: 'smooth' });
 });
+
+
+/* ============================================================
+   HOME CARDS (homepage design, DESIGN-SYSTEM.md 4.15)
+   Same three builders, switched on by { home: true }. Every other page is unchanged.
+   Styles: css/home-cards.css. Nothing is invented: a missing rating, distance, offer count, skill or
+   verified flag simply leaves that part out. No photo = category placeholder (tasks) or the StreetTasker logo (people).
+   ============================================================ */
+function stTaskCardHome(t) {
+  const e = window.escapeHtml || (x => String(x));
+  const urgent = (t.urgency || '') === 'immediate';
+  const when = stAgo(t.created_at);
+  const urgChip = urgent ? `<span class="st-chip st-chip--urgent">${ST_ICON.urgent}Urgent${when ? ' • ' + e(when) : ''}</span>` : '';
+  const catChip = t.category ? `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(t.category) : stLabel(t.category))}</span>` : '';
+  const cat = t.category || 'other';
+  const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
+  const phUrl = stTaskPhUrl(cat, t.id);
+  const pic = photos.length
+    ? `<img src="${e(photos[0])}" alt="" loading="lazy" onerror="this.remove()" />`
+    : `<img src="${e(phUrl)}" alt="" loading="lazy" /><img class="st-card-ph-logo" src="images/favicon.png" alt="" aria-hidden="true" />`;
+  const photoTag = photos.length ? `<span class="st-chip st-chip--glass st-home-photo-tag">${ST_ICON.image}${photos.length} Client Photo${photos.length > 1 ? 's' : ''}</span>` : '';
+  const remote = (t.task_type || '') === 'remote';
+  const dist = typeof t.distance_km === 'number' ? `<li class="st-home-dist"><span aria-hidden="true">•</span>${t.distance_km.toFixed(1)} km</li>` : '';
+  const offers = Number(t.offers_count);
+  const note = Number.isFinite(offers) && offers > 0 ? `<span class="st-home-note">${offers} offer${offers === 1 ? '' : 's'} submitted</span>` : '';
+  const desc = (t.description || '').trim();
+  const plus = t.offerHref && !t.hideOffer ? `<a class="st-home-plus" href="${e(t.offerHref)}" aria-label="Make an offer on ${e(t.title || 'this task')}">${ST_ICON.plus}</a>` : '';
+  return `<article class="st-card st-card--task st-card--home fade-up" data-task-id="${e(t.id)}">
+    <div class="st-home-media">${pic}
+      <div class="st-home-chips">${urgChip}${catChip}</div>
+      <button type="button" class="st-home-save" aria-label="Save task" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.bookmark}</button>
+      ${photoTag}
+    </div>
+    <div class="st-home-body">
+      <h3 class="st-home-title">${e(t.title || 'Untitled Task')}</h3>
+      ${desc ? `<p class="st-home-desc">${e(desc)}</p>` : ''}
+      <div class="st-home-bottom">
+        <ul class="st-home-meta">
+          <li class="st-home-loc">${ST_ICON.pin}<strong>${e(t.location || 'Location TBD')}</strong></li>${dist}
+          <li><span class="st-chip st-chip--mode">${remote ? ST_ICON.globe + 'Remote' : (t.category && window.STCat ? window.STCat.iconHtml(t.category) : '') + 'In-Person'}</span></li>
+        </ul>
+        <div class="st-home-row">
+          <div class="st-home-info"><span class="st-home-label">Client Budget</span><span class="st-home-price">${Number(t.budget) > 0 ? ST_NGN(t.budget) : 'No budget'}</span></div>
+          ${note}${plus}
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function stServiceCardHome(s) {
+  const e = window.escapeHtml || (x => String(x));
+  const rating = Number(s.rating);
+  const reviews = Number(s.reviews_count);
+  const ratingHtml = rating > 0
+    ? `<div class="st-home-rating"><span class="st-home-star">${ST_ICON.star}</span><strong>${rating.toFixed(1)}</strong>${reviews > 0 ? `<span>(${reviews} Review${reviews === 1 ? '' : 's'})</span>` : ''}</div>` : '';
+  const media = s.photo
+    ? `<img src="${e(s.photo)}" alt="${e(s.service_name)}" loading="lazy" onerror="this.remove()" />`
+    : `<div class="st-card-media-fallback" aria-hidden="true">${s.category ? stCatPic(s.category) : (s.emoji || ST_CAT_EMOJI.other)}</div>`;
+  const memb = (!s.isLocal && s.user_id && window.STMembership) ? window.STMembership.html(s.user_id, { small: true }) : '';
+  const name = s.provider || '';
+  const avatar = `<span class="st-home-avatar"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.providerPhoto ? `<img src="${e(s.providerPhoto)}" alt="" loading="lazy" onerror="this.remove()" />` : ''}</span>`;
+  const priced = Number(s.price) > 0;
+  const unit = String(s.unit || '').replace('/', '').trim();
+  const priceHtml = priced ? ST_NGN(s.price) + (unit ? '/' + e(unit.charAt(0).toUpperCase() + unit.slice(1)) : '') : 'Ask for a quote';
+  return `<article class="st-card st-card--service st-card--home fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
+    <div class="st-home-media">${media}
+      ${s.categoryLabel ? `<div class="st-home-chips"><span class="st-chip st-chip--glass">${e(s.categoryLabel)}</span></div>` : ''}
+      <button type="button" class="st-home-save st-home-save--heart" aria-label="Save service" aria-pressed="false" onclick="this.classList.toggle('active');this.setAttribute('aria-pressed',this.classList.contains('active'))">${ST_ICON.heart}</button>
+    </div>
+    <div class="st-home-body">
+      ${ratingHtml}
+      <h3 class="st-home-title st-home-title--svc">${e(s.service_name)}</h3>
+      ${s.isLocal ? stLocalTags() : ''}
+      <div class="st-home-bottom">
+        <div class="st-home-row">
+          <div class="st-home-info">
+            ${name ? `<span class="st-home-provider">${avatar}<span class="st-home-provider-name">${e(name)}</span>${memb}</span>` : ''}
+            <span class="st-home-price">${priceHtml}</span>
+          </div>
+          <a class="st-home-plus" href="${e(s.href)}" aria-label="Book ${e(s.service_name)}">${ST_ICON.plus}</a>
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function stTaskerCardHome(s) {
+  const e = window.escapeHtml || (x => String(x));
+  const name = s.provider_name || 'Provider';
+  const rating = Number(s.rating);
+  const reviews = Number(s.reviews);
+  const skills = (s.specialties || []).filter(Boolean);
+  const shown = skills.slice(0, 3);
+  const more = skills.length - shown.length;
+  const L = window.STLocal || {};
+  const memb = !s.isLocal && s.user_id && window.STMembership ? window.STMembership.html(s.user_id, { small: true }) : '';
+  const lead = s.isLocal ? `<span class="st-chip">${e(L.LABEL || 'Local Tasker')}</span>` : memb;
+  const unit = String(s.rate_unit || '/job').replace('/', '').trim();
+  return `<article class="st-card st-card--tasker st-card--home fade-up" id="svc-${e(s.id)}">
+    <div class="st-home-body st-home-body--tasker">
+      <div class="st-tasker-top">
+        <span class="st-home-lead">${lead}</span>
+        ${rating > 0 ? `<span class="st-rating">${ST_ICON.star}${rating.toFixed(1)}${reviews > 0 ? ` <small>(${reviews})</small>` : ''}</span>` : ''}
+      </div>
+      <div class="st-home-head">
+        <div class="st-home-id">
+          <h3 class="st-home-name"><span>${e(name)}</span>${s.verified === true ? `<span class="st-home-tick" title="Verified">${ST_ICON.verified}</span>` : ''}</h3>
+          ${s.service_name ? `<p class="st-home-role">${e(s.service_name)}</p>` : ''}
+          <p class="st-home-where">${ST_ICON.pin}<span>${e(s.location || 'Lagos')}</span></p>
+        </div>
+        <div class="st-home-photo"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+      </div>
+      ${shown.length ? `<div class="st-home-skills"><span class="st-home-skills-label">Skills</span>
+        <div class="st-home-skill-list">${shown.map(k => `<span class="st-chip st-chip--skill">${e(k)}</span>`).join('')}${more > 0 ? `<span class="st-chip st-chip--skill">+${more}</span>` : ''}</div></div>` : ''}
+      <div class="st-home-tasker-foot">
+        ${Number(s.price) > 0 ? `<span class="st-home-pill">${ST_NGN(s.price)}<i></i><small>${e(stLabel(unit) || 'Job')}</small></span>` : ''}
+        <a href="${e(s.href)}" class="st-home-view">${ST_ICON.send}View Profile</a>
+      </div>
+    </div>
+  </article>`;
+}
