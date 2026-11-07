@@ -940,17 +940,33 @@
         row.stSetItems(list.map(r => _cuTaskerCard(r, false)));
         host.appendChild(row);
       });
-      /* Taskers: every tasker the feed returned, local taskers included, each person once */
+      /* Taskers: ALL taskers. The featured feed only returns taskers with a tier or a Local Tasker listing, so every other tasker
+         with a live listing is added from the services list (the same source as Find Taskers). Featured ones come first, then
+         taskers in the customer's area, each person once. */
       const seen = new Set();
+      const idOf = r => String(r.user_id || r.tasker_user_id || r.tasker_id || r.id || '');
       const all = rows.filter(r => {
-        const id = String(r.user_id || r.tasker_user_id || r.tasker_id || r.id || '');
+        const id = idOf(r);
         if (id && seen.has(id)) return false;
         if (id) seen.add(id);
         return true;
       });
+      try {
+        const raw = await window.ST.db.fetchServices({ limit: 100 });
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
+        if (!_cuLive(host, tok)) return;
+        raw.map((r, i) => ({ r, i, score: _locScoreText(r.location) }))
+          .sort((a, b) => (b.score - a.score) || (a.i - b.i))
+          .forEach(({ r }) => {
+            const id = String(r.user_id || '');
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            all.push(Object.assign({}, r, { tasker_user_id: id, name: r.provider_name, photo_url: r.photo, tier: null }));
+          });
+      } catch (e) { /* the featured taskers are still shown */ }
       if (all.length) {
         const row = STCompact.row({ title: 'Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
-        row.stSetItems(all.map(r => _cuTaskerCard(r, r.tier === 'local')));
+        row.stSetItems(all.slice(0, 30).map(r => _cuTaskerCard(r, r.isLocal === true || r.tier === 'local')));
         host.appendChild(row);
       }
     }
