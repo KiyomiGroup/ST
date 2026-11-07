@@ -190,6 +190,7 @@ function render(page = 1) {
   const all   = filtered();
   const slice = all.slice(0, page * PAGE_SIZE);
   if (countEl) countEl.textContent = all.length;
+  if (window.STTaskersMap) window.STTaskersMap.refresh(all);   /* the map view shows the same filtered list */
 
   if (all.length === 0) {
     grid.innerHTML = '';

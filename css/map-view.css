@@ -1,0 +1,32 @@
+/* StreetTasker map view (js/map-view.js, js/taskers-map.js): List / Map toggle, map box, pins and popups.
+   Tokens only; Leaflet's own stylesheet is loaded by map-view.js when the map is first opened. */
+.stmap-toggle { display: inline-flex; padding: var(--space-1); gap: var(--space-1); border-radius: var(--radius-pill); background: var(--pt-field); }
+.stmap-toggle button {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: 32px; padding: 0 var(--space-3);
+  border: 0; border-radius: var(--radius-pill); background: none; cursor: pointer;
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink-muted);
+}
+.stmap-toggle button[aria-pressed="true"] { background: var(--pt-green); color: var(--color-text-on-primary); }
+.stmap-toggle button:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
+.stmap-wrap[hidden] { display: none; }
+.stmap-box { position: relative; z-index: 0; width: 100%; height: 560px; border-radius: var(--radius-xl); overflow: hidden; background: var(--pt-field); box-shadow: var(--shadow-pt-card); }
+.stmap-note { margin: var(--space-3) 0 0; font-size: var(--text-xs); color: var(--color-text-secondary); }
+.stmap-note[hidden] { display: none; }
+
+/* Pins: a green dot with a white ring; paler for "approximate area" */
+.stmap-pin span { display: block; width: 26px; height: 26px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--pt-green); border: 3px solid var(--color-bg); box-shadow: var(--shadow-pt-pill); }
+.stmap-pin.is-approx span { background: var(--color-primary); opacity: 0.85; }
+
+.stmap-pop { font-family: var(--font-body); min-width: 160px; }
+.stmap-pop-title { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 800; color: var(--color-text); }
+.stmap-pop-sub { margin-top: 2px; font-size: var(--text-xs); color: var(--color-text-secondary); }
+.stmap-pop-meta { margin-top: 2px; font-size: var(--text-xs); color: var(--color-text-muted); }
+.stmap-pop-approx { margin-top: var(--space-1); font-size: var(--text-xs); font-weight: 600; color: var(--color-warning); }
+.stmap-pop-link { display: inline-block; margin-top: var(--space-2); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; color: var(--color-primary); text-decoration: none; }
+.stmap-pop-link:hover { text-decoration: underline; }
+
+@media (max-width: 768px) { .stmap-box { height: 70vh; min-height: 360px; border-radius: var(--radius-lg); } }
+
+/* the list grid sets display: grid, which would beat the hidden attribute while the map is showing */
+.spg-grid[hidden] { display: none; }

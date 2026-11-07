@@ -67,6 +67,7 @@
   <link rel="stylesheet" href="css/cards-v2.css?v=2" />
   <link rel="stylesheet" href="css/local-tasker-public.css" />
   <link rel="stylesheet" href="css/membership.css" />
+  <link rel="stylesheet" href="css/map-view.css" />
 </head>
 <body class="spg-page">
 
@@ -185,10 +186,10 @@
             <h2 class="spg-results-heading">Recommended Taskers</h2>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
-            <button class="btn btn-ghost btn-sm" onclick="showToast('Map view is in development')">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-              Map View
-            </button>
+            <div class="stmap-toggle" role="group" aria-label="Show taskers as a list or on a map">
+              <button type="button" id="taskersViewList" aria-pressed="true">List</button>
+              <button type="button" id="taskersViewMap" aria-pressed="false">Map</button>
+            </div>
             <select class="sort-select" id="sortSelect">
               <option value="recent" selected>Most Recent</option>
               <option value="rating">Top Rated</option>
@@ -204,6 +205,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           Filter
         </button>
+      </div>
+      <div class="stmap-wrap" id="taskersMapWrap" hidden>
+        <div class="stmap-box" id="taskersMap" role="region" aria-label="Taskers on a map"></div>
+        <p class="stmap-note" id="taskersMapNote" role="status" hidden></p>
       </div>
       <div class="spg-grid" id="taskersGrid">
           <div class="card skeleton" style="height:220px;"></div>
@@ -287,6 +292,8 @@
   <script src="js/app.js"></script>
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
+  <script src="js/map-view.js"></script>
+  <script src="js/taskers-map.js"></script>
   <script src="js/taskers.js"></script>
   <script src="js/tasks.js"></script>
   <script>
