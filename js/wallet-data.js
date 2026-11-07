@@ -130,13 +130,55 @@
   function clearingNote(info) {
     var when = lagosDate(info.next);
     var s = 'Earnings from a job can be withdrawn ' + (info.hours ? info.hours + (info.hours === 1 ? ' hour' : ' hours') : 'a while') + ' after the customer paid.';
-    return when ? s + ' Next available: ' + when + '.' : s;
+    if (when) s += ' Next available: ' + when + '.';
+    return s + ' Once you have been on StreetTasker for 4 weeks with no disputes, your withdrawals are immediate.';
   }
+
+  /* ── Countdown to the next withdrawal + the (i) details toggle ──
+     The countdown runs from state.clearing.next_clear_at. When it reaches zero the wallet is read again,
+     so the freed amount moves to Available without a page reload. */
+  var cdTimer = null, cdReloadedFor = null;
+  function cdText(ms) {
+    var t = Math.max(0, Math.floor(ms / 1000));
+    var d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+    var two = function (n) { return (n < 10 ? '0' : '') + n; };
+    if (d > 0) return d + 'd ' + h + 'h ' + two(m) + 'm';
+    if (h > 0) return h + 'h ' + two(m) + 'm ' + two(sec) + 's';
+    return m + 'm ' + two(sec) + 's';
+  }
+  function cdTick() {
+    var c = state.clearing, next = c && c.next_clear_at ? Date.parse(c.next_clear_at) : NaN;
+    var nodes = $$('[data-clr-countdown]');
+    if (!nodes.length) return;
+    if (isNaN(next)) { nodes.forEach(function (n) { n.textContent = 'after clearing'; }); return; }
+    var left = next - Date.now();
+    if (left <= 0) {
+      nodes.forEach(function (n) { n.textContent = 'now'; });
+      if (cdReloadedFor !== c.next_clear_at && !loading) { cdReloadedFor = c.next_clear_at; loadTasker(); }
+      return;
+    }
+    var txt = cdText(left);
+    nodes.forEach(function (n) { n.textContent = txt; });
+  }
+  function startCountdown() {
+    cdTick();
+    if (!cdTimer) cdTimer = setInterval(cdTick, 1000);
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-clr-info]');
+    if (!b) return;
+    var box = b.closest('.wl-clr-next'), detail = box && box.querySelector('.wl-clr-detail');
+    if (!detail) return;
+    var open = detail.hidden;
+    detail.hidden = !open;
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
   function renderClearing(wallet) {
     var info = clearingInfo(wallet), show = info.clearing > 0;
     setAmount('clearing', show ? info.clearing : null);
     setText('clearing-note', show ? clearingNote(info) : '');
     $$('[data-wl-clearing]').forEach(function (n) { n.hidden = !show; });
+    if (show) startCountdown();
   }
 
   function renderCards(wallet, rows, heldCount) {
@@ -480,6 +522,7 @@
       $$('[data-wd-clearing] .wl-amt-dec', modal).forEach(function (n) { n.textContent = '.' + cents(info.clearing); });
       setAll('clearing-note', show ? clearingNote(info) : '');
       $$('[data-wd-clearing]', modal).forEach(function (n) { n.hidden = !show; });
+      if (show) startCountdown();
     }
     function setLimitsText() {
       setAll('min', fmt(limits.min)); setAll('max', fmt(limits.max)); setAll('daily', fmt(limits.daily));

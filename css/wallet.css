@@ -732,6 +732,17 @@ html.wl-lock { overflow: hidden; }
 .wl-clr .wl-amt-dec { font-size: var(--text-xs); color: inherit; }
 .wl-clr-note { margin: var(--space-1) 0 0; font-size: var(--text-xs); line-height: 1.4; overflow-wrap: anywhere; }
 .wl-clr-note:empty { display: none; }
+.wl-clr-note[hidden] { display: none; }
+
+/* Next-withdrawal countdown with an (i) button that opens the clearing details */
+.wl-clr-next { margin-top: var(--space-1); }
+.wl-clr-countdown { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--text-sm); color: inherit; }
+.wl-clr-countdown strong { font-family: var(--font-heading); font-weight: 800; font-variant-numeric: tabular-nums; }
+.wl-clr-info { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; opacity: .85; }
+.wl-clr-info:hover { opacity: 1; background: var(--color-glass-soft); }
+.wl-clr-info:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; opacity: 1; }
+.wl-clr-info[aria-expanded="true"] { opacity: 1; background: var(--color-glass-soft); }
+.wl-clr-detail { margin-top: var(--space-2); padding: var(--space-3); border-radius: var(--radius-form); background: var(--color-glass-soft); }
 
 /* On the dark cards the text is white (the card's own helper text is slightly under 4.5:1) */
 .wl-bal-primary .wl-clr, .wl-hero-mob .wl-clr { color: var(--white); }
