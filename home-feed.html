@@ -93,6 +93,14 @@
     body.role-tasker .hf-ico-map { display: block; }
     /* Customer location chip, on the hero's pale pill */
     .pg-hero-meta .hf-loc { background: var(--hero-btn-bg); border-color: transparent; }
+    /* "tasks open now" pill: the role rule above sets display: contents on [data-role-only], which removes the pill's
+       box (no background, padding or radius). Restore the pill's own display, with the lemon fill. */
+    body.role-tasker .pg-hero-live[data-role-only="tasker"] {
+      display: inline-flex;
+      background: var(--hero-live-bg); color: var(--hero-live-text);
+      border-radius: var(--radius-pill);
+    }
+    body.role-tasker .pg-hero-live[data-role-only="tasker"][hidden] { display: none; }
     .hf-top-spacer { display: none; }
     @media (min-width: 769px) {
       .hf-search { padding-bottom: var(--space-3); }

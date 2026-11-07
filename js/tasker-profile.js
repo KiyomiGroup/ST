@@ -902,5 +902,15 @@
     }
   }
 
+  /* Promotional flyer (Stage 3): the Stage 4 hero button calls this. No visible button yet.
+     Resolves { ok, reason, message, data } (see js/flyer-data.js); data goes straight into STFlyer.render(host, data). */
+  window.STProfileFlyer = {
+    prepare: async function () {
+      var user = await currentUser();
+      if (!window.STFlyerData || !state.model) return { ok: false, reason: 'error', message: 'The flyer is not ready yet. Please try again in a moment.' };
+      return STFlyerData.prepare(state.model, user, state.id);
+    }
+  };
+
   init();
 })();

@@ -15,8 +15,8 @@ Goal: every approved Tasker can download a personalised flyer (their photo, name
 |---|---|---|
 | 1 | Investigation | done |
 | 2 | Flyer design as one template, print path tested | **done** (this handoff: `handoff-S2.md`) |
-| 3 | Real data (profile model, referral code), QR link, graceful gaps | next |
-| 4 | Hero button, preview panel, A5 / A4 / PNG downloads | |
+| 3 | Real data (profile model, referral code), QR link, graceful gaps | **done** (`js/flyer-data.js`, `STProfileFlyer.prepare()`) |
+| 4 | Hero button, preview panel, A5 / A4 / PNG downloads | next |
 | 5 | Verification with two Tasker accounts, run `node tools/check-design-system.js` | |
 
 Rules from `AGENTS.md` apply: tokens only, no inline `style=""`, no `!important`, do not touch the gift card files, list every edited file at the end.
