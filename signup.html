@@ -69,6 +69,7 @@
       </div>
 
       <div class="av2-login-pill">Already have an account? <a href="login.html">Log in</a></div>
+      <p class="av2-coord-link">Want to coordinate Local Taskers? <a href="coordinator-test.html">Take the coordinator test to be a coordinator</a></p>
     </div>
   </section>
 
@@ -144,6 +145,25 @@
                     <input type="text" id="cRefCode" name="referral" placeholder="ST4K9X2A" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" aria-describedby="cRefHint" />
                   </div>
                   <p class="av2-ref-hint" id="cRefHint">You and your friend both earn referral points. You get 5 points when you join.</p>
+                </div>
+              </div>
+            </div>
+
+                        <!-- Optional coordinator code: checked on the server before the account is created -->
+            <div class="av2-ref av2-ref--coord" data-av2-coord>
+              <button type="button" class="av2-ref-toggle" aria-expanded="false" aria-controls="cCoBox">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Have a coordinator code? <em>Optional</em></span>
+              </button>
+              <div class="av2-ref-box" id="cCoBox" hidden>
+                <div class="av2-field">
+                  <label for="cCoCode">Coordinator code</label>
+                  <div class="av2-field-wrap">
+                    <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    <input type="text" id="cCoCode" name="coordinator_code" placeholder="CO-7KQ4M2XH" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="11" aria-describedby="cCoHint cCoMsg" />
+                  </div>
+                  <p class="av2-ref-hint" id="cCoHint">Only for people the StreetTasker team has approved. Not a coordinator yet? <a href="coordinator-test.html">Take the coordinator test to be a coordinator</a>.</p>
+                  <p class="av2-ref-hint av2-coord-msg" id="cCoMsg" role="alert" hidden></p>
                 </div>
               </div>
             </div>
@@ -275,6 +295,25 @@
               </div>
             </div>
 
+                        <!-- Optional coordinator code: checked on the server before the account is created -->
+            <div class="av2-ref av2-ref--coord" data-av2-coord>
+              <button type="button" class="av2-ref-toggle" aria-expanded="false" aria-controls="tCoBox">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Have a coordinator code? <em>Optional</em></span>
+              </button>
+              <div class="av2-ref-box" id="tCoBox" hidden>
+                <div class="av2-field">
+                  <label for="tCoCode">Coordinator code</label>
+                  <div class="av2-field-wrap">
+                    <svg class="av2-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    <input type="text" id="tCoCode" name="coordinator_code" placeholder="CO-7KQ4M2XH" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="11" aria-describedby="tCoHint tCoMsg" />
+                  </div>
+                  <p class="av2-ref-hint" id="tCoHint">Only for people the StreetTasker team has approved. Not a coordinator yet? <a href="coordinator-test.html">Take the coordinator test to be a coordinator</a>.</p>
+                  <p class="av2-ref-hint av2-coord-msg" id="tCoMsg" role="alert" hidden></p>
+                </div>
+              </div>
+            </div>
+
             <!-- mobile-only: desktop frame has no terms checkbox -->
             <div class="av2-check-row">
               <input type="checkbox" id="tTerms" required />
@@ -363,6 +402,60 @@
       });
     })();
 
+    /* Optional coordinator code: uppercase, keep the hyphen; a wrong code shows the "Request to be a coordinator" link */
+    document.querySelectorAll('[data-av2-coord]').forEach(function (box) {
+      const toggle = box.querySelector('.av2-ref-toggle');
+      const panel = box.querySelector('.av2-ref-box');
+      const input = box.querySelector('input');
+      const msg = box.querySelector('.av2-coord-msg');
+      toggle.addEventListener('click', function () {
+        const open = panel.hidden;
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        box.classList.toggle('is-open', open);
+        if (open) input.focus();
+      });
+      input.addEventListener('input', function () {
+        input.value = input.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        msg.hidden = true;
+      });
+    });
+    /* Returns true when the box is empty or the code is valid; false (with a message in the box) when sign-up must wait */
+    async function coordinatorCodeOk(prefix) {
+      const input = document.getElementById(prefix + 'CoCode');
+      const msg = document.getElementById(prefix + 'CoMsg');
+      const code = input.value.trim();
+      msg.hidden = true;
+      try { localStorage.removeItem('st_pending_coord_code'); } catch (e) {}
+      if (!code) return true;
+      const panel = document.getElementById(prefix + 'CoBox');
+      let valid = false, failed = false;
+      try {
+        const r = await window.supabase.rpc('coordinator_code_check', { p_code: code });
+        if (r.error) failed = true; else valid = r.data === true;
+      } catch (e) { failed = true; }
+      if (valid) {
+        try { localStorage.setItem('st_pending_coord_code', code); } catch (e) {}
+        return true;
+      }
+      panel.hidden = false;
+      panel.parentNode.classList.add('is-open');
+      panel.parentNode.querySelector('.av2-ref-toggle').setAttribute('aria-expanded', 'true');
+      msg.textContent = '';
+      if (failed) {
+        msg.textContent = 'We could not check the code right now. Please try again, or clear the box to sign up without it.';
+      } else {
+        msg.appendChild(document.createTextNode('That code is not valid or has expired. Check it and try again, or clear the box to sign up without it. '));
+        const a = document.createElement('a');
+        a.href = 'coordinator-apply.html';
+        a.textContent = 'Request to be a coordinator';
+        msg.appendChild(a);
+      }
+      msg.hidden = false;
+      input.focus();
+      return false;
+    }
+
     /* "Log In" links keep the page they were trying to reach */
     document.querySelectorAll('.av2-form-footer a[href="login.html"]').forEach(function (a) {
       a.setAttribute('href', 'login.html' + window.ST.auth.redirectQuery());
@@ -412,6 +505,7 @@
       btn.innerHTML = '<span>Creating account…</span>';
 
       try {
+        if (!(await coordinatorCodeOk('c'))) { btn.disabled = false; btn.innerHTML = originalHTML; return; }
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'customer', refCode: document.getElementById('cRefCode').value });
         /* Email already had a login: the customer account was added to it and they are signed in */
         if (res.roleAdded) { window.location.href = window.ST.auth.requestedRedirect() || window.ST.auth.getHomeUrl(); return; }
@@ -450,6 +544,7 @@
       btn.innerHTML = '<span>Creating account…</span>';
 
       try {
+        if (!(await coordinatorCodeOk('t'))) { btn.disabled = false; btn.innerHTML = originalHTML; return; }
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'tasker', refCode: document.getElementById('tRefCode').value });
         /* Email already had a login: the tasker account was added to it and they are signed in */
         if (res.roleAdded) { window.location.href = window.ST.auth.requestedRedirect() || window.ST.auth.firstLoginUrl('tasker'); return; }

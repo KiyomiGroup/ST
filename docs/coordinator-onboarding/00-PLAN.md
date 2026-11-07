@@ -20,8 +20,8 @@ Owner request (2026-11-06). Owner rules: uses ONLY the Supabase SQL editor and d
 | Stage | Content | Owner action | Status |
 |---|---|---|---|
 | S1 | Foundation: nav-overlap fix site-wide, page shell, design-system rule + check, apply page restyled, C0 introspect SQL | Deploy files; run C0 introspect SQL blocks and paste results | DONE 2026-11-06 |
-| S2 | Database: codes, applications, quiz questions/attempts, RPCs, RLS, scratch tests | Run SQL files in order | todo |
-| S3 | Sign-up code field, wrong-code link, "take the test" link, new apply form, `coordinator-apply` function v2 (store + email admin) | Deploy function; push files | todo |
+| S2 | Database: codes, applications, quiz questions/attempts, RPCs, RLS, scratch tests | Run `c1-coordinator-onboarding.sql` in the SQL editor | DONE 2026-11-06 (tested on scratch Postgres, NOT yet run on the real project) |
+| S3 | Sign-up code field, wrong-code link, "take the test" link, new apply form, `coordinator-apply` function v2 (store + email admin) | Deploy function; push files | DONE 2026-11-06 (function tested with stubbed fetch, pages tested in headless Chromium; NOT run against the real Supabase) |
 | S4 | Training PDF (Local Taskers + what coordinators must know) and the 20-question bank | Review PDF and questions | todo |
 | S5 | Test page `coordinator-test.html` (quiz UI, 3/day, retry, pass -> code), approval-email helper | Deploy function; push files | todo |
 | S6 | Sign-up redeem flow + routing to coordinator page, full QA at 390/768/1280, final zip | Final push | todo |

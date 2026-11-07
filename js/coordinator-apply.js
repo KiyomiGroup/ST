@@ -28,17 +28,24 @@
       full_name: val('full_name'), email: val('email'), phone: val('phone'), whatsapp: val('whatsapp'),
       age_range: val('age_range'), occupation: val('occupation'),
       state: val('state'), city: val('city'), areas: val('areas'), years_in_area: val('years_in_area'),
-      trades: trades, tasker_count: val('tasker_count'), how_you_know: val('how_you_know'),
+      trades: trades, tasker_count: val('tasker_count'), area_sqm: val('area_sqm'), how_you_know: val('how_you_know'),
+      can_meet_taskers: radio('can_meet_taskers'), can_explain: radio('can_explain'), explain_text: val('explain_text'),
       experience: val('experience'), hours: val('hours'), languages: val('languages'),
       smartphone: radio('smartphone'), has_id: radio('has_id'),
       why: val('why'), heard: val('heard'), social: val('social'),
       ref_name: val('ref_name'), ref_phone: val('ref_phone'), notes: val('notes')
     };
 
-    var required = ['full_name', 'email', 'phone', 'age_range', 'occupation', 'state', 'city', 'areas', 'years_in_area', 'tasker_count', 'how_you_know', 'experience', 'hours', 'languages', 'smartphone', 'has_id', 'why'];
+    var required = ['full_name', 'email', 'phone', 'age_range', 'occupation', 'state', 'city', 'areas', 'years_in_area', 'tasker_count', 'area_sqm', 'how_you_know', 'can_meet_taskers', 'can_explain', 'experience', 'hours', 'languages', 'smartphone', 'has_id', 'why'];
     for (var i = 0; i < required.length; i++) {
       if (!data[required[i]]) return showError('Please answer every question marked with a star.');
     }
+    var nTaskers = Number(data.tasker_count), nArea = Number(data.area_sqm);
+    if (!/^\d+$/.test(data.tasker_count) || nTaskers < 1 || nTaskers > 10000) return showError('Please enter how many Local Taskers you can bring, as a whole number from 1 to 10,000.');
+    if (!/^\d+$/.test(data.area_sqm) || nArea < 1 || nArea > 100000000) return showError('Please enter the area you would cover in square metres, as a whole number.');
+    if (data.can_explain === 'Yes' && !data.explain_text) return showError('Please write in your own words what a Local Tasker is.');
+    data.tasker_count = nTaskers; data.area_sqm = nArea;
+    data.can_meet_taskers = data.can_meet_taskers === 'Yes'; data.can_explain = data.can_explain === 'Yes';
     if (!trades.length) return showError('Please choose at least one skill or trade you know people in.');
     if (!EMAIL_RE.test(data.email)) return showError('Please enter a valid email address.');
     if (!PHONE_RE.test(data.phone) || (data.whatsapp && !PHONE_RE.test(data.whatsapp))) return showError('Please enter a valid phone number.');

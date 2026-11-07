@@ -118,19 +118,43 @@
             <div class="check-row"><input type="checkbox" id="t10" name="trades" value="Other" /><label for="t10">Other</label></div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="tasker_count">How many skilled people could you bring onto StreetTasker in your first 30 days? <span class="st-req">*</span></label>
-          <select class="form-select" id="tasker_count" name="tasker_count" required>
-            <option value="">Select</option>
-            <option>1 to 5</option>
-            <option>6 to 15</option>
-            <option>16 to 30</option>
-            <option>More than 30</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="tasker_count">How many Local Taskers can you bring in your area? <span class="st-req">*</span></label>
+            <input class="form-input" id="tasker_count" name="tasker_count" type="number" inputmode="numeric" min="1" max="10000" step="1" placeholder="e.g. 20" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="area_sqm">Area you would cover, in square metres <span class="st-req">*</span></label>
+            <input class="form-input" id="area_sqm" name="area_sqm" type="number" inputmode="numeric" min="1" max="100000000" step="1" placeholder="e.g. 50000" required />
+          </div>
         </div>
+        <p class="form-helper">Choose an area that is not far from where you live, so you can reach it easily. For comparison, a football pitch is about 7,000 square metres.</p>
         <div class="form-group">
           <label class="form-label" for="how_you_know">How do you know these people? <span class="st-req">*</span></label>
           <textarea class="form-textarea" id="how_you_know" name="how_you_know" maxlength="800" placeholder="e.g. I buy from them, we are in the same market association, I am a landlord on their street" required></textarea>
+        </div>
+      </section>
+
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">Meeting Local Taskers</h2>
+        <p class="form-helper">A Local Tasker is a skilled person, such as a tailor, mechanic or hairdresser, who does not use a smartphone or the internet. A coordinator meets them, helps them join StreetTasker and keeps their jobs on track.</p>
+        <div class="form-group">
+          <span class="form-label">Can you meet Local Taskers in person? <span class="st-req">*</span></span>
+          <div class="coa-radios">
+            <div class="check-row"><input type="radio" id="mt1" name="can_meet_taskers" value="Yes" /><label for="mt1">Yes</label></div>
+            <div class="check-row"><input type="radio" id="mt2" name="can_meet_taskers" value="No" /><label for="mt2">No</label></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <span class="form-label">Can you explain to someone what a Local Tasker is? <span class="st-req">*</span></span>
+          <div class="coa-radios">
+            <div class="check-row"><input type="radio" id="ce1" name="can_explain" value="Yes" /><label for="ce1">Yes</label></div>
+            <div class="check-row"><input type="radio" id="ce2" name="can_explain" value="No" /><label for="ce2">No</label></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="explain_text">In your own words, what is a Local Tasker? (required if you answered Yes)</label>
+          <textarea class="form-textarea" id="explain_text" name="explain_text" maxlength="800" placeholder="Explain it the way you would to a tailor or a market trader"></textarea>
         </div>
       </section>
 
