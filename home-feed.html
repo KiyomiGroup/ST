@@ -122,15 +122,15 @@
     }
 
 
-    /* ── Customer phone: the nav's menu button is gone and the location chip sits in its place ──
-       The chip is moved into the nav bar by the script at the end of this page (and back into the hero on wider screens). */
+    /* ── Customer phone: the location chip sits in the hero's top-right corner, where the tasker's live pill sits ── */
     @media (max-width: 768px) {
-      body.hf-home.role-customer .nav-toggle { display: none; }
-      body.hf-home.role-customer .nav-loc-slot { order: 1; flex: 0 0 auto; min-width: 0; display: flex; align-items: center; }
-      body.hf-home.role-customer .nav-loc-slot .hf-loc { background: var(--hero-btn-bg); border-color: transparent; max-width: 148px; }
-      body.hf-home.role-customer .nav-loc-slot .hf-loc-label { display: none; }
-      body.hf-home.role-customer .nav-loc-slot .hf-loc-text { min-width: 0; }
-      body.hf-home.role-customer .nav-loc-slot .hf-loc-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-wrap { position: absolute; top: var(--space-4); right: var(--space-5); z-index: 2; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc { max-width: 148px; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-label { display: none; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-text { min-width: 0; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* the popup opens leftwards so it stays inside the screen */
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-pop { left: auto; right: 0; }
     }
 
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
@@ -331,7 +331,7 @@
                     </div>
                   </div>
                 </span>
-                <span class="pg-hero-live hf-live-dt"><span class="spg-hero-dot"></span><strong id="liveTaskCountDt">…</strong>&nbsp;<span id="hfLiveLabelDt">tasks open now</span></span>
+                <span class="pg-hero-live hf-live-dt" data-role-only="tasker"><span class="spg-hero-dot"></span><strong id="liveTaskCountDt">…</strong>&nbsp;<span id="hfLiveLabelDt">tasks open now</span></span>
               </div>
             </div>
             <div class="pg-hero-stack fade-up d3">
@@ -925,12 +925,26 @@
       if (!_cuLive(host, tok)) return;
       host.textContent = '';
       CU_TIERS.forEach(([key, label]) => {
+        if (key === 'local') return;       /* local taskers are shown in the Taskers row below, with everyone else */
         const list = rows.filter(r => r.tier === key);
         if (!list.length) return;          /* an empty tier is skipped */
-        const row = STCompact.row({ title: key === 'local' ? 'Local Taskers' : 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
-        row.stSetItems(list.map(r => _cuTaskerCard(r, key === 'local')));
+        const row = STCompact.row({ title: 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
+        row.stSetItems(list.map(r => _cuTaskerCard(r, false)));
         host.appendChild(row);
       });
+      /* Taskers: every tasker the feed returned, local taskers included, each person once */
+      const seen = new Set();
+      const all = rows.filter(r => {
+        const id = String(r.user_id || r.tasker_user_id || r.tasker_id || r.id || '');
+        if (id && seen.has(id)) return false;
+        if (id) seen.add(id);
+        return true;
+      });
+      if (all.length) {
+        const row = STCompact.row({ title: 'Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
+        row.stSetItems(all.map(r => _cuTaskerCard(r, r.tier === 'local')));
+        host.appendChild(row);
+      }
     }
 
     async function _cuNear(host) {
@@ -1518,33 +1532,5 @@
     }
   </script>
   <script src="js/pg-hero-fixed.js"></script>
-  <script>
-  /* Customer phone: put the location chip where the menu button used to be (top-left of the nav); on wider screens it returns to the hero. */
-  (function () {
-    var mq = window.matchMedia('(max-width: 768px)');
-    var wrap, home, marker, slot;
-    function place() {
-      wrap = wrap || document.querySelector('.hf-loc-wrap');
-      if (!wrap || !document.body.classList.contains('role-customer')) return;
-      var inner = document.querySelector('#navbar .nav-inner');
-      if (!home) { home = wrap.parentNode; marker = document.createComment('hf-loc-home'); home.insertBefore(marker, wrap); }
-      if (mq.matches && inner) {
-        if (!slot) { slot = document.createElement('div'); slot.className = 'nav-loc-slot'; }
-        if (!slot.parentNode) inner.insertBefore(slot, inner.firstChild);
-        if (wrap.parentNode !== slot) slot.appendChild(wrap);
-      } else if (wrap.parentNode !== home) {
-        home.insertBefore(wrap, marker.nextSibling);
-        if (slot && slot.parentNode) slot.parentNode.removeChild(slot);
-      }
-    }
-    function start() {
-      place();
-      /* the nav and the role class arrive after the page loads: keep trying until the chip is placed */
-      var tries = 0, t = setInterval(function () { place(); if (++tries > 40 || (slot && slot.parentNode && wrap.parentNode === slot) || (!mq.matches && tries > 6)) clearInterval(t); }, 150);
-      if (mq.addEventListener) mq.addEventListener('change', place); else if (mq.addListener) mq.addListener(place);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-  })();
-  </script>
 </body>
 </html>
