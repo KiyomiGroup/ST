@@ -275,7 +275,7 @@
         const loc = TASK_FILTERS.location.toLowerCase();
         f = f.filter(t => (t.location||'').toLowerCase().includes(loc));
       }
-      if (TASK_FILTERS.minBudget > 0) f = f.filter(t => (t.budget||0) >= TASK_FILTERS.minBudget);
+      if (TASK_FILTERS.minBudget > 0) f = f.filter(t => !(Number(t.budget) > 0) || t.budget >= TASK_FILTERS.minBudget); /* No budget tasks stay visible: the tasker names the price */
       if (TASK_FILTERS.types.length) f = f.filter(t => TASK_FILTERS.types.includes(t.task_type || 'one_off'));
       if (TASK_FILTERS.urgencies.length) f = f.filter(t => TASK_FILTERS.urgencies.includes(t.urgency || 'flexible'));
 
