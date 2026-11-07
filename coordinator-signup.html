@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Create your coordinator account — StreetTasker</title>
+  <script>window.ST_PAGE_TITLE = 'Coordinator sign-up';</script>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="canonical" href="https://streettasker.com/coordinator-signup.html" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator-signup.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <!-- Coordinator accounts are separate from customer and Local Tasker accounts, so this page has no customer navbar,
+       no customer footer and loads none of the customer site scripts. -->
+  <main class="st-page st-page--narrow cos-page" id="cosPage">
+    <a class="cos-brand" href="coordinator-login.html" aria-label="StreetTasker coordinator sign-in">
+      <img src="images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+    </a>
+
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
+      <h1 class="st-hero-title">Create your coordinator account</h1>
+      <p class="st-hero-lead">For people who passed the coordinator test. A coordinator account is separate from customer and Local Tasker accounts and only works on the coordinator pages, so use an email address that is not already used on StreetTasker.</p>
+    </section>
+
+    <!-- State: the form -->
+    <section class="st-panel cos-state" id="cosFormPanel">
+      <h2 class="st-panel-title">Your details</h2>
+      <p class="form-helper">Fields marked <span class="st-req">*</span> are required.</p>
+      <form class="cos-form" id="cosForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="cosCode">Coordinator code <span class="st-req">*</span></label>
+          <input class="form-input cos-code" id="cosCode" name="coordinator_code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="CO-7KQ4M2XH" required aria-describedby="cosCodeHint" />
+          <p class="form-helper" id="cosCodeHint">You get your code when you pass the coordinator test. It works once and it expires.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cosName">Full name <span class="st-req">*</span></label>
+          <input class="form-input" id="cosName" name="name" type="text" autocomplete="name" maxlength="120" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="cosEmail">Email <span class="st-req">*</span></label>
+            <input class="form-input" id="cosEmail" name="email" type="email" autocomplete="email" maxlength="160" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cosPhone">Phone number <span class="st-req">*</span></label>
+            <input class="form-input" id="cosPhone" name="phone" type="tel" autocomplete="tel" maxlength="24" placeholder="e.g. 0801 234 5678" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cosPassword">Password <span class="st-req">*</span></label>
+          <input class="form-input" id="cosPassword" name="password" type="password" autocomplete="new-password" maxlength="72" required aria-describedby="cosRules" />
+          <ul class="pwd-rules" id="cosRules" aria-label="Password rules"></ul>
+          <div class="check-row cos-show">
+            <input type="checkbox" id="cosShow" />
+            <label for="cosShow">Show password</label>
+          </div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="cosTerms" />
+          <label for="cosTerms">I agree to the <a href="terms.html">Terms of Service</a> &amp; <a href="privacy.html">Privacy Policy</a>.</label>
+        </div>
+        <div class="form-error cos-error" id="cosError" role="alert"></div>
+        <button type="submit" class="btn btn-primary btn-lg" id="cosSubmit">Create coordinator account</button>
+      </form>
+    </section>
+
+    <!-- State: email must be confirmed first -->
+    <section class="st-panel cos-state" id="cosCheck" hidden>
+      <h2 class="st-panel-title" id="cosCheckTitle" tabindex="-1">Check your email</h2>
+      <p class="cos-text" id="cosCheckText">We sent a link to your email address. Open it to confirm your email, then sign in on the coordinator sign-in page. Your coordinator account is finished when you sign in.</p>
+      <div class="cos-actions">
+        <a href="coordinator-login.html" class="btn btn-primary">Go to coordinator sign in</a>
+      </div>
+    </section>
+
+    <!-- State: account is ready (only when email confirmation is switched off) -->
+    <section class="st-panel cos-state" id="cosDone" hidden>
+      <h2 class="st-panel-title" id="cosDoneTitle" tabindex="-1">Your coordinator account is ready</h2>
+      <p class="cos-text">You can now meet and register your Local Taskers.</p>
+      <div class="cos-actions">
+        <a href="coordinator-dashboard.html" class="btn btn-primary">Open the coordinator page</a>
+      </div>
+    </section>
+
+    <p class="cos-links" id="cosLinks">
+      <a href="coordinator-login.html">Already have a coordinator account? Sign in</a>
+      <a href="coordinator-test.html">No code yet? Take the coordinator test</a>
+      <a href="coordinator-apply.html">Request to be a coordinator</a>
+    </p>
+  </main>
+
+  <!-- Only the Supabase client: none of the customer or tasker site scripts run on this page. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/coordinator-signup.js"></script>
+</body>
+</html>

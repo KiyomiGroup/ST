@@ -13,6 +13,7 @@
   var SESSION_ONLY_KEY = 'st_co_session_only';
   var TAB_ALIVE_KEY    = 'st_co_tab_alive';
   var HOME = 'coordinator-dashboard.html';
+  var lastFinishError = '';   /* why coordinator_finish_signup said no, for the message */
 
   function $(id) { return document.getElementById(id); }
 
@@ -32,7 +33,10 @@
     el.hidden = false;
   }
   /* Coordinator accounts are separate from customer and tasker accounts, so this page never points to the customer or tasker sign-in. */
-  function showNotCoordinator() { showMsg(DENIED_TEXT.no); }
+  function showNotCoordinator() {
+    if (lastFinishError === 'invalid_code') showMsg('Your coordinator code has already been used or has expired, so your coordinator account could not be finished. Take the coordinator test again or contact StreetTasker Coordinator Support.');
+    else showMsg(DENIED_TEXT.no, null, [{ text: 'Passed the test? Create your coordinator account.', href: 'coordinator-signup.html' }]);
+  }
   function hideMsg() { var el = $('coLoginMsg'); if (el) el.hidden = true; }
 
   /* Only coordinator pages on this site are accepted as a destination. */
@@ -72,14 +76,24 @@
     } catch (e) { /* storage blocked: session behaves as "remember me" */ }
   }
 
-  /* Returns 'active' | 'inactive' | 'no'. Throws if the server cannot answer. */
+  /* Returns 'active' | 'inactive' | 'no'. Throws if the server cannot answer.
+     A brand-new coordinator who has just confirmed their email is not a coordinator yet: the database finishes the sign-up
+     (coordinator_finish_signup, Stage D-1) the first time they get here, using the code saved at sign-up. It refuses any customer or tasker account. */
   async function coordinatorStatus() {
     var sb = window.supabase;
     var active = await sb.rpc('is_active_coordinator');
     if (active.error) throw active.error;
     if (active.data === true) return 'active';
     var isCo = await sb.rpc('is_coordinator');
-    return (!isCo.error && isCo.data === true) ? 'inactive' : 'no';
+    if (!isCo.error && isCo.data === true) return 'inactive';
+    lastFinishError = '';
+    var fin = await sb.rpc('coordinator_finish_signup');
+    if (!fin.error && fin.data && fin.data.ok === true) {
+      var again = await sb.rpc('is_active_coordinator');
+      return (!again.error && again.data === true) ? 'active' : 'inactive';
+    }
+    if (fin.data && fin.data.error) lastFinishError = fin.data.error;
+    return 'no';
   }
 
   function initNotices() {
@@ -173,9 +187,8 @@
         rememberChoice($('coRemember').checked);
         window.location.replace(destination());
       } catch (err) {
-        /* An account whose email was never confirmed cannot be a coordinator (coordinator
-           accounts are approved and verified), so say that instead of the raw Auth wording. */
-        if (err && /email not confirmed/i.test(err.message || '')) showNotCoordinator();
+        /* A new coordinator who has not opened the confirmation email yet. */
+        if (err && /email not confirmed/i.test(err.message || '')) showMsg('Please confirm your email first: open the link we sent you, then sign in here.', 'info');
         else showMsg(friendlyError(err));
       } finally {
         submitting = false;

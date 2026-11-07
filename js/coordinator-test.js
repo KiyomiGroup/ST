@@ -180,30 +180,8 @@
     $('cotPassScore').textContent = (typeof data.score === 'number' && typeof data.total === 'number') ? 'You got ' + data.score + ' of ' + data.total + ' right.' : 'You have already passed the test.';
     $('cotCode').textContent = data.code || '';
     $('cotCopyNote').textContent = '';
+    $('cotCreate').href = 'coordinator-signup.html?code=' + encodeURIComponent(data.code || '');
     show('cotPass');
-    offerActivate();
-  }
-
-  /* Signed in already: one button makes the account a coordinator account. Not signed in: Sign up and Log in keep the code for the next page. */
-  async function offerActivate() {
-    var signedIn = false;
-    try { var s = await window.supabase.auth.getSession(); signedIn = !!(s && s.data && s.data.session); } catch (e) { signedIn = false; }
-    $('cotActivate').hidden = !signedIn;
-    $('cotSignup').hidden = signedIn;
-    $('cotLogin').hidden = signedIn;
-    if (signedIn) $('cotPassText').textContent = 'This is your coordinator code. It can be used once and it expires, so use it soon. You are already signed in, so press Activate to turn this account into your coordinator account.';
-  }
-  function keepCode() { if (window.ST && window.ST.auth) window.ST.auth.rememberCoordinatorCode($('cotCode').textContent, ''); }
-  async function activate() {
-    var btn = $('cotActivate'), note = $('cotCopyNote');
-    btn.disabled = true; note.textContent = '';
-    keepCode();
-    var user = null;
-    try { var s = await window.supabase.auth.getSession(); user = s && s.data && s.data.session && s.data.session.user; } catch (e) { user = null; }
-    var co = await window.ST.auth.redeemPendingCoordinatorCode(user);
-    if (co.status === 'ready') { window.location.href = window.ST.auth.COORDINATOR_HOME; return; }
-    btn.disabled = false;
-    note.textContent = co.status === 'invalid' ? 'This code has already been used or has expired.' : 'We could not reach the server. Check your internet and press Activate again.';
   }
 
   async function copyCode() {
@@ -229,9 +207,6 @@
     if (current < quiz.questions.length - 1) { current += 1; renderQuestion(); } else { submit(); }
   });
   $('cotCopy').addEventListener('click', copyCode);
-  $('cotActivate').addEventListener('click', activate);
-  $('cotSignup').addEventListener('click', keepCode);
-  $('cotLogin').addEventListener('click', keepCode);
 
   (function init() {
     token = (new URLSearchParams(window.location.search).get('t') || '').trim().toLowerCase();

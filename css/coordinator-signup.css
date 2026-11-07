@@ -1,0 +1,14 @@
+/* Coordinator sign-up page (.cos-*). Layout only: colours, sizes and radii come from tokens and the shared components. */
+.st-page.cos-page [hidden] { display: none; }
+.cos-brand { display: inline-flex; align-self: start; justify-self: start; }
+.cos-brand img { display: block; height: var(--space-5); width: auto; }
+.cos-form { display: grid; }
+.cos-code { text-transform: uppercase; letter-spacing: 0.06em; }
+.cos-error.is-visible { display: block; }
+.cos-show { margin: var(--space-3) 0 0; }
+.cos-text { font-size: var(--text-base); line-height: 1.7; color: var(--color-text-secondary); }
+.cos-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+.cos-links { display: grid; gap: var(--space-2); justify-items: start; font-size: var(--text-sm); }
+.cos-links a { color: var(--color-text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 480px) { .cos-actions .btn { flex: 1 1 100%; } }
+.cos-form .btn { margin-top: var(--space-3); }
