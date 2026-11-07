@@ -251,6 +251,11 @@
       return matchesOthers(v) && (state.filter === 'all' || v.group === state.filter);
     });
     list.sort(function (x, y) {
+      /* "All" tab: active bookings first, finished ones (completed, cancelled) at the back */
+      if (state.filter === 'all') {
+        var fx = x.group === 'completed' || x.group === 'cancelled' ? 1 : 0, fy = y.group === 'completed' || y.group === 'cancelled' ? 1 : 0;
+        if (fx !== fy) return fx - fy;
+      }
       if (state.sort === 'oldest') return new Date(x.created) - new Date(y.created);
       if (state.sort === 'amount') return (y.amount || y.budget) - (x.amount || x.budget);
       if (state.sort === 'upcoming') {

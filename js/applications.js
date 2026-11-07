@@ -169,6 +169,11 @@
       return true;
     });
     list.sort(function (x, y) {
+      /* "All" tab: live applications first, finished ones (completed, declined, cancelled) at the back */
+      if (state.filter === 'all') {
+        var fx = x.group === 'completed' || x.group === 'declined' ? 1 : 0, fy = y.group === 'completed' || y.group === 'declined' ? 1 : 0;
+        if (fx !== fy) return fx - fy;
+      }
       if (state.sort === 'oldest') return new Date(x.created) - new Date(y.created);
       if (state.sort === 'offer') return (y.offer || 0) - (x.offer || 0);
       return new Date(y.created) - new Date(x.created);

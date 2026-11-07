@@ -147,7 +147,16 @@
       if (q && (a.name + ' ' + (a.task.title || '')).toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
+    function finished(a) {
+      var b = a.booking;
+      return a.group === 'declined' || a.status === 'completed' || !!(b && (b.status === 'completed' || b.payment_status === 'released'));
+    }
     list.sort(function (x, y) {
+      /* "All" tab: live applications first, finished ones (completed, declined, cancelled) at the back */
+      if (state.filter === 'all') {
+        var fx = finished(x) ? 1 : 0, fy = finished(y) ? 1 : 0;
+        if (fx !== fy) return fx - fy;
+      }
       if (state.sort === 'oldest') return new Date(x.created) - new Date(y.created);
       if (state.sort === 'lowest') return (x.offer == null ? Infinity : x.offer) - (y.offer == null ? Infinity : y.offer);
       if (state.sort === 'rating') return (y.rating || 0) - (x.rating || 0);
