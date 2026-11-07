@@ -639,11 +639,6 @@ html.wl-lock { overflow: hidden; }
 .wl-safepay-icon .wl-i { width: 20px; height: 20px; }
 .wl-safepay-title { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--pt-ink); }
 .wl-safepay-text { margin-top: var(--space-1); font-size: var(--text-xs); line-height: 1.4; color: var(--pt-ink-muted); }
-/* Stage 7F: the coordinator's way back to the portal (phone). Hidden by the [hidden] attribute until wallet-data.js shows it. */
-.wl-co-back { margin: var(--space-3) 0; font-size: var(--text-sm); font-weight: 600; }
-/* The hero button class sets its own display, which would beat the hidden attribute: keep the link hidden for everyone but a coordinator. */
-.wl-page [data-wl-coordinator][hidden] { display: none; }
-
 /* Four cards need room: two per row below the full desktop width */
 @media (max-width: 1043px) {
   .wl-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }

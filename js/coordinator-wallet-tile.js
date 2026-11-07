@@ -4,7 +4,7 @@
 
    Reads ONLY the signed-in coordinator's own `wallets` row, the same table the tasker wallet reads (the existing
    row-level rule lets a person read their own wallet only). It never creates a wallet and never changes anything:
-   money moves only on wallet.html, through the server. If the balance cannot be read it shows a dash and a
+   money moves only on coordinator-wallet.html, through the server. If the balance cannot be read it shows a dash and a
    message, never a made-up number. A coordinator with no wallet row yet has a balance of 0.
 
    Runs on the `coordinator:ready` event from js/coordinator.js (after the route guard passed).

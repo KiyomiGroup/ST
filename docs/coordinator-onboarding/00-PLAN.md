@@ -27,3 +27,14 @@ Owner request (2026-11-06). Owner rules: uses ONLY the Supabase SQL editor and d
 | S6 | Sign-up redeem flow + routing to coordinator page, full QA at 390/768/1280, final zip | Final push | todo |
 
 Each stage has `docs/coordinator-onboarding/handoff-Sx.md`. Read in this order: this file, the previous handoff, `AGENTS.md`, `DESIGN-SYSTEM.md` (4.14, section 9).
+
+## Separation request (owner, 2026-11-07)
+Coordinators must be completely separate from customer and tasker accounts (chosen: coordinator-only login). Coordinators must pass a Didit identity check AFTER the test and BEFORE they can work. The guide PDF is shown only to an approved applicant who was sent the test link. The test becomes 20 questions.
+
+| Stage | Content | Status |
+|---|---|---|
+| A | coordinator-wallet.html (own wallet page), no links to customer/tasker pages from coordinator login/nav/dashboard, login.html signs coordinator accounts out, PDF link removed from apply page and bad-link state | DONE 2026-11-07 (stub-tested in headless Chromium, NOT run on real Supabase) |
+| B | Owner runs STEP-B read-only checks and sends results | waiting on owner |
+| C | 20-question test (RPC serves 20; add ~20 new questions from the PDF), server-side test-link check, PDF served only for a valid link (function) | todo (needs B) |
+| D | Coordinator-only sign-up page (account role coordinator, code redeemed there), remove code box/links from signup.html | todo (needs B) |
+| E | Coordinator identity check (Didit) after the test, gate before work; verify.html proxy mode into coordinator shell | todo (needs B) |

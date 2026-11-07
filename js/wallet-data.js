@@ -1,6 +1,6 @@
 /* ============================================================
    STREETTASKER — wallet-data.js
-   Real data for wallet.html. Loads after wallet-ui.js.
+   Real data for wallet.html (customers, taskers) and coordinator-wallet.html (coordinators only). Loads after wallet-ui.js.
 
    WHAT IS LIVE (tasker)
    - Balance cards ......... wallets.balance and wallets.pending_balance
@@ -37,6 +37,7 @@
   var page = document.getElementById('walletPage');
   if (!page) return;
 
+  var COORD_SHELL = page.getAttribute('data-wallet-shell') === 'coordinator';   // coordinator-wallet.html (see the Start section)
   var PAGE_SIZE = 5;
   var CREDIT_TYPES = ['escrow_release', 'earning'];
   var SVG_NS = 'http://www.w3.org/2000/svg';
@@ -155,7 +156,7 @@
       if (k === thisKey) thisM += r.amount; else if (k === lastKey) lastM += r.amount;
     });
     setAmount('lifetime', total);
-    setText('lifetime-tasks', plural(count, 'task', 'tasks') + ' completed');
+    setText('lifetime-tasks', COORD_SHELL ? plural(count, 'commission payment', 'commission payments') + ' received' : plural(count, 'task', 'tasks') + ' completed');
     if (lastM > 0) {
       var pct = Math.round(((thisM - lastM) / lastM) * 100);
       setText('lifetime-growth', (pct > 0 ? '+' : '') + pct + '%');
@@ -1154,28 +1155,49 @@
   }
 
   /* ── Start ───────────────────────────────────────────────── */
+  /* Two pages use this file:
+       wallet.html              customers and taskers (the public navbar).
+       coordinator-wallet.html  coordinators ONLY (the coordinator portal; page attribute data-wallet-shell="coordinator").
+     A coordinator has no customer or tasker account, so the two never mix: the coordinator page sends anyone who is not an
+     ACTIVE coordinator to coordinator-login.html, and wallet.html sends an active coordinator to coordinator-wallet.html. */
   function start() {
     var sb = window.supabase;
     if (!sb) { page.classList.remove('wl-loading'); return; }
     sb.auth.getSession().then(function (r) {
       var user = r && r.data && r.data.session && r.data.session.user;
-      if (!user) { window.location.replace('login.html?redirect=' + encodeURIComponent('wallet.html')); return; }
+      if (!user) {
+        window.location.replace(COORD_SHELL
+          ? 'coordinator-login.html?redirect=' + encodeURIComponent('coordinator-wallet.html')
+          : 'login.html?redirect=' + encodeURIComponent('wallet.html'));
+        return;
+      }
       state.uid = user.id;
+
+      if (COORD_SHELL) {
+        // Coordinator page: only the exact answer true from the DATABASE counts. Any failure means "not allowed".
+        return isActiveCoordinator(sb).then(function (isCoordinator) {
+          if (!isCoordinator) { window.location.replace('coordinator-login.html?denied=no'); return; }
+          state.coordinator = true;
+          state.role = 'tasker';   // the money screens are the same ones a tasker has
+          page.setAttribute('data-role', 'tasker');
+          var openHash = function () { if (bankApi) bankApi.openFromHash(); };   // coordinator-wallet.html#bank-details
+          return loadTasker().then(openHash, openHash);
+        });
+      }
+
       var roleP = (window.ST && window.ST.auth && window.ST.auth.getUserRole)
         ? window.ST.auth.getUserRole(user).catch(function () { return null; }) : Promise.resolve(null);
       return roleP.then(function (role) {
-        // Stage 7F: a tasker, or an ACTIVE coordinator, gets the tasker-style wallet. A coordinator is asked of the DATABASE
-        // (is_active_coordinator() reads the signed-in session); only the exact answer true counts, and any failure means "no"
+        // A tasker gets the tasker wallet. Anyone else is asked of the DATABASE whether they are an ACTIVE coordinator
+        // (is_active_coordinator() reads the signed-in session); an active coordinator belongs in the coordinator portal, so
+        // they are sent to coordinator-wallet.html and never see this page. Any failure of that question means "no"
         // (the customer view, no money buttons). The server checks again on every bank account and withdrawal call.
         var asked = role === 'tasker' ? Promise.resolve(false) : isActiveCoordinator(sb);
         return asked.then(function (isCoordinator) {
-          state.coordinator = isCoordinator;
-          state.role = (role === 'tasker' || isCoordinator) ? 'tasker' : 'customer';   // the session decides, never the URL
+          if (isCoordinator) { window.location.replace('coordinator-wallet.html' + (location.hash || '')); return; }
+          state.coordinator = false;
+          state.role = role === 'tasker' ? 'tasker' : 'customer';   // the session decides, never the URL
           page.setAttribute('data-role', state.role);
-          if (isCoordinator) {
-            page.setAttribute('data-wallet-owner', 'coordinator');
-            $$('[data-wl-coordinator]').forEach(function (n) { n.hidden = false; });   // the way back to the coordinator portal
-          }
           if (state.role === 'tasker') {
             var openHash = function () { if (bankApi) bankApi.openFromHash(); };   // wallet.html#bank-details
             return loadTasker().then(openHash, openHash);

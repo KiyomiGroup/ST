@@ -210,7 +210,25 @@
         return true;
       }
       if (co.status === 'invalid') showToast('That coordinator code has already been used or has expired, so it was not applied. You are signed in as normal.');
+      /* A coordinator account is coordinator-only: it never signs in to the customer or tasker side. The database says who is a
+         coordinator; if it cannot answer, the person is NOT turned away (a failed check must never lock a customer out). */
+      if (await isCoordinatorAccount()) {
+        coordinatorBlocked = true;
+        try { await window.supabase.auth.signOut(); } catch (e) { /* the page below still explains */ }
+        try { ['st_role', 'st_name', 'st_session', 'st_email', 'st_avatar', 'st_uid'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+        showNotice('warning', 'This is a coordinator account',
+          'Coordinator accounts have their own sign-in page and cannot be used as a customer or tasker account.',
+          { label: 'Go to coordinator sign-in', onClick: () => { window.location.href = 'coordinator-login.html'; } });
+        return true;
+      }
       return false;
+    }
+    let coordinatorBlocked = false;
+    async function isCoordinatorAccount() {
+      try {
+        const r = await window.supabase.rpc('is_coordinator');
+        return !r.error && r.data === true;
+      } catch (e) { return false; }
     }
 
     function initPage() {
@@ -426,7 +444,11 @@
           const { user } = await window.ST.auth.loginUser(email, pwd);
 
           /* A coordinator code from sign-up or the coordinator test: they become a coordinator and go to the coordinator page */
-          if (await coordinatorAfterLogin(user)) { if (window.ST.auth.isFirstLogin(user)) await window.ST.auth.markWelcomed(); return; }
+          if (await coordinatorAfterLogin(user)) {
+            if (coordinatorBlocked) { btn.innerHTML = originalHTML; btn.disabled = false; return; }   /* coordinator account: signed out, told where to sign in */
+            if (window.ST.auth.isFirstLogin(user)) await window.ST.auth.markWelcomed();
+            return;
+          }
 
           /* Where to: the page they came for, else (first log-in only) post a service / post a task, else home */
           const role     = await window.ST.auth.getUserRole(user);

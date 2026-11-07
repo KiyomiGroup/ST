@@ -31,11 +31,8 @@
     el.classList.toggle('co-banner--info', kind === 'info');
     el.hidden = false;
   }
-  var NOT_COORDINATOR_LINKS = [
-    { text: 'Log in', href: 'login.html' },
-    { text: 'or sign up', href: 'signup.html' }
-  ];
-  function showNotCoordinator() { showMsg(DENIED_TEXT.no, null, NOT_COORDINATOR_LINKS); }
+  /* Coordinator accounts are separate from customer and tasker accounts, so this page never points to the customer or tasker sign-in. */
+  function showNotCoordinator() { showMsg(DENIED_TEXT.no); }
   function hideMsg() { var el = $('coLoginMsg'); if (el) el.hidden = true; }
 
   /* Only coordinator pages on this site are accepted as a destination. */
@@ -63,7 +60,7 @@
   }
 
   var DENIED_TEXT = {
-    no: "This account is not a coordinator account. Coordinator access is by approval only. Customer or tasker?",
+    no: "This account is not a coordinator account. Coordinator access is by approval only.",
     inactive: "Your coordinator account isn't active. Please contact StreetTasker Coordinator Support."
   };
 

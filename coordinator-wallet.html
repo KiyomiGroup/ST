@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Wallet — StreetTasker Coordinator</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/coordinator.css" />
+  <link rel="stylesheet" href="css/wallet.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="co-page co-guarding">
+
+  <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
+
+  <!-- Route guard (js/coordinator.js): nothing below is visible until the server says this is an active coordinator. -->
+  <div class="co-gate" id="coGate" role="status" aria-live="polite">
+    <p class="co-gate-text" id="coGateText">Checking your access…</p>
+    <div class="co-gate-error" id="coGateError" hidden>
+      <p>We couldn't check your access just now. Check your connection and try again.</p>
+      <button type="button" class="btn btn-primary" id="coGateRetry">Try again</button>
+    </div>
+  </div>
+
+  <div class="co-app" id="coApp">
+    <div id="coNavRoot"></div>
+
+    <main class="co-main" id="coMain">
+
+      <!-- The coordinator wallet. It lives inside the coordinator portal: nothing on this page links to a customer or tasker page.
+           It reuses js/wallet-data.js (balance, ledger, bank accounts, withdrawals); data-wallet-shell="coordinator" tells that
+           file to answer to the coordinator guard and to send anyone who is not an active coordinator to coordinator-login.html.
+           Money is still checked on the server for every bank account and withdrawal. -->
+      <section class="co-hero co-hero--page" aria-labelledby="coHeroTitle">
+        <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Wallet</p>
+        <h1 id="coHeroTitle">Wallet &amp; withdrawals</h1>
+        <p class="co-hero-sub">Your commission, your bank accounts and your withdrawals.</p>
+        <div class="co-hero-actions">
+          <button type="button" class="btn btn-primary" data-action="withdraw">Withdraw to bank</button>
+          <button type="button" class="co-btn-onhero btn" data-bank-open="list">Bank details</button>
+        </div>
+      </section>
+
+      <div class="wl-page co-wallet wl-loading" id="walletPage" data-role="tasker" data-wallet-owner="coordinator" data-wallet-shell="coordinator">
+        <div class="wl-container">
+          <div class="wl-main" id="walletMain">
+            <section aria-label="Balances" class="wl-balances">
+<article class="wl-bal wl-bal-primary" data-wl-card="available">
+<header class="wl-bal-head">
+<h2 class="wl-bal-label">Available balance</h2>
+<span aria-hidden="true" class="wl-bal-icon"><svg class="wl-i"><use href="#i-banknote"></use></svg></span>
+</header>
+<p class="wl-amt"><span class="wl-amt-cur">₦</span><span class="wl-amt-num" data-wl-value="available">—</span><span class="wl-amt-dec">.00</span></p>
+<p class="wl-bal-note">Ready for immediate transfer</p>
+<!-- CR-2: hidden until clearing > 0 -->
+<div class="wl-clr" data-wl-clearing="" hidden="">
+<p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">₦<span data-wl-value="clearing">—</span><span class="wl-amt-dec">.00</span></span></p>
+<p class="wl-clr-note" data-wl-value="clearing-note"></p>
+</div>
+<footer class="wl-bal-foot wl-bal-foot-line">
+<button class="wl-btn wl-btn-mint" data-action="withdraw" type="button">Withdraw Funds<svg aria-hidden="true" class="wl-i"><use href="#i-arrow-right"></use></svg></button>
+</footer>
+</article>
+<article class="wl-bal" data-wl-card="lifetime">
+<header class="wl-bal-head">
+<h2 class="wl-bal-label">Total earned</h2>
+<span aria-hidden="true" class="wl-bal-icon"><svg class="wl-i"><use href="#i-badge-check"></use></svg></span>
+</header>
+<p class="wl-amt"><span class="wl-amt-cur">₦</span><span class="wl-amt-num" data-wl-value="lifetime">—</span><span class="wl-amt-dec">.00</span></p>
+<p class="wl-bal-note" data-wl-value="lifetime-tasks">—</p>
+
+</article>
+</section>
+            <section aria-label="Available to withdraw" class="wl-bal-mob wl-mob">
+<div class="wl-bal-mob-top">
+<div>
+<h2 class="wl-bal-label">Available to withdraw</h2>
+<p class="wl-amt"><span class="wl-amt-cur">₦</span><span class="wl-amt-num" data-wl-value="available">—</span><span class="wl-amt-dec">.00</span></p>
+</div>
+
+</div>
+<!-- CR-2: hidden until clearing > 0 -->
+<div class="wl-clr" data-wl-clearing="" hidden="">
+<p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">₦<span data-wl-value="clearing">—</span><span class="wl-amt-dec">.00</span></span></p>
+<p class="wl-clr-note" data-wl-value="clearing-note"></p>
+</div>
+<button class="wl-btn wl-btn-block" data-action="withdraw" type="button"><svg aria-hidden="true" class="wl-i"><use href="#i-arrow-up-right"></use></svg>Withdraw to Bank</button>
+</section>
+            <section aria-labelledby="ledgerTitle" class="wl-ledger wl-desk">
+<header class="wl-led-head">
+<div class="wl-led-copy">
+<h2 class="wl-led-title" id="ledgerTitle">Financial Ledger</h2>
+<p class="wl-sec-sub">Your commission and bank withdrawals.</p>
+
+</div>
+<div aria-controls="ledgerTasker" aria-label="Filter transactions" class="wl-filters" role="group">
+<button aria-pressed="true" class="wl-filter" data-filter="all" type="button">All Transactions</button>
+<button aria-pressed="false" class="wl-filter" data-filter="earning" type="button">Commission</button>
+<button aria-pressed="false" class="wl-filter" data-filter="withdrawal" type="button">Withdrawals</button>
+
+
+</div>
+
+</header>
+<div class="wl-led-pane" data-live="" data-total="0" id="ledgerTasker">
+<ul aria-live="polite" class="wl-tx-list"></ul>
+<p class="wl-led-empty">Loading your transactions…</p>
+<footer class="wl-led-foot">
+<p aria-live="polite" class="wl-led-count">Showing <span data-wl-shown="">0</span> of <span data-wl-total="">0</span> transaction<span data-wl-plural="">s</span></p>
+<div class="wl-pager">
+<button class="wl-pager-btn" data-action="ledger-prev" disabled="" type="button">Previous</button>
+<button class="wl-pager-btn wl-pager-next" data-action="ledger-next" type="button">Next</button>
+</div>
+</footer>
+</div>
+
+</section>
+            <section aria-labelledby="actTitle" class="wl-activity wl-mob">
+<header class="wl-sec-head">
+<h2 class="wl-sec-title" id="actTitle">Recent Activity</h2>
+<span class="wl-act-live">Updated live</span>
+</header>
+<ul aria-live="polite" class="wl-act-list" id="actTasker"></ul>
+<p class="wl-act-empty" id="actTaskerEmpty">Loading your activity…</p>
+
+</section>
+          </div>
+        </div>
+
+        <dialog aria-labelledby="wdTitle" class="wl-modal" id="withdrawModal">
+<header class="wl-modal-head">
+<span aria-hidden="true" class="wl-modal-icon"><svg class="wl-i"><use href="#i-wallet"></use></svg></span>
+<div class="wl-modal-heading">
+<h2 class="wl-modal-title" id="wdTitle">Withdraw to bank</h2>
+<p class="wl-modal-step" data-wd-stepline="">Step 1 of 2 • Choose account and amount</p>
+</div>
+<button aria-label="Close withdrawal" class="wl-modal-close" data-wd-close="" type="button"><svg aria-hidden="true" class="wl-i"><use href="#i-x"></use></svg></button>
+</header>
+<!-- Step 1 · Saved account + amount -->
+<form class="wl-modal-panel" data-wd-step="1" id="wdStep1" novalidate="">
+<div class="wl-modal-body">
+<div class="wl-wd-avail">
+<span class="wl-wd-avail-label">Available balance</span>
+<span class="wl-wd-avail-amt">₦<span data-wd="available">—</span><span class="wl-amt-dec">.00</span></span>
+</div>
+<!-- CR-2: hidden until clearing > 0 -->
+<div class="wl-clr wl-clr-wd" data-wd-clearing="" hidden="">
+<p class="wl-clr-row"><span class="wl-clr-label">Clearing</span><span class="wl-clr-amt">₦<span data-wd="clearing">—</span><span class="wl-amt-dec">.00</span></span></p>
+<p class="wl-clr-note" data-wd="clearing-note"></p>
+</div>
+<!-- Pay to: saved accounts (W6c fills #wdAccountList from #wdAccountTemplate; the default is pre-selected) -->
+<fieldset aria-describedby="wdAccountsError" class="wl-acct-set" id="wdAccounts">
+<legend class="wl-label">Pay to</legend>
+<p class="wl-acct-note" hidden="" id="wdAccountsLoading" role="status">Loading your bank accounts…</p>
+<div class="wl-acct-list" id="wdAccountList"></div>
+<div class="wl-acct-empty" hidden="" id="wdAccountsEmpty">
+<span aria-hidden="true" class="wl-acct-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<p class="wl-acct-empty-title">No bank account saved yet</p>
+<p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+</div>
+<p class="wl-field-error" id="wdAccountsError" role="alert"></p>
+<button class="wl-btn wl-btn-soft wl-acct-add" data-bank-open="add" id="wdAddAccountBtn" type="button"><svg aria-hidden="true" class="wl-i"><use href="#i-plus-circle"></use></svg>Add bank account</button>
+</fieldset>
+<label class="wl-label" for="wdAmount">Amount to withdraw</label>
+<div class="wl-field" data-wd-field="">
+<span aria-hidden="true" class="wl-field-naira">₦</span>
+<input aria-describedby="wdLimits wdError" autocomplete="off" class="wl-input" id="wdAmount" inputmode="numeric" placeholder="0" type="text"/>
+</div>
+<p class="wl-field-error" id="wdError" role="alert"></p>
+<div aria-label="Quick amounts" class="wl-presets" role="group">
+<span class="wl-presets-label">Quick pick</span>
+<button class="wl-preset" data-wd-preset="0.25" type="button">25%</button>
+<button class="wl-preset" data-wd-preset="0.5" type="button">50%</button>
+<button class="wl-preset" data-wd-preset="1" type="button">Max</button>
+</div>
+<p class="wl-wd-hint" id="wdLimits">Minimum ₦<span data-wd="min">500</span> and maximum ₦<span data-wd="max">500,000</span> per withdrawal, up to ₦<span data-wd="daily">1,000,000</span> a day. A small transfer fee is taken from the amount; you will see it before you confirm.</p>
+<p class="wl-field-error" id="wdFormError" role="alert"></p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-wd-close="" type="button">Cancel</button>
+<button class="wl-btn" data-wd-continue="" disabled="" type="submit">Continue<svg aria-hidden="true" class="wl-i"><use href="#i-arrow-right"></use></svg></button>
+</footer>
+</form>
+<!-- Step 2 · Review (amount, fee, you receive) -->
+<div class="wl-modal-panel" data-wd-step="2" hidden="" id="wdStep2">
+<div class="wl-modal-body">
+<div class="wl-wd-total">
+<span class="wl-wd-avail-label">You receive</span>
+<span class="wl-wd-total-amt">₦<span data-wd="receive">0</span><span class="wl-amt-dec">.00</span></span>
+</div>
+<dl class="wl-wd-rows">
+<div><dt>Amount from your wallet</dt><dd>₦<span data-wd="amount">0</span>.00</dd></div>
+<div><dt>Transfer fee</dt><dd>−₦<span data-wd="fee">0</span>.00</dd></div>
+<div><dt>Bank</dt><dd data-wd="bank">-</dd></div>
+<div><dt>Account name</dt><dd data-wd="name">-</dd></div>
+<div><dt>Account number</dt><dd data-wd="acct">-</dd></div>
+</dl>
+<p class="wl-bal-callout"><svg aria-hidden="true" class="wl-i"><use href="#i-shield"></use></svg>Bank transfers cannot be reversed. Check the account details above before you confirm.</p>
+<p class="wl-field-error" id="wdConfirmError" role="alert"></p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-wd-back="" type="button">Back</button>
+<button class="wl-btn" data-wd-confirm="" type="button">Confirm Withdrawal</button>
+</footer>
+</div>
+<!-- Step 3 · Processing (the money is not at the bank yet, so this is NOT "All done") -->
+<div class="wl-modal-panel" data-wd-step="3" hidden="" id="wdStep3">
+<div class="wl-modal-body wl-wd-done" role="status">
+<span aria-hidden="true" class="wl-wd-done-icon"><svg class="wl-i"><use href="#i-clock"></use></svg></span>
+<h3 class="wl-wd-done-title" tabindex="-1">Withdrawal processing</h3>
+<p class="wl-wd-done-text">₦<span data-wd="receive">0</span>.00 is on its way to <span data-wd="bank">your bank</span> (<span data-wd="acct">-</span>). Your wallet has been debited. We will let you know when it arrives, and you can follow it in your transactions.</p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-block" data-wd-close="" type="button">Done</button>
+</footer>
+</div>
+<!-- Step 4 · Failed (W6c puts the plain message from the server in [data-wd="failMessage"]) -->
+<div class="wl-modal-panel" data-wd-step="4" hidden="" id="wdStep4">
+<div class="wl-modal-body wl-wd-done" role="alert">
+<span aria-hidden="true" class="wl-wd-done-icon wl-wd-done-icon-fail"><svg class="wl-i"><use href="#i-x"></use></svg></span>
+<h3 class="wl-wd-done-title" tabindex="-1">Withdrawal not completed</h3>
+<p class="wl-wd-done-text" data-wd="failMessage">We could not complete your withdrawal. Please try again.</p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-wd-close="" type="button">Close</button>
+<button class="wl-btn" data-wd-retry="" type="button">Try again</button>
+</footer>
+</div>
+<!-- One saved-account card. W6c clones this for each saved account and sets: the radio value
+         (the account id), data-acct="bank", "name", "last4", and shows data-acct="default" for the default. -->
+<template id="wdAccountTemplate">
+<label class="wl-acct">
+<input class="wl-acct-input" name="wdAccount" type="radio" value=""/>
+<span aria-hidden="true" class="wl-acct-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<span class="wl-acct-text">
+<span class="wl-acct-head">
+<span class="wl-acct-bank" data-acct="bank"></span>
+<span class="wl-acct-default" data-acct="default" hidden="">Default</span>
+</span>
+<span class="wl-acct-name" data-acct="name"></span>
+<span class="wl-acct-num">•••• <span data-acct="last4"></span></span>
+</span>
+<span aria-hidden="true" class="wl-acct-check"><svg class="wl-i"><use href="#i-circle-check"></use></svg></span>
+</label>
+</template>
+</dialog>
+
+        <dialog aria-labelledby="bkTitle" class="wl-modal" id="bankModal">
+<header class="wl-modal-head">
+<span aria-hidden="true" class="wl-modal-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<div class="wl-modal-heading">
+<h2 class="wl-modal-title" id="bkTitle">Bank details</h2>
+<p class="wl-modal-step" data-bk-stepline="">Saved accounts</p>
+</div>
+<button aria-label="Close bank details" class="wl-modal-close" data-bk-close="" type="button"><svg aria-hidden="true" class="wl-i"><use href="#i-x"></use></svg></button>
+</header>
+<!-- Panel 1 · Saved accounts -->
+<div class="wl-modal-panel" data-bk-panel="list" data-bk-step="Saved accounts" id="bkPanelList">
+<div class="wl-modal-body">
+<p class="wl-bk-intro">Your withdrawals are only ever paid to a bank account saved here. You can save up to <span data-bk="max">3</span> accounts.</p>
+<p class="wl-acct-note" hidden="" id="bkLoading" role="status">Loading your bank accounts…</p>
+<p class="wl-field-error" id="bkListError" role="alert"></p>
+<button class="wl-btn wl-btn-soft wl-bk-retry" data-bk-reload="" hidden="" id="bkReloadBtn" type="button">Try again</button>
+<ul class="wl-bk-list" id="bkAccountList" role="list"></ul>
+<div class="wl-acct-empty" hidden="" id="bkEmpty">
+<span aria-hidden="true" class="wl-acct-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<p class="wl-acct-empty-title">No bank account saved yet</p>
+<p class="wl-acct-empty-text">Add the account you want your money sent to. You only need to do this once.</p>
+</div>
+<p class="wl-bk-note" hidden="" id="bkMaxNote">You have saved the most accounts allowed. Remove one if you want to add another.</p>
+<p class="wl-bk-note" hidden="" id="bkCooldownNote"></p>
+<p class="wl-bk-status" id="bkListStatus" role="status"></p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-bk-close="" type="button">Close</button>
+<button class="wl-btn" data-bk-add="" id="bkAddBtn" type="button"><svg aria-hidden="true" class="wl-i"><use href="#i-plus-circle"></use></svg>Add account</button>
+</footer>
+</div>
+<!-- Panel 2 · Add a bank account (the name is checked automatically; Save stays off until it shows) -->
+<form autocomplete="off" class="wl-modal-panel" data-bk-panel="add" data-bk-step="Add a bank account" hidden="" id="bkAddForm" novalidate="">
+<div class="wl-modal-body">
+<label class="wl-label" for="bkBank">Bank</label>
+<div class="wl-field wl-field-sm" data-bk-field="bank">
+<select aria-describedby="bkBankNote bkBankError" class="wl-select" disabled="" id="bkBank" name="bank" required="">
+<option value="">Choose your bank</option>
+</select>
+<svg aria-hidden="true" class="wl-i wl-sel-chev"><use href="#i-chevron-down"></use></svg>
+</div>
+<p class="wl-acct-note wl-bk-hint" hidden="" id="bkBankNote" role="status">Loading banks…</p>
+<p class="wl-field-error" id="bkBankError" role="alert"></p>
+<button class="wl-btn wl-btn-soft wl-bk-retry" data-bk-banks-retry="" hidden="" id="bkBanksRetry" type="button">Try again</button>
+<label class="wl-label wl-label-gap" for="bkAcct">Account number</label>
+<div class="wl-field wl-field-sm" data-bk-field="acct">
+<input aria-describedby="bkAcctHint bkAcctError" autocapitalize="off" autocomplete="off" autocorrect="off" class="wl-input" id="bkAcct" inputmode="numeric" maxlength="10" name="account_number" pattern="[0-9]*" placeholder="10 digits" required="" spellcheck="false" type="text"/>
+</div>
+<p class="wl-wd-hint wl-bk-hint" id="bkAcctHint">The 10-digit number on your bank card or app.</p>
+<p class="wl-field-error" id="bkAcctError" role="alert"></p>
+<!-- Live region: always present so screen readers announce what appears inside it -->
+<div aria-live="polite" class="wl-bk-check" id="bkCheck">
+<p class="wl-bk-checking" data-bk="checking" hidden=""><span aria-hidden="true" class="wl-bk-spin"></span>Checking account…</p>
+<div class="wl-bk-verified" data-bk="verified" hidden="">
+<span aria-hidden="true" class="wl-bk-verified-icon"><svg class="wl-i"><use href="#i-circle-check"></use></svg></span>
+<div class="wl-bk-verified-text">
+<p class="wl-bk-verified-label">Account name</p>
+<p class="wl-bk-verified-name" data-bk="resolvedName"></p>
+</div>
+</div>
+</div>
+<p class="wl-bal-callout wl-bk-callout"><svg aria-hidden="true" class="wl-i"><use href="#i-shield"></use></svg>We check the account name with the bank before saving. Make sure the name above is yours.</p>
+<p class="wl-field-error" id="bkFormError" role="alert"></p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-bk-back="" type="button">Back</button>
+<button class="wl-btn" data-bk-save="" disabled="" id="bkSaveBtn" type="submit">Save account</button>
+</footer>
+</form>
+<!-- Panel 3 · Remove: asks once more, in plain words -->
+<div class="wl-modal-panel" data-bk-panel="remove" data-bk-step="Remove a bank account" hidden="" id="bkPanelRemove">
+<div class="wl-modal-body">
+<h3 class="wl-bk-confirm-title" tabindex="-1">Remove this bank account?</h3>
+<div class="wl-bk-summary">
+<span aria-hidden="true" class="wl-acct-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<span class="wl-acct-text">
+<span class="wl-acct-bank" data-bk="removeBank"></span>
+<span class="wl-acct-name" data-bk="removeName"></span>
+<span class="wl-acct-num">•••• <span data-bk="removeLast4"></span></span>
+</span>
+</div>
+<p class="wl-bk-confirm-text">It will no longer be offered when you withdraw. You can add it again later.</p>
+<p class="wl-bk-confirm-text" data-bk="removeDefaultNote" hidden="">This is your default account. Your oldest other saved account becomes the default.</p>
+<p class="wl-bk-confirm-text">If a withdrawal to this account is still on its way, wait until it arrives before you remove it.</p>
+<p class="wl-field-error" id="bkRemoveError" role="alert"></p>
+</div>
+<footer class="wl-modal-foot">
+<button class="wl-btn wl-btn-grey" data-bk-remove-cancel="" type="button">Cancel</button>
+<button class="wl-btn wl-btn-danger" data-bk-remove-confirm="" type="button">Remove</button>
+</footer>
+</div>
+<!-- One saved-account row. W6e clones this for each saved account and fills the data-bk hooks.
+         It also sets aria-label on the two buttons ("Make Guaranty Trust Bank, ending 1234, the default",
+         "Remove Guaranty Trust Bank, ending 1234") so a screen reader can tell the rows apart. -->
+<template id="bkAccountTemplate">
+<li class="wl-bk-item">
+<div class="wl-bk-main">
+<span aria-hidden="true" class="wl-acct-icon"><svg class="wl-i"><use href="#i-landmark"></use></svg></span>
+<span class="wl-acct-text">
+<span class="wl-acct-head">
+<span class="wl-acct-bank" data-bk="bank"></span>
+<span class="wl-acct-default" data-bk="default" hidden="">Default</span>
+</span>
+<span class="wl-acct-name" data-bk="name"></span>
+<span class="wl-acct-num">•••• <span data-bk="last4"></span></span>
+<span class="wl-bk-cool" data-bk="cooldown" hidden=""></span>
+</span>
+</div>
+<div class="wl-bk-actions">
+<button class="wl-bk-action" data-bk-default="" hidden="" type="button">Make default</button>
+<button class="wl-bk-action wl-bk-action-danger" data-bk-remove="" type="button">Remove</button>
+</div>
+</li>
+</template>
+</dialog>
+      </div>
+
+    </main>
+  </div>
+
+  <svg aria-hidden="true" class="wl-sprite" focusable="false" height="0" width="0">
+<defs>
+<symbol id="i-wallet" viewbox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-shield-check" viewbox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-gift" viewbox="0 0 24 24"><rect height="4" rx="1" width="18" x="3" y="8"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="18" x="3" y="11"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-banknote" viewbox="0 0 24 24"><rect height="12" rx="2" width="20" x="2" y="6"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-shield" viewbox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-badge-check" viewbox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-arrow-right" viewbox="0 0 24 24"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></symbol>
+<symbol id="i-arrow-up-right" viewbox="0 0 24 24"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></symbol>
+<symbol id="i-trending-up" viewbox="0 0 24 24"><path d="M16 7h6v6"></path><path d="m22 7-8.5 8.5-5-5L2 17"></path></symbol>
+<symbol id="i-chevron-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-broom" viewbox="0 0 24 24"><path d="m16 22-1-4"></path><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"></path><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"></path><path d="m8 22 1-4"></path></symbol>
+<symbol id="i-shirt" viewbox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-wrench" viewbox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></symbol>
+<symbol id="i-copy" viewbox="0 0 24 24"><rect height="14" rx="2" width="14" x="8" y="8"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-plus-circle" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></symbol>
+<symbol id="i-arrow-down" viewbox="0 0 24 24"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></symbol>
+<symbol id="i-hourglass" viewbox="0 0 24 24"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></symbol>
+<symbol id="i-credit-card" viewbox="0 0 24 24"><rect height="14" rx="2" width="20" x="2" y="5"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-landmark" viewbox="0 0 24 24"><path d="M3 22h18"></path><path d="M6 18v-7"></path><path d="M10 18v-7"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M12 2 20 7H4z"></path></symbol>
+<symbol id="i-pencil" viewbox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-square-pen" viewbox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></symbol>
+<symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-circle-check" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+</defs>
+</svg>
+
+  <!-- Supabase CDN must load before supabaseClient.js. The public navbar and js/auth.js are NOT loaded here on purpose. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/coordinator.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/wallet-ui.js"></script>
+  <script src="js/wallet-data.js"></script>
+</body>
+</html>

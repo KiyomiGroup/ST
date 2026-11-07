@@ -644,3 +644,15 @@ body.co-drawer-open { overflow: hidden; }
 #coRv .co-consent-meta { margin-top: var(--space-4); }
 #coRv .co-rv-scale { display: flex; flex-wrap: wrap; column-gap: var(--space-5); }
 #coRv[hidden], #coRvForm[hidden], #coRvDone[hidden], #coRvFoot[hidden] { display: none; }
+
+/* ── Coordinator wallet (coordinator-wallet.html) ───────────
+   js/wallet-data.js and css/wallet.css draw the money screens; the coordinator page has no wallet hero (the portal hero above it
+   carries the buttons), so the balance cards show at every width and the compact phone card is not used. Tokens only. */
+.wl-page.co-wallet[data-role="tasker"] { padding: 0; overflow: visible; background: transparent; }
+.wl-page.co-wallet[data-role="tasker"]::before { display: none; }
+.wl-page.co-wallet[data-role="tasker"] .wl-container { width: 100%; padding-top: 0; }
+.wl-page.co-wallet[data-role="tasker"] .wl-balances { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; position: static; }
+.wl-page.co-wallet[data-role="tasker"] .wl-bal-mob { display: none; }
+@media (max-width: 560px) {
+  .wl-page.co-wallet[data-role="tasker"] .wl-balances { grid-template-columns: minmax(0, 1fr); }
+}
