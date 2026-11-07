@@ -22,3 +22,7 @@
 3. PNG fonts with real Manrope (Google Fonts). If the PNG shows a different font, tell me and I will embed the font files.
 4. Print one A5 and one A4 PDF on paper.
 5. Delete `flyer-preview.html` and `js/flyer-preview.js` if no longer wanted.
+
+## Design changes after owner review
+- Flyer paper is plain white (`.fl` background), no cream gradient. The `--fl-cream*` tokens are now unused.
+- The vertical "StreetTasker" bar on the left was removed from the template and CSS (`images/flyer/logo-bar.png` is no longer used and can be deleted).

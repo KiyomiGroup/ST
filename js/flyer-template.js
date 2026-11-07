@@ -158,8 +158,6 @@
     }));
     ph.appendChild(img); frame.appendChild(ph); t.appendChild(frame);
 
-    var bar = el('img', 'fl-bar'); bar.src = ASSETS + 'logo-bar.png'; bar.alt = '';
-    t.appendChild(bar);
 
     /* B. Details */
     var info = el('div', 'fl-info');
