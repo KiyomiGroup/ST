@@ -621,3 +621,21 @@
   --home-cat-ring-top:        -38px;
   --home-cat-ring-right:      -40px;
 }
+
+/* ── Tasker promotional flyer (css/flyer.css, js/flyer-template.js) ──
+   Print artwork, so it has its own palette. --fl-green is the exact green of the official StreetTasker logo files
+   (sampled from images/flyer/logo-wordmark.png). The others are sampled from the approved flyer reference image.
+   Marked "derived" = a lighter or darker step of a sampled value. */
+:root {
+  --fl-green:        #168A45;   /* official logo green: headline, pills, QR frame, icons */
+  --fl-green-deep:   #17693A;   /* sampled: footer pill, lower wave */
+  --fl-green-light:  #4AAF6D;   /* sampled: light wave, check circles */
+  --fl-green-mint:   #CFF5DB;   /* derived: marker highlight behind "StreetTasker" */
+  --fl-cream:        #FCF3EA;   /* sampled and lightened: paper colour of the flyer */
+  --fl-cream-edge:   #F6E3D2;   /* derived: warm edge of the paper gradient */
+  --fl-ink:          #1A1A1A;   /* charcoal text */
+  --fl-ink-soft:     #4A4A4A;   /* secondary text */
+  --fl-rule:         #D9CFC4;   /* thin dividers */
+  --fl-white:        #FFFFFF;
+  --fl-photo-bg:     #E3EFE7;   /* behind the photo while it loads */
+}

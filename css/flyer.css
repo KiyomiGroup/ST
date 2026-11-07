@@ -1,0 +1,90 @@
+/* StreetTasker promotional flyer (Tasker "My Promotional Flyer").
+   One template, drawn in ONE unit: --u. By default one u is one mm, so the canvas is 154 x 216 mm = A5 (148 x 210) + 3 mm bleed on every side.
+   Everything inside (.fl-trim) is positioned in trim millimetres, so the artwork scales cleanly: preview sets --u in px, A5 print leaves 1mm,
+   A4 print uses about 1.414mm, PNG export picks a larger value. Do not use px or pt inside .fl.
+   Colours are --fl-* tokens (css/tokens.css). Built by js/flyer-template.js. Not used by the gift card. */
+
+.fl {
+  --u: 1mm;
+  position: relative; box-sizing: border-box; width: calc(154 * var(--u)); height: calc(216 * var(--u)); overflow: hidden;
+  background: linear-gradient(165deg, var(--fl-cream) 0%, var(--fl-cream) 55%, var(--fl-cream-edge) 100%); color: var(--fl-ink);
+  font-family: var(--font-body); line-height: 1.2;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.fl *, .fl *::before, .fl *::after { box-sizing: border-box; }
+.fl-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fl-w-main { fill: var(--fl-green); }
+.fl-w-light { fill: var(--fl-green-light); }
+.fl-trim { position: absolute; left: calc(3 * var(--u)); top: calc(3 * var(--u)); width: calc(148 * var(--u)); height: calc(210 * var(--u)); }
+.fl-ico { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* A. Header */
+.fl-logo { position: absolute; left: calc(12 * var(--u)); top: calc(5.2 * var(--u)); width: calc(76 * var(--u)); height: auto; display: block; }
+.fl-tag { position: absolute; left: calc(12.4 * var(--u)); top: calc(18.6 * var(--u)); margin: 0; font-size: calc(2.7 * var(--u)); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; white-space: nowrap; color: var(--fl-ink); }
+
+/* B. Photo (left) */
+.fl-photo-frame { position: absolute; left: calc(-3 * var(--u)); top: calc(27 * var(--u)); width: calc(86 * var(--u)); height: calc(88 * var(--u)); background: var(--fl-green); border-radius: 0 calc(26 * var(--u)) calc(12 * var(--u)) 0; overflow: hidden; }
+.fl-photo { position: absolute; left: 0; top: calc(2.4 * var(--u)); width: calc(83.6 * var(--u)); height: calc(85.6 * var(--u)); border-radius: 0 calc(23.6 * var(--u)) calc(9.6 * var(--u)) 0; overflow: hidden; background: var(--fl-photo-bg); }
+.fl-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.fl-bar { position: absolute; left: calc(0.8 * var(--u)); top: calc(122 * var(--u)); width: calc(8 * var(--u)); height: auto; display: block; }
+
+/* B. Tasker details (right) */
+.fl-info { position: absolute; left: calc(86.5 * var(--u)); top: calc(31 * var(--u)); width: calc(53.5 * var(--u)); height: calc(78 * var(--u)); display: flex; flex-direction: column; justify-content: space-evenly; gap: calc(2 * var(--u)); }
+.fl-name { --fs: 7; margin: 0; max-height: calc(14 * var(--u)); overflow: hidden; font-family: var(--font-heading); font-size: calc(var(--fs) * var(--u)); font-weight: 800; line-height: 1.1; color: var(--fl-ink); overflow-wrap: anywhere; }
+.fl-job { display: flex; align-items: center; gap: calc(2.4 * var(--u)); width: 100%; padding: calc(2.4 * var(--u)) calc(3.6 * var(--u)); border-radius: calc(99 * var(--u)); background: var(--fl-green); color: var(--fl-white); }
+.fl-job .fl-ico { flex: 0 0 calc(5.6 * var(--u)); width: calc(5.6 * var(--u)); height: calc(5.6 * var(--u)); }
+.fl-job-text { --fs: 4.6; flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(var(--fs) * var(--u)); font-weight: 700; }
+.fl-where { display: flex; align-items: flex-start; gap: calc(1.6 * var(--u)); padding-bottom: calc(2.4 * var(--u)); border-bottom: calc(0.3 * var(--u)) solid var(--fl-rule); color: var(--fl-ink); }
+.fl-where .fl-ico { flex: 0 0 calc(4.4 * var(--u)); width: calc(4.4 * var(--u)); height: calc(4.4 * var(--u)); margin-top: calc(0.2 * var(--u)); stroke-width: 2.4; }
+.fl-where-text { --fs: 4.2; max-height: calc(10 * var(--u)); overflow: hidden; font-size: calc(var(--fs) * var(--u)); font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+.fl-svc-title { margin: 0 0 calc(2 * var(--u)); font-size: calc(4.5 * var(--u)); font-weight: 800; line-height: 1.2; color: var(--fl-ink); }
+.fl-svc-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: calc(2.8 * var(--u)); }
+.fl-svc { display: flex; align-items: center; gap: calc(2.4 * var(--u)); }
+.fl-svc .fl-ico { flex: 0 0 calc(5 * var(--u)); width: calc(5 * var(--u)); height: calc(5 * var(--u)); stroke-width: 2.2; color: var(--fl-green-light); }
+.fl-svc-text { --fs: 4.2; flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(var(--fs) * var(--u)); font-weight: 500; }
+
+/* C. Message */
+.fl-headline { position: absolute; left: calc(11.5 * var(--u)); top: calc(118.5 * var(--u)); width: calc(84 * var(--u)); margin: 0; font-family: var(--font-heading); font-weight: 800; line-height: 0.98; letter-spacing: -0.02em; color: var(--fl-green); }
+.fl-headline span { --fs: 14.6; display: block; white-space: nowrap; font-size: calc(var(--fs) * var(--u)); }
+.fl-lead { position: absolute; left: calc(11.5 * var(--u)); top: calc(148.6 * var(--u)); width: calc(80 * var(--u)); margin: 0; font-size: calc(4.05 * var(--u)); font-weight: 500; line-height: 1.28; color: var(--fl-ink); }
+.fl-hl { padding: 0 calc(0.9 * var(--u)); border-radius: calc(1.2 * var(--u)); background: var(--fl-green-mint); color: var(--fl-green); font-weight: 800; white-space: nowrap; }
+
+/* D. QR */
+.fl-qr { position: absolute; left: calc(99.5 * var(--u)); top: calc(110.5 * var(--u)); width: calc(41.5 * var(--u)); height: calc(48 * var(--u)); border-radius: calc(6 * var(--u)); background: var(--fl-green); overflow: hidden; }
+.fl-qr-card { position: absolute; left: calc(2.2 * var(--u)); top: calc(2.2 * var(--u)); width: calc(37.1 * var(--u)); height: calc(37.1 * var(--u)); padding: calc(2.6 * var(--u)); border-radius: calc(4.4 * var(--u)); background: var(--fl-white); }
+.fl-qr-code, .fl-qr-code svg { display: block; width: 100%; height: 100%; }
+.fl-qr-label { position: absolute; left: 0; right: 0; bottom: 0; height: calc(6.9 * var(--u)); display: flex; align-items: center; justify-content: center; gap: calc(1.6 * var(--u)); color: var(--fl-white); font-size: calc(3.1 * var(--u)); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.fl-qr-label .fl-ico { flex: 0 0 calc(3.6 * var(--u)); width: calc(3.6 * var(--u)); height: calc(3.6 * var(--u)); }
+
+/* E. Benefits */
+.fl-benefits { position: absolute; left: calc(11 * var(--u)); top: calc(167 * var(--u)); width: calc(127 * var(--u)); height: calc(12 * var(--u)); margin: 0; padding: 0; list-style: none; display: flex; align-items: center; }
+.fl-benefit { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: calc(1.8 * var(--u)); padding: 0 calc(2 * var(--u)); font-size: calc(3.3 * var(--u)); font-weight: 600; line-height: 1.25; white-space: nowrap; color: var(--fl-ink); }
+.fl-benefit:first-child { padding-left: 0; }
+.fl-benefit + .fl-benefit { border-left: calc(0.3 * var(--u)) solid var(--fl-rule); }
+.fl-benefit .fl-ico { flex: 0 0 calc(7.4 * var(--u)); width: calc(7.4 * var(--u)); height: calc(7.4 * var(--u)); color: var(--fl-green); stroke-width: 1.6; }
+
+/* F. Footer */
+.fl-url { position: absolute; left: calc(37 * var(--u)); top: calc(185.8 * var(--u)); width: calc(74 * var(--u)); height: calc(9.6 * var(--u)); display: flex; align-items: center; justify-content: center; gap: calc(2.6 * var(--u)); border-radius: calc(99 * var(--u)); background: var(--fl-green-deep); color: var(--fl-white); font-size: calc(5.2 * var(--u)); font-weight: 600; letter-spacing: 0.01em; }
+.fl-url .fl-ico { flex: 0 0 calc(5.6 * var(--u)); width: calc(5.6 * var(--u)); height: calc(5.6 * var(--u)); stroke-width: 1.8; }
+.fl-foot { position: absolute; left: 0; right: 0; top: calc(199.4 * var(--u)); margin: 0; text-align: center; font-size: calc(2.55 * var(--u)); font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap; color: var(--fl-white); }
+
+/* ── Preview page (flyer-preview.html) ── */
+.flp-body { margin: 0; padding: var(--space-5) var(--space-4); background: var(--color-bg-subtle); font-family: var(--font-body); color: var(--color-text); }
+.flp-wrap { max-width: 960px; margin: 0 auto; }
+.flp-title { margin: 0 0 var(--space-2); font-family: var(--font-heading); font-size: var(--text-xl); }
+.flp-note { margin: 0 0 var(--space-4); color: var(--color-text-secondary); font-size: var(--text-sm); }
+.flp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.flp-bar label { font-size: var(--text-sm); font-weight: 600; }
+.flp-bar select, .flp-bar input[type="file"] { font-size: var(--text-sm); }
+.flp-stage { display: flex; justify-content: center; padding: var(--space-4); border-radius: var(--radius-card-media); background: var(--color-bg-muted); }
+.flp-paper { box-shadow: var(--shadow-gc-card); }
+
+/* ── Print: the A5 / A4 sheet (shown only while printing, same idea as the gift card's .gcp) ──
+   js/flyer-template.js builds .fl-sheet, sets its size and the flyer's --u and offset, adds body.fl-printing, then calls window.print(). */
+.fl-sheet { display: none; }
+@media print {
+  body.fl-printing { margin: 0; padding: 0; background: var(--fl-white); }
+  body.fl-printing > *:not(.fl-sheet):not(script):not(svg) { display: none; }
+  body.fl-printing .fl-sheet { display: block; position: relative; overflow: hidden; width: var(--fl-sheet-w); height: var(--fl-sheet-h); break-inside: avoid; }
+  body.fl-printing .fl-sheet .fl { position: absolute; left: var(--fl-sheet-x); top: var(--fl-sheet-y); }
+}

@@ -475,3 +475,14 @@ Added to `css/tokens.css` for `js/onboarding.js` and `css/onboarding.css`: `--to
 ## Help / Learn page (onboarding Stage 4)
 
 `learn.html` + `css/learn.css` follow the referrals page pattern: `--pt-page` background, forest hero (`--color-forest-900/700`), white panels (`--radius-hero`), tinted rows (`--pt-field`, `--radius-form`), pill tabs, `.btn-mint` and `.btn-primary`. Status chips use the `--tone-*` tokens. No new tokens.
+
+## Tasker promotional flyer (flyer stage 2, 2026-11-07)
+
+Print artwork for "My Promotional Flyer": `css/flyer.css`, `js/flyer-template.js`, assets in `images/flyer/`, design check page `flyer-preview.html`. It is **not** a screen component, so it follows its own rules:
+
+- **One unit.** Everything inside `.fl` is sized in `--u` (default 1mm), never px or pt. Canvas 154 x 216 mm = A5 (148 x 210) plus 3 mm bleed. Screen preview sets `--u` in px (`STFlyer.setWidth`), A5 print uses 1mm, A4 print about 1.414mm.
+- **Colours** are the `--fl-*` tokens at the end of `css/tokens.css`. `--fl-green` is the exact green of the official logo files; the rest were sampled from the approved reference image.
+- **Fonts** are the site fonts (`--font-heading` Manrope, `--font-body` Inter). Text that can be long (name, profession, location, services) shrinks to fit through `data-fs` / `data-min` (see `fit()` in the template).
+- **Words** live in one `COPY` object at the top of `js/flyer-template.js`. Benefit claims must stay true to the product (escrow, reviews, booking).
+- **New formats** (sticker, business card) are a new function added to `STFlyer.templates`; they reuse the same data, QR and fitting.
+- **Printing** copies the gift card idea: a hidden `.fl-sheet`, `@page` size injected for A5 or A4, `window.print()` ("Save as PDF"). The QR is made in the browser by `js/vendor/qrcode.min.js` at error correction Q.

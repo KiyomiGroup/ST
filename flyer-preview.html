@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Flyer preview (design check) — StreetTasker</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/flyer.css" />
+</head>
+<body class="flp-body">
+  <div class="flp-wrap">
+    <h1 class="flp-title">Flyer design check</h1>
+    <p class="flp-note">Sample Taskers only, nothing here is read from your database. Use it to look at the design and to test printing. The real button on the Tasker profile arrives in Stage 4.</p>
+    <div class="flp-bar">
+      <label for="flpSample">Sample Tasker</label>
+      <select id="flpSample"></select>
+      <label for="flpPhoto">Try a photo</label>
+      <input id="flpPhoto" type="file" accept="image/*" />
+      <button type="button" class="btn btn-primary" id="flpPrintA5">Print A5 test</button>
+      <button type="button" class="btn" id="flpPrintA4">Print A4 test</button>
+    </div>
+    <div class="flp-stage"><div class="flp-paper" id="flpHost"></div></div>
+  </div>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/flyer-template.js"></script>
+  <script src="js/flyer-preview.js"></script>
+</body>
+</html>
