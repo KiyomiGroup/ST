@@ -217,7 +217,7 @@ Tokens (`css/tokens.css`, "Page hero tokens"):
 | `--hero-btn-bg`, `--hero-btn-bg-hover` | pale pill buttons, active chip, live pill |
 | `--hero-chip-bg`, `--hero-chip-bg-hover` | idle filter chips on the hero |
 | `--hero-dot` | live dot, focus ring on the hero |
-| `--hero-live-bg`, `--hero-live-text` | lemon fill and black text of the "tasks open now" live pill (`.pg-hero-live`) |
+| `--hero-live-bg`, `--hero-live-text` | pale mint fill (same as `--hero-btn-bg`) and black text of the "tasks open now" live pill (`.pg-hero-live`) |
 | `--hero-float-gap` | how far cards (stat cards, balance cards) overlap the hero's bottom edge |
 | `--hero-bar-overlap` | how far the floating search pill overlaps the hero's bottom edge |
 | `--hero-chip-h`, `--hero-chips-lift` | chip height, and how far the chip row sits above the hero's bottom edge |

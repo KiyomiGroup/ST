@@ -361,7 +361,7 @@
   --hero-chip-bg:       var(--color-forest-700);            /* idle filter chips on the hero */
   --hero-chip-bg-hover: var(--pt-escrow-icon);
   --hero-dot:           var(--color-live);                    /* live dot (same green as .spg-hero-dot) */
-  --hero-live-bg:       #FFF3A3;                    /* lemon fill of the "tasks open now" live pill */
+  --hero-live-bg:       var(--hero-btn-bg);         /* pale mint fill of the "tasks open now" live pill (same as the hero buttons) */
   --hero-live-text:     var(--color-text);          /* black text on the lemon live pill */
   --hero-bg-mobile:     var(--color-forest-900);                    /* flat hero fill on mobile; the mobile top nav uses the same value so there is no seam */
   --hero-float-gap:     40px;                       /* how far floating content overlaps the hero's bottom edge */
