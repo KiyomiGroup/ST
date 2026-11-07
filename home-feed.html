@@ -109,8 +109,9 @@
     @media (max-width: 768px) {
       /* The hero and search scroll with the page (the nav stays fixed); this only clears the nav */
       .hf-top { padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px)); }
-      /* Tasker hero: no "New tasks near you…" line on phones */
-      .hf-hero-dt .pg-hero-note > [data-role-only="tasker"] { display: none; }
+      /* Both heroes: no "New tasks near you…" / "Verified neighborhood professionals…" line on phones */
+      .hf-hero-dt .pg-hero-note > [data-role-only="tasker"],
+      .hf-hero-dt .pg-hero-note > [data-role-only="customer"] { display: none; }
       .hf-hero-dt .pg-hero { padding-bottom: 100px; }
       .hf-hero-dt .spg-hero-spark { display: none; }
       .hf-hero-dt .pg-hero-title { margin-bottom: var(--space-1); }
