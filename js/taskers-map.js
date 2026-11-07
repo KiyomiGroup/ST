@@ -66,6 +66,21 @@
     } catch (e) { return null; }
   }
 
+  function areaNote(r) { note(r.on ? 'Showing ' + r.shown + ' of ' + r.total + ' in this area. Tap "Show all" to see every tasker again.' : ''); }
+
+  /* "Show in list" on a pin: back to the list, on the page that holds this tasker's card, scrolled to it */
+  function pick(item) {
+    setMode(false);
+    var all = typeof window.filtered === 'function' ? window.filtered() : S.list;
+    var idx = all.findIndex(function (s) { return String(s.id) === String(item.pickId); });
+    var size = typeof PAGE_SIZE === 'number' ? PAGE_SIZE : 8;
+    if (idx >= size && typeof window.render === 'function') window.render(Math.floor(idx / size) + 1);
+    var el = document.getElementById('svc-' + String(item.pickId).replace(/[^\w-]/g, ''));
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('stmap-picked'); void el.offsetWidth; el.classList.add('stmap-picked');
+  }
+
   function note(text) { var n = $('taskersMapNote'); if (n) { n.textContent = text || ''; n.hidden = !text; } }
 
   async function paint() {
@@ -98,10 +113,10 @@
       var bits = [];
       if (s.price > 0) bits.push('From ' + naira(s.price));
       if (s.rating > 0) bits.push('\u2605 ' + Number(s.rating).toFixed(1));
-      items.push({ id: id, lat: lat, lon: lon, approx: approx, title: s.provider_name || 'Tasker', sub: s.service_name || '',
+      items.push({ id: id, pickId: s.id, lat: lat, lon: lon, approx: approx, title: s.provider_name || 'Tasker', sub: s.service_name || '',
         meta: [s.location, bits.join(' \u00B7 ')].filter(Boolean).join(' \u00B7 '), href: 'tasker-profile.html?id=' + encodeURIComponent(id), linkLabel: 'View profile' });
     });
-    try { await window.STMap.show(host, items, {}); }
+    try { await window.STMap.show(host, items, { onPick: pick, onArea: areaNote }); }
     catch (e) { if (run === S.run) note((e && e.message) || 'The map could not be loaded.'); return; }
     if (run !== S.run) return;
     note(!items.length ? 'We could not place these taskers on the map yet. Use the list view.'

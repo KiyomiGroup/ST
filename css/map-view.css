@@ -30,3 +30,20 @@
 
 /* the list grid sets display: grid, which would beat the hidden attribute while the map is showing */
 .spg-grid[hidden] { display: none; }
+
+/* Stage 3: map buttons, "Show in list", cluster bubbles, the card a pin pointed to */
+.stmap-ctl { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+.stmap-ctl-btn { height: 34px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--color-bg); color: var(--color-text); cursor: pointer; box-shadow: var(--shadow-pt-pill); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; }
+.stmap-ctl-btn:hover { background: var(--pt-field); }
+.stmap-ctl-btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.stmap-ctl-btn:disabled { opacity: 0.6; cursor: default; }
+.stmap-ctl-area { background: var(--pt-green); color: var(--color-text-on-primary); }
+.stmap-ctl-area:hover { background: var(--pt-green); opacity: 0.92; }
+.stmap-ctl-btn[hidden] { display: none; }
+.stmap-pop-pick { display: inline-block; margin: var(--space-2) 0 0 var(--space-3); padding: 0; border: 0; background: none; cursor: pointer; font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); }
+.stmap-pop-pick:hover { text-decoration: underline; }
+.marker-cluster div { font-family: var(--font-heading); font-weight: 800; color: var(--color-text-on-primary); background: var(--pt-green); }
+.marker-cluster { background: rgba(15, 107, 70, 0.25); }
+.stmap-picked { animation: stmap-picked 2.4s ease-out; }
+@keyframes stmap-picked { 0%, 55% { box-shadow: 0 0 0 4px var(--pt-green); } 100% { box-shadow: 0 0 0 4px transparent; } }
+@media (prefers-reduced-motion: reduce) { .stmap-picked { animation: none; box-shadow: 0 0 0 4px var(--pt-green); } }

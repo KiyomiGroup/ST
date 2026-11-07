@@ -33,6 +33,17 @@
     return pt;
   }
 
+  function areaNote(r) { note(r.on ? 'Showing ' + r.shown + ' of ' + r.total + ' in this area. Tap "Show all" to see every task again.' : ''); }
+
+  /* "Show in list" on a pin: back to the list, scrolled to that task's card */
+  function pick(item) {
+    setMode(false);
+    var el = document.querySelector('.st-card--task[data-task-id="' + String(item.pickId).replace(/["\\]/g, '') + '"]');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('stmap-picked'); void el.offsetWidth; el.classList.add('stmap-picked');
+  }
+
   function note(text) { var n = $('tasksMapNote'); if (n) { n.textContent = text || ''; n.hidden = !text; } }
   function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 
@@ -59,11 +70,11 @@
       var id = String(t.id), d = window.STMap.nudge(id);
       var cat = t.category ? (window.STCat ? window.STCat.label(t.category) : t.category) : '';
       var pay = Number(t.budget) > 0 ? naira(t.budget) : 'No budget set';
-      items.push({ id: id, lat: p.lat + d.dLat, lon: p.lon + d.dLon, approx: true, title: t.title || 'Untitled task', sub: cat,
+      items.push({ id: id, pickId: id, lat: p.lat + d.dLat, lon: p.lon + d.dLon, approx: true, title: t.title || 'Untitled task', sub: cat,
         meta: [t.location, pay, t.urgency === 'immediate' ? 'Urgent' : ''].filter(Boolean).join(' · '),
         href: 'task-details.html?id=' + encodeURIComponent(id), linkLabel: 'View task' });
     });
-    try { await window.STMap.show(host, items, {}); }
+    try { await window.STMap.show(host, items, { onPick: pick, onArea: areaNote }); }
     catch (e) { if (run === S.run) note((e && e.message) || 'The map could not be loaded.'); return; }
     if (run !== S.run) return;
 
