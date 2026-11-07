@@ -1,5 +1,5 @@
 /* ============================================================
-   STREETTASKER — map-view.js   (shared map: Find Taskers now, Find Tasks next)
+   STREETTASKER — map-view.js   (shared map: Find Taskers and Find Tasks)
    One small wrapper around Leaflet + OpenStreetMap tiles. Leaflet is loaded only the first time a map is opened,
    so the list view costs nothing extra. No API key. No data is read or written here: the page gives it pins.
 
@@ -9,6 +9,8 @@
         opts = { fit: true }   fit the view to the pins (default true)
      STMap.refresh()             call after the map's container was hidden and is shown again (fixes grey tiles)
      STMap.destroy()
+     STMap.nudge(id)             a stable offset (about 100-350 m) per id, so pins from one area do not sit on top of each other
+     STMap.areaPoint(place)      Promise of {lat, lon} or null: the centre of a named area (RPC homepage_place_point), remembered in this browser
    Popups are built with textContent (never innerHTML), so names and text from the database cannot inject markup.
    ============================================================ */
 (function () {
@@ -89,8 +91,32 @@
     });
   }
 
+  /* ---- area points (shared by Find Taskers and Find Tasks; same cache key as taskers-map.js) ---- */
+  var CACHE_KEY = 'st.map.areaPoints.v1';
+  var areas = (function () { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+
+  function nudge(id) {
+    var h = 0, s = String(id);
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    var a = (h % 360) * Math.PI / 180, r = 0.0008 + ((h >> 8) % 100) / 100 * 0.0022;
+    return { dLat: Math.sin(a) * r, dLon: Math.cos(a) * r };
+  }
+
+  async function areaPoint(place) {
+    var k = String(place || '').trim().toLowerCase();
+    if (!k) return null;
+    if (k in areas) return areas[k];                 /* null is remembered too: an unknown place is not asked again */
+    try {
+      var r = await window.supabase.rpc('homepage_place_point', { p_place: place });
+      var row = Array.isArray(r.data) ? r.data[0] : null;
+      var pt = (row && row.lat != null && row.lon != null && isFinite(Number(row.lat)) && isFinite(Number(row.lon))) ? { lat: Number(row.lat), lon: Number(row.lon) } : null;
+      if (!r.error) { areas[k] = pt; try { localStorage.setItem(CACHE_KEY, JSON.stringify(areas)); } catch (e) { /* private mode */ } }
+      return pt;
+    } catch (e) { return null; }
+  }
+
   function refresh() { if (S.map) setTimeout(function () { S.map.invalidateSize(); }, 0); }
   function destroy() { if (S.map) { S.map.remove(); S.map = null; S.group = null; S.el = null; } }
 
-  window.STMap = { show: show, refresh: refresh, destroy: destroy };
+  window.STMap = { show: show, refresh: refresh, destroy: destroy, nudge: nudge, areaPoint: areaPoint };
 })();
