@@ -23,12 +23,12 @@
     <section class="st-hero">
       <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
       <h1 class="st-hero-title">Coordinator test</h1>
-      <p class="st-hero-lead">Pass this short test to receive your coordinator code. Every question comes from the Local Tasker and Coordinator Guide.</p>
+      <p class="st-hero-lead">Pass this test to receive your coordinator code. Every question comes from the Local Tasker and Coordinator Guide.</p>
     </section>
 
     <!-- State: checking the link -->
     <section class="st-panel cot-state" id="cotLoading" aria-live="polite">
-      <p class="cot-text">Checking your link…</p>
+      <p class="cot-text" id="cotLoadingText">Checking your link…</p>
     </section>
 
     <!-- State: no, wrong or expired link -->
@@ -40,19 +40,21 @@
       </div>
     </section>
 
-    <!-- State: intro -->
+    <!-- State: intro (only shown after the server has confirmed the link) -->
     <section class="st-panel cot-state" id="cotIntro" hidden>
-      <h2 class="st-panel-title">Read the guide first</h2>
-      <p class="cot-text">Read the Local Tasker and Coordinator Guide before you start. It is a short PDF and all the test questions come from it.</p>
+      <h2 class="st-panel-title" id="cotIntroTitle">Read the guide first</h2>
+      <p class="cot-text" id="cotIntroText">Read the Local Tasker and Coordinator Guide before you start. It is a short PDF and all the test questions come from it. It is only for people who were sent this test link, so please do not share it.</p>
       <div class="cot-actions">
-        <a href="downloads/local-tasker-coordinator-guide.pdf" class="btn btn-outline" target="_blank" rel="noopener">Open the guide (PDF)</a>
+        <button type="button" class="btn btn-outline" id="cotGuide">Download the guide (PDF)</button>
       </div>
-      <ul class="cot-facts">
-        <li>10 questions, chosen at random from a bank of questions.</li>
-        <li>You need 80 percent to pass.</li>
+      <p class="cot-note" id="cotGuideNote" role="status" aria-live="polite"></p>
+      <ul class="cot-facts" id="cotFacts">
+        <li>20 questions, chosen at random from a bigger bank of questions.</li>
+        <li>You need 80 percent to pass: 16 of the 20 right.</li>
         <li>You can take the test 3 times a day. Each time you press Start counts as one try.</li>
         <li>If you leave a test half way, you can carry on with it for 60 minutes without using another try.</li>
       </ul>
+      <p class="cot-text" id="cotTriesLeft"></p>
       <div class="form-error cot-error" id="cotIntroError" role="alert"></div>
       <button type="button" class="btn btn-primary btn-lg" id="cotStart">Start the test</button>
     </section>
@@ -61,7 +63,7 @@
     <section class="st-panel cot-state" id="cotQuiz" hidden>
       <div class="cot-progress">
         <p class="cot-progress-text" id="cotProgressText" aria-live="polite"></p>
-        <progress class="cot-bar" id="cotBar" max="10" value="0"></progress>
+        <progress class="cot-bar" id="cotBar" max="20" value="0"></progress>
       </div>
       <h2 class="st-panel-title cot-question" id="cotQuestion" tabindex="-1"></h2>
       <div class="cot-options" id="cotOptions" role="radiogroup" aria-labelledby="cotQuestion"></div>
@@ -79,8 +81,9 @@
       <p class="cot-text" id="cotFailText"></p>
       <div class="cot-actions">
         <button type="button" class="btn btn-primary" id="cotRetry">Try again</button>
-        <a href="downloads/local-tasker-coordinator-guide.pdf" class="btn btn-outline" target="_blank" rel="noopener">Read the guide again (PDF)</a>
+        <button type="button" class="btn btn-outline" id="cotGuideAgain">Download the guide again (PDF)</button>
       </div>
+      <p class="cot-note" id="cotGuideAgainNote" role="status" aria-live="polite"></p>
     </section>
 
     <!-- State: passed -->

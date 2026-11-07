@@ -10,7 +10,7 @@ Owner request (2026-11-06). Owner rules: uses ONLY the Supabase SQL editor and d
 5. **Site work:** the apply page did not follow the site style (fixed in S1); the top nav covers headings on phones (fixed in S1); design system gets a rule that every new page follows the site style, tokens and layout (done in S1: DESIGN-SYSTEM.md 4.14 and section 9, AGENTS.md / CLAUDE.md rule 9, check tool).
 
 ## Defaults chosen by the AI (owner can change; confirm in S2)
-- Pass mark 80%. Questions served in random order from a bank of 20, 10 per attempt. Answers are graded on the server only; the browser never receives the answer key.
+- Pass mark 80%. Questions served in random order, 20 per attempt (S7C), from a bank of 52 (32 from S4 + 20 added in S7C). Answers are graded on the server only; the browser never receives the answer key.
 - 3 attempts per rolling calendar day in Africa/Lagos time, counted on the server per application.
 - Approval link: random token, valid 14 days, tied to one application. Passing a test marks the application `passed` and issues a single-use coordinator code (shown on the page and emailed).
 - Coordinator code: 10 characters from an unambiguous alphabet (no 0/O/1/I), e.g. `CO-7KQ4M2XH`, single use, optional expiry (default 30 days), created by the admin through a SQL function (the Admin Control Centre does not exist in the project zip; document what the admin page needs).
@@ -34,7 +34,12 @@ Coordinators must be completely separate from customer and tasker accounts (chos
 | Stage | Content | Status |
 |---|---|---|
 | A | coordinator-wallet.html (own wallet page), no links to customer/tasker pages from coordinator login/nav/dashboard, login.html signs coordinator accounts out, PDF link removed from apply page and bad-link state | DONE 2026-11-07 (stub-tested in headless Chromium, NOT run on real Supabase) |
-| B | Owner runs STEP-B read-only checks and sends results | waiting on owner |
-| C | 20-question test (RPC serves 20; add ~20 new questions from the PDF), server-side test-link check, PDF served only for a valid link (function) | todo (needs B) |
+| B | Owner runs STEP-B read-only checks and sends results | DONE 2026-11-07 (all 8 results received, copies in 4-FOR-NEXT-AI/stage-b-results) |
+| C | 20-question test (RPC serves 20; 20 new questions from the PDF; garbled naira options in Q32 repaired), server-side test-link check, PDF removed from the public site and served only for a valid link (Edge Function `coordinator-guide`, PDF stored in table `coordinator_guide_files`) | FILES DONE 2026-11-07. SQL NOT run on any Postgres (none available), function NOT deployed, nothing run on real Supabase: waiting for the owner to run the 2 SQL files, deploy the function, upload, delete the public PDF |
 | D | Coordinator-only sign-up page (account role coordinator, code redeemed there), remove code box/links from signup.html | todo (needs B) |
 | E | Coordinator identity check (Didit) after the test, gate before work; verify.html proxy mode into coordinator shell | todo (needs B) |
+
+
+## Notes added in S7C
+- The Stage B results show: no `handle_new_user` function and no trigger that creates `public.users` (only two referral triggers on `auth.users`), so the site creates the `users` row itself from the browser (`js/auth.js`, `signUpUser` and the Google-sign-in path). `add_my_role` only accepts `customer` or `tasker`. `idv_*` functions know the subject kinds `tasker_local`, `tasker_regular`, `customer` only. Details in `handoff-S7C-test-and-guide.md`, section "What D and E need to know".
+- The public PDF `downloads/local-tasker-coordinator-guide.pdf` must be DELETED from the live site by the owner; the source copy is in `4-FOR-NEXT-AI/guide-source/` and must never be put in a folder that is uploaded to the site.

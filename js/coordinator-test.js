@@ -3,7 +3,10 @@
      coordinator_quiz_start(p_token)                      -> { ok, attempt_id, questions:[{id,question,options}], attempts_left, max_per_day, pass_percent }
                                                               | { ok, passed:true, code } | { ok:false, error: invalid_token | no_attempts (+next_at) | quiz_not_ready }
      coordinator_quiz_submit(p_token, p_attempt, p_answers) -> pass { ok, passed:true, score, total, code } | fail { ok, passed:false, score, total, attempts_left, next_at }
-   All text from the server is written with textContent. */
+   Stage C also uses:
+     coordinator_test_link_check(p_token)  -> { ok:true, passed, attempts_left, max_per_day, questions_per_try, pass_percent } | { ok:false, error:'invalid_token' }
+     POST <functions>/coordinator-guide { token }  -> the guide as a PDF for a valid link, otherwise JSON { ok:false, error } (404 not valid, 503 not loaded yet)
+   The guide is never linked from a public URL. All text from the server is written with textContent. */
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
@@ -42,6 +45,60 @@
     var res = await sb().rpc(name, args);
     if (res.error) throw res.error;
     return res.data;
+  }
+
+  /* ---- the guide (PDF): fetched from the Edge Function with the test link; not a public file ---- */
+  var guideBusy = false;
+  async function downloadGuide(btn, noteId) {
+    if (guideBusy) return;
+    var note = $(noteId);
+    guideBusy = true; btn.disabled = true; note.textContent = 'Getting the guide…';
+    try {
+      if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') throw new Error('no_client');
+      var res = await fetch(SUPABASE_URL + '/functions/v1/coordinator-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ token: token }),
+      });
+      var type = (res.headers.get('content-type') || '').toLowerCase();
+      if (res.ok && type.indexOf('application/pdf') !== -1) {
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'StreetTasker-Local-Tasker-Coordinator-Guide.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        note.textContent = 'The guide is downloading. If nothing happens, press the button again.';
+      } else if (res.status === 404) {
+        showBad();
+      } else if (res.status === 503) {
+        note.textContent = 'The guide is not ready yet. Please try again later.';
+      } else {
+        note.textContent = 'We could not get the guide. Please try again.';
+      }
+    } catch (e) {
+      note.textContent = 'We could not reach the server. Check your internet and try again.';
+    } finally { guideBusy = false; btn.disabled = false; }
+  }
+
+  /* ---- check the link on the server before showing anything ---- */
+  async function checkLink() {
+    show('cotLoading');
+    $('cotLoadingText').textContent = 'Checking your link…';
+    var data;
+    try { data = await callRpc('coordinator_test_link_check', { p_token: token }); }
+    catch (e) { $('cotLoadingText').textContent = 'We could not reach the server. Check your internet, then reload this page.'; return; }
+    if (!data || data.ok !== true) return showBad();
+    if (data.passed) {
+      $('cotIntroTitle').textContent = 'You have already passed';
+      $('cotIntroText').textContent = 'You already passed the coordinator test. Press the button to see your coordinator code again.';
+      $('cotFacts').hidden = true; $('cotTriesLeft').textContent = '';
+      $('cotStart').textContent = 'Show my coordinator code';
+    } else if (typeof data.attempts_left === 'number') {
+      var left = data.attempts_left;
+      $('cotTriesLeft').textContent = left === 0 ? 'You have used all 3 tries for today. Please come back tomorrow.' : 'You have ' + left + (left === 1 ? ' try' : ' tries') + ' left today.';
+    }
+    show('cotIntro');
   }
 
   /* ---- start / resume a try ---- */
@@ -164,6 +221,8 @@
   /* ---- wiring ---- */
   $('cotStart').addEventListener('click', function () { this.disabled = true; var b = this; startTry().finally(function () { b.disabled = false; }); });
   $('cotRetry').addEventListener('click', function () { startTry(); });
+  $('cotGuide').addEventListener('click', function () { downloadGuide(this, 'cotGuideNote'); });
+  $('cotGuideAgain').addEventListener('click', function () { downloadGuide(this, 'cotGuideAgainNote'); });
   $('cotBack').addEventListener('click', function () { if (current > 0) { current -= 1; renderQuestion(); } });
   $('cotNext').addEventListener('click', function () {
     if (answers[current] === null) return;
@@ -177,6 +236,6 @@
   (function init() {
     token = (new URLSearchParams(window.location.search).get('t') || '').trim().toLowerCase();
     if (!TOKEN_RE.test(token)) return showBad('The link is missing or incomplete. Open the test link from your approval email, or apply to be a coordinator.');
-    show('cotIntro');
+    checkLink();
   })();
 })();
