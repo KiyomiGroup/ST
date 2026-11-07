@@ -1372,7 +1372,7 @@
       await bumpThread(t, body);
       if (S.thread && S.thread.id === t.id) append(ins.data);
       if (S.attach === a) clearAttach();
-      if (input) { input.value = ''; input.style.height = 'auto'; }
+      if (input) { input.value = ''; input.style.height = ''; }
       return true;
     } catch (e) {
       var msg = (e && e.message) || String(e);
@@ -1471,7 +1471,7 @@
     if (!input) return;
     if (S.attach) { await sendAttachment(); return; }
     var ok = await send(input.value);
-    if (ok) { input.value = ''; input.style.height = 'auto'; syncSendState(); }
+    if (ok) { input.value = ''; input.style.height = ''; syncSendState(); }
   }
 
   function bindComposer() {
@@ -1485,7 +1485,6 @@
         if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitFromInput(); }
       });
       input.addEventListener('input', function () {
-        fitInput(input);
         syncSendState();
         var w = $('jrComposeWarn');
         if (w && !w.hidden && !hasContactInfo(input.value)) hideWarn();
@@ -1498,17 +1497,6 @@
       jump.addEventListener('click', function () { scrollToBottom(body); jump.hidden = true; });
     }
     syncSendState();
-  }
-
-  /* The message box keeps its width. It grows one line at a time up to 5 lines (128px with padding and border),
-     then stays that size and the text scrolls inside it, so the line you are typing is always visible. */
-  function fitInput(input) {
-    var MAX = 128;
-    input.style.height = 'auto';
-    var border = input.offsetHeight - input.clientHeight;
-    var want = input.scrollHeight + border;
-    input.style.height = Math.min(want, MAX) + 'px';
-    input.style.overflowY = want > MAX ? 'auto' : 'hidden';
   }
 
   window.JRThread = {

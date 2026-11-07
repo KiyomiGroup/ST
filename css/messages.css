@@ -1163,13 +1163,13 @@ body.msg-page {
 .msg-input {
   display: block;
   width: 100%;
-  /* Like other chat apps: the box grows up to 5 lines, then stays that size and the text scrolls inside it
-     (5 lines x 20px + padding + border). messages-thread.js sets the height as you type. */
-  max-height: 128px;
+  /* One fixed line, always the same size, so the buttons beside it stay lined up. Long text scrolls inside the box
+     and the line being typed stays visible. */
+  height: calc(20px + 2 * var(--space-3) + 3px);
   box-sizing: border-box;
   padding: var(--space-3) var(--space-4);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-pill);
   background: var(--color-bg-subtle);
   font-family: var(--font-body);
   font-size: var(--text-sm);
