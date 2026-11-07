@@ -278,11 +278,9 @@
       });
     }
 
-    function renderTasks() {
-      const grid = document.getElementById('tasksGrid');
-      const cnt  = document.getElementById('taskCount');
-      const emp  = document.getElementById('tasksEmpty');
-      let f = [...ALL_TASKS];
+    /* The page's filters applied to any list of tasks. renderTasks() uses it; so does the map's "Search this area" (js/tasks-map.js). */
+    function applyTaskFilters(list) {
+      let f = [...list];
       if (TASK_FILTERS.search) {
         const q = TASK_FILTERS.search.toLowerCase();
         f = f.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
@@ -296,6 +294,14 @@
       else if (TASK_FILTERS.minBudget > 0) f = f.filter(t => !(Number(t.budget) > 0) || t.budget >= TASK_FILTERS.minBudget); /* No budget tasks stay visible: the tasker names the price */
       if (TASK_FILTERS.types.length) f = f.filter(t => TASK_FILTERS.types.includes(t.task_type || 'one_off'));
       if (TASK_FILTERS.urgencies.length) f = f.filter(t => TASK_FILTERS.urgencies.includes(t.urgency || 'flexible'));
+      return f;
+    }
+
+    function renderTasks() {
+      const grid = document.getElementById('tasksGrid');
+      const cnt  = document.getElementById('taskCount');
+      const emp  = document.getElementById('tasksEmpty');
+      const f = applyTaskFilters(ALL_TASKS);
 
       if (cnt) cnt.textContent = f.length;
       const mapOn = !!(window.STTasksMap && STTasksMap.active());

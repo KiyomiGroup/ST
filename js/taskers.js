@@ -143,9 +143,9 @@ function initTaskersPage() {
 }
 
 /* ── Filter + sort ───────────────────────────────────────────── */
-function filtered() {
-  let list = [...ALL];
-  const { search, category, maxPrice, minRating, sortBy, availability, specialty, verifiedOnly } = FILTERS;
+/* The filters only (no sorting). filtered() below uses it; the map's "Search this area" uses it for rows found outside the loaded list. */
+function filterList(list) {
+  const { search, category, maxPrice, minRating, availability, specialty, verifiedOnly } = FILTERS;
   if (search) {
     const q = search.toLowerCase();
     list = list.filter(s =>
@@ -162,6 +162,12 @@ function filtered() {
   if (availability && availability.length) list = list.filter(s => availability.includes(s.availability_status));
   if (specialty)          list = list.filter(s => (s.specialties || []).some(sp => sp.toLowerCase() === specialty.toLowerCase()));
   if (verifiedOnly)       list = list.filter(s => s.verified === true);
+  return list;
+}
+
+function filtered() {
+  let list = filterList([...ALL]);
+  const { sortBy } = FILTERS;
   if (sortBy === 'recent')     list.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
   if (sortBy === 'rating')     list.sort((a,b) => b.rating - a.rating);
   if (sortBy === 'price_asc')  list.sort((a,b) => a.price - b.price);

@@ -9,7 +9,9 @@
         item.pickId = optional id passed back to opts.onPick (a "Show in list" button is added to the popup when onPick is given)
         opts = { fit: true,                       fit the view to the pins (default true)
                  onPick(item),                    "Show in list" tapped in a popup
-                 onArea({ shown, total, on }) }   "Search this area" / "Show all" used: how many pins are in view
+                 fetchArea(bounds) -> Promise of items   optional: "Search this area" also asks the page for pins in the view that are not
+                                                  loaded yet. bounds = { south, west, north, east }. Those pins are dropped again on "Show all".
+                 onArea({ shown, total, extra, on }) }   "Search this area" / "Show all" used: pins in view, pins known, how many came from fetchArea
      Pins close together are grouped into numbered clusters (Leaflet.markercluster, loaded with Leaflet).
      Two buttons sit on the map: "Near me" (asks the browser for the position, centres on it, draws a blue dot) and "Search this area"
      (appears after the person moves the map; keeps only the pins in view; becomes "Show all").
@@ -35,7 +37,7 @@
   var ATTRIB = CFG.attribution || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   var LAGOS  = [6.5244, 3.3792];
 
-  var S = { lib: null, map: null, el: null, group: null, items: [], opts: {}, areaOn: false, busy: false, areaBtn: null, meDot: null, sheet: null };
+  var S = { lib: null, map: null, el: null, group: null, items: [], opts: {}, areaOn: false, busy: false, areaBtn: null, meDot: null, sheet: null, extra: [], areaRun: 0 };
 
   function loadLeaflet() {
     if (window.L && window.L.map) return Promise.resolve(window.L);
@@ -74,7 +76,7 @@
       a.className = 'stmap-pop-link'; a.href = item.href; a.textContent = item.linkLabel || 'View';
       box.appendChild(a);
     }
-    if (opts && typeof opts.onPick === 'function') {
+    if (opts && typeof opts.onPick === 'function' && item.pickId != null) {   /* only pins that are in the list can be shown there */
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'stmap-pop-pick'; b.textContent = 'Show in list';
       b.addEventListener('click', function () { opts.onPick(item); });
@@ -157,12 +159,36 @@
     }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
   }
 
+  function report() {
+    if (typeof S.opts.onArea === 'function') S.opts.onArea({ shown: S.shown, total: S.items.length + S.extra.length, extra: S.extra.length, on: S.areaOn });
+  }
+
   function toggleArea(L, map) {
-    S.areaOn = !S.areaOn;
-    draw(L, S.items, true);
-    S.areaBtn.textContent = S.areaOn ? 'Show all' : 'Search this area';
-    if (!S.areaOn) S.areaBtn.hidden = true;
-    if (typeof S.opts.onArea === 'function') S.opts.onArea({ shown: S.shown, total: S.items.length, on: S.areaOn });
+    var btn = S.areaBtn;
+    if (S.areaOn) {                                   /* "Show all": back to the page's own pins */
+      S.areaOn = false; S.extra = []; S.areaRun++;
+      draw(L, S.items, false);
+      btn.hidden = true; btn.textContent = 'Search this area';
+      report();
+      return;
+    }
+    S.areaOn = true;
+    var run = ++S.areaRun, bb = map.getBounds();
+    var bounds = { south: bb.getSouth(), west: bb.getWest(), north: bb.getNorth(), east: bb.getEast() };
+    btn.disabled = true; btn.textContent = 'Searching\u2026';
+    var ask = typeof S.opts.fetchArea === 'function' ? Promise.resolve().then(function () { return S.opts.fetchArea(bounds); }) : Promise.resolve([]);
+    ask.catch(function () { return []; }).then(function (extra) {
+      if (run !== S.areaRun) return;                  /* the pins were replaced (a filter changed) while we waited */
+      var have = {}; S.items.forEach(function (i) { have[String(i.id)] = 1; });
+      S.extra = (extra || []).map(norm).filter(function (e) { return isFinite(e.lat) && isFinite(e.lon) && !have[String(e.id)] && (have[String(e.id)] = 1); });
+      draw(L, S.items.concat(S.extra), true);
+      btn.disabled = false; btn.textContent = 'Show all';
+      report();
+    });
+  }
+
+  function norm(it) {
+    return { id: it.id, pickId: it.pickId, lat: Number(it.lat), lon: Number(it.lon), title: it.title, sub: it.sub, meta: it.meta, href: it.href, linkLabel: it.linkLabel, approx: it.approx };
   }
 
   /* draw the pins (all, or only those in view) */
@@ -210,9 +236,9 @@
     opts = opts || {};
     return loadLeaflet().then(function (L) {
       var map = ensureMap(L, el);
-      S.items = (items || []).map(function (it) { return { id: it.id, pickId: it.pickId, lat: Number(it.lat), lon: Number(it.lon), title: it.title, sub: it.sub, meta: it.meta, href: it.href, linkLabel: it.linkLabel, approx: it.approx }; });
-      S.opts = opts; S.areaOn = false;              /* new pins (filters changed): back to showing all of them */
-      if (S.areaBtn) { S.areaBtn.hidden = true; S.areaBtn.textContent = 'Search this area'; }
+      S.items = (items || []).map(norm);
+      S.opts = opts; S.areaOn = false; S.extra = []; S.areaRun++;              /* new pins (filters changed): back to showing all of them */
+      if (S.areaBtn) { S.areaBtn.hidden = true; S.areaBtn.disabled = false; S.areaBtn.textContent = 'Search this area'; }
       var pts = draw(L, S.items, false);
       map.invalidateSize();
       if (opts.fit !== false) {
@@ -250,7 +276,7 @@
   }
 
   function refresh() { if (S.map) setTimeout(function () { S.map.invalidateSize(); }, 0); }
-  function destroy() { if (S.map) { S.map.remove(); S.map = null; S.group = null; S.el = null; S.areaBtn = null; S.meDot = null; S.sheet = null; hideTileMsg(); } }
+  function destroy() { if (S.map) { S.map.remove(); S.map = null; S.group = null; S.el = null; S.areaBtn = null; S.meDot = null; S.sheet = null; S.extra = []; hideTileMsg(); } }
 
   window.STMap = { show: show, refresh: refresh, destroy: destroy, nudge: nudge, areaPoint: areaPoint };
 })();

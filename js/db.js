@@ -91,6 +91,12 @@ async function postTask({ title, description, category, budget, noBudget = false
   }
   if (error) throw error;
 
+  /* Map point (sql/task-map-points.sql): the server works out the task's AREA centre from its location text. Best effort and not awaited:
+     if the function is not installed yet, or fails, the task is posted all the same and the map looks the area up in the browser instead. */
+  if (data && data.id != null) {
+    try { Promise.resolve(window.supabase.rpc('set_task_map_point', { p_task_id: String(data.id) })).catch(function () {}); } catch (e) { /* never blocks posting */ }
+  }
+
   /* Notify nearby taskers (non-blocking), only for a task that is actually live */
   if (canGoLive) { try { await _notifyTaskersOfNewTask(data); } catch(e) { /* silent */ } }
 

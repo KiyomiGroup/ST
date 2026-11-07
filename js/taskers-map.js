@@ -5,27 +5,19 @@
      1. taskers.business_lat / business_lon (public columns), rounded to 3 decimals (about 100 m), so a home address is never shown exactly
      2. the centre of the tasker's area, from the database function homepage_place_point (the same one the Home page uses), plus a small
         fixed offset per person so taskers in one area do not sit on top of each other. These pins say "Approximate area".
-   Nothing is written. Looked-up area points are remembered in this browser (localStorage) so each area is asked for once.
+   Area lookups and offsets come from js/map-view.js (STMap.areaPoint / STMap.nudge); they are remembered in this browser so each area is asked for once.
+   "Search this area" also asks the database for taskers whose business point is inside the view but who are not in the loaded list (fetchArea).
+   Only taskers with business_lat / business_lon can be found that way: area-only taskers have no point to search by.
+   Nothing is written.
    Hooks: taskers.js calls STTaskersMap.refresh(list) at the end of render(); the toggle buttons are in find-taskers.html.
    ============================================================ */
 (function () {
   'use strict';
 
-  var CACHE_KEY = 'st.map.areaPoints.v1';
-  var S = { active: false, list: [], run: 0, exact: {}, exactFor: '', areas: loadAreas() };
+  var S = { active: false, list: [], run: 0, exact: {}, exactFor: '' };
 
   function $(id) { return document.getElementById(id); }
-  function loadAreas() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
-  function saveAreas() { try { localStorage.setItem(CACHE_KEY, JSON.stringify(S.areas)); } catch (e) { /* private mode: asked again next time */ } }
   function naira(n) { return '\u20A6' + Number(n || 0).toLocaleString('en-NG'); }
-
-  /* one stable offset per person, about +-350 m, so area pins spread out the same way every visit */
-  function nudge(id) {
-    var h = 0, s = String(id);
-    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    var a = (h % 360) * Math.PI / 180, r = 0.0008 + ((h >> 8) % 100) / 100 * 0.0022;
-    return { dLat: Math.sin(a) * r, dLon: Math.cos(a) * r };
-  }
 
   /* one pin per person, even if they have several listings */
   function people(list) {
@@ -53,20 +45,9 @@
     } catch (e) { /* no exact points: area centres are used */ }
   }
 
-  async function areaPoint(place) {
-    var k = String(place || '').trim().toLowerCase();
-    if (!k) return null;
-    if (k in S.areas) return S.areas[k];            /* null is remembered too: an unknown place is not asked again */
-    try {
-      var r = await window.supabase.rpc('homepage_place_point', { p_place: place });
-      var row = Array.isArray(r.data) ? r.data[0] : null;
-      var pt = (row && row.lat != null && row.lon != null && isFinite(Number(row.lat)) && isFinite(Number(row.lon))) ? { lat: Number(row.lat), lon: Number(row.lon) } : null;
-      if (!r.error) { S.areas[k] = pt; saveAreas(); }
-      return pt;
-    } catch (e) { return null; }
+  function areaNote(r) {
+    note(r.on ? 'Showing ' + r.shown + ' of ' + r.total + ' in this area' + (r.extra ? ' (' + r.extra + ' more, not in the list). ' : '. ') + 'Tap "Show all" to see every tasker again.' : '');
   }
-
-  function areaNote(r) { note(r.on ? 'Showing ' + r.shown + ' of ' + r.total + ' in this area. Tap "Show all" to see every tasker again.' : ''); }
 
   /* "Show in list" on a pin: back to the list, on the page that holds this tasker's card, scrolled to it */
   function pick(item) {
@@ -83,6 +64,41 @@
 
   function note(text) { var n = $('taskersMapNote'); if (n) { n.textContent = text || ''; n.hidden = !text; } }
 
+  function toItem(s, lat, lon, approx) {
+    var bits = [];
+    if (s.price > 0) bits.push('From ' + naira(s.price));
+    if (s.rating > 0) bits.push('\u2605 ' + Number(s.rating).toFixed(1));
+    return { id: String(s.user_id), pickId: s.id, lat: lat, lon: lon, approx: approx, title: s.provider_name || 'Tasker', sub: s.service_name || '',
+      meta: [s.location, bits.join(' \u00B7 ')].filter(Boolean).join(' \u00B7 '), href: 'tasker-profile.html?id=' + encodeURIComponent(String(s.user_id)), linkLabel: 'View profile' };
+  }
+
+  /* "Search this area": taskers with a business point inside the view that the page has not loaded (it loads the newest 100 listings).
+     Their listings are filtered with the page's own filters (filterList in taskers.js). Pins only: they are not in the list view. */
+  async function fetchArea(b) {
+    var sb = window.supabase;
+    var r = await sb.from('taskers').select('user_id, business_lat, business_lon')
+      .gte('business_lat', b.south).lte('business_lat', b.north).gte('business_lon', b.west).lte('business_lon', b.east).limit(100);
+    var pts = {}, ids = [];
+    (r.data || []).forEach(function (t) {
+      var la = Number(t.business_lat), lo = Number(t.business_lon);
+      if (t.user_id && t.business_lat != null && t.business_lon != null && isFinite(la) && isFinite(lo)) { pts[String(t.user_id)] = { lat: Math.round(la * 1000) / 1000, lon: Math.round(lo * 1000) / 1000 }; ids.push(String(t.user_id)); }
+    });
+    if (!ids.length) return [];
+    var loaded = {}; people(S.list).forEach(function (s) { loaded[String(s.user_id)] = 1; });
+    ids = ids.filter(function (id) { return !loaded[id]; });
+    if (!ids.length) return [];
+    var sv = await sb.from('services').select('id, service_name, category, price, rate_unit, location, description, user_id, available, created_at').in('user_id', ids).eq('available', true).limit(200);
+    var un = await sb.from('users').select('id, name, business_name').in('id', ids);
+    var names = {}; (un.data || []).forEach(function (u) { names[String(u.id)] = u.business_name || u.name; });
+    var rows = (sv.data || []).map(function (s) {
+      return { id: String(s.id), user_id: String(s.user_id), provider_name: names[String(s.user_id)] || 'Provider', service_name: s.service_name || 'Service',
+        category: s.category || 'other', location: s.location || '', price: parseFloat(s.price) || 0, rating: 0, reviews: 0, description: s.description || '',
+        specialties: s.service_name ? [s.service_name] : [], availability_status: null, verified: false, created_at: s.created_at };
+    });
+    if (typeof window.filterList === 'function') rows = window.filterList(rows);
+    return people(rows).map(function (s) { var p = pts[String(s.user_id)]; return toItem(s, p.lat, p.lon, false); });
+  }
+
   async function paint() {
     var run = ++S.run;
     var host = $('taskersMap');
@@ -97,7 +113,7 @@
     var places = {}; ppl.forEach(function (s) { if (!S.exact[String(s.user_id)] && s.location) places[s.location] = 1; });
     var names = Object.keys(places), pts = {};
     for (var i = 0; i < names.length; i += 4) {                      /* four lookups at a time */
-      await Promise.all(names.slice(i, i + 4).map(async function (n) { pts[n] = await areaPoint(n); }));
+      await Promise.all(names.slice(i, i + 4).map(async function (n) { pts[n] = await window.STMap.areaPoint(n); }));
       if (run !== S.run) return;
     }
 
@@ -108,15 +124,11 @@
       else {
         var p = pts[s.location];
         if (!p) { missing++; return; }
-        var d = nudge(id); lat = p.lat + d.dLat; lon = p.lon + d.dLon; approx = true;
+        var d = window.STMap.nudge(id); lat = p.lat + d.dLat; lon = p.lon + d.dLon; approx = true;
       }
-      var bits = [];
-      if (s.price > 0) bits.push('From ' + naira(s.price));
-      if (s.rating > 0) bits.push('\u2605 ' + Number(s.rating).toFixed(1));
-      items.push({ id: id, pickId: s.id, lat: lat, lon: lon, approx: approx, title: s.provider_name || 'Tasker', sub: s.service_name || '',
-        meta: [s.location, bits.join(' \u00B7 ')].filter(Boolean).join(' \u00B7 '), href: 'tasker-profile.html?id=' + encodeURIComponent(id), linkLabel: 'View profile' });
+      items.push(toItem(s, lat, lon, approx));
     });
-    try { await window.STMap.show(host, items, { onPick: pick, onArea: areaNote }); }
+    try { await window.STMap.show(host, items, { onPick: pick, onArea: areaNote, fetchArea: fetchArea }); }
     catch (e) { if (run === S.run) note((e && e.message) || 'The map could not be loaded.'); return; }
     if (run !== S.run) return;
     note(!items.length ? 'We could not place these taskers on the map yet. Use the list view.'
