@@ -551,6 +551,7 @@
                 <h2>Notifications</h2>
                 <button class="btn btn-ghost btn-sm" onclick="markCustAllRead()">Mark all read</button>
               </div>
+              <div class="np-settings-card" id="custNotifSettings"></div>
               <div id="custNotifList"><div class="db-state">Loading...</div></div>
             </div>
 
@@ -703,6 +704,18 @@
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    /* Notification settings (phone + email switches) on the Notifications page. push.js is loaded by the shared notifications panel after sign-in. */
+    (function () {
+      var tries = 0;
+      (function wait() {
+        var host = document.getElementById('custNotifSettings');
+        if (host && window.STPush && window.STPush.mountSettings) { window.STPush.mountSettings(host); return; }
+        if (++tries < 80) setTimeout(wait, 250);
+      })();
+    })();
+  </script>
+
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
   <script src="js/customer-overview.js"></script>

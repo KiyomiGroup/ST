@@ -1,16 +1,20 @@
-/* M19: the "phone notifications" row inside the notifications panel. Tokens only. */
-.np-push {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border);
-}
+/* M19: notification settings rows (phone + email switches) inside the notifications panel and the dashboard Notifications page. Tokens only. */
+.np-push { display: flex; flex-direction: column; border-bottom: 1px solid var(--color-border); }
 .np-push[hidden] { display: none; }
-.np-push-text { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
-.np-push-btn {
-  flex: none; padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-pill);
-  background: var(--pt-green); color: var(--white); font: inherit; font-size: var(--text-sm); font-weight: 700; cursor: pointer;
-}
-.np-push-btn:disabled { opacity: 0.6; cursor: default; }
-.np-push-link {
-  flex: none; padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-sm);
-  color: var(--color-text-muted); cursor: pointer; text-decoration: underline;
-}
+.np-set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); }
+.np-set-row + .np-set-row { border-top: 1px solid var(--color-border); }
+.np-set-text { min-width: 0; }
+.np-set-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.np-set-help { margin-top: var(--space-1); font-size: var(--text-xs); line-height: 1.4; color: var(--color-text-muted); }
+.np-switch { position: relative; flex: none; display: inline-block; width: var(--space-7); height: var(--space-5); cursor: pointer; }
+.np-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.np-switch-track { position: absolute; inset: 0; border-radius: var(--radius-pill); background: var(--color-border-strong); transition: background var(--t) var(--ease); pointer-events: none; }
+.np-switch-track::after { content: ''; position: absolute; top: var(--space-1); left: var(--space-1); width: var(--space-4); height: var(--space-4); border-radius: var(--radius-pill); background: var(--color-bg); transition: transform var(--t) var(--ease); }
+.np-switch input:checked + .np-switch-track { background: var(--color-primary); }
+.np-switch input:checked + .np-switch-track::after { transform: translateX(var(--space-5)); }
+.np-switch input:focus-visible + .np-switch-track { box-shadow: var(--shadow-focus); }
+.np-switch input:disabled { cursor: default; }
+.np-switch input:disabled + .np-switch-track { opacity: 0.6; }
+/* The same rows on the dashboard Notifications page sit in a card */
+.np-settings-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); margin-bottom: var(--space-4); overflow: hidden; }
+.np-settings-card .np-push { border-bottom: 0; }
