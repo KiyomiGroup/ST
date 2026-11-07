@@ -138,11 +138,40 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
           </span>
           <div class="jr-reminder-text">
-            <strong id="jrSafetyReminderTitle">StreetTasker Safety Reminder</strong>
-            <p>Keep all communication, agreements and payments on StreetTasker. Taking transactions off-platform violates our policies and may result in a permanent account ban.</p>
+            <div class="jr-reminder-head">
+              <strong id="jrSafetyReminderTitle">StreetTasker Safety Reminder</strong>
+              <button type="button" class="jr-reminder-info" id="jrSafetyInfoBtn" aria-haspopup="dialog" aria-controls="jrSafetyInfoLayer" aria-label="More about safety, payments and disputes" title="More info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+            </div>
+            <p class="jr-reminder-full">Keep all communication, agreements and payments on StreetTasker. Taking transactions off-platform violates our policies and may result in a permanent account ban.</p>
+            <p class="jr-reminder-short">Keep all communication, agreement and payment on StreetTasker. Any transaction taken off the site won&rsquo;t be settled in a dispute and results in a permanent ban.</p>
             <p class="jr-reminder-note">Applies to both Customers and Taskers.</p>
           </div>
         </aside>
+
+        <!-- Safety reminder: the info icon opens this (text differs for customers and taskers; shown by the script that reveals the conversation) -->
+        <div class="jr-sheet-layer" id="jrSafetyInfoLayer" hidden>
+          <div class="jr-sheet-backdrop" id="jrSafetyInfoBackdrop"></div>
+          <div class="jr-sheet" role="dialog" aria-modal="true" aria-labelledby="jrSafetyInfoTitle">
+            <div class="jr-sheet-grab" aria-hidden="true"></div>
+            <div class="jr-sheet-head">
+              <h2 class="jr-sheet-title" id="jrSafetyInfoTitle">Your protection on StreetTasker</h2>
+              <button type="button" class="jr-icon-btn" id="jrSafetyInfoClose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="jr-sheet-body jr-info-body">
+              <ul class="jr-info-list" data-safety-info="customer" hidden>
+                <li><strong>Your money is held safely.</strong> When you pay, the money stays on StreetTasker and is only released when you agree the job is done. That saves you the trouble of issues with a tasker.</li>
+                <li><strong>Disputes can be resolved.</strong> If something goes wrong, open a dispute and StreetTasker will help sort it out.</li>
+                <li><strong>Keep everything on StreetTasker.</strong> Communication, agreements and payments must stay on the site. Any transaction taken off the site is not covered in a dispute and results in a permanent ban.</li>
+              </ul>
+              <ul class="jr-info-list" data-safety-info="tasker" hidden>
+                <li><strong>Your payment is secured.</strong> Once the customer pays, the money is held by StreetTasker and released to you when the customer agrees the job is done.</li>
+                <li><strong>Disputes can be resolved.</strong> If a job goes wrong, a dispute can be opened and StreetTasker will help resolve it.</li>
+                <li><strong>Clearing.</strong> New earnings go through clearing before they can be withdrawn. Same-day withdrawal can be unlocked after 4 weeks on StreetTasker.</li>
+                <li><strong>Keep everything on StreetTasker.</strong> Communication, agreements and payments must stay on the site. Any transaction taken off the site is not covered in a dispute and results in a permanent ban.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
         <!-- Docked next-step panel, right above the message box: price box, pay, release code, Share location, code entry.
              Built by js/messages-dock.js (driven by js/messages-flow.js). -->
@@ -391,6 +420,7 @@
     document.getElementById('chatBody').style.display   = 'flex';
     document.getElementById('inputBar').style.display   = 'flex';
     document.getElementById('jrSafetyReminder').hidden  = false;   /* every conversation, both roles */
+    if (window.stSafetyInfoRole) window.stSafetyInfoRole(isCustomer ? 'customer' : 'tasker');
     document.getElementById('msgChat').classList.add('open');
 
     /* Header + task status banner (js/messages-room.js) */
@@ -540,6 +570,7 @@
   /* Close modal on backdrop click */
 
   </script>
+  <script src="js/safety-info.js"></script>
   <script src="js/onboarding.js"></script>
   <script src="js/onboarding-tours-customer.js"></script>
   <script src="js/onboarding-tours-chat.js"></script>

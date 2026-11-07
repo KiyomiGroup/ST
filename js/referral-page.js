@@ -4,7 +4,7 @@
   'use strict';
   var D = window.STReferralData;
   var $ = function (id) { return document.getElementById(id); };
-  var RUN = 0;          /* newest render wins when the person switches programme quickly */
+  var RUN = 0;          /* newest render wins when a reward button re-draws the page */
   var ROWS = [];
 
   var COPY = {
@@ -12,13 +12,11 @@
       title: 'More People. More Tasks. More Opportunities.',
       lead: 'Invite people to StreetTasker. Every friend who signs up and verifies their email earns you points, and milestones save you free Starter plan time.',
       how: 'Each milestone you reach saves one free 30-day Starter gift.',
-      tab: 'Tasker account',
     },
     customer: {
       title: 'Invite Friends. Earn Rewards.',
       lead: 'Share StreetTasker with friends. Every friend who signs up and verifies their email earns you points you can turn into wallet credit.',
       how: 'Every full 1,000 points earns N200 wallet credit.',
-      tab: 'Customer account',
     },
   };
 
@@ -33,19 +31,6 @@
     try { await navigator.clipboard.writeText(text); toast('Link copied'); return; } catch (e) {}
     var i = $('rfLinkInput'); i.focus(); i.select();
     try { document.execCommand('copy'); toast('Link copied'); } catch (e2) { toast('Press and hold the link to copy it'); }
-  }
-
-  function renderTabs(active) {
-    var box = $('rfTabs');
-    box.textContent = '';
-    if (ROWS.length < 2) { box.hidden = true; return; }
-    box.hidden = false;
-    ROWS.forEach(function (r) {
-      var b = el('button', 'rf-tab', (COPY[r.programme] || {}).tab || r.programme);
-      b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', r.programme === active ? 'true' : 'false');
-      b.addEventListener('click', function () { show(r.programme); });
-      box.appendChild(b);
-    });
   }
 
   function renderProgress(row) {
@@ -149,7 +134,6 @@
     if (!row) return;
     var c = COPY[programme] || COPY.customer;
     $('rfTitle').textContent = c.title; $('rfLead').textContent = c.lead; $('rfHowReward').textContent = c.how;
-    renderTabs(programme);
 
     var url = D.shareUrl(row.code);
     $('rfLinkInput').value = url; $('rfCode').textContent = row.code;
@@ -188,8 +172,10 @@
       var sb = $('rfShare'); sb.hidden = false;
       sb.addEventListener('click', function () { navigator.share({ title: 'StreetTasker', text: 'Join me on StreetTasker', url: $('rfLinkInput').value }).catch(function () {}); });
     }
+    /* One programme per account type: a tasker sees the tasker referral, a customer sees the customer referral. No switch. */
     var want = D.activeProgramme();
-    show(ROWS.some(function (r) { return r.programme === want; }) ? want : ROWS[0].programme);
+    if (!ROWS.some(function (r) { return r.programme === want; })) { state('Your referral link is not ready yet. Finish setting up your account and check back soon.'); return; }
+    show(want);
   }
 
   init();

@@ -6,14 +6,9 @@
 .rf-body { background: var(--pt-page); min-height: 100vh; }
 .rf-main { width: min(var(--page-width), calc(100% - 2 * var(--page-margin))); margin: 0 auto; padding: calc(var(--nav-height) + var(--space-5)) 0 var(--space-8); }
 .rf-state { margin: var(--space-5) 0; color: var(--color-text-secondary); }
-.rf-state[hidden], .rf-tabs[hidden], .rf-app[hidden], .rf-empty[hidden], .rf-chip[hidden] { display: none; }
+.rf-state[hidden], .rf-app[hidden], .rf-empty[hidden], .rf-chip[hidden] { display: none; }
 
 /* Programme tabs (shown only when the person has both programmes) */
-.rf-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
-.rf-tab { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--pt-field-strong); background: var(--color-bg); color: var(--pt-ink); cursor: pointer; transition: background var(--t) var(--ease), color var(--t) var(--ease); }
-.rf-tab:hover { background: var(--pt-field); }
-.rf-tab[aria-selected="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-on-primary); }
-.rf-tab:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
 .rf-app { display: grid; gap: var(--space-5); }
 

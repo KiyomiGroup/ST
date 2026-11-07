@@ -13,8 +13,8 @@
         the tab or the phone reconnects. This is the safety net: even with Realtime off, the red dot lights within
         seconds, not only when the bell is clicked.
    Each notification is handled once (known{} by id), so Realtime + the check never double-ring.
-   Sound: a short two-note chime made with the Web Audio API (no audio file), with an <audio> back-up for phones. ON by default; the speaker button in
-   the panel header mutes it and the choice is kept in localStorage ('st_notif_sound' = 'off'). Browsers only allow
+   Sound: a short two-note chime made with the Web Audio API (no audio file), with an <audio> back-up for phones. The panel no longer has a
+   sound button (phone notifications are switched in the panel's settings row); a device that muted it earlier keeps 'st_notif_sound' = 'off'. Browsers only allow
    sound after the person has tapped or clicked the page once, so the first click anywhere "unlocks" it.
    ============================================================ */
 'use strict';
@@ -38,7 +38,6 @@
 
   /* ── sound ───────────────────────────────────────────────── */
   function soundOn() { try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { return true; } }
-  function setSound(on) { try { localStorage.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch (e) {} syncSoundBtn(); }
 
   /* Phones are stricter than desktops about sound, so there are two layers:
        1. Web Audio (the chime), 2. a tiny <audio> clip as a back-up.
@@ -281,7 +280,6 @@
       '<header class="np-head">' +
         '<h2 class="np-title">Notifications</h2>' +
         '<div class="np-head-actions">' +
-          '<button type="button" class="np-sound" data-np-sound aria-pressed="true"><svg class="np-sound-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="np-sound-label"></span></button>' +
           '<button type="button" class="np-markall" data-np-markall>Mark all as read</button>' +
         '</div>' +
       '</header>' +
@@ -293,19 +291,12 @@
     document.body.appendChild(backdrop);
     document.body.appendChild(panel);
     if (window.STPush && window.STPush.mountPrompt) window.STPush.mountPrompt(panel);   /* M19: phone notifications row */
-    syncSoundBtn();
 
     backdrop.addEventListener('click', close);
     panel.addEventListener('click', function (e) {
       var t = e.target.closest('[data-np-tab]');
       if (t) { tab = t.getAttribute('data-np-tab'); render(); return; }
       if (e.target.closest('[data-np-markall]')) { markAll(); return; }
-      if (e.target.closest('[data-np-sound]')) {
-        var turningOn = !soundOn();
-        setSound(turningOn);
-        if (turningOn) { unlockAudio(); setTimeout(chime, 60); }   /* a short preview */
-        return;
-      }
       var row = e.target.closest('[data-np-id]');
       if (row) {
         var id = row.getAttribute('data-np-id');
@@ -318,19 +309,6 @@
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) close(); });
     window.addEventListener('resize', function () { if (!panel.hidden) place(); });
-  }
-
-  var SPEAKER_ON = '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/>';
-  var SPEAKER_OFF = '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6"/><path d="m17 9 6 6"/>';
-  function syncSoundBtn() {
-    if (!panel) return;
-    var b = panel.querySelector('[data-np-sound]'); if (!b) return;
-    var on = soundOn();
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.setAttribute('aria-label', on ? 'Notification sound is on. Tap to mute' : 'Notification sound is muted. Tap to turn on');
-    b.title = on ? 'Mute notification sound' : 'Turn notification sound on';
-    b.querySelector('.np-sound-ico').innerHTML = on ? SPEAKER_ON : SPEAKER_OFF;
-    b.querySelector('.np-sound-label').textContent = on ? 'Sound on' : 'Muted';
   }
 
   function render() {
@@ -381,7 +359,6 @@
     if (openerEl && openerEl.setAttribute) openerEl.setAttribute('aria-expanded', 'true');
     var list = panel.querySelector('[data-np-list]');
     if (loaded) render(); else list.innerHTML = '<p class="np-empty">Loading…</p>';   /* cached rows show at once; fresh ones replace them */
-    syncSoundBtn();
     try { await load(); render(); setDots(unreadCount() > 0); }
     catch (e) { list.innerHTML = '<p class="np-empty">Could not load notifications.</p>'; }
   }

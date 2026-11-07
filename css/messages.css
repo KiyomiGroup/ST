@@ -731,6 +731,24 @@ body.msg-page {
 .jr-reminder-text strong { display: block; font-family: var(--font-heading); font-size: var(--text-sm); color: var(--color-warning); }
 .jr-reminder-text p { margin: var(--space-1) 0 0; }
 .jr-reminder-text .jr-reminder-note { font-weight: 600; color: var(--color-text-muted); }
+/* Title row with the info icon; the long text shows on desktop, the short text on phones */
+.jr-reminder-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.jr-reminder-info {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: var(--space-6); height: var(--space-6); padding: 0; border: 0; border-radius: var(--radius-pill);
+  background: none; color: var(--color-warning); cursor: pointer;
+}
+.jr-reminder-info:hover { background: var(--color-warning-soft); }
+.jr-reminder-info:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.jr-reminder-short { display: none; }
+@media (max-width: 768px) {
+  .jr-reminder-full, .jr-reminder-note { display: none; }
+  .jr-reminder-short { display: block; }
+}
+.jr-info-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+.jr-info-list[hidden] { display: none; }
+.jr-info-list li { padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); font-size: var(--text-sm); line-height: 1.5; color: var(--color-text-secondary); }
+.jr-info-list strong { display: block; font-family: var(--font-heading); color: var(--color-text); }
 @media (max-width: 480px) {
   .jr-reminder { margin: var(--space-2) var(--space-3); padding: var(--space-2) var(--space-3); gap: var(--space-2); }
 }

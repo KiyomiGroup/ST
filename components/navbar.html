@@ -117,7 +117,11 @@
           <button type="button" class="nav-menu-item nav-menu-item-danger" id="navMenuLogout" role="menuitem" data-nav-logout>Log out</button>
         </div>
       </div>
-      <!-- Avatar with online dot — opens the profile page (href set in auth.js) -->
+      <!-- Tasker only: wallet button in place of the avatar (shown by auth.js) -->
+      <a href="wallet.html" class="nav-icon-btn nav-wallet-btn" id="navWalletBtn" title="Wallet" aria-label="Wallet" hidden>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+      </a>
+      <!-- Customer only: avatar with online dot — opens the customer's profile (href set in auth.js) -->
       <div class="nav-avatar-wrap">
         <a href="edit-profile-customer.html" class="nav-avatar" id="navAvatar" title="My profile" aria-label="My profile">
           <span id="navAvatarInitial">?</span>
@@ -141,7 +145,11 @@
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span class="nav-mobile-bell-dot" id="navMobileNotifDot" style="display:none;"></span>
       </button>
-      <a href="#" class="nav-mobile-avatar" id="navMobileAvatarLink">
+      <!-- Tasker only: wallet button in place of the avatar (shown by auth.js) -->
+      <a href="wallet.html" class="nav-mobile-avatar nav-mobile-wallet" id="navMobileWalletLink" aria-label="Wallet" hidden>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+      </a>
+      <a href="client-profile.html" class="nav-mobile-avatar" id="navMobileAvatarLink" aria-label="My profile">
         <img id="navMobileAvatarImg" alt="" style="display:none;" />
         <span id="navMobileAvatarInitial"></span>
       </a>

@@ -100,6 +100,16 @@ function _applyNavState(loggedIn, role, name) {
     if (avInit) avInit.textContent = initials;
     if (av)     av.href = viewProfileUrl;
 
+    /* Top-right icon: a customer sees their photo and it opens their profile; a tasker sees a wallet button that opens their wallet. */
+    const avWrap = document.querySelector('.nav-avatar-wrap');
+    const walletBtn = $('navWalletBtn');
+    if (avWrap)    avWrap.hidden    = isTasker;
+    if (walletBtn) walletBtn.hidden = !isTasker;
+    const mAvLink = $('navMobileAvatarLink');
+    const mWalLink = $('navMobileWalletLink');
+    if (mAvLink)  { mAvLink.hidden  = isTasker; mAvLink.href = viewProfileUrl; }
+    if (mWalLink) mWalLink.hidden = !isTasker;
+
     /* Mobile: hide + / show account icons */
     const mPlus = $('nav-mobile-plus-btn');
     const mAcct = $('navMobileAccount');
