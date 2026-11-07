@@ -378,15 +378,15 @@
   function codeEntry(host, v) {
     v = v || view();
     var inDock = host.id === 'jrDock' || !!host.closest('#jrDock');
-    host.appendChild(el('div', 'jr-wp-title', 'Enter the release code'));
+    host.appendChild(el('div', 'jr-wp-title', inDock ? 'Release Code' : 'Enter the release code'));
     host.appendChild(el('div', 'jr-wp-text', inDock
-      ? 'When the job is done, ask the customer for their 6-digit release code and enter it here to get paid.'
+      ? 'Ask the customer for the release code once the job is done.'
       : 'The customer has paid and holds a 6-digit release code. When the job is done, ask them for it and enter it here to get paid.'));
     var form = el('div', 'jr-wp-form');
     var input = el('input', 'jr-code-input');
     input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'one-time-code';
     input.placeholder = '000000'; input.setAttribute('aria-label', '6-digit completion code');
-    var go = btn('Confirm completion', 'jr-wp-btn--primary', function () {
+    var go = btn(inDock ? 'Release Code' : 'Confirm completion', 'jr-wp-btn--primary', function () {
       var code = input.value.replace(/\D/g, '');
       if (code.length !== 6) { err.textContent = 'Enter the 6-digit code.'; err.hidden = false; return; }
       err.hidden = true; go.disabled = true; go.textContent = 'Checking…';
@@ -397,7 +397,7 @@
         });
       }).catch(function (e) {
         err.textContent = (e && e.message) || 'Could not release the payment.'; err.hidden = false;
-        go.disabled = false; go.textContent = 'Confirm completion'; input.value = '';
+        go.disabled = false; go.textContent = inDock ? 'Release Code' : 'Confirm completion'; input.value = '';
       });
     });
     var err = el('div', 'jr-wp-error'); err.hidden = true; err.setAttribute('role', 'alert');

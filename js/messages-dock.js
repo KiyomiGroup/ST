@@ -53,22 +53,22 @@
 
   /* ── tasker: propose a price ─────────────────────────────── */
   function priceCard(v, intro) {
-    var c = card('', 'Propose your price', intro || 'Set one price for the whole job. The customer accepts it, then pays. Transport, materials and extra costs are asked for separately.');
+    var c = card('', 'Propose your price', intro || 'One price for the whole job. Transport and materials are asked separately.');
     var row = el('div', 'jr-dock-form');
     var amount = el('input', 'jr-dock-input');
-    amount.type = 'number'; amount.inputMode = 'numeric'; amount.min = '0'; amount.step = '100'; amount.placeholder = 'Price in ₦, e.g. 15000';
+    amount.type = 'number'; amount.inputMode = 'numeric'; amount.min = '0'; amount.step = '100'; amount.placeholder = 'Price in ₦';
     amount.setAttribute('aria-label', 'Proposed price in naira');
     var send = el('button', 'jr-flow-btn jr-flow-btn--primary', 'Send price'); send.type = 'button';
     row.appendChild(amount); row.appendChild(send);
     c.appendChild(row);
     var note = el('input', 'jr-dock-input jr-dock-input--text');
-    note.type = 'text'; note.maxLength = 300; note.placeholder = 'What the price covers (optional)';
+    note.type = 'text'; note.maxLength = 300; note.placeholder = 'What it covers (optional)';
     note.setAttribute('aria-label', 'What the price covers (optional)');
     c.appendChild(note);
     var err = el('div', 'jr-wp-error'); err.hidden = true; err.setAttribute('role', 'alert');
     c.appendChild(err);
     if (S.priceOpen && v.sm.base > 0) {
-      var cancel = plainBtn('Keep the current price', false, function () { S.priceOpen = false; window.JRFlow.repaint(); });
+      var cancel = plainBtn('Keep current price', false, function () { S.priceOpen = false; window.JRFlow.repaint(); });
       actions(c).appendChild(cancel);
     }
 
@@ -101,28 +101,28 @@
 
   /* ── paid: code + location ───────────────────────────────── */
   function customerPaid(host, v, p) {
-    var loc = card('', window.JRThread.locationShared() ? 'Location shared' : 'Tell the tasker where and when',
+    var loc = card('', window.JRThread.locationShared() ? 'Location shared' : 'Share your location',
       window.JRThread.locationShared()
-        ? 'The tasker has your location. Use the chat to agree the time.'
-        : 'Share your location so the tasker can find you, then agree the time to come in the chat.');
+        ? 'Tasker has it. Agree the time in the chat.'
+        : 'So the tasker can find you.');
     var la = actions(loc);
     var share = plainBtn(window.JRThread.locationShared() ? 'Share location again' : 'Share location', !window.JRThread.locationShared(), function () {
       if (S.busy) return;
-      S.busy = true; share.disabled = true; share.textContent = 'Getting your location…';
+      S.busy = true; share.disabled = true; share.textContent = 'Getting location…';
       Promise.resolve(window.JRThread.shareLocation()).catch(function () {})
         .then(function () { S.busy = false; window.JRFlow.repaint(); });
     });
     la.appendChild(share);
     host.appendChild(loc);
 
-    var code = card('code', 'Your release code', 'The payment of ' + naira(v.sm.paid) + ' is held safely. Only give this code to the tasker AFTER the job is done and you are happy with it.');
+    var code = card('code', 'Your release code', naira(v.sm.paid) + ' is held safely. Give this code only AFTER the job is done.');
     code.appendChild(window.JRFlow.codeNode(v.bookingId));
     host.appendChild(code);
   }
 
   function taskerPaid(host, v, p) {
     if (!window.JRThread.locationShared() && !noticeDone(v)) {
-      var n = card('notice', 'The customer has paid', 'Now ask the customer for the job location and the time you should come. You can say so in the chat. They have a Share location button.');
+      var n = card('notice', 'Customer has paid', 'Ask for their location and the time to come.');
       var na = actions(n);
       na.appendChild(plainBtn('Ask in the chat', true, function () {
         Promise.resolve(window.JRThread.send('I have seen your payment. Please share your location and tell me what time you want me to come.'));
@@ -130,7 +130,7 @@
       na.appendChild(plainBtn('Got it', false, function () { noticeDismiss(v); window.JRFlow.repaint(); }));
       host.appendChild(n);
     } else if (window.JRThread.locationShared()) {
-      host.appendChild(card('', 'Location received', 'The customer shared their location in the chat. Agree the time with them there.'));
+      host.appendChild(card('', 'Location received', 'Agree the time in the chat.'));
     }
     var c = el('section', 'jr-dock-card jr-dock-card--code');
     if (window.JRWork && window.JRWork.codeEntry) window.JRWork.codeEntry(c, v);
@@ -143,7 +143,7 @@
 
     if (v.status === 'awaiting_confirmation') {
       if (customer) {
-        var rc = card('notice', p ? p.title : 'Work submitted', 'The tasker says the job is done. Check the work. When you are happy, get your release code.');
+        var rc = card('notice', p ? p.title : 'Work submitted', 'Check the work. Happy? Get your release code.');
         actions(rc).appendChild(plainBtn('Review work', true, function () { window.JRFlow.openBar(); }));
         host.appendChild(rc);
       } else {
@@ -159,13 +159,13 @@
       return true;
     }
 
-    if (v.processing) { host.appendChild(card('', 'Confirming payment', 'This can take a moment. You do not need to pay again.')); return true; }
+    if (v.processing) { host.appendChild(card('', 'Confirming payment', 'Please wait. Do not pay again.')); return true; }
 
     var d = v.decision;
     if (d && d.kind === 'price_proposal') {
       var dc = card('', customer ? 'Price proposed: ' + naira(d.amount) : 'Waiting for the customer', d.mine
-        ? 'You proposed ' + naira(d.amount) + '. They can accept or decline.'
-        : 'The tasker proposed ' + naira(d.amount) + (d.note ? '. ' + d.note : '.') + ' Accept it, then pay.');
+        ? 'You proposed ' + naira(d.amount) + '.'
+        : (d.note ? d.note : 'Accept it, then pay.'));
       if (!d.mine) {
         var da = actions(dc);
         da.appendChild(flowBtn({ label: 'Accept ' + naira(d.amount), decide: { id: d.id, accept: true } }, true));
@@ -178,13 +178,13 @@
     if (v.waiting) {
       var amt = Number(v.waiting.amount) || 0;
       if (customer) {
-        var pc = card('', 'Pay ' + naira(amt), 'This is the price for the job. It is held safely until the work is done. Want a different price? Say so in the chat.');
+        var pc = card('', 'Pay ' + naira(amt), 'Held safely until the work is done.');
         actions(pc).appendChild(flowBtn({ label: 'Pay ' + naira(amt), pay: v.waiting.id }, true));
         host.appendChild(pc);
       } else if (S.priceOpen) {
-        host.appendChild(priceCard(v, 'The customer has not paid yet. A new price cancels the old payment request.'));
+        host.appendChild(priceCard(v, 'A new price cancels the old payment request.'));
       } else {
-        var wc = card('', 'Waiting for the customer to pay ' + naira(amt), 'You will be told as soon as it is paid.');
+        var wc = card('', 'Waiting for the customer to pay ' + naira(amt), 'You will be told when it is paid.');
         actions(wc).appendChild(plainBtn('Change price', false, function () { S.priceOpen = true; window.JRFlow.repaint(); }));
         host.appendChild(wc);
       }
@@ -192,11 +192,11 @@
     }
 
     if (v.sm.base > 0) {
-      if (customer) { host.appendChild(card('', 'Price: ' + naira(v.sm.base), 'Waiting for the tasker to confirm this price and send the payment request.')); return true; }
+      if (customer) { host.appendChild(card('', 'Price: ' + naira(v.sm.base), 'Waiting for the tasker to confirm.')); return true; }
       if (S.priceOpen) { host.appendChild(priceCard(v)); return true; }
-      var ac = card('', 'Customer price: ' + naira(v.sm.base), 'Agree and the customer is asked to pay straight away, or suggest another price.');
+      var ac = card('', 'Customer price: ' + naira(v.sm.base), 'Agree to ask them to pay, or suggest another price.');
       var aa = actions(ac);
-      aa.appendChild(flowBtn({ label: 'Agree ' + naira(v.sm.base) + ' and request payment', agree: v.sm.base }, true));
+      aa.appendChild(flowBtn({ label: 'Agree ' + naira(v.sm.base), agree: v.sm.base }, true));
       aa.appendChild(plainBtn('Change price', false, function () { S.priceOpen = true; window.JRFlow.repaint(); }));
       host.appendChild(ac);
       return true;

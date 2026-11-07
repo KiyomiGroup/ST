@@ -131,20 +131,22 @@
         <!-- Attachment preview chip (UI only until Stage 9: nothing is uploaded or sent) -->
         <div class="jr-attach-preview" id="jrAttachPreview" hidden></div>
 
+        <!-- Docked next-step panel, on top of the safety reminder, which sits right above the message box: price box, pay, release code, Share location, code entry.
+             Built by js/messages-dock.js (driven by js/messages-flow.js). -->
+        <div class="jr-dock" id="jrDock" hidden></div>
+
         <!-- StreetTasker Safety Reminder: always above the message input, for customers and taskers, in every conversation.
              Not dismissible. Shown with the conversation (js below, where #inputBar is revealed). Wording is fixed by the spec. -->
         <aside class="jr-reminder" id="jrSafetyReminder" aria-labelledby="jrSafetyReminderTitle" data-tour="chat-safety-reminder" hidden>
           <span class="jr-reminder-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
           </span>
           <div class="jr-reminder-text">
             <div class="jr-reminder-head">
               <strong id="jrSafetyReminderTitle">StreetTasker Safety Reminder</strong>
-              <button type="button" class="jr-reminder-info" id="jrSafetyInfoBtn" aria-haspopup="dialog" aria-controls="jrSafetyInfoLayer" aria-label="More about safety, payments and disputes" title="More info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+              <button type="button" class="jr-reminder-info" id="jrSafetyInfoBtn" aria-haspopup="dialog" aria-controls="jrSafetyInfoLayer" aria-label="More about safety, payments and disputes" title="More info"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
             </div>
-            <p class="jr-reminder-full">Keep all communication, agreements and payments on StreetTasker. Taking transactions off-platform violates our policies and may result in a permanent account ban.</p>
-            <p class="jr-reminder-short">Keep all communication, agreement and payment on StreetTasker. Any transaction taken off the site won&rsquo;t be settled in a dispute and results in a permanent ban.</p>
-            <p class="jr-reminder-note">Applies to both Customers and Taskers.</p>
+            <p class="jr-reminder-short">Keep all chats and payments on StreetTasker. Off-platform deals are not covered in a dispute and lead to a permanent ban.</p>
           </div>
         </aside>
 
@@ -172,10 +174,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Docked next-step panel, right above the message box: price box, pay, release code, Share location, code entry.
-             Built by js/messages-dock.js (driven by js/messages-flow.js). -->
-        <div class="jr-dock" id="jrDock" hidden></div>
 
         <div class="msg-input-bar" id="inputBar" hidden>
           <div class="jr-menu-wrap">
