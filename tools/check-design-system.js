@@ -16,6 +16,8 @@
  *   rgb      raw rgb()/rgba()     -> use a token
  *   inline   style="..." attribute -> use a class
  *   important  !important          -> needs a real reason
+ *   shell    a page with the shared nav that is not in tools/legacy-pages.json must use
+ *            <main class="st-page"> (DESIGN-SYSTEM.md 4.14), so the nav never covers it
  */
 const fs = require('fs');
 const path = require('path');
@@ -87,6 +89,14 @@ for (const [file, counts] of Object.entries(current)) {
     const allowed = (base[file] && base[file][rule]) || 0;
     if (n > allowed) problems.push(`${file}: ${rule} ${allowed} -> ${n} (+${n - allowed})`);
   }
+}
+
+const LEGACY = path.join(__dirname, 'legacy-pages.json');
+const legacyPages = new Set(fs.existsSync(LEGACY) ? JSON.parse(fs.readFileSync(LEGACY, 'utf8')).pages : []);
+for (const name of fs.readdirSync(ROOT)) {
+  if (!name.endsWith('.html') || legacyPages.has(name)) continue;
+  const t = fs.readFileSync(path.join(ROOT, name), 'utf8');
+  if (t.includes('navbar-placeholder') && !/class="[^"]*\bst-page\b/.test(t)) problems.push(`${name}: shell new page must use <main class="st-page"> inside <body class="st-shell"> (DESIGN-SYSTEM.md 4.14)`);
 }
 
 if (problems.length) {

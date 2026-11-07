@@ -16,30 +16,33 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
 </head>
-<body>
+<body class="st-shell">
   <div id="navbar-placeholder"></div>
 
-  <main class="coa-page" id="coaPage">
-    <h1>Apply to be a Coordinator</h1>
-    <p class="coa-lead">Coordinators connect skilled people in their community, who may not use smartphones or the internet, with customers on StreetTasker, and earn for every task those Local Taskers complete. Tell us about yourself and our team will review your application and contact you by email or phone.</p>
+  <main class="st-page st-page--narrow coa-page" id="coaPage">
+    <section class="st-hero coa-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
+      <h1 class="st-hero-title">Apply to be a Coordinator</h1>
+      <p class="st-hero-lead">Coordinators connect skilled people in their community, who may not use smartphones or the internet, with customers on StreetTasker, and earn for every task those Local Taskers complete. Tell us about yourself and our team will review your application and contact you by email or phone.</p>
+    </section>
 
     <form class="coa-form" id="coaForm" novalidate>
       <div class="coa-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
 
-      <section class="card coa-card">
-        <h2>About you</h2>
-        <p class="form-helper">Fields marked <span class="coa-req">*</span> are required.</p>
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">About you</h2>
+        <p class="form-helper">Fields marked <span class="st-req">*</span> are required.</p>
         <div class="form-group">
-          <label class="form-label" for="full_name">Full name <span class="coa-req">*</span></label>
+          <label class="form-label" for="full_name">Full name <span class="st-req">*</span></label>
           <input class="form-input" id="full_name" name="full_name" type="text" autocomplete="name" maxlength="120" required />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="email">Email <span class="coa-req">*</span></label>
+            <label class="form-label" for="email">Email <span class="st-req">*</span></label>
             <input class="form-input" id="email" name="email" type="email" autocomplete="email" maxlength="160" required />
           </div>
           <div class="form-group">
-            <label class="form-label" for="phone">Phone number <span class="coa-req">*</span></label>
+            <label class="form-label" for="phone">Phone number <span class="st-req">*</span></label>
             <input class="form-input" id="phone" name="phone" type="tel" autocomplete="tel" maxlength="24" placeholder="e.g. 0801 234 5678" required />
           </div>
         </div>
@@ -50,7 +53,7 @@
             <p class="form-helper">Leave empty if it is the same as your phone number.</p>
           </div>
           <div class="form-group">
-            <label class="form-label" for="age_range">Age range <span class="coa-req">*</span></label>
+            <label class="form-label" for="age_range">Age range <span class="st-req">*</span></label>
             <select class="form-select" id="age_range" name="age_range" required>
               <option value="">Select</option>
               <option>Under 18</option>
@@ -63,30 +66,30 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="occupation">What do you do now? <span class="coa-req">*</span></label>
+          <label class="form-label" for="occupation">What do you do now? <span class="st-req">*</span></label>
           <input class="form-input" id="occupation" name="occupation" type="text" maxlength="160" placeholder="e.g. Student, trader, shop owner, community leader, unemployed" required />
         </div>
       </section>
 
-      <section class="card coa-card">
-        <h2>Where you would work</h2>
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">Where you would work</h2>
         <p class="form-helper">We match coordinators to the communities they know best.</p>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="state">State <span class="coa-req">*</span></label>
+            <label class="form-label" for="state">State <span class="st-req">*</span></label>
             <input class="form-input" id="state" name="state" type="text" maxlength="80" placeholder="e.g. Lagos" required />
           </div>
           <div class="form-group">
-            <label class="form-label" for="city">City or town <span class="coa-req">*</span></label>
+            <label class="form-label" for="city">City or town <span class="st-req">*</span></label>
             <input class="form-input" id="city" name="city" type="text" maxlength="80" required />
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="areas">Areas, markets or neighbourhoods you could cover <span class="coa-req">*</span></label>
+          <label class="form-label" for="areas">Areas, markets or neighbourhoods you could cover <span class="st-req">*</span></label>
           <textarea class="form-textarea" id="areas" name="areas" maxlength="600" required></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label" for="years_in_area">How long have you lived or worked in this area? <span class="coa-req">*</span></label>
+          <label class="form-label" for="years_in_area">How long have you lived or worked in this area? <span class="st-req">*</span></label>
           <select class="form-select" id="years_in_area" name="years_in_area" required>
             <option value="">Select</option>
             <option>Less than 1 year</option>
@@ -97,11 +100,11 @@
         </div>
       </section>
 
-      <section class="card coa-card">
-        <h2>Local Taskers you know</h2>
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">Local Taskers you know</h2>
         <p class="form-helper">Local Taskers are skilled workers, such as tailors, mechanics and hairdressers, who you would help to find customers.</p>
         <div class="form-group">
-          <span class="form-label">Which skills or trades do you know people in? <span class="coa-req">*</span></span>
+          <span class="form-label">Which skills or trades do you know people in? <span class="st-req">*</span></span>
           <div class="coa-checks" id="trades">
             <div class="check-row"><input type="checkbox" id="t1" name="trades" value="Tailoring and fashion" /><label for="t1">Tailoring and fashion</label></div>
             <div class="check-row"><input type="checkbox" id="t2" name="trades" value="Hair and beauty" /><label for="t2">Hair and beauty</label></div>
@@ -116,7 +119,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="tasker_count">How many skilled people could you bring onto StreetTasker in your first 30 days? <span class="coa-req">*</span></label>
+          <label class="form-label" for="tasker_count">How many skilled people could you bring onto StreetTasker in your first 30 days? <span class="st-req">*</span></label>
           <select class="form-select" id="tasker_count" name="tasker_count" required>
             <option value="">Select</option>
             <option>1 to 5</option>
@@ -126,20 +129,20 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="how_you_know">How do you know these people? <span class="coa-req">*</span></label>
+          <label class="form-label" for="how_you_know">How do you know these people? <span class="st-req">*</span></label>
           <textarea class="form-textarea" id="how_you_know" name="how_you_know" maxlength="800" placeholder="e.g. I buy from them, we are in the same market association, I am a landlord on their street" required></textarea>
         </div>
       </section>
 
-      <section class="card coa-card">
-        <h2>Experience and availability</h2>
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">Experience and availability</h2>
         <div class="form-group">
-          <label class="form-label" for="experience">Experience leading, selling to, or organising people <span class="coa-req">*</span></label>
+          <label class="form-label" for="experience">Experience leading, selling to, or organising people <span class="st-req">*</span></label>
           <textarea class="form-textarea" id="experience" name="experience" maxlength="1000" placeholder="Sales, community or religious groups, associations, supervising staff, running a business, and so on" required></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="hours">Hours you can give each week <span class="coa-req">*</span></label>
+            <label class="form-label" for="hours">Hours you can give each week <span class="st-req">*</span></label>
             <select class="form-select" id="hours" name="hours" required>
               <option value="">Select</option>
               <option>Under 5 hours</option>
@@ -149,12 +152,12 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="languages">Languages you speak <span class="coa-req">*</span></label>
+            <label class="form-label" for="languages">Languages you speak <span class="st-req">*</span></label>
             <input class="form-input" id="languages" name="languages" type="text" maxlength="160" placeholder="e.g. English, Yoruba, Pidgin" required />
           </div>
         </div>
         <div class="form-group">
-          <span class="form-label">Do you have a smartphone with internet access? <span class="coa-req">*</span></span>
+          <span class="form-label">Do you have a smartphone with internet access? <span class="st-req">*</span></span>
           <div class="coa-radios">
             <div class="check-row"><input type="radio" id="sp1" name="smartphone" value="Yes" /><label for="sp1">Yes</label></div>
             <div class="check-row"><input type="radio" id="sp2" name="smartphone" value="Sometimes" /><label for="sp2">Sometimes</label></div>
@@ -162,7 +165,7 @@
           </div>
         </div>
         <div class="form-group">
-          <span class="form-label">Do you have a valid government ID (NIN slip, driver's licence, voter's card or international passport)? <span class="coa-req">*</span></span>
+          <span class="form-label">Do you have a valid government ID (NIN slip, driver's licence, voter's card or international passport)? <span class="st-req">*</span></span>
           <div class="coa-radios">
             <div class="check-row"><input type="radio" id="id1" name="has_id" value="Yes" /><label for="id1">Yes</label></div>
             <div class="check-row"><input type="radio" id="id2" name="has_id" value="No" /><label for="id2">No</label></div>
@@ -171,10 +174,10 @@
         </div>
       </section>
 
-      <section class="card coa-card">
-        <h2>A little more</h2>
+      <section class="st-panel coa-card">
+        <h2 class="st-panel-title">A little more</h2>
         <div class="form-group">
-          <label class="form-label" for="why">Why do you want to be a coordinator? <span class="coa-req">*</span></label>
+          <label class="form-label" for="why">Why do you want to be a coordinator? <span class="st-req">*</span></label>
           <textarea class="form-textarea" id="why" name="why" maxlength="1200" required></textarea>
         </div>
         <div class="form-row">
@@ -211,16 +214,16 @@
         </div>
       </section>
 
-      <section class="card coa-card">
-        <div class="check-row"><input type="checkbox" id="consent_checks" name="consent_checks" /><label for="consent_checks">I understand StreetTasker may contact me, my reference, and verify my identity before approving my application. <span class="coa-req">*</span></label></div>
-        <div class="check-row"><input type="checkbox" id="consent_data" name="consent_data" /><label for="consent_data">I agree that StreetTasker may use the information above to review my application, as described in the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>. <span class="coa-req">*</span></label></div>
+      <section class="st-panel coa-card">
+        <div class="check-row"><input type="checkbox" id="consent_checks" name="consent_checks" /><label for="consent_checks">I understand StreetTasker may contact me, my reference, and verify my identity before approving my application. <span class="st-req">*</span></label></div>
+        <div class="check-row"><input type="checkbox" id="consent_data" name="consent_data" /><label for="consent_data">I agree that StreetTasker may use the information above to review my application, as described in the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>. <span class="st-req">*</span></label></div>
         <div class="form-error coa-error" id="coaError" role="alert"></div>
         <button type="submit" class="btn btn-primary btn-lg" id="coaSubmit">Submit application</button>
       </section>
     </form>
 
-    <section class="card coa-success" id="coaSuccess" tabindex="-1">
-      <h2>Application received</h2>
+    <section class="st-panel coa-success" id="coaSuccess" tabindex="-1">
+      <h2 class="st-panel-title">Application received</h2>
       <p>Thank you. Our team will review your application and get back to you by email or phone.</p>
       <a href="index.html" class="btn btn-primary">Back to home</a>
     </section>

@@ -319,6 +319,31 @@ Pages that use it load `css/cards-compact.css`, `js/rating-badge.js` and `css/ra
 - Place the label after the name and after the identity tick; it never replaces or touches the tick.
 - S4i: labels are also drawn on service cards (`stServiceCard`, after the provider name in the eyebrow line, only when the card shows the name, never on a perk line or a Local Tasker), the customer's offers list (`customer-applications.html`, after the applicant's name) and the customer's bookings list (`customer-bookings.html`, after the provider's name). A page that draws labels links `css/membership.css` and loads `js/membership-labels.js` before its page script, then calls `STMembership.load(ids)` once.
 
+### 4.14 Page shell (2026-11-06): the frame for every new page
+
+**Rule: every new page must use it.** It gives the same look as `learn.html` and `referrals.html` (forest hero, white panels on `--pt-page`) and guarantees the fixed nav never covers the heading.
+
+| Piece | Class | Notes |
+|---|---|---|
+| Body | `<body class="st-shell">` | `--pt-page` background |
+| Main | `<main class="st-page">` or `st-page--narrow` | Clears the nav (`--nav-height` + 24px, 16px on phones), width `--page-width` (narrow: `--page-width-narrow` 720px), 60px margin on desktop, 16px on phones, 24px gap between blocks. Exempt from the legacy phone rule `main:not(.st-page)` |
+| Hero | `.st-hero` + `.st-hero-chip` (with `.st-hero-dot`), `.st-hero-title` (the page h1), `.st-hero-lead` | Forest gradient, `--radius-hero`. One per page, first block |
+| Panel | `.st-panel` + `.st-panel-title`, `.st-panel-note` | White card, `--radius-hero`, 24px padding (16px phones). Fields inside get the tinted `--pt-field` look automatically |
+| Required star | `.st-req` | |
+
+Inside panels use `.btn`, `.form-group`, `.form-label`, `.form-input`, `.check-row`, `.st-notice`, `.badge`. A page file adds layout only (columns, grids), never new colours, sizes or radii. `html` has `scroll-padding-top` so `#anchor` links stop below the nav.
+
+**Why it exists:** a legacy rule `main { padding: ... !important }` inside the phone breakpoint overrode the top padding of every bare `<main>`, and the Privacy and Terms pages used a 48px gap under a 64px nav. Both are fixed; the shell stops it coming back. Pages older than the shell are listed in `tools/legacy-pages.json`; `tools/check-design-system.js` fails any other page that has the shared nav but no `.st-page`.
+
+## 9. Checklist for every new page
+
+1. `<body class="st-shell">`, `<main class="st-page">` (`st-page--narrow` for forms and text), `.st-hero`, `.st-panel` blocks.
+2. Tokens and existing components only (sections 1 to 4). New value needed: add it to `css/tokens.css` and this file first.
+3. No inline `style=""`, no `!important`, no page-local button, card or input looks.
+4. Breakpoints 480 / 768 / 1044 only.
+5. View at 390px and 1280px: heading below the nav, no sideways scroll.
+6. `node tools/check-design-system.js` passes.
+
 ---
 
 ## 5. Logged-out desktop navigation (implemented)

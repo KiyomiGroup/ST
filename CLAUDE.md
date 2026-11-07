@@ -11,4 +11,6 @@ This project follows a design system. Read it before you change any `.html`, `.c
 7. **Run the check before you finish:** `node tools/check-design-system.js`. It must pass. Do not edit `tools/design-baseline.json` to make it pass. Only run `--update` after you have removed violations.
 8. When done, list every file you edited and confirm nothing outside the requested scope changed.
 
+9. **Every NEW page uses the page shell** (`DESIGN-SYSTEM.md` 4.14): `<body class="st-shell">`, `<main class="st-page">` (or `st-page--narrow` for forms), `.st-hero` and `.st-panel` blocks, shared `.btn` / `.form-*`, tokens only. Copy `coordinator-apply.html` as the model. Never leave `<main>` without `.st-page`, never hand-pick a top padding smaller than the nav. After building, check the page at 390px: the heading must sit below the nav. The check tool fails a new page that skips the shell.
+
 Existing hardcoded values in older pages are known debt (see the baseline). Do not copy them into new code.

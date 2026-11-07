@@ -1,0 +1,10 @@
+# S2 handoff: database and server logic (todo)
+Goal: all data rules in SQL so the browser cannot cheat. Needs the owner's C0 introspect results (see handoff-S1.md). Test on a scratch Postgres 16 with stand-ins (method in `HANDOFF-README.md`), never claim it ran on production.
+Build (files in `sql/coordinator-onboarding/`, with rollback files, numbered `c1-...`):
+1. `coordinator_codes` (code, note/for_whom, created_by, expires_at, used_by, used_at, application_id nullable). RLS on, no direct access for anon/authenticated. Admin helper `admin_create_coordinator_code(note text, days int default 30)` returns the code. Run by the admin in the SQL editor.
+2. `coordinator_code_check(code text)` for sign-up (anon allowed): returns only valid / invalid (never why). Rate-limit by IP is not possible in SQL; keep codes long, single use.
+3. `coordinator_redeem_code(code text)` (authenticated): marks used and creates the coordinator row the way existing coordinators are created (from C0), idempotent, one row per user.
+4. `coordinator_applications` (status new/approved/rejected/passed, all new form fields incl. `tasker_count`, `area_sqm`, `can_meet_taskers`, `can_explain`, token hash, token_expires_at). `admin_approve_coordinator_application(id)` returns the test link `https://streettasker.com/coordinator-test.html?t=<token>` (store only a hash); `admin_reject_...`.
+5. Quiz: `coordinator_quiz_questions` (answers never readable by anon/authenticated), `coordinator_quiz_attempts`. RPCs `coordinator_quiz_start(token)` (returns 10 random questions WITHOUT answers + attempts left today), `coordinator_quiz_submit(token, answers)` (grades on the server, enforces 3 per Lagos day, pass mark 80%, on pass issues a code and returns it). Return remaining attempts and next-allowed time after a fail.
+6. Document in the handoff what the future Admin Control Centre needs (list applications, approve/reject, create code).
+Owner action: run the SQL files in order in the SQL editor (give exact order and what success looks like).
