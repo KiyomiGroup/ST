@@ -17,9 +17,13 @@
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
 </head>
 <body class="st-shell">
-  <div id="navbar-placeholder"></div>
+  <!-- Coordinator accounts are separate from customer and Local Tasker accounts, so this page has no customer navbar,
+       no customer footer and loads none of the customer site scripts. -->
 
   <main class="st-page st-page--narrow cot-page" id="cotPage">
+    <a class="cot-brand" href="coordinator-login.html" aria-label="StreetTasker coordinator sign-in">
+      <img src="images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+    </a>
     <section class="st-hero">
       <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
       <h1 class="st-hero-title">Coordinator test</h1>
@@ -100,14 +104,8 @@
     </section>
   </main>
 
-  <div id="footer-placeholder"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
-  <script src="js/sanitize.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/saved.js"></script>
-  <script src="js/app.js"></script>
   <script src="js/coordinator-test.js"></script>
 </body>
 </html>

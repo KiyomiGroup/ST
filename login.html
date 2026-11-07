@@ -196,23 +196,15 @@
       tick();
     }
 
-    /* Coordinator code waiting in this browser (typed at sign-up, or shown after the coordinator test).
-       true = they are now a coordinator and are being sent to the coordinator page. */
-    let coordinatorCheck = null;   /* one check per page load, so Google's two callbacks cannot redeem twice or send the person two ways */
+    /* A coordinator account is coordinator-only: it never signs in to the customer or tasker side. The database says who is a
+       coordinator; if it cannot answer, the person is NOT turned away (a failed check must never lock a customer out).
+       true = it is a coordinator account: they are signed out and told where to sign in. */
+    let coordinatorCheck = null;   /* one check per page load, so Google's two callbacks cannot run it twice */
     function coordinatorAfterLogin(user) {
       if (!coordinatorCheck) coordinatorCheck = coordinatorCheckNow(user);
       return coordinatorCheck;
     }
     async function coordinatorCheckNow(user) {
-      const co = await window.ST.auth.redeemPendingCoordinatorCode(user);
-      if (co.status === 'ready') {
-        showToast('Your coordinator account is ready. Taking you to the coordinator page...');
-        setTimeout(() => { window.location.replace(window.ST.auth.COORDINATOR_HOME); }, 800);
-        return true;
-      }
-      if (co.status === 'invalid') showToast('That coordinator code has already been used or has expired, so it was not applied. You are signed in as normal.');
-      /* A coordinator account is coordinator-only: it never signs in to the customer or tasker side. The database says who is a
-         coordinator; if it cannot answer, the person is NOT turned away (a failed check must never lock a customer out). */
       if (await isCoordinatorAccount()) {
         coordinatorBlocked = true;
         try { await window.supabase.auth.signOut(); } catch (e) { /* the page below still explains */ }
@@ -444,7 +436,7 @@
         try {
           const { user } = await window.ST.auth.loginUser(email, pwd);
 
-          /* A coordinator code from sign-up or the coordinator test: they become a coordinator and go to the coordinator page */
+          /* A coordinator account is turned away here and sent to the coordinator sign-in */
           if (await coordinatorAfterLogin(user)) {
             if (coordinatorBlocked) { btn.innerHTML = originalHTML; btn.disabled = false; return; }   /* coordinator account: signed out, told where to sign in */
             if (window.ST.auth.isFirstLogin(user)) await window.ST.auth.markWelcomed();

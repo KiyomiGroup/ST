@@ -18,6 +18,14 @@ async function getUserRole(user) {
   const { data } = await window.supabase.from('users').select('role').eq('id', user.id).maybeSingle();
   return data?.role || null;
 }
+/* A coordinator login is coordinator-only (Stage D-2). If one ever reaches a customer or tasker page, it is signed out
+   and sent to the coordinator sign-in; it is never shown as a customer. */
+const COORDINATOR_LOGIN_URL = 'coordinator-login.html';
+async function _turnAwayCoordinator() {
+  try { await window.supabase.auth.signOut(); } catch (e) { /* the redirect below still happens */ }
+  try { ['st_role', 'st_name', 'st_session', 'st_uid', 'st_email', 'st_avatar', 'st_plan'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  window.location.replace(COORDINATOR_LOGIN_URL);
+}
 function getDashboardUrl(role) {
   return role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 }
@@ -29,9 +37,10 @@ function getHomeUrl() { return 'home-feed.html'; }
 /* ── Instant navbar init from localStorage (runs before network) ── */
 function initNavbarInstant() {
   /* Read cached role from localStorage — set at login/signup */
-  const cachedRole = localStorage.getItem('st_role') || 'customer';
+  let cachedRole = localStorage.getItem('st_role') || 'customer';
   const cachedName = localStorage.getItem('st_name') || '';
-  const isLoggedIn = !!localStorage.getItem('st_session');
+  let isLoggedIn = !!localStorage.getItem('st_session');
+  if (cachedRole === 'coordinator') { cachedRole = 'customer'; isLoggedIn = false; }   /* never paint a coordinator as a customer */
   _applyNavState(isLoggedIn, cachedRole, cachedName);
 }
 
@@ -426,6 +435,7 @@ async function syncNavbarAuthState() {
 
   if (user) {
     const role = await getUserRole(user);
+    if (role === 'coordinator') { await _turnAwayCoordinator(); return; }
     const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
 
     /* Cache in localStorage for instant next-page render */
@@ -663,6 +673,7 @@ function _roleErrorMessage(error) {
     return 'Switching between customer and tasker accounts is not switched on yet. Please try again later.';
   }
   if (/not_held/i.test(msg)) return 'You do not have that kind of account yet.';
+  if (/coordinator_account/i.test(msg)) return 'This email belongs to a coordinator account, which cannot be used as a customer or tasker account. Please use a different email address.';
   return msg || 'Something went wrong. Please try again.';
 }
 
@@ -892,6 +903,7 @@ async function requireAuth() {
     window.location.href = `login.html?redirect=${encodeURIComponent(window.location.pathname)}`;
     return null;
   }
+  if (user.user_metadata?.role === 'coordinator') { await _turnAwayCoordinator(); return null; }
   return user;
 }
 
@@ -905,6 +917,7 @@ async function requireRole(role) {
   const user = await requireAuth();
   if (!user) return null;
   const userRole = await getUserRole(user);
+  if (userRole === 'coordinator') { await _turnAwayCoordinator(); return null; }
   if (userRole !== role) {
     const redirect = role === 'tasker' ? 'dashboard-customer.html' : 'dashboard-tasker.html';
     window.location.href = redirect;
@@ -971,55 +984,6 @@ async function initDashboardWelcome() {
   } catch (e) { /* cached version above already applied — fail silently */ }
 }
 
-/* ── Coordinator code (coordinator onboarding, S6) ───────────────
-   A coordinator code typed at sign-up (or the code shown after passing the coordinator test) is kept in this
-   browser until the person is signed in, then redeemed ONCE by the database (rpc coordinator_redeem_code).
-   The code is kept for 24 hours and only used for the same email it was entered with. The database decides if
-   it is real, unused and not expired; nothing here grants access. */
-const PENDING_CO_KEY = 'st_pending_coord_code';
-const PENDING_CO_MAX_AGE = 24 * 60 * 60 * 1000;
-const COORDINATOR_HOME = 'coordinator-dashboard.html';
-function rememberCoordinatorCode(code, email) {
-  try {
-    const c = String(code || '').trim().toUpperCase();
-    if (!c) { localStorage.removeItem(PENDING_CO_KEY); return; }
-    localStorage.setItem(PENDING_CO_KEY, JSON.stringify({ code: c, email: String(email || '').trim().toLowerCase(), at: Date.now() }));
-  } catch (e) { /* storage blocked: the person can still use the code from the coordinator test page */ }
-}
-function _readPendingCoordinatorCode() {
-  try {
-    const raw = localStorage.getItem(PENDING_CO_KEY);
-    if (!raw) return null;
-    let d = null;
-    try { d = JSON.parse(raw); } catch (e) { d = { code: raw, email: '', at: Date.now() }; }   /* a plain code saved by an older sign-up page */
-    if (typeof d === 'string') d = { code: d, email: '', at: Date.now() };
-    if (!d || typeof d.code !== 'string' || !d.code || !d.at || Date.now() - d.at > PENDING_CO_MAX_AGE) { localStorage.removeItem(PENDING_CO_KEY); return null; }
-    return d;
-  } catch (e) { return null; }
-}
-/* Returns { status }:  'none'   nothing waiting (or it belongs to another email): carry on as normal
-                        'ready'  the person is now an active coordinator: send them to COORDINATOR_HOME
-                        'invalid' the code was already used or has expired: tell them, carry on as normal
-                        'error'  the server could not be reached: the code is kept for the next log-in */
-async function redeemPendingCoordinatorCode(user) {
-  const d = _readPendingCoordinatorCode();
-  if (!d) return { status: 'none' };
-  try {
-    if (d.email && user && user.email && d.email !== String(user.email).toLowerCase()) return { status: 'none' };
-    const r = await window.supabase.rpc('coordinator_redeem_code', { p_code: d.code });
-    if (r.error || !r.data) return { status: 'error' };
-    if (r.data.ok === true) { localStorage.removeItem(PENDING_CO_KEY); return { status: 'ready' }; }
-    const err = r.data.error;
-    if (err === 'not_signed_in') return { status: 'error' };
-    localStorage.removeItem(PENDING_CO_KEY);
-    if (err === 'already_coordinator') {
-      const a = await window.supabase.rpc('is_active_coordinator');
-      return { status: (!a.error && a.data === true) ? 'ready' : 'none' };
-    }
-    return { status: 'invalid' };
-  } catch (e) { return { status: 'error' }; }
-}
-
 window.ST      = window.ST || {};
 window.ST.auth = {
   getSession, getCurrentUser, getUserRole, getDashboardUrl, getHomeUrl,
@@ -1028,5 +992,4 @@ window.ST.auth = {
   getMyRoles, addRole, switchRole, checkCustomerOnly, CUSTOMER_ONLY_BOOKING, CUSTOMER_ONLY_GIFTS,
   signUpUser, loginUser, checkPassword, passwordProblem, attachPasswordRules, PASSWORD_RULES, logoutUser, requireAuth, requireRole, syncNavbarAuthState, initNavbarInstant,
   initDashboardWelcome,
-  rememberCoordinatorCode, redeemPendingCoordinatorCode, COORDINATOR_HOME,
 };

@@ -17,3 +17,5 @@
 .coa-error { display: none; }
 .coa-error.is-visible { display: block; }
 @media (max-width: 480px) { .coa-checks { grid-template-columns: minmax(0, 1fr); } }
+.coa-brand { display: inline-flex; align-self: start; justify-self: start; }
+.coa-brand img { display: block; height: var(--space-5); width: auto; }

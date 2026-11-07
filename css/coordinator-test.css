@@ -19,3 +19,5 @@
 .cot-note { min-height: var(--space-5); margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary); }
 .cot-note:empty { min-height: 0; margin-top: 0; }
 @media (max-width: 480px) { .cot-actions .btn { flex: 1 1 100%; } .cot-code { font-size: var(--text-xl); } }
+.cot-brand { display: inline-flex; align-self: start; justify-self: start; }
+.cot-brand img { display: block; height: var(--space-5); width: auto; }

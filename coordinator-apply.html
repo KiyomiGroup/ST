@@ -17,9 +17,13 @@
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
 </head>
 <body class="st-shell">
-  <div id="navbar-placeholder"></div>
+  <!-- Coordinator accounts are separate from customer and Local Tasker accounts, so this page has no customer navbar,
+       no customer footer and loads none of the customer site scripts. -->
 
   <main class="st-page st-page--narrow coa-page" id="coaPage">
+    <a class="coa-brand" href="coordinator-login.html" aria-label="StreetTasker coordinator sign-in">
+      <img src="images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+    </a>
     <section class="st-hero coa-hero">
       <span class="st-hero-chip"><span class="st-hero-dot"></span>Coordinators</span>
       <h1 class="st-hero-title">Apply to be a Coordinator</h1>
@@ -251,18 +255,12 @@
       <h2 class="st-panel-title">Application received</h2>
       <p>Thank you. Our team will review your application and get back to you by email or phone.</p>
       <p>If you are accepted, we will email you a link to the next step, which includes the coordinator guide and the test.</p>
-      <a href="index.html" class="btn btn-primary">Back to home</a>
+      <a href="coordinator-login.html" class="btn btn-primary">Coordinator sign-in</a>
     </section>
   </main>
 
-  <div id="footer-placeholder"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabaseClient.js"></script>
-  <script src="js/sanitize.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/saved.js"></script>
-  <script src="js/app.js"></script>
   <script src="js/coordinator-apply.js"></script>
 </body>
 </html>
