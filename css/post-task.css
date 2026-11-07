@@ -288,7 +288,9 @@
   transition: background var(--t) var(--ease);
 }
 .pt-preset:hover { background: var(--pt-field-strong); }
-.pt-preset.is-active { background: var(--pt-mint); color: var(--pt-green); }
+.pt-preset.is-active, .pt-preset[aria-pressed="true"] { background: var(--pt-mint); color: var(--pt-green); }
+.pt-no-budget-note { margin: var(--space-2) 0 0; }
+.pt-group-budget.is-no-budget .pt-budget-field { opacity: 0.5; }
 
 /* ── Urgent ──────────────────────────────────────────────── */
 .pt-urgent { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); padding: var(--space-5); background: var(--pt-field); border-radius: var(--radius-form); }

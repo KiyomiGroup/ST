@@ -295,9 +295,37 @@ function updateCharCounter() {
 }
 
 /* ── Budget: formatted input + presets ──────────────────────── */
+/* "No budget": for customers with no price in mind. The budget is saved as 0 with no_budget = true. */
+function isNoBudget() {
+  const b = $id('noBudgetBtn');
+  return !!(b && b.getAttribute('aria-pressed') === 'true');
+}
+
+function setNoBudget(on) {
+  const btn = $id('noBudgetBtn');
+  const input = $id('taskBudget');
+  if (!btn || !input) return;
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  input.disabled = !!on;
+  input.required = !on;
+  if (on) { input.value = ''; clearFieldError(input, $id('budgetError')); }
+  const note = $id('noBudgetNote');
+  if (note) note.hidden = !on;
+  const group = input.closest('.pt-group-budget');
+  if (group) group.classList.toggle('is-no-budget', !!on);
+  syncBudgetPresets();
+}
+
 function wireBudget() {
   const input = $id('taskBudget');
   if (!input) return;
+
+  const noBtn = $id('noBudgetBtn');
+  if (noBtn) noBtn.addEventListener('click', () => {
+    setNoBudget(!isNoBudget());
+    saveDraft();
+    updateProgress();
+  });
 
   input.addEventListener('input', () => {
     const n = parseBudget(input.value);
@@ -308,6 +336,7 @@ function wireBudget() {
 
   document.querySelectorAll('[data-budget-chip]').forEach(chip => {
     chip.addEventListener('click', () => {
+      if (isNoBudget()) setNoBudget(false);
       input.value = formatBudget(parseInt(chip.dataset.budgetChip, 10));
       syncBudgetPresets();
       validateBudget(input);
@@ -686,6 +715,7 @@ function readDraftFromForm() {
   d.workMode  = radioValue('workMode') || 'in_person';
   d.urgency   = radioValue('urgency') || 'flexible';
   d.timeOfDay = radioValue('timeOfDay') || '';
+  d.noBudget  = isNoBudget();
   /* never keep coordinates; only remember whether the area was confirmed */
   delete d.lat; delete d.lon; delete d.precise;
   d.locArea = (loc && loc.dataset.area === '1') ? '1' : '0';
@@ -704,7 +734,7 @@ function saveDraft() {
 }
 
 function hasDraftContent(d) {
-  return !!(d && (d.title || d.description || d.budget || d.location || d.category || d.urgentPaid));
+  return !!(d && (d.title || d.description || d.budget || d.noBudget || d.location || d.category || d.urgentPaid));
 }
 
 function restoreDraft() {
@@ -734,6 +764,7 @@ function restoreDraft() {
   const loc = $id('taskLocation');
   const budget = $id('taskBudget');
   if (budget && draft.budget) budget.value = formatBudget(parseBudget(draft.budget));
+  if (draft.noBudget) setNoBudget(true);
 
   setUrgentUI(draft.urgentPaid ? 'paid' : 'off');
   syncAll();
@@ -779,6 +810,7 @@ function discardDraft() {
   document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
   document.querySelectorAll('.pt-error').forEach(el => { el.textContent = ''; });
   setUrgentUI('off');
+  setNoBudget(false);
   syncAll();
   showToast('Draft discarded.');
 }
@@ -799,7 +831,7 @@ function sectionStatus() {
   const execution = [];
   if (mode === 'in_person') execution.push(!!val('taskLocation'));
   if (urgency === 'scheduled') execution.push(!!val('taskDeadline'));
-  const budget = [parseBudget(val('taskBudget')) >= MIN_BUDGET];
+  const budget = [isNoBudget() || parseBudget(val('taskBudget')) >= MIN_BUDGET];
 
   return [overview, execution, budget];
 }
@@ -894,6 +926,7 @@ function validateDescription(input) {
 }
 
 function validateBudget(input) {
+  if (isNoBudget()) { clearFieldError(input, $id('budgetError')); return true; }
   const val = parseBudget(input.value);
   const err = $id('budgetError');
   if (isNaN(val) || val < MIN_BUDGET) {
@@ -968,7 +1001,8 @@ async function handleTaskSubmit(e) {
   const taskPayload = {
     title:       titleInput.value.trim(),
     description: descInput.value.trim(),
-    budget:      parseBudget(budgetInput.value),
+    budget:      isNoBudget() ? 0 : parseBudget(budgetInput.value),
+    noBudget:    isNoBudget(),
     location:    workMode === 'remote' ? 'Remote / Online' : locInput.value.trim(),
     deadline:    dlInput.value || null,
     category:    catInput.value || 'other',
@@ -1014,6 +1048,7 @@ async function handleTaskSubmit(e) {
         title:       taskPayload.title,
         description: taskPayload.description,
         budget:      taskPayload.budget,
+        noBudget:    taskPayload.noBudget,
         location:    taskPayload.location,
         deadline:    taskPayload.deadline,
         category:    taskPayload.category,
@@ -1050,6 +1085,7 @@ async function handleTaskSubmit(e) {
         title:       taskPayload.title,
         description: taskPayload.description,
         budget:      taskPayload.budget,
+        no_budget:   !!taskPayload.noBudget,
         location:    taskPayload.location,
         deadline:    taskPayload.deadline ? new Date(taskPayload.deadline).toISOString() : null,
         category:    taskPayload.category,
@@ -1117,7 +1153,7 @@ function setupTaskShare(payload) {
   const input = document.getElementById('taskShareUrl');
   if (!box || !input) return;
   const url = window.location.origin + '/t/' + encodeURIComponent(payload.id);
-  const money = Number(payload.budget) > 0 ? ' for \u20a6' + Math.round(Number(payload.budget)).toLocaleString('en-NG') : '';
+  const money = !payload.noBudget && Number(payload.budget) > 0 ? ' for \u20a6' + Math.round(Number(payload.budget)).toLocaleString('en-NG') : '';
   const message = 'I need a tasker for ' + payload.title + money + '. Apply as a tasker or post your own task: ' + url;
   input.value = url;
   const wa = document.getElementById('taskShareWa');

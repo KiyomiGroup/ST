@@ -401,7 +401,7 @@ function stTaskCard(t) {
       </ul>
     </div>
     <div class="st-card-foot">
-      <div class="st-card-foot-info"><span class="st-card-foot-label">Client Budget</span><span class="st-card-price">${ST_NGN(t.budget)}</span>${offersNote}</div>
+      <div class="st-card-foot-info"><span class="st-card-foot-label">Client Budget</span><span class="st-card-price">${Number(t.budget) > 0 ? ST_NGN(t.budget) : 'No budget'}</span>${offersNote}</div>
       <div class="st-card-actions">
         <a class="st-card-cta st-card-cta--ghost" href="task-details.html?id=${encodeURIComponent(t.id)}">View Details</a>
         ${t.hideOffer ? '' : `<button type="button" class="st-card-cta">Make an Offer ${ST_ICON.arrow}</button>`}

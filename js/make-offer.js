@@ -135,7 +135,7 @@
     var remote = String(t.work_mode || t.task_type || '').toLowerCase() === 'remote';
     var chips = [];
     var budget = money(t.budget);
-    chips.push('<span class="mo-chip mo-chip--primary">' + icon('wallet') + 'Client budget: ' + esc(budget || 'To be agreed') + '</span>');
+    chips.push('<span class="mo-chip mo-chip--primary">' + icon('wallet') + 'Client budget: ' + esc(budget || 'No budget') + '</span>');
     chips.push('<span class="mo-chip">' + icon('shield') + 'Escrow protected</span>');
     if (remote) chips.push('<span class="mo-chip">' + icon('globe') + 'Remote</span>');
     else if (text(t.location)) chips.push('<span class="mo-chip">' + icon('pin') + esc(text(t.location)) + '</span>');
@@ -639,7 +639,7 @@
         return '<a class="mo-match" href="task-details.html?id=' + encodeURIComponent(x.id) + '">' +
           (text(x.location) ? '<span class="mo-match-loc">' + icon('pin') + esc(text(x.location)) + '</span>' : '') +
           '<strong>' + esc(text(x.title)) + '</strong>' +
-          '<span class="mo-match-foot"><b>' + esc(money(x.budget) || 'Budget to be agreed') + '</b><span>View task' + icon('arrow-right') + '</span></span></a>';
+          '<span class="mo-match-foot"><b>' + esc(money(x.budget) || 'No budget') + '</b><span>View task' + icon('arrow-right') + '</span></span></a>';
       }).join('');
       $('moMatches').hidden = false;
     } catch (e) { /* hidden */ }

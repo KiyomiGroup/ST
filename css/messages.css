@@ -490,10 +490,12 @@ body.msg-page {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   color: var(--color-text);
+  font-family: var(--font-heading);
   font-size: var(--text-sm);
+  font-weight: 600;
   text-decoration: none;
 }
-.jr-menu-item:hover { background: var(--color-bg-subtle); }
+.jr-menu-item:hover { background: var(--color-bg-muted); }
 
 /* Task status banner */
 .jr-banner {

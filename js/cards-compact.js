@@ -123,7 +123,7 @@
     var foot = el('div', 'cc-foot');
     var price = el('div', 'cc-price');
     price.appendChild(el('span', 'cc-label', 'Budget'));
-    price.appendChild(el('span', 'cc-amount', Number(t.budget) > 0 ? ngn(t.budget) : 'Open budget'));
+    price.appendChild(el('span', 'cc-amount', Number(t.budget) > 0 ? ngn(t.budget) : 'No budget'));
     foot.appendChild(price);
     var n = Number(t.offers_count);
     if (isFinite(n) && n > 0) foot.appendChild(el('span', 'cc-note', n + ' offer' + (n === 1 ? '' : 's')));

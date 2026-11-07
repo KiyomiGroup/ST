@@ -186,7 +186,7 @@
       var rival = a.rivals > 0
         ? '<div class="ap-fig-text">' + icon('users') + a.rivals + ' other offer' + (a.rivals === 1 ? '' : 's') + ' submitted</div>' : '';
       body += '<div class="ap-figures">' +
-        '<div><div class="ap-fig-label">Client Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : '\u2014') + '</div></div>' +
+        '<div><div class="ap-fig-label">Client Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : 'No budget') + '</div></div>' +
         '<div><div class="ap-fig-label">Your Offer</div><div class="ap-fig-value is-offer">' + (a.offer ? naira(a.offer) : '\u2014') + '</div></div>' +
         '<div>' + (rival ? '<div class="ap-fig-label">Competition</div>' + rival : '') + '</div></div>';
     } else {

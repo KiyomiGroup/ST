@@ -1099,7 +1099,7 @@ function openMessagesPanel() {
           return '<div class="task-row-card tdb-mb-md">' +
             '<div class="task-row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
             '<div class="task-row-content"><div class="task-row-title">' + (t.title||'Task') + '</div>' +
-            '<div class="task-row-meta"><span>' + (t.location||'Lagos') + '</span>' + (t.category?'<span>'+t.category+'</span>':'') + '<span class="db-price">&#8358;' + Number(t.budget||0).toLocaleString() + '</span></div>' +
+            '<div class="task-row-meta"><span>' + (t.location||'Lagos') + '</span>' + (t.category?'<span>'+t.category+'</span>':'') + '<span class="db-price">' + (Number(t.budget) > 0 ? '&#8358;' + Number(t.budget).toLocaleString() : 'No budget') + '</span></div>' +
             (t.description?'<p class="db-desc">' + t.description.slice(0,100) + (t.description.length>100?'…':'') + '</p>':'') +
             '</div><div class="tdb-noshrink"><a href="find-tasks.html" class="btn btn-primary btn-sm">Apply</a></div></div>';
         }).join('');

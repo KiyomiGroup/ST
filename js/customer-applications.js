@@ -182,7 +182,7 @@
             : '<div class="ap-delta">Matches your budget</div>';
     }
     var figures = '<div class="ap-figures">' +
-      '<div><div class="ap-fig-label">Your Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : '\u2014') + '</div></div>' +
+      '<div><div class="ap-fig-label">Your Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : 'No budget') + '</div></div>' +
       '<div><div class="ap-fig-label">Their Offer</div><div class="ap-fig-value is-offer">' + (a.offer ? naira(a.offer) : '\u2014') + '</div>' + delta + '</div>' +
       '<div>' + (a.offers > 1 ? '<div class="ap-fig-label">Competition</div><div class="ap-fig-text">' + icon('users') + a.offers + ' offers on this task</div>' : '') + '</div></div>';
 

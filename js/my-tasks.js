@@ -205,7 +205,7 @@
   }
 
   function figures(t) {
-    var budget = '<div><div class="ap-fig-label">Your Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : '\u2014') + '</div></div>';
+    var budget = '<div><div class="ap-fig-label">Your Budget</div><div class="ap-fig-value">' + (t.budget ? naira(t.budget) : 'No budget') + '</div></div>';
     if (t.group === 'open') {
       var n = t.offers.length;
       var rates = t.offers.map(function (a) { return a.rate; }).filter(function (r) { return r != null; });

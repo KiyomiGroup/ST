@@ -345,7 +345,7 @@
   function renderActions() {
     var t = state.task, open = taskGroup(t.status) === 'open', applied = !!state.myApplication;
     var budget = money(t.budget);
-    setText('tdPrice', budget || 'To be agreed');
+    setText('tdPrice', budget || 'No budget');
     var offerBtn = $('tdOfferBtn'), msgBtn = $('tdMessageBtn'), manage = $('tdManageBtn'), post = $('tdPostBtn'), note = $('tdCtaNote');
     var bar = $('tdActionbar'), barOffer = $('tdBarOffer'), barMsg = $('tdBarMsg');
     [offerBtn, msgBtn, manage, post, note, barMsg].forEach(function (el) { el.hidden = true; });

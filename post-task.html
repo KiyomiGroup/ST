@@ -278,8 +278,10 @@
                   <input type="text" inputmode="numeric" id="taskBudget" name="budget" class="pt-input pt-budget" placeholder="25,000" required data-field="budget" autocomplete="off" />
                 </div>
                 <span class="pt-error" id="budgetError" role="alert"></span>
+                <p class="pt-hint pt-no-budget-note" id="noBudgetNote" hidden>No fixed budget. Your task shows &ldquo;No budget&rdquo; and taskers send you their own price.</p>
                 <div class="pt-presets">
                   <span class="pt-presets-label pt-desk">Suggested presets:</span>
+                <button type="button" class="pt-preset pt-preset-none" id="noBudgetBtn" aria-pressed="false">No budget</button>
                 <button type="button" class="pt-preset" data-budget-chip="2000">₦2,000</button>
                 <button type="button" class="pt-preset" data-budget-chip="5000">₦5,000</button>
                 <button type="button" class="pt-preset" data-budget-chip="10000">₦10,000</button>

@@ -41,7 +41,7 @@ function _parseRate(raw) {
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null, frequency = 'one_off', workMode = 'in_person', timeOfDay = null, urgentPaid = false, urgentFee = 0, urgentPaymentRef = null, photoLabels = [] }) {
+async function postTask({ title, description, category, budget, noBudget = false, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null, frequency = 'one_off', workMode = 'in_person', timeOfDay = null, urgentPaid = false, urgentFee = 0, urgentPaymentRef = null, photoLabels = [] }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -59,7 +59,7 @@ async function postTask({ title, description, category, budget, location, deadli
     title:       title.trim(),
     description: description.trim(),
     category:    category || null,
-    budget:      parseFloat(budget) || 0,
+    budget:      noBudget ? 0 : (parseFloat(budget) || 0),
     location:    location.trim(),
     deadline:    deadline || null,
     urgent:      urgent,
@@ -78,6 +78,7 @@ async function postTask({ title, description, category, budget, location, deadli
     urgent_fee:         urgentPaid ? (parseFloat(urgentFee) || 0) : 0,
     urgent_payment_ref: urgentPaid ? (urgentPaymentRef || null) : null,
     photo_labels:       photoLabels && photoLabels.length ? photoLabels : [],
+    no_budget:          !!noBudget,
   });
 
   let { data, error } = await window.supabase.from('tasks').insert(extended).select().single();
