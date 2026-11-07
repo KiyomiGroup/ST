@@ -90,4 +90,25 @@
     <priority>0.4</priority>
   </url>
 
+  <url>
+    <loc>https://streettasker.com/cookies.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/payments.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/refunds.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/community.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/ip-complaints.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/accessibility.html</loc>
+  </url>
+  <url>
+    <loc>https://streettasker.com/data-consent.html</loc>
+  </url>
 </urlset>
