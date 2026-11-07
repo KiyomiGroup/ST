@@ -30,7 +30,7 @@
 
 /* B. Tasker details (right) */
 .fl-info { position: absolute; left: calc(86.5 * var(--u)); top: calc(31 * var(--u)); width: calc(53.5 * var(--u)); height: calc(78 * var(--u)); display: flex; flex-direction: column; justify-content: space-evenly; gap: calc(2 * var(--u)); }
-.fl-name { --fs: 7; margin: 0; max-height: calc(14 * var(--u)); overflow: hidden; font-family: var(--font-heading); font-size: calc(var(--fs) * var(--u)); font-weight: 800; line-height: 1.1; color: var(--fl-ink); overflow-wrap: anywhere; }
+.fl-name { --fs: 7; margin: 0; max-height: calc(14 * var(--u)); overflow: hidden; font-family: var(--font-heading); font-size: calc(var(--fs) * var(--u)); font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; color: var(--fl-ink); overflow-wrap: anywhere; }
 .fl-job { display: flex; align-items: center; gap: calc(2.4 * var(--u)); width: 100%; padding: calc(2.4 * var(--u)) calc(3.6 * var(--u)); border-radius: calc(99 * var(--u)); background: var(--fl-green); color: var(--fl-white); }
 .fl-job .fl-ico { flex: 0 0 calc(5.6 * var(--u)); width: calc(5.6 * var(--u)); height: calc(5.6 * var(--u)); }
 .fl-job-text { --fs: 4.6; flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(var(--fs) * var(--u)); font-weight: 700; }
@@ -81,6 +81,8 @@
 
 /* ── Print: the A5 / A4 sheet (shown only while printing, same idea as the gift card's .gcp) ──
    js/flyer-template.js builds .fl-sheet, sets its size and the flyer's --u and offset, adds body.fl-printing, then calls window.print(). */
+/* PNG export draws the flyer here, off screen (js/flyer-template.js STFlyer.png) */
+.fl-offscreen { position: fixed; left: 0; top: 0; transform: translateX(-100%); pointer-events: none; }
 .fl-sheet { display: none; }
 @media print {
   body.fl-printing { margin: 0; padding: 0; background: var(--fl-white); }

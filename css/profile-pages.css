@@ -227,6 +227,19 @@
 .tp-callout-btn:hover { background: var(--hero-btn-bg-hover); }
 .tp-callout-btn:focus-visible { outline: 2px solid var(--hero-dot); outline-offset: 2px; }
 
+/* ── Promotional flyer (owner only): hero button + dialog ── */
+.tp-hero-actions { display: flex; }
+.tp-flyer-btn { flex: 0 0 auto; }
+.tp-flyer-btn[hidden] { display: none; }
+.tp-flyer-dialog { width: min(520px, calc(100% - 2 * var(--space-4))); max-height: calc(100dvh - 2 * var(--space-4)); overflow-y: auto; }
+.tp-flyer-stage { display: flex; justify-content: center; margin-bottom: var(--space-4); padding: var(--space-3); border-radius: var(--radius-xl); background: var(--pt-field); }
+.tp-flyer-stage:empty { display: none; }
+.tp-flyer-msg { margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.6; color: var(--pt-ink-muted); }
+.tp-flyer-msg[hidden], .tp-flyer-actions[hidden], .tp-dialog-foot[hidden] { display: none; }
+.tp-flyer-actions { display: flex; flex-direction: column; gap: var(--space-2); }
+.tp-flyer-actions .btn { width: 100%; justify-content: center; }
+.tp-flyer-actions .btn[disabled] { opacity: 0.6; cursor: progress; }
+
 /* ── Dialogs (booking, photo) ────────────────────────────── */
 .tp-dialog { position: relative; }
 .tp-dialog-body { position: relative; padding: var(--space-5); }

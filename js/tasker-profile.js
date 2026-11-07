@@ -241,6 +241,8 @@
     setText('tpBookLabel', label);
     $('tpBarBook').textContent = state.isOwner ? 'Edit My Page' : label + rateShort;
     $('tpBarMsg').hidden = state.isOwner;
+    /* Promotional flyer button: the owner's own real profile only (not samples, not coordinator-managed Local Taskers) */
+    var flyerBtn = $('tpFlyerBtn'); if (flyerBtn) flyerBtn.hidden = !(state.isOwner && !m.isDemo && !m.isLocal);
     $('tpActionbar').hidden = false;
   }
 

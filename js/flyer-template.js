@@ -4,6 +4,7 @@
 
      STFlyer.render(host, data, opts)  -> { el, ready, qrOk }   draws the flyer into host (replaces what is there)
      STFlyer.setWidth(el, px)                                    scales a drawn flyer to px wide on screen (it is drawn in mm, scaled by --u)
+     STFlyer.refit(el)                                           re-fits the text at the current on-screen size (small previews)
      STFlyer.print(el, 'a5' | 'a4')                              prints a clone of el on its own sheet (Save as PDF), same idea as the gift card
      STFlyer.normalise(data)                                     the cleaning rules (used by render, exposed for tests)
 
@@ -120,6 +121,13 @@
     if (prev) flyer.style.setProperty('--u', prev); else flyer.style.removeProperty('--u');
   }
 
+  /* Fits again at the flyer's CURRENT size. Small previews (a phone) wrap text in different places than the 4 px per mm measurement above,
+     so a screen preview calls this after setWidth. Call it only on a flyer that is on screen. */
+  function refit(flyer) {
+    var nodes = flyer.querySelectorAll('[data-fs]');
+    for (var i = 0; i < nodes.length; i++) fit(nodes[i], parseFloat(nodes[i].getAttribute('data-min')) || 2.6);
+  }
+
   /* ── Template: the A5 portrait flyer ── */
   TEMPLATES.flyer = function (c, state) {
     var f = el('div', 'fl');
@@ -155,7 +163,7 @@
 
     /* B. Details */
     var info = el('div', 'fl-info');
-    var name = el('h1', 'fl-name', c.name); name.setAttribute('data-fs', '7'); name.setAttribute('data-min', '3.6');
+    var name = el('p', 'fl-name', c.name); name.setAttribute('data-fs', '7'); name.setAttribute('data-min', '3.6');
     info.appendChild(name);
 
     var job = el('div', 'fl-job'); job.appendChild(icon('wrench'));
@@ -264,5 +272,42 @@
     setTimeout(function () { try { root.print(); } catch (e) { cleanup(); } }, 50);
   }
 
-  root.STFlyer = { render: render, setWidth: setWidth, print: print, normalise: normalise, templates: TEMPLATES, copy: COPY };
+  /* PNG: draws a fresh flyer off screen at 10 px per mm, crops the 3 mm bleed away (so the picture is the A5 trim size, 1480 x 2100 px,
+     about 254 dpi) and resolves { blob, photoDropped }. Needs js/vendor/html-to-image.min.js (window.htmlToImage).
+     The photo is fetched first and passed in as a data link: if the photo's server does not allow that (CORS), the PNG is made with the
+     no-photo avatar and photoDropped is true, so the page can tell the person instead of silently leaving the photo out. */
+  var PNG_PX_PER_MM = 10;
+  function readAsDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader(); r.onload = function () { resolve(String(r.result)); }; r.onerror = function () { reject(r.error); }; r.readAsDataURL(blob);
+    });
+  }
+  function png(data) {
+    var lib = root.htmlToImage;
+    if (!lib || typeof lib.toCanvas !== 'function') return Promise.reject(new Error('png-unavailable'));
+    var u = PNG_PX_PER_MM, d = Object.assign({}, data), photoDropped = false;
+    var photo = d.photoUrl ? fetch(d.photoUrl, { mode: 'cors' }).then(function (r) {
+      if (!r.ok) throw new Error('photo ' + r.status);
+      return r.blob();
+    }).then(readAsDataUrl).then(function (url) { d.photoUrl = url; }).catch(function () { d.photoUrl = ''; photoDropped = true; }) : Promise.resolve();
+    return photo.then(function () {
+      var host = el('div', 'fl-offscreen'), cleanup = function () { if (host.parentNode) host.parentNode.removeChild(host); };
+      document.body.appendChild(host);
+      var r = render(host, d);
+      setWidth(r.el, 154 * u);   /* before r.ready, so the text is fitted at this size */
+      return r.ready.then(function () {
+        /* html-to-image does not carry a CSS fill (fill: var(--fl-green)) onto SVG paths: the waves came out black. Write the colour on each path. */
+        Array.prototype.forEach.call(r.el.querySelectorAll('.fl-bg path'), function (p) { p.setAttribute('fill', getComputedStyle(p).fill); });
+        return lib.toCanvas(r.el, { pixelRatio: 1, width: 154 * u, height: 216 * u });
+      }).then(function (full) {
+        var out = document.createElement('canvas'); out.width = 148 * u; out.height = 210 * u;
+        out.getContext('2d').drawImage(full, -3 * u, -3 * u);
+        return new Promise(function (resolve, reject) {
+          out.toBlob(function (blob) { blob ? resolve({ blob: blob, photoDropped: photoDropped }) : reject(new Error('png-empty')); }, 'image/png');
+        });
+      }).then(function (res) { cleanup(); return res; }, function (e) { cleanup(); throw e; });
+    });
+  }
+
+  root.STFlyer = { render: render, setWidth: setWidth, refit: refit, print: print, png: png, normalise: normalise, templates: TEMPLATES, copy: COPY };
 })(window);

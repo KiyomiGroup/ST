@@ -88,6 +88,9 @@
                 <p class="tp-rating-line" id="tpRatingLine"></p>
               </div>
             </div>
+            <div class="tp-hero-actions">
+              <button type="button" class="pg-hero-btn tp-flyer-btn" id="tpFlyerBtn" aria-haspopup="dialog" hidden>Download my flyer</button>
+            </div>
           </div>
           <div class="pp-hero-chips tp-trust" id="tpTrust" aria-label="Trust and verification"></div>
         </section>
@@ -203,6 +206,23 @@
     <div class="tp-dialog-body" id="tpBookBody"></div>
   </dialog>
 
+  <!-- Promotional flyer (owner only): preview + A5 / A4 PDF + PNG. Drawn by js/flyer-template.js, wired by js/tasker-flyer.js -->
+  <dialog class="ap-dialog tp-dialog tp-flyer-dialog" id="tpFlyerDialog" aria-labelledby="tpFlyerTitle">
+    <div class="tp-dialog-body">
+      <button type="button" class="tp-dialog-x" id="tpFlyerClose" aria-label="Close"><svg class="ap-i" aria-hidden="true"><use href="#i-close"/></svg></button>
+      <h2 class="tp-dialog-title" id="tpFlyerTitle">My promotional flyer</h2>
+      <p class="tp-dialog-lead">Print it or share it. Anyone who scans the QR code signs up with your referral code and lands on your profile.</p>
+      <div class="tp-flyer-stage" id="tpFlyerHost" aria-live="polite"></div>
+      <p class="tp-flyer-msg" id="tpFlyerMsg" role="status" hidden></p>
+      <div class="tp-flyer-actions" id="tpFlyerActions" hidden>
+        <button type="button" class="btn btn-primary" id="tpFlyerA5">Download A5 (PDF)</button>
+        <button type="button" class="btn btn-outline" id="tpFlyerA4">Download A4 (PDF)</button>
+        <button type="button" class="btn btn-outline" id="tpFlyerPng">Download picture (PNG)</button>
+      </div>
+      <p class="tp-dialog-foot" id="tpFlyerHelp" hidden>For a PDF, choose &ldquo;Save as PDF&rdquo; as the printer in the window that opens.</p>
+    </div>
+  </dialog>
+
   <!-- Portfolio photo -->
   <dialog class="ap-dialog tp-dialog tp-lightbox" id="tpLightbox" aria-label="Project photo">
     <button type="button" class="tp-lightbox-close" id="tpLightboxClose" aria-label="Close"><svg class="ap-i" aria-hidden="true"><use href="#i-close"/></svg></button>
@@ -230,9 +250,11 @@
   <script src="js/ng-places.js"></script>
   <script src="js/location.js"></script>
   <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/vendor/html-to-image.min.js"></script>
   <script src="js/flyer-template.js"></script>
   <script src="js/referral-data.js"></script>
   <script src="js/flyer-data.js"></script>
   <script src="js/tasker-profile.js"></script>
+  <script src="js/tasker-flyer.js"></script>
 </body>
 </html>
