@@ -545,7 +545,7 @@
       var ul = document.getElementById('stCatGrid');
       if (!ul || !window.STCat) return;
       ul.innerHTML = STCat.list.filter(function (c) { return c.value !== 'other'; }).map(function (c) {
-        return '<li><a class="st-cattile" href="find-services.html?category=' + c.value + '">' +
+        return '<li><a class="st-cattile" href="find-services.html?category=' + c.value + '">' + STCat.iconHtml(c.value) +
           '<span class="st-cattile-label">' + c.label.replace('&', '&amp;') + '</span></a></li>';
       }).join('');
     })();
