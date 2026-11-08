@@ -26,4 +26,7 @@ Disallow: /redeem.html
 Disallow: /gift-card-success.html
 Disallow: /wallet.html
 
+# Admin area (stage A3a): never indexed. Real protection is the sign-in and the server checks, not this file.
+Disallow: /admin/
+
 Sitemap: https://streettasker.com/sitemap.xml

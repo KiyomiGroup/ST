@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Admin sign in · StreetTasker</title>
+</head>
+<body class="ad-body">
+  <!-- Admin sign-in. Separate from the customer, Tasker and coordinator sign-ins: no site navbar, no site scripts. -->
+  <div class="ad-login">
+    <div class="ad-card ad-login-card">
+      <div class="ad-login-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <h1>Admin sign in</h1>
+      <p class="ad-note">For StreetTasker staff with an admin account.</p>
+
+      <div class="ad-banner" id="adLoginMsg" role="alert" hidden></div>
+
+      <form id="adLoginForm" novalidate>
+        <div class="ad-field">
+          <label for="adEmail">Email address</label>
+          <input class="form-input" type="email" id="adEmail" name="email" autocomplete="username" required />
+        </div>
+        <div class="ad-field">
+          <label for="adPassword">Password</label>
+          <div class="ad-field-wrap">
+            <input class="form-input" type="password" id="adPassword" name="password" autocomplete="current-password" required />
+            <button type="button" class="ad-pwd-toggle" id="adPwdToggle" aria-label="Show password" aria-pressed="false">
+              <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="adLoginBtn">Sign in</button>
+      </form>
+      <p class="ad-login-foot">Signing in here also signs you in on this device for the rest of the StreetTasker site. Use a login made only for admin work.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-login.js"></script>
+</body>
+</html>

@@ -641,3 +641,16 @@
   --fl-white:        #FFFFFF;
   --fl-photo-bg:     #E3EFE7;   /* behind the photo while it loads */
 }
+
+/* ── Admin shell tokens (admin/*.html, css/admin.css; DESIGN-SYSTEM.md 4.17) ──
+   Layout sizes only. Colours come from the tokens above. */
+:root {
+  --admin-sidebar-width:  256px;    /* full sidebar, 1044px and up */
+  --admin-sidebar-icons:  72px;     /* icon-only sidebar, 769 to 1043px */
+  --admin-topbar-height:  56px;
+  --admin-content-max:    1200px;
+  --admin-drawer-width:   288px;    /* phone menu drawer */
+  --admin-login-width:    420px;
+  --admin-icon-size:      20px;
+  --admin-touch-min:      44px;     /* smallest tap target */
+}

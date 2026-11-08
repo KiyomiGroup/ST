@@ -365,6 +365,25 @@ Phones have rounded screen corners and a home bar. Anything fixed or sticky to t
 
 Rules: a bottom bar uses `padding-bottom: calc(<its normal padding> + var(--corner-clear))`; a floating bar uses `bottom: calc(<its normal gap> + var(--corner-clear))`; a toast or banner uses `+ var(--safe-bottom)`; the page that scrolls under it adds `var(--corner-clear)` to its own bottom padding. Every page's viewport tag carries `viewport-fit=cover`, otherwise the phone reports 0 for the safe area and only the 24px minimum applies.
 
+### 4.17 Admin shell (2026-11-08, stage A3a): the frame for every page in `/admin/`
+
+Owner decision D-A4 (default accepted): admin pages use their own frame, not the public page shell (4.14), because they are a side-menu app. Everything else in sections 1 to 4 still applies: **tokens only, no inline style, no `!important`, breakpoints 480 / 768 / 1044**. `tools/check-design-system.js` only looks for the public shell on root-level `.html` files, so `/admin/` needs no exemption; its token rules still cover `/admin/` and `css/admin.css`.
+
+| Piece | Class / file | Notes |
+|---|---|---|
+| Body | `<body class="ad-body">`, and `<html class="st-loader-off">` | The site page loader would cover the page otherwise |
+| Stylesheets | `/css/styles.css`, `/css/admin.css` | styles.css gives `.btn`, `.form-input`, `.badge`; admin.css gives the frame |
+| Gate | `#adGate` | Full-screen state shown before the shell: checking access, No access, two-step needed, error with Retry |
+| Frame | `.ad-app` > `.ad-sidebar` + `.ad-frame` (`.ad-topbar` + `.ad-main`) | `.ad-main` is `<div role="main">`, **not `<main>`**: the old phone rule `main:not(.st-page)` would override its padding |
+| Menu | `#adNav` filled by `admin/js/admin-shell.js` | Only permitted, built items are drawn; a group with none is not drawn |
+| Card | `.ad-card`, `.ad-card-title`, `.ad-note`, `.ad-pagehead` | White, 1px border, `--radius-form` (16px), `--shadow-pt-card`. No hero blocks, no gradients |
+| States | `.ad-state`, `.ad-skel`, `.ad-banner`, `.ad-toast` | Written once in the shell: loading, empty, no results, error with Retry, no permission, toast |
+| Chip | `.ad-chip` | Role and "Admin" labels (pill) |
+
+Layout: 1044px and up = 256px sidebar (`--admin-sidebar-width`); 769 to 1043px = 72px icon sidebar; 768px and under = drawer behind a menu button (`--admin-drawer-width`), tap targets at least 44px (`--admin-touch-min`), bottom padding clears the phone curve with `--corner-clear` (4.16). Content max width `--admin-content-max` 1200px. New tokens in `css/tokens.css`: `--admin-sidebar-width`, `--admin-sidebar-icons`, `--admin-topbar-height`, `--admin-content-max`, `--admin-drawer-width`, `--admin-login-width`, `--admin-icon-size`, `--admin-touch-min`.
+
+Rules for admin scripts: build text with `textContent`, never `innerHTML` with data; no `localStorage` and no `st_*` keys; every list page uses the shared states above. Later stages that need a table or dialog add it to `css/admin.css` here first.
+
 ## 9. Checklist for every new page
 
 1. `<body class="st-shell">`, `<main class="st-page">` (`st-page--narrow` for forms and text), `.st-hero`, `.st-panel` blocks.
