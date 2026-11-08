@@ -68,15 +68,6 @@
     dl.appendChild(dt); dl.appendChild(dd);
   }
   function yesNo(v) { return v ? 'Yes' : 'No'; }
-  function secondText(c) {
-    switch (c.second_check_status) {
-      case 'requested': return 'An administrator call-back was asked for. The quote can be sent once it is recorded as passed.';
-      case 'passed': return 'Administrator call-back: passed.' + (c.second_check_note ? ' ' + c.second_check_note : '');
-      case 'failed': return 'Administrator call-back: failed.' + (c.second_check_note ? ' ' + c.second_check_note : '') + ' Record a new answer to continue.';
-      default: return '';
-    }
-  }
-
   function renderSummary(d, cur) {
     var dl = $('coCfFacts'); dl.textContent = '';
     if (cur.outcome === 'confirmed') {
@@ -99,8 +90,6 @@
       fact(dl, 'Time of call', B.dateTime(cur.called_at));
       fact(dl, 'Reason', cur.limitations || cur.agreed_notes);
     }
-    $('coCfSecondNote').textContent = secondText(cur);
-    $('coCfSecondNote').hidden = !$('coCfSecondNote').textContent;
     $('coCfAgainRow').hidden = !(active(d) && CAN_REDO[d.lt_status]);
     $('coCfAgainConfirm').hidden = true;
     $('coCfSummary').hidden = false;
@@ -176,7 +165,7 @@
       outcome: o, name: $('coCfName').value.trim(), number: $('coCfNumber').value.trim(), when: $('coCfWhen').value,
       avail: $('coCfAvail').checked, can: $('coCfCan').checked, dur: $('coCfDuration').value.trim(),
       matNotes: $('coCfMatNotes').value.trim(), limits: $('coCfLimits').value.trim(), notes: $('coCfNotes').value.trim(),
-      readBack: $('coCfReadBack').checked, second: $('coCfSecond').checked
+      readBack: $('coCfReadBack').checked
     };
     if (!o) { plain('coCfOutcomeErr', 'Choose what they said.'); ok = false; first = first || 'coCfOutConfirmed'; }
     if (!v.name) bad('coCfName', 'Say who you spoke to.');
@@ -229,7 +218,7 @@
         p_price: v.outcome === 'confirmed' ? v.price : null, p_duration: v.outcome === 'confirmed' ? v.dur : null,
         p_transport: v.outcome === 'confirmed' ? v.transport : 0, p_materials: v.outcome === 'confirmed' ? v.materials : 0,
         p_materials_notes: v.outcome === 'confirmed' ? (v.matNotes || null) : null, p_limitations: v.limits || null, p_notes: v.notes || null,
-        p_read_back: v.outcome === 'confirmed' ? v.readBack : false, p_second_check: v.outcome === 'confirmed' ? v.second : false
+        p_read_back: v.outcome === 'confirmed' ? v.readBack : false, p_second_check: false
       });
       if (res.error) throw res.error;
       requestId = null;                   // a saved call is finished; the next one gets a new id

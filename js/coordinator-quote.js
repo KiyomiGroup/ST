@@ -78,18 +78,13 @@
     var cur = data.current, conf = data.confirmed, st = d.lt_status;
     var canBuild = active(d) && (st === 'tasker_confirmed' || st === 'quote_declined') && !!conf;
     if (canBuild) {
-      var needSecond = conf.second_check_status === 'requested' || conf.second_check_status === 'failed';
       $('coQtLead').textContent = st === 'quote_declined'
         ? 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.' +
           (cur && cur.decision && cur.decision.reason ? ' Their reason: “' + cur.decision.reason + '”.' : '')
         : 'Check the figures below, then send the quote. The service fee is the Local Tasker’s own price.';
-      if (needSecond) {
-        $('coQtLead').textContent = 'An administrator call-back to the Local Tasker is still needed before a quote can be sent.';
-      } else {
-        if (!requestId) requestId = newId();
-        prepareForm(st === 'quote_declined' ? cur : null);
-        $('coQtForm').hidden = false;
-      }
+      if (!requestId) requestId = newId();
+      prepareForm(st === 'quote_declined' ? cur : null);
+      $('coQtForm').hidden = false;
     } else if (cur) {
       renderLines($('coQtLines'), cur);
       $('coQtLead').textContent = 'Quote version ' + cur.version + (cur.created_at ? ' · ' + B.dateTime(cur.created_at) : '');

@@ -33,6 +33,7 @@
 
   var MESSAGES = {
     not_found: "This Local Tasker isn't assigned to you any more, or your coordinator account isn't active. Nothing was changed.",
+    tasker_identity: 'This Local Tasker cannot be published until their identity is verified. Complete their identity check first. Nothing was published.',
     not_ready: 'Not everything on the checklist is done yet. Nothing was published. The checklist above has been refreshed.',
     bad_input: 'That reason is too long. Please shorten it.',
     unauthenticated: 'Your sign-in has expired. Please sign in again, then come back to this page.',
@@ -175,6 +176,33 @@
     }
   }
 
+  /* The LOCAL TASKER's identity must be verified (Didit) before they can go public.
+     idv_local_status(p_tasker) is the same server read the profile and verify pages use (the server checks the coordinator
+     is active and the Local Tasker is assigned to them). If it cannot be read, publishing stays blocked (the safe answer).
+     The database must refuse too: see the owner's F1 results and the F-3 SQL. */
+  var taskerVerified = false;
+  async function readTaskerIdentity() {
+    try {
+      var r = await window.supabase.rpc('idv_local_status', { p_tasker: taskerId });
+      if (r.error || !r.data) return false;
+      return r.data.verified === true || r.data.status === 'VERIFIED';
+    } catch (e) { return false; }
+  }
+  function applyIdentityGate() {
+    if (taskerVerified || !state) return;
+    var list = $('coPubChecks');
+    var li = C.el('li', 'co-check-item is-bad');
+    li.appendChild(C.el('span', 'co-check-mark'));
+    li.appendChild(C.el('span', 'co-check-text', 'Their identity check is verified'));
+    var a = C.el('a', 'co-fact-link', 'Open identity check'); a.href = 'coordinator-tasker-verify.html?id=' + encodeURIComponent(taskerId); li.appendChild(a);
+    list.insertBefore(li, list.firstChild); list.hidden = false;
+    var hint = $('coPubChecksHint');
+    hint.textContent = 'This Local Tasker cannot be published until their identity is verified. Complete their identity check first.';
+    hint.hidden = false;
+    $('coPubPublish').disabled = true;
+    $('coPubRefresh').disabled = true;
+  }
+
   async function loadStatus() {
     ['coPubChecksError'].forEach(function (x) { $(x).hidden = true; });
     $('coPubChecksLoading').hidden = false; $('coPubChecks').hidden = true; $('coPubChecksHint').hidden = true;
@@ -186,6 +214,8 @@
       state = d;
       $('coPubChecksLoading').hidden = true;
       paintChecks(d); paintActions();
+      taskerVerified = await readTaskerIdentity();
+      applyIdentityGate();
     } catch (e) {
       console.error('[coordinator publish status]', e);
       state = null;
@@ -238,13 +268,14 @@
     busy = on;
     ['coPubPublish', 'coPubRefresh', 'coPubUnpublishOpen', 'coPubUnpublishConfirm', 'coPubUnpublishCancel'].forEach(function (id) {
       var b = $(id); if (!b) return;
-      if (on) { b.disabled = true; } else if (id === 'coPubPublish' || id === 'coPubRefresh') { b.disabled = !(state && state.ready); } else { b.disabled = false; }
+      if (on) { b.disabled = true; } else if (id === 'coPubPublish' || id === 'coPubRefresh') { b.disabled = !(state && state.ready && taskerVerified); } else { b.disabled = false; }
     });
   }
 
   async function publish(isRefresh) {
     if (busy) return;
     clearMessages();
+    if (!taskerVerified) { showError('tasker_identity'); return; }
     if (!isRefresh) {
       if (!$('coPubConfirm').checked) { fieldError('coPubConfirm', 'Tick the box to confirm they agreed.'); $('coPubConfirm').focus(); return; }
       fieldError('coPubConfirm', '');
