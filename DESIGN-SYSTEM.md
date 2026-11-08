@@ -379,6 +379,7 @@ Owner decision D-A4 (default accepted): admin pages use their own frame, not the
 | Card | `.ad-card`, `.ad-card-title`, `.ad-note`, `.ad-pagehead` | White, 1px border, `--radius-form` (16px), `--shadow-pt-card`. No hero blocks, no gradients |
 | States | `.ad-state`, `.ad-skel`, `.ad-banner`, `.ad-toast` | Written once in the shell: loading, empty, no results, error with Retry, no permission, toast |
 | Chip | `.ad-chip` | Role and "Admin" labels (pill) |
+| Detail rows, small forms (A3b) | `.ad-dl` (label and value pairs), `.ad-form`, `.ad-actions`, `.ad-hint` | Profile page; reuse for detail panels |
 
 Layout: 1044px and up = 256px sidebar (`--admin-sidebar-width`); 769 to 1043px = 72px icon sidebar; 768px and under = drawer behind a menu button (`--admin-drawer-width`), tap targets at least 44px (`--admin-touch-min`), bottom padding clears the phone curve with `--corner-clear` (4.16). Content max width `--admin-content-max` 1200px. New tokens in `css/tokens.css`: `--admin-sidebar-width`, `--admin-sidebar-icons`, `--admin-topbar-height`, `--admin-content-max`, `--admin-drawer-width`, `--admin-login-width`, `--admin-icon-size`, `--admin-touch-min`.
 

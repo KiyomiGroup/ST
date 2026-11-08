@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>My profile · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">My profile</div>
+        <div class="ad-user"><div><div class="ad-user-name" id="adUserName"></div><div class="ad-user-roles" id="adUserRoles"></div></div></div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="adProfile" hidden>
+          <div class="ad-pagehead">
+            <h1>My profile</h1>
+            <p>Your own admin account. You cannot see or change anyone else's here.</p>
+          </div>
+
+          <section class="ad-card" aria-labelledby="pfAcctTitle">
+            <h2 class="ad-card-title" id="pfAcctTitle">Account</h2>
+            <dl class="ad-dl">
+              <dt>Name</dt><dd id="pfName"></dd>
+              <dt>Email</dt><dd id="pfEmail"></dd>
+              <dt>Roles</dt><dd id="pfRoles"></dd>
+              <dt>Permissions</dt><dd id="pfPerms"></dd>
+              <dt>Last sign-in</dt><dd id="pfLast"></dd>
+              <dt>Two-step verification</dt><dd id="pfMfa"></dd>
+            </dl>
+          </section>
+
+          <section class="ad-card" aria-labelledby="pfPwTitle">
+            <h2 class="ad-card-title" id="pfPwTitle">Change password</h2>
+            <div class="ad-banner" id="pfPwMsg" role="alert" hidden></div>
+            <form class="ad-form" id="pfPwForm" novalidate>
+              <div class="ad-field">
+                <label for="pfNew">New password</label>
+                <input class="form-input" type="password" id="pfNew" autocomplete="new-password" required />
+                <p class="ad-hint">At least 12 characters.</p>
+              </div>
+              <div class="ad-field">
+                <label for="pfNew2">Repeat the new password</label>
+                <input class="form-input" type="password" id="pfNew2" autocomplete="new-password" required />
+              </div>
+              <button type="submit" class="btn btn-primary" id="pfPwBtn">Change password</button>
+            </form>
+          </section>
+
+          <section class="ad-card" aria-labelledby="pfOutTitle">
+            <h2 class="ad-card-title" id="pfOutTitle">Sign out</h2>
+            <p class="ad-note">Signing out here also signs you out of the rest of StreetTasker on this device, because the site shares one sign-in.</p>
+            <div class="ad-actions">
+              <button type="button" class="ad-btn-quiet" id="pfOutHere">Sign out of this device</button>
+              <button type="button" class="ad-btn-quiet" id="pfOutAll">Sign out of all devices</button>
+            </div>
+          </section>
+
+          <section class="ad-card" aria-labelledby="pfNotTitle">
+            <h2 class="ad-card-title" id="pfNotTitle">Notification preferences</h2>
+            <p class="ad-note">Shown for information. Admin alerts do not exist yet, so nothing here can be changed.</p>
+            <dl class="ad-dl">
+              <dt>Phone alerts</dt><dd id="pfPush"></dd>
+              <dt>Email alerts</dt><dd id="pfEmailPref"></dd>
+            </dl>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-profile.js"></script>
+</body>
+</html>

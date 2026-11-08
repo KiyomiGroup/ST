@@ -27,7 +27,7 @@
     ] },
     { group: 'General', items: [
       { key: 'help',      label: 'Help',              href: 'help.html',      icon: 'help',   any: null, built: false },
-      { key: 'profile',   label: 'My profile',        href: 'profile.html',   icon: 'user',   any: null, built: false }
+      { key: 'profile',   label: 'My profile',        href: 'profile.html',   icon: 'user',   any: null, built: true }
     ] }
   ];
 

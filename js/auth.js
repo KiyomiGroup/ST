@@ -26,6 +26,19 @@ async function _turnAwayCoordinator() {
   try { ['st_role', 'st_name', 'st_session', 'st_uid', 'st_email', 'st_avatar', 'st_plan'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
   window.location.replace(COORDINATOR_LOGIN_URL);
 }
+/* An ADMIN login (admin area, stage A3b) that has no customer or Tasker account is sent to the admin area instead of being
+   shown as a customer. Only asked when the login has no role at all, so every normal customer and Tasker pays nothing for it,
+   and a login that is both an admin and a customer (it has a customer role) is left alone and is never signed out here. */
+const ADMIN_HOME_URL = 'admin/index.html';
+async function _sendAdminToAdminArea() {
+  try {
+    const r = await window.supabase.rpc('admin_my_access');
+    if (r.error || !r.data || r.data.active !== true) return false;
+  } catch (e) { return false; }
+  try { ['st_role', 'st_name', 'st_session', 'st_uid', 'st_email', 'st_avatar', 'st_plan'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  window.location.replace(ADMIN_HOME_URL);
+  return true;
+}
 function getDashboardUrl(role) {
   return role === 'tasker' ? 'dashboard-tasker.html' : 'dashboard-customer.html';
 }
@@ -452,6 +465,7 @@ async function syncNavbarAuthState() {
   if (user) {
     const role = await getUserRole(user);
     if (role === 'coordinator') { await _turnAwayCoordinator(); return; }
+    if (!role && await _sendAdminToAdminArea()) return;
     const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
 
     /* Cache in localStorage for instant next-page render */
@@ -921,6 +935,7 @@ async function requireAuth() {
     return null;
   }
   if (user.user_metadata?.role === 'coordinator') { await _turnAwayCoordinator(); return null; }
+  if (!user.user_metadata?.role && !(await getUserRole(user)) && await _sendAdminToAdminArea()) return null;
   return user;
 }
 
@@ -935,6 +950,7 @@ async function requireRole(role) {
   if (!user) return null;
   const userRole = await getUserRole(user);
   if (userRole === 'coordinator') { await _turnAwayCoordinator(); return null; }
+  if (!userRole && await _sendAdminToAdminArea()) return null;
   if (userRole !== role) {
     const redirect = role === 'tasker' ? 'dashboard-customer.html' : 'dashboard-tasker.html';
     window.location.href = redirect;

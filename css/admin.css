@@ -193,3 +193,16 @@ body.ad-body {
   .ad-login, .ad-gate { padding: var(--space-4); }
 }
 @media (min-width: 769px) { .ad-scrim { display: none; } }
+
+/* ── Definition rows and small forms (profile page and later detail panels) ── */
+.ad-dl { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: var(--space-2) var(--space-5); margin: 0; }
+.ad-dl dt { color: var(--color-text-muted); }
+.ad-dl dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.ad-form { display: grid; gap: var(--space-4); max-width: var(--admin-login-width); }
+.ad-form .ad-field { margin-top: 0; }
+.ad-form .form-input { min-height: var(--admin-touch-min); }
+.ad-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+.ad-actions .btn { min-height: var(--admin-touch-min); }
+.ad-form .btn { min-height: var(--admin-touch-min); width: fit-content; }
+.ad-hint { color: var(--color-text-muted); font-size: var(--text-xs); margin: var(--space-1) 0 0; }
+@media (max-width: 480px) { .ad-dl { grid-template-columns: 1fr; gap: var(--space-1); } .ad-dl dd { margin-bottom: var(--space-2); } }

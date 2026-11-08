@@ -1,6 +1,6 @@
 # Admin Control Centre: implementation status
 
-Updated 2026-11-08 (stage A3a written). Never describe planned work as done. "Not run" means not run.
+Updated 2026-11-08 (stage A3b written). Never describe planned work as done. "Not run" means not run.
 
 | Stage | State | Evidence |
 |---|---|---|
@@ -10,7 +10,8 @@ Updated 2026-11-08 (stage A3a written). Never describe planned work as done. "No
 | **A1b Release the admin login from coordinator** | Recorded applied per the owner's no-error convention (2026-11-08); not tested on Supabase; the coordinator release may have printed NOT DONE (the owner has not said) | `sql/admin/a1b-release-coordinator.sql` |
 | **A2 Approval infrastructure (SQL)** | **Recorded applied per the owner's no-error convention; local run 48 checks passed; Supabase tests not reported** | `sql/admin/a2-*.sql` |
 | **A3a Admin frame and sign-in** | **Written; pages tested in a headless browser against a fake Supabase (390, 820, 1280px); real sign-in not tried; not deployed** | `admin/`, `css/admin.css`, `handoffs/A3a.md` |
-| A3b, A3c | Not started | **A3b is next.** |
+| **A3b My Profile and admin guard** | **Written; fake-Supabase browser tests only; not deployed** | `admin/profile.html`, `js/auth.js`, `handoffs/A3b.md` |
+| A3c | Not started | **A3c is next.** |
 | A4 to A28 | Not started | |
 | S1 (secret rotation, separate security stage) | Not started, waiting for the owner's decision | `ARCHITECTURE.md` Part C item 6 |
 

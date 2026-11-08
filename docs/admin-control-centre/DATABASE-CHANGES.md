@@ -30,3 +30,6 @@ New: tables `admin_sensitive_actions` (13 proposed launch actions), `admin_appro
 
 ## A3a (2026-11-08): admin frame and sign-in
 No database change. The pages call only `admin_my_access()` (A1). A1b and A2 are recorded as applied per the owner's no-error convention (not tested on Supabase).
+
+## A3b (2026-11-08): My Profile and guard
+No database change. The profile page reads the caller's own `notification_preferences` row; the `js/auth.js` guard calls `admin_my_access()` only for logins with no role.
