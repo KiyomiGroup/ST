@@ -44,7 +44,7 @@
       <section class="co-hero co-hero--page" aria-labelledby="cvTitle">
         <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Identity check</p>
         <h1 id="cvTitle">Identity check for <span id="cvName">this Local Tasker</span></h1>
-        <p class="co-hero-sub">You start the check. The Local Tasker does it on their own phone. Only Didit's result can mark them verified; nothing on this page can.</p>
+        <p class="co-hero-sub">You do the check on your phone, with the Local Tasker beside you. Only Didit's result can mark them verified; nothing on this page can.</p>
       </section>
 
       <div class="co-banner" id="cvError" role="alert" hidden></div>
@@ -58,7 +58,7 @@
           <div data-status-panel="NOT_STARTED" hidden>
             <span class="badge badge-gray">Not started</span>
             <p class="cv-msg">Identity verification has not been completed for this Local Tasker.</p>
-            <p class="cv-sub">Explain what they agree to, record how they agreed, then start. They use their phone camera.</p>
+            <p class="cv-sub">Explain what they agree to, record how they agreed, then start. You open the check on your phone and they use its camera.</p>
           </div>
           <div data-status-panel="IN_PROGRESS" hidden>
             <span class="badge badge-amber">In progress</span>
@@ -118,7 +118,7 @@
               <p><strong>Who handles it.</strong> Didit collects and processes the ID photo, selfie and face comparison, and may do so outside Nigeria. StreetTasker receives the result of the check (for example verified or not completed) and the dates, not the ID images, and does not ask for an ID number. If a check needs a manual review, authorised StreetTasker staff may view the verification record in Didit. The information is not shared with anyone else, except where the law requires it.</p>
               <p><strong>How long it is kept.</strong> StreetTasker keeps the result and dates while the account is active. Didit keeps the images only for a limited period set in our Didit account, and then deletes them.</p>
               <p><strong>Their choice and rights.</strong> Giving consent is their choice. Verification is required to be offered on StreetTasker, and without consent we cannot verify them. They can withdraw consent at any time by emailing support@streettasker.com. Withdrawing does not undo what has already happened. They can ask to see, correct or delete their information by emailing the same address, and can complain to the Nigeria Data Protection Commission.</p>
-              <p><strong>Your part as coordinator.</strong> You explain this to them first, and you record that they agreed, how, and when. They do the check on their own phone.</p>
+              <p><strong>Your part as coordinator.</strong> You explain this to them first, and you record that they agreed, how, and when. The check is done on your phone, with them beside you.</p>
             </div>
             <div class="form-group">
               <label class="form-label" for="cvMethod">How did the Local Tasker give consent?</label>
@@ -144,11 +144,11 @@
           <button type="button" class="btn btn-primary" id="cvStartBtn" data-action="start" disabled>Start verification for this Local Tasker</button>
 
           <div class="cv-linkbox" id="cvLinkBox" hidden>
-            <p class="cv-sub">Give this link to the Local Tasker. They open it on their own phone and follow the steps there. Do not send it to anyone else.</p>
+            <p class="cv-sub">Open this link on your phone, then hand the phone to the Local Tasker (or hold it for them) so they can take the photo of their ID and the selfie. Do not send the link to anyone else.</p>
             <input type="text" id="cvLinkInput" class="form-input" readonly autocomplete="off" />
             <div class="cv-actions">
+              <a class="btn btn-primary" id="cvOpenLink" href="#" rel="noopener">Open on this phone</a>
               <button type="button" class="btn btn-outline" id="cvCopyBtn">Copy link</button>
-              <a class="btn btn-primary" id="cvOpenLink" href="#" rel="noopener">Open on this device</a>
             </div>
             <p class="cv-sub">Come back and use Check again to see the result.</p>
             <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>

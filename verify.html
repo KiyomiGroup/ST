@@ -6,6 +6,20 @@
     /* Stage E-2: a coordinator's identity check for a Local Tasker now lives on coordinator-tasker-verify.html. This page loads the
        customer scripts, which sign a coordinator-only login out, so old proxy links are sent on before anything else runs. */
     (function () {
+      /* A coordinator now does a Local Tasker's check on the coordinator's own phone. Didit then sends the browser here, and the customer
+         scripts below would sign the coordinator out. The coordinator page left a note (localStorage) saying where to go back to. */
+      try {
+        var raw = localStorage.getItem('st_lt_verify_return');
+        if (raw) {
+          var m = JSON.parse(raw);
+          localStorage.removeItem('st_lt_verify_return');
+          if (m && typeof m.u === 'string' && /^coordinator-[a-z-]+\.html(\?[A-Za-z0-9=&_%.-]*)?$/.test(m.u) && Date.now() - Number(m.t) < 3 * 60 * 60 * 1000) {
+            window.location.replace(m.u);
+            document.open(); document.write('<!DOCTYPE html><title>StreetTasker</title><p>Taking you back to the coordinator page\u2026</p>'); document.close();
+            return;
+          }
+        }
+      } catch (e) { /* carry on */ }
       try {
         var q = new URLSearchParams(window.location.search);
         if (q.get('mode') === 'proxy') {
@@ -198,11 +212,11 @@
           </button>
 
           <div id="proxyLinkBox" class="verify-linkbox" hidden>
-            <p class="verify-text">Give this link to the Local Tasker. They open it on their own phone and follow the steps there. Do not send it to anyone else.</p>
+            <p class="verify-text">Open this link on your phone, then hand the phone to the Local Tasker so they can take the photo of their ID and the selfie. Do not send the link to anyone else.</p>
             <input type="text" id="proxyLinkInput" class="form-input" readonly autocomplete="off" />
             <div class="verify-actions">
               <button type="button" class="btn btn-outline" id="proxyCopyBtn">Copy link</button>
-              <a class="btn btn-primary" id="proxyOpenLink" href="#" rel="noopener">Open on this device</a>
+              <a class="btn btn-primary" id="proxyOpenLink" href="#" rel="noopener">Open on this phone</a>
             </div>
           </div>
           <div class="verify-actions verify-actions-spaced">

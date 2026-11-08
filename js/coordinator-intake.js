@@ -148,7 +148,7 @@
 
     /* Services */
     '<section class="co-card" id="ik-services" aria-label="Services and agreed rates">' + head('tag', 'Services and agreed rates', 'services') +
-      '<p class="co-card-lead">One entry for each thing they offer, with the price they agreed. Up to 5. Hidden from customers until you publish.</p>' +
+      '<p class="co-card-lead">One entry for each thing they offer, with the price they agreed. Up to 5. Hidden from customers until you publish. Explain the 12% fee to them before you ask for the price.</p>' +
       '<p class="co-loading" data-loading="services">Loading…</p>' +
       '<ul class="co-svc-list" data-list="services" hidden></ul>' +
       '<form class="co-form ik-subform" data-form="services" novalidate>' +
@@ -156,7 +156,7 @@
         '<div class="form-group"><label class="form-label" for="ik-sv-name">Service title</label><input class="form-input" type="text" id="ik-sv-name" data-f="svName" maxlength="100" autocomplete="off" placeholder="Solid wood wardrobe repair" /><p class="co-field-error" data-fe="svName" hidden></p></div>' +
         '<div class="form-group"><label class="form-label" for="ik-sv-cat">Category</label><select class="form-select" id="ik-sv-cat" data-f="svCat">' + cats + '</select><p class="co-field-error" data-fe="svCat" hidden></p></div>' +
         '<div class="form-group"><label class="form-label" for="ik-sv-desc">What is included</label><textarea class="form-textarea" id="ik-sv-desc" data-f="svDesc" maxlength="1000"></textarea><p class="form-helper">At least 10 characters. Say what the price covers and what the customer provides.</p><p class="co-field-error" data-fe="svDesc" hidden></p></div>' +
-        '<div class="form-group"><label class="form-label" for="ik-sv-price">Agreed price (₦)</label><input class="form-input" type="text" id="ik-sv-price" data-f="svPrice" inputmode="decimal" autocomplete="off" placeholder="12500" /><p class="co-field-error" data-fe="svPrice" hidden></p></div>' +
+        '<div class="form-group"><label class="form-label" for="ik-sv-price">Agreed price (₦)</label><input class="form-input" type="text" id="ik-sv-price" data-f="svPrice" inputmode="decimal" autocomplete="off" placeholder="12500" /><p class="form-helper" data-price-net>StreetTasker keeps 12% of each payment. If they charge &#8358;10,000, they receive &#8358;8,800.</p><p class="co-field-error" data-fe="svPrice" hidden></p></div>' +
         '<div class="form-group"><label class="form-label" for="ik-sv-unit">Per</label><select class="form-select" id="ik-sv-unit" data-f="svUnit">' + units + '</select></div>' +
         agreeBlock('sv', 'They agreed that these services and rates may be listed for customers once I publish.') +
         errBox('services') +
@@ -185,7 +185,7 @@
 
     /* Identity */
     '<section class="co-card" id="ik-identity" aria-label="Identity check">' + head('shield', 'Identity check', 'identity') +
-      '<p class="co-card-lead">They do the check on their own phone camera, with you beside them. Only the result of the check can mark them verified. A profile cannot be published until it is.</p>' +
+      '<p class="co-card-lead">You do the check on your phone, with the Local Tasker beside you. They take the photo of their ID and the selfie on your phone. Only the result of the check can mark them verified. A profile cannot be published until it is.</p>' +
       '<p class="co-loading" data-loading="identity">Loading…</p>' +
       '<p class="co-fact-value" data-id-status hidden></p>' +
       '<div data-id-start hidden>' +
@@ -198,7 +198,7 @@
             '<p><strong>Who handles it.</strong> Didit collects and processes the ID photo, selfie and face comparison, and may do so outside Nigeria. StreetTasker receives the result of the check (for example verified or not completed) and the dates, not the ID images, and does not ask for an ID number. If a check needs a manual review, authorised StreetTasker staff may view the verification record in Didit. The information is not shared with anyone else, except where the law requires it.</p>' +
             '<p><strong>How long it is kept.</strong> StreetTasker keeps the result and dates while the account is active. Didit keeps the images only for a limited period set in our Didit account, and then deletes them.</p>' +
             '<p><strong>Their choice and rights.</strong> Giving consent is their choice. Verification is required to be offered on StreetTasker, and without consent we cannot verify them. They can withdraw consent at any time by emailing support@streettasker.com. Withdrawing does not undo what has already happened. They can ask to see, correct or delete their information by emailing the same address, and can complain to the Nigeria Data Protection Commission.</p>' +
-            '<p><strong>Your part as coordinator.</strong> You explain this to them first, and you record that they agreed, how, and when. They do the check on their own phone.</p>' +
+            '<p><strong>Your part as coordinator.</strong> You explain this to them first, and you record that they agreed, how, and when. The check is done on your phone, with them beside you.</p>' +
           '</div>' +
           '<div class="form-group"><label class="form-label" for="ik-id-method">How did they give consent?</label><select class="form-select" id="ik-id-method" data-f="idMethod">' + methodOptions() + '</select></div>' +
           '<div class="form-group"><label class="co-check" for="ik-id-confirm"><input type="checkbox" id="ik-id-confirm" data-f="idConfirm" /><span>I explained the notice above and this Local Tasker agreed to the identity check.</span></label></div>' +
@@ -207,9 +207,9 @@
         errBox('identity') +
         '<button type="button" class="btn btn-primary" data-action="id-start" disabled>Start verification for this Local Tasker</button>' +
         '<div class="cv-linkbox" data-id-link hidden>' +
-          '<p class="cv-sub">Give this link to the Local Tasker. They open it on their own phone and follow the steps. Do not send it to anyone else.</p>' +
+          '<p class="cv-sub">Open this link on your phone, then hand the phone to the Local Tasker (or hold it for them) so they can take the photo of their ID and the selfie. Do not send the link to anyone else.</p>' +
           '<input type="text" class="form-input" data-id-link-input readonly autocomplete="off" aria-label="Verification link" />' +
-          '<div class="cv-actions"><button type="button" class="btn btn-outline" data-action="id-copy">Copy link</button><a class="btn btn-primary" data-id-open href="#" rel="noopener">Open on this device</a></div>' +
+          '<div class="cv-actions"><a class="btn btn-primary" data-id-open href="#" rel="noopener">Open on this phone</a><button type="button" class="btn btn-outline" data-action="id-copy">Copy link</button></div>' +
         '</div>' +
       '</div>' +
       '<button type="button" class="btn btn-outline ik-gap" data-action="id-refresh" hidden>Check again</button>' +
@@ -279,6 +279,14 @@
     }
     q('[data-loading="services"]').hidden = true;
     showAgree('sv', await consentExists('publish_info'));
+  }
+  /* Shows what the Local Tasker receives after StreetTasker's 12%. */
+  function priceNet() {
+    var el = q('[data-price-net]'); if (!el) return;
+    var p = parsePrice(f('svPrice').value);
+    if (!(p > 0)) { el.textContent = 'StreetTasker keeps 12% of each payment. If they charge \u20A610,000, they receive \u20A68,800.'; return; }
+    var net = Math.round(p * 0.88);
+    el.textContent = 'At \u20A6' + p.toLocaleString('en-NG') + ', StreetTasker keeps 12% and they receive \u20A6' + net.toLocaleString('en-NG') + '.';
   }
   function parsePrice(raw) { var s = String(raw || '').replace(/[₦,\s]/g, ''); return /^\d+(\.\d{1,2})?$/.test(s) ? Number(s) : NaN; }
   async function submitService(e) {
@@ -453,7 +461,8 @@
       q('[data-id-link-input]').value = made.url; q('[data-id-open]').setAttribute('href', made.url);
       q('[data-id-link]').hidden = false; q('[data-id-consent]').hidden = true; q('[data-id-consent-done]').hidden = false;
       q('[data-action="id-refresh"]').hidden = false;
-      note('identity', 'Verification is ready. Give the link to the Local Tasker now. After they finish, use Check again.');
+      try { localStorage.setItem('st_lt_verify_return', JSON.stringify({ u: window.location.pathname.split('/').pop() + window.location.search, t: Date.now() })); } catch (e) { /* the check still works */ }
+      note('identity', 'Verification is ready. Press Open on this phone and do the check together. When it finishes, come back here and use Check again.');
     } catch (e) { banner('identity', 'bad_input', e.message); }
     state.busy.identity = false; idReady();
   }
@@ -571,6 +580,7 @@
     state = { busy: {}, method: opts.method || '', need_sv: true, need_ph: true, prepared: null, idConsent: false };
     root.innerHTML = template();
     var sf = q('[data-form="services"]'); sf.addEventListener('submit', submitService);
+    sf.addEventListener('input', function (ev) { if (ev.target === f('svPrice')) priceNet(); });
     var pf = q('[data-form="payout"]'); pf.addEventListener('submit', submitPayout);
     pf.addEventListener('input', function (ev) { if (ev.target === f('poAcct')) { var d = acctDigits(); if (f('poAcct').value !== d) f('poAcct').value = d; } refreshPayout(); });
     pf.addEventListener('change', refreshPayout);
@@ -589,22 +599,22 @@
     '<div class="ik-info-body">' +
     '<h3>Before you meet</h3><p>Ask them to bring:</p><ul>' +
       '<li>A valid government ID that has not expired, for the identity check.</li>' +
-      '<li>Their own phone with a working camera, for the identity check (the check is done on their phone, not yours).</li>' +
+      '<li>Nothing else for the identity check: it is done on your phone. Make sure your phone is charged, has data and a working camera.</li>' +
       '<li>Their bank account details: the bank and the 10-digit account number, in their own name.</li>' +
       '<li>A few clear photos of their work, if they want to show them.</li></ul>' +
     '<h3>What you will collect</h3><ol>' +
       '<li><strong>Profile.</strong> Public name (what customers see), full legal name (must match the bank account name, at least two names), phone number, skills (up to 20), areas served, availability notes.</li>' +
       '<li><strong>Their agreement.</strong> How they agreed (in person, by phone or in writing), an optional reference such as a form number, and your confirmation. The record is permanent.</li>' +
-      '<li><strong>Services and agreed rates.</strong> Up to 5. For each: a title, a category, what is included, the price they agreed and what it is per (job, hour, day, visit or session).</li>' +
+      '<li><strong>Services and agreed rates.</strong> Up to 5. For each: a title, a category, what is included, the price they agreed and what it is per (job, hour, day, visit or session). Explain the 12% fee first (see &ldquo;Prices and the 12% fee&rdquo; below), then ask for the price.</li>' +
       '<li><strong>Payout account.</strong> The bank and 10-digit account number. The bank confirms the account name matches their full name. They confirm they agree to payouts going there and that the account is theirs alone. Only the last four digits are stored.</li>' +
-      '<li><strong>Identity check.</strong> You record that they agreed to it, start it, and give them the link. They complete it on their own phone. The profile cannot be published until it shows Verified.</li>' +
+      '<li><strong>Identity check.</strong> You record that they agreed to it, start it, and open it on your phone. They take the photo of their ID and the selfie on your phone while you are beside them. The profile cannot be published until it shows Verified.</li>' +
       '<li><strong>Photos (optional).</strong> Up to 8 photos of their work, with an optional caption and a cover photo. Their agreement is recorded the first time.</li></ol>' +
     '<h3>What to explain to them</h3><ul>' +
       '<li><strong>What this is.</strong> StreetTasker connects customers with skilled people. They do not need a smartphone or the internet: you register them, manage their profile and speak to them by phone.</li>' +
       '<li><strong>Nothing goes live without them.</strong> You work with their agreement. Nothing is shown to customers until you publish, and publishing needs their identity verified.</li>' +
       '<li><strong>Privacy.</strong> Their phone number and full name stay private to you and StreetTasker administrators. Customers see only the public name, services, prices, area and photos.</li>' +
       '<li><strong>How a booking works.</strong> A customer requests a booking. You call them, check they are available, read the price back to them and send the customer a quote. The customer approves and pays, and the money is held safely. When the job is done the customer gives you a release code, and entering it pays the money to their own bank account.</li>' +
-      '<li><strong>Prices.</strong> They set the rates. Every price change is recorded. You earn a commission from the service fee.</li>' +
+      '<li><strong>Prices and the 12% fee. Explain this before you ask for their price.</strong> StreetTasker keeps 12% of every payment, and they receive the other 88%. For example, if they charge &#8358;10,000, they receive &#8358;8,800. A small payment-processing charge from Paystack may also be deducted; it is shown before a booking is accepted. They set the rates, so they should decide their price knowing this. Every price change is recorded.</li>' +
       '<li><strong>The identity check.</strong> It uses a photo of their ID and a short selfie, run by our provider Didit. StreetTasker receives only the result, not the ID images. The images are kept for a limited time and then deleted. It is their choice; without it they cannot be verified. They can withdraw consent, or ask to see, correct or delete their information, by emailing support@streettasker.com, and can complain to the Nigeria Data Protection Commission.</li>' +
       '<li><strong>Payouts.</strong> Only to a bank account in their own name. The bank checks the name. A different account later needs a new check and a new agreement from them.</li>' +
       '<li><strong>Photos.</strong> Private until you publish. It is their decision which ones to show.</li>' +
@@ -613,7 +623,7 @@
     '<h3>Before you leave</h3><ul>' +
       '<li>Read their details back to them.</li>' +
       '<li>Check every item in the checklist is done, apart from the optional photos.</li>' +
-      '<li>Make sure they have started the identity check on their phone before you go, or agree when they will finish it.</li></ul>' +
+      '<li>Do the identity check with them on your phone before you go, or agree when you will meet to do it.</li></ul>' +
     '</div>';
 
   function mountInfo(btn) {

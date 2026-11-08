@@ -4,7 +4,7 @@
      - records the consent          (rpc idv_record_local_consent: method, optional reference, who/when are stored by the server)
      - starts the check             (Edge Function didit-create-session, mode proxy)
      - asks the server to refresh   (Edge Function didit-sync, mode proxy)
-   The Didit link is shown to the coordinator to give to the Local Tasker (their phone). It is never stored here.
+   The Didit link is shown to the coordinator, who opens it on their own phone and hands the phone to the Local Tasker. It is never stored here.
    Runs after js/coordinator.js (route guard) says "ready". All text from the server is written with textContent. */
 (function () {
   'use strict';
@@ -93,14 +93,16 @@
       }
       var made = await callFunction('didit-create-session', { mode: 'proxy', local_tasker_user_id: taskerId, request_id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 10) });
       if (!isDiditUrl(made.url)) throw new Error(FALLBACK);
-      /* The link goes to the Local Tasker, not to this browser: show it, never redirect, never store it. */
+      /* Show the link; the coordinator opens it on this phone by pressing the button. Never redirect, never store the link itself.
+         Remember only which coordinator page to come back to, because Didit sends the browser to verify.html afterwards. */
+      try { localStorage.setItem('st_lt_verify_return', JSON.stringify({ u: window.location.pathname.split('/').pop() + window.location.search, t: Date.now() })); } catch (e) { /* the check still works */ }
       $('cvLinkInput').value = made.url;
       $('cvOpenLink').setAttribute('href', made.url);
       setHidden($('cvLinkBox'), false);
       setHidden($('cvConsentFields'), true);
       setHidden($('cvConsentDone'), false);
       state.linkMade = true;
-      say('cvNotice', 'Verification is ready. Give the link below to the Local Tasker, then use Check again later to see the result.');
+      say('cvNotice', 'Verification is ready. Press Open on this phone and do the check together. When it finishes, come back here and use Check again.');
     } catch (e) {
       say('cvError', e.message || FALLBACK);
       var box = $('cvError'); if (box && box.scrollIntoView) box.scrollIntoView({ block: 'center' });

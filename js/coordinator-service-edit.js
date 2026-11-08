@@ -213,3 +213,19 @@
     var retry = $('coEditRetry'); if (retry) retry.addEventListener('click', function () { if (last) load(); });
   });
 })();
+
+/* Shows what the Local Tasker receives after StreetTasker's 12%, while the coordinator types the price. */
+(function () {
+  'use strict';
+  var inp = document.getElementById('coFPrice'), out = document.getElementById('coFPriceNet');
+  if (!inp || !out) return;
+  var DEFAULT = out.textContent;
+  function show() {
+    var raw = String(inp.value || '').replace(/[\u20A6,\s]/g, '');
+    var p = /^\d+(\.\d{1,2})?$/.test(raw) ? Number(raw) : NaN;
+    if (!(p > 0)) { out.textContent = DEFAULT; return; }
+    out.textContent = 'At \u20A6' + p.toLocaleString('en-NG') + ', StreetTasker keeps 12% and they receive \u20A6' + Math.round(p * 0.88).toLocaleString('en-NG') + '.';
+  }
+  inp.addEventListener('input', show);
+  setTimeout(show, 1500); /* the saved price is filled in after the page loads */
+})();
