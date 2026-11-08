@@ -449,20 +449,46 @@
 
       <div class="lt-donate fade-up d2" id="donate">
         <h3 class="lt-ngo-subtitle">Support Local Taskers with a donation</h3>
-        <p class="lt-donate-lead">Give by bank transfer to the account below. Then email us your payment reference so we can confirm receipt and acknowledge your gift.</p>
-        <dl class="lt-donate-details">
-          <div><dt>Bank</dt><dd>Moniepoint</dd></div>
-          <div><dt>Account number</dt><dd class="lt-donate-num" id="lt-acct">7088448530</dd></div>
-          <div><dt>Account name</dt><dd>Street Taskers Ventures</dd></div>
-        </dl>
-        <!-- To add card payment: paste the Paystack payment page link into href below and remove the comment markers.
-        <a href="PASTE-PAYSTACK-LINK-HERE" class="btn btn-primary btn-lg" target="_blank" rel="noopener">Give by card with Paystack</a>
-        -->
-        <div class="lt-cta-row lt-cta-row--start">
-          <button type="button" class="btn btn-primary btn-lg" id="lt-copy-acct">Copy account number</button>
-          <a href="mailto:contact@streettasker.com?subject=Donation%20payment%20reference&body=Name%20(or%20organisation)%3A%0AAmount%3A%0ADate%20of%20transfer%3A%0APayment%20reference%20or%20sender%20account%20name%3A%0AWould%20you%20like%20a%20receipt%3F%20" class="btn btn-ghost btn-lg">Email your payment details</a>
-        </div>
-        <p class="lt-section-note lt-donate-note" id="lt-copy-status" role="status" aria-live="polite">Please check the account name shows as Street Taskers Ventures in your banking app before you confirm the transfer.</p>
+        <p class="lt-donate-lead">Your gift helps skilled people who are not yet online get onto StreetTasker, with a coordinator beside them. You will get an email receipt as soon as the payment is confirmed.</p>
+        <p class="lt-donate-thanks" id="lt-donate-thanks" role="status" hidden>Thank you. If your payment went through, a receipt is on its way to your email. If you do not see it within a few minutes, check your spam folder or write to contact@streettasker.com.</p>
+        <form class="lt-donate-form" id="lt-donate-form" novalidate>
+          <fieldset class="lt-donate-amounts">
+            <legend>Choose an amount (&#8358;)</legend>
+            <label><input type="radio" name="lt-amt" value="2000"><span>&#8358;2,000</span></label>
+            <label><input type="radio" name="lt-amt" value="5000" checked><span>&#8358;5,000</span></label>
+            <label><input type="radio" name="lt-amt" value="10000"><span>&#8358;10,000</span></label>
+            <label><input type="radio" name="lt-amt" value="25000"><span>&#8358;25,000</span></label>
+            <label><input type="radio" name="lt-amt" value="other"><span>Other</span></label>
+          </fieldset>
+          <div class="lt-donate-field" id="lt-other-wrap" hidden>
+            <label for="lt-other">Amount in naira (minimum &#8358;500)</label>
+            <input id="lt-other" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 15000">
+          </div>
+          <div class="lt-donate-field">
+            <label for="lt-dname">Your name or organisation (optional)</label>
+            <input id="lt-dname" type="text" autocomplete="name" maxlength="80">
+          </div>
+          <div class="lt-donate-field">
+            <label for="lt-demail">Email for your receipt</label>
+            <input id="lt-demail" type="email" autocomplete="email" maxlength="254" required>
+          </div>
+          <p class="lt-donate-error" id="lt-donate-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary btn-lg" id="lt-donate-btn">Give by card or bank with Paystack</button>
+        </form>
+        <details class="lt-donate-bank">
+          <summary>Prefer a direct bank transfer?</summary>
+          <dl class="lt-donate-details">
+            <div><dt>Bank</dt><dd>Moniepoint</dd></div>
+            <div><dt>Account number</dt><dd class="lt-donate-num" id="lt-acct">7088448530</dd></div>
+            <div><dt>Account name</dt><dd>Street Taskers Ventures</dd></div>
+          </dl>
+          <p class="lt-section-note lt-donate-note">Check that your banking app shows the account name Street Taskers Ventures before you confirm. Then email us your payment details so we can record your gift and send a receipt.</p>
+          <div class="lt-cta-row lt-cta-row--start">
+            <button type="button" class="btn btn-ghost btn-lg" id="lt-copy-acct">Copy account number</button>
+            <a href="mailto:contact@streettasker.com?subject=Donation%20payment%20reference&amp;body=Name%20(or%20organisation)%3A%0AAmount%3A%0ADate%20of%20transfer%3A%0APayment%20reference%20or%20sender%20account%20name%3A%0AEmail%20for%20receipt%3A%0A" class="btn btn-ghost btn-lg">Email your payment details</a>
+          </div>
+          <p class="lt-section-note lt-donate-note" id="lt-copy-status" role="status" aria-live="polite"></p>
+        </details>
       </div>
     </div>
   </section>
@@ -522,6 +548,7 @@
     /* Meet Local Taskers: real published people fill this grid (shared code in js/local-tasker-public.js). */
     if (window.STLocal) STLocal.mountGrid({ grid: document.getElementById('ltGrid'), chips: document.getElementById('ltCrafts'), note: document.getElementById('ltNote') });
   </script>
+<script src="js/local-tasker-donate.js"></script>
 <script>
 (function(){var b=document.getElementById('lt-copy-acct'),n=document.getElementById('lt-acct'),st=document.getElementById('lt-copy-status');
 if(!b||!n)return;b.addEventListener('click',function(){var t=n.textContent.trim();

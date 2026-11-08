@@ -78,8 +78,8 @@ function cardBlock(card) {
   const msg = card.message ? `<tr><td style="padding:0 24px 20px;font-family:${FONT};font-size:14px;line-height:1.5;font-style:italic;color:${C.mint}">&ldquo;${esc(card.message).replace(/\n/g, "<br>")}&rdquo;</td></tr>` : "";
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.green};border-radius:20px"><tr><td style="padding:24px 24px 4px;font-family:${FONT};font-size:20px;font-weight:700;color:${C.white}">StreetTasker<span style="float:right;font-size:12px;font-weight:600;color:${C.mint}">${esc(themeLabel(card.theme))}</span></td></tr><tr><td style="padding:16px 24px 0;font-family:${FONT};font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#82D8A8">Gift voucher for</td></tr><tr><td style="padding:2px 24px 12px;font-family:${FONT};font-size:22px;font-weight:700;color:${C.white}">${esc(card.recipient_name)}</td></tr>` + msg + `<tr><td style="padding:0 24px 4px;font-family:${FONT};font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#82D8A8">Value</td></tr><tr><td style="padding:0 24px 16px;font-family:${FONT};font-size:34px;font-weight:800;color:${C.white}">${naira(card.amount)}</td></tr><tr><td style="padding:0 24px 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.deep};border-radius:12px"><tr><td style="padding:14px 16px;font-family:${FONT};font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#82D8A8">Your code</td><td align="right" style="padding:14px 16px;font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:700;letter-spacing:0;white-space:nowrap;color:${C.mint}">${esc(card.code)}</td></tr></table></td></tr><tr><td style="padding:0 24px 22px;font-family:${FONT};font-size:12px;color:#82D8A8">From ${esc(card.sender_name)}</td></tr></table>`;
 }
-function shell(title, preheader, inner, support) {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head><body style="margin:0;padding:0;background:${C.band}"><div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.band}">${esc(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.band}"><tr><td align="center" style="padding:24px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px"><tr><td style="padding:0 4px 16px;font-family:${FONT};font-size:22px;font-weight:800;color:${C.green}">StreetTasker</td></tr><tr><td style="background:${C.white};border-radius:24px;padding:32px 28px;font-family:${FONT};font-size:15px;line-height:1.6;color:${C.muted}">${inner}</td></tr><tr><td style="padding:20px 8px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.muted};text-align:center">Questions? Reply to this email or write to <a href="mailto:${esc(support)}" style="color:${C.mintText}">${esc(support)}</a>.<br>StreetTasker gift cards never expire.</td></tr></table></td></tr></table></body></html>`;
+function shell(title, preheader, inner, support, foot = "StreetTasker gift cards never expire.") {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head><body style="margin:0;padding:0;background:${C.band}"><div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.band}">${esc(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.band}"><tr><td align="center" style="padding:24px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px"><tr><td style="padding:0 4px 16px;font-family:${FONT};font-size:22px;font-weight:800;color:${C.green}">StreetTasker</td></tr><tr><td style="background:${C.white};border-radius:24px;padding:32px 28px;font-family:${FONT};font-size:15px;line-height:1.6;color:${C.muted}">${inner}</td></tr><tr><td style="padding:20px 8px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.muted};text-align:center">Questions? Reply to this email or write to <a href="mailto:${esc(support)}" style="color:${C.mintText}">${esc(support)}</a>.<br>${esc(foot)}</td></tr></table></td></tr></table></body></html>`;
 }
 function h1(text) {
   return `<h1 style="margin:0 0 12px;font-family:${FONT};font-size:24px;line-height:1.25;color:${C.ink}">${esc(text)}</h1>`;
@@ -281,6 +281,96 @@ async function verifyAndFulfil(deps, reference) {
   return { status: "paid", card, created };
 }
 
+// _shared/donations.ts
+var DONATION_REF_RE = /^DN-[A-Z2-9]{20}$/;
+function lagosDateTime(d) {
+  return d.toLocaleString("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos" }) + " (Lagos time)";
+}
+function donationReceiptEmail(d, support) {
+  const subject = `Thank you for your donation (${naira(d.amount)})`;
+  const row = (k, v) => `<tr><td style="padding:6px 0;font-family:${FONT};font-size:14px;color:${C.muted}">${k}</td><td align="right" style="padding:6px 0;font-family:${FONT};font-size:14px;font-weight:600;color:${C.ink}">${v}</td></tr>`;
+  const when = lagosDateTime(d.paid_at ? new Date(d.paid_at) : new Date());
+  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;border-top:1px solid ${C.rule};border-bottom:1px solid ${C.rule}">` + row("Donation to", "Local Taskers") + row("Amount received", naira(d.amount)) + row("Date", esc(when)) + row("Paid by", "Card or bank via Paystack") + row("Reference", `<span style="font-family:'Courier New',Courier,monospace;font-size:12px">${esc(d.reference)}</span>`) + `</table>`;
+  const who = d.donor_name ? firstName(d.donor_name) : "there";
+  const html = shell(
+    subject,
+    `We received your ${naira(d.amount)} donation. Thank you.`,
+    h1("Thank you for your donation") + p(`Hi ${esc(who)}, we have received your donation to support Local Taskers. It helps skilled people who are not yet online get onto StreetTasker, with a coordinator beside them.`) + table + p(`Please keep this email as your record. If you need anything else for your own accounts, reply to this email and tell us.`),
+    support,
+    "StreetTasker is run by Street Taskers Ventures."
+  );
+  const text = [
+    "Thank you for your donation",
+    "",
+    `Hi ${who}, we have received your donation to support Local Taskers.`,
+    "",
+    `Amount received: ${naira(d.amount)}`,
+    `Date: ${when}`,
+    `Reference: ${d.reference}`,
+    "",
+    "Please keep this email as your record. Reply to it if you need anything else.",
+    `Questions? Write to ${support}`
+  ].join("\n");
+  return { subject, html, text };
+}
+function donationAdminEmail(d, support) {
+  const subject = `Donation received: ${naira(d.amount)} (${d.reference})`;
+  const html = shell(
+    subject,
+    `${naira(d.amount)} donation confirmed by Paystack.`,
+    h1("Donation received") + p(`${esc(naira(d.amount))} was paid and confirmed by Paystack.`) + p(`Donor: ${esc(d.donor_name || "(no name given)")} &lt;${esc(d.donor_email)}&gt;<br>Reference: ${esc(d.reference)}<br>Receipt to donor: ${d.receipt_sent_at ? "sent" : "being sent"}`) + p("It is recorded in the donations table. Check it against your Paystack settlement when the money reaches your bank."),
+    support,
+    "Internal notice."
+  );
+  const text = `Donation received: ${naira(d.amount)}\nDonor: ${d.donor_name || "(no name given)"} <${d.donor_email}>\nReference: ${d.reference}\nRecorded in the donations table.`;
+  return { subject, html, text };
+}
+async function fulfilDonation(deps, reference) {
+  let d = await deps.db.getDonation(reference);
+  if (!d) {
+    console.error("donation webhook: unknown reference", reference);
+    return;
+  }
+  if (d.status !== "paid") {
+    const tx = await verifyTransaction(deps.fetchFn, deps.paystackSecret, reference);
+    if (tx.status !== "success") return;
+    if (tx.currency !== "NGN" || tx.amount !== d.amount * 100) {
+      await deps.db.flagDonation(reference, `amount_mismatch: expected ${d.amount * 100} NGN kobo, Paystack says ${tx.amount} ${tx.currency}`);
+      console.error("donation amount mismatch", reference, tx.amount, tx.currency);
+      return;
+    }
+    await deps.db.markDonationPaid(reference, tx.amount, tx.channel ?? null);
+    d = await deps.db.getDonation(reference);
+  }
+  if (!deps.sendDonationEmail) {
+    console.warn("RESEND_API_KEY is not set: donation recorded, no emails sent.", reference);
+    return;
+  }
+  let failed = null;
+  try {
+    const mine = await deps.db.claimDonationReceipt(reference);
+    if (mine) {
+      await deps.sendDonationEmail({ to: mine.donor_email, ...donationReceiptEmail(mine, deps.donationReplyTo), idempotencyKey: `dn-receipt-${mine.id}` });
+      await deps.db.markDonationReceiptSent(reference);
+    }
+  } catch (err) {
+    failed = err;
+    console.error("donation receipt failed", reference, errMsg(err));
+  }
+  try {
+    const fresh = await deps.db.getDonation(reference);
+    const mineAdmin = await deps.db.claimDonationAdminNotice(reference);
+    if (mineAdmin) {
+      await deps.sendDonationEmail({ to: deps.donationNotifyTo, ...donationAdminEmail(fresh ?? mineAdmin, deps.donationReplyTo), idempotencyKey: `dn-admin-${mineAdmin.id}` });
+      await deps.db.markDonationAdminNotified(reference);
+    }
+  } catch (err) {
+    failed = failed ?? err;
+    console.error("donation admin notice failed", reference, errMsg(err));
+  }
+  if (failed) throw failed;
+}
+
 // _shared/handlers.ts
 async function handleWebhook(req, deps) {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -294,6 +384,15 @@ async function handleWebhook(req, deps) {
     return new Response("Bad request", { status: 400 });
   }
   const reference = event.data?.reference ?? "";
+  if (event.event === "charge.success" && event.data?.metadata?.kind === "donation" && DONATION_REF_RE.test(reference)) {
+    try {
+      await fulfilDonation(deps, reference);
+      return new Response("ok", { status: 200 });
+    } catch (err) {
+      console.error("webhook donation failed", reference, err instanceof Error ? err.message : err);
+      return new Response("error", { status: 500 });
+    }
+  }
   const isGiftCard = event.data?.metadata?.kind === "gift_card" && REFERENCE_RE.test(reference);
   if (event.event !== "charge.success" || !isGiftCard) return new Response("ignored", { status: 200 });
   try {
@@ -380,6 +479,39 @@ function createDb(url, serviceRoleKey) {
       const { error } = await client.rpc("record_gift_card_delivery_error", { p_card_id: cardId, p_error: message });
       if (error) console.error("could not record delivery error", cardId, error.message);
     },
+    async getDonation(reference) {
+      const { data, error } = await client.from("donations").select("*").eq("reference", reference).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ?? null;
+    },
+    async markDonationPaid(reference, paidKobo, channel) {
+      const { error } = await client.from("donations").update({ status: "paid", paid_kobo: paidKobo, channel, paid_at: new Date().toISOString() }).eq("reference", reference).in("status", ["pending", "failed"]);
+      if (error) throw new Error(error.message);
+    },
+    async flagDonation(reference, reason) {
+      const { error } = await client.from("donations").update({ status: "flagged", flag_reason: reason.slice(0, 300) }).eq("reference", reference).neq("status", "paid");
+      if (error) throw new Error(error.message);
+    },
+    async claimDonationReceipt(reference) {
+      const stale = new Date(Date.now() - 5 * 60 * 1e3).toISOString();
+      const { data, error } = await client.from("donations").update({ receipt_claimed_at: new Date().toISOString() }).eq("reference", reference).eq("status", "paid").is("receipt_sent_at", null).or(`receipt_claimed_at.is.null,receipt_claimed_at.lt.${stale}`).select("*").maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ?? null;
+    },
+    async markDonationReceiptSent(reference) {
+      const { error } = await client.from("donations").update({ receipt_sent_at: new Date().toISOString() }).eq("reference", reference);
+      if (error) throw new Error(error.message);
+    },
+    async claimDonationAdminNotice(reference) {
+      const stale = new Date(Date.now() - 5 * 60 * 1e3).toISOString();
+      const { data, error } = await client.from("donations").update({ admin_claimed_at: new Date().toISOString() }).eq("reference", reference).eq("status", "paid").is("admin_notified_at", null).or(`admin_claimed_at.is.null,admin_claimed_at.lt.${stale}`).select("*").maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ?? null;
+    },
+    async markDonationAdminNotified(reference) {
+      const { error } = await client.from("donations").update({ admin_notified_at: new Date().toISOString() }).eq("reference", reference);
+      if (error) throw new Error(error.message);
+    },
     async listDueCards(todayLagos, scheduledOk, limit) {
       const { data, error } = await client.rpc("list_due_gift_cards", { p_today: todayLagos, p_scheduled_ok: scheduledOk, p_limit: limit });
       if (error) throw new Error(error.message);
@@ -437,7 +569,14 @@ function realDeps() {
     supportEmail,
     cronSecret: Deno.env.get("CRON_SECRET") || void 0
   };
+  deps.donationReplyTo = Deno.env.get("DONATION_REPLY_TO") ?? "contact@streettasker.com";
+  deps.donationNotifyTo = Deno.env.get("DONATION_NOTIFY_TO") ?? "contact@streettasker.com";
   if (resendKey) {
+    deps.sendDonationEmail = createResendSender(fetch, {
+      apiKey: resendKey,
+      from: Deno.env.get("DONATION_EMAIL_FROM") ?? "StreetTasker <gifts@contact.streettasker.com>",
+      replyTo: deps.donationReplyTo
+    });
     deps.sendEmail = createResendSender(fetch, {
       apiKey: resendKey,
       from: Deno.env.get("GIFT_EMAIL_FROM") ?? DEFAULT_FROM,
