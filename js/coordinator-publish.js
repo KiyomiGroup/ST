@@ -26,13 +26,15 @@
     service:           { label: 'At least one active service with an agreed price', fix: 'service' },
     private_clear:     { label: 'No private contact details on the public record' },
     verification:      { label: 'Verification recorded' },
-    photo:             { label: 'At least one photo' }
+    photo:             { label: 'At least one photo' },
+    identity:          { label: 'Their identity check is verified', fix: 'identity' }
   };
-  var FIX_TEXT = { service: 'Add or edit a service', photos: 'Manage photos' };
+  var FIX_TEXT = { service: 'Add or edit a service', photos: 'Manage photos', identity: 'Open identity check' };
   var UNIT = { '/job': 'job', '/hour': 'hour', '/day': 'day', '/visit': 'visit', '/session': 'session' };
 
   var MESSAGES = {
     not_found: "This Local Tasker isn't assigned to you any more, or your coordinator account isn't active. Nothing was changed.",
+    identity_not_verified: 'This Local Tasker cannot be published until their identity is verified. Complete their identity check first. Nothing was published.',
     tasker_identity: 'This Local Tasker cannot be published until their identity is verified. Complete their identity check first. Nothing was published.',
     not_ready: 'Not everything on the checklist is done yet. Nothing was published. The checklist above has been refreshed.',
     bad_input: 'That reason is too long. Please shorten it.',
@@ -70,6 +72,7 @@
   function fixHref(kind) {
     if (kind === 'service') return 'coordinator-service-edit.html?id=' + encodeURIComponent(taskerId);
     if (kind === 'photos') return 'coordinator-photos.html?id=' + encodeURIComponent(taskerId);
+    if (kind === 'identity') return 'coordinator-tasker-verify.html?id=' + encodeURIComponent(taskerId);
     return null;
   }
 
@@ -188,8 +191,10 @@
       return r.data.verified === true || r.data.status === 'VERIFIED';
     } catch (e) { return false; }
   }
+  function hasServerIdentityCheck() { return !!(state && state.checks && state.checks.some(function (c) { return c.key === 'identity'; })); }
   function applyIdentityGate() {
-    if (taskerVerified || !state) return;
+    /* a live listing is not held back (owner: leave existing ones); the database check 'identity' also covers this once F-2 SQL is run */
+    if (taskerVerified || !state || state.status === 'published' || state.checks.some(function (c) { return c.key === 'identity'; })) return;
     var list = $('coPubChecks');
     var li = C.el('li', 'co-check-item is-bad');
     li.appendChild(C.el('span', 'co-check-mark'));
@@ -268,14 +273,14 @@
     busy = on;
     ['coPubPublish', 'coPubRefresh', 'coPubUnpublishOpen', 'coPubUnpublishConfirm', 'coPubUnpublishCancel'].forEach(function (id) {
       var b = $(id); if (!b) return;
-      if (on) { b.disabled = true; } else if (id === 'coPubPublish' || id === 'coPubRefresh') { b.disabled = !(state && state.ready && taskerVerified); } else { b.disabled = false; }
+      if (on) { b.disabled = true; } else if (id === 'coPubPublish' || id === 'coPubRefresh') { b.disabled = !(state && state.ready && (taskerVerified || state.status === 'published' || hasServerIdentityCheck())); } else { b.disabled = false; }
     });
   }
 
   async function publish(isRefresh) {
     if (busy) return;
     clearMessages();
-    if (!taskerVerified) { showError('tasker_identity'); return; }
+    if (!taskerVerified && !hasServerIdentityCheck() && !(state && state.status === 'published')) { showError('tasker_identity'); return; }
     if (!isRefresh) {
       if (!$('coPubConfirm').checked) { fieldError('coPubConfirm', 'Tick the box to confirm they agreed.'); $('coPubConfirm').focus(); return; }
       fieldError('coPubConfirm', '');
