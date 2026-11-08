@@ -1,0 +1,12 @@
+docs/
+sql/
+tests/
+tools/
+ADMIN-HANDOFF.md
+HANDOFF-README.md
+SUBSCRIPTION-HANDOFF.md
+MIGRATION-CHECKLIST.md
+ONBOARDING-STAGES.md
+CHANGES-categories-services.md
+AGENTS.md
+CLAUDE.md
