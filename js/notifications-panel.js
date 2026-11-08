@@ -181,11 +181,30 @@
     return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
   }
 
+  /* Coordinator portal (body.co-page, set on every coordinator-*.html page): a coordinator account is kept apart from
+     the customer and tasker sides, so a notification opened from there must NEVER lead to a customer or tasker page.
+     Anything the data points at that is not a coordinator page is ignored and the destination is worked out here. */
+  function inCoordinatorPortal() { return !!(document.body && document.body.classList.contains('co-page')); }
+  function coordinatorTarget(t, d) {
+    if (d.url) {
+      var base = String(d.url).split(/[?#]/)[0].split('/').pop();
+      if (/^coordinator-[a-z-]+\.html$/.test(base)) return d.url;       /* already a coordinator page: trust it */
+    }
+    if (d.booking_id) return 'coordinator-booking.html?id=' + encodeURIComponent(d.booking_id);
+    if (d.thread_id || t.indexOf('message') > -1 || t.indexOf('payment_request') > -1 || t.indexOf('job_update') > -1) return 'coordinator-chat.html';
+    if (t.indexOf('payout') > -1 || t.indexOf('wallet') > -1 || t.indexOf('payment') > -1 || t.indexOf('withdrawal') > -1) return 'coordinator-wallet.html';
+    if (t.indexOf('offer') > -1 || t.indexOf('application') > -1 || t.indexOf('apply') > -1 || t.indexOf('quote') > -1 ||
+        t.indexOf('booking') > -1 || t.indexOf('task') > -1 || t.indexOf('dispute') > -1) return 'coordinator-bookings.html';
+    if (t.indexOf('verif') > -1 || t.indexOf('identity') > -1 || t.indexOf('consent') > -1 || t.indexOf('tasker') > -1) return 'coordinator-taskers.html';
+    return 'coordinator-dashboard.html';
+  }
+
   /* Where a notification leads, by type (and by role where the page differs) */
   function target(n) {
     var t = String(n.type || '').toLowerCase();
     var d = n.data || {};
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = {}; } }
+    if (inCoordinatorPortal()) return coordinatorTarget(t, d);
     var tasker = role() === 'tasker';
     if (d.url) return d.url;
     /* Stage 15: anything that belongs to a conversation opens THAT conversation (messages.html reads ?thread=) */
