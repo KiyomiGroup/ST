@@ -13,6 +13,7 @@
   /* Each icon: 64x64 viewBox, solid shapes (fill) plus a few strokes, drawn after the reference sheet. */
   var I = {
     cleaning: '<path d="M38 4l4 2-12 28-4-2z"/><path d="M8 58l8-22 12 6-6 16z"/><path d="M4 60h56v3H4z"/><path d="M36 38h24l-3 22H39z"/><circle cx="42" cy="26" r="4"/><circle cx="52" cy="22" r="3"/><circle cx="48" cy="31" r="2.5"/>',
+    laundry: '<rect x="8" y="4" width="48" height="56" rx="6"/><rect x="14" y="10" width="14" height="5" rx="2" fill="var(--color-bg)"/><circle cx="45" cy="12.5" r="2.5" fill="var(--color-bg)"/><circle cx="32" cy="38" r="17" fill="var(--color-bg)"/><circle cx="32" cy="38" r="12"/><path d="M23 40c3-3.5 6 3.5 9 0s6 3.5 9 0" fill="none" stroke="var(--color-bg)" stroke-width="2.5" stroke-linecap="round"/>',
     grooming: '<rect x="8" y="6" width="14" height="5" rx="2"/><rect x="8" y="53" width="14" height="5" rx="2"/><path d="M10 13h10v38H10z" fill-opacity=".35"/><path d="M10 16l10 6v6l-10-6zM10 30l10 6v6l-10-6z"/><circle cx="38" cy="44" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="52" cy="48" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M40 40L58 8M49 44L34 10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>',
     automotive: '<path d="M6 40c0-6 4-8 10-10l8-9c2-2 4-3 7-3h12c3 0 6 1 8 3l7 9c5 1 8 3 8 8v6H6z"/><circle cx="20" cy="50" r="7" fill="var(--color-bg)" stroke="currentColor" stroke-width="3"/><circle cx="48" cy="50" r="7" fill="var(--color-bg)" stroke="currentColor" stroke-width="3"/><path d="M26 25h8v8H20zM38 25h6l5 8H38z" fill="var(--color-bg)"/><path d="M14 8h12v6H14zM38 8h12v6H38zM26 8h12v3H26z"/>',
     handyman: '<g transform="rotate(45 32 32)"><rect x="29" y="16" width="6" height="46" rx="2"/><path d="M16 6h26a4 4 0 0 1 4 4v8H16z"/><path d="M16 6c-6 0-10 4-12 8l12 0z"/></g><g transform="rotate(-45 32 32)"><rect x="29" y="22" width="6" height="40" rx="2"/><path d="M22 2h20v18c0 5-4 8-8 8h-4c-4 0-8-3-8-8z"/><rect x="29" y="0" width="6" height="12" fill="var(--color-bg)"/></g>',
@@ -34,6 +35,7 @@
   /* value = what is saved on a task or service. label = what people read. */
   var LIST = [
     { value: 'cleaning',    label: 'Cleaning Services',        short: 'Cleaning',     emoji: '🧹', services: ['Deep house cleaning', 'Move-in / move-out cleaning', 'Post-construction cleaning', 'Carpet & upholstery cleaning', 'Window washing', 'Tile & grout scrubbing', 'Mold remediation', 'Air duct cleaning', 'Chimney sweeping', 'Laundry & ironing'] },
+    { value: 'laundry',     label: 'Laundry Services',         short: 'Laundry',      emoji: '🧺', services: ['Wash & fold', 'Ironing & pressing', 'Dry cleaning', 'Laundry pickup & delivery', 'Duvet & bedding cleaning', 'Stain removal', 'Shoe & sneaker cleaning', 'Curtain & rug washing', 'Bulk & business laundry'] },
     { value: 'grooming',    label: 'Grooming & Barber',        short: 'Grooming',     emoji: '💈', services: ['Haircutting & styling', 'Beard trimming & shaping', 'Hair coloring', 'Manicure & pedicure', 'Facial treatments', 'Massage therapy', 'Body waxing', 'Eyebrow threading', 'Makeup application', 'Spray tanning'] },
     { value: 'automotive',  label: 'Automotive Services',      short: 'Automotive',   emoji: '🚗', services: ['Mobile car detailing', 'Oil change', 'Tire replacement & balancing', 'Brake repair', 'Engine diagnostics', 'Windshield repair', 'Auto body restoration', 'Towing', 'Roadside assistance', 'Vehicle wrapping'] },
     { value: 'handyman',    label: 'Handyman & Trades',        short: 'Handyman',     emoji: '🛠️', services: ['Plumbing repair', 'Electrical wiring', 'HVAC installation & maintenance', 'Roof repair', 'Carpentry', 'Painting & drywall', 'Locksmith services', 'Pest control', 'Pool maintenance', 'Appliance repair'] },
@@ -60,7 +62,8 @@
     mechanic: 'automotive', auto: 'automotive', car: 'automotive',
     moving: 'logistics', delivery: 'logistics', courier: 'logistics', freight: 'logistics',
     gardening: 'landscaping', lawn: 'landscaping', garden: 'landscaping',
-    cleaner: 'cleaning', laundry: 'cleaning',
+    cleaner: 'cleaning',
+    laundromat: 'laundry', dryclean: 'laundry', drycleaning: 'laundry', ironing: 'laundry', washing: 'laundry',
     cooking: 'hospitality', chef: 'hospitality', catering: 'hospitality',
     photography: 'events', photographer: 'events', security: 'events',
     tutoring: 'education', tutor: 'education', lesson: 'education',
@@ -110,7 +113,8 @@
      A word in the title counts 3, in the description 1 (each word once). A category needs 2 or more to win, so one passing
      mention in the description is not enough. Two categories tied: the one mentioned first wins. Still unclear: null (stays Other). */
   var KEYWORDS = {
-    cleaning:    ['clean', 'laundry', 'ironing', 'mop!', 'mopping', 'scrub', 'dusting', 'disinfect', 'sanitis', 'sanitiz', 'housekeep', 'house help', 'maid!', 'carpet wash', 'wash my clothes', 'wash clothes', 'washing clothes', 'janitor'],
+    cleaning:    ['clean', 'mop!', 'mopping', 'scrub', 'dusting', 'disinfect', 'sanitis', 'sanitiz', 'housekeep', 'house help', 'maid!', 'carpet wash', 'janitor'],
+    laundry:     ['laundry', 'launder', 'laundromat', 'ironing', 'iron my', 'dry clean', 'wash and fold', 'wash & fold', 'wash my clothes', 'wash clothes', 'washing clothes', 'wash my duvet', 'duvet', 'bedsheet', 'starch', 'garment', 'clothes!', 'shoe wash', 'sneaker clean'],
     grooming:    ['haircut', 'hair cut', 'barber', 'braid', 'hairstyl', 'hair style', 'hair!', 'wig!', 'beard', 'manicure', 'pedicure', 'gel nail', 'nail tech', 'nails done', 'makeup', 'make-up', 'facial!', 'massage', 'waxing', 'eyelash', 'eyebrow', 'lash extension', 'dreadlock', 'salon'],
     automotive:  ['car wash', 'car repair', 'car service', 'car!', 'mechanic', 'tyre', 'tire!', 'brake', 'engine', 'oil change', 'vulcaniz', 'panel beat', 'windscreen', 'windshield', 'towing', 'vehicle', 'gearbox', 'radiator', 'jump start', 'wheel alignment', 'suspension', 'auto electrician'],
     handyman:    ['plumb', 'leak', 'pipe!', 'toilet', 'faucet', 'borehole', 'electrician', 'wiring', 'rewire', 'socket!', 'circuit breaker', 'generator', 'inverter', 'ac repair', 'air condition', 'fridge repair', 'freezer repair', 'appliance', 'carpent', 'furniture assembl', 'assemble', 'paint', 'drywall', 'pop ceiling', 'tiling', 'tiler', 'roofing', 'roof!', 'locksmith', 'door lock', 'pest control', 'cockroach', 'termite', 'rodent', 'fumigat', 'welding', 'welder', 'curtain rod', 'handyman', 'washing machine repair'],

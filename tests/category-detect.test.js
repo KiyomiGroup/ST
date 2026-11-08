@@ -12,6 +12,10 @@ const detect = win.STCat.detect;
 
 const CLEAR = [
   ['Deep clean my 3-bedroom flat', '', 'cleaning'],
+  ['Laundry pickup every Saturday', '', 'laundry'],
+  ['Wash and iron my clothes', '', 'laundry'],
+  ['Dry cleaning for 3 suits', '', 'laundry'],
+  ['Wash my duvet and curtains', '', 'laundry'],
   ['Need a plumber', 'Kitchen sink is leaking badly', 'handyman'],
   ['Fix my generator', '', 'handyman'],
   ['Haircut at home', '', 'grooming'],

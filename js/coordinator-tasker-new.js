@@ -61,6 +61,7 @@
     unauthenticated: 'Your sign-in has expired. Please sign in again, then come back to this form.',
     too_large: 'That was too much text to send. Shorten the notes and try again.',
     server_error: 'Something went wrong on our side. Nothing was created. Please try again in a moment.',
+    db_error: 'The database refused to save this profile, so nothing was created. Please tell StreetTasker support and quote the error code below.',
     network: "We couldn't reach the server. Check your connection and press Create again. It will not create a duplicate."
   };
 
@@ -132,7 +133,7 @@
       try { body = await ctx.json(); } catch (e) { body = null; }
       var status = ctx.status;
       var code = (body && (body.error || body.code)) || (status ? 'http_' + status : 'server_error');
-      var raw = null;
+      var raw = (body && typeof body.detail === 'string') ? body.detail : null;   /* the real database message, when the function sends one */
       if (status === 401 && !MESSAGES[code]) { raw = code; code = 'unauthenticated'; }   /* gateway rejection: keep its own code visible */
       return { code: code, message: body && body.message, raw: raw };
     }

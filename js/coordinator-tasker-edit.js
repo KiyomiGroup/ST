@@ -127,6 +127,7 @@
       $('coFPhone').value = p.phone || '';
       $('coFAreas').value = p.areas_served || '';
       $('coFNotes').value = p.availability_notes || '';
+      if (window.STCoPick) { window.STCoPick.fillAreas(p.areas_served || ''); window.STCoPick.fillAvailability(p.availability_notes || ''); }   /* draw the saved values as chips and options */
       $('coFSkills').value = Array.isArray(p.skills) ? p.skills.join(', ') : '';
       /* The public name lives on the public user row. If it can't be read, the box stays
          empty and a note says so; the coordinator then types the name to keep. */

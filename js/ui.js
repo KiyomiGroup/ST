@@ -331,7 +331,7 @@ function stCatPic(cat) {
    StreetTasker logo at the top right so people know it is a placeholder and not the client's own photo. Other, unknown and
    uncategorised tasks get the general TASK picture. Cleaning has two pictures; the task id picks one so cards differ. */
 const ST_TASK_PH = {
-  cleaning: ['cleaning', 'cleaning-2'], grooming: ['grooming'], automotive: ['automotive'], handyman: ['handyman'],
+  cleaning: ['cleaning', 'cleaning-2'], laundry: ['cleaning-2'], grooming: ['grooming'], automotive: ['automotive'], handyman: ['handyman'],
   landscaping: ['landscaping'], hospitality: ['hospitality'], business: ['business'], it_tech: ['it_tech'], creative: ['creative'],
   logistics: ['logistics'], health: ['health'], pet: ['pet'], education: ['education'], financial: ['financial'], legal: ['legal'],
   events: ['events']

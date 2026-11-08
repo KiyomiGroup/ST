@@ -121,14 +121,16 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="coFAreas">Areas served</label>
-            <input class="form-input" type="text" id="coFAreas" maxlength="300" autocomplete="off" placeholder="Sabo, Yaba, Ebute Metta" aria-describedby="coFAreasErr" />
+            <label class="form-label" for="coFAreasSearch">Areas served</label>
+            <input type="hidden" id="coFAreas" />
+            <div id="coAreasMount"></div>
             <p class="co-field-error" id="coFAreasErr" hidden></p>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="coFNotes">Availability notes</label>
-            <textarea class="form-textarea" id="coFNotes" maxlength="500" aria-describedby="coFNotesErr"></textarea>
+            <span class="form-label" id="coFNotesLabel">Availability</span>
+            <input type="hidden" id="coFNotes" />
+            <div id="coAvailMount" role="group" aria-labelledby="coFNotesLabel"></div>
             <p class="co-field-error" id="coFNotesErr" hidden></p>
           </div>
             </section>
@@ -186,6 +188,8 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-intake.js"></script>
+  <script src="js/ng-places.js"></script>
+  <script src="js/coordinator-pickers.js"></script>
   <script src="js/coordinator-tasker-edit.js"></script>
 </body>
 </html>

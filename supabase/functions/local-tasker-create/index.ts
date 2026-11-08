@@ -146,15 +146,22 @@ Deno.serve(async (req: Request) => {
   const { data: res, error: dbErr } = await admin.rpc("create_local_tasker", { ...rpcArgs, p_tasker_user: identityId });
   if (dbErr) {
     const hint = (dbErr as any).hint as string | undefined;
-    console.error("create_local_tasker failed", requestId, hint ?? "", dbErr.code ?? "");
+    // Log the REAL database message (the hint alone can be generic, e.g. "You might need to add explicit type casts").
+    console.error("create_local_tasker failed", requestId, "code=", dbErr.code ?? "", "message=", dbErr.message ?? "", "hint=", hint ?? "", "details=", (dbErr as any).details ?? "");
     try {
       const again = await found();
       if (!again.request_exists && !again.identity_has_profile && again.identity_user_id) {
         await admin.auth.admin.deleteUser(again.identity_user_id);
       }
     } catch (e) { console.error("cleanup failed", String(e)); }
-    const status = (hint && HINT_STATUS[hint]) || 500;
-    return fail(req, status, hint ?? "server_error", status === 500 ? "Could not create the Local Tasker." : dbErr.message);
+    const known = hint && HINT_STATUS[hint] ? hint : null;
+    if (known) return fail(req, HINT_STATUS[known], known, dbErr.message);
+    // An unexpected database error: say so with a fixed code, and pass the real message back in `detail`
+    // (the caller is a verified, active coordinator) so the cause can be read on screen and reported.
+    return json(req, 500, {
+      ok: false, error: "db_error", message: "Could not create the Local Tasker.",
+      detail: `${dbErr.code ?? ""} ${dbErr.message ?? ""}`.trim().slice(0, 300),
+    });
   }
   const r = res as { created: boolean; tasker_user_id: string };
   return json(req, r.created ? 201 : 200, { ok: true, created: r.created, tasker_user_id: r.tasker_user_id, identity_new: madeHere });
