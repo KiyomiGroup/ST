@@ -12,17 +12,18 @@
                                               buttons that cannot review (not a party, not completed) are removed
    STReview.promptFromUrl()                   opens the dialog when the address has ?review=<booking id> (the notification link)
    STReview.remind()                          the reminder: opens the dialog for the customer's newest completed job that is still
-                                              not reviewed. js/auth.js calls it on every customer page (not the chat page). Closing the dialog,
-                                              clicking outside it, pressing Escape or "Not now" does NOT stop it: it comes back on the next page.
-                                              Only "No thanks" (then "Yes, stop reminding me") stops it for that job.
-                                              Declined and already-reviewed job ids are kept in this browser (localStorage, per user).
+                                              not reviewed. js/auth.js calls it on every customer page (not the chat page).
+                                              Clicking outside the dialog or pressing Escape is treated as a mistake: it comes back on the next page.
+                                              Submitting a review, or tapping "No thanks", stops it for that job for good.
+                                              "No thanks" is saved in the database (review_declines, sql/review-decline.sql) so it holds on every
+                                              device; this browser (localStorage, per user) also keeps a copy as a fallback.
    Any element with data-act="review" data-id="<booking id>" opens the dialog when clicked (document-level handler).
    ============================================================ */
 (function () {
   'use strict';
 
   var COMMENT_MAX = 1000;
-  var REMIND_TEXT = 'You haven\u2019t rated this job yet. We\u2019ll keep reminding you until you rate it or choose \u201cNo thanks\u201d.';
+  var REMIND_TEXT = 'You haven\u2019t rated this job yet. Rate it, or choose \u201cNo thanks\u201d and we won\u2019t ask again.';
   var dlg = null, els = null, ctx = null, rating = 0, busy = false;
   var stateCache = {};
   var reminded = false;
@@ -34,6 +35,17 @@
   function addToList(k, id) {
     try { var a = readList(k); if (a.indexOf(id) === -1) { a.push(id); window.localStorage.setItem(k, JSON.stringify(a.slice(-200))); } }
     catch (_e) { /* private mode: the reminder simply comes back */ }
+  }
+  /* declines saved in the database (all devices). Any failure (table not created yet) just means "none known". */
+  async function serverDeclines() {
+    try {
+      var r = await window.supabase.from('review_declines').select('booking_id');
+      if (r.error || !Array.isArray(r.data)) return [];
+      return r.data.map(function (x) { return String(x.booking_id); }).filter(isUuid);
+    } catch (_e) { return []; }
+  }
+  async function saveDecline(bookingId) {
+    try { await window.supabase.rpc('decline_review', { p_booking: String(bookingId) }); } catch (_e) { /* the local copy still stops it on this device */ }
   }
   async function currentUid() {
     try { var r = await window.supabase.auth.getUser(); return r && r.data && r.data.user ? r.data.user.id : null; } catch (_e) { return null; }
@@ -101,16 +113,15 @@
 
     dlg.addEventListener('click', function (e) { if (e.target === dlg && !busy) dlg.close(); });
     later.addEventListener('click', function () { dlg.close(); });
-    /* "No thanks" asks once more, so nobody stops the reminder by a stray tap */
+    /* "No thanks" is a deliberate choice: saved at once, and the pop-up never comes back for this job. */
     decline.addEventListener('click', async function () {
       if (!ctx || busy) return;
-      if (!decline.getAttribute('data-sure')) {
-        decline.setAttribute('data-sure', '1'); decline.textContent = 'Yes, stop reminding me';
-        els.remindNote.textContent = 'Are you sure? We won\u2019t remind you to rate this job again.'; els.remindNote.hidden = false;
-        return;
-      }
+      busy = true; decline.disabled = true;
+      var id = ctx.bookingId;
       var uid = await currentUid();
-      if (uid && ctx) addToList(declKey(uid), ctx.bookingId);
+      if (uid) addToList(declKey(uid), id);
+      await saveDecline(id);
+      busy = false; decline.disabled = false;
       dlg.close();
     });
     done.addEventListener('click', function () { dlg.close(); });
@@ -170,7 +181,7 @@
     if (!isUuid(opts.bookingId)) return;
     if (!dlg) build();
     ctx = { bookingId: String(opts.bookingId), onDone: opts.onDone, reminder: !!opts.reminder };
-    els.decline.hidden = true; els.decline.removeAttribute('data-sure'); els.decline.textContent = 'No thanks';
+    els.decline.hidden = true; els.decline.disabled = false; els.later.hidden = true; els.decline.textContent = 'No thanks';
     els.remindNote.textContent = REMIND_TEXT; els.remindNote.hidden = true;
     rating = 0; paintStars();
     els.stars.forEach(function (s) { s.inp.checked = false; });
@@ -188,7 +199,10 @@
     }
     els.lead.textContent = '';
     if (st.ok === false) { showMessage(st.error || 'Please sign in to leave a review.', true); return; }
-    if (st.reason === 'already_reviewed') { showMessage('You have already reviewed this job. Thank you.', true); return; }
+    if (st.reason === 'already_reviewed') {
+      currentUid().then(function (uid) { if (uid) addToList(doneKey(uid), ctx.bookingId); });
+      showMessage('You have already reviewed this job. Thank you.', true); return;
+    }
     if (st.can_review !== true) {
       showMessage(st.reason === 'not_completed' ? 'You can leave a review once the job is completed and the payment is released.' : 'This job can\u2019t be reviewed by you.', true);
       return;
@@ -196,8 +210,9 @@
     els.title.textContent = st.reviewee_name ? 'How was ' + st.reviewee_name + '?' : 'Leave a review';
     els.lead.textContent = st.reviewee_role === 'customer' ? 'Tell other taskers what this customer was like to work with.' : 'Tell other customers what this tasker was like to work with.';
     els.form.hidden = false;
-    /* only a customer rating a tasker can say "No thanks" (and see the reminder note) */
+    /* a customer rating a tasker can say "No thanks" (never asked again). A tasker rating a customer gets a plain "Not now". */
     if (st.reviewee_role !== 'customer') { els.decline.hidden = false; els.remindNote.hidden = !ctx.reminder; }
+    else { els.later.hidden = false; }
     var first = els.stars[0].inp; if (first && first.focus) first.focus();
   }
 
@@ -226,7 +241,8 @@
     }
   }
 
-  /* The reminder: customers who have not rated a finished job are asked again on every page until they rate it or say "No thanks". */
+  /* The reminder: a customer who has not rated a finished job is asked on their next page if they closed the dialog by mistake (outside
+   click, Escape). Rating it or "No thanks" ends it for that job. */
   async function remind() {
     if (reminded) return;
     reminded = true;
@@ -238,7 +254,7 @@
       var res = await window.supabase.from('bookings').select('id').eq('customer_id', uid)
         .or('status.eq.completed,payment_status.eq.released').order('created_at', { ascending: false }).limit(15);
       if (res.error || !res.data) return;
-      var skip = readList(declKey(uid)).concat(readList(doneKey(uid)));
+      var skip = readList(declKey(uid)).concat(readList(doneKey(uid)), await serverDeclines());
       for (var i = 0; i < res.data.length; i++) {
         var id = res.data[i].id;
         if (!isUuid(id) || skip.indexOf(id) !== -1) continue;
