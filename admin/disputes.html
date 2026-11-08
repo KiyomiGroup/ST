@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Disputes · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Disputes</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="adDisputes" hidden>
+          <div class="ad-pagehead">
+            <h1>Disputes</h1>
+            <p>Problem reports on jobs and Local Tasker bookings. You record decisions here; money is only ever refunded in the Paystack dashboard. Subscription payments never appear here.</p>
+          </div>
+          <div class="ad-split">
+            <section class="ad-split-list" id="dpListCol" aria-label="Reports">
+              <div class="ad-card">
+                <label class="ad-filter-label" for="dpSearch">Search reports</label>
+                <input class="form-input" id="dpSearch" type="search" maxlength="100" autocomplete="off" placeholder="Name, thread id or words in the report" />
+                <div class="ad-tabs" role="group" aria-label="Show" id="dpFilter">
+                  <button type="button" class="btn btn-sm btn-outline" data-f="live" aria-pressed="true">Needs action</button>
+                  <button type="button" class="btn btn-sm btn-ghost" data-f="resolved" aria-pressed="false">Closed</button>
+                  <button type="button" class="btn btn-sm btn-ghost" data-f="all" aria-pressed="false">All</button>
+                </div>
+                <p class="ad-hint" id="dpCount" aria-live="polite"></p>
+                <div id="dpList"></div>
+                <div class="ad-actions" id="dpMoreRow" hidden><button type="button" class="btn" id="dpMore">Show more</button></div>
+              </div>
+              <details class="ad-card ad-orphans" id="dpOrphans">
+                <summary>Orphan uploads (files with no record)</summary>
+                <div id="dpOrphanBody"></div>
+              </details>
+            </section>
+            <section class="ad-split-detail" id="dpDetailCol" aria-live="polite" aria-label="Report detail">
+              <button type="button" class="btn ad-back" id="dpBack" hidden>Back to the list</button>
+              <div id="dpDetail"><div class="ad-card"><p class="ad-note">Choose a report on the left.</p></div></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-disputes.js"></script>
+</body>
+</html>
