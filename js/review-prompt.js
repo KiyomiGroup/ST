@@ -11,14 +11,33 @@
    STReview.decorate(root)                    after a page draws its cards: buttons for jobs already reviewed turn into a "Reviewed" tag,
                                               buttons that cannot review (not a party, not completed) are removed
    STReview.promptFromUrl()                   opens the dialog when the address has ?review=<booking id> (the notification link)
+   STReview.remind()                          the reminder: opens the dialog for the customer's newest completed job that is still
+                                              not reviewed. js/auth.js calls it on every customer page (not the chat page). Closing the dialog,
+                                              clicking outside it, pressing Escape or "Not now" does NOT stop it: it comes back on the next page.
+                                              Only "No thanks" (then "Yes, stop reminding me") stops it for that job.
+                                              Declined and already-reviewed job ids are kept in this browser (localStorage, per user).
    Any element with data-act="review" data-id="<booking id>" opens the dialog when clicked (document-level handler).
    ============================================================ */
 (function () {
   'use strict';
 
   var COMMENT_MAX = 1000;
+  var REMIND_TEXT = 'You haven\u2019t rated this job yet. We\u2019ll keep reminding you until you rate it or choose \u201cNo thanks\u201d.';
   var dlg = null, els = null, ctx = null, rating = 0, busy = false;
   var stateCache = {};
+  var reminded = false;
+
+  /* ids of jobs the customer chose not to rate, and of jobs already reviewed (so the reminder never asks the server about them again) */
+  function declKey(uid) { return 'st_review_declined_' + uid; }
+  function doneKey(uid) { return 'st_review_done_' + uid; }
+  function readList(k) { try { var a = JSON.parse(window.localStorage.getItem(k) || '[]'); return Array.isArray(a) ? a.filter(isUuid) : []; } catch (_e) { return []; } }
+  function addToList(k, id) {
+    try { var a = readList(k); if (a.indexOf(id) === -1) { a.push(id); window.localStorage.setItem(k, JSON.stringify(a.slice(-200))); } }
+    catch (_e) { /* private mode: the reminder simply comes back */ }
+  }
+  async function currentUid() {
+    try { var r = await window.supabase.auth.getUser(); return r && r.data && r.data.user ? r.data.user.id : null; } catch (_e) { return null; }
+  }
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -65,21 +84,35 @@
     var count = el('span', 'rv-hint', '0 / ' + COMMENT_MAX);
     var err = el('p', 'rv-error'); err.setAttribute('role', 'alert'); err.hidden = true;
     var note = el('p', 'rv-hint', 'Your review shows on their profile straight away. It can\u2019t be edited or removed afterwards.');
+    var remindNote = el('p', 'rv-hint rv-remind', REMIND_TEXT); remindNote.hidden = true;
     var actions = el('div', 'rv-actions');
+    var decline = el('button', 'rv-btn rv-btn-quiet', 'No thanks'); decline.type = 'button'; decline.hidden = true;
     var later = el('button', 'rv-btn', 'Not now'); later.type = 'button';
     var send = el('button', 'rv-btn rv-btn-primary', 'Submit review'); send.type = 'submit';
-    actions.appendChild(later); actions.appendChild(send);
-    [set, field, count, err, note, actions].forEach(function (n) { form.appendChild(n); });
+    actions.appendChild(decline); actions.appendChild(later); actions.appendChild(send);
+    [set, field, count, err, note, remindNote, actions].forEach(function (n) { form.appendChild(n); });
 
     var close = el('div', 'rv-actions'); var done = el('button', 'rv-btn rv-btn-primary', 'Close'); done.type = 'button';
     close.appendChild(done); close.hidden = true;
 
     [title, lead, msg, form, close].forEach(function (n) { body.appendChild(n); });
     dlg.appendChild(body); document.body.appendChild(dlg);
-    els = { title: title, lead: lead, msg: msg, form: form, stars: stars, set: set, comment: comment, count: count, err: err, send: send, later: later, close: close, done: done };
+    els = { title: title, lead: lead, msg: msg, form: form, stars: stars, set: set, comment: comment, count: count, err: err, send: send, later: later, close: close, done: done, decline: decline, remindNote: remindNote };
 
     dlg.addEventListener('click', function (e) { if (e.target === dlg && !busy) dlg.close(); });
     later.addEventListener('click', function () { dlg.close(); });
+    /* "No thanks" asks once more, so nobody stops the reminder by a stray tap */
+    decline.addEventListener('click', async function () {
+      if (!ctx || busy) return;
+      if (!decline.getAttribute('data-sure')) {
+        decline.setAttribute('data-sure', '1'); decline.textContent = 'Yes, stop reminding me';
+        els.remindNote.textContent = 'Are you sure? We won\u2019t remind you to rate this job again.'; els.remindNote.hidden = false;
+        return;
+      }
+      var uid = await currentUid();
+      if (uid && ctx) addToList(declKey(uid), ctx.bookingId);
+      dlg.close();
+    });
     done.addEventListener('click', function () { dlg.close(); });
     comment.addEventListener('input', function () { count.textContent = comment.value.length + ' / ' + COMMENT_MAX; });
     stars.forEach(function (s) {
@@ -127,6 +160,7 @@
 
   function finish() {
     var cb = ctx && ctx.onDone; var id = ctx && ctx.bookingId;
+    if (id) currentUid().then(function (uid) { if (uid) addToList(doneKey(uid), id); });
     if (cb) { try { cb(id); } catch (_e) { /* the page's own callback must never break the dialog */ } }
     decorate(document);
   }
@@ -135,7 +169,9 @@
     opts = opts || {};
     if (!isUuid(opts.bookingId)) return;
     if (!dlg) build();
-    ctx = { bookingId: String(opts.bookingId), onDone: opts.onDone };
+    ctx = { bookingId: String(opts.bookingId), onDone: opts.onDone, reminder: !!opts.reminder };
+    els.decline.hidden = true; els.decline.removeAttribute('data-sure'); els.decline.textContent = 'No thanks';
+    els.remindNote.textContent = REMIND_TEXT; els.remindNote.hidden = true;
     rating = 0; paintStars();
     els.stars.forEach(function (s) { s.inp.checked = false; });
     els.comment.value = ''; els.count.textContent = '0 / ' + COMMENT_MAX; els.err.hidden = true;
@@ -160,6 +196,8 @@
     els.title.textContent = st.reviewee_name ? 'How was ' + st.reviewee_name + '?' : 'Leave a review';
     els.lead.textContent = st.reviewee_role === 'customer' ? 'Tell other taskers what this customer was like to work with.' : 'Tell other customers what this tasker was like to work with.';
     els.form.hidden = false;
+    /* only a customer rating a tasker can say "No thanks" (and see the reminder note) */
+    if (st.reviewee_role !== 'customer') { els.decline.hidden = false; els.remindNote.hidden = !ctx.reminder; }
     var first = els.stars[0].inp; if (first && first.focus) first.focus();
   }
 
@@ -188,6 +226,31 @@
     }
   }
 
+  /* The reminder: customers who have not rated a finished job are asked again on every page until they rate it or say "No thanks". */
+  async function remind() {
+    if (reminded) return;
+    reminded = true;
+    try {
+      if (!window.supabase || (dlg && dlg.open) || document.querySelector('dialog[open]')) return;
+      if (/[?&]review=/.test(window.location.search)) return;          /* a notification link is already opening the dialog */
+      var uid = await currentUid();
+      if (!uid) return;
+      var res = await window.supabase.from('bookings').select('id').eq('customer_id', uid)
+        .or('status.eq.completed,payment_status.eq.released').order('created_at', { ascending: false }).limit(15);
+      if (res.error || !res.data) return;
+      var skip = readList(declKey(uid)).concat(readList(doneKey(uid)));
+      for (var i = 0; i < res.data.length; i++) {
+        var id = res.data[i].id;
+        if (!isUuid(id) || skip.indexOf(id) !== -1) continue;
+        if (document.querySelector('dialog[open]')) return;             /* something else is on screen: try again on the next page */
+        var st;
+        try { st = await getState(id); } catch (_e) { return; }
+        if (st.reason === 'already_reviewed') { addToList(doneKey(uid), id); continue; }
+        if (st.ok !== false && st.can_review === true && st.reviewee_role !== 'customer') { open({ bookingId: id, reminder: true }); return; }
+      }
+    } catch (_e) { /* a reminder must never break the page */ }
+  }
+
   function promptFromUrl() {
     try {
       var p = new URLSearchParams(window.location.search), id = p.get('review');
@@ -206,5 +269,5 @@
     open({ bookingId: t.getAttribute('data-id') });
   });
 
-  window.STReview = { open: open, button: button, decorate: decorate, promptFromUrl: promptFromUrl };
+  window.STReview = { open: open, button: button, decorate: decorate, promptFromUrl: promptFromUrl, remind: remind };
 })();

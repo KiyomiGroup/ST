@@ -430,6 +430,22 @@ function _initNavMenus() {
 }
 _initNavMenus();
 
+/* The "please rate your tasker" reminder (js/review-prompt.js, STReview.remind). It loads that file on pages that do not
+   already have it, waits a moment so the page settles, and skips the chat page, where the review is asked for in the flow. */
+function _startReviewReminder() {
+  try {
+    if (/messages\.html/.test(window.location.pathname)) return;
+    var go = function () { window.setTimeout(function () { if (window.STReview && window.STReview.remind) window.STReview.remind(); }, 1200); };
+    if (window.STReview) { go(); return; }
+    if (!document.querySelector('link[href$="css/review-prompt.css"]')) {
+      var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'css/review-prompt.css'; document.head.appendChild(l);
+    }
+    if (document.querySelector('script[data-st-review]')) return;
+    var s = document.createElement('script'); s.src = 'js/review-prompt.js'; s.setAttribute('data-st-review', '1'); s.onload = go;
+    document.head.appendChild(s);
+  } catch (_e) { /* never break the page */ }
+}
+
 async function syncNavbarAuthState() {
   const user = await getCurrentUser();
 
@@ -462,6 +478,7 @@ async function syncNavbarAuthState() {
     _applyNavState(true, role, name);
     _syncRoleSwitchItems(user, role).catch(() => {});
     _loadNavIndicators(user, role); /* plan badge, counts, dots — non-blocking */
+    if (role !== 'tasker') _startReviewReminder();   /* customers: remind them to rate a finished job until they rate it or decline */
     /* Load the photo the person uploaded on their profile (users.avatar_url; for a tasker the service photo is the fallback,
        the same order Edit Profile uses). A sign-in provider's picture is not an upload, so it is not used here. */
     try {

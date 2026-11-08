@@ -22,6 +22,9 @@
 .rv-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-3); }
 .rv-btn { min-height: 44px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-card); background: var(--color-bg-muted); color: var(--color-text); font: inherit; font-weight: 700; cursor: pointer; }
 .rv-btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.rv-btn-quiet { background: transparent; color: var(--color-text-secondary); margin-right: auto; }
+.rv-btn-quiet:hover { color: var(--color-text); }
+.rv-btn-quiet[hidden], .rv-remind[hidden] { display: none; }
 .rv-btn-primary { background: var(--color-primary); color: var(--color-text-on-primary); }
 .rv-btn-primary:hover { background: var(--color-primary-hover); }
 .rv-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
