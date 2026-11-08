@@ -16,7 +16,7 @@
 
   var PHONE_RE = /^\+?[0-9][0-9 ()-]{6,19}$/;
   var LIMITS = { publicName: [2, 80], fullName: [2, 120], areas: 300, notes: 500, skills: 20, skill: 60 };
-  var last = null, busy = false, leaving = false, taskerId = null;
+  var last = null, busy = false, leaving = false, taskerId = null, mounted = false;
 
   var MESSAGES = {
     not_found: "This Local Tasker isn't assigned to you any more, or your coordinator account isn't active. Nothing was changed.",
@@ -140,6 +140,7 @@
       show('coEditLayout');
       refresh();
       $('coProxyName').textContent = p.full_name || 'this Local Tasker';
+      if (window.STIntake && !mounted) { mounted = true; window.STIntake.mount($('ikRoot'), taskerId, {}); }
     } catch (e) {
       console.error('[coordinator edit tasker]', e);
       show('coEditLoadError');
@@ -197,6 +198,7 @@
   document.addEventListener('coordinator:ready', function (e) { last = e.detail; load(); });
   document.addEventListener('DOMContentLoaded', function () {
     var form = $('coForm'); if (form) { form.addEventListener('submit', submit); form.addEventListener('input', refresh); }
+    if (window.STIntake) window.STIntake.mountInfo($('ikInfoBtn'));
     var retry = $('coEditRetry'); if (retry) retry.addEventListener('click', function () { if (last) load(); });
   });
 })();
