@@ -252,3 +252,28 @@ body.ad-body {
   .ad-grid--wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 480px) { .ad-grid--wide { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Activity log (stage A6): filters, table that becomes cards on phones, detail rows ── */
+.ad-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.ad-filter { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ad-filter--grow, .ad-check, .ad-filters .ad-actions { grid-column: 1 / -1; }
+.ad-filter-label { font-size: var(--text-sm); font-weight: 600; }
+.ad-check { display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--text-sm); }
+.ad-muted { color: var(--color-text-muted); }
+.ad-btn-small { min-height: var(--admin-touch-min); padding: 0 var(--space-4); }
+.ad-detail { margin-top: var(--space-2); }
+.ad-pre { margin: 0; padding: var(--space-3); border-radius: var(--radius-form); background: var(--color-bg-muted); font-size: var(--text-xs); white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+.ad-pager { justify-content: space-between; margin-top: var(--space-4); }
+@media (min-width: 769px) {
+  .ad-filters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ad-filter--grow { grid-column: span 2; }
+}
+@media (max-width: 768px) {
+  .ad-table--cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ad-table--cards, .ad-table--cards tbody, .ad-table--cards tr, .ad-table--cards td { display: block; width: 100%; }
+  .ad-table--cards tr { border: 1px solid var(--color-border); border-radius: var(--radius-form); padding: var(--space-3); margin-bottom: var(--space-3); }
+  .ad-table--cards td { display: flex; justify-content: space-between; gap: var(--space-3); border-top: 0; padding: var(--space-1) 0; overflow-wrap: anywhere; }
+  .ad-table--cards td::before { content: attr(data-label); color: var(--color-text-secondary); font-weight: 600; flex: 0 0 auto; }
+  .ad-table--cards td[data-label=""]::before { content: none; }
+  .ad-table--cards td[data-label=""] { display: block; }
+}

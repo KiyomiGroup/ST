@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4)
+   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4; Activity log on in A6)
    The one shared script of every admin page. It:
      1. checks the sign-in and asks the database who the admin is (rpc admin_my_access);
      2. shows "No access", "Two-step needed", or an error with Retry, instead of the page, when it should;
@@ -25,6 +25,9 @@
       { key: 'dashboard', label: 'Dashboard',         href: 'dashboard.html', icon: 'chart',  any: null, built: true },
       { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: false }
     ] },
+    { group: 'System', items: [
+      { key: 'audit',     label: 'Activity log',      href: 'audit.html',     icon: 'list',   any: ['audit_logs.view'], built: true }
+    ] },
     { group: 'General', items: [
       { key: 'help',      label: 'Help',              href: 'help.html',      icon: 'help',   any: null, built: true },
       { key: 'profile',   label: 'My profile',        href: 'profile.html',   icon: 'user',   any: null, built: true }
@@ -37,6 +40,7 @@
     check: 'M9 12l2 2 4-4M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',
     help:  'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01',
     user:  'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+    list:  'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
     menu:  'M3 6h18M3 12h18M3 18h18',
     out:   'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9'
   };

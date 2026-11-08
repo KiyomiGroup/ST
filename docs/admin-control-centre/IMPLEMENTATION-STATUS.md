@@ -1,6 +1,6 @@
 # Admin Control Centre: implementation status
 
-Updated 2026-11-08 (stage A4 written). The owner reported the real admin sign-in worked and Overview and My profile open (A3a and A3b confirmed live). Never describe planned work as done. "Not run" means not run.
+Updated 2026-11-08 (stage A6 written; owner reported A3c two-step done). The owner reported the real admin sign-in worked and Overview and My profile open (A3a and A3b confirmed live). Never describe planned work as done. "Not run" means not run.
 
 | Stage | State | Evidence |
 |---|---|---|
@@ -13,7 +13,8 @@ Updated 2026-11-08 (stage A4 written). The owner reported the real admin sign-in
 | **A3b My Profile and admin guard** | **Written; fake-Supabase browser tests only; not deployed** | `admin/profile.html`, `js/auth.js`, `handoffs/A3b.md` |
 | **A3c Help and two-step verification** | **Written; fake-Supabase browser tests only (30 checks); the three `a3c-*.sql` files not run; not deployed** | `admin/help.html`, `admin/js/admin-mfa.js`, `sql/admin/a3c-*.sql`, `handoffs/A3c.md` |
 | **A4 Dashboard (read only)** | **Written; fake-Supabase browser tests only (full, limited role, function missing, denied; 390, 820, 1280px); `a4-dashboard.sql` NOT run anywhere (no Postgres in the build environment); not deployed** | `sql/admin/a4-dashboard.sql`, `a4-rollback.sql`, `admin/dashboard.html`, `admin/js/admin-dashboard.js`, `handoffs/A4.md` |
-| A5 to A28 | Not started | **A5 or A6 is next (owner chooses; plan order lists A6 next).** |
+| **A6 Activity log reader** | **Written; fake-Supabase browser tests only (full, filters, paging, details, empty, function missing, no permission; 390 and 1280px); `a6-activity-feed.sql` NOT run anywhere (no Postgres here); not deployed** | `sql/admin/a6-activity-feed.sql`, `a6-rollback.sql`, `admin/audit.html`, `admin/js/admin-audit.js`, `handoffs/A6.md` |
+| A5, A7 to A28 | Not started | **A13 (Disputes) is next per the plan order** (A5 earlier if the owner asks for staff accounts). |
 | S1 (secret rotation, separate security stage) | Not started, waiting for the owner's decision | `ARCHITECTURE.md` Part C item 6 |
 
 ## What exists in the repo for admin

@@ -18,7 +18,7 @@ AdminShell.init({ page: 'dashboard', title: 'Dashboard', permission: null }).the
   function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
   function fmt(n) { return Number(n).toLocaleString('en-NG'); }
   function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG', { maximumFractionDigits: 2 }); }
-  function label(s) { var t = String(s == null ? 'unknown' : s).replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); }
+  function label(s) { var t = String(s == null ? 'unknown' : s).replace(/[._]/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); }
   function ok(sec) { return sec && sec.available === true; }
 
   /* a card links only to a page that is built; otherwise it is plain (no dead links) */
