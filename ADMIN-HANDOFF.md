@@ -11,17 +11,18 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 4. `docs/admin-control-centre/02-SCREEN-SPECS.md`: every screen, its data, actions, permissions and layout.
 5. `docs/admin-control-centre/03-OWNER-DECISIONS.md`: open decisions with defaults.
 6. The owner's master brief, saved as `docs/admin-control-centre/00-BRIEF.md` (business requirement; the repo wins where they disagree).
-7. The newest file in `docs/admin-control-centre/handoffs/` (now `A3a.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
+7. The newest file in `docs/admin-control-centre/handoffs/` (now `A3c.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-08, after A3b)
+## CURRENT STATE (2026-11-08, after A3c)
+**A3c is written too (Help page, authenticator-app set-up on My profile, code step at sign-in, three SQL files).** Tested in a headless browser against a fake Supabase only (30 checks); the three SQL files were **not run anywhere**. The owner reported (before A3c) that the real sign-in worked and she could see Overview and My profile, so A3a and A3b are now confirmed on the live site. She says a second admin, `kiyomigroups@gmail.com`, was added by another AI (not verified by me), and that `admin@streettasker.com` should be admin-only, not also a customer (`a3c-admin-report.sql` gathers the facts; no change was made).
 A0 done. A1 applied by the owner (bootstrap returned DONE for `admin@streettasker.com`; not tested beyond that). A1b and A2 SQL: the owner sent new files and reported no error, so they are recorded **applied per the owner's no-error convention, not tested** (`handoffs/A2.md` item 18 asked her to run them and report). **A3b is written too (profile page and the `js/auth.js` guard; owner said "go" without reporting the real sign-in, so A3a is recorded deployed per the no-error convention, not tested). A3a is written (2026-11-08): the first admin pages exist** (`admin/login.html`, `admin/index.html`, `css/admin.css`, `admin/js/*`), plus `/admin` security headers and `Disallow: /admin/`. They were tested in a headless browser against a **fake Supabase only**; the real sign-in has not been tried. `_is_support()` is untouched. `js/auth.js` got the admin guard in A3b (redirect only, never a sign-out). Site snapshot of 2026-11-08 01:07 is in `ARCHITECTURE.md` Part D.
 Key facts: admin tables and functions are in `DATABASE-CHANGES.md`. The only admin is `admin@streettasker.com`, also the owner's coordinator login and it has a `public.users` row (she wants it admin-only; the coordinator release is blocked while it looks after Local Taskers); rule R-SELF applies. Only one Super Admin exists, so approvals cannot be decided until a second one is added (D-A10). No reference screens exist: follow `DESIGN-SYSTEM.md` (new 4.17 Admin shell) and the site style.
 **Known, not caused by admin work:** `node tools/check-design-system.js` fails on the repo as uploaded (violations in older files and 6 root pages without the page shell; identical before and after A3a; no admin file is listed). Do not edit the baseline files to hide it; it needs the owner's decision.
 **Security alert (not an admin stage):** `ARCHITECTURE.md` Part C item 6 (exposed service-role key and two secrets). Never copy a secret into a file or message. Rotation is stage S1, only on the owner's go.
 
-## NEXT STAGE: **A3c** (Help page and two-step verification)
-Plan: `00-PLAN.md` A3c row. First read the owner's report on A3a and A3b and fix any failure. Write `admin/help.html` (static: how-to notes, escalation contact, link to these docs; spec S27) and `admin/js/admin-help.js` only if needed; TOTP set-up and challenge with Supabase Auth MFA (enrol, verify, challenge at sign-in) so `admin_settings.require_mfa` can be turned on without locking the owner out; flip `built: true` for Help in `admin/js/admin-shell.js`; update the profile's two-step line. Do not turn `require_mfa` on yourself: give the owner the one SQL statement after she has enrolled.
+## NEXT STAGE: **A4** (Dashboard, read only)
+Plan: `00-PLAN.md` A4 row. First read the owner's report on A3c (see `handoffs/A3c.md` item 15) and fix any failure. Then do A4. The old A3c text follows for reference only (it is done):  Write `admin/help.html` (static: how-to notes, escalation contact, link to these docs; spec S27) and `admin/js/admin-help.js` only if needed; TOTP set-up and challenge with Supabase Auth MFA (enrol, verify, challenge at sign-in) so `admin_settings.require_mfa` can be turned on without locking the owner out; flip `built: true` for Help in `admin/js/admin-shell.js`; update the profile's two-step line. Do not turn `require_mfa` on yourself: give the owner the one SQL statement after she has enrolled.
 
 ## Owner rules (carry into every stage)
 - Uses ONLY the Supabase SQL editor and dashboard function deploys. No console, curl or terminal steps. Leave non-compulsory steps out. Ask only for SQL-editor queries with no placeholders (get any needed value, such as an email address, in chat first and write it into the statement).
@@ -56,5 +57,6 @@ Plan: `00-PLAN.md` A3c row. First read the owner's report on A3a and A3b and fix
 | A1b, A2 | Recorded applied per the owner's no-error convention (2026-11-08); not tested on Supabase. |
 | A3a (frame, sign-in, headers, design 4.17) | Written 2026-11-08; browser-tested against a fake Supabase only; not deployed. |
 | A3b (profile, `js/auth.js` guard) | Written 2026-11-08; fake-Supabase browser tests only; not deployed. |
-| A3c | Not started. Next. |
+| A3c (Help, two-step, `a3c-*.sql`) | Written 2026-11-08; fake-Supabase browser tests only; SQL not run; not deployed. |
+| A4 | Not started. Next. |
 | A4 to A28 | Not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |

@@ -4,6 +4,8 @@
 - **D-A3:** first Super Admin email is **admin@streettasker.com** (one address so far; a second Super Admin is still recommended, see D-A10).
 - **D-A3 (revised 2026-11-08):** `admin@streettasker.com` is already the owner's **coordinator** login. The bootstrap refused it. The owner chose to keep that one login for both the coordinator and the admin area. Recommended alternative (not chosen): a separate admin-only login. Consequence recorded as rule **R-SELF** in `00-PLAN.md`.
 - **D-A3b (2026-11-08):** the owner wants `admin@streettasker.com` to be an admin only, not a coordinator. `a1b-release-coordinator.sql` does this safely; it is blocked while that login still looks after Local Taskers. R-SELF stays until then.
+- **D-A10 (2026-11-08, reported by the owner, not verified):** a second admin, `kiyomigroups@gmail.com`, was added by another AI. Check with `sql/admin/a3c-admin-report.sql`. Approvals need this second person to be an active Super Admin.
+- **D-A3c (2026-11-08):** the owner wants `admin@streettasker.com` to be an admin only, **also not a customer**. Not done yet: `a3c-admin-report.sql` shows what that login owns first. No history is deleted.
 - **D-A4 (default applied 2026-11-08, stage A3a):** admin has its own frame (`DESIGN-SYSTEM.md` 4.17). The design checker needed no change: it only looks for the public shell on root-level pages.
 - **D-A5:** there are **no reference screens**; follow `DESIGN-SYSTEM.md` and the existing website style for consistency.
 - **D-A14 (answered by A0):** the limit exists as per-tier capacity in the database, not as a fixed 10 (`ARCHITECTURE.md` B5).

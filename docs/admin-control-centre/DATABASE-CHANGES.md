@@ -33,3 +33,6 @@ No database change. The pages call only `admin_my_access()` (A1). A1b and A2 are
 
 ## A3b (2026-11-08): My Profile and guard
 No database change. The profile page reads the caller's own `notification_preferences` row; the `js/auth.js` guard calls `admin_my_access()` only for logins with no role.
+
+## A3c (2026-11-08): two-step verification
+No schema change. Files: `sql/admin/a3c-mfa-on.sql` (sets `admin_settings.require_mfa = 'on'` only if every active admin has a verified TOTP factor in `auth.mfa_factors`; otherwise changes nothing), `a3c-mfa-off.sql` (rollback and lock-out recovery: sets it to `'off'`), `a3c-admin-report.sql` (read-only report on `admin@streettasker.com` and `kiyomigroups@gmail.com`). State: written; **not run anywhere**. Guessed: the enum values `totp` and `verified` of `auth.mfa_factors.factor_type` and `.status` (compared as text).

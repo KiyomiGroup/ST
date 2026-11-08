@@ -1,6 +1,7 @@
-/* StreetTasker Admin: My profile (stage A3b). Own data only.
+/* StreetTasker Admin: My profile (stage A3b; two-step set-up added in A3c). Own data only.
    Reads: the session user (name comes from the server's admin answer), the access answer, own notification_preferences row
-   (own-row read policy). Writes: password (Supabase Auth updateUser) and sign-out. No database function is added. */
+   (own-row read policy). Writes: password (Supabase Auth updateUser), sign-out, and the authenticator app (Supabase Auth MFA
+   through admin-mfa.js: set up, list, remove). No database function is added. */
 'use strict';
 AdminShell.init({ page: 'profile', title: 'My profile', permission: null }).then(async function (ctx) {
   function $(id) { return document.getElementById(id); }
@@ -24,7 +25,12 @@ AdminShell.init({ page: 'profile', title: 'My profile', permission: null }).then
   $('pfRoles').textContent = (a.roles || []).map(label).join(', ') || 'No role';
   $('pfPerms').textContent = String((a.permissions || []).length);
   $('pfLast').textContent = when(user && user.last_sign_in_at);
-  $('pfMfa').textContent = a.mfa_required ? (a.mfa_ok ? 'Required, and done for this sign-in' : 'Required, not done') : 'Not required yet (set-up arrives in stage A3c)';
+  var required = !!a.mfa_required;
+  function setMfaLine(count) {
+    var state = count > 0 ? 'Authenticator app set up' : 'No authenticator app set up';
+    $('pfMfa').textContent = state + (required ? '. Required for admin sign-in.' : '. Not required yet.');
+  }
+  setMfaLine(0);
 
   /* Own preferences, read only. No row means the site default (both on). */
   try {
@@ -36,6 +42,74 @@ AdminShell.init({ page: 'profile', title: 'My profile', permission: null }).then
   } catch (e) {
     $('pfPush').textContent = NA; $('pfEmailPref').textContent = NA;
   }
+
+
+  /* ── Two-step: list, set up, remove ── */
+  function mfaMsg(text, info) { var m = $('pfMfaMsg'); m.textContent = text; m.classList.toggle('ad-banner--info', !!info); m.hidden = false; }
+  var pendingFactor = null;
+
+  async function drawFactors() {
+    var list = $('pfFactors');
+    while (list.firstChild) list.removeChild(list.firstChild);
+    var factors = [];
+    try { factors = await AdminMfa.verifiedFactors(); }
+    catch (e) { mfaMsg('Could not read your two-step settings. Try again later.'); $('pfMfaStart').disabled = true; return; }
+    setMfaLine(factors.length);
+    factors.forEach(function (f) {
+      var li = document.createElement('li'); li.className = 'ad-factor';
+      var name = document.createElement('span'); name.className = 'ad-factor-name'; name.textContent = f.friendly_name || 'Authenticator app';
+      var added = document.createElement('span'); added.className = 'ad-hint'; added.textContent = 'Added ' + when(f.created_at);
+      var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'ad-btn-quiet'; rm.textContent = 'Remove';
+      /* the last authenticator cannot be removed while two-step is required: that would lock this login out */
+      if (required && factors.length === 1) { rm.disabled = true; rm.title = 'Two-step is required, so the last authenticator cannot be removed.'; }
+      var armed = false;
+      rm.addEventListener('click', async function () {
+        if (!armed) { armed = true; rm.textContent = 'Tap again to remove'; return; }
+        rm.disabled = true;
+        try { await AdminMfa.remove(f.id); ctx.toast('Authenticator removed'); $('pfMfaMsg').hidden = true; }
+        catch (e) { mfaMsg(AdminMfa.friendly(e)); }
+        await drawFactors();
+      });
+      li.appendChild(name); li.appendChild(added); li.appendChild(rm);
+      list.appendChild(li);
+    });
+    $('pfMfaStart').textContent = factors.length ? 'Add another authenticator app' : 'Set up an authenticator app';
+  }
+
+  function closeEnrol() {
+    pendingFactor = null;
+    $('pfEnrol').hidden = true; $('pfMfaActions').hidden = false;
+    $('pfQr').removeAttribute('src'); $('pfSecret').textContent = ''; $('pfCode').value = '';
+  }
+
+  $('pfMfaStart').addEventListener('click', async function () {
+    $('pfMfaMsg').hidden = true;
+    var btn = $('pfMfaStart'); btn.disabled = true;
+    try {
+      var e = await AdminMfa.startEnrol();
+      pendingFactor = e.factorId;
+      if (e.qr) $('pfQr').src = e.qr; else $('pfQr').removeAttribute('src');
+      $('pfQr').hidden = !e.qr;
+      $('pfSecret').textContent = e.secret;
+      $('pfEnrol').hidden = false; $('pfMfaActions').hidden = true;
+      $('pfCode').focus();
+    } catch (err) { mfaMsg(AdminMfa.friendly(err)); }
+    finally { btn.disabled = false; }
+  });
+  $('pfEnrolCancel').addEventListener('click', closeEnrol);
+  $('pfEnrolForm').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    $('pfMfaMsg').hidden = true;
+    if (!pendingFactor) return;
+    var btn = $('pfEnrolBtn'); btn.disabled = true;
+    var r = await AdminMfa.verify(pendingFactor, $('pfCode').value);
+    btn.disabled = false;
+    if (!r.ok) { mfaMsg(r.message); return; }
+    closeEnrol();
+    ctx.toast('Two-step verification is set up');
+    await drawFactors();
+  });
+  await drawFactors();
 
   $('pfPwForm').addEventListener('submit', async function (ev) {
     ev.preventDefault();

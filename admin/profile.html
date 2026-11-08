@@ -54,6 +54,35 @@
             </dl>
           </section>
 
+          <section class="ad-card" aria-labelledby="pfMfaTitle">
+            <h2 class="ad-card-title" id="pfMfaTitle">Two-step verification</h2>
+            <p class="ad-note">An authenticator app on your phone gives a 6-digit code that changes every 30 seconds. Once two-step is required, a password alone no longer opens the admin area.</p>
+            <div class="ad-banner" id="pfMfaMsg" role="alert" hidden></div>
+            <ul class="ad-factors" id="pfFactors"></ul>
+            <div class="ad-actions" id="pfMfaActions">
+              <button type="button" class="btn btn-primary" id="pfMfaStart">Set up an authenticator app</button>
+            </div>
+            <div class="ad-enrol" id="pfEnrol" hidden>
+              <ol class="ad-steps">
+                <li>Open an authenticator app (Google Authenticator, Microsoft Authenticator, Authy or 1Password).</li>
+                <li>Scan this picture. If you cannot scan, type the set-up key instead.</li>
+              </ol>
+              <img class="ad-qr" id="pfQr" alt="QR code for your authenticator app" />
+              <p class="ad-hint">Set-up key (keep it private):</p>
+              <p class="ad-secret" id="pfSecret"></p>
+              <form class="ad-form" id="pfEnrolForm" novalidate>
+                <div class="ad-field">
+                  <label for="pfCode">Then enter the 6-digit code from the app</label>
+                  <input class="form-input ad-code-input" type="text" id="pfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required />
+                </div>
+                <div class="ad-actions">
+                  <button type="submit" class="btn btn-primary" id="pfEnrolBtn">Verify and turn on</button>
+                  <button type="button" class="ad-btn-quiet" id="pfEnrolCancel">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
           <section class="ad-card" aria-labelledby="pfPwTitle">
             <h2 class="ad-card-title" id="pfPwTitle">Change password</h2>
             <div class="ad-banner" id="pfPwMsg" role="alert" hidden></div>
@@ -98,6 +127,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabaseClient.js"></script>
   <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-mfa.js"></script>
   <script src="/admin/js/admin-profile.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker Admin: admin/js/admin-shell.js (stage A3a)
+   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c)
    The one shared script of every admin page. It:
      1. checks the sign-in and asks the database who the admin is (rpc admin_my_access);
      2. shows "No access", "Two-step needed", or an error with Retry, instead of the page, when it should;
@@ -26,7 +26,7 @@
       { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: false }
     ] },
     { group: 'General', items: [
-      { key: 'help',      label: 'Help',              href: 'help.html',      icon: 'help',   any: null, built: false },
+      { key: 'help',      label: 'Help',              href: 'help.html',      icon: 'help',   any: null, built: true },
       { key: 'profile',   label: 'My profile',        href: 'profile.html',   icon: 'user',   any: null, built: true }
     ] }
   ];
@@ -229,7 +229,7 @@
           return;
         }
         if (access.mfa_required && !access.mfa_ok) {
-          gateCard('Two-step verification needed', 'Admin accounts must finish two-step verification before any admin page opens. Setting it up arrives in a later stage.', [{ label: 'Sign out', onClick: signOut }]);
+          gateCard('Enter your two-step code', 'Admin pages open after you enter the 6-digit code from your authenticator app.', [{ label: 'Enter code', href: loginUrl(true) }, { label: 'Sign out', onClick: signOut }]);
           return;
         }
 

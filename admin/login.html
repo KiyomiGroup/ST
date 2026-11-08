@@ -41,12 +41,25 @@
         </div>
         <button type="submit" class="btn btn-primary" id="adLoginBtn">Sign in</button>
       </form>
+
+      <form id="adCodeForm" novalidate hidden>
+        <p class="ad-note">Open your authenticator app and enter the 6-digit code for StreetTasker Admin.</p>
+        <div class="ad-field">
+          <label for="adCode">6-digit code</label>
+          <input class="form-input ad-code-input" type="text" id="adCode" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required />
+        </div>
+        <div class="ad-actions">
+          <button type="submit" class="btn btn-primary" id="adCodeBtn">Verify and sign in</button>
+          <button type="button" class="ad-btn-quiet" id="adCodeCancel">Use a different account</button>
+        </div>
+      </form>
       <p class="ad-login-foot">Signing in here also signs you in on this device for the rest of the StreetTasker site. Use a login made only for admin work.</p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-mfa.js"></script>
   <script src="/admin/js/admin-login.js"></script>
 </body>
 </html>

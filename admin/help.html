@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Help · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Help</div>
+        <div class="ad-user"><div><div class="ad-user-name" id="adUserName"></div><div class="ad-user-roles" id="adUserRoles"></div></div></div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="adHelp" hidden>
+          <div class="ad-pagehead">
+            <h1>Help</h1>
+            <p>Short notes for StreetTasker admins. Nothing on this page is live data.</p>
+          </div>
+
+          <section class="ad-card" aria-labelledby="hpSignTitle">
+            <h2 class="ad-card-title" id="hpSignTitle">Signing in and two-step verification</h2>
+            <ul class="ad-list">
+              <li>Sign in at <strong>/admin/login.html</strong> with an account that has admin access. Use a login made only for admin work.</li>
+              <li>Set up your authenticator app on <a href="profile.html">My profile</a>. Do this before two-step is switched on for everyone.</li>
+              <li>When two-step is required, you enter the 6-digit code after your password. Codes change every 30 seconds.</li>
+              <li>Never share a code, the set-up key or your password. Nobody at StreetTasker will ask for them.</li>
+              <li>Lost your phone? Tell the owner or another Super Admin straight away. They can reset your two-step from the database.</li>
+              <li>Use <strong>Sign out</strong> on shared computers. It also signs you out of the rest of the StreetTasker site on that device.</li>
+            </ul>
+          </section>
+
+          <section class="ad-card" aria-labelledby="hpSeeTitle">
+            <h2 class="ad-card-title" id="hpSeeTitle">What you can see and do</h2>
+            <ul class="ad-list">
+              <li>The menu only shows pages your role allows. If a page you need is missing, ask a Super Admin to add the permission.</li>
+              <li>Every action is checked on the server again and written to the activity log. Hiding a button is not what keeps data safe.</li>
+              <li>Sensitive changes need a second person to approve them. You cannot approve your own request.</li>
+              <li>Private details such as phone numbers and addresses are hidden until you choose to reveal them, and each reveal is logged.</li>
+            </ul>
+          </section>
+
+          <section class="ad-card" aria-labelledby="hpNeverTitle">
+            <h2 class="ad-card-title" id="hpNeverTitle">What admin never does</h2>
+            <ul class="ad-list">
+              <li>It never moves money, calls the payment provider, or changes a wallet, escrow or payment status. Refund and adjustment screens only record what was decided.</li>
+              <li>It never sets or lowers a Local Tasker's price, and never skips a worker's agreement to a job.</li>
+              <li>It never marks anyone as identity verified. PRO and PREMIUM are membership labels, not identity.</li>
+              <li>It never deletes history. Removing someone keeps their records.</li>
+            </ul>
+          </section>
+
+          <section class="ad-card" aria-labelledby="hpEscTitle">
+            <h2 class="ad-card-title" id="hpEscTitle">When something looks wrong</h2>
+            <ul class="ad-list">
+              <li>Stop and do not retry a money-related action. Tell the owner (the Super Admin) what you saw and what you clicked.</li>
+              <li>A page that says &ldquo;Something went wrong&rdquo; changed nothing. Use <strong>Retry</strong> once, then report it.</li>
+              <li>If you think someone else has your password or code, change your password on <a href="profile.html">My profile</a>, use <strong>Sign out of all devices</strong>, and tell the owner.</li>
+            </ul>
+            <p class="ad-note">The build notes for the admin area (plan, database changes, stage handoffs) are kept in the project files by the owner. They are not part of this website.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-help.js"></script>
+</body>
+</html>

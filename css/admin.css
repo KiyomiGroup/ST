@@ -206,3 +206,16 @@ body.ad-body {
 .ad-form .btn { min-height: var(--admin-touch-min); width: fit-content; }
 .ad-hint { color: var(--color-text-muted); font-size: var(--text-xs); margin: var(--space-1) 0 0; }
 @media (max-width: 480px) { .ad-dl { grid-template-columns: 1fr; gap: var(--space-1); } .ad-dl dd { margin-bottom: var(--space-2); } }
+
+/* ── Two-step verification and Help (stage A3c) ── */
+.ad-factors { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; gap: var(--space-2); }
+.ad-factor { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-form); background: var(--color-bg-subtle); }
+.ad-factor-name { font-weight: 600; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ad-factor .ad-hint { margin: 0; }
+.ad-enrol { margin-top: var(--space-4); }
+.ad-steps { margin: 0 0 var(--space-3); padding-left: var(--space-5); color: var(--color-text-secondary); }
+.ad-qr { display: block; width: 100%; max-width: var(--admin-login-width); height: auto; aspect-ratio: 1; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-form); padding: var(--space-3); }
+.ad-secret { font-weight: 600; letter-spacing: 0.08em; overflow-wrap: anywhere; user-select: all; margin: 0 0 var(--space-4); }
+.ad-code-input { letter-spacing: 0.3em; text-align: center; font-weight: 600; }
+.ad-list { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-2); color: var(--color-text-secondary); }
+.ad-list strong { color: var(--color-text); }
