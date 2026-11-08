@@ -19,11 +19,11 @@
 
   <div id="navbar-placeholder"></div>
 
-  <!-- HERO -->
+  <!-- HERO: built exactly like the homepage hero (.hero-frame) so the small eyebrow line, the big title, the subtext and the buttons sit in the same places on both pages. -->
   <section class="hero">
     <div class="container-home">
-      <div class="lt-banner fade-up">
-        <div class="hero-eyebrow lt-hero-eyebrow"><span class="lt-hero-eyebrow-dot"></span>Local Taskers</div>
+      <div class="hero-frame lt-hero-frame fade-up">
+        <div class="hero-eyebrow">Find a local tasker</div>
 
         <div class="hero-pill-float left hero-floater">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -35,23 +35,22 @@
         </div>
 
         <h1 class="sr-only">Local Taskers — find skilled workers near you</h1>
+        <picture>
+          <source media="(max-width: 640px)" srcset="images/lt-hero-mobile.webp" />
+          <img class="hero-banner-img lt-hero-img" src="images/lt-hero-desktop.webp" alt="" aria-hidden="true" />
+        </picture>
+        <p class="hero-sub">Find the right person for the task you need done.</p>
+
+        <div class="hero-frame-actions">
+          <a href="#meet" class="btn btn-primary btn-lg">Find a Local Tasker</a>
+          <a href="#how-it-works" class="btn btn-white btn-lg">How It Works</a>
+        </div>
 
         <div class="hero-float-card hero-floater">
           <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <div><div class="fc-title">Clean my apartment</div><div class="fc-price">&#8358;25,000</div></div>
         </div>
-
-        <div class="hero-float-badge2 lt-hero-rating hero-floater">
-          Escrow protected
-        </div>
-
-        <div class="lt-hero-caption">
-          <p class="hero-sub">Find the right person for the task you need done.</p>
-          <div class="hero-frame-actions">
-            <a href="#meet" class="btn btn-primary btn-lg">Find a Local Tasker</a>
-            <a href="#how-it-works" class="btn btn-white btn-lg">How It Works</a>
-          </div>
-        </div>
+        <div class="hero-float-badge2 hero-floater"><span class="dot"></span>Escrow protected</div>
       </div>
     </div>
   </section>
@@ -381,7 +380,72 @@
         </li>
         </ol>
       </div>
-      <p class="lt-section-note fade-up d1">Organisations that want to help enrol Local Taskers can write to <a class="lt-benefit-link" href="mailto:partners@streettasker.com">partners@streettasker.com</a>.</p>
+      <p class="lt-section-note fade-up d1">Organisations that want to help enrol Local Taskers can <a class="lt-benefit-link" href="#ngo-partners">read how to partner with us</a> or write to <a class="lt-benefit-link" href="mailto:contact@streettasker.com?subject=Partnership%20enquiry">contact@streettasker.com</a>.</p>
+    </div>
+  </section>
+
+  <!-- FOR NGOs, FOUNDATIONS AND DONORS -->
+  <section class="section" id="ngo-partners">
+    <div class="container-home">
+      <div class="lt-ngo fade-up">
+        <div class="lt-ngo-intro">
+          <div class="lt-ngo-eyebrow">For NGOs, foundations and donors</div>
+          <h2 class="lt-ngo-title">Skill is everywhere. Access is not.</h2>
+          <p class="lt-ngo-lead">Every day, tailors, mechanics, hairdressers and caterers in our communities do excellent work. Many are still shut out of the digital economy, not because of their skill, but because they have no smartphone, no data, no way to prove who they are online and no one to speak for them.</p>
+          <p class="lt-ngo-lead">Local Taskers is how StreetTasker closes that gap, one person at a time. We are looking for partners who want to help us close it faster, so that equal opportunity is something skilled people can use, not just something we talk about.</p>
+          <div class="lt-cta-row lt-cta-row--start">
+            <a href="mailto:contact@streettasker.com?subject=NGO%20partnership%20enquiry" class="btn btn-white btn-lg">Partner with us</a>
+            <a href="mailto:contact@streettasker.com?subject=Donation%20to%20support%20Local%20Taskers" class="btn btn-ghost-light btn-lg">Support Local Taskers</a>
+          </div>
+        </div>
+        <div class="lt-ngo-barriers">
+          <h3 class="lt-ngo-subtitle">The barriers we help remove</h3>
+          <ul class="lt-ngo-list">
+            <li><span class="lt-ngo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span><div><strong>No smartphone or data</strong><p>A local coordinator registers and manages the profile, and speaks to the Local Tasker by phone.</p></div></li>
+            <li><span class="lt-ngo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></span><div><strong>No way to prove who they are</strong><p>Their identity is checked, with the coordinator beside them, before their profile goes live.</p></div></li>
+            <li><span class="lt-ngo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><div><strong>No safe way to be paid</strong><p>Customer payments are held until the job is done, then paid to the Local Tasker&rsquo;s own verified bank account.</p></div></li>
+            <li><span class="lt-ngo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><div><strong>No one to vouch for their work</strong><p>Their services, agreed prices and photos are shown to customers, and a named coordinator is accountable for every action taken on their behalf.</p></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-header center lt-ngo-head fade-up">
+        <h2>How you can help</h2>
+        <p>We are building this with partners. If one of these fits your mission, tell us and we will shape it with you.</p>
+      </div>
+      <div class="trust-grid trust-grid--four fade-up d1">
+        <div class="trust-card trust-card--left">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></div>
+          <h3>Fund onboarding</h3>
+          <p>Help pay for the in-person work of bringing skilled people onto StreetTasker: the meeting, the identity check and the bank account set-up.</p>
+        </div>
+        <div class="trust-card trust-card--left">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <h3>Back coordinators in underserved areas</h3>
+          <p>Support trusted people from the community to reach neighbourhoods and trades that online platforms have not reached.</p>
+        </div>
+        <div class="trust-card trust-card--left">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <h3>Equip Local Taskers</h3>
+          <p>Contribute towards tools, materials and training that let a Local Tasker take on more work, or better-paid work.</p>
+        </div>
+        <div class="trust-card trust-card--left">
+          <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+          <h3>Introduce the people you already serve</h3>
+          <p>Work with artisans, cooperatives or trade associations? Introduce them, or have your field staff <a class="lt-benefit-link lt-inline-link" href="coordinator-apply.html">apply as coordinators</a>.</p>
+        </div>
+      </div>
+
+      <div class="lt-ngo-promise fade-up d2">
+        <h3 class="lt-ngo-subtitle">What partners can rely on</h3>
+        <ul class="lt-checklist lt-checklist--two">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Payouts go straight to each Local Tasker&rsquo;s own verified bank account.</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Nothing is published without the Local Tasker&rsquo;s agreement, and that agreement is recorded.</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>A Local Tasker&rsquo;s phone number and full name are never shown to customers.</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Every action a coordinator takes for a Local Tasker is logged.</li>
+        </ul>
+        <p class="lt-section-note lt-ngo-contact">To talk about a partnership or a donation, write to <a class="lt-benefit-link" href="mailto:contact@streettasker.com?subject=NGO%20partnership%20enquiry">contact@streettasker.com</a>. We will reply with how we could work together.</p>
+      </div>
     </div>
   </section>
 

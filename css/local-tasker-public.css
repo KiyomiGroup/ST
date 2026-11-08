@@ -50,3 +50,33 @@
 @media (max-width: 480px) { .lt-flow-item { grid-template-columns: 32px 1fr; padding: var(--space-4); } .lt-flow-num { width: 32px; height: 32px; } }
 @media (max-width: 768px) { .trust-grid--three { grid-template-columns: 1fr; } }
 .lt-section-note .lt-benefit-link { display: inline; }
+
+/* ---- Hero: reuses the homepage .hero-frame, so only the artwork needs its own rule. ---- */
+/* The artwork is a transparent WebP (its flat green background was removed), so it sits straight on the hero gradient with no visible box. */
+.lt-hero-img { max-width: 1040px; }
+@media (max-width: 640px) { .lt-hero-img { max-width: 100%; } }
+
+/* ---- NGO / donor section (#ngo-partners). Tokens only. ---- */
+.lt-ngo { display: grid; grid-template-columns: 1.1fr 1fr; gap: var(--space-7); align-items: start; background: var(--color-forest-900); color: var(--color-text-on-primary); border-radius: var(--radius-hero); padding: var(--space-8) var(--space-7); }
+.lt-ngo-eyebrow { display: inline-flex; background: var(--color-forest-800); color: var(--color-mint); border: 1px solid var(--color-forest-700); font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px var(--space-4); border-radius: var(--radius-pill); margin-bottom: var(--space-4); }
+.lt-ngo-title { color: var(--color-text-on-primary); font-size: var(--text-h2); line-height: 1.15; margin: 0 0 var(--space-4); }
+.lt-ngo-lead { font-size: var(--text-base); line-height: 1.7; margin: 0 0 var(--space-4); color: var(--color-mint); }
+.lt-ngo .btn-ghost-light { background: transparent; color: var(--color-text-on-primary); border: 1.5px solid var(--color-forest-700); }
+.lt-ngo .btn-ghost-light:hover { background: var(--color-forest-800); }
+.lt-ngo-subtitle { font-size: var(--text-lg); margin: 0 0 var(--space-4); }
+.lt-ngo-barriers .lt-ngo-subtitle { color: var(--color-text-on-primary); }
+.lt-ngo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.lt-ngo-list li { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-3); align-items: start; background: var(--color-forest-800); border: 1px solid var(--color-forest-700); border-radius: var(--radius-card-media); padding: var(--space-4); }
+.lt-ngo-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--color-forest-700); color: var(--color-mint); display: flex; align-items: center; justify-content: center; }
+.lt-ngo-list strong { display: block; color: var(--color-text-on-primary); font-size: var(--text-base); margin-bottom: var(--space-1); }
+.lt-ngo-list p { margin: 0; font-size: var(--text-sm); line-height: 1.6; color: var(--color-mint); }
+.lt-ngo-head { margin-top: var(--space-8); }
+.trust-grid--four { grid-template-columns: repeat(4, 1fr); margin-top: var(--space-6); }
+.lt-inline-link { display: inline; margin-top: 0; }
+.lt-ngo-promise { max-width: 820px; margin: var(--space-7) auto 0; background: var(--color-primary-soft); border: 1px solid var(--color-mint-border); border-radius: var(--radius-card-media); padding: var(--space-5) var(--space-6); }
+.lt-ngo-promise .lt-ngo-subtitle { color: var(--color-text); }
+.lt-checklist--two { grid-template-columns: repeat(2, 1fr); gap: var(--space-3) var(--space-5); margin-bottom: var(--space-4); }
+.lt-ngo-contact { margin-top: 0; text-align: left; max-width: none; }
+@media (max-width: 1024px) { .trust-grid--four { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .lt-ngo { grid-template-columns: 1fr; gap: var(--space-6); padding: var(--space-7) var(--space-5); } }
+@media (max-width: 640px) { .trust-grid--four { grid-template-columns: 1fr; } .lt-checklist--two { grid-template-columns: 1fr; } .lt-ngo-promise { padding: var(--space-5); } }
