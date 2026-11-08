@@ -691,6 +691,10 @@ html.wl-lock { overflow: hidden; }
   .wl-hero-mob .wl-amt, .wl-hero-mob .wl-amt-dec { color: var(--white); }
   .wl-hero-mob .wl-amt { margin-top: 0; flex-wrap: nowrap; font-size: var(--text-lg); letter-spacing: -0.02em; }
   .wl-hero-mob .pg-hero-icon-btn .wl-i { width: 20px; height: 20px; color: var(--color-text); }
+  /* The "how clearing works" note sits on its own line under the buttons, so it no longer squeezes the Withdraw button */
+  .wl-hero-mob .pg-hero-side { flex-wrap: wrap; }
+  .wl-hero-mob .wl-hero-note { order: 3; flex: 0 0 100%; margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--hero-text-muted); }
+  .wl-hero-mob .wl-hero-note a { color: inherit; text-decoration: underline; }
   .wl-bal-mob { display: none; }
 
   /* Section 2: tasker gets the compact card; customer keeps the gift card credits card */

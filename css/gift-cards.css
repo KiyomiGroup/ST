@@ -776,21 +776,24 @@
 .gc-buybar { display: none; }
 
 @media (max-width: 768px) {
-  .gc-cz-input, .gc-cz-custom-input { scroll-margin-bottom: calc(120px + var(--corner-clear)); }   /* keep a focused field clear of the buy bar */
+  .gc-cz-input, .gc-cz-custom-input { scroll-margin-bottom: calc(170px + var(--corner-clear)); }   /* keep a focused field clear of the buy bar */
   .gc-cz-checkout-error--panel:not([hidden]) { display: block; }
 
   /* Room for the bar so it never covers the footer */
-  body.page-gift-cards { padding-bottom: calc(96px + var(--corner-clear)); }
+  body.page-gift-cards { padding-bottom: calc(150px + var(--corner-clear)); }
 
   .gc-buybar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);
     padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--corner-clear));
     border-radius: var(--radius-gc-tile) var(--radius-gc-tile) 0 0;
     background: var(--color-bg); box-shadow: var(--shadow-pt-bar);
   }
   .gc-buybar-total { display: flex; flex-direction: column; min-width: 0; margin: 0; }
-  .gc-buybar-label { font-size: var(--text-xs); font-weight: 500; color: var(--gc-ink-muted); }
+  .gc-buybar-label { font-size: var(--text-xs); font-weight: 500; color: var(--gc-ink-muted); white-space: nowrap; }
+  .gc-buybar-amount { white-space: nowrap; }
+  /* Terms line takes its own row under the total and button, so it never competes with them for width */
+  .gc-buybar-terms { flex: 0 0 100%; margin: 0; text-align: center; font-size: var(--text-xs); line-height: 1.4; color: var(--gc-ink-muted); }
   .gc-buybar-amount {
     font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800;
     line-height: 1.15; letter-spacing: -0.02em; color: var(--gc-ink);
