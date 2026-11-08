@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c)
+   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4)
    The one shared script of every admin page. It:
      1. checks the sign-in and asks the database who the admin is (rpc admin_my_access);
      2. shows "No access", "Two-step needed", or an error with Retry, instead of the page, when it should;
@@ -22,7 +22,7 @@
   var NAV = [
     { group: 'Overview', items: [
       { key: 'index',     label: 'Overview',          href: 'index.html',     icon: 'home',   any: null, built: true },
-      { key: 'dashboard', label: 'Dashboard',         href: 'dashboard.html', icon: 'chart',  any: null, built: false },
+      { key: 'dashboard', label: 'Dashboard',         href: 'dashboard.html', icon: 'chart',  any: null, built: true },
       { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: false }
     ] },
     { group: 'General', items: [

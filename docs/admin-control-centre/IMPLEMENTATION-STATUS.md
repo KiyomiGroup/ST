@@ -1,6 +1,6 @@
 # Admin Control Centre: implementation status
 
-Updated 2026-11-08 (stage A3c written). The owner reported the real admin sign-in worked and Overview and My profile open (A3a and A3b confirmed live). Never describe planned work as done. "Not run" means not run.
+Updated 2026-11-08 (stage A4 written). The owner reported the real admin sign-in worked and Overview and My profile open (A3a and A3b confirmed live). Never describe planned work as done. "Not run" means not run.
 
 | Stage | State | Evidence |
 |---|---|---|
@@ -12,8 +12,8 @@ Updated 2026-11-08 (stage A3c written). The owner reported the real admin sign-i
 | **A3a Admin frame and sign-in** | **Written; pages tested in a headless browser against a fake Supabase (390, 820, 1280px); real sign-in not tried; not deployed** | `admin/`, `css/admin.css`, `handoffs/A3a.md` |
 | **A3b My Profile and admin guard** | **Written; fake-Supabase browser tests only; not deployed** | `admin/profile.html`, `js/auth.js`, `handoffs/A3b.md` |
 | **A3c Help and two-step verification** | **Written; fake-Supabase browser tests only (30 checks); the three `a3c-*.sql` files not run; not deployed** | `admin/help.html`, `admin/js/admin-mfa.js`, `sql/admin/a3c-*.sql`, `handoffs/A3c.md` |
-| A4 | Not started | **A4 is next.** |
-| A4 to A28 | Not started | |
+| **A4 Dashboard (read only)** | **Written; fake-Supabase browser tests only (full, limited role, function missing, denied; 390, 820, 1280px); `a4-dashboard.sql` NOT run anywhere (no Postgres in the build environment); not deployed** | `sql/admin/a4-dashboard.sql`, `a4-rollback.sql`, `admin/dashboard.html`, `admin/js/admin-dashboard.js`, `handoffs/A4.md` |
+| A5 to A28 | Not started | **A5 or A6 is next (owner chooses; plan order lists A6 next).** |
 | S1 (secret rotation, separate security stage) | Not started, waiting for the owner's decision | `ARCHITECTURE.md` Part C item 6 |
 
 ## What exists in the repo for admin
