@@ -149,7 +149,7 @@
 
     busy = true;
     var btn = $('coFSubmit'); var label = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Creating…';
+    btn.disabled = true; btn.textContent = 'Saving…';
     try {
       var res = await window.supabase.functions.invoke('local-tasker-create', {
         body: {
@@ -174,8 +174,7 @@
         return;
       }
       dropRequestId();
-      leaving = true;
-      window.location.href = 'coordinator-tasker.html?id=' + encodeURIComponent(d.tasker_user_id) + '&created=' + (d.created ? '1' : '0');
+      afterSave(d.tasker_user_id, d.created, v);
       return;
     } catch (err) {
       console.error('[coordinator add tasker]', err);
@@ -184,6 +183,37 @@
       busy = false;
       if (!leaving && !atCap) { btn.disabled = false; btn.textContent = label; }
     }
+  }
+
+
+  /* ── After the profile exists: stay on this page and open the rest of the intake ── */
+  function showSaved(id, name, created, method) {
+    leaving = true;                                   /* keep the create button off: this person now exists */
+    $('coForm').hidden = true; $('ikIntro').hidden = true; $('coFormCap').hidden = true; $('coFormCheckError').hidden = true;
+    $('coHeroTitle').textContent = name ? name : 'Local Tasker';
+    $('ikSavedText').textContent = created === false
+      ? 'This Local Tasker was already created by an earlier attempt, so nothing new was added. Complete the sections below while you are with them.'
+      : 'Their profile and agreement are recorded. They are a draft: nothing is shown to customers until you publish. Now complete the sections below while you are with them.';
+    $('ikEditLink').href = 'coordinator-tasker-edit.html?id=' + encodeURIComponent(id);
+    $('ikDoneLink').href = 'coordinator-tasker.html?id=' + encodeURIComponent(id) + '&created=' + (created === false ? '0' : '1');
+    $('ikSaved').hidden = false; $('ikRoot').hidden = false; $('ikFinish').hidden = false;
+    window.STIntake.mount($('ikRoot'), id, { method: method || '' });
+  }
+  function afterSave(id, created, v) {
+    try { window.history.replaceState(null, '', 'coordinator-tasker-new.html?id=' + encodeURIComponent(id)); } catch (e) { /* address bar left as it is */ }
+    showSaved(id, v.publicName, created, v.method);
+    var root = $('ikRoot'); if (root && root.scrollIntoView) root.scrollIntoView({ block: 'start' });
+  }
+  /* Reopening this page with ?id= (a refresh, or coming back to finish) continues the same person. */
+  async function resume(id) {
+    try {
+      var res = await window.supabase.from('local_tasker_profiles').select('tasker_user_id, full_name, status').eq('tasker_user_id', id).maybeSingle();
+      if (res.error || !res.data) return false;
+      var pub = '';
+      try { var u = await window.supabase.from('users').select('name').eq('id', id).maybeSingle(); if (!u.error && u.data && u.data.name) pub = u.data.name; } catch (e) { pub = ''; }
+      showSaved(id, pub || res.data.full_name, undefined, '');
+      return true;
+    } catch (e) { console.error('[coordinator add tasker resume]', e); return false; }
   }
 
   /* ── Places left (display only: the database trigger is the authority) ── */
@@ -205,9 +235,15 @@
     }
   }
 
-  document.addEventListener('coordinator:ready', function (e) { last = e.detail; requestId(); checkCap(last); });
+  document.addEventListener('coordinator:ready', async function (e) {
+    last = e.detail;
+    var qid = new URLSearchParams(window.location.search).get('id');
+    if (C.isUuid(qid) && await resume(qid)) return;
+    requestId(); checkCap(last);
+  });
   document.addEventListener('DOMContentLoaded', function () {
     var form = $('coForm');
     if (form) form.addEventListener('submit', submit);
+    if (window.STIntake) window.STIntake.mountInfo($('ikInfoBtn'));
   });
 })();

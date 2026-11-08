@@ -1,0 +1,26 @@
+/* Local Tasker intake (js/coordinator-intake.js): sub-forms inside the section cards and the "what to collect / explain" pop-up. Tokens only. */
+.ik-subform { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--color-border); max-width: none; }
+.ik-subform[hidden] { display: none; }
+.ik-subtitle { font-size: var(--text-base); font-weight: 700; margin: 0 0 var(--space-4); }
+.ik-gap { margin-top: var(--space-4); }
+.ik-progress .co-check-text { text-decoration: none; }
+.ik-saved-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+.ik-intro-note { margin: 0 0 var(--space-4); }
+.ik-info-btn { display: inline-flex; align-items: center; gap: var(--space-2); }
+.ik-info-btn svg { flex-shrink: 0; }
+#ikRoot { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-4); scroll-margin-top: var(--space-9); }
+#ikRoot[hidden], #ikSaved[hidden], #ikFinish[hidden] { display: none; }
+.co-card[id^="ik-"] { scroll-margin-top: var(--space-9); }
+
+.ik-dialog { width: calc(100% - var(--space-6)); max-width: 720px; max-height: 86vh; padding: 0; border: none; border-radius: var(--radius-co-card); background: var(--color-bg); color: var(--color-text); box-shadow: var(--shadow-co-card); overflow: auto; }
+.ik-dialog::backdrop { background: var(--color-text); opacity: 0.55; }
+.ik-dialog-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+.ik-dialog-head h2 { font-size: var(--text-lg); margin: 0; }
+.ik-info-body { padding: var(--space-4) var(--space-5) var(--space-6); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); }
+.ik-info-body h3 { font-size: var(--text-base); color: var(--color-text); margin: var(--space-5) 0 var(--space-2); }
+.ik-info-body h3:first-child { margin-top: 0; }
+.ik-info-body ul, .ik-info-body ol { padding-left: var(--space-5); margin: 0 0 var(--space-3); }
+.ik-info-body ul { list-style: disc; }
+.ik-info-body ol { list-style: decimal; }
+.ik-info-body li { margin-bottom: var(--space-2); }
+.ik-info-body strong { color: var(--color-text); }
