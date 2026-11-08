@@ -395,7 +395,7 @@
           <p class="lt-ngo-lead">Local Taskers is how StreetTasker closes that gap, one person at a time. We are looking for partners who want to help us close it faster, so that equal opportunity is something skilled people can use, not just something we talk about.</p>
           <div class="lt-cta-row lt-cta-row--start">
             <a href="mailto:contact@streettasker.com?subject=NGO%20partnership%20enquiry" class="btn btn-white btn-lg">Partner with us</a>
-            <a href="mailto:contact@streettasker.com?subject=Donation%20to%20support%20Local%20Taskers" class="btn btn-ghost-light btn-lg">Support Local Taskers</a>
+            <a href="#donate" class="btn btn-ghost-light btn-lg">Support Local Taskers</a>
           </div>
         </div>
         <div class="lt-ngo-barriers">
@@ -444,7 +444,25 @@
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>A Local Tasker&rsquo;s phone number and full name are never shown to customers.</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Every action a coordinator takes for a Local Tasker is logged.</li>
         </ul>
-        <p class="lt-section-note lt-ngo-contact">To talk about a partnership or a donation, write to <a class="lt-benefit-link" href="mailto:contact@streettasker.com?subject=NGO%20partnership%20enquiry">contact@streettasker.com</a>. We will reply with how we could work together.</p>
+        <p class="lt-section-note lt-ngo-contact">To talk about a partnership, write to <a class="lt-benefit-link" href="mailto:contact@streettasker.com?subject=NGO%20partnership%20enquiry">contact@streettasker.com</a>. We will reply with how we could work together.</p>
+      </div>
+
+      <div class="lt-donate fade-up d2" id="donate">
+        <h3 class="lt-ngo-subtitle">Support Local Taskers with a donation</h3>
+        <p class="lt-donate-lead">Give by bank transfer to the account below. Then email us your payment reference so we can confirm receipt and acknowledge your gift.</p>
+        <dl class="lt-donate-details">
+          <div><dt>Bank</dt><dd>Moniepoint</dd></div>
+          <div><dt>Account number</dt><dd class="lt-donate-num" id="lt-acct">7088448530</dd></div>
+          <div><dt>Account name</dt><dd>Street Taskers Ventures</dd></div>
+        </dl>
+        <!-- To add card payment: paste the Paystack payment page link into href below and remove the comment markers.
+        <a href="PASTE-PAYSTACK-LINK-HERE" class="btn btn-primary btn-lg" target="_blank" rel="noopener">Give by card with Paystack</a>
+        -->
+        <div class="lt-cta-row lt-cta-row--start">
+          <button type="button" class="btn btn-primary btn-lg" id="lt-copy-acct">Copy account number</button>
+          <a href="mailto:contact@streettasker.com?subject=Donation%20payment%20reference&body=Name%20(or%20organisation)%3A%0AAmount%3A%0ADate%20of%20transfer%3A%0APayment%20reference%20or%20sender%20account%20name%3A%0AWould%20you%20like%20a%20receipt%3F%20" class="btn btn-ghost btn-lg">Email your payment details</a>
+        </div>
+        <p class="lt-section-note lt-donate-note" id="lt-copy-status" role="status" aria-live="polite">Please check the account name shows as Street Taskers Ventures in your banking app before you confirm the transfer.</p>
       </div>
     </div>
   </section>
@@ -504,5 +522,12 @@
     /* Meet Local Taskers: real published people fill this grid (shared code in js/local-tasker-public.js). */
     if (window.STLocal) STLocal.mountGrid({ grid: document.getElementById('ltGrid'), chips: document.getElementById('ltCrafts'), note: document.getElementById('ltNote') });
   </script>
+<script>
+(function(){var b=document.getElementById('lt-copy-acct'),n=document.getElementById('lt-acct'),st=document.getElementById('lt-copy-status');
+if(!b||!n)return;b.addEventListener('click',function(){var t=n.textContent.trim();
+function ok(){st.textContent='Account number copied: '+t;}
+function fail(){st.textContent='Could not copy automatically. The account number is '+t+'.';}
+try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fail);}else{fail();}}catch(e){fail();}});})();
+</script>
 </body>
 </html>
