@@ -32,13 +32,13 @@
   }
 
   async function photoUrl(id) {
-    /* the profile picture first; if there is none yet, the cover portfolio photo; otherwise the template's own placeholder */
+    /* the cover photo first; if there is none, the profile picture, then any other photo; otherwise the template's own placeholder */
     var res = await window.supabase.from('local_tasker_photos').select('storage_path, kind, is_cover, created_at')
       .eq('tasker_user_id', id).is('removed_at', null);
     if (res.error) throw res.error;
     var rows = res.data || [];
-    var pick = rows.filter(function (r) { return r.kind === 'avatar'; })[0]
-      || rows.filter(function (r) { return r.is_cover; })[0] || rows[0];
+    var pick = rows.filter(function (r) { return r.is_cover && r.kind !== 'avatar'; })[0]
+      || rows.filter(function (r) { return r.kind === 'avatar'; })[0] || rows[0];
     if (!pick) return '';
     var s = await window.supabase.storage.from(BUCKET).createSignedUrl(pick.storage_path, 3600);
     if (s.error || !s.data || !s.data.signedUrl) return '';
