@@ -20,6 +20,8 @@
   var last = null, busy = false, leaving = false;
   var taskerId = null, serviceId = null;
   var needConsent = true, consentKnown = true;
+  var IMG_BUCKET = 'service-images', IMG_MAX = 5 * 1024 * 1024, IMG_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  var currentPhoto = '';
 
   var MESSAGES = {
     not_found: "This Local Tasker isn't assigned to you any more, or your coordinator account isn't active. Nothing was changed.",
@@ -116,7 +118,7 @@
 
       if (serviceId) {
         var sv = await window.supabase.from('services')
-          .select('id, service_name, category, price, rate_unit, description, location, specialties, availability_status, available')
+          .select('id, service_name, category, price, rate_unit, description, location, specialties, availability_status, available, photo')
           .eq('id', serviceId).eq('user_id', taskerId).maybeSingle();
         if (sv.error) throw sv.error;
         if (!sv.data) { show('coEditMissing'); return; }
@@ -137,6 +139,11 @@
         $('coFSpec').value = Array.isArray(s.specialties) ? s.specialties.join(', ') : '';
         $('coFAvail').value = s.availability_status || 'available_this_week';
         $('coFActive').checked = s.available !== false;
+        currentPhoto = s.photo || '';
+        if (currentPhoto) {
+          $('coFImageCurrent').textContent = 'This service has an image now. Choose a new file to replace it.'; $('coFImageCurrent').hidden = false;
+          $('coFImageRemoveRow').hidden = false;
+        }
       }
 
       /* Has the publish_info agreement been recorded already? If this cannot be read, show the
@@ -171,6 +178,9 @@
     clearError();
     var v = read();
     var firstBad = validate(v);
+    var imgFile = $('coFImage').files && $('coFImage').files[0];
+    if (imgFile && (!IMG_TYPES[imgFile.type] || imgFile.size > IMG_MAX)) { fieldError('coFImage', 'Use a JPG, PNG or WebP picture of 5 MB or less.'); if (!firstBad) firstBad = 'coFImage'; }
+    else fieldError('coFImage', '');
     if (firstBad) { var f = $(firstBad); if (f) f.focus(); return; }
 
     busy = true;
@@ -196,9 +206,31 @@
       if (res.error) { var fail = failureFrom(res.error); showError(fail.code, fail.message, fail.raw); return; }
       var d = res.data;
       if (!d || !C.isUuid(d.service_id) || !Array.isArray(d.changed)) { showError('bad_response'); return; }
+      /* The service is saved. Now the optional image: its own step, so a failed upload never loses the service. */
+      var imgNote = '';
+      var wantRemove = $('coFImageRemove').checked && !imgFile;
+      if (imgFile || wantRemove) {
+        try {
+          var url = null;
+          if (imgFile) {
+            var sess = await window.supabase.auth.getSession();
+            var me = sess.data.session && sess.data.session.user;
+            if (!me) throw new Error('no session');
+            var path = 'services/' + me.id + '-' + Date.now() + '.' + IMG_TYPES[imgFile.type];
+            var up = await window.supabase.storage.from(IMG_BUCKET).upload(path, imgFile, { cacheControl: '3600', upsert: true, contentType: imgFile.type });
+            if (up.error) throw up.error;
+            url = window.supabase.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl;
+          }
+          var ph = await window.supabase.rpc('set_local_tasker_service_photo', { p_tasker: taskerId, p_service_id: d.service_id, p_photo: url });
+          if (ph.error) throw ph.error;
+        } catch (imgErr) {
+          console.error('[coordinator service image]', imgErr);
+          imgNote = '&image_failed=1';
+        }
+      }
       leaving = true;
       var outcome = d.created ? 'created' : (d.changed.length ? 'updated' : 'none');
-      window.location.href = profileUrl('&service_saved=' + outcome);
+      window.location.href = profileUrl('&service_saved=' + outcome + imgNote);
     } catch (err) {
       console.error('[coordinator service save]', err);
       showError('network');

@@ -132,7 +132,7 @@ async function fetchTasks({ limit = 50, category = '' } = {}) {
      add a foreign key on customer_id (or user_id) referencing users.id,
      then this function can go back to the single embedded query. */
   let q = window.supabase.from('tasks').select('*')
-    .eq('status', 'open').order('created_at', { ascending: false }).limit(limit);
+    .in('status', ['open', 'in_progress']).order('created_at', { ascending: false }).limit(limit);   /* B5: a booked task stays listed until it is closed */
   if (category) q = q.eq('category', category);
   const { data, error } = await q;
   if (error) throw error;

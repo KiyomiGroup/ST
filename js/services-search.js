@@ -89,6 +89,7 @@ async function svcLoad() {
 
   SVC_ALL = rows.map(r => {
     const svc = svcNormalize(r, userMap[r.user_id]);
+    svc.ownPhoto = r.photo || null;   /* B5: the service's own image, kept apart from the avatar fallback below */
     if (!svc.photo && userMap[r.user_id] && userMap[r.user_id].avatar_url) svc.photo = userMap[r.user_id].avatar_url;
     return svc;
   });
@@ -99,7 +100,7 @@ async function svcLoad() {
       await STLocal.load(SVC_ALL.map(x => x.user_id));
       SVC_ALL.forEach(x => {
         if (!STLocal.isLocal(x.user_id)) return;
-        x.isLocal = true; x.photo = STLocal.coverUrl(x.user_id); x.rating = 0; x.reviews_count = 0;
+        x.isLocal = true; x.photo = x.ownPhoto || (typeof stTaskPhUrl === 'function' ? stTaskPhUrl(x.category, x.id) : null); x.rating = 0; x.reviews_count = 0;
       });
     }
   } catch (e) { /* label is optional */ }

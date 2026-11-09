@@ -368,9 +368,10 @@ function stTaskCard(t) {
   const chipTxt = urg === 'immediate' ? 'Urgent' : (urg === 'scheduled' ? 'Scheduled' : 'Flexible');
   /* t.compact: the caller does not know the urgency or category (home pages), so nothing is invented: no "Flexible", no "Other".
      No posted date anywhere on the card, and none inside the Urgent tag. */
-  const urgChip = t.compact && urg !== 'immediate'
+  const urgChip = (t.compact && urg !== 'immediate'
     ? ''
-    : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}</span>`;
+    : `<span class="st-chip ${chipCls}">${urg === 'immediate' ? ST_ICON.clock : ''}${chipTxt}</span>`)
+    + (t.status === 'in_progress' ? '<span class="st-chip st-chip--soon">Booked</span>' : '');   /* B5 */
   const cat   = t.category || 'other';
   const catChip = t.compact && !t.category ? '' : `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(cat) : stLabel(cat))}</span>`;
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
@@ -527,7 +528,8 @@ function stTaskCardHome(t) {
   const e = window.escapeHtml || (x => String(x));
   const urgent = (t.urgency || '') === 'immediate';
   /* No posted date inside the Urgent tag (or anywhere on the home card). */
-  const urgChip = urgent ? `<span class="st-chip st-chip--urgent">${ST_ICON.urgent}Urgent</span>` : '';
+  const urgChip = (urgent ? `<span class="st-chip st-chip--urgent">${ST_ICON.urgent}Urgent</span>` : '')
+    + (t.status === 'in_progress' ? '<span class="st-chip st-chip--soon">Booked</span>' : '');   /* B5 */
   const catChip = t.category ? `<span class="st-chip st-chip--category">${e(window.STCat ? window.STCat.label(t.category) : stLabel(t.category))}</span>` : '';
   const cat = t.category || 'other';
   const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];

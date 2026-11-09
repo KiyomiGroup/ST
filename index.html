@@ -616,7 +616,7 @@
       try {
         const live = await window.ST.db.fetchServices({ limit: 6 });
         allServices = live || [];
-        if (window.STLocal) await STLocal.decorate(allServices, ['user_id'], ['photo']);   /* Local Taskers show their cover photo */
+        if (window.STLocal) await STLocal.decorate(allServices, ['user_id'], ['photo'], { service: true });   /* Local Taskers show their cover photo */
         renderServices(allServices);
       } catch(e) {
         console.warn('[ST] loadServicesSection error:', e);
@@ -747,7 +747,7 @@
         if (!taskers.length) {
           try {
             const svcList = await window.ST.db.fetchServices({ limit: 6 });
-            if (window.STLocal) await STLocal.decorate(svcList, ['user_id'], ['photo']);
+            if (window.STLocal) await STLocal.decorate(svcList, ['user_id'], ['photo'], { service: true });
             if (svcList.length) {
               el.innerHTML = svcList.map(s => {
                 const uid = s.user_id ? String(s.user_id) : '';

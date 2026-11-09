@@ -50,7 +50,7 @@
 
   /* Give published Local Taskers their cover photo on any list of cards. rows: objects; idKeys: fields that hold the person's user id (first one
      present is used); photoKeys: fields to fill with the signed cover link. Rows that are not published Local Taskers are left alone. Never throws. */
-  async function decorate(rows, idKeys, photoKeys) {
+  async function decorate(rows, idKeys, photoKeys, opts) {
     try {
       var list = rows || [];
       function idOf(r) { for (var i = 0; i < idKeys.length; i++) { if (r && r[idKeys[i]]) return String(r[idKeys[i]]); } return ''; }
@@ -59,6 +59,10 @@
         var id = idOf(r);
         if (!id || !info[id]) return;
         r.isLocal = true;
+        if (opts && opts.service) {   /* B5: a service card shows the service's own image, else the category placeholder (never the cover photo) */
+          if (!r.photo && typeof window.stTaskPhUrl === 'function') r.photo = window.stTaskPhUrl(r.category, r.id || r.service_id);
+          return;
+        }
         var url = info[id].coverUrl;
         if (url) photoKeys.forEach(function (k) { r[k] = url; });
       });

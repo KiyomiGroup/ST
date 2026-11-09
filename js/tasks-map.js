@@ -68,7 +68,7 @@
 
   /* "Search this area": open tasks with a saved point inside the view. Filtered with the page's own filters. Pins only (not in the list view). */
   async function fetchArea(b) {
-    var r = await window.supabase.from('tasks').select('*').eq('status', 'open')
+    var r = await window.supabase.from('tasks').select('*').in('status', ['open', 'in_progress'])
       .gte('map_lat', b.south).lte('map_lat', b.north).gte('map_lon', b.west).lte('map_lon', b.east)
       .order('created_at', { ascending: false }).limit(150);
     if (r.error) return [];                          /* the map_lat columns are not there yet: nothing extra, the loaded pins still work */

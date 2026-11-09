@@ -954,7 +954,7 @@
       });
       try {
         const raw = await window.ST.db.fetchServices({ limit: 100 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });
         if (!_cuLive(host, tok)) return;
         raw.map((r, i) => ({ r, i, score: _locScoreText(r.location) }))
           .sort((a, b) => (b.score - a.score) || (a.i - b.i))
@@ -1003,7 +1003,7 @@
       host.appendChild(row);
       try {
         const raw = await window.ST.db.fetchServices({ limit: 48 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);   /* Local Taskers show their cover photo */
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });   /* Local Taskers show their cover photo */
         if (!_cuLive(host, tok)) return;
         const list = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
           .sort((a, b) => (b.score - a.score) || (a.i - b.i)).slice(0, CU.limit).map(x => x.p);
@@ -1247,7 +1247,7 @@
       host.appendChild(row);
       try {
         const raw = await window.ST.db.fetchServices({ limit: 48 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });
         const list = raw.map(_normProvider).filter(p => p.uid !== _userId).slice(0, TK.limit);
         row.stSetItems(list.map(p => STCompact.serviceCard({
           service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
@@ -1496,7 +1496,7 @@
       let list = [];
       try {
         const raw = await window.ST.db.fetchServices({ limit: 40 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo']);
+        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });
         list = await _enrichProviders((raw || []).map(_normProvider));
       } catch (e) { list = []; }
       const seen = new Set();

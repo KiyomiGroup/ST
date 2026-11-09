@@ -838,7 +838,7 @@
     if (!state.isTasker) {
       return showError('Switch to a tasker account', 'Offers are made by taskers. Switch to your tasker account to apply for this task.', back, 'Back to Task Details');
     }
-    if (taskGroup(t.status) !== 'open') {
+    if (taskGroup(t.status) !== 'open' && taskGroup(t.status) !== 'progress') {   /* B5: a booked task still takes offers */
       return showError('No longer taking offers', 'This task is no longer open, so new offers cannot be sent.', back, 'Back to Task Details');
     }
 

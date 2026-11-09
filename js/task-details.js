@@ -162,7 +162,8 @@
   function renderHead(t) {
     var group = taskGroup(t.status), badges = [];
     if (group === 'open') badges.push('<span class="td-badge td-badge--open"><span class="td-dot"></span>Open for Offers</span>');
-    else badges.push('<span class="td-badge td-badge--closed">' + esc(group === 'progress' ? 'In Progress' : label(group)) + '</span>');
+    else if (group === 'progress') badges.push('<span class="td-badge td-badge--closed">Booked</span>');   /* B5: still takes offers */
+    else badges.push('<span class="td-badge td-badge--closed">' + esc(label(group)) + '</span>');
     var urgency = String(t.urgency || '').toLowerCase();
     if (urgency === 'immediate' || t.urgent === true) badges.push('<span class="td-badge td-badge--urgent">Urgent Need</span>');
     else if (urgency === 'scheduled') badges.push('<span class="td-badge td-badge--soft">Scheduled</span>');
@@ -342,7 +343,7 @@
 
   /* Who sees which button */
   function renderActions() {
-    var t = state.task, open = taskGroup(t.status) === 'open', applied = !!state.myApplication;
+    var t = state.task, booked = taskGroup(t.status) === 'progress', open = taskGroup(t.status) === 'open' || booked, applied = !!state.myApplication;   /* B5: a booked task still takes offers */
     var budget = money(t.budget);
     setText('tdPrice', budget || 'No budget');
     var offerBtn = $('tdOfferBtn'), msgBtn = $('tdMessageBtn'), manage = $('tdManageBtn'), post = $('tdPostBtn'), note = $('tdCtaNote');
@@ -379,6 +380,7 @@
       return;
     }
     setOffer('Make an Offer', budget ? 'Apply for ' + budget : 'Make an Offer', false);
+    if (booked) { note.hidden = false; note.textContent = 'The customer has already booked someone for this task. You can still send an offer in case it does not work out.'; }
   }
 
   /* ── actions ─────────────────────────────────────────────── */

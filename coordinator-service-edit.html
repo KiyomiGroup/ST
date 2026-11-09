@@ -124,6 +124,17 @@
                 <p class="co-field-error" id="coFUnitErr" hidden></p>
               </div>
               <div class="form-group">
+                <label class="form-label" for="coFImage">Service image (optional)</label>
+                <input class="form-input" type="file" id="coFImage" accept="image/jpeg,image/png,image/webp" aria-describedby="coFImageHelp coFImageErr" />
+                <p class="form-helper" id="coFImageHelp">Shown on this service's card. A photo of the work or the shop, JPG, PNG or WebP, up to 5 MB. If you add none, a picture for the category is used.</p>
+                <p class="form-helper" id="coFImageCurrent" hidden></p>
+                <label class="co-check" for="coFImageRemove" id="coFImageRemoveRow" hidden>
+                  <input type="checkbox" id="coFImageRemove" />
+                  <span>Remove the current image (the category picture is used instead).</span>
+                </label>
+                <p class="co-field-error" id="coFImageErr" hidden></p>
+              </div>
+              <div class="form-group">
                 <label class="form-label" for="coFAvail">Availability</label>
                 <select class="form-select" id="coFAvail">
                   <option value="available_now">Available now</option>

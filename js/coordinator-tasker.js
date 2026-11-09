@@ -63,7 +63,7 @@
     var box = $('coCreatedBanner'), text = $('coCreatedText');
     var T = { created: 'Service added. It stays hidden from customers until you publish.', updated: 'Service saved.', none: 'Nothing was changed, so nothing was saved.' };
     if (!box || !text || !T[q]) return;
-    text.textContent = T[q]; box.hidden = false;
+    text.textContent = T[q] + (new URLSearchParams(window.location.search).get('image_failed') === '1' ? ' The service image could not be added. Open the service and try the image again.' : ''); box.hidden = false;
   }
 
   var UNIT = { '/job': 'job', '/hour': 'hour', '/day': 'day', '/visit': 'visit', '/session': 'session' };

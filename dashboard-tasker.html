@@ -1093,7 +1093,7 @@ function openMessagesPanel() {
       var el = document.getElementById('findTasksList');
       try {
         var ftRes = await window.supabase.from('tasks').select('*')
-          .eq('status', 'open').order('created_at', { ascending: false }).limit(20);
+          .in('status', ['open', 'in_progress']).order('created_at', { ascending: false }).limit(20);
         var tasks = ftRes.data || [];
         if (!tasks.length) { el.innerHTML = empty('No open tasks right now. Check back soon.', null, null); return; }
         el.innerHTML = tasks.map(function(t) {
