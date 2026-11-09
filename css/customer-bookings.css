@@ -54,6 +54,13 @@
 .bk-q-panel .bk-textarea { background: var(--color-bg); min-height: 88px; }
 .bk-q-label { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; }
 .bk-q-help { margin: 0; font-size: var(--text-xs); color: var(--pt-ink-muted); }
+/* B2a: the optional service price field in the decline panel (same look as the reason box) */
+.bk-q-money {
+  width: 100%; height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
+  background: var(--color-bg); color: var(--pt-ink); font-family: var(--font-body); font-size: var(--text-sm);
+}
+.bk-q-money::placeholder { color: var(--pt-ink-muted); }
+.bk-q-money:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
 .bk-q-state { display: inline-block; margin-left: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--pt-field-strong); color: var(--pt-ink-muted); font-size: var(--text-xs); font-weight: 700; }
 .bk-q-state.is-paid { background: var(--pt-mint); color: var(--pt-green); }
 .bk-q-state.is-pending, .bk-q-state.is-failed, .bk-q-state.is-processing { background: var(--color-warning-soft); color: var(--color-warning); }
@@ -64,7 +71,7 @@
   .bk-pay-opt { flex-direction: column; align-items: stretch; }
   .bk-pay-opt .bk-btn { width: 100%; height: 44px; }
   .bk-code-show { font-size: var(--text-xl); }
-  .bk-textarea { font-size: var(--text-base); } /* 16px stops iOS zooming into the field */
+  .bk-textarea, .bk-q-money { font-size: var(--text-base); } /* 16px stops iOS zooming into the field */
   .bk-q { padding: var(--space-3); }
   .bk-q .bk-actions .bk-btn { flex: 1 1 auto; height: 44px; }
 }

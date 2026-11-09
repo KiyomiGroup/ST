@@ -82,8 +82,11 @@
       return;
     }
     if (canBuild) {
+      var ask = cur && cur.decision && Number(cur.decision.counter_amount) > 0 ? Number(cur.decision.counter_amount) : 0;   // B2a: the price the customer proposed
       $('coQtLead').textContent = st === 'quote_declined'
-        ? 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.' +
+        ? (ask
+            ? 'The customer declined and asks for a service price of ' + B.naira(ask) + ' (the quote had ' + B.naira(cur.service_fee) + '). The service fee is the Local Tasker’s own price, so phone them with this price and go back to the Local Tasker to record their new answer. Transport and materials can still be revised below.'
+            : 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.') +
           (cur && cur.decision && cur.decision.reason ? ' Their reason: “' + cur.decision.reason + '”.' : '')
         : 'Check the figures below, then send the quote. The service fee is the Local Tasker’s own price.';
       if (!requestId) requestId = newId();

@@ -16,6 +16,11 @@
   var naira = function (n) { return '₦' + Number(n || 0).toLocaleString('en-NG'); };
   var icon = function (id) { return '<svg class="bk-i" aria-hidden="true"><use href="#i-' + id + '"/></svg>'; };
   var REASON_MAX = 300;
+  /* B2a: the service fee line of the quote (the Local Tasker's own price) is what a proposed price is compared with */
+  function serviceFee(q) {
+    var l = ((q && q.quote && q.quote.lines) || []).filter(function (x) { return x.key === 'service_fee'; })[0];
+    return l ? Number(l.amount) : 0;
+  }
 
   function newId() {
     if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
@@ -86,7 +91,11 @@
   function hint(id) {
     var q = get(id); if (!q) return null;
     if (q.lt_status === 'quote_sent') return { tone: 'warn', text: 'A quote is waiting for your answer. Approving it does not charge you.' };
-    if (q.lt_status === 'quote_declined') return { tone: 'muted', text: 'You declined this quote. The coordinator will send a revised one, and you will see it here.' };
+    if (q.lt_status === 'quote_declined') {
+      var cd = q.decision && Number(q.decision.counter_amount) > 0 ? Number(q.decision.counter_amount) : 0;
+      return { tone: 'muted', text: cd ? 'You asked for a service price of ' + naira(cd) + '. Your coordinator will check it with the Local Tasker and send a revised quote, and you will see it here.'
+                                       : 'You declined this quote. The coordinator will send a revised one, and you will see it here.' };
+    }
     if (q.lt_status === 'quote_approved') {
       var s = payState(q);
       if (s.open > 0) return { tone: 'warn', text: 'Quote approved. Pay in the job room to lock it in. The money is held safely until the work is done.' };
@@ -127,6 +136,9 @@
         body += '<div class="bk-q-panel"><label class="bk-q-label" for="bkqr-' + esc(id) + '">Why are you declining? (optional)</label>' +
           '<textarea class="bk-textarea" id="bkqr-' + esc(id) + '" maxlength="' + REASON_MAX + '" data-qreason="' + esc(id) + '"' + dis + '></textarea>' +
           '<p class="bk-q-help">The coordinator sees this so they can send a revised quote.</p>' +
+          '<label class="bk-q-label" for="bkqp-' + esc(id) + '">Do you have a service price in mind? (optional)</label>' +
+          '<input type="text" inputmode="numeric" autocomplete="off" class="bk-q-money" id="bkqp-' + esc(id) + '" data-qprice="' + esc(id) + '" placeholder="e.g. 8000"' + dis + '>' +
+          '<p class="bk-q-help">The service fee on this quote is ' + naira(serviceFee(q)) + '. Your coordinator takes your price to the Local Tasker. It is a request, not a promise.</p>' +
           '<div class="bk-actions"><button type="button" class="bk-btn bk-btn-danger" data-qact="confirm-decline" data-id="' + esc(id) + '"' + dis + '>' + (busy ? 'Declining…' : 'Decline quote') + '</button>' +
           '<button type="button" class="bk-btn bk-btn-text" data-qact="back" data-id="' + esc(id) + '"' + dis + '>Back</button></div></div>';
       } else {
@@ -140,8 +152,12 @@
       if (s.open > 0) body += '<div class="bk-actions"><button type="button" class="bk-btn bk-btn-primary" data-qact="room" data-id="' + esc(id) + '">' + icon('lock') + 'Pay in Job Room</button></div>';
     } else {
       var d = q.decision || {};
-      head = '<h3 class="bk-q-title">You declined this quote</h3><p class="bk-q-sub">The coordinator will send a revised quote, and you will see it here. You have not been charged.</p>';
-      body = lines(q, false) + (d.reason ? '<p class="bk-q-note"><strong>Your reason:</strong> ' + esc(d.reason) + '</p>' : '');
+      var asked = Number(d.counter_amount) > 0;
+      head = '<h3 class="bk-q-title">You declined this quote</h3><p class="bk-q-sub">' + (asked
+        ? 'Your coordinator will take your price to the Local Tasker and send a revised quote, and you will see it here. You have not been charged.'
+        : 'The coordinator will send a revised quote, and you will see it here. You have not been charged.') + '</p>';
+      body = lines(q, false) + (asked ? '<p class="bk-q-note"><strong>Service price you asked for:</strong> ' + naira(d.counter_amount) + '</p>' : '') +
+        (d.reason ? '<p class="bk-q-note"><strong>Your reason:</strong> ' + esc(d.reason) + '</p>' : '');
     }
     return head + body + errBox(id);
   }
@@ -176,10 +192,11 @@
   function redraw(id) {
     var el = S.list && S.list.querySelector('[data-qbox="' + id + '"]');
     if (!el) return;
-    var keep = S.list.querySelector('[data-qreason="' + id + '"]');
-    var text = keep ? keep.value : null;
+    var keep = S.list.querySelector('[data-qreason="' + id + '"]'), keepP = S.list.querySelector('[data-qprice="' + id + '"]');
+    var text = keep ? keep.value : null, price = keepP ? keepP.value : null;
     el.innerHTML = inner(id);
     if (text != null) { var ta = S.list.querySelector('[data-qreason="' + id + '"]'); if (ta) ta.value = text; }
+    if (price != null) { var pi = S.list.querySelector('[data-qprice="' + id + '"]'); if (pi) pi.value = price; }
   }
 
   /* ── actions ────────────────────────────────────────────── */
@@ -200,6 +217,15 @@
     var ta = S.list.querySelector('[data-qreason="' + id + '"]');
     var reason = decision === 'declined' && ta ? ta.value.trim() : '';
     if (reason.length > REASON_MAX) { S.err[id] = 'Keep the reason to ' + REASON_MAX + ' characters.'; redraw(id); return; }
+    /* B2a: an optional service price, only with a decline. Checked here for a clear message; the database checks it again. */
+    var counter = null, pe = S.list.querySelector('[data-qprice="' + id + '"]');
+    if (decision === 'declined' && pe && pe.value.trim() !== '') {
+      var raw = pe.value.replace(/[₦,\s]/g, ''), fee = serviceFee(q);
+      if (!/^\d+$/.test(raw)) { S.err[id] = 'Enter the price as a whole number, for example 8000.'; redraw(id); return; }
+      counter = Number(raw);
+      if (counter < 100) { S.err[id] = 'The price must be at least ' + naira(100) + '.'; redraw(id); return; }
+      if (fee && counter >= fee) { S.err[id] = 'The price you propose must be lower than the current service fee of ' + naira(fee) + '.'; redraw(id); return; }
+    }
     var version = q.quote && q.quote.version;
     var key = id + ':' + version + ':' + decision;
     if (!S.ids[key]) S.ids[key] = newId();        /* the same id until it succeeds, so a retry never answers twice */
@@ -207,7 +233,7 @@
     var changed = false;
     try {
       var res = await window.supabase.rpc('local_booking_decide_quote', {
-        p_booking: id, p_version: version, p_request_id: S.ids[key], p_decision: decision, p_reason: reason || null
+        p_booking: id, p_version: version, p_request_id: S.ids[key], p_decision: decision, p_reason: reason || null, p_counter: counter
       });
       if (res.error) throw res.error;
       delete S.ids[key]; S.ui[id] = {}; changed = true;
