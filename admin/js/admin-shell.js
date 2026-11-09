@@ -26,6 +26,7 @@
       { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: false }
     ] },
     { group: 'People', items: [
+      { key: 'local-taskers', label: 'Local Taskers', href: 'local-taskers.html', icon: 'users', any: ['local_taskers.view'], built: true },
       { key: 'coordinators', label: 'Coordinators',   href: 'coordinators.html', icon: 'users', any: ['coordinators.view', 'coordinators.applications.review'], built: true }
     ] },
     { group: 'Marketplace', items: [
