@@ -13,7 +13,7 @@
         the tab or the phone reconnects. This is the safety net: even with Realtime off, the red dot lights within
         seconds, not only when the bell is clicked.
    Each notification is handled once (known{} by id), so Realtime + the check never double-ring.
-   Sound: a short two-note chime made with the Web Audio API (no audio file), with an <audio> back-up for phones. The panel no longer has a
+   Sound: a short two-note chime made with the Web Audio API (no audio file). It mixes with whatever the person is already playing (music, podcasts) and never pauses it. The panel no longer has a
    sound button (phone notifications are switched in the panel's settings row); a device that muted it earlier keeps 'st_notif_sound' = 'off'. Browsers only allow
    sound after the person has tapped or clicked the page once, so the first click anywhere "unlocks" it.
    ============================================================ */
@@ -39,54 +39,18 @@
   /* ── sound ───────────────────────────────────────────────── */
   function soundOn() { try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { return true; } }
 
-  /* Phones are stricter than desktops about sound, so there are two layers:
-       1. Web Audio (the chime), 2. a tiny <audio> clip as a back-up.
+  /* Phones are stricter than desktops about sound:
      - Each page load needs one real tap to unlock sound. Unlocking listens to touchend as well as click
        (a scroll gesture does not count on iOS) and stays armed, because iOS puts the audio engine in an
        "interrupted" state when the screen locks or the tab is backgrounded, and it must be woken again.
-     - iPhones keep Web Audio silent while the ringer switch is on silent, unless an <audio> element has
-       played. The unlock plays a silent clip once, and asks Safari for the "playback" audio session.
-     - If the engine is still asleep when a notification arrives we try to wake it, then fall back to the
-       <audio> clip, then (Android) a short vibration, rather than staying silent. */
-  var fallbackAudio = null, silentUrl = '', dingUrl = '';
-
-  /* Builds a WAV (two-note ding, or silence) in memory: no audio file to host */
-  function makeWav(notes) {
-    var rate = 22050, secs = 0.7, n = Math.floor(rate * secs), pcm = new Int16Array(n);
-    (notes || []).forEach(function (note) {
-      var start = Math.floor(note[1] * rate);
-      for (var i = start; i < n; i++) {
-        var t = (i - start) / rate; if (t > 0.5) break;
-        var env = Math.min(t / 0.02, 1) * Math.exp(-t * 7);
-        pcm[i] += Math.round(Math.sin(2 * Math.PI * note[0] * t) * env * 9000);
-      }
-    });
-    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
-    function str(o, t) { for (var i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); }
-    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
-    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-    str(36, 'data'); v.setUint32(40, n * 2, true);
-    for (var k = 0; k < n; k++) v.setInt16(44 + k * 2, pcm[k], true);
-    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-  }
-  /* The <audio> element is unlocked with a SILENT clip (so tapping a link or switching pages can never make a sound).
-     The chime clip is only put on the element at the moment a real notification rings. */
-  function prepFallback() {
-    if (fallbackAudio) return fallbackAudio;
-    try {
-      silentUrl = makeWav([]);
-      dingUrl = makeWav([[880, 0], [1318.5, 0.14]]);
-      fallbackAudio = new Audio(silentUrl);
-      fallbackAudio.preload = 'auto';
-      fallbackAudio.setAttribute('playsinline', '');
-    } catch (e) { fallbackAudio = null; }
-    return fallbackAudio;
-  }
-
+     - The chime must NEVER interrupt the person's music or podcast. So the audio session is 'ambient' (it mixes with
+       other apps) and there is NO <audio> element: on iOS and Android a playing <audio> element takes audio focus and
+       pauses other apps. Trade-off: on an iPhone with the ringer switch on silent the in-page chime stays quiet
+       (the phone push notification still sounds). If the engine is asleep when a notification arrives we try to wake it,
+       then (Android) a short vibration, rather than staying silent. */
   function unlockAudio() {
-    /* iOS 16.4+: sound should play even with the ringer switch on silent */
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    /* iOS 16.4+: 'ambient' mixes with the person's music instead of pausing it ('playback' would stop it) */
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
 
     if (!audioCtx) {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -97,16 +61,6 @@
       try {                                                   /* a silent one-sample blip finishes the iOS unlock */
         var b = audioCtx.createBuffer(1, 1, 22050), src = audioCtx.createBufferSource();
         src.buffer = b; src.connect(audioCtx.destination); src.start(0);
-      } catch (e) {}
-    }
-    /* Prime the <audio> element while we are inside the tap, with the silent clip: nothing can be heard */
-    var a = prepFallback();
-    if (a && !a.__primed) {
-      try {
-        a.muted = true;
-        var p = a.play();
-        var done = function () { try { a.pause(); a.currentTime = 0; a.muted = false; a.__primed = true; } catch (e) {} };
-        if (p && p.then) p.then(done).catch(function () { a.muted = false; }); else done();
       } catch (e) {}
     }
     return audioCtx;
@@ -135,13 +89,7 @@
       o.start(at); o.stop(at + 0.5);
     });
   }
-  function playFallback() {
-    var a = fallbackAudio;
-    if (a && a.__primed) {
-      try { a.muted = false; if (dingUrl && a.src !== dingUrl) a.src = dingUrl; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(buzz); return; } catch (e) {}
-    }
-    buzz();
-  }
+  function playFallback() { buzz(); }          /* no <audio> back-up: it would pause the person's music */
   function buzz() { try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {} }
 
   function chime() {
