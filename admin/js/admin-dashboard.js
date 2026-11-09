@@ -74,7 +74,7 @@ AdminShell.init({ page: 'dashboard', title: 'Dashboard', permission: null }).the
     }
     addCount('verifications_waiting', 'Identity checks waiting', null, 'warn');
     addCount('stuck_withdrawals', 'Withdrawals stuck over 60 minutes', null, 'danger');
-    addCount('coordinator_applications', 'Coordinator applications waiting', null, 'warn');
+    addCount('coordinator_applications', 'Coordinator applications waiting', builtHref('coordinators.html'), 'warn');
 
     var a = section('Needs attention');
     var anySeen = ['pending_approvals', 'local_needs_coordinator', 'disputes', 'verifications_waiting', 'stuck_withdrawals', 'coordinator_applications'].some(function (k) { return d[k]; });

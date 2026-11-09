@@ -310,3 +310,8 @@ body.ad-body {
   .ad-split.is-detail .ad-split-list { display: none; }
   .ad-split.is-detail .ad-split-detail { display: block; }
 }
+
+/* ── Coordinators (stage A9): reuses the Disputes list/detail layout; only the one-time secret box is new ── */
+.ad-secretbox { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-primary); border-radius: var(--radius-form); background: var(--color-primary-soft); }
+.ad-secretbox .form-input { min-height: var(--admin-touch-min); overflow-wrap: anywhere; }
+.ad-secretbox .ad-field { margin-top: 0; }
