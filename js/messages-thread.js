@@ -791,6 +791,12 @@
     } catch (_e) { S.requestsFailed = true; }
   }
 
+  /* B2e: the current quote of this booking, for the quote card (customer only; never blocks the chat) */
+  async function loadQuote() {
+    if (!window.JRQuote) return;
+    try { window.JRQuote.bind(); await window.JRQuote.load(S.thread, S.role); } catch (_e) { /* the quote line stays a plain line */ }
+  }
+
   /* A request message arrived live: its job_requests row may not be loaded yet */
   async function ensureRequest(m) {
     var id = requestIdOf(m);
@@ -849,7 +855,7 @@
     if (m && (m.type === 'image' || m.type === 'video' || m.type === 'file' || m.type === 'location')) m = withMeta(m);
     var isMine = !!(S.user && m.sender_id === S.user.id);
     var node;
-    if (m.type === 'system') node = buildSystem(m);
+    if (m.type === 'system') node = (window.JRQuote && window.JRQuote.isCard(m)) ? window.JRQuote.build(m) : buildSystem(m);   /* B2e: the quote line is a card for the customer */
     else if (m.type === 'safety') node = buildSafety(m);
     else if (m.type === 'payment_request') node = buildPaymentRequest(m, isMine);
     else if (m.type === 'payment_confirmed') node = buildPaymentConfirmed(m, isMine);
@@ -967,7 +973,7 @@
       if (S.thread.id !== token) return;               /* user switched thread */
       if (res.error) throw res.error;
       var msgs = (res.data || []).slice().reverse();
-      var rem = await Promise.all([loadRequests(msgs), loadMoney(token), loadRemovals(token)]);
+      var rem = await Promise.all([loadRequests(msgs), loadMoney(token), loadRemovals(token), loadQuote()]);
       if (S.thread.id !== token) return;
       S.removed = rem[2] || {};
       if (window.JRDetails) window.JRDetails.update();      /* money rows are in: figures can be drawn */
