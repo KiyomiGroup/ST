@@ -124,24 +124,28 @@
   function ngn(n) { return '\u20A6' + Number(n || 0).toLocaleString('en-NG'); }
   function el(tag, cls, txt) { var x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; }
 
+  var CHECK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.4-4-4 1.4-1.4 2.6 2.6 5-5 1.4 1.4-6.4 6.4z"/></svg>';
+
   function gridCard(c) {
-    var art = el('div', 'lt-tasker-card lt-tasker-card--live');
-    var photo = el('div', 'lt-tasker-photo lt-tasker-photo--live');
-    if (c.avatarUrl) {
-      var img = el('img', 'lt-tasker-img'); img.src = c.avatarUrl; img.alt = ''; img.loading = 'lazy';
+    var art = el('article', 'lt-pcard');
+    var photo = el('div', 'lt-pcard-photo');
+    photo.appendChild(el('span', 'lt-pcard-initials', initials(c.name)));
+    var picUrl = c.coverUrl || c.avatarUrl;           /* card photo: cover portfolio photo, else profile picture (same rule as the SQL) */
+    if (picUrl) {
+      var img = el('img', 'lt-pcard-img'); img.src = picUrl; img.alt = ''; img.loading = 'lazy';
       img.addEventListener('error', function () { img.remove(); });
       photo.appendChild(img);
     }
-    photo.appendChild(el('span', 'lt-tasker-initials', initials(c.name)));
-    var body = el('div', 'lt-tasker-body');
-    body.appendChild(el('div', 'lt-tasker-name', c.name));
-    body.appendChild(el('div', 'lt-tasker-spec', c.service));
-    /* One tag in the body (not on the photo) so it also shows in the phone layout, where the photo is a small circle. */
-    var tag = el('span', 'lt-live-tag'); tag.innerHTML = PHONE_SVG + ' '; tag.appendChild(document.createTextNode('Phone Assisted'));
-    body.appendChild(tag);
-    if (c.location) { var loc = el('div', 'lt-tasker-loc'); loc.innerHTML = PIN_SVG + ' '; loc.appendChild(document.createTextNode(c.location)); body.appendChild(loc); }
-    body.appendChild(el('div', 'lt-tasker-rating', c.price ? 'From ' + ngn(c.price) + c.rate_unit : 'Ask for a quote'));
-    var a = el('a', 'btn btn-outline btn-sm btn-full', 'View Profile'); a.href = 'tasker-profile.html?id=' + encodeURIComponent(c.user_id);
+    var phone = el('span', 'lt-pcard-phone'); phone.innerHTML = PHONE_SVG + ' '; phone.appendChild(document.createTextNode('Phone Assisted'));
+    photo.appendChild(phone);
+    var body = el('div', 'lt-pcard-body');
+    var ver = el('span', 'lt-pcard-verified'); ver.innerHTML = CHECK_SVG + ' '; ver.appendChild(document.createTextNode('Verified Tasker'));
+    body.appendChild(ver);
+    body.appendChild(el('h3', 'lt-pcard-name', c.name));
+    body.appendChild(el('div', 'lt-pcard-spec', c.service));
+    if (c.location) { var loc = el('div', 'lt-pcard-loc'); loc.innerHTML = PIN_SVG + ' '; loc.appendChild(document.createTextNode(c.location)); body.appendChild(loc); }
+    body.appendChild(el('div', 'lt-pcard-price', c.price ? 'From ' + ngn(c.price) + c.rate_unit : 'Ask for a quote'));
+    var a = el('a', 'lt-pcard-btn', 'View Profile'); a.href = 'tasker-profile.html?id=' + encodeURIComponent(c.user_id);
     body.appendChild(a);
     art.appendChild(photo); art.appendChild(body);
     return art;

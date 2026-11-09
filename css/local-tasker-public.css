@@ -112,3 +112,33 @@
 .lt-donate-form { grid-template-columns: minmax(0, 1fr); }
 .lt-donate-form > *, .lt-donate-field input { min-width: 0; max-width: 100%; box-sizing: border-box; }
 .lt-donate-form .btn { width: 100%; box-sizing: border-box; }
+
+/* ---- "Meet Local Taskers" cards (index.html + local-taskers.html only). Big photo, pills, grey View Profile button. Tokens only. ---- */
+.lt-tasker-grid { align-items: stretch; }
+.lt-pcard { display: flex; flex-direction: column; min-width: 0; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-2xl); overflow: hidden; box-shadow: var(--shadow-pt-card); transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.lt-pcard:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+.lt-pcard-photo { position: relative; aspect-ratio: 3 / 2; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; }
+.lt-pcard-initials { font-family: var(--font-heading); font-weight: 700; font-size: var(--text-xl); color: var(--color-primary); }
+.lt-pcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lt-pcard-phone { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 1; display: inline-flex; align-items: center; gap: var(--space-1); background: var(--color-bg); color: var(--color-primary); font-size: var(--text-xs); font-weight: 700; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); box-shadow: var(--shadow-pt-pill); }
+.lt-pcard-body { display: flex; flex-direction: column; flex: 1; padding: var(--space-4) var(--space-4) var(--space-4); }
+.lt-pcard-verified { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1); background: var(--color-mint-border); color: var(--color-forest-800); font-size: var(--text-xs); font-weight: 600; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); margin-bottom: var(--space-3); }
+.lt-pcard-name { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 700; line-height: 1.25; color: var(--color-text); margin: 0 0 var(--space-1); overflow-wrap: anywhere; }
+.lt-pcard-spec { font-size: var(--text-sm); font-weight: 600; color: var(--color-primary); margin-bottom: var(--space-3); }
+.lt-pcard-loc { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-1); }
+.lt-pcard-price { font-size: var(--text-xs); font-weight: 600; color: var(--color-text); margin-bottom: var(--space-4); }
+.lt-pcard-btn { margin-top: auto; display: flex; align-items: center; justify-content: center; min-height: 44px; background: var(--color-bg-muted); color: var(--color-text); font-size: var(--text-sm); font-weight: 600; text-decoration: none; border-radius: var(--radius-full); transition: background var(--t) var(--ease); }
+.lt-pcard-btn:hover { background: var(--color-border); }
+.lt-pcard-btn:focus-visible { outline: 3px solid var(--color-mint-border); outline-offset: 2px; }
+
+/* Phones: one row of cards you swipe sideways, edge to edge (same pattern as "People are getting things done"). */
+@media (max-width: 768px) {
+  .lt-tasker-grid {
+    display: flex; gap: var(--space-4); overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    margin-inline: calc(-1 * var(--home-pad, 0px)); padding-inline: var(--home-pad, 0px); scroll-padding-inline: var(--home-pad, 0px);
+    padding-bottom: var(--space-2); scrollbar-width: none;
+  }
+  .lt-tasker-grid::-webkit-scrollbar { display: none; }
+  .lt-tasker-grid > .lt-pcard { flex: 0 0 78%; max-width: 320px; scroll-snap-align: start; }
+  .lt-pcard:hover { transform: none; }
+}
