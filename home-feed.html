@@ -146,6 +146,13 @@
       body.hf-home.role-customer .hf-hero-dt .hf-loc-wrap:has(.hf-loc-pop:not([hidden])) { z-index: 3; }
     }
 
+    /* Customer desktop: same fix as the phone. The hero clips its content (overflow: hidden) and the chip sits inside .pg-hero-meta, whose entrance
+       animation makes it its own stacking layer, so the search pill (z-index 2) was drawn over the open popup. Open only: nothing else changes. */
+    @media (min-width: 769px) {
+      body.hf-home.role-customer .hf-hero-dt .pg-hero:has(.hf-loc-pop:not([hidden])) { overflow: visible; }
+      body.hf-home.role-customer .hf-hero-dt .pg-hero-meta:has(.hf-loc-pop:not([hidden])) { position: relative; z-index: 3; }
+    }
+
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
     .hf-feed-customer, .hf-feed-tasker { display: none; padding-bottom: var(--space-8); }
     body.role-customer .hf-feed-customer { display: block; }
