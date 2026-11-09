@@ -30,6 +30,7 @@
       { key: 'coordinators', label: 'Coordinators',   href: 'coordinators.html', icon: 'users', any: ['coordinators.view', 'coordinators.applications.review'], built: true }
     ] },
     { group: 'Marketplace', items: [
+      { key: 'bookings',  label: 'Bookings and Tasks', href: 'bookings.html', icon: 'list', any: ['bookings.view'], built: true },
       { key: 'disputes',  label: 'Disputes',          href: 'disputes.html',  icon: 'flag',   any: ['disputes.manage'], built: true }
     ] },
     { group: 'System', items: [
