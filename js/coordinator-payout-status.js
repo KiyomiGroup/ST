@@ -3,7 +3,7 @@
    The "Payout to the Local Tasker" card on the coordinator booking page. After the release code is accepted the payout
    waits 24 hours, then StreetTasker sends it to the Local Tasker's bank account. This card shows the countdown and the state.
    Reads:  rpc local_booking_payout_state(p_booking)  { has_payout, phase, amount, release_after, seconds_left, paid_at, reason }
-           phase = waiting | due | processing | paid | failed | review | reversed
+           phase = waiting | due | processing | paid | failed | review | reversed; commission = null | { phase: pending | credited, amount }
    Writes nothing, touches no money. All text from the database is set with textContent. The countdown is worked out from
    the server's seconds_left, not from this device's clock, so a wrong phone clock cannot change it.
    Mounted by coordinator-booking.js: STCoPayoutStatus.mount(detail, { reload }).
@@ -57,6 +57,11 @@
     }
     $('coPoLead').textContent = lead; $('coPoLead').hidden = !lead;
     $('coPoCount').textContent = count; $('coPoCount').hidden = !count;
+    /* Stage B4b: the coordinator's own commission is held for the same 24 hours */
+    var cm = data.commission, comm = '';
+    if (cm && cm.phase === 'pending') comm = 'Your commission of ' + naira(cm.amount) + ' is added to your wallet 24 hours after the release code, at the same time as the payout.';
+    else if (cm && cm.phase === 'credited') comm = 'Your commission of ' + naira(cm.amount) + ' has been added to your wallet.';
+    $('coPoComm').textContent = comm; $('coPoComm').hidden = !comm;
   }
 
   async function load() {

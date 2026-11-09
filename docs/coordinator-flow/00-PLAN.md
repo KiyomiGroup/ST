@@ -46,3 +46,6 @@ Owner said "go". `_release_escrow` and the payout functions were never pasted, s
 
 ## B4 result (2026-11-09)
 Built from the pasted `b4-introspect.sql` results. `_release_escrow` already completes the booking and queues the payout at once, so B4 holds the payout with `local_payouts.release_after` (24 hours, set by a trigger, enforced in `local_payout_claim`), adds the booking-page countdown card and a `coordinator_payout_sent` notification when the payout is paid. Findings: no sender or cron for payouts exists in the repo (a separate stage), and "task leaves the site only when closed" needs an owner decision and the `accept_application` source. See `handoff-B4.md`.
+
+## B4b result (2026-11-09)
+Owner decided the coordinator's commission also waits 24 hours. `_release_escrow` (exact pasted text, only the commission block changed) now writes a hold row in `local_booking_commission_holds`; `_lt_credit_due_commissions()` credits it after 24 hours (cron every 5 minutes, skipped while a problem report is open). The booking card shows the commission line. See `handoff-B4b.md`. B4 still open: payout sender, task visibility.
