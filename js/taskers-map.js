@@ -90,7 +90,8 @@
     var sv = await sb.from('services').select('id, service_name, category, price, rate_unit, location, description, user_id, available, created_at').in('user_id', ids).eq('available', true).limit(200);
     var un = await sb.from('users').select('id, name, business_name').in('id', ids);
     var names = {}; (un.data || []).forEach(function (u) { names[String(u.id)] = u.business_name || u.name; });
-    var rows = (sv.data || []).map(function (s) {
+    var svRows = (window.ST && window.ST.db && window.ST.db.hideUnpublishedLocal) ? await window.ST.db.hideUnpublishedLocal(sv.data || [], 'user_id') : (sv.data || []);   /* HP2 */
+    var rows = svRows.map(function (s) {
       return { id: String(s.id), user_id: String(s.user_id), provider_name: names[String(s.user_id)] || 'Provider', service_name: s.service_name || 'Service',
         category: s.category || 'other', location: s.location || '', price: parseFloat(s.price) || 0, rating: 0, reviews: 0, description: s.description || '',
         specialties: s.service_name ? [s.service_name] : [], availability_status: null, verified: false, created_at: s.created_at };

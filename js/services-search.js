@@ -73,7 +73,8 @@ async function svcLoad() {
     .select('*').eq('available', true)
     .order('created_at', { ascending: false }).limit(200);
   if (error) throw error;
-  const rows = data || [];
+  let rows = data || [];
+  if (window.ST && window.ST.db && window.ST.db.hideUnpublishedLocal) rows = await window.ST.db.hideUnpublishedLocal(rows, 'user_id');   /* HP2 */
 
   /* Provider names in one separate query (no join, so RLS on users
      can't hide the services themselves from logged-out visitors) */

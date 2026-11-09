@@ -519,6 +519,25 @@ async function deleteService(serviceId) {
   if (error) throw error;
 }
 
+/* HP2: a Local Tasker who is not published (ready, draft, deactivated) must never show on a public list, even though their services stay live
+   (unpublish does not switch services off, so the coordinator can publish again). One question to the database for the whole list.
+   If the function is missing or fails, the list is returned unchanged (the page keeps working). */
+async function hideUnpublishedLocal(rows, idKey) {
+  const list = rows || [];
+  try {
+    const key = idKey || 'user_id';
+    const ids = [...new Set(list.map(r => r && r[key]).filter(Boolean).map(String))];
+    if (!ids.length || !window.supabase) return list;
+    const hidden = new Set();
+    for (let i = 0; i < ids.length; i += 100) {
+      const r = await window.supabase.rpc('local_tasker_hidden_ids', { p_ids: ids.slice(i, i + 100) });
+      if (r.error) return list;
+      (r.data || []).forEach(x => { if (x && x.user_id) hidden.add(String(x.user_id)); });
+    }
+    return hidden.size ? list.filter(r => !(r && hidden.has(String(r[key])))) : list;
+  } catch (e) { return list; }
+}
+
 async function fetchServices({ category = '', limit = 60 } = {}) {
   /* Step 1: fetch services without the users join (avoids RLS issues for anon visitors) */
   let q = window.supabase.from('services').select(
@@ -526,7 +545,8 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
   ).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
 
-  const { data: svcData, error: svcErr } = await q;
+  const { data: svcDataRaw, error: svcErr } = await q;
+  const svcData = svcDataRaw ? await hideUnpublishedLocal(svcDataRaw, 'user_id') : svcDataRaw;   /* HP2 */
 
   if (!svcErr && svcData && svcData.length > 0) {
     /* Step 2: batch-fetch provider names separately — single query, no join */
@@ -618,6 +638,7 @@ async function fetchMatchingServices({ category, location, limit = 5 }) {
     }));
   }
   const loc = (location || '').toLowerCase();
+  data = await hideUnpublishedLocal(data, 'user_id');   /* HP2 */
   return data.map(s => {
     const sloc = (s.location || '').toLowerCase();
     let score = 0;
@@ -869,7 +890,7 @@ window.ST.db = {
   postTask, fetchTasks, fetchMyTasks, countMyTasks,
   postService, updateService, deleteService,
   publishService, pauseService, reactivateService, chooseActiveListings, fetchMyListingSlots, listingErrorMessage, isListingError,
-  fetchServices, fetchMyServices, fetchMyTaskerProfile, fetchMatchingServices, uploadServiceImage,
+  fetchServices, hideUnpublishedLocal, fetchMyServices, fetchMyTaskerProfile, fetchMatchingServices, uploadServiceImage,
   applyToTask, fetchTaskApplications, fetchMyApplications, updateApplicationStatus,
   createBooking, fetchMyBookings, fetchTaskerBookings, updateBookingStatus,
   checkTaskerCanAcceptBooking, fetchMySubscription,

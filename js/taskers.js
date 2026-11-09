@@ -13,7 +13,8 @@ async function loadServices() {
     const _sRes = await window.supabase.from('services')
       .select('*, users:user_id(name, business_name, avatar_url)')
       .eq('available', true).order('created_at', { ascending: false }).limit(100);
-    const services = (_sRes.data || []).map(s => ({
+    const _svcRows = (window.ST && window.ST.db && window.ST.db.hideUnpublishedLocal) ? await window.ST.db.hideUnpublishedLocal(_sRes.data || [], 'user_id') : (_sRes.data || []);   /* HP2 */
+    const services = _svcRows.map(s => ({
       id: String(s.id), service_name: s.service_name || s.service, category: s.category,
       price: s.price, rate_unit: s.rate_unit || '/job', location: s.location,
       description: s.description,
