@@ -7,6 +7,8 @@
      coordinator_chat_activity  the activity timeline (job_events) of the booking
    Never touches a money table itself. Everything from the database is put on the page with textContent, never innerHTML
    (the only innerHTML is the fixed icon markup below). Same classes as the Job Room (css/messages.css); no new colours.
+   Stage B2d: the quote is a card too (a Job Room line of type system whose payload says card = quote). It is drawn from the "quotes" list of coordinator_chat_cards:
+   total, the lines, the customer's answer (approved or declined, the price they asked for, their reason) and "replaced" when a newer quote was sent.
    Public API (window.STCoCards): load(id), loadActivity(id), has(id), sig(), cardFor(message, mine), fallbackText(message),
                                   historyBlock(id), activityBlock(id), clear()
    Stage 6D-4b: setHooks({ actionsFor(request) -> [{ label, primary, run() }] }) lets js/coordinator-jobactions.js put "Send update", "Send proof" and
@@ -15,7 +17,7 @@
 'use strict';
 
 (function () {
-  var D = { id: null, ok: false, payments: {}, requests: {}, receipts: [], list: [], sigText: '' };
+  var D = { id: null, ok: false, payments: {}, requests: {}, quotes: {}, receipts: [], list: [], sigText: '' };
   var A = { id: null, ok: false, rows: [], showAll: false, sigText: '' };
   var SHOW = 6;
   var H = null;      /* hooks from coordinator-jobactions.js (Stage 6D-4b) */
@@ -53,7 +55,7 @@
   function normStatus(s) { return s === 'approved' ? 'pending' : s === 'accepted' ? 'processing' : (s || 'pending'); }
 
   /* ── loading ───────────────────────────────────────────────── */
-  function clear() { D = { id: null, ok: false, payments: {}, requests: {}, receipts: [], list: [], sigText: '' }; A = { id: null, ok: false, rows: [], showAll: false, sigText: '' }; }
+  function clear() { D = { id: null, ok: false, payments: {}, requests: {}, quotes: {}, receipts: [], list: [], sigText: '' }; A = { id: null, ok: false, rows: [], showAll: false, sigText: '' }; }
 
   var latest = null, latestAct = null;
   async function load(id) {
@@ -61,11 +63,12 @@
     var res;
     try { res = await sb().rpc('coordinator_chat_cards', { p_booking: id }); } catch (e) { res = { error: e }; }
     if (latest !== id) return false;   /* the person moved to another conversation while this was loading */
-    if (res.error || !res.data) { if (D.id !== id) D = { id: id, ok: false, payments: {}, requests: {}, receipts: [], list: [], sigText: 'x' }; else D.ok = false; return false; }
-    var d = res.data, n = { id: id, ok: true, payments: {}, requests: {}, receipts: d.receipts || [], list: d.payments || [], sigText: '' };
+    if (res.error || !res.data) { if (D.id !== id) D = { id: id, ok: false, payments: {}, requests: {}, quotes: {}, receipts: [], list: [], sigText: 'x' }; else D.ok = false; return false; }
+    var d = res.data, n = { id: id, ok: true, payments: {}, requests: {}, quotes: {}, receipts: d.receipts || [], list: d.payments || [], sigText: '' };
     (d.payments || []).forEach(function (p) { n.payments[p.id] = p; });
     (d.requests || []).forEach(function (r) { n.requests[r.id] = r; });
-    n.sigText = (d.payments || []).map(function (p) { return p.id + p.status + (p.settlement || ''); }).concat((d.requests || []).map(function (r) { return r.id + r.status; }),
+    (d.quotes || []).forEach(function (q) { n.quotes[q.id] = q; });
+    n.sigText = (d.payments || []).map(function (p) { return p.id + p.status + (p.settlement || ''); }).concat((d.requests || []).map(function (r) { return r.id + r.status; }), (d.quotes || []).map(function (q) { return q.id + q.status; }),
                  (d.receipts || []).map(function (r) { return r.id; })).join(',');
     D = n; return true;
   }
@@ -160,11 +163,45 @@
     return wrap;
   }
 
+
+  /* B2d: the quote card. Read only. Same classes as the money card, no new CSS. */
+  var QUOTE_PILL = { sent: ['pending', 'Sent'], approved: ['paid', 'Approved'], declined: ['declined', 'Declined'], replaced: ['cancelled', 'Replaced'] };
+  function quoteCard(m, mine, q) {
+    var st = QUOTE_PILL[q.status] ? q.status : 'sent', pill = QUOTE_PILL[st];
+    var wrap = el('div', 'msg-bubble-wrap is-card ' + (mine ? 'mine' : 'theirs')); wrap.dataset.id = String(m.id || ''); wrap.dataset.quoteId = String(q.id);
+    var card = el('div', 'payment-request-card jr-money jr-money--' + pill[0] + (mine ? ' mine-card' : '')); card.id = 'quote-' + q.id;
+    var head = el('div', 'prc-header'), ic = el('div', 'prc-icon'); ic.innerHTML = ICON_CARD; head.appendChild(ic);
+    head.appendChild(el('span', 'prc-label', Number(q.version) > 1 ? 'Quote ' + Number(q.version) : 'Quote'));
+    head.appendChild(el('span', 'jr-req-pill jr-req-pill--' + pill[0], pill[1])); card.appendChild(head);
+    card.appendChild(el('div', 'prc-amount', Number(q.total) > 0 ? naira(q.total) : '—'));
+    var lines = Array.isArray(q.lines) ? q.lines.filter(function (l) { return l && Number(l.amount) > 0 && l.label; }) : [];
+    if (lines.length) {
+      var list = el('div', 'jr-money-lines');
+      lines.forEach(function (l) { var row = el('div', 'jr-money-line'); row.appendChild(el('span', null, String(l.label))); row.appendChild(el('span', null, naira(l.amount))); list.appendChild(row); });
+      card.appendChild(list);
+    }
+    if (q.note) card.appendChild(el('div', 'jr-req-note', q.note));
+    if (st === 'declined') {
+      if (Number(q.counter_amount) > 0) card.appendChild(el('div', 'jr-req-note', 'The customer asked for a service price of ' + naira(q.counter_amount) + '.'));
+      if (q.reason) card.appendChild(el('div', 'jr-req-note', 'Reason: ' + q.reason));
+    }
+    var badge = '', cls = 'accepted';
+    if (st === 'sent') badge = 'Waiting for the customer to answer';
+    else if (st === 'approved') { badge = '✓ Approved by the customer'; cls = 'paid'; }
+    else if (st === 'declined') badge = 'Declined by the customer';
+    else badge = 'A newer quote was sent';
+    var act = el('div', 'prc-actions'); act.appendChild(el('span', 'prc-status-badge ' + cls, badge)); card.appendChild(act);
+    wrap.appendChild(card); wrap.appendChild(el('div', 'msg-time', timeLabel(m.created_at)));
+    return wrap;
+  }
+  function quoteIdOf(m) { var p = m && m.type === 'system' && m.payload && typeof m.payload === 'object' && m.payload.card === 'quote' ? m.payload.quote_id : ''; return p ? String(p) : ''; }
+
   /* The card for one message, or null when the message is not a card or its row could not be loaded (the caller then draws a plain line). */
   function cardFor(m, mine) {
     if (!D.ok || !m) return null;
     var pid = idOf(m.body, 'PAYMENT_REQUEST'); if (pid && D.payments[pid]) return moneyCard(m, mine, D.payments[pid]);
     var rid = idOf(m.body, 'JOB_REQUEST'); if (rid && D.requests[rid]) return requestCard(m, mine, D.requests[rid]);
+    var qid = quoteIdOf(m); if (qid && D.quotes[qid]) return quoteCard(m, mine, D.quotes[qid]);
     return null;
   }
   /* Plain line used when a card cannot be drawn (rows not loaded). Never shows the raw code. */
@@ -174,7 +211,7 @@
     if (/^JOB_REQUEST:/.test(t)) { var k = kindOfBody(t); return (REQ_TEXT[k] || ['Request'])[0]; }
     return '';
   }
-  function isCardBody(m) { var b = String((m && m.body) || ''); return /^(PAYMENT_REQUEST|JOB_REQUEST):/.test(b); }
+  function isCardBody(m) { var b = String((m && m.body) || ''); return /^(PAYMENT_REQUEST|JOB_REQUEST):/.test(b) || !!quoteIdOf(m); }
 
   /* ── right-hand column ─────────────────────────────────────── */
   function block(title) { var c = el('section', 'cc-card'); c.appendChild(el('h3', 'cc-card-title', title)); return c; }
