@@ -53,7 +53,7 @@
       <section class="co-hero co-hero--page co-hero--dash" aria-labelledby="coHeroTitle">
         <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Live Coordinator Hub</p>
         <h1 id="coHeroTitle">Welcome back, <span id="coWelcomeName">Coordinator</span></h1>
-        <p class="co-hero-sub" id="coHeroSub">Your assigned Local Taskers, bookings and messages, all in one place.</p>
+        <p class="co-hero-sub"><span id="coHeroTasks">Your assigned Local Taskers, bookings and messages, all in one place.</span><span id="coHeroOrders"></span></p>
         <div class="co-hero-actions">
           <a class="btn btn-mint" href="coordinator-tasker-new.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Add Local Tasker</a>
         </div>
@@ -103,13 +103,24 @@
         <button type="button" class="co-link-btn co-banner-retry" id="coOverviewRetry">Try again</button>
       </div>
 
-      <section class="co-panel" aria-labelledby="coRequestsTitle">
-        <div class="co-panel-head">
-          <h2 id="coRequestsTitle">Active Requests</h2>
+      <section class="co-card co-req" aria-labelledby="coRequestsTitle">
+        <div class="co-req-head">
+          <div>
+            <h2 id="coRequestsTitle">Active Requests</h2>
+            <p class="co-section-sub">Open bookings under your coordination.</p>
+          </div>
+          <a class="co-fact-link co-req-all" href="coordinator-bookings.html">View all bookings &rarr;</a>
         </div>
-        <div class="co-empty co-empty--dark" id="coRequestsEmpty">
-          <p class="co-empty-title">Booking requests aren't switched on yet</p>
-          <p class="co-empty-text">When customers can book your Local Taskers, new requests, quotes waiting for approval, active jobs and issues will be listed here.</p>
+        <div class="co-req-tabs" id="coReqTabs" role="group" aria-label="Filter requests" hidden></div>
+        <p class="co-loading" id="coReqLoading">Loading your requests…</p>
+        <div class="co-banner" id="coReqError" role="alert" hidden>
+          <span>We couldn't load your requests just now.</span>
+          <button type="button" class="co-link-btn co-banner-retry" id="coReqRetry">Try again</button>
+        </div>
+        <ul class="co-req-list" id="coReqList" hidden></ul>
+        <div class="co-empty co-req-empty" id="coReqEmpty" hidden>
+          <p class="co-empty-title" id="coReqEmptyTitle">No open requests</p>
+          <p class="co-empty-text" id="coReqEmptyText">When customers book your Local Taskers, their requests will be listed here.</p>
         </div>
       </section>
 
@@ -158,6 +169,8 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-overview.js"></script>
+  <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-requests.js"></script>
   <script src="js/coordinator-wallet-tile.js"></script>
 </body>
 </html>

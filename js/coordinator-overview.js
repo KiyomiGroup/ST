@@ -93,7 +93,7 @@
       /* Capacity comes from the coordinator's plan (Stage 7G), not from a number in this file. */
       var plan = await C.plan();
       var capOf = $('coStatOf'), bar = $('coCapBar'), fill = $('coCapFill'), recruit = $('coRecruit');
-      var hero = $('coHeroSub');
+      var hero = $('coHeroTasks');
       if (hero) hero.textContent = 'Managing ' + ids.length + (ids.length === 1 ? ' Local Tasker' : ' Local Taskers') + ' under your coordination.';
       if (plan) {
         var left = Math.max(0, plan.capacity - ids.length);
