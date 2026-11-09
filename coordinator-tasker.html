@@ -53,6 +53,11 @@
         <span id="coCreatedText"></span>
       </div>
 
+      <div class="co-banner" id="coRepubBanner" role="status" hidden>
+        <span>You changed this profile after it went live. Customers still see the old version until you publish again.</span>
+        <a id="coRepubLink" href="coordinator-publish.html">Go to Publish and press Update</a>
+      </div>
+
       <article class="co-detail" id="coDetail" hidden>
         <section class="co-hero co-hero--page" aria-labelledby="coDetailName">
           <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Local Tasker profile</p>
@@ -90,6 +95,7 @@
           <p class="co-loading" id="coSvcLoading">Loading…</p>
           <p class="co-fact-value is-empty" id="coSvcError" role="alert" hidden>We couldn't load the services just now. Reload the page to try again.</p>
           <p class="co-fact-value is-empty" id="coSvcEmpty" hidden>No services yet. Add one to describe what this person offers and the rate they agreed. Services stay hidden from customers until you publish.</p>
+          <p class="co-card-lead" id="coSvcLiveCount" hidden></p>
           <ul class="co-svc-list" id="coSvcList" hidden></ul>
         </section>
 

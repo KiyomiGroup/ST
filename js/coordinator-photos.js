@@ -23,7 +23,7 @@
   var TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
   var last = null, busy = false;
-  var taskerId = null, photos = [], needConsent = true, consentKnown = true;
+  var taskerId = null, photos = [], avatar = null, needConsent = true, consentKnown = true;
   var prepared = null;          /* { blob, path, key }: the chosen file, already shrunk, with its upload path */
   var previewUrl = null, picking = 0;
 
@@ -225,10 +225,8 @@
     var rows = sortPhotos(photos);
     $('coPhotosEmpty').hidden = rows.length > 0;
     grid.hidden = rows.length === 0;
-    var full = rows.length >= MAX_PHOTOS;
-    $('coAddFull').hidden = !full; $('coAddFields').hidden = full;
-    $('coAgreeCard').hidden = full; $('coFormActions').hidden = full;
-    $('coPCoverGroup').hidden = rows.length === 0;
+    await renderAvatar();
+    applyKind();
     if (!rows.length) return;
     var s = await signedUrls(rows);
     rows.forEach(function (p, i) { grid.appendChild(photoItem(p, s.map[p.storage_path], i)); });
@@ -237,11 +235,32 @@
 
   async function fetchPhotos() {
     var res = await window.supabase.from('local_tasker_photos')
-      .select('id, storage_path, caption, is_cover, created_at')
+      .select('id, storage_path, caption, is_cover, created_at, kind')
       .eq('tasker_user_id', taskerId).is('removed_at', null)
       .order('is_cover', { ascending: false }).order('created_at', { ascending: true });
     if (res.error) throw res.error;
-    photos = res.data || [];
+    var all = res.data || [];
+    photos = all.filter(function (r) { return r.kind !== 'avatar'; });       /* the portfolio: the avatar has its own card */
+    avatar = all.filter(function (r) { return r.kind === 'avatar'; })[0] || null;
+  }
+  function kind() { var k = $('coPKind'); return k && k.value === 'avatar' ? 'avatar' : 'portfolio'; }
+  /* The form shows only what the chosen kind needs. A full portfolio (8) never blocks a profile picture. */
+  function applyKind() {
+    var isAv = kind() === 'avatar', full = photos.length >= MAX_PHOTOS && !isAv;
+    $('coPCaptionGroup').hidden = isAv;
+    $('coPCoverGroup').hidden = isAv || photos.length === 0;
+    $('coAddFull').hidden = !full; $('coAddFields').hidden = full;
+    $('coAgreeCard').hidden = full; $('coFormActions').hidden = full;
+  }
+  async function renderAvatar() {
+    var box = $('coAvatarBox'); box.textContent = '';
+    $('coAvatarEmpty').hidden = !!avatar; box.hidden = !avatar;
+    if (!avatar) return;
+    var s = await signedUrls([avatar]);
+    var li = C.el('li', 'co-photo-item'), frame = C.el('div', 'co-photo-frame');
+    if (s.map[avatar.storage_path]) { var img = C.el('img'); img.src = s.map[avatar.storage_path]; img.alt = 'Profile picture'; img.loading = 'lazy'; frame.appendChild(img); }
+    else frame.appendChild(C.el('span', 'co-photo-missing', 'Picture unavailable'));
+    li.appendChild(frame); box.appendChild(li);
   }
   async function fetchConsent() {
     needConsent = true; consentKnown = true;
@@ -327,7 +346,7 @@
     function bad(id, msg) { fieldError(id, msg); if (!first) first = id; }
     function ok(id) { fieldError(id, ''); }
     prepared ? ok('coPFile') : bad('coPFile', 'Choose a photo first.');
-    v.caption.length > MAX_CAPTION ? bad('coPCaption', 'Keep the caption under 120 characters.') : ok('coPCaption');
+    if (kind() === 'portfolio') { if (v.caption.length > MAX_CAPTION) bad('coPCaption', 'Keep the caption under 120 characters.'); else ok('coPCaption'); }
     if (needConsent && consentKnown) {
       v.method ? ok('coFMethod') : bad('coFMethod', 'Choose how they agreed.');
       v.confirmed ? ok('coFConfirm') : bad('coFConfirm', 'Tick the box to confirm they agreed.');
@@ -355,25 +374,25 @@
         if (sf !== 'exists') { showError(sf, null, up.error.statusCode ? String(up.error.statusCode) : null); return; }
       }
       /* 2. register it. Safe to repeat for the same path. */
-      var res = await window.supabase.rpc('add_local_tasker_photo', {
-        p_tasker: taskerId,
-        p_path: prepared.path,
-        p_caption: v.caption,
-        p_make_cover: !!v.cover,
+      var isAvatar = kind() === 'avatar';
+      var consentArgs = {
         p_consent_method: needConsent ? v.method : null,
         p_consent_evidence: needConsent ? v.evidence : null,
         p_consent_details: needConsent ? v.details : null
-      });
+      };
+      var res = isAvatar
+        ? await window.supabase.rpc('add_local_tasker_avatar', Object.assign({ p_tasker: taskerId, p_path: prepared.path }, consentArgs))
+        : await window.supabase.rpc('add_local_tasker_photo', Object.assign({ p_tasker: taskerId, p_path: prepared.path, p_caption: v.caption, p_make_cover: !!v.cover }, consentArgs));
       if (res.error) { var fail = failureFrom(res.error); showError(fail.code, fail.message, fail.raw); return; }
       var d = res.data;
-      if (!d || !C.isUuid(d.photo_id) || typeof d.is_cover !== 'boolean') { showError('bad_response'); return; }
+      if (!d || !C.isUuid(d.photo_id) || (!isAvatar && typeof d.is_cover !== 'boolean')) { showError('bad_response'); return; }
 
       prepared = null; picking++; clearPreview();
       $('coPFile').value = ''; $('coPCaption').value = ''; $('coPCover').checked = false;
       if (needConsent) { $('coFMethod').value = ''; $('coFEvidence').value = ''; $('coFDetails').value = ''; $('coFConfirm').checked = false; }
       await fetchConsent();
       await refresh();
-      notice(d.created === false ? 'That photo was already added, so nothing new was saved.' : (d.is_cover ? 'Photo added. It is the cover photo.' : 'Photo added.'));
+      notice(d.created === false ? 'That photo was already added, so nothing new was saved.' : isAvatar ? 'Profile picture saved. It replaces the old one.' : (d.is_cover ? 'Photo added. It is the cover photo.' : 'Photo added.'));
     } catch (err) {
       console.error('[coordinator photo add]', err);
       showError('network');
@@ -386,6 +405,8 @@
   document.addEventListener('DOMContentLoaded', function () {
     var form = $('coForm'); if (form) form.addEventListener('submit', submit);
     var file = $('coPFile'); if (file) file.addEventListener('change', onPick);
+    var kd = $('coPKind'); if (kd) kd.addEventListener('change', applyKind);
+    if (kd && new URLSearchParams(window.location.search).get('kind') === 'avatar') kd.value = 'avatar';   /* from the publish checklist */
     var retry = $('coEditRetry'); if (retry) retry.addEventListener('click', function () { if (last) load(); });
   });
 })();

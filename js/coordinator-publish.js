@@ -13,7 +13,7 @@
 (function () {
   var C = window.STCo;
   function $(id) { return document.getElementById(id); }
-  var last = null, busy = false, taskerId = null, state = null;
+  var last = null, busy = false, taskerId = null, state = null, needsRepublish = false;
 
   /* label, whether there is a place to fix it (a page), and the page */
   var CHECKS = {
@@ -27,9 +27,10 @@
     private_clear:     { label: 'No private contact details on the public record' },
     verification:      { label: 'Verification recorded' },
     photo:             { label: 'At least one photo' },
+    avatar:            { label: 'A profile picture (separate from the portfolio photos)', fix: 'avatar' },
     identity:          { label: 'Their identity check is verified', fix: 'identity' }
   };
-  var FIX_TEXT = { service: 'Add or edit a service', photos: 'Manage photos', identity: 'Open identity check' };
+  var FIX_TEXT = { service: 'Add or edit a service', photos: 'Manage photos', avatar: 'Add a profile picture', identity: 'Open identity check' };
   var UNIT = { '/job': 'job', '/hour': 'hour', '/day': 'day', '/visit': 'visit', '/session': 'session' };
 
   var MESSAGES = {
@@ -72,6 +73,7 @@
   function fixHref(kind) {
     if (kind === 'service') return 'coordinator-service-edit.html?id=' + encodeURIComponent(taskerId);
     if (kind === 'photos') return 'coordinator-photos.html?id=' + encodeURIComponent(taskerId);
+    if (kind === 'avatar') return 'coordinator-photos.html?id=' + encodeURIComponent(taskerId) + '&kind=avatar';
     if (kind === 'identity') return 'coordinator-tasker-verify.html?id=' + encodeURIComponent(taskerId);
     return null;
   }
@@ -115,14 +117,15 @@
       s === 'published' ? 'Published' : s === 'inactive' ? 'Retired' : s === 'ready' ? 'Hidden' : 'Draft'));
     $('coPubRefresh').disabled = !ready;
     var live = $('coPubLiveText');
-    live.textContent = ready ? 'This person is live. Customers can find them now.'
-      : 'This person is live, but something on the checklist is no longer complete. Fix it, or unpublish.';
+    live.textContent = !ready ? 'This person is live, but something on the checklist is no longer complete. Fix it, or unpublish.'
+      : needsRepublish ? 'You changed this profile after it went live (services, main service, photos or details). Press “Update public listing” so customers see the changes.'
+      : 'This person is live. Customers can find them now.';
   }
 
   /* ---------- preview ---------- */
   function primaryService(rows) {
     var act = (rows || []).filter(function (s) { return s.available === true && Number(s.price) > 0; });
-    act.sort(function (a, b) { return String(a.created_at || '').localeCompare(String(b.created_at || '')); });
+    act.sort(function (a, b) { if (!!a.is_main !== !!b.is_main) return a.is_main ? -1 : 1; return String(a.created_at || '').localeCompare(String(b.created_at || '')); });   /* the main service first: the same order the database uses */
     return act[0] || null;
   }
   function paintPreview(profile, publicName, services, photos, urlMap) {
@@ -158,7 +161,7 @@
     try {
       var res = await window.supabase.from('local_tasker_photos')
         .select('id, storage_path, caption, is_cover, created_at')
-        .eq('tasker_user_id', taskerId).is('removed_at', null)
+        .eq('tasker_user_id', taskerId).eq('kind', 'portfolio').is('removed_at', null)
         .order('is_cover', { ascending: false }).order('created_at', { ascending: true });
       if (res.error) throw res.error;
       var rows = (res.data || []).slice().sort(function (a, b) {
@@ -239,11 +242,12 @@
     $('coBackText').textContent = 'Back to profile';
     try {
       var pr = await window.supabase.from('local_tasker_profiles')
-        .select('tasker_user_id, full_name, areas_served, skills, status, published_at')
+        .select('tasker_user_id, full_name, areas_served, skills, status, published_at, needs_republish')
         .eq('tasker_user_id', id).maybeSingle();
       if (pr.error) throw pr.error;
       if (!pr.data) { show('coEditMissing'); return; }
       var profile = pr.data;
+      needsRepublish = profile.needs_republish === true;
       var proxy = $('coProxyName'); if (proxy) proxy.textContent = profile.full_name || 'this Local Tasker';
       /* the preview parts are best effort: a problem in one never hides the page or the checklist */
       var um = null, svcs = [];
@@ -253,7 +257,7 @@
       } catch (e) { console.error('[coordinator publish name]', e); }
       try {
         var sr = await window.supabase.from('services')
-          .select('id, service_name, category, price, rate_unit, description, location, specialties, available, created_at')
+          .select('id, service_name, category, price, rate_unit, description, location, specialties, available, is_main, created_at')
           .eq('user_id', id).order('created_at', { ascending: true });
         if (!sr.error) svcs = sr.data || [];
       } catch (e) { console.error('[coordinator publish services]', e); }
@@ -298,6 +302,7 @@
       var d = res.data;
       if (!d || d.status !== 'published' || typeof d.already_published !== 'boolean') { showError('bad_response'); return; }
       btn.textContent = label; setBusy(false);
+      needsRepublish = false;
       await loadStatus();
       showNotice(d.already_published ? 'Public listing updated. Customers now see the latest services and rates.'
         : 'Published. This person can now be found by customers, with the Local Tasker and Phone Assisted labels.');

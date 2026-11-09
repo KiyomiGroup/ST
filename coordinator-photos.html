@@ -73,6 +73,13 @@
             <span class="co-banner-code" id="coPhotoErrorCode"></span>
           </div>
 
+          <section class="co-card" aria-labelledby="coAvatarTitle" id="coAvatarCard">
+            <div class="co-card-head"><h2 class="co-card-title" id="coAvatarTitle">Profile picture</h2></div>
+            <p class="co-card-lead">One clear picture of the Local Tasker (their face, or their shop front). It is kept apart from the portfolio photos below, which show their work. Needed before the first publish.</p>
+            <p class="co-fact-value is-empty" id="coAvatarEmpty" hidden>No profile picture yet. Choose “Profile picture” in the form below and upload one.</p>
+            <ul class="co-photo-grid" id="coAvatarBox" hidden></ul>
+          </section>
+
           <section class="co-card" aria-labelledby="coPhotosTitle">
             <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><h2 class="co-card-title" id="coPhotosTitle">Photos on this profile</h2></div>
             <p class="co-fact-value is-empty" id="coPhotosEmpty" hidden>No photos yet. Add the first one below. It becomes the cover photo.</p>
@@ -84,6 +91,13 @@
             <section class="co-card" aria-labelledby="coAddTitle" id="coAddCard">
               <div class="co-card-head"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><h2 class="co-card-title" id="coAddTitle">Add a photo</h2></div>
               <p class="co-card-lead" id="coAddFull" hidden>This person already has 8 photos. Remove one to add another.</p>
+              <div class="form-group">
+                <label class="form-label" for="coPKind">What is this picture?</label>
+                <select class="form-input" id="coPKind">
+                  <option value="portfolio">Portfolio photo (shows their work)</option>
+                  <option value="avatar">Profile picture (replaces the current one)</option>
+                </select>
+              </div>
               <div id="coAddFields">
                 <div class="form-group">
                   <label class="form-label" for="coPFile">Photo</label>
@@ -92,7 +106,7 @@
                   <p class="co-field-error" id="coPFileErr" hidden></p>
                   <div class="co-photo-preview" id="coPPreviewBox" hidden><img id="coPPreview" alt="Preview of the photo you chose" /></div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="coPCaptionGroup">
                   <label class="form-label" for="coPCaption">Caption (optional)</label>
                   <input class="form-input" type="text" id="coPCaption" maxlength="120" autocomplete="off" aria-describedby="coPCaptionHelp coPCaptionErr" />
                   <p class="form-helper" id="coPCaptionHelp">What the photo shows, up to 120 characters.</p>

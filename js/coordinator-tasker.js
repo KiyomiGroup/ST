@@ -73,7 +73,8 @@
     var li = C.el('li', 'co-svc-item');
     var head = C.el('div', 'co-consent-head');
     head.appendChild(C.el('span', 'co-consent-purpose', s.service_name || 'Service'));
-    head.appendChild(C.el('span', s.available === false ? 'co-status co-status--draft' : 'co-status co-status--published', s.available === false ? 'Paused' : 'Active'));
+    if (s.is_main) head.appendChild(C.el('span', 'co-status co-status--published', 'Main service'));
+    head.appendChild(C.el('span', s.available === false ? 'co-status co-status--draft' : 'co-status co-status--published', s.available === false ? 'Paused' : 'Live'));
     li.appendChild(head);
     var price = money(s.price);
     var meta = (s.category ? C.statusLabel(s.category) : '') + (price ? (s.category ? ' · ' : '') + price + (UNIT[s.rate_unit] ? ' per ' + UNIT[s.rate_unit] : '') : '');
@@ -82,7 +83,29 @@
     var a = C.el('a', 'co-fact-link', 'Edit service');
     a.href = 'coordinator-service-edit.html?id=' + encodeURIComponent(id) + '&service=' + encodeURIComponent(s.id);
     li.appendChild(a);
+    if (s.available !== false && !s.is_main) {
+      var mb = C.el('button', 'co-link-btn', 'Make this the main service'); mb.type = 'button';
+      mb.addEventListener('click', function () { makeMain(id, s.id, mb); });
+      li.appendChild(mb);
+    }
     return li;
+  }
+
+  /* T1: the main service is the one customers see first on the Local Tasker's card. Only a live service can be main. */
+  var MAIN_ERR = { not_live: 'Only a live service can be the main service.', not_found: 'This Local Tasker is not assigned to you any more. Nothing was changed.' };
+  async function makeMain(id, serviceId, btn) {
+    btn.disabled = true; var label = btn.textContent; btn.textContent = 'Saving…';
+    var er = $('coSvcError');
+    try {
+      var res = await window.supabase.rpc('set_local_tasker_main_service', { p_tasker: id, p_service: serviceId });
+      if (res.error) throw res.error;
+      await load(last);                              /* repaint services and the "publish again" banner */
+    } catch (e) {
+      console.error('[coordinator main service]', e);
+      btn.disabled = false; btn.textContent = label;
+      er.textContent = (e && MAIN_ERR[e.hint]) || 'We could not change the main service. Nothing was changed. Try again.';
+      er.hidden = false;
+    }
   }
 
   /* Services load separately so a problem here can never hide the profile. */
@@ -94,7 +117,7 @@
     $('coSvcAdd').href = 'coordinator-service-edit.html?id=' + encodeURIComponent(id);
     try {
       var res = await window.supabase.from('services')
-        .select('id, service_name, category, price, rate_unit, description, available, created_at')
+        .select('id, service_name, category, price, rate_unit, description, available, is_main, created_at')
         .eq('user_id', id)
         .order('created_at', { ascending: true });
       if (res.error) throw res.error;
@@ -104,6 +127,8 @@
       rows.forEach(function (s) { list.appendChild(serviceItem(id, s)); });
       list.hidden = false;
       if (rows.length >= 5) $('coSvcAdd').hidden = true;
+      var liveN = rows.filter(function (r) { return r.available !== false; }).length;
+      var cap = $('coSvcLiveCount'); if (cap) { cap.textContent = liveN + ' of 3 live services. A Local Tasker can have at most 3 live at once.'; cap.hidden = false; }
     } catch (e) {
       console.error('[coordinator tasker services]', e);
       $('coSvcLoading').hidden = true;
@@ -121,7 +146,7 @@
     try {
       var res = await window.supabase.from('local_tasker_photos')
         .select('id, storage_path, caption, is_cover, created_at')
-        .eq('tasker_user_id', id).is('removed_at', null)
+        .eq('tasker_user_id', id).eq('kind', 'portfolio').is('removed_at', null)
         .order('is_cover', { ascending: false }).order('created_at', { ascending: true });
       if (res.error) throw res.error;
       $('coPhotoLoading').hidden = true;
@@ -246,6 +271,12 @@
     document.title = name + ' — StreetTasker';
     $('coDetailAvatar').textContent = C.initialsOf(name);
     $('coDetailName').textContent = name;
+    /* T1: edits after publishing do not reach customers until the coordinator presses Update on the Publish page */
+    var rb = $('coRepubBanner');
+    if (rb) {
+      rb.hidden = !(p.status === 'published' && p.needs_republish === true);
+      var rl = $('coRepubLink'); if (rl) rl.href = 'coordinator-publish.html?id=' + encodeURIComponent(p.tasker_user_id);
+    }
     var skills = Array.isArray(p.skills) ? p.skills.filter(Boolean) : [];
     $('coDetailSkills').textContent = skills.length ? skills.join(', ') : 'No skills recorded yet';
     var st = $('coDetailStatus'); st.textContent = '';
@@ -309,7 +340,7 @@
     var cb = $('coCreatedBanner'); if (cb) cb.hidden = true;
     try {
       var res = await window.supabase.from('local_tasker_profiles')
-        .select('tasker_user_id, full_name, phone, areas_served, skills, availability_notes, status, published_at, created_at')
+        .select('tasker_user_id, full_name, phone, areas_served, skills, availability_notes, status, published_at, created_at, needs_republish')
         .eq('tasker_user_id', id)
         .maybeSingle();
       if (res.error) throw res.error;

@@ -24,7 +24,8 @@
   var MESSAGES = {
     not_found: "This Local Tasker isn't assigned to you any more, or your coordinator account isn't active. Nothing was changed.",
     consent_required: 'Choose how they agreed and tick the confirmation.',
-    service_limit: 'A Local Tasker can have at most 5 services. Pause or edit an existing one instead.',
+    service_limit: 'A Local Tasker can have at most 5 services. Edit an existing one instead.',
+    live_service_limit: 'A Local Tasker can have at most 3 live services. Untick “Live” on one of their other services first, then save this one again.',
     duplicate_name: 'This Local Tasker already has a service with that name. Pick another title, or edit the existing service.',
     unauthenticated: 'Your sign-in has expired. Please sign in again, then come back to this form.',
     network: "We couldn't reach the server. Before pressing Save again, check the services on the profile so you don't add it twice.",
