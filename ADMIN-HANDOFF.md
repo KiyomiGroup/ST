@@ -11,10 +11,13 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 4. `docs/admin-control-centre/02-SCREEN-SPECS.md`: every screen, its data, actions, permissions and layout.
 5. `docs/admin-control-centre/03-OWNER-DECISIONS.md`: open decisions with defaults.
 6. The owner's master brief, saved as `docs/admin-control-centre/00-BRIEF.md` (business requirement; the repo wins where they disagree).
-7. The newest file in `docs/admin-control-centre/handoffs/` (now `A12b.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
+7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5a.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-09, after A12b)
+## CURRENT STATE (2026-11-09, after A5a)
+**A5a (approvals reader) is written**: `sql/admin/a5a-approvals-reader.sql` (+ rollback), `admin/approvals.html`, `admin/js/admin-approvals.js`, menu item "Pending approvals" switched on in `admin-shell.js`. Read only: it lists requests in four tabs (Pending, Approved, Rejected, Expired or cancelled), shows a current-versus-proposed table, history and time left, and has NO Approve, Reject or Cancel button (that is A5b). **Page run against a fake Supabase (36 checks, `local-tests/a5a-browser-test.py`); the SQL was NOT run anywhere (this build environment had no Postgres) and nothing is on Supabase or deployed.** The owner ran `a10-local-taskers.sql`, `a12a-bookings.sql` and `a12b-local-booking-ops.sql` on Supabase on 2026-11-09 and each printed DONE; the Problems queue loads (empty). A5 is split in five (`00-PLAN.md`, row "A5 split"). Read `handoffs/A5a.md`. The A12b paragraph below is kept for history.
+
+## PREVIOUS STATE (2026-11-09, after A12b)
 **A12b (Local booking operations) is written** from the REAL function sources the owner pasted: `sql/admin/a12b-local-booking-ops.sql` (+ rollback), Bookings page now has a Problems queue tab, a coordinator-change panel (`local_bookings.reassign`) and an unlock panel (`local_bookings.unlock`). **SQL run on a scratch Postgres (65 checks pass); page run against a fake Supabase (54 checks); NOT run on Supabase, NOT deployed.** Running the SQL found a bug that also affects A10 and A12a (`v_failed || 'x'` needs `::text`): fixed in both files; **the owner must re-run `a10-local-taskers.sql` and `a12a-bookings.sql` before `a12b-local-booking-ops.sql`** (`handoffs/A12b.md` items 4 and 7). Read `handoffs/A12b.md`. The A12a paragraph below is kept for history.
 
 ### Earlier state (after A12a)

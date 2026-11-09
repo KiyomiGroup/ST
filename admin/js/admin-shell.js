@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4; Activity log on in A6; Disputes on in A13; Coordinators on in A9)
+   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4; Activity log on in A6; Disputes on in A13; Coordinators on in A9; Pending approvals on in A5a)
    The one shared script of every admin page. It:
      1. checks the sign-in and asks the database who the admin is (rpc admin_my_access);
      2. shows "No access", "Two-step needed", or an error with Retry, instead of the page, when it should;
@@ -23,7 +23,7 @@
     { group: 'Overview', items: [
       { key: 'index',     label: 'Overview',          href: 'index.html',     icon: 'home',   any: null, built: true },
       { key: 'dashboard', label: 'Dashboard',         href: 'dashboard.html', icon: 'chart',  any: null, built: true },
-      { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: false }
+      { key: 'approvals', label: 'Pending approvals', href: 'approvals.html', icon: 'check',  any: ['approvals.view', 'approvals.request', 'approvals.decide'], built: true }
     ] },
     { group: 'People', items: [
       { key: 'local-taskers', label: 'Local Taskers', href: 'local-taskers.html', icon: 'users', any: ['local_taskers.view'], built: true },
