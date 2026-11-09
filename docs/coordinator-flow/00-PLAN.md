@@ -17,7 +17,7 @@ Rules (same as earlier work): owner uses ONLY the Supabase SQL editor and dashbo
 | B1 | New-booking intake. A "New booking" panel tells the coordinator, in order: accept the application, chat with the customer first to confirm date, price, place and details; record it; while chatting, call the Local Tasker to confirm; only then record the Local Tasker's answer. Quote is blocked until the customer chat is recorded. | small | `b1-introspect.sql` |
 | B2a | Customer declines a quote and can propose a lower service price; the coordinator is told what to do (bell / phone / email). DONE, not yet run. | yes (small) | none (sources already pasted) |
 | B2b | Coordinator "what to do now" after a decline: phone the Local Tasker with the customer's price > record the new answer > send the new quote, as guided steps on the booking page (same style as the B1 "New booking" card). | no | none. DONE, not yet pushed. |
-| B2c | If the customer will not accept: the coordinator closes the booking (task stays closed, not re-opened), the customer is told, the Job Room chat closes. | yes | `b2c-introspect.sql` (`_local_booking_cancel_block`, task triggers, `job_cancel`) |
+| B2c | If the customer will not accept: the coordinator closes the booking (task stays closed, not re-opened), the customer is told, the Job Room chat closes. | yes | `b2c-introspect.sql` (`_local_booking_cancel_block`, task triggers, `job_cancel`). DONE, not yet run. |
 | B2d | The quote appears as a card in the chat: coordinator chat page (read) and the message that puts it there. | yes | `b2d-introspect.sql` (`coordinator_send_message`, `coordinator_chat_thread`, `coordinator_chat_cards`, messages triggers) |
 | B2e | The same quote card in the customer's Job Room with Approve / Decline (uses the B2a answer function; the proposed-price field is in the card). | no (front end) | none after B2d |
 | B3 | Job day. Coordinator asks the customer for the location and shares it with the Local Tasker; day-and-time prompt to call the Local Tasker and confirm work began; Local Tasker finished > coordinator asks the customer if satisfied > release code pop-up in the chat > money released > chat closes after the code is entered. | yes | `b1-introspect.sql` |
@@ -34,3 +34,6 @@ Reading of the plan used for B2: "payment is declined" = the customer declines t
 2. "Task closed" (B4): the coordinator writes the release code; entering it closes the chat and the task.
 3. T1: no Local Tasker has more than 3 live services today, so the limit only needs to block the 4th.
 4. Reminders (N1d): both, 30 minutes before and at the start time.
+
+## B2c note (2026-11-09)
+The coordinator page already has "Cancel or report a problem" (`coordinator-closeout.js`, `local_booking_cancel`: refused when money is held, so it works after a declined quote). B2c should reuse it with a guided "customer will not accept" step, not build a second cancel. `b2c-introspect.sql` (read-only) is written; B2c is built after its results are pasted.

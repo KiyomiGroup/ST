@@ -670,3 +670,5 @@ body.co-drawer-open { overflow: hidden; }
 
 /* B2b: space between the customer's request and the steps on the "Quote declined" card */
 #coDcFactsBox { margin-bottom: var(--space-4); }
+/* B2c: the hidden attribute must win over .co-form-actions { display: flex } inside the "Quote declined" card */
+#coDc .co-form-actions[hidden], #coDc .co-pub-reason[hidden] { display: none; }

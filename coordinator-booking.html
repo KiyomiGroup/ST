@@ -107,6 +107,25 @@
           <div id="coDcStepsBox" hidden>
             <ol class="co-check-list co-check-list--stack" id="coDcSteps"></ol>
           </div>
+          <div class="co-banner" id="coDcError" role="alert" hidden><span id="coDcErrorText"></span></div>
+          <div id="coDcClose" hidden>
+            <p class="form-label">If the customer will not accept</p>
+            <div class="co-form-actions" id="coDcCloseRow">
+              <button type="button" class="btn btn-outline" id="coDcCloseOpen">Customer will not accept: close booking</button>
+            </div>
+            <form class="co-pub-reason" id="coDcCloseForm" novalidate hidden>
+              <p class="co-card-lead">This closes the booking and the task, and closes the Job Room chat. The customer is told, and nothing is charged. It can’t be undone.</p>
+              <div class="form-group">
+                <label class="form-label" for="coDcNote">Note (optional)</label>
+                <textarea class="form-textarea" id="coDcNote" maxlength="250" aria-describedby="coDcNoteErr"></textarea>
+                <p class="co-field-error" id="coDcNoteErr" hidden></p>
+              </div>
+              <div class="co-form-actions">
+                <button type="button" class="btn btn-ghost" id="coDcCloseCancel">Keep it open</button>
+                <button type="submit" class="btn btn-primary" id="coDcCloseGo">Yes, close the booking</button>
+              </div>
+            </form>
+          </div>
         </section>
 
         <section class="co-card" id="coCf" aria-labelledby="coCfTitle" hidden>
