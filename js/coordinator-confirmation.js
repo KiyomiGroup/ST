@@ -30,6 +30,11 @@
   /* Text under "Next step": what to do here, or what is coming. */
   function noteFor(d) {
     if (!active(d)) return '';
+    if (d.customer_chat_recorded === false && (WAITING[d.lt_status] || d.lt_status === 'tasker_confirmed')) {
+      return WAITING[d.lt_status]
+        ? 'Chat with the customer and record it in “New booking” below. Use “The Local Tasker’s answer” to record your call.'
+        : 'Record your customer chat in “New booking” below. Then build the quote.';
+    }
     if (WAITING[d.lt_status]) return 'Use “The Local Tasker’s answer” below to record your call.';
     if (d.lt_status === 'tasker_confirmed' || d.lt_status === 'quote_declined') return 'Build the quote in “The quote” below.';
     return '';

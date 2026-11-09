@@ -457,6 +457,8 @@ body.co-drawer-open { overflow: hidden; }
 .co-check-mark { flex-shrink: 0; width: 16px; height: 16px; border: 2px solid var(--color-border-strong); border-radius: 50%; }
 .co-check-item.is-done { color: var(--co-ink); }
 .co-check-item.is-done .co-check-mark { background: var(--co-green-bright); border-color: var(--co-green-bright); }
+.co-check-item.is-now { background: var(--co-notice-soft); color: var(--co-green); font-weight: 700; }
+.co-check-item.is-now .co-check-mark { border-color: var(--co-green); }
 .co-edit-aside .co-card-lead:last-child { margin-bottom: 0; }
 
 @media (min-width: 768px) {

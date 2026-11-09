@@ -82,6 +82,7 @@
       if (e.note) li.appendChild(C.el('span', 'co-bk-event-note', e.note));
       h.appendChild(li);
     });
+    if (window.STCoNew) window.STCoNew.mount(d, { reload: function () { return load(); } });
     if (window.STCoConfirm) window.STCoConfirm.mount(d, { reload: function () { return load(); } });
     if (window.STCoQuote) window.STCoQuote.mount(d, { reload: function () { return load(); } });
     if (window.STCoMilestones) window.STCoMilestones.mount(d, { reload: function () { return load(); } });

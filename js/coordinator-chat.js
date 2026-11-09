@@ -74,6 +74,7 @@
       avail: function () { return !!(JOB() && JOB().available('coRs')); }, why: function () { return JOB() ? JOB().why('coRs') : whyNot(); } },
     { pane: 'coPf', group: 'Tell the customer', icon: ICONS.photo, label: 'Send proof of work',               hint: 'Photos, video or files for the customer’s request',
       avail: function () { return !!(JOB() && JOB().available('coPf')); }, why: function () { return JOB() ? JOB().why('coPf') : whyNot(); } },
+    { pane: 'coNb', group: 'New booking',       icon: ICONS.check,  label: 'Record the customer chat',         hint: 'After you chat with the customer: date, price, place and details' },
     { pane: 'coCf', group: 'Price and payment', icon: ICONS.phone,  label: 'Record the Local Tasker’s answer', hint: 'After you phone them: can they do it, and at what price' },
     { pane: 'coQt', group: 'Price and payment', icon: ICONS.tag,    label: 'Send or change the quote',         hint: 'Send the price to the customer to approve and pay' },
     { pane: 'coXt', group: 'Price and payment', icon: ICONS.tool,   label: 'Request an extra cost',            hint: 'More work, materials or transport. The customer can pay or decline' },
@@ -83,7 +84,7 @@
     { pane: 'coEx', group: 'Problems',          icon: ICONS.flag,   label: 'Write down something that went wrong', hint: 'Only a record. It changes nothing' },
     { pane: 'coCo', group: 'Problems',          icon: ICONS.cancel, label: 'Cancel or report a problem',       hint: 'Cancel the booking or open a report for support' }
   ];
-  var CARD_MODULES = ['STCoConfirm', 'STCoQuote', 'STCoMilestones', 'STCoRelease', 'STCoExceptions', 'STCoCloseout', 'STCoExtras', 'STCoReduction', 'STCoJob'];
+  var CARD_MODULES = ['STCoNew', 'STCoConfirm', 'STCoQuote', 'STCoMilestones', 'STCoRelease', 'STCoExceptions', 'STCoCloseout', 'STCoExtras', 'STCoReduction', 'STCoJob'];
 
   /* ── time ─────────────────────────────────────────────────── */
   function timeLabel(iso) {

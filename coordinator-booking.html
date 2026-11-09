@@ -63,6 +63,41 @@
           <a class="btn btn-outline btn-sm" id="coBdChat" href="coordinator-chat.html">Open the conversation</a>
         </section>
 
+        <section class="co-card" id="coNb" aria-labelledby="coNbTitle" hidden>
+          <h2 class="co-card-title" id="coNbTitle">New booking</h2>
+          <p class="co-card-lead" id="coNbLead"></p>
+          <div class="co-banner" id="coNbError" role="alert" hidden><span id="coNbErrorText"></span></div>
+
+          <div id="coNbStepsBox" hidden>
+            <ol class="co-check-list co-check-list--stack" id="coNbSteps"></ol>
+          </div>
+
+          <div id="coNbSummary" hidden>
+            <dl class="co-facts" id="coNbFacts"></dl>
+          </div>
+
+          <form class="co-form" id="coNbForm" novalidate hidden>
+            <p class="form-helper">What the booking says now. Check each one with the customer.</p>
+            <dl class="co-facts" id="coNbBooking"></dl>
+            <fieldset class="co-cf-outcome">
+              <legend class="form-label">I confirmed with the customer</legend>
+              <label class="co-check" for="coNbDate"><input type="checkbox" id="coNbDate" /><span>The date and time</span></label>
+              <label class="co-check" for="coNbPrice"><input type="checkbox" id="coNbPrice" /><span>The price</span></label>
+              <label class="co-check" for="coNbPlace"><input type="checkbox" id="coNbPlace" /><span>The place</span></label>
+              <label class="co-check" for="coNbDetails"><input type="checkbox" id="coNbDetails" /><span>What the job is (the details)</span></label>
+              <p class="co-field-error" id="coNbTicksErr" hidden></p>
+            </fieldset>
+            <div class="form-group">
+              <label class="form-label" for="coNbNote">What did you agree?</label>
+              <textarea class="form-textarea" id="coNbNote" maxlength="500" aria-describedby="coNbNoteErr"></textarea>
+              <p class="co-field-error" id="coNbNoteErr" hidden></p>
+            </div>
+            <div class="co-form-actions">
+              <button type="submit" class="btn btn-primary" id="coNbSave">Save the customer chat</button>
+            </div>
+          </form>
+        </section>
+
         <section class="co-card" id="coCf" aria-labelledby="coCfTitle" hidden>
           <h2 class="co-card-title" id="coCfTitle">The Local Tasker’s answer</h2>
           <p class="co-card-lead" id="coCfLead"></p>
@@ -520,6 +555,7 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-newbooking.js"></script>
   <script src="js/coordinator-confirmation.js"></script>
   <script src="js/coordinator-quote.js"></script>
   <script src="js/coordinator-milestones.js"></script>

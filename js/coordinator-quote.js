@@ -77,6 +77,10 @@
     card.hidden = false;
     var cur = data.current, conf = data.confirmed, st = d.lt_status;
     var canBuild = active(d) && (st === 'tasker_confirmed' || st === 'quote_declined') && !!conf;
+    if (canBuild && d.customer_chat_recorded === false) {      // B1: the quote is locked until the customer chat is recorded
+      $('coQtLead').textContent = 'The quote is locked. Chat with the customer and record it in the “New booking” card first. Then you can send the quote.';
+      return;
+    }
     if (canBuild) {
       $('coQtLead').textContent = st === 'quote_declined'
         ? 'The customer declined the last quote. Revise it below, or go back to the Local Tasker if the price needs to change.' +
@@ -136,6 +140,7 @@
     if (hint === 'booking_closed') return 'This booking is closed, so no quote can be sent.';
     if (hint === 'dispute_open') return 'A problem report is open on this booking, so no quote can be sent right now.';
     if (hint === 'invalid_transition') return 'A quote can’t be sent at this step. Reload the page to see where the booking is.';
+    if (hint === 'customer_chat_required') return 'Record your chat with the customer first (the “New booking” card). The quote is locked until then.';
     if (hint === 'confirmation_required' || hint === 'second_check_pending' || hint === 'exceeds_confirmed' || hint === 'bad_input') return msg || 'We couldn’t send that.';
     return 'We couldn’t send the quote just now. Check your connection and try again. Nothing was sent.';
   }

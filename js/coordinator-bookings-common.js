@@ -55,9 +55,15 @@
     }
     switch (r.lt_status) {
       case 'needs_reassignment': return { tab: 'waiting', text: 'Waiting for an administrator to give this Local Tasker a coordinator.' };
-      case 'assigned': return { tab: 'action', text: 'Contact the Local Tasker and ask whether they can do this job.' };
-      case 'awaiting_tasker_confirmation': return { tab: 'action', text: 'Record the Local Tasker’s answer once you have it.' };
-      case 'tasker_confirmed': return { tab: 'action', text: 'Prepare the itemised quote for the customer.' };
+      case 'assigned':
+        if (r.customer_chat_recorded === false) return { tab: 'action', text: 'New booking: chat with the customer first and confirm the date, price, place and details. Record it, and phone the Local Tasker while you chat.' };
+        return { tab: 'action', text: 'Phone the Local Tasker and ask whether they can do this job, then record their answer.' };
+      case 'awaiting_tasker_confirmation':
+        if (r.customer_chat_recorded === false) return { tab: 'action', text: 'Record your chat with the customer, and record the Local Tasker’s answer once you have it.' };
+        return { tab: 'action', text: 'Record the Local Tasker’s answer once you have it.' };
+      case 'tasker_confirmed':
+        if (r.customer_chat_recorded === false) return { tab: 'action', text: 'Record your chat with the customer. The quote is locked until you do.' };
+        return { tab: 'action', text: 'Prepare the itemised quote for the customer.' };
       case 'tasker_declined': return { tab: 'action', text: 'The Local Tasker declined. Let the customer know and agree what happens next.' };
       case 'quote_sent': return { tab: 'waiting', text: 'Waiting for the customer to approve the quote.' };
       case 'quote_declined': return { tab: 'action', text: 'The customer declined the quote. Revise it or check with the Local Tasker.' };
