@@ -70,13 +70,15 @@
       var profiles = [];
       if (ids.length) {
         var pr = await sb.from('local_tasker_profiles')
-          .select('tasker_user_id, full_name, areas_served, skills, status')
+          .select('tasker_user_id, full_name, areas_served, skills, status, needs_republish')
           .in('tasker_user_id', ids);
         if (pr.error) throw pr.error;
         profiles = pr.data || [];
       }
       var byId = {};
       profiles.forEach(function (p) { byId[p.tasker_user_id] = p; });
+      /* Shared with the "needing attention" panel (js/coordinator-attention.js): no second read of the same rows. */
+      document.dispatchEvent(new CustomEvent('coordinator:taskers', { detail: { ids: ids, byId: byId } }));
 
       /* Count from the assignments (the rule that is capped); status from the profile. */
       var published = 0, drafts = 0;
@@ -119,6 +121,7 @@
       grid.hidden = false;
     } catch (e) {
       console.error('[coordinator overview]', e);
+      document.dispatchEvent(new CustomEvent('coordinator:taskers', { detail: { error: true } }));
       ['assigned', 'published', 'draft', 'open'].forEach(function (k) { setStat(k, '—'); });
       var of2 = $('coStatOf'), bar2 = $('coCapBar'); if (of2) of2.hidden = true; if (bar2) bar2.hidden = true;
       if (loading) loading.hidden = true;

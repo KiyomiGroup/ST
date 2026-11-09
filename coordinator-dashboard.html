@@ -103,7 +103,10 @@
         <button type="button" class="co-link-btn co-banner-retry" id="coOverviewRetry">Try again</button>
       </div>
 
-      <section class="co-card co-req" aria-labelledby="coRequestsTitle">
+      <div class="co-dash-body">
+
+      <div class="co-dash-req">
+        <section class="co-card co-req" aria-labelledby="coRequestsTitle">
         <div class="co-req-head">
           <div>
             <h2 id="coRequestsTitle">Active Requests</h2>
@@ -123,8 +126,37 @@
           <p class="co-empty-text" id="coReqEmptyText">When customers book your Local Taskers, their requests will be listed here.</p>
         </div>
       </section>
+      </div>
 
-      <section class="co-section" aria-labelledby="coTaskersTitle">
+      <div class="co-dash-rail">
+        <section class="co-card co-attn" aria-labelledby="coAttnTitle">
+          <div class="co-attn-head">
+            <h2 id="coAttnTitle" class="co-card-title">Taskers needing attention</h2>
+            <span class="co-attn-count" id="coAttnCount" hidden></span>
+          </div>
+          <p class="co-loading" id="coAttnLoading">Checking your Local Taskers…</p>
+          <ul class="co-attn-list" id="coAttnList" hidden></ul>
+          <p class="co-card-lead co-attn-empty" id="coAttnEmpty" hidden>All your Local Taskers are in good shape. Nothing needs attention.</p>
+          <p class="co-card-lead co-attn-note" id="coAttnNote" role="status" hidden></p>
+        </section>
+
+        <!-- Stage 7F/C3: the coordinator's wallet. The balance is read by js/coordinator-wallet-tile.js; it shows a dash, never a made-up number,
+           if it cannot be read. Withdrawals happen on coordinator-wallet.html. -->
+        <section class="co-card co-wallet" aria-labelledby="coWalletTitle">
+          <div class="co-wallet-head">
+            <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+            <h2 id="coWalletTitle" class="co-card-title">Coordinator earnings</h2>
+          </div>
+          <p class="co-fact-label co-wallet-label">Available balance</p>
+          <p class="co-wallet-balance" id="coWalletBalance" aria-live="polite">—</p>
+          <p class="co-card-lead" id="coWalletNote" role="status" hidden></p>
+          <a class="btn btn-primary btn-full" href="coordinator-wallet.html">Withdraw balance</a>
+          <a class="co-fact-link co-wallet-link" href="coordinator-wallet.html">Open full wallet &amp; payout accounts &rarr;</a>
+        </section>
+      </div>
+
+      <div class="co-dash-taskers">
+        <section class="co-section" aria-labelledby="coTaskersTitle">
         <div class="co-section-head">
           <div>
             <h2 id="coTaskersTitle">Assigned Local Taskers</h2>
@@ -138,25 +170,9 @@
           <p class="co-empty-text">Local Taskers assigned to you will appear here. Ask a StreetTasker administrator if you were expecting some.</p>
         </div>
       </section>
+      </div>
 
-      <!-- Stage 7F: the coordinator's wallet (your own wallet page inside the coordinator portal). The balance is read by js/coordinator-wallet-tile.js;
-           it shows a dash, never a made-up number, if it cannot be read. Withdrawals happen on coordinator-wallet.html. -->
-      <section class="co-section" aria-labelledby="coWalletTitle">
-        <div class="co-section-head">
-          <div>
-            <h2 id="coWalletTitle">Wallet</h2>
-            <p class="co-section-sub">Your commission, bank accounts and withdrawals.</p>
-          </div>
-        </div>
-        <article class="co-card">
-          <div class="co-facts">
-            <p class="co-fact-label">Wallet balance</p>
-            <p class="co-fact-value" id="coWalletBalance" aria-live="polite">—</p>
-          </div>
-          <p class="co-card-lead" id="coWalletNote" role="status" hidden></p>
-          <p class="co-card-lead"><a class="co-fact-link" href="coordinator-wallet.html">Open your wallet</a> to add a bank account or withdraw.</p>
-        </article>
-      </section>
+      </div>
 
     </main>
 
@@ -168,9 +184,11 @@
   <script src="js/supabaseClient.js"></script>
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
+  <script src="js/coordinator-verify-status.js"></script>
   <script src="js/coordinator-overview.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-requests.js"></script>
+  <script src="js/coordinator-attention.js"></script>
   <script src="js/coordinator-wallet-tile.js"></script>
 </body>
 </html>

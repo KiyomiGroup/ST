@@ -125,3 +125,53 @@
   .co-req-item { padding: var(--space-4) var(--space-5); }
 }
 .co-req-item.is-issue .co-status { background: var(--color-bg); }
+
+/* ── Right rail: needs attention + wallet (Stage C3) ────────── */
+.co-dash-body { display: flex; flex-direction: column; gap: var(--space-6); }
+.co-dash-rail { display: flex; flex-direction: column; gap: var(--space-4); }
+.co-dash-req, .co-dash-taskers { min-width: 0; }
+
+.co-attn-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.co-attn-head .co-card-title { margin-bottom: 0; }
+.co-attn-count {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 var(--space-2);
+  border-radius: var(--radius-pill); background: var(--co-danger); color: var(--color-text-on-primary);
+  font-size: var(--text-xs); font-weight: 800;
+}
+.co-attn-count[hidden], .co-attn-list[hidden], .co-attn-empty[hidden], .co-attn-note[hidden], .co-attn .co-loading[hidden] { display: none; }
+.co-attn .co-loading { padding: 0; }
+.co-attn-empty, .co-attn-note { margin: 0; }
+.co-attn-note { margin-top: var(--space-3); }
+.co-attn-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+.co-attn-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); background: var(--co-field); border-radius: var(--radius-lg); }
+.co-attn-avatar { width: 40px; height: 40px; font-size: var(--text-sm); flex-shrink: 0; }
+.co-attn-text { flex: 1; min-width: 0; }
+.co-attn-name { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--co-ink); overflow-wrap: anywhere; }
+.co-attn-reason { font-size: var(--text-xs); color: var(--co-ink-muted); overflow-wrap: anywhere; }
+.co-attn-reason.is-bad { color: var(--co-danger); font-weight: 600; }
+.co-attn-action { flex-shrink: 0; font-size: var(--text-sm); text-decoration: none; white-space: nowrap; }
+.co-attn-action:hover { text-decoration: underline; }
+.co-attn-more { padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
+
+.co-wallet-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.co-wallet-head .co-card-title { margin-bottom: 0; }
+.co-wallet-label { margin-top: 0; }
+.co-wallet-balance { margin: var(--space-1) 0 var(--space-4); font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; line-height: 1.1; color: var(--co-ink); overflow-wrap: anywhere; }
+.co-wallet .co-card-lead[hidden] { display: none; }
+.co-wallet-link { display: block; margin-top: var(--space-3); text-align: center; font-size: var(--text-sm); text-decoration: none; }
+.co-wallet-link:hover { text-decoration: underline; }
+
+@media (min-width: 1044px) {
+  .co-dash-body {
+    display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "req rail" "tasker rail";
+    align-items: start; column-gap: var(--space-5); row-gap: var(--space-6);
+  }
+  .co-dash-req { grid-area: req; }
+  .co-dash-rail { grid-area: rail; }
+  .co-dash-taskers { grid-area: tasker; }
+  .co-dash-taskers .co-tasker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .co-attn-item { flex-wrap: wrap; }
+  .co-attn-action { flex-basis: 100%; padding-left: calc(40px + var(--space-3)); }
+}
