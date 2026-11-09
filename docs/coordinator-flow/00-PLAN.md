@@ -21,7 +21,7 @@ Rules (same as earlier work): owner uses ONLY the Supabase SQL editor and dashbo
 | B2d | The quote appears as a card in the chat: coordinator chat page (read) and the message that puts it there. | yes | `b2d-introspect.sql` (`coordinator_send_message`, `coordinator_chat_thread`, `coordinator_chat_cards`, messages triggers) |
 | B2e | The same quote card in the customer's Job Room with Approve / Decline (uses the B2a answer function; the proposed-price field is in the card). | no (front end) | none after B2d |
 | B3 | DONE, not yet run. Job day. Coordinator asks the customer for the location and shares it with the Local Tasker; day-and-time prompt to call the Local Tasker and confirm work began; Local Tasker finished > coordinator asks the customer if satisfied > release code pop-up in the chat > money released > chat closes after the code is entered. | yes | `b1-introspect.sql` |
-| B4 | Booking page countdown for the Local Tasker's payout, a notification to the coordinator when it is sent, and a task leaves the site only when closed (not when it is booked). | yes | `b1-introspect.sql` |
+| B4 | Booking page countdown for the Local Tasker's payout (24 hours after the release code), a notification to the coordinator when it is sent, and a task leaves the site only when closed (not when it is booked). BUILT, not yet run (24 hour payout wait, countdown card, coordinator notice when paid). NOT done: task visibility and the payout sender, see `handoff-B4.md`. | yes | `b4-introspect.sql` (done) |
 
 Order: N1 first (most painful bug), then T1, B1, B2, B3, B4.
 
@@ -40,3 +40,9 @@ The coordinator page already has "Cancel or report a problem" (`coordinator-clos
 
 ## B3 result (2026-11-09)
 Built from the pasted `b3-introspect.sql` results. The owner did not answer the two questions, so defaults were used (change on request): (1) location = relay by phone: the dock shows the place the customer shared with a Maps button and a Call button, the coordinator tells the Local Tasker and records "address confirmed"; (2) the release code stays a docked panel (not a modal) that appears by itself once "work finished" is recorded. Findings: the chat already closes when `bookings.status` becomes completed/cancelled; `_release_escrow` was NOT pasted, so whether release sets status = completed is unknown, hence the new trigger `lt_close_chat_on_release`. See `handoff-B3.md`. Next: B4.
+
+## B4 start (2026-11-09)
+Owner said "go". `_release_escrow` and the payout functions were never pasted, so B4 starts with the read-only `sql/coordinator-flow/b4-introspect.sql`. Not run yet. After the owner pastes the results, B4 is built in one session and then stops for "go".
+
+## B4 result (2026-11-09)
+Built from the pasted `b4-introspect.sql` results. `_release_escrow` already completes the booking and queues the payout at once, so B4 holds the payout with `local_payouts.release_after` (24 hours, set by a trigger, enforced in `local_payout_claim`), adds the booking-page countdown card and a `coordinator_payout_sent` notification when the payout is paid. Findings: no sender or cron for payouts exists in the repo (a separate stage), and "task leaves the site only when closed" needs an owner decision and the `accept_application` source. See `handoff-B4.md`.

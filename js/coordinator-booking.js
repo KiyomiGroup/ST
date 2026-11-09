@@ -88,6 +88,7 @@
     if (window.STCoQuote) window.STCoQuote.mount(d, { reload: function () { return load(); } });
     if (window.STCoMilestones) window.STCoMilestones.mount(d, { reload: function () { return load(); } });
     if (window.STCoRelease) window.STCoRelease.mount(d, { reload: function () { return load(); } });
+    if (window.STCoPayoutStatus) window.STCoPayoutStatus.mount(d, { reload: function () { return load(); } });
     if (window.STCoReview) window.STCoReview.mount(d, { reload: function () { return load(); } });
     if (window.STCoExceptions) window.STCoExceptions.mount(d, { reload: function () { return load(); } });
     if (window.STCoCloseout) window.STCoCloseout.mount(d, { reload: function () { return load(); } });

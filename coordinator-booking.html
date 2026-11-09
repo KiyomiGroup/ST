@@ -330,6 +330,12 @@
           <p class="co-consent-meta" id="coRlFoot">A wrong code uses one of three attempts. After three wrong codes the booking is locked and only a StreetTasker administrator can unlock it. Entering the right code releases the payment once. It can’t be undone.</p>
         </section>
 
+        <section class="co-card" id="coPo" aria-labelledby="coPoTitle" hidden>
+          <h2 class="co-card-title" id="coPoTitle">Payout to the Local Tasker</h2>
+          <p class="co-card-lead" id="coPoLead"></p>
+          <p class="co-consent-meta" id="coPoCount" role="status" hidden></p>
+        </section>
+
         <section class="co-card" id="coRv" aria-labelledby="coRvTitle" hidden>
           <h2 class="co-card-title" id="coRvTitle">Review the customer</h2>
           <p class="co-card-lead" id="coRvLead"></p>
@@ -592,6 +598,7 @@
   <script src="js/coordinator-milestones.js"></script>
   <script src="js/coordinator-exceptions.js"></script>
   <script src="js/coordinator-release.js"></script>
+  <script src="js/coordinator-payout-status.js"></script>
   <script src="js/coordinator-review.js"></script>
   <script src="js/coordinator-closeout.js"></script>
   <script src="js/coordinator-extras.js"></script>
