@@ -18,9 +18,9 @@ Rules (same as earlier work): owner uses ONLY the Supabase SQL editor and dashbo
 | B2a | Customer declines a quote and can propose a lower service price; the coordinator is told what to do (bell / phone / email). DONE, not yet run. | yes (small) | none (sources already pasted) |
 | B2b | Coordinator "what to do now" after a decline: phone the Local Tasker with the customer's price > record the new answer > send the new quote, as guided steps on the booking page (same style as the B1 "New booking" card). | no | none. DONE, not yet pushed. |
 | B2c | If the customer will not accept: the coordinator closes the booking (task stays closed, not re-opened), the customer is told, the Job Room chat closes. | yes | `b2c-introspect.sql` (`_local_booking_cancel_block`, task triggers, `job_cancel`). DONE, not yet run. |
-| B2d | The quote appears as a card in the chat: coordinator chat page (read) and the message that puts it there. DONE, not yet run. | yes | `b2d-introspect.sql` (done, pasted) |
-| B2e | The same quote card in the customer's Job Room with Approve / Decline (uses the B2a answer function; the proposed-price field is in the card). DONE, not yet pushed. | no (front end) | none after B2d |
-| B3 | Job day. Coordinator asks the customer for the location and shares it with the Local Tasker; day-and-time prompt to call the Local Tasker and confirm work began; Local Tasker finished > coordinator asks the customer if satisfied > release code pop-up in the chat > money released > chat closes after the code is entered. | yes | `b1-introspect.sql` |
+| B2d | The quote appears as a card in the chat: coordinator chat page (read) and the message that puts it there. | yes | `b2d-introspect.sql` (`coordinator_send_message`, `coordinator_chat_thread`, `coordinator_chat_cards`, messages triggers) |
+| B2e | The same quote card in the customer's Job Room with Approve / Decline (uses the B2a answer function; the proposed-price field is in the card). | no (front end) | none after B2d |
+| B3 | DONE, not yet run. Job day. Coordinator asks the customer for the location and shares it with the Local Tasker; day-and-time prompt to call the Local Tasker and confirm work began; Local Tasker finished > coordinator asks the customer if satisfied > release code pop-up in the chat > money released > chat closes after the code is entered. | yes | `b1-introspect.sql` |
 | B4 | Booking page countdown for the Local Tasker's payout, a notification to the coordinator when it is sent, and a task leaves the site only when closed (not when it is booked). | yes | `b1-introspect.sql` |
 
 Order: N1 first (most painful bug), then T1, B1, B2, B3, B4.
@@ -38,8 +38,5 @@ Reading of the plan used for B2: "payment is declined" = the customer declines t
 ## B2c note (2026-11-09)
 The coordinator page already has "Cancel or report a problem" (`coordinator-closeout.js`, `local_booking_cancel`: refused when money is held, so it works after a declined quote). B2c should reuse it with a guided "customer will not accept" step, not build a second cancel. `b2c-introspect.sql` (read-only) is written; B2c is built after its results are pasted.
 
-## B2d result (2026-11-09)
-Quote chat line written by trigger `lbq_chat_line` on `local_booking_quotes` (type `system`, payload `{card:'quote', quote_id, version}`); `coordinator_chat_cards` returns `quotes`; `coordinator_chat_thread` passes the payload. Block 2b (check constraints on `messages`) was not pasted, so no new message type is used. See `handoff-B2d.md`.
-
-## B2e result (2026-11-09)
-Front end only. `js/messages-quote.js` draws that line as a card in the customer's Job Room with Approve / Decline (same `local_booking_decide_quote` call and rules as the Bookings page). Needs B2d's SQL run first. See `handoff-B2e.md`. Next: B3.
+## B3 result (2026-11-09)
+Built from the pasted `b3-introspect.sql` results. The owner did not answer the two questions, so defaults were used (change on request): (1) location = relay by phone: the dock shows the place the customer shared with a Maps button and a Call button, the coordinator tells the Local Tasker and records "address confirmed"; (2) the release code stays a docked panel (not a modal) that appears by itself once "work finished" is recorded. Findings: the chat already closes when `bookings.status` becomes completed/cancelled; `_release_escrow` was NOT pasted, so whether release sets status = completed is unknown, hence the new trigger `lt_close_chat_on_release`. See `handoff-B3.md`. Next: B4.

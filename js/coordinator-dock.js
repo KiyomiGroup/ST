@@ -6,7 +6,9 @@
      Start                phone the Local Tasker and record their answer          > opens that form
      Local Tasker yes     send the price (the quote) to the customer               > opens the quote form
      Quote sent / approved  waiting notices
-     Customer has paid    the release-code box: "ask the customer for the code once the job is done"
+     Customer has paid    B3, the job day in order: ask the customer for the job location > tell the Local Tasker (phone) and record the address >
+                          call at the start time, record arrived / started > record finished > ask the customer if they are satisfied and enter
+                          the release code (the box appears by itself once "finished" is recorded). The steps come from local_booking_milestones.
 
    Data: only S.detail (local_booking_detail) and the open conversation, both already loaded by coordinator-chat.js, plus the
    database function that already powers the Release the payment card:
@@ -19,7 +21,7 @@
 'use strict';
 
 (function () {
-  var S = { sig: '', code: null, codeFor: '', loading: false, busy: false };
+  var S = { sig: '', code: null, codeFor: '', loading: false, busy: false, ms: null, msFor: '', msStamp: null, msLoading: false, force: '', asked: {} };   /* B3: ms = the recorded job-day steps */
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) { return window.STCo.el(tag, cls, text); }
@@ -120,12 +122,83 @@
     return c;
   }
 
+
+  /* ── B3: job day ─────────────────────────────────────────── */
+  function loadMs(d) {
+    if (S.msLoading) return;
+    S.msLoading = true;
+    window.supabase.rpc('local_booking_milestones', { p_booking: d.booking_id }).then(function (r) {
+      S.ms = r.error || !r.data ? { ok: false } : { ok: true, next: r.data.next_kind || '', done: (r.data.items || []).map(function (x) { return x.kind; }) };
+      S.msFor = d.booking_id;
+    }).catch(function () { S.ms = { ok: false }; S.msFor = d.booking_id; })
+      .then(function () { S.msLoading = false; S.sig = ''; update(); });
+  }
+  /* the latest place the customer shared in this conversation (numbers only are used) */
+  function customerPlace() {
+    var c = chat(), t = c && c.state() && c.state().thread, list = (t && t.messages) || [], out = null;
+    list.forEach(function (m) {
+      if (m && m.kind === 'customer' && m.type === 'location' && m.payload && isFinite(Number(m.payload.lat)) && isFinite(Number(m.payload.lng))) {
+        out = { id: String(m.id), lat: Number(m.payload.lat), lng: Number(m.payload.lng), label: m.payload.label ? String(m.payload.label) : '' };
+      }
+    });
+    return out;
+  }
+  function phoneBtn(a) {
+    var c = chat(), ph = c && c.state() && c.state().taskerPhone;
+    if (!ph) return;
+    var b = btn('Call the Local Tasker', false, function () { window.location.href = 'tel:' + String(ph).replace(/[^0-9+]/g, ''); });
+    a.appendChild(b);
+  }
+  function askOnce(d, key, text, label, a) {
+    var done = !!S.asked[d.booking_id + key];
+    var b = btn(done ? 'Asked in the chat' : label, !done, function () {
+      if (S.asked[d.booking_id + key] || !chat()) return;
+      S.asked[d.booking_id + key] = true; chat().sendText(text); S.sig = ''; update();
+    });
+    b.disabled = done; a.appendChild(b);
+  }
+  function jobDay(host, d) {
+    var m = S.msFor === d.booking_id ? S.ms : null;
+    if (!m) { loadMs(d); host.appendChild(card('', 'Job day', 'Checking…')); return; }
+    if (!m.ok || S.force === d.booking_id) { host.appendChild(codeCard(d)); return; }   /* steps not available: the release box, as before */
+    var skip = function (c) { actions(c).appendChild(btn('I already have the release code', false, function () { S.force = d.booking_id; S.sig = ''; update(); })); };
+    if (!m.next) {                                   /* every step is recorded, including finished */
+      var f = card('', 'The work is finished', 'Ask the customer if they are happy with it. If they are, ask them for their 6-digit release code and enter it below.');
+      askOnce(d, ':sat', 'Hello, the Local Tasker has told us the work is finished. Are you happy with it? If yes, please send me your 6-digit release code so we can release the payment. If something is not right, tell me here.', 'Ask the customer if they are satisfied', actions(f));
+      host.appendChild(f); host.appendChild(codeCard(d)); return;
+    }
+    if (m.next === 'address_confirmed') {
+      var pl = customerPlace();
+      var c1 = card('', pl ? 'The customer shared the job location' : 'Get the job location', pl
+        ? (pl.label ? pl.label + '. ' : '') + 'Tell the Local Tasker where to go (call them), then record that they confirmed the address.'
+        : 'Ask the customer to share the exact place in the chat. Then tell the Local Tasker by phone.');
+      var a1 = actions(c1);
+      if (pl) {
+        a1.appendChild(btn('Open in Maps', false, function () { window.open('https://www.google.com/maps?q=' + pl.lat + ',' + pl.lng, '_blank', 'noopener'); }));
+        phoneBtn(a1);
+        a1.appendChild(btn('Record: address confirmed', true, function () { open('coMs'); }));
+      } else {
+        askOnce(d, ':loc', 'Hello, please share the exact job location here in the chat so we can pass it to the Local Tasker. Thank you.', 'Ask the customer for the location', a1);
+        a1.appendChild(btn('Record: address confirmed', false, function () { open('coMs'); }));
+      }
+      skip(c1); host.appendChild(c1); return;
+    }
+    var TXT = {
+      arrived: ['Job day: confirm the Local Tasker arrived', 'At the agreed time, call the Local Tasker and ask if they have arrived. Then record it.', 'Record: arrived'],
+      started: ['Job day: confirm the work has begun', 'Call the Local Tasker and ask if the work has begun. Then record it.', 'Record: work started'],
+      finished: ['The work is in progress', 'When the Local Tasker tells you the work is finished, record it. The release code box then appears here.', 'Record: work finished']
+    }[m.next] || ['Job day', 'Record the next step.', 'Record progress'];
+    var c2 = card('', TXT[0], TXT[1]), a2 = actions(c2); phoneBtn(a2);
+    a2.appendChild(btn(TXT[2], true, function () { open('coMs'); }));
+    skip(c2); host.appendChild(c2);
+  }
+
   /* ── build ───────────────────────────────────────────────── */
   function build(host, d) {
     var paid = d.payment_status === 'paid';
 
     if (paid) {
-      host.appendChild(codeCard(d));
+      jobDay(host, d);
       return true;
     }
 
@@ -163,7 +236,11 @@
     var can = !!(c && c.canWrite() && d && d.booking_id && d.booking_id === st.activeId);
     if (!can || (!d.open && d.booking_status !== 'disputed') || d.frozen || d.booking_status === 'disputed') { host.hidden = true; host.textContent = ''; S.sig = ''; return; }
 
-    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : ''].join('|');
+    /* B3: a reloaded booking (a step was just recorded) means the steps are read again; the old ones stay on screen until then */
+    if (d.payment_status === 'paid' && S.msStamp !== d && !S.msLoading) { S.msStamp = d; loadMs(d); }
+    var pl = d.payment_status === 'paid' ? customerPlace() : null, ms = S.msFor === d.booking_id && S.ms ? (S.ms.ok ? S.ms.next + ':' + S.ms.done.length : 'x') : '';
+    var asked = Object.keys(S.asked).filter(function (k) { return k.indexOf(d.booking_id) === 0; }).join(',');
+    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : '', ms, pl ? pl.id : '', S.force === d.booking_id ? 'f' : '', asked].join('|');
     if (sig === S.sig && !host.hidden) return;
     S.sig = sig;
     host.textContent = '';
