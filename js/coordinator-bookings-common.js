@@ -66,7 +66,7 @@
         return { tab: 'action', text: 'Prepare the itemised quote for the customer.' };
       case 'tasker_declined': return { tab: 'action', text: 'The Local Tasker declined. Let the customer know and agree what happens next.' };
       case 'quote_sent': return { tab: 'waiting', text: 'Waiting for the customer to approve the quote.' };
-      case 'quote_declined': return { tab: 'action', text: 'The customer declined the quote. Revise it or check with the Local Tasker.' };
+      case 'quote_declined': return { tab: 'action', text: 'The customer declined the quote. Phone the Local Tasker with the customer’s price, record their new answer, then send a new quote.' };
       case 'quote_approved':
         return isUnpaid(r.payment_status)
           ? { tab: 'waiting', text: 'Waiting for the customer to pay. Payments are handled by StreetTasker.' }

@@ -36,7 +36,8 @@
         : 'Record your customer chat in “New booking” below. Then build the quote.';
     }
     if (WAITING[d.lt_status]) return 'Use “The Local Tasker’s answer” below to record your call.';
-    if (d.lt_status === 'tasker_confirmed' || d.lt_status === 'quote_declined') return 'Build the quote in “The quote” below.';
+    if (d.lt_status === 'quote_declined') return 'Follow the steps in “Quote declined” below. Then send the new quote in “The quote”.';
+    if (d.lt_status === 'tasker_confirmed') return 'Build the quote in “The quote” below.';
     return '';
   }
 

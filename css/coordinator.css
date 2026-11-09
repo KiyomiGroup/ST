@@ -667,3 +667,6 @@ body.co-drawer-open { overflow: hidden; }
 .co-flyer-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
 .co-flyer-actions .btn { width: 100%; justify-content: center; }
 @media (min-width: 640px) { .co-flyer-actions { flex-direction: row; flex-wrap: wrap; } .co-flyer-actions .btn { width: auto; } }
+
+/* B2b: space between the customer's request and the steps on the "Quote declined" card */
+#coDcFactsBox { margin-bottom: var(--space-4); }
