@@ -465,6 +465,11 @@ function stLocalTags() {
   const L = window.STLocal || {};
   return `<div class="st-local-tags"><span class="st-chip st-chip--local">${L.LABEL || 'Local Tasker'}</span><span class="st-chip st-chip--local-phone">${L.LABEL_PHONE || 'Phone Assisted'}</span></div>`;
 }
+/* Profile pictures on cards: the card only says whose picture belongs in a spot; js/local-tasker-public.js puts it there after the card is on the page. */
+function stAvAttr(s, kind) {
+  const uid = String((s && s.user_id) || '');
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid) ? ` data-avatar-user="${uid}" data-avatar-kind="${kind}"` : '';
+}
 const ST_AVAIL = { available_now: ['Available', true], available_today: ['Available today', true], available_this_week: ['This week', false] };
 function stTaskerCard(s) {
   if (s && s.home) return stTaskerCardHome(s);
@@ -491,7 +496,7 @@ function stTaskerCard(s) {
           <p class="st-tasker-role">${e(s.service_name || '')}</p>
           <p class="st-tasker-loc">${ST_ICON.pin}${e(s.location || 'Lagos')}</p>
         </div>
-        <div class="st-tasker-avatar"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+        <div class="st-tasker-avatar"${stAvAttr(s, 'photo')}><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo && !s.isLocal ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
       ${s.isLocal ? stLocalTags() : ''}
       ${shown.length ? `<div class="st-tasker-skills"><span class="st-card-label">Skills</span>
@@ -578,7 +583,7 @@ function stServiceCardHome(s) {
     : `<div class="st-card-media-fallback" aria-hidden="true">${s.category ? stCatPic(s.category) : (s.emoji || ST_CAT_EMOJI.other)}</div>`;
   const memb = (!s.isLocal && s.user_id && window.STMembership) ? window.STMembership.html(s.user_id, { small: true }) : '';
   const name = s.provider || '';
-  const avatar = `<span class="st-home-avatar"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.providerPhoto ? `<img src="${e(s.providerPhoto)}" alt="" loading="lazy" onerror="this.remove()" />` : ''}</span>`;
+  const avatar = `<span class="st-home-avatar"${stAvAttr(s, 'chip')}><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.providerPhoto ? `<img src="${e(s.providerPhoto)}" alt="" loading="lazy" onerror="this.remove()" />` : ''}</span>`;
   const priced = Number(s.price) > 0;
   const unit = String(s.unit || '').replace('/', '').trim();
   const priceHtml = priced ? ST_NGN(s.price) + (unit ? '/' + e(unit.charAt(0).toUpperCase() + unit.slice(1)) : '') : 'Ask for a quote';
@@ -628,7 +633,7 @@ function stTaskerCardHome(s) {
           ${s.service_name ? `<p class="st-home-role">${e(s.service_name)}</p>` : ''}
           <p class="st-home-where">${ST_ICON.pin}<span>${e(s.location || 'Lagos')}</span></p>
         </div>
-        <div class="st-home-photo"><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
+        <div class="st-home-photo"${stAvAttr(s, 'photo')}><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.photo && !s.isLocal ? `<img src="${e(s.photo)}" alt="${e(name)}" loading="lazy" onerror="this.remove()" />` : ''}</div>
       </div>
       ${shown.length ? `<div class="st-home-skills"><span class="st-home-skills-label">Skills</span>
         <div class="st-home-skill-list">${shown.map(k => `<span class="st-chip st-chip--skill">${e(k)}</span>`).join('')}${more > 0 ? `<span class="st-chip st-chip--skill">+${more}</span>` : ''}</div></div>` : ''}

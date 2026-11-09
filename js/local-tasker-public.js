@@ -14,7 +14,7 @@
   var BUCKET = 'local-tasker-photos';
   var TTL = 3600;                     /* signed links last one hour */
   var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var info = {};                      /* user id -> { coverUrl } for published Local Taskers */
+  var info = {};                      /* user id -> { coverUrl, avatarUrl } for published Local Taskers */
   var asked = {};                     /* user id -> true once the database answered for it */
 
   function sb() { return window.supabase || null; }
@@ -31,6 +31,17 @@
     return out;
   }
 
+  /* user id -> avatar storage path, for published Local Taskers who have a profile picture. Never throws. */
+  async function avatarPaths(ids) {
+    var out = {};
+    if (!ids.length || !sb()) return out;
+    try {
+      var r = await sb().rpc('local_tasker_public_avatars', { p_ids: ids });
+      if (!r.error) (r.data || []).forEach(function (x) { if (x && x.avatar_path) out[String(x.user_id)] = x.avatar_path; });
+    } catch (e) { /* no pictures: the card shows the StreetTasker mark */ }
+    return out;
+  }
+
   /* Ask once for any ids not asked yet (100 per call, the database limit). */
   async function load(ids) {
     if (!sb()) return;
@@ -41,9 +52,10 @@
         var r = await sb().rpc('local_tasker_public_info', { p_ids: chunk });
         if (r.error) continue;                 /* not asked: a later call may retry */
         var rows = r.data || [];
-        var urls = await sign(rows.map(function (x) { return x.cover_path; }));
+        var av = await avatarPaths(rows.map(function (x) { return String(x.user_id); }));   /* profile pictures (kind avatar); empty if the function is not installed */
+        var urls = await sign(rows.map(function (x) { return x.cover_path; }).concat(Object.keys(av).map(function (k) { return av[k]; })));
         chunk.forEach(function (id) { asked[id] = true; });
-        rows.forEach(function (x) { info[String(x.user_id)] = { coverUrl: urls[x.cover_path] || null }; });
+        rows.forEach(function (x) { var id = String(x.user_id); info[id] = { coverUrl: urls[x.cover_path] || null, avatarUrl: (av[id] && urls[av[id]]) || null }; });
       } catch (e) { /* leave the chunk unasked */ }
     }
   }
@@ -63,8 +75,8 @@
           if (!r.photo && typeof window.stTaskPhUrl === 'function') r.photo = window.stTaskPhUrl(r.category, r.id || r.service_id);
           return;
         }
-        var url = info[id].coverUrl;
-        if (url) photoKeys.forEach(function (k) { r[k] = url; });
+        var url = info[id].avatarUrl || '';   /* the person's profile picture; never the cover or the service photo */
+        photoKeys.forEach(function (k) { r[k] = url; });
       });
     } catch (e) { /* cards keep their own photo or the placeholder */ }
     return rows;
@@ -90,12 +102,13 @@
       var r = await sb().rpc('local_tasker_public_cards', { p_limit: limit || 12 });
       if (r.error) return [];
       var rows = r.data || [];
-      var urls = await sign(rows.map(function (x) { return x.cover_path; }));
+      var av = await avatarPaths(rows.map(function (x) { return String(x.user_id); }));
+      var urls = await sign(rows.map(function (x) { return x.cover_path; }).concat(Object.keys(av).map(function (k) { return av[k]; })));
       return rows.map(function (x) {
         return {
           user_id: String(x.user_id), name: x.display_name || '', service: x.service_name || '',
           category: x.category || '', location: x.location || '', price: Number(x.price) || 0,
-          rate_unit: x.rate_unit || '/job', specialties: x.specialties || [], coverUrl: urls[x.cover_path] || null
+          rate_unit: x.rate_unit || '/job', specialties: x.specialties || [], coverUrl: urls[x.cover_path] || null, avatarUrl: (av[String(x.user_id)] && urls[av[String(x.user_id)]]) || null
         };
       });
     } catch (e) { return []; }
@@ -114,8 +127,8 @@
   function gridCard(c) {
     var art = el('div', 'lt-tasker-card lt-tasker-card--live');
     var photo = el('div', 'lt-tasker-photo lt-tasker-photo--live');
-    if (c.coverUrl) {
-      var img = el('img', 'lt-tasker-img'); img.src = c.coverUrl; img.alt = ''; img.loading = 'lazy';
+    if (c.avatarUrl) {
+      var img = el('img', 'lt-tasker-img'); img.src = c.avatarUrl; img.alt = ''; img.loading = 'lazy';
       img.addEventListener('error', function () { img.remove(); });
       photo.appendChild(img);
     }
@@ -158,6 +171,64 @@
     });
   }
 
+  /* ── Profile pictures on cards ──────────────────────────────────────────────────────────────────────
+     Cards (js/ui.js) mark the spot with data-avatar-user / data-avatar-kind. Here the picture is put in.
+       kind "photo" (the big picture on a tasker card): a Local Tasker shows their profile picture, never the service or cover photo.
+                    If they have no picture yet, the StreetTasker mark stays. Other taskers are not touched.
+       kind "chip"  (the small round picture beside the name on a service card): a Local Tasker's profile picture; for anyone else the
+                    picture on their account (users.avatar_url) if it can be read. No picture: the StreetTasker mark stays. */
+  var UUID36 = UUID, userAv = {}, userAsked = {};
+  function safeUrl(u) { return typeof u === 'string' && /^https:\/\//i.test(u) ? u : null; }
+  async function loadUserAvatars(ids) {
+    var todo = ids.filter(function (x) { return !userAsked[x]; });
+    for (var i = 0; i < todo.length; i += 100) {
+      var chunk = todo.slice(i, i + 100);
+      chunk.forEach(function (x) { userAsked[x] = true; });          /* asked once, even if it fails */
+      try {
+        var r = await sb().from('users').select('id, avatar_url').in('id', chunk);
+        if (!r.error) (r.data || []).forEach(function (u) { var s = safeUrl(u.avatar_url); if (s) userAv[String(u.id)] = s; });
+      } catch (e) { /* no picture: the mark stays */ }
+    }
+  }
+  function putImg(node, url) {
+    var img = document.createElement('img');
+    img.src = url; img.alt = ''; img.loading = 'lazy';
+    img.addEventListener('error', function () { if (img.parentNode) img.parentNode.removeChild(img); });
+    node.appendChild(img);
+  }
+  var fillBusy = false, fillAgain = false;
+  async function fillAvatars() {
+    if (fillBusy) { fillAgain = true; return; }
+    fillBusy = true;
+    try {
+      if (!sb()) return;
+      var nodes = Array.prototype.slice.call(document.querySelectorAll('[data-avatar-user]:not([data-avatar-done])'));
+      if (!nodes.length) return;
+      var ids = Array.from(new Set(nodes.map(function (n) { return String(n.getAttribute('data-avatar-user')).toLowerCase(); }))).filter(function (x) { return UUID36.test(x); });
+      await load(ids);
+      var chipOthers = Array.from(new Set(nodes.filter(function (n) { return n.getAttribute('data-avatar-kind') === 'chip'; }).map(function (n) { return String(n.getAttribute('data-avatar-user')).toLowerCase(); })))
+        .filter(function (x) { return UUID36.test(x) && !info[x]; });
+      if (chipOthers.length) await loadUserAvatars(chipOthers);
+      nodes.forEach(function (n) {
+        n.setAttribute('data-avatar-done', '1');
+        var uid = String(n.getAttribute('data-avatar-user')).toLowerCase(), kind = n.getAttribute('data-avatar-kind'), url = null;
+        if (info[uid]) {
+          url = info[uid].avatarUrl || null;
+          if (kind === 'photo') Array.prototype.slice.call(n.querySelectorAll('img:not(.st-logo-ph)')).forEach(function (im) { im.remove(); });
+        } else if (kind === 'chip') { url = userAv[uid] || null; }
+        if (url) putImg(n, url);
+      });
+    } catch (e) { /* cards keep the StreetTasker mark */ }
+    finally { fillBusy = false; if (fillAgain) { fillAgain = false; schedule(); } }
+  }
+  var fillTimer = null;
+  function schedule() { clearTimeout(fillTimer); fillTimer = setTimeout(fillAvatars, 120); }
+  function startFill() {
+    schedule();
+    try { new MutationObserver(function () { if (document.querySelector('[data-avatar-user]:not([data-avatar-done])')) schedule(); }).observe(document.body, { childList: true, subtree: true }); } catch (e) { /* no live updates */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startFill); else startFill();
+
   window.STLocal = {
     LABEL: 'Local Tasker',
     LABEL_PHONE: 'Phone Assisted',
@@ -167,6 +238,8 @@
     decorate: decorate,
     isLocal: function (id) { return !!info[String(id)]; },
     coverUrl: function (id) { return (info[String(id)] && info[String(id)].coverUrl) || null; },
+    avatarUrl: function (id) { return (info[String(id)] && info[String(id)].avatarUrl) || null; },
+    fillAvatars: fillAvatars,
     photos: photos,
     cards: cards,
     mountGrid: mountGrid
