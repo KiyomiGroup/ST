@@ -944,14 +944,14 @@
       if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);   /* Local Taskers show their cover photo */
       if (!_cuLive(host, tok)) return;
       host.textContent = '';
-      CU_TIERS.forEach(([key, label]) => {
-        if (key === 'local') return;       /* local taskers are shown in the Taskers row below, with everyone else */
-        const list = rows.filter(r => r.tier === key);
-        if (!list.length) return;          /* an empty tier is skipped */
-        const row = STCompact.row({ title: 'Featured Taskers \u00B7 ' + label, skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
-        row.stSetItems(list.map(r => _cuTaskerCard(r, false)));
+      /* ONE "Featured Taskers" row for every paid plan, in plan order: Premium first, then Pro, then Starter.
+         Standard (no paid plan) and Local Taskers are not featured; they appear in the Taskers row below with everyone else. */
+      const featured = ['premium', 'pro', 'starter'].reduce((acc, key) => acc.concat(rows.filter(r => r.tier === key)), []);
+      if (featured.length) {            /* nobody on a paid plan: no row */
+        const row = STCompact.row({ title: 'Featured Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
+        row.stSetItems(featured.map(r => _cuTaskerCard(r, false)));
         host.appendChild(row);
-      });
+      }
       /* Taskers: ALL taskers. The featured feed only returns taskers with a tier or a Local Tasker listing, so every other tasker
          with a live listing is added from the services list (the same source as Find Taskers). Featured ones come first, then
          taskers in the customer's area, each person once. */
