@@ -308,6 +308,7 @@
       else { pubLink.textContent = 'Preview and publish'; pubSum.textContent = 'Not published. Nothing is shown to customers yet. Preview how it will look and check what is still needed.'; }
     }
     loadConsents(p.tasker_user_id);
+    if (window.STCoFlyer) window.STCoFlyer.mount(p);          /* T1c: the shop flyer (published Local Taskers only) */
     loadServices(p.tasker_user_id);
     loadPhotos(p.tasker_user_id);
     loadPayout(p.tasker_user_id);

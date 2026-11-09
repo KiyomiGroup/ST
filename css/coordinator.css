@@ -656,3 +656,12 @@ body.co-drawer-open { overflow: hidden; }
 @media (max-width: 560px) {
   .wl-page.co-wallet[data-role="tasker"] .wl-balances { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* T1c: shop flyer card on the Local Tasker profile (the flyer itself is drawn by css/flyer.css) */
+.co-flyer-stage { display: flex; justify-content: center; margin-bottom: var(--space-4); padding: var(--space-3); border-radius: var(--radius-xl); background: var(--color-bg-muted); }
+.co-flyer-stage:empty { display: none; }
+.co-flyer-msg { margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); }
+.co-flyer-msg[hidden], #coFlyer[hidden], #coFlyerBody[hidden] { display: none; }
+.co-flyer-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
+.co-flyer-actions .btn { width: 100%; justify-content: center; }
+@media (min-width: 640px) { .co-flyer-actions { flex-direction: row; flex-wrap: wrap; } .co-flyer-actions .btn { width: auto; } }

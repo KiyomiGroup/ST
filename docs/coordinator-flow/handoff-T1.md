@@ -1,4 +1,4 @@
-# Handoff: stage T1a done (rules, republish banner, profile picture). Flyer = T1c, still open. (2026-11-08)
+# Handoff: stage T1 done (rules, republish banner, profile picture, shop flyer). One open risk below. (2026-11-08)
 
 Read first: `00-PLAN.md`, `handoff-N1.md`, `AGENTS.md`, `DESIGN-SYSTEM.md`.
 
@@ -20,7 +20,12 @@ Pages: `js/coordinator-tasker.js` + `coordinator-tasker.html` (Main badge, "Make
 - The step-by-step intake pages (`coordinator-tasker-new/edit`, `js/coordinator-intake.js`) upload portfolio photos only; the profile picture is added from the Photos page (the publish checklist links to it with `&kind=avatar`).
 - "Publish again" does not hold a snapshot: customers see edits at once; owner chose a warning, not a hold (default in the plan). Say so if they wanted a hold.
 
-## T1c: shop flyer (not started; needs owner answers)
-Owner wants: a coordinator creates a flyer and gives it to a Local Tasker who has a shop. Existing code: `js/tasker-flyer.js`, `js/flyer-template.js`, `js/flyer-data.js`, `flyer-preview.html`, `css/flyer.css`, `images/flyer/`. `taskers` already has `business_name`, `business_address`, `business_lat/lon`, `banner_img`, `whatsapp`. Ask the owner: what must the flyer show (shop name, address, services, QR to the profile)? Is "has a shop" a yes/no on the intake page? Then add `has_shop`, `shop_name`, `shop_address` to `local_tasker_profiles` and a "Create flyer" button on `coordinator-tasker.html` reusing the flyer template (read how `tasker-profile.html` calls it first).
+## T1c: shop flyer: BUILT (2026-11-08)
+Owner: the flyer follows the normal website flyer template. Done: card "Flyer for their shop" on `coordinator-tasker.html` (new `js/coordinator-flyer.js`, styles appended to `css/coordinator.css`, loads `css/flyer.css`, `js/vendor/qrcode.min.js`, `js/vendor/html-to-image.min.js`, `js/flyer-template.js` UNCHANGED). Shown for every Local Tasker but the preview and downloads work only once PUBLISHED (the QR opens `tasker-profile.html?id=<their user id>`, which needs a public profile); otherwise a plain message says publish first. Content: public name, main service as the job line, up to 3 live services (main first), place from the main service or the profile area, optional "Shop address" field that replaces the place, photo = profile picture, else the cover portfolio photo, else the template placeholder. A5 / A4 PDF and PNG exactly like the Tasker profile page. No SQL, no referral code (a Local Tasker has no login, so the QR is the profile link, not a sign-up link).
+Tested in headless Chromium at 390 and 1280 with a stubbed Supabase and the real template: renders, 3 services in the right order, QR drawn, address edit updates the flyer, PNG downloads, unpublished shows the message, no sideways scroll. The photo was a 1-pixel stand-in, so a real signed photo and a real PDF print were NOT tested.
+"Has a shop" is not a stored field: the coordinator decides. (Say if the owner wants a yes/no on the form.)
 
-## Next stage after T1c: B1 (new-booking intake), see `00-PLAN.md`. Its introspect file is `b1-introspect.sql` (run it; it returns function text and column names only, no secrets).
+## OPEN RISK (do first in the next session): the new profile picture may show on the PUBLIC page
+`js/local-tasker-public.js` reads photos through `local_tasker_public_photos`, `local_tasker_public_info`, `local_tasker_public_cards` and the storage rule `local_tasker_photo_is_public(name)`; none were seen. Because the profile picture lives in `local_tasker_photos` with `kind = 'avatar'`, those functions may list it as a gallery photo or use it as the cover. Owner: run `sql/coordinator-flow/t1c-introspect.sql`, paste results. Then patch them (portfolio-only for the gallery, `is_cover` logic unchanged) and, if wanted, return the picture as its own field for the public card.
+
+## Next stage: B1 (new-booking intake), see `00-PLAN.md`. Its introspect file is `b1-introspect.sql` (run it; it returns function text and column names only, no secrets).

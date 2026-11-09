@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/coordinator.css" />
   <link rel="stylesheet" href="css/coordinator-verify.css" />
+  <link rel="stylesheet" href="css/flyer.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -112,6 +113,26 @@
           <p class="co-consent-meta" id="coPhotoCount" hidden></p>
         </section>
 
+        <section class="co-card" id="coFlyer" aria-labelledby="coFlyerTitle" hidden>
+          <div class="co-card-head"><h2 class="co-card-title" id="coFlyerTitle">Flyer for their shop</h2></div>
+          <p class="co-card-lead">For a Local Tasker who has a shop. Print it or save it, and give it to them to put up. It is the same flyer as on the rest of StreetTasker. The QR code opens their public profile.</p>
+          <p class="co-flyer-msg" id="coFlyerMsg" role="status" hidden></p>
+          <div id="coFlyerBody" hidden>
+            <div class="form-group">
+              <label class="form-label" for="coFlyerAddress">Shop address (optional)</label>
+              <input class="form-input" type="text" id="coFlyerAddress" maxlength="120" autocomplete="off" aria-describedby="coFlyerAddressHelp" />
+              <p class="form-helper" id="coFlyerAddressHelp">Shown on the flyer instead of the area. Leave empty to use the area.</p>
+            </div>
+            <div class="co-flyer-stage" id="coFlyerHost" aria-live="polite"></div>
+            <div class="co-flyer-actions">
+              <button type="button" class="btn btn-primary" id="coFlyerA5">Download A5 (PDF)</button>
+              <button type="button" class="btn btn-outline" id="coFlyerA4">Download A4 (PDF)</button>
+              <button type="button" class="btn btn-outline" id="coFlyerPng">Download picture (PNG)</button>
+            </div>
+            <p class="form-helper">For a PDF, choose “Save as PDF” as the printer in the window that opens.</p>
+          </div>
+        </section>
+
         <section class="co-card" aria-labelledby="coDetailPayTitle">
           <div class="co-card-head">
             <span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
@@ -159,6 +180,10 @@
   <script src="js/coordinator.js"></script>
   <script src="js/coordinator-common.js"></script>
   <script src="js/coordinator-verify-status.js"></script>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/vendor/html-to-image.min.js"></script>
+  <script src="js/flyer-template.js"></script>
+  <script src="js/coordinator-flyer.js"></script>
   <script src="js/coordinator-tasker.js"></script>
 </body>
 </html>
