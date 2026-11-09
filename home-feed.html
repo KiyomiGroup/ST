@@ -140,6 +140,10 @@
       body.hf-home.role-customer .hf-hero-dt .hf-loc-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       /* the popup opens leftwards so it stays inside the screen */
       body.hf-home.role-customer .hf-hero-dt .hf-loc-pop { left: auto; right: 0; }
+      /* While the location popup is open it must show in full: the phone hero clips its content (overflow: hidden), which cut the suggestions
+         off at the hero's bottom edge, and the search pill (z-index 2, later in the page) was drawn over them. Open only, so nothing else changes. */
+      body.hf-home.role-customer .hf-hero-dt .pg-hero:has(.hf-loc-pop:not([hidden])) { overflow: visible; }
+      body.hf-home.role-customer .hf-hero-dt .hf-loc-wrap:has(.hf-loc-pop:not([hidden])) { z-index: 3; }
     }
 
     /* ── Feed: customer (Step 3) and tasker (Step 4), one per role ── */
