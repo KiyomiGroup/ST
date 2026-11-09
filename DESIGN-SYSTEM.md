@@ -488,6 +488,10 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 
 `coordinator-dashboard.html` only: from 1044px it has a dark left sidebar (`.co-side`, width `--co-sidebar-width`) instead of the pill nav; phones and tablets keep the drawer and bottom bar. Hero, stat tiles and the sidebar live in `css/coordinator-dashboard.css`, scoped by `body.co-page--dash`; other coordinator pages are unchanged. Stat tiles use `.co-stat--tile`, `.co-icon-badge`, `.co-progress` (existing parts). Only real figures are shown; reference items with no data behind them (Broadcast Note, Export Summary, SLA card, RevShare chip, Analytics) are left out on purpose.
 
+### Coordinator Local Tasker page (2026-11-09, stage T1)
+
+`coordinator-tasker.html?id=<tasker>[&tab=<tab>]` is one page with tabs: Overview, Bookings, Messages, Earnings, Profile & Services. `body.co-page--tasker`; styles in `css/coordinator-tasker.css` (loads after `css/coordinator-dashboard.css`, which supplies the same dark sidebar as the overview). Header card `.co-th`, tab bar `.co-tabs` / `.co-tab` (pills on phones, underline from 768px; the open tab is `aria-selected`), panels `.co-tpanel`, phone/tablet tasker switcher `.co-tsw`. A tab that is not built yet is a `disabled` button, greyed out, with no panel; a stage turns it on by removing `disabled` and adding its `role="tabpanel"` section. Only tokens are used. Reference items with no data behind them are left out on purpose (see `COORDINATOR-TASKER-HANDOFF.md`).
+
 ---
 
 ## Palette merge and auth tokens (2026-10-29)

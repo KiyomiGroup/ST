@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="css/coordinator.css" />
   <link rel="stylesheet" href="css/coordinator-verify.css" />
   <link rel="stylesheet" href="css/flyer.css" />
+  <link rel="stylesheet" href="css/coordinator-dashboard.css" />
+  <link rel="stylesheet" href="css/coordinator-tasker.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -16,7 +18,7 @@
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
 </head>
-<body class="co-page co-guarding">
+<body class="co-page co-page--tasker co-guarding">
 
   <noscript><p class="co-noscript">The coordinator portal needs JavaScript. Please turn it on and reload.</p></noscript>
 
@@ -31,12 +33,52 @@
   <div class="co-app" id="coApp">
     <div id="coNavRoot"></div>
 
+    <div class="co-dash">
+
+    <aside class="co-side" aria-label="Workspace">
+      <p class="co-side-label">My workspace</p>
+      <nav class="co-side-nav" aria-label="Coordinator workspace">
+        <a class="co-side-link" href="coordinator-dashboard.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></a>
+        <a class="co-side-link" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>My Local Taskers</span></a>
+        <a class="co-side-link" href="coordinator-bookings.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></a>
+        <a class="co-side-link" href="coordinator-chat.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span><span class="co-side-badge" id="coSideUnread" hidden></span></a>
+        <a class="co-side-link" href="coordinator-wallet.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg><span>Wallet</span></a>
+        <a class="co-side-link" href="coordinator-plan.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg><span>Plan &amp; Upgrade</span></a>
+        <span class="co-side-link is-soon" aria-disabled="true" title="Coming soon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help &amp; Support</span></span>
+      </nav>
+
+      <div class="co-side-taskers">
+        <p class="co-side-label co-side-label--row"><span>My Local Taskers</span><span class="co-side-cap" id="coSideCap" hidden></span></p>
+        <label class="co-side-filter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="coSideFilter" placeholder="Filter taskers…" aria-label="Filter Local Taskers" autocomplete="off" /></label>
+        <ul class="co-side-tlist" id="coSideTaskers"></ul>
+        <p class="co-side-empty" id="coSideEmpty" hidden>No Local Taskers to show.</p>
+      </div>
+
+      <a class="co-side-add" href="coordinator-tasker-new.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Local Tasker</span></a>
+    </aside>
+
     <main class="co-main co-main--page" id="coMain">
 
-      <a class="co-back" href="coordinator-taskers.html">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        My Local Taskers
-      </a>
+      <!-- Stage T1: top row. Desktop: trail on the left, back to the workspace on the right. Phones: back link, then the tasker switcher. -->
+      <div class="co-tcrumb">
+        <nav class="co-tcrumb-trail" aria-label="Breadcrumb">
+          <a href="coordinator-taskers.html">Local Taskers</a>
+          <span class="co-tcrumb-sep" aria-hidden="true">/</span>
+          <span id="coCrumbName">Local Tasker</span>
+          <span class="co-tcrumb-sep" aria-hidden="true">/</span>
+          <span class="co-tcrumb-now" id="coCrumbTab" aria-current="page">Profile &amp; Services</span>
+        </nav>
+        <a class="co-back" href="coordinator-dashboard.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back to My Workspace</span>
+        </a>
+      </div>
+
+      <label class="co-tsw" id="coSwitchWrap" hidden>
+        <span class="co-visually-hidden">Switch Local Tasker</span>
+        <select id="coTaskerSwitch"></select>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </label>
 
       <p class="co-loading" id="coDetailLoading">Loading…</p>
 
@@ -60,21 +102,37 @@
       </div>
 
       <article class="co-detail" id="coDetail" hidden>
-        <section class="co-hero co-hero--page" aria-labelledby="coDetailName">
-          <p class="co-eyebrow"><span class="co-eyebrow-dot" aria-hidden="true"></span>Local Tasker profile</p>
-          <div class="co-hero-id">
+
+        <!-- Stage T1: the Local Tasker header. The ids below are the ones js/coordinator-tasker.js already fills in. -->
+        <section class="co-card co-th" aria-labelledby="coDetailName">
+          <div class="co-th-id">
             <span class="co-tasker-avatar co-tasker-avatar--lg" id="coDetailAvatar">LT</span>
-            <div class="co-hero-idtext">
-              <h1 id="coDetailName">Local Tasker</h1>
-              <p class="co-hero-sub" id="coDetailSkills"></p>
-              <div class="co-hero-status"><span id="coDetailStatus"></span></div>
+            <div class="co-th-text">
+              <div class="co-th-namerow">
+                <h1 class="co-th-name" id="coDetailName">Local Tasker</h1>
+                <span class="co-th-managing" id="coManaging" hidden></span>
+              </div>
+              <p class="co-th-sub"><span id="coDetailSkills"></span><span class="co-th-area" id="coDetailArea" hidden></span></p>
+              <div class="co-th-chips"><span id="coDetailStatus"></span><span id="coVerifyChip" hidden></span></div>
+            </div>
+            <div class="co-th-actions">
+              <a class="btn btn-outline" id="coPublicLink" href="tasker-profile.html" target="_blank" rel="noopener" hidden>View public page <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+              <a class="btn btn-primary" id="coEditLink" href="coordinator-taskers.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Edit details</a>
             </div>
           </div>
-          <div class="co-hero-actions">
-            <a class="btn btn-white" id="coEditLink" href="coordinator-taskers.html">Edit details</a>
+
+          <!-- Tabs not built yet are disabled and greyed out. A stage turns one on by removing `disabled` and adding its panel. -->
+          <div class="co-tabs" id="coTabs" role="tablist" aria-label="Local Tasker sections" data-default="profile">
+            <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1" disabled title="Coming soon">Overview</button>
+            <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
+            <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1" disabled title="Coming soon">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
+            <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Earnings</button>
+            <button type="button" class="co-tab" role="tab" id="coTabProfile" data-tab="profile" data-label="Profile &amp; Services" aria-controls="coPanelProfile" aria-selected="true" tabindex="0">Profile &amp; Services</button>
           </div>
         </section>
 
+        <!-- Profile &amp; Services: the existing cards, unchanged in this stage (restyled to the reference in a later stage). -->
+        <section class="co-tpanel" id="coPanelProfile" role="tabpanel" aria-labelledby="coTabProfile">
         <div class="co-proxy" role="note"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><p>Private to you and StreetTasker administrators. Customers never see the phone number or the full name here.</p></div>
 
         <section class="co-card" aria-labelledby="coDetailContactTitle">
@@ -170,9 +228,13 @@
           <p class="co-fact-value is-empty" id="coConsentEmpty" hidden>No agreement has been recorded for this person.</p>
           <ul class="co-consent-list" id="coConsentList" hidden></ul>
         </section>
+        </section>
+
       </article>
 
     </main>
+
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -185,5 +247,6 @@
   <script src="js/flyer-template.js"></script>
   <script src="js/coordinator-flyer.js"></script>
   <script src="js/coordinator-tasker.js"></script>
+  <script src="js/coordinator-tasker-shell.js"></script>
 </body>
 </html>
