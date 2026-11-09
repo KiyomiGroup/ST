@@ -484,6 +484,10 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 
 `css/tokens.css` now has a `--co-*` block (colours, `--radius-co-*`, `--shadow-co-*`, header and bottom-nav heights) used only by `coordinator-login.html`, `coordinator-dashboard.html`, `css/coordinator.css` and the coordinator components. Values were sampled from the owner's coordinator design screens (no Figma values), so they are approximations; replace them in `tokens.css` if exact Figma values exist. Same rule as the Post a Task and Gift Cards blocks: page-specific, do not reuse elsewhere without a design decision.
 
+### Coordinator overview layout (2026-11-09, stage C1)
+
+`coordinator-dashboard.html` only: from 1044px it has a dark left sidebar (`.co-side`, width `--co-sidebar-width`) instead of the pill nav; phones and tablets keep the drawer and bottom bar. Hero, stat tiles and the sidebar live in `css/coordinator-dashboard.css`, scoped by `body.co-page--dash`; other coordinator pages are unchanged. Stat tiles use `.co-stat--tile`, `.co-icon-badge`, `.co-progress` (existing parts). Only real figures are shown; reference items with no data behind them (Broadcast Note, Export Summary, SLA card, RevShare chip, Analytics) are left out on purpose.
+
 ---
 
 ## Palette merge and auth tokens (2026-10-29)

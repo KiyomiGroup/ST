@@ -92,13 +92,19 @@
       setStat('draft', String(drafts));
       /* Capacity comes from the coordinator's plan (Stage 7G), not from a number in this file. */
       var plan = await C.plan();
-      var cap = $('coCapNote');
+      var capOf = $('coStatOf'), bar = $('coCapBar'), fill = $('coCapFill'), recruit = $('coRecruit');
+      var hero = $('coHeroSub');
+      if (hero) hero.textContent = 'Managing ' + ids.length + (ids.length === 1 ? ' Local Tasker' : ' Local Taskers') + ' under your coordination.';
       if (plan) {
-        setStat('open', String(Math.max(0, plan.capacity - ids.length)));
-        if (cap) cap.textContent = 'of ' + plan.capacity + ' allowed';
+        var left = Math.max(0, plan.capacity - ids.length);
+        setStat('open', String(left));
+        if (capOf) { capOf.textContent = ' / ' + plan.capacity; capOf.hidden = false; }
+        if (bar && fill) { fill.style.width = (plan.capacity > 0 ? Math.min(100, Math.round(ids.length / plan.capacity * 100)) : 0) + '%'; bar.hidden = false; }
+        if (recruit) recruit.hidden = left === 0;   /* no places left: the plan page is the next step, not "Recruit" */
       } else {
-        setStat('open', '—');
-        if (cap) cap.textContent = 'Active assignments';
+        setStat('open', '\u2014');
+        if (capOf) capOf.hidden = true;
+        if (bar) bar.hidden = true;
       }
 
       if (loading) loading.hidden = true;
@@ -114,6 +120,7 @@
     } catch (e) {
       console.error('[coordinator overview]', e);
       ['assigned', 'published', 'draft', 'open'].forEach(function (k) { setStat(k, '—'); });
+      var of2 = $('coStatOf'), bar2 = $('coCapBar'); if (of2) of2.hidden = true; if (bar2) bar2.hidden = true;
       if (loading) loading.hidden = true;
       showError(true);
     }
