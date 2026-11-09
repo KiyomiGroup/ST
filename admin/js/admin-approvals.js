@@ -1,7 +1,10 @@
-/* StreetTasker Admin: Pending approvals (stage A5a, spec S02 and S26). READ ONLY.
-   Calls rpc admin_approval_counts, admin_approval_list (50 per page, newest first) and admin_approval_detail (the diff, history
-   and expiry of one request). Needs one of approvals.view, approvals.request or approvals.decide; the server checks again.
-   An admin with approvals.request only sees the requests they made. There is no Approve, Reject or Cancel button here (A5b).
+/* StreetTasker Admin: Pending approvals (spec S02 and S26). A5a: read; A5b: decide and cancel.
+   Reads: rpc admin_approval_counts, admin_approval_list (50 per page, newest first), admin_approval_detail (diff, history, expiry).
+   Writes (A5b): rpc admin_decide_approval(p_id, p_approve, p_reason) for a Super Admin (approvals.decide) who is NOT the requester, and
+   admin_cancel_approval(p_id, p_reason) for the requester or a Super Admin. Every button asks twice and needs a reason of 10+ characters
+   (cancel: optional). The buttons only mark the request; they never carry out the change (the requester does, in a later stage's page).
+   The server decides every rule again (self-approval, expiry, who may cancel); the page only shows what is likely to work.
+   Needs one of approvals.view, approvals.request or approvals.decide. An admin with approvals.request only sees their own requests.
    All text via textContent. */
 'use strict';
 AdminShell.init({ page: 'approvals', title: 'Pending approvals', permission: null }).then(function (ctx) {
@@ -90,6 +93,98 @@ AdminShell.init({ page: 'approvals', title: 'Pending approvals', permission: nul
     return wrap;
   }
 
+  /* ---------- actions (A5b) ---------- */
+  var uidn = 0;
+  function afterChange(msg, id) { ctx.toast(msg); load().then(function () { if (id) openDetail(id); }); }
+
+  /* One form: a reason box and one or more buttons. Each button asks twice, the second press shows exactly what will change. */
+  function actionForm(d, o) {
+    var f = h('form', 'ad-form'); f.noValidate = true;
+    uidn += 1; var rid = 'apWhy' + uidn;
+    var lab = h('label', 'ad-filter-label', o.reasonLabel); lab.htmlFor = rid;
+    var reason = h('textarea', 'form-input'); reason.id = rid; reason.rows = 3; reason.maxLength = 300;
+    var err = h('p', 'ad-error'); err.hidden = true; err.setAttribute('role', 'alert');
+    var sure = h('p', 'ad-note'); sure.hidden = true; sure.setAttribute('aria-live', 'polite');
+    var bar = h('div', 'ad-actions ad-actions--tight'); var armed = null; var btns = [];
+    function disarm() { armed = null; sure.hidden = true; btns.forEach(function (x) { x.el.textContent = x.def.label; }); }
+    o.buttons.forEach(function (def) {
+      var b = h('button', 'btn ' + (def.primary ? 'btn-primary' : 'btn-outline'), def.label); b.type = 'button';
+      btns.push({ el: b, def: def });
+      b.addEventListener('click', async function () {
+        err.hidden = true;
+        var text = reason.value.trim();
+        if (text.length < def.min) { err.textContent = 'Write a reason of at least ' + def.min + ' characters.'; err.hidden = false; disarm(); return; }
+        if (armed !== def) {
+          disarm(); armed = def; b.textContent = 'Press again to confirm';
+          sure.textContent = def.sure; sure.hidden = false; return;
+        }
+        btns.forEach(function (x) { x.el.disabled = true; });
+        var res;
+        try { res = await window.supabase.rpc(def.fn, def.args(text)); } catch (e) { res = { error: e }; }
+        btns.forEach(function (x) { x.el.disabled = false; });
+        disarm();
+        var r = res && res.data;
+        if (res.error || !r) {
+          err.textContent = (res.error && res.error.code === '42501') ? 'You do not have permission to do this.' : 'The server could not answer. Nothing was changed.';
+          err.hidden = false; return;
+        }
+        if (!r.ok) { err.textContent = r.error || 'It could not be done. Nothing was changed.'; err.hidden = false; return; }
+        afterChange(def.done, d.id);
+      });
+      bar.appendChild(b);
+    });
+    reason.addEventListener('input', disarm);
+    add(f, lab, reason, err, sure, bar);
+    return f;
+  }
+
+  function actionPanel(d) {
+    var eff = d.effective_status;
+    if (eff !== 'pending' && eff !== 'approved') return null;
+    var canDecide = ctx.has('approvals.decide');
+    var canCancel = ctx.has('approvals.request') && (d.is_mine || canDecide);
+    var what = '"' + (d.action_label || words(d.action)) + '" on ' + words(d.target_type) + ' ' + d.target_id + ', asked by ' + (d.requested_by_name || 'an admin');
+    var panel = h('div', 'ad-panel');
+    panel.appendChild(h('h3', 'ad-panel-title', 'Decision'));
+
+    if (eff === 'pending') {
+      if (!canDecide) {
+        panel.appendChild(h('p', 'ad-note', 'Only a Super Admin can approve or reject a request.'));
+      } else if (d.is_mine) {
+        panel.appendChild(h('p', 'ad-error', 'You cannot approve or reject your own request. Another Super Admin must.'));
+        var row = h('div', 'ad-actions ad-actions--tight');
+        ['Approve', 'Reject'].forEach(function (t) { var b = h('button', 'btn btn-outline', t); b.type = 'button'; b.disabled = true; row.appendChild(b); });
+        panel.appendChild(row);
+      } else {
+        panel.appendChild(h('p', 'ad-note', 'Approving does not carry out the change. It lets the person who asked carry it out once, before it expires. Rejecting ends the request.'));
+        panel.appendChild(actionForm(d, {
+          reasonLabel: 'Reason (at least 10 characters; it goes in the activity log)',
+          buttons: [
+            { label: 'Approve', primary: true, min: 10, fn: 'admin_decide_approval', done: 'Approved. Nothing has been carried out yet.',
+              args: function (t) { return { p_id: d.id, p_approve: true, p_reason: t }; },
+              sure: 'You are about to APPROVE ' + what + '. Press the button again to confirm.' },
+            { label: 'Reject', primary: false, min: 10, fn: 'admin_decide_approval', done: 'Rejected.',
+              args: function (t) { return { p_id: d.id, p_approve: false, p_reason: t }; },
+              sure: 'You are about to REJECT ' + what + '. The request will end. Press the button again to confirm.' }
+          ]
+        }));
+      }
+    } else {
+      panel.appendChild(h('p', 'ad-note', 'Approved. The change has not been carried out by this page: the person who asked does that. It can be cancelled until it is used or expires.'));
+    }
+
+    if (canCancel) {
+      panel.appendChild(h('h3', 'ad-panel-title', 'Cancel this request'));
+      panel.appendChild(actionForm(d, {
+        reasonLabel: 'Reason (optional)',
+        buttons: [{ label: 'Cancel request', primary: false, min: 0, fn: 'admin_cancel_approval', done: 'The request was cancelled.',
+          args: function (t) { return { p_id: d.id, p_reason: t || null }; },
+          sure: 'You are about to CANCEL ' + what + '. It cannot be used afterwards. Press the button again to confirm.' }]
+      }));
+    }
+    return panel;
+  }
+
   function drawDetail(holder) {
     clear(holder);
     var d = state.detail;
@@ -132,7 +227,7 @@ AdminShell.init({ page: 'approvals', title: 'Pending approvals', permission: nul
       card.appendChild(ul);
     } else card.appendChild(h('p', 'ad-note', 'Nothing has been logged for this request yet.'));
 
-    card.appendChild(h('p', 'ad-hint', 'Approve, Reject and Cancel are not on this page yet.'));
+    var ap = actionPanel(d); if (ap) card.appendChild(ap);
     holder.appendChild(card);
   }
 

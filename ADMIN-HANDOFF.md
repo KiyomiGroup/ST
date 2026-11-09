@@ -11,10 +11,13 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 4. `docs/admin-control-centre/02-SCREEN-SPECS.md`: every screen, its data, actions, permissions and layout.
 5. `docs/admin-control-centre/03-OWNER-DECISIONS.md`: open decisions with defaults.
 6. The owner's master brief, saved as `docs/admin-control-centre/00-BRIEF.md` (business requirement; the repo wins where they disagree).
-7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5a.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
+7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5b.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-09, after A5a)
+## CURRENT STATE (2026-11-09, after A5b)
+**A5b (decide and cancel) is written**: only `admin/approvals.html` (intro text) and `admin/js/admin-approvals.js` changed; **no new SQL** (it calls the A2 functions `admin_decide_approval` and `admin_cancel_approval`). A Super Admin who is not the requester gets Approve and Reject (reason of 10+ characters, two presses, the second press shows exactly what will be approved); the requester and Super Admins get Cancel request (reason optional); the requester's own request shows "You cannot approve or reject your own request" with disabled buttons; read-only admins see no buttons. Approving only marks the request: nothing is carried out. **Page run against a fake Supabase (56 checks, `local-tests/a5b-browser-test.py`, which replaces the A5a test). The A2 SQL itself has not been reported as tested on Supabase (`a2-tests.sql` result missing), and no second active Super Admin has been verified.** `a5a-approvals-reader.sql` printed DONE on Supabase. Read `handoffs/A5b.md`. The A5a paragraph below is kept for history.
+
+## PREVIOUS STATE (2026-11-09, after A5a)
 **A5a (approvals reader) is written**: `sql/admin/a5a-approvals-reader.sql` (+ rollback), `admin/approvals.html`, `admin/js/admin-approvals.js`, menu item "Pending approvals" switched on in `admin-shell.js`. Read only: it lists requests in four tabs (Pending, Approved, Rejected, Expired or cancelled), shows a current-versus-proposed table, history and time left, and has NO Approve, Reject or Cancel button (that is A5b). **Page run against a fake Supabase (36 checks, `local-tests/a5a-browser-test.py`); the SQL was NOT run anywhere (this build environment had no Postgres) and nothing is on Supabase or deployed.** The owner ran `a10-local-taskers.sql`, `a12a-bookings.sql` and `a12b-local-booking-ops.sql` on Supabase on 2026-11-09 and each printed DONE; the Problems queue loads (empty). A5 is split in five (`00-PLAN.md`, row "A5 split"). Read `handoffs/A5a.md`. The A12b paragraph below is kept for history.
 
 ## PREVIOUS STATE (2026-11-09, after A12b)
