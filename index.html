@@ -181,6 +181,73 @@
     .skel { background:linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%); background-size:200% 100%; animation:skel 1.2s infinite; border-radius:var(--radius-sm); }
     @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
+
+    /* ── "People are getting things done" cards (landing page only) ──
+       Own classes (.lp-*), so no other page or card is affected. Photo on top, category tile + title,
+       tags, short description, price + posted time. 4 across on desktop, swipe sideways on phones. */
+    #tasksList .lp-card {
+      --lp-border: #EDEDED; --lp-title: #171717; --lp-sub: #8A8F98; --lp-desc: #737373; --lp-posted: #94A3B8;
+      --lp-amber-bg: #FEF5DF; --lp-amber-ink: #D97706; --lp-purple-bg: #F5ECFF; --lp-purple-ink: #9333EA;
+      position: relative; display: flex; flex-direction: column; min-width: 0; text-align: left; cursor: pointer;
+      background: var(--color-bg, #fff); border: 1px solid var(--lp-border); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+    }
+    #tasksList .lp-card:hover { box-shadow: 0 10px 24px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    #tasksList .lp-media { position: relative; aspect-ratio: 5 / 3; background: var(--color-bg-muted, #F5F5F5); overflow: hidden; }
+    #tasksList .lp-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #tasksList .lp-card .lp-save {
+      position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      background: transparent; color: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+    }
+    #tasksList .lp-card .lp-save svg { width: 20px; height: 20px; }
+    #tasksList .lp-card .lp-save:hover { background: rgba(0,0,0,0.18); color: #fff; }
+    #tasksList .lp-card .lp-save.active { color: #fff; }
+    #tasksList .lp-card .lp-save.active svg { fill: #fff; }
+    #tasksList .lp-body { display: flex; flex-direction: column; flex: 1 1 auto; padding: 20px 20px 0; }
+    #tasksList .lp-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    #tasksList .lp-tile {
+      flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      background: var(--color-primary-soft, #EEFFF1); color: var(--color-primary, #0F6B46);
+    }
+    #tasksList .lp-tile svg { width: 20px; height: 20px; }
+    #tasksList .lp-tile img { width: 20px; height: 20px; object-fit: contain; }
+    #tasksList .lp-who { min-width: 0; }
+    #tasksList .lp-card .lp-title {
+      margin: 0; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; line-height: 1.35; color: var(--lp-title);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; letter-spacing: 0;
+    }
+    #tasksList .lp-sub { margin: 2px 0 0; font-size: var(--text-xs); line-height: 1.3; color: var(--lp-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #tasksList .lp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    #tasksList .lp-tag {
+      display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 500; line-height: 1.4; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+    }
+    #tasksList .lp-tag--mode { background: var(--lp-amber-bg); color: var(--lp-amber-ink); }
+    #tasksList .lp-tag--cat  { background: var(--lp-purple-bg); color: var(--lp-purple-ink); }
+    #tasksList .lp-tag--freq { background: var(--color-primary-soft, #EEFFF1); color: var(--color-primary, #0F6B46); }
+    #tasksList .lp-desc {
+      margin: 14px 0 0; min-height: 40px; font-size: var(--text-sm); line-height: 20px; color: var(--lp-desc);
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    #tasksList .lp-foot {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: auto 0 0; padding: 14px 0 16px;
+      border-top: 1px solid var(--lp-border);
+    }
+    #tasksList .lp-body > .lp-desc + .lp-foot { margin-top: 24px; }
+    #tasksList .lp-card .lp-price { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700; color: var(--lp-title); white-space: nowrap; }
+    #tasksList .lp-posted { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--lp-posted); white-space: nowrap; min-width: 0; }
+    #tasksList .lp-posted svg { width: 14px; height: 14px; flex: 0 0 auto; }
+    @media (min-width: 769px) {
+      #tasksList { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+      #tasksList .lp-card:nth-child(n+5) { display: none; }   /* one row of four, as designed */
+    }
+    @media (max-width: 768px) {
+      /* the existing scroller (display:flex; overflow-x:auto; snap) on #tasksList stays; these only size the cards */
+      #tasksList .lp-card { flex: 0 0 78%; max-width: 320px; scroll-snap-align: start; }
+    }
+
     @media(max-width: 768px){.dual-cta{grid-template-columns:1fr}.live-grid{grid-template-columns:repeat(2,1fr)}.how-panel.active{grid-template-columns:1fr}}
     @media(max-width: 480px){.live-grid{grid-template-columns:1fr}}
   </style>
@@ -673,13 +740,52 @@
       return day + ' | ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
     }
 
-    /* Card design: js/ui.js (stTaskCard). The home list does not know urgency or category unless the row has them. */
+    /* Landing-page card ("People are getting things done"). Own markup + .lp-* styles in this file's <style>;
+       the shared task card (js/ui.js stTaskCard) is untouched and still used everywhere else. */
+    function lpEsc(x) { return (window.escapeHtml || (v => String(v)))(x == null ? '' : x); }
+    function lpPoster(t) {
+      const raw = String((t.users && (t.users.name || t.users.business_name)) || '').trim();
+      if (!raw) return '';
+      const parts = raw.split(/\s+/);
+      return parts.length > 1 ? parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.' : parts[0];
+    }
     function renderPgtdCard(t) {
-      return stTaskCard({
-        id: t.id, title: t.title, description: t.description, category: t.category, location: t.location,
-        budget: t.budget, created_at: t.created_at, photo_urls: t.photo_urls, offers_count: t.offers,
-        task_type: t.task_type, urgency: t.urgency, compact: !t.urgency
-      });
+      const cat    = t.category || 'other';
+      const photos = Array.isArray(t.photo_urls) ? t.photo_urls.filter(Boolean) : [];
+      const imgSrc = photos.length ? photos[0] : stTaskPhUrl(cat, t.id);
+      const catLabel = t.category ? (window.STCat ? window.STCat.label(cat) : stLabel(cat)) : '';
+      const remote = (t.work_mode || t.task_type || '') === 'remote';
+      const freq   = t.frequency === 'recurring' ? 'Recurring' : (t.frequency === 'one_off' ? 'One-off' : '');
+      const poster = lpPoster(t);
+      const sub    = [poster, t.location].filter(Boolean).map(lpEsc).join(' \u2022 ');
+      const desc   = String(t.description || '').trim();
+      const ago    = t.created_at ? pgtdAgo(t.created_at) : '';
+      const tile   = window.STCat && t.category ? window.STCat.iconHtml(cat) : '<img src="images/favicon.png" alt="" aria-hidden="true" />';
+      return `<article class="lp-card" data-task-id="${lpEsc(t.id)}">
+        <div class="lp-media">
+          <img src="${lpEsc(imgSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='images/placeholders/task-general.jpg'" />
+          <button type="button" class="lp-save st-card-save" aria-label="Save task" aria-pressed="false">${ST_ICON.heart}</button>
+        </div>
+        <div class="lp-body">
+          <div class="lp-head">
+            <span class="lp-tile" aria-hidden="true">${tile}</span>
+            <div class="lp-who">
+              <h3 class="lp-title st-card-title">${lpEsc(t.title || 'Untitled Task')}</h3>
+              ${sub ? `<p class="lp-sub">${sub}</p>` : ''}
+            </div>
+          </div>
+          <div class="lp-tags">
+            <span class="lp-tag lp-tag--mode">${remote ? 'Remote' : 'In-person'}</span>
+            ${catLabel ? `<span class="lp-tag lp-tag--cat st-chip--category">${lpEsc(catLabel)}</span>` : ''}
+            ${freq ? `<span class="lp-tag lp-tag--freq">${freq}</span>` : ''}
+          </div>
+          ${desc ? `<p class="lp-desc">${lpEsc(desc)}</p>` : ''}
+          <div class="lp-foot">
+            <span class="lp-price st-card-price">${Number(t.budget) > 0 ? ST_NGN(t.budget) : 'No budget'}</span>
+            ${ago ? `<span class="lp-posted">${PGTD_CLOCK}Posted ${ago}</span>` : ''}
+          </div>
+        </div>
+      </article>`;
     }
 
     async function loadTasksSection() {
@@ -698,9 +804,8 @@
           el.dataset.cardsWired = '1';
           el.addEventListener('click', ev => {
             if (ev.target.closest('.st-card-save') || ev.target.closest('a')) return;
-            const card = ev.target.closest('.st-card--task'); if (!card) return;
-            const id = encodeURIComponent(card.dataset.taskId || '');
-            window.location.href = ev.target.closest('.st-card-cta') ? 'find-tasks.html?task=' + id : 'task-details.html?id=' + id;
+            const card = ev.target.closest('.lp-card'); if (!card) return;
+            window.location.href = 'task-details.html?id=' + encodeURIComponent(card.dataset.taskId || '');
           });
         }
       } catch(e) {
