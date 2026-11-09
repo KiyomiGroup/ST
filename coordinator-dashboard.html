@@ -40,11 +40,19 @@
         <a class="co-side-link" href="coordinator-dashboard.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></a>
         <a class="co-side-link" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>My Local Taskers</span></a>
         <a class="co-side-link" href="coordinator-bookings.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></a>
-        <a class="co-side-link" href="coordinator-chat.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
+        <a class="co-side-link" href="coordinator-chat.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span><span class="co-side-badge" id="coSideUnread" hidden></span></a>
         <a class="co-side-link" href="coordinator-wallet.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg><span>Wallet</span></a>
         <a class="co-side-link" href="coordinator-plan.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg><span>Plan &amp; Upgrade</span></a>
         <span class="co-side-link is-soon" aria-disabled="true" title="Coming soon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help &amp; Support</span></span>
       </nav>
+
+      <div class="co-side-taskers">
+        <p class="co-side-label co-side-label--row"><span>My Local Taskers</span><span class="co-side-cap" id="coSideCap" hidden></span></p>
+        <label class="co-side-filter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="coSideFilter" placeholder="Filter taskers…" aria-label="Filter Local Taskers" autocomplete="off" /></label>
+        <ul class="co-side-tlist" id="coSideTaskers"></ul>
+        <p class="co-side-empty" id="coSideEmpty" hidden>No Local Taskers to show.</p>
+      </div>
+
       <a class="co-side-add" href="coordinator-tasker-new.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Local Tasker</span></a>
     </aside>
 
@@ -126,6 +134,26 @@
           <p class="co-empty-text" id="coReqEmptyText">When customers book your Local Taskers, their requests will be listed here.</p>
         </div>
       </section>
+      
+        <section class="co-card co-msgs" aria-labelledby="coMsgsTitle">
+          <div class="co-req-head">
+            <div>
+              <h2 id="coMsgsTitle">Latest Messages</h2>
+              <p class="co-section-sub">Recent conversations across all your Local Taskers.</p>
+            </div>
+            <a class="co-fact-link co-req-all" href="coordinator-chat.html">View full inbox &rarr;</a>
+          </div>
+          <p class="co-loading" id="coMsgsLoading">Loading your messages…</p>
+          <div class="co-banner" id="coMsgsError" role="alert" hidden>
+            <span>We couldn't load your messages just now.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coMsgsRetry">Try again</button>
+          </div>
+          <ul class="co-msgs-list" id="coMsgsList" hidden></ul>
+          <div class="co-empty co-req-empty" id="coMsgsEmpty" hidden>
+            <p class="co-empty-title">No conversations yet</p>
+            <p class="co-empty-text">When a customer books one of your Local Taskers, the conversation will appear here.</p>
+          </div>
+        </section>
       </div>
 
       <div class="co-dash-rail">
@@ -189,6 +217,8 @@
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-requests.js"></script>
   <script src="js/coordinator-attention.js"></script>
+  <script src="js/coordinator-messages.js"></script>
+  <script src="js/coordinator-sidebar.js"></script>
   <script src="js/coordinator-wallet-tile.js"></script>
 </body>
 </html>
