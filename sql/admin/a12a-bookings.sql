@@ -52,7 +52,7 @@ begin
   if v_kind = 'regular' and v_filter not in ('all', 'pending', 'confirmed', 'completed', 'cancelled', 'other', 'locked', 'disputed') then
     return jsonb_build_object('ok', false, 'error', 'Unknown filter.');
   end if;
-  if v_kind = 'local' and v_filter not in ('all', 'needs_reassignment', 'assigned', 'awaiting_tasker_confirmation', 'tasker_confirmed',
+  if v_kind = 'local' and v_filter not in ('all', 'locked', 'needs_reassignment', 'assigned', 'awaiting_tasker_confirmation', 'tasker_confirmed',
                                            'tasker_declined', 'quote_sent', 'quote_approved', 'quote_declined') then
     return jsonb_build_object('ok', false, 'error', 'Unknown filter.');
   end if;
@@ -82,9 +82,9 @@ begin
               or position(lower(v_q) in lower(coalesce(m.worker_name, ''))) > 0)
          and case
                when v_filter = 'all' then true
+               when v_filter = 'locked' then m.code_attempts >= 3 and coalesce(m.status, '') not in ('completed', 'cancelled')
                when v_kind = 'local' then m.lt_status = v_filter
                when v_filter = 'other' then coalesce(m.status, '') not in ('pending', 'confirmed', 'completed', 'cancelled')
-               when v_filter = 'locked' then m.code_attempts >= 3 and coalesce(m.status, '') not in ('completed', 'cancelled')
                when v_filter = 'disputed' then m.dispute_reason is not null
                else m.status = v_filter end
     ), pg as (
@@ -110,6 +110,7 @@ begin
              'disputed', (select count(*) from mine where dispute_reason is not null))
            else jsonb_build_object(
              'all', (select count(*) from mine),
+             'locked', (select count(*) from mine where code_attempts >= 3 and coalesce(status, '') not in ('completed', 'cancelled')),
              'needs_reassignment', (select count(*) from mine where lt_status = 'needs_reassignment'),
              'assigned', (select count(*) from mine where lt_status = 'assigned'),
              'awaiting_tasker_confirmation', (select count(*) from mine where lt_status = 'awaiting_tasker_confirmation'),
@@ -152,7 +153,7 @@ begin
            'customer_name', (select u.name from public.users u where u.id::text = b.customer_id::text),
            'tasker_name', (select u.name from public.users u where u.id::text = b.tasker_id::text),
            'task_title', (select t.title from public.tasks t where t.id::text = to_jsonb(b) ->> 'task_id'));
-  exception when others then v_failed := v_failed || 'booking'; v_booking := null;
+  exception when others then v_failed := v_failed || 'booking'::text; v_booking := null;
   end;
 
   -- Local booking state, if this is a Local booking
@@ -165,29 +166,29 @@ begin
         'coordinator_name', (select coalesce(nullif(c.display_name, ''), (select u.name from public.users u where u.id = c.user_id)) from public.coordinators c where c.user_id = s.coordinator_id),
         'original_coordinator_name', (select coalesce(nullif(c.display_name, ''), (select u.name from public.users u where u.id = c.user_id)) from public.coordinators c where c.user_id = s.original_coordinator_id));
     end if;
-  exception when others then v_failed := v_failed || 'local'; v_local := null;
+  exception when others then v_failed := v_failed || 'local'::text; v_local := null;
   end;
 
   if v_local is not null then
     begin
       select public._a12a_pick(to_jsonb(q), array['version', 'service_fee', 'transport_amount', 'materials_amount', 'created_at'])
         into v_quote from public.local_booking_quotes q where q.booking_id = p_booking and q.superseded_at is null order by q.version desc limit 1;
-    exception when others then v_failed := v_failed || 'quote'; v_quote := null;
+    exception when others then v_failed := v_failed || 'quote'::text; v_quote := null;
     end;
     begin
       select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(m), array['kind', 'created_at']) order by to_jsonb(m) ->> 'created_at'), '[]'::jsonb)
         into v_miles from public.local_booking_milestones m where to_jsonb(m) ->> 'booking_id' = p_booking::text;
-    exception when others then v_failed := v_failed || 'milestones'; v_miles := null;
+    exception when others then v_failed := v_failed || 'milestones'::text; v_miles := null;
     end;
     begin
-      select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(x), array['kind', 'created_at', 'resolved_at']) order by to_jsonb(x) ->> 'created_at'), '[]'::jsonb)
+      select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(x), array['kind', 'happened_at', 'recorded_at']) order by to_jsonb(x) ->> 'happened_at'), '[]'::jsonb)
         into v_exc from public.local_booking_exceptions x where to_jsonb(x) ->> 'booking_id' = p_booking::text;
-    exception when others then v_failed := v_failed || 'exceptions'; v_exc := null;
+    exception when others then v_failed := v_failed || 'exceptions'::text; v_exc := null;
     end;
     begin
       select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(e), array['id', 'kind', 'event', 'event_type', 'created_at']) order by to_jsonb(e) ->> 'created_at', to_jsonb(e) ->> 'id'), '[]'::jsonb)
         into v_levents from (select * from public.local_booking_events le where to_jsonb(le) ->> 'booking_id' = p_booking::text limit 200) e;
-    exception when others then v_failed := v_failed || 'local_events'; v_levents := null;
+    exception when others then v_failed := v_failed || 'local_events'::text; v_levents := null;
     end;
   end if;
 
@@ -195,7 +196,7 @@ begin
   begin
     select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(e), array['id', 'kind', 'event', 'event_type', 'type', 'created_at']) order by to_jsonb(e) ->> 'created_at', to_jsonb(e) ->> 'id'), '[]'::jsonb)
       into v_events from (select * from public.job_events je where to_jsonb(je) ->> 'booking_id' = p_booking::text limit 200) e;
-  exception when others then v_failed := v_failed || 'timeline'; v_events := null;
+  exception when others then v_failed := v_failed || 'timeline'::text; v_events := null;
   end;
 
   -- payment held for the booking: read only; admin never moves, releases or refunds from here
@@ -203,7 +204,7 @@ begin
     select coalesce(jsonb_agg(public._a12a_pick(to_jsonb(p), array['status', 'amount', 'platform_fee', 'tasker_amount', 'created_at', 'released_at'])
                               order by to_jsonb(p) ->> 'created_at'), '[]'::jsonb)
       into v_escrow from public.escrow_payments p where to_jsonb(p) ->> 'booking_id' = p_booking::text;
-  exception when others then v_failed := v_failed || 'payment'; v_escrow := null;
+  exception when others then v_failed := v_failed || 'payment'::text; v_escrow := null;
   end;
 
   -- disputes linked to this booking (by a booking_id key, or through the booking's chat thread)
@@ -213,7 +214,7 @@ begin
       into v_disp from public.job_disputes d
      where to_jsonb(d) ->> 'booking_id' = p_booking::text
         or exists (select 1 from public.message_threads t where t.id = d.thread_id and to_jsonb(t) ->> 'booking_id' = p_booking::text);
-  exception when others then v_failed := v_failed || 'disputes'; v_disp := null;
+  exception when others then v_failed := v_failed || 'disputes'::text; v_disp := null;
   end;
 
   return jsonb_build_object('ok', true, 'booking', v_booking, 'local', v_local, 'quote', v_quote, 'milestones', v_miles, 'exceptions', v_exc,

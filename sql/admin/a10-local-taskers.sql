@@ -155,21 +155,21 @@ begin
              order by a.assigned_at desc), '[]'::jsonb)
       into v_hist from public.coordinator_assignments a left join public.coordinators c on c.user_id = a.coordinator_id
      where a.tasker_user_id = p_tasker;
-  exception when others then v_failed := v_failed || 'coordinator'; v_cur := null; v_hist := null;
+  exception when others then v_failed := v_failed || 'coordinator'::text; v_cur := null; v_hist := null;
   end;
 
   begin
     select jsonb_build_object('status', v.status, 'updated_at', coalesce(to_jsonb(v) ->> 'updated_at', to_jsonb(v) ->> 'created_at'))
       into v_idv from public.identity_verifications v where v.user_id = p_tasker
      order by coalesce(to_jsonb(v) ->> 'updated_at', to_jsonb(v) ->> 'created_at') desc nulls last limit 1;
-  exception when others then v_failed := v_failed || 'identity'; v_idv := null;
+  exception when others then v_failed := v_failed || 'identity'::text; v_idv := null;
   end;
 
   begin   -- services and prices are shown, never changed
     select coalesce(jsonb_agg(public._a10_pick(to_jsonb(s), array['id','service_name','category','price','rate_unit','available','is_main','availability_status','location'])
              order by s.created_at, s.id), '[]'::jsonb)
       into v_serv from public.services s where s.user_id = p_tasker;
-  exception when others then v_failed := v_failed || 'services'; v_serv := null;
+  exception when others then v_failed := v_failed || 'services'::text; v_serv := null;
   end;
 
   begin   -- photos: counts only, no file names or links
@@ -178,14 +178,14 @@ begin
              'profile_picture', count(*) filter (where ph.removed_at is null and ph.kind = 'avatar'),
              'removed', count(*) filter (where ph.removed_at is not null))
       into v_photos from public.local_tasker_photos ph where ph.tasker_user_id = p_tasker;
-  exception when others then v_failed := v_failed || 'photos'; v_photos := null;
+  exception when others then v_failed := v_failed || 'photos'::text; v_photos := null;
   end;
 
   begin   -- consent records: what and how, never the evidence reference or the notes
     select coalesce(jsonb_agg(public._a10_pick(to_jsonb(c), array['id','purpose','method','created_at','recorded_at','revoked_at'])
              order by coalesce(to_jsonb(c) ->> 'created_at', to_jsonb(c) ->> 'recorded_at') desc nulls last), '[]'::jsonb)
       into v_cons from public.local_tasker_consents c where c.tasker_user_id = p_tasker;
-  exception when others then v_failed := v_failed || 'consents'; v_cons := null;
+  exception when others then v_failed := v_failed || 'consents'::text; v_cons := null;
   end;
 
   begin
@@ -194,7 +194,7 @@ begin
                                 'booking_status', b.status, 'created_at', to_jsonb(b) ->> 'created_at') as x
         from public.local_booking_state s left join public.bookings b on b.id = s.booking_id
        where s.tasker_user_id = p_tasker order by to_jsonb(b) ->> 'created_at' desc nulls last limit 25) q;
-  exception when others then v_failed := v_failed || 'bookings'; v_book := null;
+  exception when others then v_failed := v_failed || 'bookings'::text; v_book := null;
   end;
 
   begin   -- payout records: status and amount only. The payout table's link to the worker was not seen, so it is matched by key name.
@@ -203,7 +203,7 @@ begin
       into v_pay from public.local_payouts lp where to_jsonb(lp) ->> 'tasker_user_id' = p_tasker::text;
     select coalesce(jsonb_agg(public._a10_pick(to_jsonb(la), array['bank_name','last4','account_last4','status'])), '[]'::jsonb)
       into v_acct from public.local_payout_accounts la where to_jsonb(la) ->> 'tasker_user_id' = p_tasker::text;
-  exception when others then v_failed := v_failed || 'payouts'; v_pay := null; v_acct := null;
+  exception when others then v_failed := v_failed || 'payouts'::text; v_pay := null; v_acct := null;
   end;
 
   return jsonb_build_object('ok', true, 'profile', v_profile, 'coordinator', v_cur, 'history', v_hist, 'identity', v_idv,
