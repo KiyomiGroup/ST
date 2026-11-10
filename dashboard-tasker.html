@@ -1169,14 +1169,12 @@ function openMessagesPanel() {
       var pRes  = await window.supabase.from('taskers')
         .select('bio, location, service, service_name, photo_url, rate_value, rate_unit')
         .eq('user_id', String(userId)).maybeSingle();
-      var uRes  = await window.supabase.from('users')
-        .select('name, bio, avatar_url').eq('id', String(userId)).maybeSingle();
       var pData = (pRes && pRes.data) || {};
-      var uData = (uRes && uRes.data) || {};
 
-      var hasPhoto    = !!(pData.photo_url || uData.avatar_url);
+      /* The tasker profile is the taskers row only; the customer profile (users) is separate */
+      var hasPhoto    = !!pData.photo_url;
       var hasService  = !!(pData.service || pData.service_name);
-      var hasBio      = !!(pData.bio || uData.bio);
+      var hasBio      = !!pData.bio;
       var hasLocation = !!pData.location;
       var hasRate     = !!(pData.rate_value && (pData.rate_value > 0));
 

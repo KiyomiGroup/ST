@@ -52,6 +52,47 @@ function toastStack() {
   return stack;
 }
 
+/* ── Report an error ─────────────────────────────────────────
+   STReport.href(message, where)   mailto: link that opens an email to support with the error, the page, the time and the account id
+   STReport.attach(el, message)    adds a "Report this error" link after the text already inside el (once)
+   Used by every error toast and by the error lines on the edit-profile pages. Nothing is sent by the page itself:
+   the person's own email app opens with the details filled in, and they press Send. */
+const ST_REPORT_EMAIL = 'support@streettasker.com';
+window.STReport = {
+  email: ST_REPORT_EMAIL,
+  href: function (message, where) {
+    let uid = '', role = '';
+    try { uid = localStorage.getItem('st_uid') || ''; role = localStorage.getItem('st_role') || ''; } catch (e) {}
+    const lines = [
+      'Please describe what you were doing when this happened:',
+      '',
+      '',
+      '--- Details (please leave these in) ---',
+      'Error: ' + String(message == null ? '' : message).slice(0, 600),
+      where ? 'Where: ' + String(where).slice(0, 200) : '',
+      'Page: ' + window.location.href.slice(0, 300),
+      'Time: ' + new Date().toISOString(),
+      uid ? 'Account id: ' + uid : '',
+      role ? 'Account type: ' + role : '',
+      'Browser: ' + String(navigator.userAgent || '').slice(0, 200)
+    ].filter(function (l, i) { return l !== '' || i < 3; });
+    return 'mailto:' + ST_REPORT_EMAIL + '?subject=' + encodeURIComponent('StreetTasker error report') + '&body=' + encodeURIComponent(lines.join('\n'));
+  },
+  link: function (message, where) {
+    const a = document.createElement('a');
+    a.className = 'st-report-link';
+    a.href = window.STReport.href(message, where);
+    a.textContent = 'Report this error';
+    a.rel = 'noopener';
+    return a;
+  },
+  attach: function (el, message, where) {
+    if (!el || el.querySelector('.st-report-link')) return;
+    el.appendChild(document.createTextNode(' '));
+    el.appendChild(window.STReport.link(message != null ? message : el.textContent, where));
+  }
+};
+
 function showToast(msg, opts) {
   const o = (typeof opts === 'number') ? { duration: opts } : (opts || {});
   const type = TOAST_ICONS[o.type] ? o.type : guessToastType((o.title || '') + ' ' + msg);
@@ -83,6 +124,8 @@ function showToast(msg, opts) {
     second.textContent = text;
     copy.appendChild(second);
   }
+  /* Every error toast offers a way to report it to us */
+  if (type === 'error') copy.appendChild(window.STReport.link((o.title ? o.title + ' - ' : '') + text));
   const close = document.createElement('button');
   close.type = 'button';
   close.className = 'st-toast-close';

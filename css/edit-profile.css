@@ -135,6 +135,7 @@
 .ep-msg[hidden] { display: none; }
 .ep-msg.is-ok { color: var(--pt-green); }
 .ep-msg.is-error { color: var(--color-danger); }
+.ep-msg .st-report-link { display: inline; margin-left: var(--space-1); }
 .ep-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-4); flex-wrap: wrap; padding-top: var(--space-2); }
 .ep-actions .ep-msg { margin-right: auto; }
 .ep-actions .btn-primary { min-width: 160px; }

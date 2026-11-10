@@ -116,10 +116,21 @@
 .tp-stats:empty { display: none; }
 
 /* ── Two columns ─────────────────────────────────────────── */
-.tp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-5); align-items: start; }
-.tp-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
-.tp-side { display: flex; flex-direction: column; gap: var(--space-4); }
-.tp-tabs-wrap { display: none; }
+.tp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto 1fr; gap: var(--space-5); align-items: start; }
+.tp-main .tp-card.is-tab-off { display: none; }   /* the other view (About / Reviews) */
+.tp-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); grid-column: 1; grid-row: 2; }
+.tp-side { display: flex; flex-direction: column; gap: var(--space-4); grid-column: 2; grid-row: 1 / span 2; }
+/* About | Reviews switch, above the content, on every screen size (phones pin it under the nav, see the phone rules below) */
+.tp-tabs-wrap { grid-column: 1; grid-row: 1; }
+.tp-tabs-wrap[hidden] { display: none; }
+.tp-tabs { display: flex; gap: var(--space-2); }
+.tp-tab {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-pill);
+  background: var(--color-bg); box-shadow: var(--shadow-pt-pill); color: var(--pt-ink-muted); text-decoration: none;
+  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600;
+}
+.tp-tab[aria-current="true"] { background: var(--pt-green); color: var(--color-text-on-primary); }
+.tp-tab:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
 
 /* ── Section cards ───────────────────────────────────────── */
 .tp-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5) var(--space-6); scroll-margin-top: calc(var(--nav-height) + var(--space-9)); }
@@ -234,6 +245,14 @@
 .tp-flyer-dialog { width: min(520px, calc(100% - 2 * var(--space-4))); max-height: calc(100dvh - 2 * var(--space-4)); overflow-y: auto; }
 .tp-flyer-stage { display: flex; justify-content: center; margin-bottom: var(--space-4); padding: var(--space-3); border-radius: var(--radius-xl); background: var(--pt-field); }
 .tp-flyer-stage:empty { display: none; }
+/* Flyer editor (inside the flyer dialog) */
+.tp-flyer-edit { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); padding: var(--space-4); border-radius: var(--radius-xl); border: 1px solid var(--pt-field); }
+.tp-flyer-edit[hidden] { display: none; }
+.tp-flyer-edit-title { font-size: var(--text-base); font-weight: 700; }
+.tp-flyer-edit-note { font-size: var(--text-sm); line-height: 1.5; color: var(--pt-ink-muted); }
+.tp-flyer-edit .form-group { display: grid; gap: var(--space-2); margin: 0; }
+.tp-flyer-edit-btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tp-flyer-edit-btns .btn[hidden] { display: none; }
 .tp-flyer-msg { margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.6; color: var(--pt-ink-muted); }
 .tp-flyer-msg[hidden], .tp-flyer-actions[hidden], .tp-dialog-foot[hidden] { display: none; }
 .tp-flyer-actions { display: flex; flex-direction: column; gap: var(--space-2); }

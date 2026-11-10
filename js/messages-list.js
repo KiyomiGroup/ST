@@ -218,6 +218,12 @@
     try {
       var r = await window.supabase.from('users').select('id,name,avatar_url').in('id', ids);
       (r.data || []).forEach(function (u) { map[u.id] = u; });
+      /* A tasker's picture now lives on their tasker profile only; use it when the account has no customer photo */
+      var noPhoto = ids.filter(function (id) { return !(map[id] && map[id].avatar_url); });
+      if (noPhoto.length) {
+        var tp = await window.supabase.from('taskers').select('user_id,photo_url').in('user_id', noPhoto.map(String));
+        (tp.data || []).forEach(function (t) { if (t.photo_url && map[t.user_id]) map[t.user_id].avatar_url = t.photo_url; });
+      }
     } catch (_e) { /* names fall back to "Tasker" / "Customer" */ }
     return map;
   }

@@ -493,15 +493,17 @@ async function syncNavbarAuthState() {
     _syncRoleSwitchItems(user, role).catch(() => {});
     _loadNavIndicators(user, role); /* plan badge, counts, dots — non-blocking */
     if (role !== 'tasker') _startReviewReminder();   /* customers: remind them to rate a finished job until they rate it or decline */
-    /* Load the photo the person uploaded on their profile (users.avatar_url; for a tasker the service photo is the fallback,
-       the same order Edit Profile uses). A sign-in provider's picture is not an upload, so it is not used here. */
+    /* Load the photo the person uploaded on the profile of the ACTIVE account: a tasker's photo is taskers.photo_url,
+       a customer's is users.avatar_url. The two accounts have separate profiles, so neither falls back to the other.
+       A sign-in provider's picture is not an upload, so it is not used here. */
     try {
       let finalPhoto = '';
-      const uRes = await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
-      finalPhoto = (uRes && uRes.data && uRes.data.avatar_url) || '';
-      if (!finalPhoto && role === 'tasker') {
+      if (role === 'tasker') {
         const tRes = await window.supabase.from('taskers').select('photo_url').eq('user_id', String(user.id)).maybeSingle();
         finalPhoto = (tRes && tRes.data && tRes.data.photo_url) || '';
+      } else {
+        const uRes = await window.supabase.from('users').select('avatar_url').eq('id', user.id).maybeSingle();
+        finalPhoto = (uRes && uRes.data && uRes.data.avatar_url) || '';
       }
       try { if (finalPhoto) localStorage.setItem('st_avatar', finalPhoto); else localStorage.removeItem('st_avatar'); } catch(e) {}
       _setNavAvatar(finalPhoto);
@@ -695,6 +697,7 @@ function _setCachedRole(role) {
   try {
     localStorage.setItem('st_role', role);
     localStorage.removeItem('st_plan');
+    localStorage.removeItem('st_avatar');   /* each account has its own photo; the next page load paints the right one */
   } catch (e) {}
 }
 
@@ -728,6 +731,21 @@ async function addRole(role, profile) {
   const { error } = await window.supabase.rpc('add_my_role', { p_role: role });
   if (error) throw new Error(_roleErrorMessage(error));
   const user = await getCurrentUser();
+  /* A new customer account starts afresh. Before the two profiles were separated, a tasker's Edit Profile also wrote
+     the shared users columns, so those still hold the tasker's details. Clear them, but only when the tasker row
+     exists (it holds the tasker's own copy), so no tasker detail is lost. The tasker side starts afresh by itself:
+     Edit Profile (tasker) reads the taskers row only. */
+  if (role === 'customer' && user) {
+    try {
+      const tk = await window.supabase.from('taskers').select('user_id').eq('user_id', String(user.id)).maybeSingle();
+      if (tk && tk.data) {
+        await window.supabase.from('users').update(
+          { bio: null, avatar_url: null, location: null, business_name: null, profile_details: null }
+        ).eq('id', user.id);
+        try { localStorage.removeItem('st_avatar'); } catch (e) {}
+      }
+    } catch (e) { /* the customer profile is simply left as it was */ }
+  }
   if (role === 'tasker' && user) {
     const name = profile.name || user.user_metadata?.name || (user.email || '').split('@')[0] || 'Tasker';
     try {
@@ -1009,10 +1027,14 @@ async function initDashboardWelcome() {
   try {
     const user = await getCurrentUser();
     if (!user) return;
-    const { data } = await window.supabase.from('users').select('name, avatar_url').eq('id', user.id).maybeSingle();
+    const isTasker = localStorage.getItem('st_role') === 'tasker';
+    const { data } = isTasker
+      ? await window.supabase.from('taskers').select('name, photo_url').eq('user_id', String(user.id)).maybeSingle()
+      : await window.supabase.from('users').select('name, avatar_url').eq('id', user.id).maybeSingle();
     if (data) {
-      if (data.avatar_url) localStorage.setItem('st_avatar', data.avatar_url);
-      applyAvatar(data.name || cachedName, data.avatar_url || cachedAvatar);
+      const photo = (isTasker ? data.photo_url : data.avatar_url) || '';
+      if (photo) localStorage.setItem('st_avatar', photo); else localStorage.removeItem('st_avatar');
+      applyAvatar(data.name || cachedName, photo);
     }
   } catch (e) { /* cached version above already applied — fail silently */ }
 }

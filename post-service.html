@@ -742,15 +742,15 @@
           rate_value:   rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           location:     location,
-          bio:          description,
-          photo_url:    photoUrl || null,
+          /* bio and photo_url are NOT written here: they belong to the tasker's profile (Edit Profile), not to one listing.
+             Writing the listing's photo here used to replace the profile picture on the public profile. */
           available:    isVerified,
         }, { onConflict: 'user_id' });
 
         if (isVerified) {
           /* Live immediately */
           showToast('Service posted and live! Redirecting...');
-          setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1600);
+          setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);   /* back to My Services, not the overview */
         } else {
           /* V6e: register the saved service and the public listing with the server, so both go live by
              themselves once the person is verified. A failure here never blocks the page. If the server
@@ -765,7 +765,7 @@
           } catch(holdErr) { console.warn('[post-service] could not register for auto-publish', holdErr && holdErr.message); }
           if (servedLive) {
             showToast('Service posted and live! Redirecting...');
-            setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1600);
+            setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);   /* back to My Services, not the overview */
             return;
           }
 
@@ -787,6 +787,7 @@
 
       function showErr(msg) {
         errEl.textContent   = msg;
+        if (window.STReport) window.STReport.attach(errEl, msg, 'post-service');
         errEl.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }

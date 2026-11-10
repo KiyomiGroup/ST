@@ -1,14 +1,15 @@
 /* ============================================================
    STREETTASKER — edit-profile-tasker.js
    Tasker "Edit Profile" page (edit-profile-tasker.html).
-   Loads and saves the same data the dashboard's old Edit Page panel did:
-     users   -> name, bio, business_name, avatar_url
+   Loads and saves the TASKER profile only. A person with both a tasker and a customer account keeps two
+   separate profiles: this page never reads or writes the customer's users.bio / avatar_url / location /
+   business_name, so nothing carries over from one account to the other.
      taskers -> name, business_name, location, service, service_name, category,
                 rate_value, rate_unit, bio, photo_url, available
                 (banner_color / banner_img are no longer edited here; saved values are left untouched)
    plus everything the public profile shows that a tasker has to provide, stored in
    taskers.profile_details (jsonb, see docs/profile-details-migration.sql):
-   headline, experience, pricing style, next opening, coverage, offers, services,
+   headline, experience, pricing style, next opening, coverage, offers (max 4),
    portfolio, certifications, emergency callouts.
    Live profile-strength ring, track record (rating, jobs, earnings), verification status.
    ============================================================ */
@@ -20,7 +21,8 @@
   var BIO_MAX = 1000;
   var PORTFOLIO_FEED_MAX = 12; /* only for the one-time import of old feed posts below; NOT the plan limit */
   var portfolioMax = 12;       /* until the server answers; the real limit is the plan's (get_my_entitlements features.portfolio_max) and the database enforces it */
-  var offers, services, certs, areas;
+  var offers, certs, areas;
+  var HIGHLIGHT_MAX = 4;       /* "What You Offer" highlights: never more than 4 */
 
   var S = {
     user: null,
@@ -69,13 +71,12 @@
     EP.renderStrength([
       { label: 'Profile photo',            pct: 10, done: EP.hasPhoto() },
       { label: 'Name & business name',     pct: 8,  done: !!(EP.val('epName') && EP.val('epBusiness')) },
-      { label: 'Headline & experience',    pct: 10, done: !!(EP.val('epHeadline') && EP.val('epYears')) },
-      { label: 'Service & rate',           pct: 10, done: !!(EP.val('epService') && rate > 0) },
+      { label: 'Headline & experience',    pct: 12, done: !!(EP.val('epHeadline') && EP.val('epYears')) },
+      { label: 'Service & rate',           pct: 12, done: !!(EP.val('epService') && rate > 0) },
       { label: 'Location & coverage',      pct: 12, done: !!(EP.val('epLocation') && areas && areas.get().length) },
-      { label: 'About you',                pct: 10, done: !!EP.val('epBio') },
-      { label: 'Services & estimates',     pct: 14, done: !!(services && services.count()) },
-      { label: 'Work portfolio',           pct: 10, done: S.portfolio.length > 0 },
-      { label: 'Certifications',           pct: 6,  done: !!(certs && certs.count()) },
+      { label: 'About you',                pct: 12, done: !!EP.val('epBio') },
+      { label: 'Work portfolio',           pct: 14, done: S.portfolio.length > 0 },
+      { label: 'Certifications',           pct: 10, done: !!(certs && certs.count()) },
       { label: 'Verified identity',        pct: 10, done: S.verified }
     ]);
   }
@@ -241,13 +242,14 @@
     var ud = res[0] || {}, td = res[1] || {};
     S.existing = td;
 
-    $('epName').value     = ud.name || (user.user_metadata && user.user_metadata.name) || '';
-    $('epBusiness').value = ud.business_name || td.business_name || '';
+    /* Tasker details come from the taskers row only. The sign-up name is the one thing offered as a starting point. */
+    $('epName').value     = td.name || ud.name || (user.user_metadata && user.user_metadata.name) || '';
+    $('epBusiness').value = td.business_name || '';
     $('epService').value  = td.service || td.service_name || '';
     $('epRate').value     = td.rate_value || '';
     if (td.rate_unit) $('epRateUnit').value = td.rate_unit;
-    $('epLocation').value = td.location || ud.location || '';
-    $('epBio').value      = ud.bio || td.bio || '';
+    $('epLocation').value = td.location || '';
+    $('epBio').value      = td.bio || '';
 
     var d = (td.profile_details && typeof td.profile_details === 'object') ? td.profile_details : {};
     S.details = d;
@@ -259,8 +261,7 @@
     $('epAvailable').checked = td.available !== false;
     $('epRadius').value      = String((d.coverage && d.coverage.radius_km) || 15);
     areas.set(d.coverage && d.coverage.areas);
-    offers.set(d.offers);
-    services.set(d.services);
+    offers.set((Array.isArray(d.offers) ? d.offers : []).slice(0, HIGHLIGHT_MAX));
     certs.set(d.certifications);
     $('epEmergency').checked = !!(d.emergency && d.emergency.enabled);
     $('epEmergencyText').value = (d.emergency && d.emergency.text) || '';
@@ -275,7 +276,7 @@
         return { image_url: x.image_url || x.image, title: x.caption || x.content || '', location: '', description: '' };
       });
     }
-    EP.photo.url = ud.avatar_url || td.photo_url || '';
+    EP.photo.url = td.photo_url || '';
     var r = parseFloat(td.rating);
     S.rating = isFinite(r) && r > 0 ? r : null;
     var rc = parseInt(td.review_count, 10);
@@ -306,7 +307,7 @@
 
     EP.flushChips([areas]);
     EP.busy(true);
-    var extraFailed = false, limitMsg = '';
+    var extraFailed = false, limitMsg = '', extraErr = null;
     try {
       var uid = S.user.id;
       var ex = S.existing || {};
@@ -320,10 +321,8 @@
       var service = EP.val('epService') || null;
       var location = EP.val('epLocation') || null;
 
-      var u = await window.supabase.from('users').update({
-        name: name, bio: bio, business_name: biz, avatar_url: avatarUrl
-      }).eq('id', uid);
-      if (u.error) throw u.error;
+      /* The tasker profile lives in the taskers row only. The customer profile (users.bio, avatar_url, location,
+         business_name) is a different profile and is not touched here. */
 
       /* Upsert (not update) so a brand-new tasker gets a row. Columns not listed here keep their saved values. */
       var t = await window.supabase.from('taskers').upsert({
@@ -352,16 +351,24 @@
         price_note:      EP.val('epPriceNote'),
         next_opening:    EP.val('epNextOpening'),
         coverage:        { radius_km: parseInt(EP.val('epRadius'), 10) || 15, areas: areas.get() },
-        offers:          offers.get(),
-        services:        services.get(),
+        offers:          offers.get().slice(0, HIGHLIGHT_MAX),
         portfolio:       S.portfolio,
-        certifications:  certs.get(),
+        certifications:  certs.get().map(function (c) {
+          /* a verification link must be a web address; anything else is dropped */
+          var u = c.cred_url ? (/^https?:\/\//i.test(c.cred_url) ? c.cred_url : 'https://' + c.cred_url) : '';
+          c.cred_url = /^https?:\/\/[^\s]+\.[^\s]+$/i.test(u) ? u : '';
+          return c;
+        }),
         emergency:       { enabled: $('epEmergency').checked, text: EP.val('epEmergencyText') }
       });
+      delete details.services;   /* the old "Core services & estimates" list was removed: listings are promoted from My Services */
       var x = await window.supabase.from('taskers').update({ profile_details: details }).eq('user_id', String(uid));
       var limitHit = x.error && /portfolio_limit:(\d+)/.exec(String(x.error.message || ''));
       if (limitHit) { portfolioMax = parseInt(limitHit[1], 10); limitMsg = 'Core details saved, but your plan allows ' + portfolioMax + ' portfolio photos, so the extra details were not saved. Remove some photos, or choose a bigger plan, then save again.'; renderPortfolio(); }
-      else if (x.error) { extraFailed = true; console.error('[edit-profile-tasker] profile_details not saved:', x.error); }
+      else if (x.error) {
+        extraFailed = true; extraErr = x.error;
+        console.error('[edit-profile-tasker] profile_details not saved:', x.error);
+      }
       else S.details = details;
 
       /* Saved: the new files are now the stored ones */
@@ -375,14 +382,19 @@
       if (limitMsg) {
         EP.say(limitMsg, 'error');
       } else if (extraFailed) {
-        EP.say('Core details saved, but the extra profile details could not be stored yet. The database needs the profile_details update (docs/profile-details-migration.sql).', 'error');
+        /* Say what really went wrong. Only a missing column means the database update is needed. */
+        var missingCol = extraErr && (extraErr.code === '42703' || extraErr.code === 'PGRST204' || /profile_details/i.test(String(extraErr.message || '')) && /column|schema cache/i.test(String(extraErr.message || '')));
+        EP.say(missingCol
+          ? 'Your main details are saved, but the extra profile details (headline, highlights, credentials, coverage) could not be stored because the database is missing the profile_details column. Please report this error so we can fix it.'
+          : 'Your main details are saved, but the extra profile details (headline, highlights, credentials, coverage) could not be saved this time. Please try again, and if it keeps happening, report this error so we can fix it.',
+          'error', EP.errText(extraErr));
       } else {
         EP.say('Profile updated successfully.', 'ok');
         EP.toast('Your profile has been saved!');
       }
     } catch (err) {
       console.error('[edit-profile-tasker] save failed:', err);
-      EP.say('Save failed: ' + (err && err.message ? err.message : 'please try again.'), 'error');
+      EP.say('Save failed: ' + (err && err.message ? err.message : 'please try again.'), 'error', EP.errText(err));
     } finally {
       EP.busy(false);
     }
@@ -398,17 +410,14 @@
     EP.initPhoto({ getName: function () { return EP.val('epName'); }, onChange: strength });
     var onList = function () { strength(); };
     areas = EP.chips({ host: $('epAreas'), max: 12, placeholder: 'Add an area, e.g. Ikoyi', onChange: onList });
-    offers = EP.repeater({ host: $('epOffers'), addBtn: $('epOfferAdd'), max: 4, noun: 'Highlight', onChange: onList, fields: [
+    offers = EP.repeater({ host: $('epOffers'), addBtn: $('epOfferAdd'), max: HIGHLIGHT_MAX, noun: 'Highlight', onChange: onList, fields: [
       { key: 'title', label: 'Title', placeholder: 'e.g. Itemized Digital Invoices', maxlength: 40 },
       { key: 'description', label: 'Short description', placeholder: 'e.g. Direct transparency on materials', maxlength: 80 } ] });
-    services = EP.repeater({ host: $('epServices'), addBtn: $('epServiceAdd'), max: 8, noun: 'Service', onChange: onList, fields: [
-      { key: 'title', label: 'Service name', placeholder: 'e.g. Inverter & Solar Backup Installation', maxlength: 60 },
-      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'What is included?', maxlength: 160 },
-      { key: 'price', label: 'Starting price (\u20A6)', type: 'number', prefix: '\u20A6', placeholder: '45,000', half: true },
-      { key: 'price_note', label: 'Price note', placeholder: 'e.g. Labour estimate, Per unit, Flat fee', maxlength: 30, half: true } ] });
     certs = EP.repeater({ host: $('epCerts'), addBtn: $('epCertAdd'), max: 6, noun: 'Credential', onChange: onList, fields: [
-      { key: 'title', label: 'Credential', placeholder: 'e.g. COREN Registered & NATE Certified', maxlength: 70 },
-      { key: 'detail', label: 'Issuer and year', placeholder: 'e.g. Council for the Regulation of Engineering in Nigeria', maxlength: 100 } ] });
+      { key: 'title', label: 'Credential', placeholder: 'e.g. COREN Registered Engineer', maxlength: 70 },
+      { key: 'detail', label: 'Issuer and year', placeholder: 'e.g. Council for the Regulation of Engineering in Nigeria, 2021', maxlength: 100 },
+      { key: 'cred_id', label: 'Credential ID / licence number', placeholder: 'The number or ID customers can check, e.g. R.12345', maxlength: 40, half: true },
+      { key: 'cred_url', label: 'Where to check it online (optional)', placeholder: 'e.g. https://registry.example.org/verify', maxlength: 200, half: true } ] });
     $('epEmergency').addEventListener('change', syncEmergency);
     wirePortfolio();
 

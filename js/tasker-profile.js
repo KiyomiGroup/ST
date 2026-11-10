@@ -17,7 +17,7 @@
   var esc = function (s) { return escapeHtml(s); };
   var NAIRA = '\u20a6';
 
-  var state = { id: null, tasker: null, model: null, user: null, isOwner: false, demo: null, portfolio: [] };
+  var state = { id: null, tasker: null, model: null, user: null, isOwner: false, demo: null, portfolio: [], tab: '' };
 
   /* ── small helpers ───────────────────────────────────────── */
   function icon(name) { return '<svg class="ap-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
@@ -61,10 +61,10 @@
       radius: Number(src.radius) || 0, areas: [], emergency: { enabled: false, text: '' }, isDemo: !!src.isDemo, isLocal: !!src.isLocal,
       membership: (window.STMembership && !src.isDemo && !src.isLocal) ? STMembership.clean(src.membership) : ''
     };
-    m.offers = list(src.offers).filter(function (o) { return o && text(o.title); });
+    m.offers = list(src.offers).filter(function (o) { return o && (text(o.title) || text(o.description)); }).slice(0, 4);   /* highlights: 4 at most */
     m.services = list(src.services).filter(function (o) { return o && text(o.title); });
     m.portfolio = list(src.portfolio).filter(function (o) { return o && text(o.image_url); });
-    m.certs = list(src.certs).filter(function (o) { return o && text(o.title); });
+    m.certs = list(src.certs).filter(function (o) { return o && (text(o.title) || text(o.detail) || text(o.cred_id)); });
     m.areas = list(src.areas).map(text).filter(Boolean);
     if (src.emergency && src.emergency.enabled) m.emergency = { enabled: true, text: text(src.emergency.text) };
     return m;
@@ -123,6 +123,7 @@
     var chips = [];
     /* Local Tasker labels (stage 4C-2): shown only when the database says this person is a published Local Tasker. */
     if (m.isLocal) { chips.push(['user', (window.STLocal && STLocal.LABEL) || 'Local Tasker']); chips.push(['chat', (window.STLocal && STLocal.LABEL_PHONE) || 'Phone Assisted']); }
+    if (m.service) chips.push(['briefcase', m.service]);
     if (m.certs.length) chips.push(['award', 'Credentials Listed']);
     chips.push(['shield', 'Escrow Protected']);
     $('tpTrust').innerHTML = chips.map(function (c) { return '<span class="pp-hero-chip tp-chip">' + icon(c[0]) + esc(c[1]) + '</span>'; }).join('');
@@ -135,6 +136,7 @@
     if (m.completed != null) s.push(['Completed tasks', esc(m.completed), 'On StreetTasker']);
     if (m.repeatPct != null) s.push(['Repeat clients', esc(m.repeatPct) + '%', 'Clients who booked again']);
     if (m.years) s.push(['Experience', esc(m.years) + '+ Years', m.expNote || 'In the trade']);
+    else if (m.expNote) s.push(['Experience', esc(m.expNote), 'Focus']);
     $('tpStats').innerHTML = s.map(function (x) {
       return '<div class="pp-stat"><span class="pp-stat-label">' + esc(x[0]) + '</span><span class="pp-stat-value">' + x[1] +
         '</span><span class="pp-stat-note">' + esc(x[2]) + '</span></div>';
@@ -145,8 +147,8 @@
     var ps = paras(m.bio);
     $('tpBio').innerHTML = ps.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
     $('tpOffers').innerHTML = m.offers.map(function (o) {
-      return '<div class="tp-offer"><span class="tp-offer-icon">' + icon('check') + '</span><div><strong>' + esc(o.title) + '</strong>' +
-        (text(o.description) ? '<span>' + esc(o.description) + '</span>' : '') + '</div></div>';
+      return '<div class="tp-offer"><span class="tp-offer-icon">' + icon('check') + '</span><div><strong>' + esc(o.title || o.description) + '</strong>' +
+        (text(o.title) && text(o.description) ? '<span>' + esc(o.description) + '</span>' : '') + '</div></div>';
     }).join('');
     setText('tpFirst', m.first);
     $('secAbout').hidden = !(ps.length || m.offers.length);
@@ -178,8 +180,12 @@
 
   function renderCerts(m) {
     $('tpCerts').innerHTML = m.certs.map(function (c) {
-      return '<div class="tp-cert"><span class="tp-cert-icon">' + icon('award') + '</span><div><strong>' + esc(c.title) + '</strong>' +
-        (text(c.detail) ? '<span>' + esc(c.detail) + '</span>' : '') + '</div></div>';
+      var url = /^https?:\/\//i.test(text(c.cred_url)) ? text(c.cred_url) : '';
+      return '<div class="tp-cert"><span class="tp-cert-icon">' + icon('award') + '</span><div><strong>' + esc(c.title || c.detail || c.cred_id) + '</strong>' +
+        (text(c.title) && text(c.detail) ? '<span>' + esc(c.detail) + '</span>' : '') +
+        (text(c.cred_id) ? '<span>ID / Licence no: ' + esc(c.cred_id) + '</span>' : '') +
+        (url ? '<span><a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer nofollow">Check this credential online</a></span>' : '') +
+        '</div></div>';
     }).join('');
     $('secCerts').hidden = !m.certs.length;
   }
@@ -221,7 +227,7 @@
     $('tpAreas').innerHTML = m.areas.map(function (a) { return '<span class="tp-area">' + esc(a) + '</span>'; }).join('');
     $('secCoverage').hidden = !(hasCover);
 
-    var call = m.emergency.enabled && !state.isOwner;
+    var call = m.emergency.enabled;   /* the owner sees it too, so they can check what customers see */
     $('secCallout').hidden = !call;
     if (call) {
       setText('tpCalloutEyebrow', 'Have an urgent ' + (m.service ? m.service.toLowerCase() : 'service') + ' need?');
@@ -233,14 +239,12 @@
     var label, rateShort = money(m.rateValue) ? ' (' + money(m.rateValue) + m.rateUnit.replace(/^\/hour$/, '/hr') + ')' : '';
     if (state.isOwner) {
       label = 'Edit My Page';
-      $('tpQuote').hidden = true;
       setText('tpEscrowText', 'This is how customers see your page. Payments are held in escrow until the customer approves the completed task.');
     } else {
       label = 'Book ' + m.first;
     }
     setText('tpBookLabel', label);
     $('tpBarBook').textContent = state.isOwner ? 'Edit My Page' : label + rateShort;
-    $('tpBarMsg').hidden = state.isOwner;
     /* Promotional flyer button: the owner's own real profile only (not samples, not coordinator-managed Local Taskers) */
     var flyerBtn = $('tpFlyerBtn'); if (flyerBtn) flyerBtn.hidden = !(state.isOwner && !m.isDemo && !m.isLocal);
     $('tpActionbar').hidden = false;
@@ -259,14 +263,34 @@
     $('tpEmptyCta').hidden = !state.isOwner;
   }
 
+  /* Two views share one place: "About" (bio, highlights, services, portfolio, credentials) and "Reviews".
+     Pressing Reviews swaps the About content for the reviews right where it was, so a long list of reviews never
+     means scrolling past everything else. Sections still hide themselves when they have no data (the `hidden` attribute);
+     the view switch only adds .is-tab-off. */
+  var TAB_ABOUT = ['secAbout', 'secLocal', 'secServices', 'secPortfolio', 'secCerts'];
+  function paintTab() {
+    var showReviews = state.tab === 'reviews' && !$('secReviews').hidden;
+    TAB_ABOUT.forEach(function (id) { if ($(id)) $(id).classList.toggle('is-tab-off', showReviews); });
+    $('secReviews').classList.toggle('is-tab-off', !showReviews);
+    Array.prototype.forEach.call($('tpTabs').children, function (a) {
+      if (a.getAttribute('data-tab') === (showReviews ? 'reviews' : 'about')) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    });
+  }
+  function setTab(name) { state.tab = name; paintTab(); }
   function buildTabs() {
-    var defs = [['secAbout', 'About'], ['secServices', 'Services & Rates'], ['secPortfolio', 'Portfolio'], ['secCerts', 'Credentials'], ['secReviews', 'Reviews']];
-    var items = defs.filter(function (d) { return $(d[0]) && !$(d[0]).hidden; });
-    var nav = $('tpTabs');
+    var hasAbout = TAB_ABOUT.some(function (id) { return $(id) && !$(id).hidden; });
+    var hasReviews = !$('secReviews').hidden;
+    if (!hasReviews) state.tab = 'about';
+    var items = [];
+    if (hasAbout) items.push(['about', 'About']);
+    if (hasReviews) items.push(['reviews', 'Reviews' + (state.model && state.model.reviewCount ? ' (' + state.model.reviewCount + ')' : '')]);
     $('tpTabsWrap').hidden = items.length < 2;
-    nav.innerHTML = items.map(function (d, i) {
-      return '<a href="#' + d[0] + '" class="tp-tab"' + (i === 0 ? ' aria-current="true"' : '') + '>' + esc(d[1]) + '</a>';
+    $('tpTabs').innerHTML = items.map(function (d) {
+      return '<a href="#' + (d[0] === 'about' ? 'secAbout' : 'secReviews') + '" class="tp-tab" data-tab="' + d[0] + '">' + esc(d[1]) + '</a>';
     }).join('');
+    if (items.length < 2) { TAB_ABOUT.forEach(function (id) { if ($(id)) $(id).classList.remove('is-tab-off'); }); $('secReviews').classList.remove('is-tab-off'); return; }
+    if (!state.tab) state.tab = (window.location.hash === '#secReviews' && hasReviews) ? 'reviews' : 'about';
+    paintTab();
   }
 
   function renderAll(m) {
@@ -288,7 +312,7 @@
     if (m.isLocal) setText('tpLocalNote', (window.STLocal && STLocal.NOTE) || '');
   }
 
-  function fail() { $('tpLoading').hidden = true; $('tpError').hidden = false; }
+  function fail() { $('tpLoading').hidden = true; $('tpError').hidden = false; if (window.STReport) window.STReport.attach($('tpError'), 'Public profile could not be loaded', 'tasker-profile ' + (state.id || '')); }
 
   /* ── data: real providers ────────────────────────────────── */
   async function loadReal(id) {
@@ -302,8 +326,10 @@
     var u = await sb.from('users').select('name, bio, business_name, avatar_url, location').eq('id', id).maybeSingle();
     var userRow = u.data;
 
+    /* A person with no tasker row has no tasker profile. The users row is the CUSTOMER profile, so none of its
+       bio, photo, business name or location is shown here. Only the account name is used, as a last resort. */
     if (!tasker && userRow) {
-      tasker = { user_id: id, name: userRow.name || userRow.business_name || 'Service Provider', bio: userRow.bio || '', location: userRow.location || '', available: true };
+      tasker = { user_id: id, name: userRow.name || 'Service Provider', bio: '', location: '', available: true };
     }
     if (!tasker) return fail();
     state.tasker = tasker;
@@ -328,8 +354,10 @@
     var verification = results[0].data, posts = results[1].data, bookings = results[2].data;
     var d = parseDetails(tasker.profile_details);
 
-    var name = (verification && verification.business_name) || tasker.business_name || (userRow && userRow.business_name) || (userRow && userRow.name) || tasker.name || 'Service Provider';
-    var person = (userRow && userRow.name) || tasker.name || name;
+    /* The name the tasker typed on Edit Profile wins (business name, then full name). The verification record and the
+       customer's users row are only fallbacks, so an edited name shows straight away. */
+    var name = tasker.business_name || tasker.name || (verification && verification.business_name) || (userRow && userRow.name) || 'Service Provider';
+    var person = tasker.name || (userRow && userRow.name) || name;
 
     var completed = null, repeatPct = null;
     if (bookings) {
@@ -355,20 +383,32 @@
       portfolio = localPhotos.map(function (p) { return { image_url: p.url, title: p.caption, description: '', location: '' }; });
     }
 
+    /* "Services & Rates" shows the tasker's live service listings (My Services), not a separate list typed on Edit Profile.
+       So what a person promotes is what customers and the flyer see. No listings = the section stays hidden. */
+    var listings = [];
+    if (!isLocal) {
+      try {
+        var lr = await sb.from('services').select('service_name, description, price, rate_unit, available').eq('user_id', String(tasker.user_id || id)).eq('available', true).order('created_at', { ascending: false }).limit(8);
+        listings = (lr.data || []).map(function (x) {
+          return { title: x.service_name, description: text(x.description).slice(0, 160), price: x.price, price_note: text(x.rate_unit).replace(/^\//, '') ? 'per ' + text(x.rate_unit).replace(/^\//, '') : '' };
+        });
+      } catch (_s) { listings = []; }
+    }
     var revData = await fetchReviews(tasker.user_id || id);
     var cov = (d.coverage && typeof d.coverage === 'object') ? d.coverage : {};
     var model = buildModel({
       name: name, first: String(person).trim().split(/\s+/)[0] || name,
       service: tasker.service || tasker.service_name || '', headline: d.headline,
-      location: tasker.business_address || tasker.location || (userRow && userRow.location) || '',
-      photo: isLocal ? localCover : (tasker.photo_url || tasker.photo || (userRow && userRow.avatar_url) || null), isLocal: isLocal,
+      location: tasker.location || tasker.business_address || '',
+      /* The profile photo only (taskers.photo_url). Not the service listing's image, not the customer's photo. */
+      photo: isLocal ? localCover : (tasker.photo_url || null), isLocal: isLocal,
       verified: false, pending: false,
       rating: revData.count > 0 ? revData.avg : 0, reviewCount: revData.count, completed: completed, repeatPct: repeatPct,
       years: d.years_experience, expNote: d.experience_note,
       rateValue: tasker.rate_value, rateUnit: tasker.rate_unit, priceNote: d.price_note,
       available: tasker.available, nextOpening: d.next_opening,
-      bio: (userRow && userRow.bio) || tasker.bio || '',
-      offers: d.offers, services: d.services, portfolio: portfolio, certs: d.certifications,
+      bio: tasker.bio || '',
+      offers: d.offers, services: listings, portfolio: portfolio, certs: d.certifications,
       radius: cov.radius_km, areas: cov.areas, emergency: d.emergency,
       membership: (window.STMembership && !isLocal) ? STMembership.get(tasker.user_id || id) : ''
     });
@@ -807,8 +847,6 @@
   function wire() {
     $('tpBook').addEventListener('click', bookAction);
     $('tpBarBook').addEventListener('click', bookAction);
-    $('tpQuote').addEventListener('click', openQuote);
-    $('tpBarMsg').addEventListener('click', openQuote);
     $('tpCallout').addEventListener('click', function () { openBooking('callout'); });
 
     /* Back: previous page when it was ours, otherwise Find Taskers */
@@ -858,28 +896,19 @@
     var pin = function () {
       var navH = nav ? nav.getBoundingClientRect().height : 0;
       tabs.classList.toggle('is-stuck', phone.matches && !wrap.hidden && wrap.getBoundingClientRect().top <= navH);
-      /* Highlight the section being read */
-      var current = null, line = navH + wrap.offsetHeight + 24;
-      Array.prototype.forEach.call(tabs.children, function (a) {
-        var sec = $(a.getAttribute('href').slice(1));
-        if (sec && sec.getBoundingClientRect().top <= line) current = a;
-      });
-      if (current && !current.hasAttribute('aria-current')) {
-        Array.prototype.forEach.call(tabs.children, function (t) { t.removeAttribute('aria-current'); });
-        current.setAttribute('aria-current', 'true');
-      }
     };
     window.addEventListener('scroll', pin, { passive: true });
     window.addEventListener('resize', pin);
 
-    /* Tabs: smooth scroll and highlight the current one */
+    /* Tabs: swap the content in place (no scrolling down the page) */
     $('tpTabs').addEventListener('click', function (e) {
       var a = e.target.closest('.tp-tab'); if (!a) return;
       e.preventDefault();
-      var target = $(a.getAttribute('href').slice(1));
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      Array.prototype.forEach.call($('tpTabs').children, function (t) { t.removeAttribute('aria-current'); });
-      a.setAttribute('aria-current', 'true');
+      setTab(a.getAttribute('data-tab'));
+      /* on a phone the strip is pinned under the nav: bring the top of the content back into view */
+      var wrap = $('tpTabsWrap'), nav = document.getElementById('navbar');
+      var navH = nav ? nav.getBoundingClientRect().height : 0;
+      if (wrap && wrap.getBoundingClientRect().top < navH) window.scrollTo({ top: window.pageYOffset + wrap.getBoundingClientRect().top - navH, behavior: 'auto' });
     });
   }
 

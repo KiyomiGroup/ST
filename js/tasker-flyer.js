@@ -11,7 +11,11 @@
 
   var host = $('tpFlyerHost'), msg = $('tpFlyerMsg'), actions = $('tpFlyerActions'), help = $('tpFlyerHelp'), pngBtn = $('tpFlyerPng');
   var PNG_LABEL = pngBtn.textContent;
-  var current = null, data = null, token = 0, pngBusy = false;
+  var current = null, data = null, base = null, token = 0, pngBusy = false;
+  var photoOverride = null;   /* null = the profile photo; '' = no photo; a data: URL = a photo chosen here */
+  var edit = $('tpFlyerEdit'), drawTimer = null;
+  var FIELDS = { name: $('tpFlyerName'), prof: $('tpFlyerProf'), loc: $('tpFlyerLoc'), svc: [$('tpFlyerSvc1'), $('tpFlyerSvc2'), $('tpFlyerSvc3')] };
+  var PHOTO_MAX = 5 * 1024 * 1024, PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
   function say(text) { msg.textContent = text || ''; msg.hidden = !text; }
 
@@ -22,9 +26,27 @@
     f.ready.then(function () { if (f === current) STFlyer.refit(f.el); });   /* text wraps differently at phone size */
   }
 
+  /* The flyer shows what the form says. Nothing here is saved to the profile. */
+  function fillForm() {
+    FIELDS.name.value = base.name || ''; FIELDS.prof.value = base.profession || ''; FIELDS.loc.value = base.location || '';
+    FIELDS.svc.forEach(function (f, i) { f.value = (base.services && base.services[i]) || ''; });
+  }
+  function collect() {
+    var photo = photoOverride === null ? base.photoUrl : photoOverride;
+    data = Object.assign({}, base, {
+      name: FIELDS.name.value, profession: FIELDS.prof.value, location: FIELDS.loc.value,
+      services: FIELDS.svc.map(function (f) { return f.value; }).filter(function (v) { return v.trim(); }),
+      photoUrl: photo
+    });
+    $('tpFlyerPhotoReset').hidden = photoOverride === null;
+    $('tpFlyerPhotoNone').hidden = !(photo);
+  }
+  function redraw() { collect(); draw(); }
+  function redrawSoon() { clearTimeout(drawTimer); drawTimer = setTimeout(redraw, 200); }
+
   async function open() {
     var mine = ++token;
-    current = null; data = null; host.textContent = ''; actions.hidden = true; help.hidden = true;
+    current = null; data = null; base = null; photoOverride = null; host.textContent = ''; actions.hidden = true; help.hidden = true; edit.hidden = true;
     say('Getting your flyer ready…');
     if (!dlg.open) dlg.showModal();
     var r;
@@ -32,8 +54,8 @@
     catch (e) { r = { ok: false, message: 'We could not get your flyer ready. Please try again in a moment.' }; }
     if (mine !== token || !dlg.open) return;   /* closed or reopened while waiting */
     if (!r.ok) { say(r.message || 'Your flyer is not available right now.'); return; }
-    data = r.data; say(''); draw();
-    actions.hidden = false; help.hidden = false;
+    base = r.data; say(''); fillForm(); collect(); draw();
+    edit.hidden = false; actions.hidden = false; help.hidden = false;
   }
 
   function download(blob, name) {
@@ -60,6 +82,21 @@
       pngBusy = false; pngBtn.disabled = false; pngBtn.textContent = PNG_LABEL;
     }
   }
+
+  [FIELDS.name, FIELDS.prof, FIELDS.loc].concat(FIELDS.svc).forEach(function (f) { f.addEventListener('input', redrawSoon); });
+  $('tpFlyerPhotoFile').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (PHOTO_TYPES.indexOf(f.type) === -1) { say('Please choose a JPG, PNG or WebP photo.'); e.target.value = ''; return; }
+    if (f.size > PHOTO_MAX) { say('That photo is over 5 MB. Please choose a smaller one.'); e.target.value = ''; return; }
+    var rd = new FileReader();
+    rd.onload = function () { photoOverride = String(rd.result); say(''); redraw(); };
+    rd.onerror = function () { say('We could not read that photo. Please try another.'); };
+    rd.readAsDataURL(f);   /* a data: URL works for the print and the PNG download alike */
+  });
+  $('tpFlyerPhotoNone').addEventListener('click', function () { photoOverride = ''; $('tpFlyerPhotoFile').value = ''; redraw(); });
+  $('tpFlyerPhotoReset').addEventListener('click', function () { photoOverride = null; $('tpFlyerPhotoFile').value = ''; redraw(); });
+  $('tpFlyerReset').addEventListener('click', function () { photoOverride = null; $('tpFlyerPhotoFile').value = ''; fillForm(); redraw(); });
 
   btn.addEventListener('click', open);
   $('tpFlyerClose').addEventListener('click', function () { dlg.close(); });

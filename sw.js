@@ -76,7 +76,7 @@ self.addEventListener('push', function (event) {
       body: d.body || '',
       icon: '/images/pwa/icon-192.png',
       tag: d.tag || undefined,
-      data: { url: d.url || '/' }
+      data: { url: d.url || '/', nid: d.nid || d.notification_id || d.id || '' }
     })
   ];
   if (typeof d.badge === 'number' && self.navigator && self.navigator.setAppBadge) {
@@ -90,6 +90,8 @@ self.addEventListener('notificationclick', function (event) {
   var raw = (event.notification.data && event.notification.data.url) || '/';
   var url = new URL(raw, self.location.origin);
   if (url.origin !== self.location.origin) url = new URL('/', self.location.origin);   /* never open another site */
+  var nid = event.notification.data && event.notification.data.nid;
+  if (nid) url.searchParams.set('st_nid', String(nid));   /* the page marks that notification as read (js/notifications-panel.js) */
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
       for (var i = 0; i < list.length; i++) {

@@ -207,13 +207,20 @@
   };
 
   /* ── status message + save button ────────────────────────── */
-  EP.say = function (text, kind) {
+  /* detail (optional): the technical reason, put in the email a person sends with "Report this error" */
+  EP.say = function (text, kind, detail) {
     var m = $('epMsg');
     if (!m) return;
     if (!text) { m.hidden = true; m.textContent = ''; return; }
     m.textContent = text;
     m.className = 'ep-msg ' + (kind === 'error' ? 'is-error' : 'is-ok');
+    if (kind === 'error' && window.STReport) window.STReport.attach(m, text + (detail ? ' [' + detail + ']' : ''), document.title);
     m.hidden = false;
+  };
+  /* Short technical description of a Supabase / JS error, for the report email */
+  EP.errText = function (err) {
+    if (!err) return '';
+    return [err.code, err.message, err.details, err.hint].filter(Boolean).join(' | ').slice(0, 400);
   };
   EP.busy = function (on) {
     ['epSave', 'epHeroSave'].forEach(function (id) {

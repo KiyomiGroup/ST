@@ -214,13 +214,34 @@
   }
   function unreadCount() { return items.filter(function (n) { return !n.is_read; }).length; }
 
+  /* Resolves once the database has been told (or after ~1.5 s at most), so a page change that follows cannot cancel the request */
   async function markRead(id) {
     var n = items.filter(function (x) { return x.id === id; })[0];
     if (!n || n.is_read) return;
     n.is_read = true;
-    try { await window.supabase.from('notifications').update({ is_read: true }).eq('id', id); } catch (e) {}
     setDots(unreadCount() > 0);
+    var send = (async function () {
+      try { await window.supabase.from('notifications').update({ is_read: true }).eq('id', id); } catch (e) {}
+    })();
+    await Promise.race([send, new Promise(function (res) { setTimeout(res, 1500); })]);
   }
+  /* Opened from a phone notification (?st_nid=<id>, added by sw.js): mark that one as read, then tidy the address */
+  async function markFromLink() {
+    try {
+      var u = new URL(window.location.href), nid = u.searchParams.get('st_nid');
+      if (!nid) return;
+      u.searchParams.delete('st_nid');
+      window.history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+      var uid = await getUser();
+      if (!uid) return;
+      await window.supabase.from('notifications').update({ is_read: true }).eq('id', nid).eq('user_id', uid);
+      known[String(nid)] = true;
+      items.forEach(function (n) { if (String(n.id) === String(nid)) n.is_read = true; });
+      check();
+    } catch (e) { /* the notification simply stays unread */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(markFromLink, 600); });
+  else setTimeout(markFromLink, 600);
   async function markAll() {
     items.forEach(function (n) { n.is_read = true; });
     render();
@@ -269,9 +290,9 @@
         var id = row.getAttribute('data-np-id');
         var n = items.filter(function (x) { return String(x.id) === id; })[0];
         if (!n) return;
-        markRead(n.id);
         var url = target(n);
-        if (url) { window.location.href = url; } else { render(); }
+        /* Mark it read FIRST, and wait for the database, so leaving the page cannot cancel it */
+        markRead(n.id).then(function () { if (url) { window.location.href = url; } else { render(); } });
       }
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) close(); });

@@ -165,7 +165,6 @@
                   <div><strong id="tpAvailTitle"></strong><span id="tpAvailNote"></span></div>
                 </div>
                 <button type="button" class="btn btn-primary tp-cta" id="tpBook"><svg class="ap-i" aria-hidden="true"><use href="#i-calendar"/></svg><span id="tpBookLabel">Book</span></button>
-                <button type="button" class="btn btn-ghost tp-cta" id="tpQuote"><svg class="ap-i" aria-hidden="true"><use href="#i-chat"/></svg>Request Quote</button>
                 <div class="tp-escrow">
                   <svg class="ap-i" aria-hidden="true"><use href="#i-shield"/></svg>
                   <div><strong>StreetTasker Escrow Protection</strong><p id="tpEscrowText">Your payment is held securely in escrow and only released after you inspect and approve the completed task.</p></div>
@@ -196,7 +195,6 @@
 
     <!-- Mobile action bar (phones only, sits above the bottom tab bar) -->
     <div class="tp-actionbar" id="tpActionbar" hidden>
-      <button type="button" class="tp-actionbar-msg" id="tpBarMsg" aria-label="Request a quote"><svg class="ap-i" aria-hidden="true"><use href="#i-chat"/></svg></button>
       <button type="button" class="btn btn-primary tp-actionbar-book" id="tpBarBook"></button>
     </div>
   </div>
@@ -214,6 +212,41 @@
       <p class="tp-dialog-lead">Print it or share it. Anyone who scans the QR code signs up with your referral code and lands on your profile.</p>
       <div class="tp-flyer-stage" id="tpFlyerHost" aria-live="polite"></div>
       <p class="tp-flyer-msg" id="tpFlyerMsg" role="status" hidden></p>
+
+      <!-- Edit the flyer before printing. These changes are for this flyer only; they do not change your profile. -->
+      <section class="tp-flyer-edit" id="tpFlyerEdit" aria-labelledby="tpFlyerEditTitle" hidden>
+        <h3 class="tp-flyer-edit-title" id="tpFlyerEditTitle">Edit your flyer</h3>
+        <p class="tp-flyer-edit-note">Change anything below and the flyer updates. This only changes the flyer, not your profile.</p>
+        <div class="form-group">
+          <label class="form-label" for="tpFlyerName">Name</label>
+          <input type="text" id="tpFlyerName" class="form-input" maxlength="60" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tpFlyerProf">What you do</label>
+          <input type="text" id="tpFlyerProf" class="form-input" maxlength="40" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tpFlyerLoc">Location</label>
+          <input type="text" id="tpFlyerLoc" class="form-input" maxlength="70" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <span class="form-label" id="tpFlyerSvcLabel">Services listed (up to 3)</span>
+          <input type="text" id="tpFlyerSvc1" class="form-input" maxlength="42" autocomplete="off" aria-labelledby="tpFlyerSvcLabel" />
+          <input type="text" id="tpFlyerSvc2" class="form-input" maxlength="42" autocomplete="off" aria-labelledby="tpFlyerSvcLabel" />
+          <input type="text" id="tpFlyerSvc3" class="form-input" maxlength="42" autocomplete="off" aria-labelledby="tpFlyerSvcLabel" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tpFlyerPhotoFile">Photo on the flyer</label>
+          <input type="file" id="tpFlyerPhotoFile" accept="image/jpeg,image/png,image/webp" />
+          <div class="form-helper">JPG, PNG or WebP, up to 5 MB. Choose any photo you like for this flyer.</div>
+          <div class="tp-flyer-edit-btns">
+            <button type="button" class="btn btn-text btn-sm" id="tpFlyerPhotoNone">No photo</button>
+            <button type="button" class="btn btn-text btn-sm" id="tpFlyerPhotoReset" hidden>Use my profile photo</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="tpFlyerReset">Reset all to my profile</button>
+      </section>
+
       <div class="tp-flyer-actions" id="tpFlyerActions" hidden>
         <button type="button" class="btn btn-primary" id="tpFlyerA5">Download A5 (PDF)</button>
         <button type="button" class="btn btn-outline" id="tpFlyerA4">Download A4 (PDF)</button>

@@ -447,8 +447,7 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
       id: String(user.id), user_id: String(user.id),
       service: serviceName.trim(), category: category || 'other',
       rate_value: numericPrice, rate: rateStr,
-      location: location.trim(), bio: description.trim(),
-      photo_url: photoUrl || null, available: true,
+      location: location.trim(), available: true,   /* bio and photo_url belong to the tasker's profile, not to a listing */
     }, { onConflict: 'id' });
     if (tErr) throw new Error(tErr.message);
     return basePayload;
@@ -459,8 +458,7 @@ async function postService({ serviceName, category, pricingType = 'per_job', pri
     id: String(user.id), user_id: String(user.id),
     service: serviceName.trim(), category: category || 'other',
     rate_value: numericPrice, rate: rateStr,
-    location: location.trim(), bio: description.trim(),
-    photo_url: photoUrl || null, available: true,
+    location: location.trim(), available: true,   /* bio and photo_url belong to the tasker's profile, not to a listing */
   }, { onConflict: 'id' });
 
   return svc || payload;

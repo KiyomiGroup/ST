@@ -412,22 +412,6 @@
     </div>
   </section>
 
-  <!-- SERVICES NEAR YOU (live data — kept for search/category filtering, hidden from this layout) -->
-  <section class="section-sm" style="display:none;" aria-hidden="true">
-    <div class="container">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
-        <button class="btn btn-sm cat-chip active" onclick="filterCat(this,'')">All</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'barber')">Barber</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'electrician')">Electrician</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'cleaning')">Cleaning</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'plumber')">Plumber</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'beauty')">Beauty</button>
-        <button class="btn btn-sm cat-chip" onclick="filterCat(this,'mechanic')">Mechanic</button>
-      </div>
-      <div class="live-grid" id="servicesList"></div>
-    </div>
-  </section>
-
   <!-- HOW IT WORKS -->
   <section class="section" id="how-it-works">
     <div class="container-home">
@@ -555,6 +539,20 @@
         <div class="tasker-split-visual">
           <img src="images/become-tasker.jpg" alt="A friendly StreetTasker professional fixing a kitchen sink" loading="lazy" />
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES TASKERS OFFER (live). Desktop: a grid. Phone: one row you swipe sideways. -->
+  <section class="section section-flush-top" id="homeServices">
+    <div class="container-home">
+      <div class="section-header center fade-up">
+        <h2>Services you can book today</h2>
+        <p>Browse services offered by skilled taskers near you.</p>
+      </div>
+      <div class="home-svc-row fade-up d1" id="servicesList"></div>
+      <div class="text-center mt-32 fade-up">
+        <a href="find-services.html" class="btn btn-outline btn-lg">Browse all services</a>
       </div>
     </div>
   </section>

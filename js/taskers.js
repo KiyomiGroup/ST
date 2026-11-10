@@ -19,9 +19,9 @@ async function loadServices() {
       price: s.price, rate_unit: s.rate_unit || '/job', location: s.location,
       description: s.description,
       /* Use service photo first, then user avatar_url */
-      photo: s.photo || (s.users && s.users.avatar_url) || null,
+      photo: s.photo || null,   /* the customer's users.avatar_url is never used: a tasker's picture is taskers.photo_url (filled in below) */
       user_id: s.user_id,
-      provider_name: (s.users && (s.users.business_name || s.users.name)) || 'Provider',
+      provider_name: (s.users && s.users.name) || 'Provider',   /* replaced below by the name on the tasker's own profile */
       available: s.available, fromServices: true,
       specialties: s.specialties, availability_status: s.availability_status, verified: s.verified,
     }));
@@ -48,13 +48,22 @@ async function loadServices() {
          Optional: if the query fails the cards simply have no strip. */
       try {
         const ids = [...new Set(liveMapped.map(m => m.user_id).filter(Boolean))];
-        const { data: tk } = await window.supabase.from('taskers').select('user_id, profile_details').in('user_id', ids);
-        const byUser = {};
+        const { data: tk } = await window.supabase.from('taskers').select('user_id, name, business_name, photo_url, profile_details').in('user_id', ids);
+        const byUser = {}, prof = {};
         (tk || []).forEach(r => {
           const d = (r.profile_details && typeof r.profile_details === 'object') ? r.profile_details : {};
           if (Array.isArray(d.portfolio)) byUser[String(r.user_id)] = d.portfolio;
+          prof[String(r.user_id)] = r;
         });
-        liveMapped.forEach(m => { m.portfolio = byUser[m.user_id] || []; });
+        liveMapped.forEach(m => {
+          m.portfolio = byUser[m.user_id] || [];
+          /* Name and picture come from the tasker's own profile, so an edited name shows on every card */
+          const r = prof[m.user_id];
+          if (r) {
+            m.provider_name = r.business_name || r.name || m.provider_name;
+            if (!m.photo && r.photo_url) m.photo = r.photo_url;
+          }
+        });
       } catch (_pe) { /* portfolio is optional */ }
       /* Local Taskers (stage 4C-2): the label, picture and honest rating come from the database function, never from a column.
          A Local Tasker has no ratings yet, so the 4.5 default above must not be shown for them. If the lookup fails the person simply shows as a normal listing. */
