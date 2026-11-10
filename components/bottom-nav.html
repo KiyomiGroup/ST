@@ -1,4 +1,4 @@
-<!-- StreetTasker — global mobile bottom nav (Home / Tasks / + / Messages / Profile)
+<!-- StreetTasker — global mobile bottom nav (Home / Tasks / + (customers) or Service (taskers) / Messages / Profile)
      Injected on every page via js/app.js. Only visible when logged in —
      see body.st-logged-in gate in css/styles.css. Hrefs below are role-aware
      and get rewritten by the inline script once auth state is known. -->
@@ -37,18 +37,28 @@
 
   if (elHome)     elHome.href     = 'home-feed.html';
   if (elTasks)    elTasks.href    = isTasker ? 'find-tasks.html' : 'find-taskers.html';
-  if (elPlus)     elPlus.href     = isTasker ? 'post-service.html' : 'post-task.html';
+  if (elPlus)     elPlus.href     = isTasker ? 'my-services.html' : 'post-task.html';
+  /* Taskers: the round "+" becomes a normal tab, "Service" with the service (briefcase) icon, styled like Home / Tasks.
+     Customers keep the "+" (post a task). The id stays, so the onboarding tours still find it. */
+  if (elPlus && isTasker) {
+    elPlus.className = 'st-bn-item';
+    elPlus.setAttribute('aria-label', 'Service');
+    elPlus.innerHTML = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>Service</span>';
+  }
   /* Messages is its own page (messages.html) for both roles. */
   if (elMessages) elMessages.href = 'messages.html';
   if (elProfile)  elProfile.href  = isTasker ? 'edit-profile-tasker.html' : 'edit-profile-customer.html';
 
   /* Active tab based on the current page */
   var page = (window.location.pathname.split('/').pop() || 'index.html');
-  [elHome, elTasks, elMessages, elProfile].forEach(function (el) {
-    if (el) el.classList.remove('active');
+  [elHome, elTasks, elPlus, elMessages, elProfile].forEach(function (el) {
+    if (el && el !== elPlus) el.classList.remove('active');
+    else if (el && isTasker) el.classList.remove('active');
   });
   if (page === 'home-feed.html') {
     if (elHome) elHome.classList.add('active');
+  } else if (isTasker && (page === 'my-services.html' || page === 'post-service.html' || page === 'service-details.html')) {
+    if (elPlus) elPlus.classList.add('active');
   } else if (page === 'edit-profile-tasker.html' || page === 'edit-profile-customer.html' || page === 'saved.html') {
     if (elProfile) elProfile.classList.add('active');
   } else if (page === dashUrl) {
