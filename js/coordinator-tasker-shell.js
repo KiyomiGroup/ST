@@ -108,7 +108,8 @@
     if (!ul) return;
     ul.textContent = '';
     var term = filterText.trim().toLowerCase();
-    var shown = rows.filter(function (r) { return !term || (r.name + ' ' + r.skills).toLowerCase().indexOf(term) > -1; });
+    var pub = rows.filter(function (r) { return r.status === 'published'; });   /* the side panel lists published Local Taskers only (rows stays complete for the header and switcher) */
+    var shown = pub.filter(function (r) { return !term || (r.name + ' ' + r.skills).toLowerCase().indexOf(term) > -1; });
     shown.forEach(function (r) {
       var li = el('li');
       var isCur = r.id === taskerId;
@@ -130,7 +131,7 @@
     if (empty) {
       empty.hidden = !!shown.length;
       if (rosterFailed) { empty.hidden = false; empty.textContent = 'We couldn\u2019t load your Local Taskers just now.'; }
-      else empty.textContent = rows.length ? 'No Local Taskers match that filter.' : 'No Local Taskers assigned to you yet.';
+      else empty.textContent = pub.length ? 'No Local Taskers match that filter.' : (rows.length ? 'No published Local Taskers yet.' : 'No Local Taskers assigned to you yet.');
     }
   }
 
@@ -162,7 +163,13 @@
     if (!p) return;
     var m = $('coManaging'); if (m) { m.textContent = 'Managing ' + p.name; m.hidden = false; }
     var crumb = $('coCrumbName'); if (crumb) crumb.textContent = p.name;
-    var area = $('coDetailArea'); if (area) { area.textContent = p.areas || ''; area.hidden = !p.areas; }
+    var area = $('coDetailArea');
+    if (area) {   /* first place on its own, the rest in a second span (phones show only the first) */
+      var parts = String(p.areas || '').split(/[,;\n]/).map(function (x) { return x.trim(); }).filter(Boolean);
+      area.textContent = ''; area.title = parts.join(', ');
+      if (parts.length) { area.appendChild(el('span', 'co-th-first', parts[0])); if (parts.length > 1) area.appendChild(el('span', 'co-th-rest', ', ' + parts.slice(1).join(', '))); }
+      area.hidden = !parts.length;
+    }
     var pub = $('coPublicLink');
     if (pub) {
       pub.hidden = p.status !== 'published';

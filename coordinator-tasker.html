@@ -35,7 +35,7 @@
 
     <main class="co-main co-main--page" id="coMain">
 
-      <!-- Stage T1: top row. Desktop: trail on the left, back to the workspace on the right. Phones: back link, then the tasker switcher. -->
+      <!-- Stage T1: top row. Desktop: trail on the left, back to the workspace on the right. Phones: back link on the left and the tasker switcher on the right, on one line. -->
       <div class="co-tcrumb">
         <nav class="co-tcrumb-trail" aria-label="Breadcrumb">
           <a href="coordinator-taskers.html">Local Taskers</a>
@@ -48,13 +48,12 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           <span>Back to My Workspace</span>
         </a>
+        <label class="co-tsw" id="coSwitchWrap" hidden>
+          <span class="co-visually-hidden">Switch Local Tasker</span>
+          <select id="coTaskerSwitch"></select>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </label>
       </div>
-
-      <label class="co-tsw" id="coSwitchWrap" hidden>
-        <span class="co-visually-hidden">Switch Local Tasker</span>
-        <select id="coTaskerSwitch"></select>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-      </label>
 
       <p class="co-loading" id="coDetailLoading">Loading…</p>
 
@@ -160,7 +159,7 @@
                   <a class="co-fact-link co-req-all" href="coordinator-bookings.html">View all bookings &rarr;</a>
                 </div>
                 <p class="co-loading" id="coOvBookLoading">Loading bookings&hellip;</p>
-                <ul class="co-req-list" id="coOvBookList" hidden></ul>
+                <ul class="co-tc-list" id="coOvBookList" hidden></ul>
                 <div class="co-empty co-req-empty" id="coOvBookEmpty" hidden>
                   <p class="co-empty-title">No open bookings</p>
                   <p class="co-empty-text">When a customer books this Local Tasker, the request will be listed here.</p>
@@ -209,23 +208,42 @@
           </div>
         </section>
 
-        <!-- Stage T3: Bookings tab (js/coordinator-tasker-bookings.js). Same groups and cards as coordinator-bookings.html, for this Local Tasker only. -->
+        <!-- Stage T3: Bookings tab (js/coordinator-tasker-bookings.js). This Local Tasker's bookings as a queue: search, date range, CSV export,
+             filter pills, a table on tablet and up, cards on phones, pages of six. Each row opens coordinator-booking.html?id=. -->
         <section class="co-tpanel" id="coPanelBookings" role="tabpanel" aria-labelledby="coTabBookings" hidden>
           <p class="co-section-sub" id="coTbSummary">Bookings for this Local Tasker.</p>
           <div class="co-banner" id="coTbError" role="alert" hidden>
             <span>We couldn&rsquo;t load these bookings just now.</span>
             <button type="button" class="co-link-btn co-banner-retry" id="coTbRetry">Try again</button>
           </div>
-          <div class="co-toolbar" id="coTbToolbar" hidden>
+          <div class="co-bq-tools" id="coTbToolbar" hidden>
             <label class="co-search">
               <span class="co-visually-hidden">Search these bookings</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="search" id="coTbSearch" placeholder="Search by job, customer or reference" autocomplete="off" />
+              <input type="search" id="coTbSearch" placeholder="Search by customer, job or reference" autocomplete="off" />
             </label>
-            <div class="co-filters" id="coTbTabs" role="group" aria-label="Show bookings that"></div>
+            <div class="co-bq-actions">
+              <label class="co-bq-select">
+                <span class="co-visually-hidden">Date requested</span>
+                <select id="coTbRange"></select>
+              </label>
+              <button type="button" class="btn btn-outline btn-sm co-bq-export" id="coTbExport">Export CSV</button>
+            </div>
+            <div class="co-filters co-bq-pills" id="coTbTabs" role="group" aria-label="Show bookings that are"></div>
           </div>
           <p class="co-loading" id="coTbLoading">Loading bookings&hellip;</p>
-          <ul class="co-bk-list" id="coTbList" hidden></ul>
+          <div class="co-bq" id="coTbQueue" hidden>
+            <div class="co-bq-title">
+              <h2 id="coTbHeading">Bookings Queue</h2>
+              <span class="co-bq-sort">Sorted by urgency</span>
+            </div>
+            <div class="co-bq-th" aria-hidden="true"><span>Customer &amp; job</span><span>Schedule &amp; next step</span><span>Price &amp; payment</span><span>Status</span><span></span></div>
+            <ul class="co-bq-list" id="coTbList"></ul>
+            <nav class="co-bq-pager" id="coTbPager" aria-label="Booking pages">
+              <p class="co-bq-count" id="coTbCount"></p>
+              <div class="co-bq-pages" id="coTbPages"></div>
+            </nav>
+          </div>
           <div class="co-empty" id="coTbEmpty" hidden>
             <p class="co-empty-title">No bookings yet</p>
             <p class="co-empty-text">When a customer books this Local Tasker, the booking appears here with the next thing you need to do.</p>
@@ -436,6 +454,7 @@
   <script src="js/coordinator-tasker.js"></script>
   <script src="js/coordinator-tasker-shell.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-tasker-card.js"></script>
   <script src="js/coordinator-tasker-overview.js"></script>
   <script src="js/coordinator-tasker-bookings.js"></script>
   <script src="js/coordinator-tasker-messages.js"></script>

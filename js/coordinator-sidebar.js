@@ -1,7 +1,7 @@
 /* ============================================================
    StreetTasker — coordinator-sidebar.js (sidebar on every coordinator page)
    Fills the desktop sidebar (components/coordinator-nav.html, shown from 1044px) with:
-     - the "My Local Taskers" list, its filter and the "6/10" places count
+     - the "My Local Taskers" list (published Local Taskers only), its filter and the "6/10" places count
      - the unread-messages badge on Messages
    Loaded by js/coordinator.js once the nav is in the page. Waits for `coordinator:ready` (the guard has said yes).
    Display only. Each row opens that Local Tasker's profile. Renders with textContent only.
@@ -34,7 +34,8 @@
     if (!ul) return;
     ul.textContent = '';
     var term = q.trim().toLowerCase();
-    var shown = rows.filter(function (r) { return !term || (r.name + ' ' + r.skills).toLowerCase().indexOf(term) > -1; });
+    var pub = rows.filter(function (r) { return r.status === 'published'; });   /* the menu and side panel list published Local Taskers only */
+    var shown = pub.filter(function (r) { return !term || (r.name + ' ' + r.skills).toLowerCase().indexOf(term) > -1; });
     shown.forEach(function (r) {
       var li = el('li');
       var isCur = r.id === current;
@@ -54,7 +55,7 @@
     if (empty) {
       empty.hidden = !!shown.length;
       if (failed) { empty.hidden = false; empty.textContent = 'We couldn\u2019t load your Local Taskers just now.'; }
-      else empty.textContent = rows.length ? 'No Local Taskers match that filter.' : 'No Local Taskers assigned to you yet.';
+      else empty.textContent = pub.length ? 'No Local Taskers match that filter.' : (rows.length ? 'No published Local Taskers yet.' : 'No Local Taskers assigned to you yet.');
     }
   }
 

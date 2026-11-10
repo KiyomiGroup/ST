@@ -4,6 +4,8 @@
    Real data only: one call, rpc local_booking_list (the database decides which
    bookings this coordinator may see). Read-only: every card links to the booking page.
    Each card holds two layouts (tablet and up, phone); CSS shows one. Fields the list does not return (location, hours, skill) are not shown.
+   Phone card: the Local Tasker's profile picture (local_tasker_photos kind 'avatar', private bucket, signed links; initials if none)
+   and, under the name, the service the customer booked.
    Uses STCoBk (coordinator-bookings-common.js) for labels, amounts and refs.
    Renders with textContent only (names are user-entered data).
    Runs on `coordinator:ready` (after the route guard passed).
@@ -21,13 +23,14 @@
     { id: 'issue', label: 'Issues' }
   ];
   var KIND = {
-    new:    { chip: 'New booking',   cls: 'co-status co-status--published', cta: 'Review booking' },
+    new:    { chip: 'New booking',   cls: 'co-status co-status--published', cta: 'Review request' },
     quote:  { chip: 'Quote',         cls: 'co-status co-req-chip--quote',   cta: 'Manage quote' },
     active: { chip: 'Active job',    cls: 'co-status',                      cta: 'Open job' },
     issue:  { chip: 'Problem reported', cls: 'co-status co-status--inactive', cta: 'View problem' }
   };
 
   var rows = [], tab = 'all', last = null;
+  var pics = {};   /* Local Tasker user id -> signed profile picture link; absent means show initials */
   function $(id) { return document.getElementById(id); }
 
   /* Which group a booking belongs to. Closed bookings are not "active requests". */
@@ -75,17 +78,52 @@
   var ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
   var ICON_CAL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
 
-  /* One sentence for the phone card, built from real fields only. The customer name is bold. */
+  /* One sentence for the phone card, built from real fields only. The customer name is bold.
+     The service the customer booked is shown under the Local Tasker's name, so it is not repeated here. */
   function sentence(r) {
     var p = C.el('p', 'co-req-sentence');
-    var who = r.customer_name, title = r.title || 'Booking';
+    var who = r.customer_name;
     function add(text) { p.appendChild(document.createTextNode(text)); }
     function bold(text) { p.appendChild(C.el('strong', null, text)); }
-    if (r._kind === 'new') { add('New booking request'); if (who) { add(' from '); bold(who); } add(' for ' + title + '.'); }
-    else if (r._kind === 'quote') { add('Quote for ' + title); if (who) { add(' from '); bold(who); } add('.'); }
-    else if (r._kind === 'active') { add('Active job'); if (who) { add(' for '); bold(who); } add(': ' + title + '.'); }
-    else { add('Problem reported'); if (who) { add(' by '); bold(who); } add(': ' + title + '.'); }
+    if (r._kind === 'new') { add('New booking request'); if (who) { add(' from '); bold(who); } add('.'); }
+    else if (r._kind === 'quote') { add('Quote'); if (who) { add(' for '); bold(who); } add('.'); }
+    else if (r._kind === 'active') { add('Active job'); if (who) { add(' for '); bold(who); } add('.'); }
+    else { add('Problem reported'); if (who) { add(' by '); bold(who); } add('.'); }
     return p;
+  }
+
+  /* Profile pictures for the Local Taskers on the list. One read, one signing call. A failure only means initials are shown. */
+  async function loadPics() {
+    try {
+      var ids = Array.from(new Set(rows.map(function (r) { return r.tasker_user_id; }).filter(Boolean)));
+      if (!ids.length) return;
+      var res = await window.supabase.from('local_tasker_photos')
+        .select('tasker_user_id, storage_path, created_at')
+        .in('tasker_user_id', ids).eq('kind', 'avatar').is('removed_at', null)
+        .order('created_at', { ascending: false });
+      if (res.error) throw res.error;
+      var path = {};
+      (res.data || []).forEach(function (x) { if (x && x.storage_path && !path[x.tasker_user_id]) path[x.tasker_user_id] = x.storage_path; });   /* newest first: keep the newest */
+      var list = Object.keys(path).map(function (k) { return path[k]; });
+      if (!list.length) return;
+      var s = await window.supabase.storage.from('local-tasker-photos').createSignedUrls(list, 3600);
+      if (s.error) throw s.error;
+      var url = {};
+      (s.data || []).forEach(function (d) { if (d && d.signedUrl && !d.error) url[d.path] = d.signedUrl; });
+      Object.keys(path).forEach(function (k) { if (url[path[k]]) pics[k] = url[path[k]]; });
+      render();
+    } catch (e) { console.error('[coordinator request pictures]', e); }
+  }
+
+  /* The Local Tasker's picture, or their initials when there is none (or it fails to load). */
+  function avatar(r) {
+    var av = C.el('span', 'co-tasker-avatar co-req-avatar', C.initialsOf(r.tasker_name, 'LT'));
+    var src = pics[r.tasker_user_id];
+    if (src) {
+      var img = C.el('img'); img.src = src; img.alt = ''; img.loading = 'lazy';
+      img.addEventListener('load', function () { av.textContent = ''; av.appendChild(img); });   /* swap in only once the picture is ready */
+    }
+    return av;
   }
 
   function cta(r, k, withAmount, withIcon, mint) {
@@ -136,11 +174,10 @@
   function phoneCard(r, k) {
     var box = C.el('div', 'co-req-phone');
     var head = C.el('div', 'co-req-phead');
-    head.appendChild(C.el('span', 'co-tasker-avatar co-req-avatar', C.initialsOf(r.tasker_name, 'LT')));
+    head.appendChild(avatar(r));
     var who = C.el('div', 'co-req-pwho');
     who.appendChild(C.el('p', 'co-req-pname', r.tasker_name || 'Local Tasker'));
-    var sub = [k.chip]; var when = ago(r.created_at); if (when) sub.push(when);
-    who.appendChild(C.el('p', 'co-req-psub', sub.join(' \u2022 ')));
+    who.appendChild(C.el('p', 'co-req-psub', r.title || 'Booking'));   /* the service the customer booked */
     head.appendChild(who);
     var amt = B.naira(r.amount);
     if (amt) head.appendChild(C.el('span', 'co-req-amount', amt));
@@ -198,7 +235,7 @@
         if (k) { r._kind = k; rows.push(r); }
       });
       $('coReqLoading').hidden = true;
-      buildTabs(); render(); heroOrders();
+      buildTabs(); render(); heroOrders(); loadPics();
     } catch (e) {
       console.error('[coordinator requests]', e);
       $('coReqLoading').hidden = true; $('coReqError').hidden = false;

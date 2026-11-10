@@ -529,3 +529,7 @@ Print artwork for "My Promotional Flyer": `css/flyer.css`, `js/flyer-template.js
 - **Words** live in one `COPY` object at the top of `js/flyer-template.js`. Benefit claims must stay true to the product (escrow, reviews, booking).
 - **New formats** (sticker, business card) are a new function added to `STFlyer.templates`; they reuse the same data, QR and fitting.
 - **Printing** copies the gift card idea: a hidden `.fl-sheet`, `@page` size injected for A5 or A4, `window.print()` ("Save as PDF"). The QR is made in the browser by `js/vendor/qrcode.min.js` at error correction Q.
+
+
+### Coordinator sidebar collapse
+From 1044px the coordinator sidebar can collapse to an icon rail (`body.co-sb-collapsed`, width `--co-sidebar-width-collapsed`, toggle `#coSideToggle`, choice kept in `localStorage` key `st_co_sb`). `coordinator-chat.html` shows its three-column layout only when there is room (1520px expanded, 1310px collapsed); otherwise two columns, with booking details from the info button.

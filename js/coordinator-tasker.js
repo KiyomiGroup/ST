@@ -266,10 +266,28 @@
     }
   }
 
+  /* The header circle shows the Local Tasker's profile picture (kind 'avatar', private bucket, signed link); initials stay until it loads, or if there is none. */
+  var picFor = '';
+  async function loadHeaderPic(id) {
+    picFor = id;
+    try {
+      var res = await window.supabase.from('local_tasker_photos').select('storage_path')
+        .eq('tasker_user_id', id).eq('kind', 'avatar').is('removed_at', null).order('created_at', { ascending: false }).limit(1);
+      if (res.error || !res.data || !res.data.length) return;
+      var s = await window.supabase.storage.from('local-tasker-photos').createSignedUrls([res.data[0].storage_path], 3600);
+      var d = s && s.data && s.data[0];
+      if (!d || d.error || !d.signedUrl) return;
+      var img = new Image(); img.alt = '';
+      img.onload = function () { var av = $('coDetailAvatar'); if (av && picFor === id) { av.textContent = ''; av.appendChild(img); } };
+      img.src = d.signedUrl;
+    } catch (e) { console.error('[coordinator tasker picture]', e); }
+  }
+
   function paint(p) {
     var name = p.full_name || 'Local Tasker';
     document.title = name + ' — StreetTasker';
     $('coDetailAvatar').textContent = C.initialsOf(name);
+    loadHeaderPic(p.tasker_user_id);
     $('coDetailName').textContent = name;
     /* T1: edits after publishing do not reach customers until the coordinator presses Update on the Publish page */
     var rb = $('coRepubBanner');
@@ -278,7 +296,10 @@
       var rl = $('coRepubLink'); if (rl) rl.href = 'coordinator-publish.html?id=' + encodeURIComponent(p.tasker_user_id);
     }
     var skills = Array.isArray(p.skills) ? p.skills.filter(Boolean) : [];
-    $('coDetailSkills').textContent = skills.length ? skills.join(', ') : 'No skills recorded yet';
+    /* First service on its own, the rest in a second span: phones show only the first (css), so a long list cannot crowd the header. */
+    var sk = $('coDetailSkills'); sk.textContent = ''; sk.title = skills.join(', ');
+    if (!skills.length) sk.textContent = 'No skills recorded yet';
+    else { sk.appendChild(C.el('span', 'co-th-first', skills[0])); if (skills.length > 1) sk.appendChild(C.el('span', 'co-th-rest', ', ' + skills.slice(1).join(', '))); }
     var st = $('coDetailStatus'); st.textContent = '';
     st.appendChild(C.el('span', C.statusClass(p.status), C.statusLabel(p.status)));
 

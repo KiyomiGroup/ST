@@ -67,40 +67,8 @@
   }
 
   /* ── Open bookings ────────────────────────────────────────── */
-  function ago(iso) {
-    var t = new Date(iso).getTime();
-    if (!iso || isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    if (m < 1) return 'Received just now';
-    if (m < 60) return 'Received ' + m + 'm ago';
-    var h = Math.round(m / 60);
-    if (h < 24) return 'Received ' + h + 'h ago';
-    var d = Math.round(h / 24);
-    return 'Received ' + d + (d === 1 ? ' day ago' : ' days ago');
-  }
-
-  function bookingCard(r, act) {
-    var issue = r.frozen === true || r.booking_status === 'disputed';
-    var li = C.el('li', 'co-req-item' + (issue ? ' is-issue' : ''));
-    var top = C.el('div', 'co-req-top'), tags = C.el('div', 'co-req-tags');
-    tags.appendChild(C.el('span', issue ? 'co-status co-status--inactive' : 'co-status', issue ? 'Problem reported' : B.ltLabel(r.lt_status)));
-    var when = ago(r.created_at); if (when) tags.appendChild(C.el('span', 'co-req-when', when));
-    top.appendChild(tags);
-    var amt = B.naira(r.amount); if (amt) top.appendChild(C.el('span', 'co-req-amount', amt));
-    li.appendChild(top);
-    li.appendChild(C.el('h3', 'co-req-title', r.title || 'Booking'));
-    if (r.customer_name) li.appendChild(C.el('p', 'co-req-meta', 'Customer: ' + r.customer_name));
-    li.appendChild(C.el('p', 'co-req-meta', act.text));
-    var foot = C.el('div', 'co-req-foot'), sub = [B.ref(r.booking_id)];
-    if (B.whenText(r)) sub.push(B.whenText(r));
-    foot.appendChild(C.el('p', 'co-req-sub', sub.join(' \u00B7 ')));
-    var a = C.el('a', 'btn btn-sm ' + (act.tab === 'action' || issue ? 'btn-primary' : 'btn-mint'), act.tab === 'action' ? 'Open and act' : 'Open booking');
-    a.href = 'coordinator-booking.html?id=' + encodeURIComponent(r.booking_id);
-    a.setAttribute('aria-label', 'Open booking: ' + (r.title || 'Booking'));
-    foot.appendChild(a);
-    li.appendChild(foot);
-    return li;
-  }
+  /* The card is built by js/coordinator-tasker-card.js (shared with the Bookings tab). */
+  function bookingCard(r, act) { return window.STCoTCard.build(r, act); }
 
   function paintBookings(rows) {
     var list = $('coOvBookList'), empty = $('coOvBookEmpty');
@@ -111,7 +79,7 @@
     list.textContent = '';
     open.slice(0, MAX_BOOKINGS).forEach(function (x) { list.appendChild(bookingCard(x.r, x.a)); });
     if (open.length > MAX_BOOKINGS) {
-      var li = C.el('li', 'co-req-more'), a = C.el('a', 'co-fact-link', (open.length - MAX_BOOKINGS) + ' more in Bookings \u2192');
+      var li = C.el('li', 'co-tc-more'), a = C.el('a', 'co-fact-link', (open.length - MAX_BOOKINGS) + ' more in Bookings \u2192');
       a.href = 'coordinator-bookings.html'; li.appendChild(a); list.appendChild(li);
     }
     list.hidden = !open.length;

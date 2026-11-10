@@ -477,6 +477,7 @@
   --co-header-height: 72px;
   --co-bottom-nav-height: calc(72px + max(var(--safe-bottom), var(--space-3)));   /* 72px bar + the home-bar clearance */
   --co-sidebar-width: 280px;   /* coordinator sidebar: every coordinator page, desktop from 1044px */
+  --co-sidebar-width-collapsed: 72px;   /* the same sidebar collapsed to an icon rail (body.co-sb-collapsed) */
 }
 
 /* ── Auth pages (login, signup, onboarding): colours that were raw in styles.css ──

@@ -98,7 +98,32 @@
     var sso = $('coSideSignOut'); if (sso) sso.addEventListener('click', signOut);
     wireMenus();
     wireBell();
+    wireSidebarToggle();
     loadSidebarScript();
+  }
+
+  /* Desktop sidebar: collapse to an icon rail and back. The choice is remembered on this device (a display preference only). */
+  var SB_KEY = 'st_co_sb';
+  function setSidebar(collapsed, save) {
+    document.body.classList.toggle('co-sb-collapsed', collapsed);
+    var b = $('coSideToggle');
+    if (b) {
+      var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      b.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      b.setAttribute('aria-label', label); b.title = label;
+    }
+    document.querySelectorAll('#coSidebar .co-side-link').forEach(function (a) {   /* icons only when collapsed: the name moves to a tooltip */
+      var t = a.querySelector('span:not(.co-side-badge)');
+      if (collapsed && t) a.title = t.textContent; else a.removeAttribute('title');
+    });
+    if (save) { try { localStorage.setItem(SB_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage blocked: works for this visit only */ } }
+  }
+  function wireSidebarToggle() {
+    var saved = false;
+    try { saved = localStorage.getItem(SB_KEY) === '1'; } catch (e) { /* not remembered */ }
+    setSidebar(saved, false);
+    var b = $('coSideToggle');
+    if (b) b.addEventListener('click', function () { setSidebar(!document.body.classList.contains('co-sb-collapsed'), true); });
   }
 
   /* The sidebar's Local Taskers list is filled by js/coordinator-sidebar.js on every page (the Local Tasker page fills it itself,

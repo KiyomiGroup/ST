@@ -657,6 +657,27 @@ body.co-drawer-open { overflow: hidden; }
 /* B2c: the hidden attribute must win over .co-form-actions { display: flex } inside the "Quote declined" card */
 #coDc .co-form-actions[hidden], #coDc .co-pub-reason[hidden] { display: none; }
 
+
+/* ── Sidebar collapsed to an icon rail (body.co-sb-collapsed, set by js/coordinator.js, desktop only) ─────
+   Icons, the bell and the account avatar stay; names, the Local Taskers list and Sign out come back when expanded. */
+@media (min-width: 1044px) {
+  .co-sb-toggle svg { transition: transform var(--t) var(--ease); }
+  body.co-sb-collapsed .co-sb-toggle svg { transform: rotate(180deg); }
+  body.co-sb-collapsed .co-app { padding-left: var(--co-sidebar-width-collapsed); }
+  body.co-sb-collapsed .co-sidebar { width: var(--co-sidebar-width-collapsed); padding-left: var(--space-2); padding-right: var(--space-2); align-items: center; }
+  body.co-sb-collapsed .co-sb-top { flex-direction: column; gap: var(--space-2); padding-left: 0; padding-right: 0; }
+  body.co-sb-collapsed .co-sb-top .co-brand { display: none; }
+  body.co-sb-collapsed .co-side-nav { align-items: center; }
+  body.co-sb-collapsed .co-side-link { position: relative; justify-content: center; width: 48px; padding: var(--space-2); }
+  body.co-sb-collapsed .co-side-link > span:not(.co-side-badge) { display: none; }
+  body.co-sb-collapsed .co-side-badge { position: absolute; top: var(--space-1); right: var(--space-1); min-width: 18px; height: 18px; margin-left: 0; padding: 0 var(--space-1); }
+  body.co-sb-collapsed .co-side-taskers { display: none; }
+  body.co-sb-collapsed .co-side-add { width: 48px; height: 48px; margin-top: var(--space-3); padding: 0; border-radius: 50%; }
+  body.co-sb-collapsed .co-side-add span { display: none; }
+  body.co-sb-collapsed .co-sb-foot { flex-direction: column; justify-content: center; margin: auto calc(-1 * var(--space-2)) 0; padding: var(--space-3) 0; width: var(--co-sidebar-width-collapsed); }
+  body.co-sb-collapsed .co-sb-user, body.co-sb-collapsed .co-sb-signout { display: none; }
+}
+
 /* ── Sidebar (every coordinator page, desktop from 1044px) ─────
    One full-height column fixed to the left edge, like a normal app sidebar. The page content sits to its right.
    Below 1044px it is hidden and the header, drawer and bottom bar are used. The sidebar scrolls as a whole only

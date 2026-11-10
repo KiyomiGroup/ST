@@ -108,9 +108,23 @@ a.jr-icon-btn[hidden] { display: none; }
 .cc-ctx .btn-full { margin-top: var(--space-1); }
 .jr-sheet .btn-full { margin-top: var(--space-3); }
 
-/* Wide screens show the booking context column, so the phone shortcuts go away (after their own rules, same specificity). */
+/* Desktop columns. The sidebar takes 280px (72px when collapsed), so three columns only fit on wider windows; below that the
+   page shows two (list + conversation) and the booking details open from the info button / job strip, as on a phone.
+   Width needed for three columns: sidebar + about 1230px of page (list 340, conversation at least 440, context 340, gaps). */
 @media (min-width: 1044px) {
+  .cc-shell { grid-template-columns: 320px minmax(0, 1fr); gap: var(--space-4); padding: var(--space-4); }
+  .cc-shell .jr-detail { display: none; }
+  .cc-main .jr-room, .cc-main .jr-list { min-width: 0; }
+}
+@media (min-width: 1520px) {
+  .cc-shell { grid-template-columns: 340px minmax(0, 1fr) 340px; gap: var(--space-5); padding: var(--space-5) var(--space-6); }
+  .cc-shell .jr-detail { display: flex; }
   .msg-chat-head .cc-info-btn, .cc-jobstrip { display: none; }
+}
+@media (min-width: 1310px) {
+  body.co-sb-collapsed .cc-shell { grid-template-columns: 340px minmax(0, 1fr) 340px; gap: var(--space-5); padding: var(--space-5) var(--space-6); }
+  body.co-sb-collapsed .cc-shell .jr-detail { display: flex; }
+  body.co-sb-collapsed .msg-chat-head .cc-info-btn, body.co-sb-collapsed .cc-jobstrip { display: none; }
 }
 
 /* Header chips may wrap onto a second line on a phone instead of being cut off */
