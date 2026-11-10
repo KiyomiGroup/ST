@@ -266,9 +266,9 @@
     var bookings = {}, apps = {};
     try {
       if (bookingIds.length) {
-        var b = await sb.from('bookings').select('id,task_id,status,payment_status,notes,amount,work_stage').in('id', bookingIds);
+        var b = await sb.from('bookings').select('id,task_id,status,payment_status,notes,amount,work_stage,job_title').in('id', bookingIds);
         if (b.error) {
-          /* Step 7 SQL not run yet: no work_stage column */
+          /* work_stage or job_title column missing in this database: retry without them */
           b = await sb.from('bookings').select('id,task_id,status,payment_status,notes,amount').in('id', bookingIds);
         }
         (b.data || []).forEach(function (r) { bookings[r.id] = r; });
@@ -301,8 +301,12 @@
       t.application = ap || null;
       var taskId = (bk && bk.task_id) || (ap && ap.task_id);
       t._taskId = taskId || null;
+      /* The room title is the task HEADING: the task's title, else the booking's job title. Never the description.
+         Older bookings without job_title: the first line of notes (the heading), without the [Quote request] tag. */
+      var noteHead = bk && bk.notes ? String(bk.notes).split('\n')[0].replace(/^\[[^\]]*\]\s*/, '').trim() : '';
       t._title = (taskId && titles[taskId]) ||
-                 (bk && bk.notes ? String(bk.notes).slice(0, 48) : '') ||
+                 (bk && bk.job_title ? String(bk.job_title).trim() : '') ||
+                 noteHead ||
                  (t.context_type === 'booking' ? 'Service booking' : 'Task application');
       t._job = derive(t, state.role);
     });

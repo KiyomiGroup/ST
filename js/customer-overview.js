@@ -548,7 +548,6 @@
       '<div class="tov-detail-foot">' +
         '<dl class="tov-totals">' +
           '<div><dt>Subtotal</dt><dd>' + esc(nairaCents(r.amount)) + '</dd></div>' +
-          '<div><dt>Platform fee</dt><dd class="tov-fee">' + esc(nairaCents(0)) + ' <small>(Free)</small></dd></div>' +
           '<div><dt>Escrow balance</dt><dd>' + esc(nairaCents(ps === 'held' ? r.amount : 0)) + '</dd></div>' +
         '</dl>' +
         '<div class="tov-actions">' +

@@ -659,6 +659,24 @@
     }
   }
 
+  /* A customer must be VERIFIED before booking a service (the server answers, idv_my_status). If the answer cannot be read,
+     the booking does not open: no answer = no booking. Shows a dialog with a Verify now link and returns true when it blocked. */
+  async function blockIfUnverified() {
+    var V = window.ST && window.ST.verify;
+    var ok = false;
+    try { ok = !!(V && V.isUserVerified && await V.isUserVerified()); } catch (e) { ok = false; }
+    if (ok) return false;
+    var back = 'verify.html?return=' + encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search) + '&action=' + encodeURIComponent('book a service');
+    $('tpBookBody').innerHTML =
+      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
+      '<div class="tp-dialog-done"><h2 class="tp-dialog-title" id="tpBookTitle">Verify your profile to book</h2>' +
+      '<p class="tp-dialog-lead">To keep everyone safe, you need to verify your identity before you can book a service. It only takes a few minutes.</p>' +
+      '<a class="btn btn-primary tp-dialog-submit" href="' + esc(back) + '">Verify now</a>' +
+      '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Not now</button></div>';
+    openDialog($('tpBookDialog'));
+    return true;
+  }
+
   /* mode: 'book' | 'quote' | 'callout' */
   async function openBooking(mode) {
     mode = mode || 'book';
@@ -668,6 +686,7 @@
     var m = state.model; if (!m) return;
     if (state.demo) return openDemoBooking();
     if (!state.id) return;
+    if (await blockIfUnverified()) return;
 
     var today = new Date().toISOString().split('T')[0];
     var pick = state.bookSvc || null;   /* a service chosen from the Services tab: its own name and price */
@@ -721,6 +740,7 @@
 
   async function submitBooking(mode) {
     var user = await currentUser(); if (!user) return;
+    if (await blockIfUnverified()) return;   /* checked again at send: the pop-up may have been open a while */
     var jobVal = text($('bkJob').value), areaVal = text($('bkArea').value), streetVal = text($('bkStreet').value), dateVal = text($('bkDate').value), timeVal = $('bkTime').value, descVal = text($('bkNotes').value);
     var urgencyVal = state.bkUrgency === 'urgent' ? 'Urgent' : 'Flexible';
     var err = $('bkErr'), btn = $('bkSubmitBtn'), body = $('tpBookBody');

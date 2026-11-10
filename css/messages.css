@@ -2302,3 +2302,39 @@ body.msg-page {
 .jr-quote-total { font-weight: 700; color: var(--color-text); }
 .jr-quote-error { margin-top: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-xs); line-height: 1.5; background: var(--color-danger-soft); border: 1px solid var(--color-danger-border); color: var(--color-danger); }
 @media (max-width: 640px) { .jr-quote-panel .form-input, .jr-quote-panel .form-textarea { font-size: var(--text-base); } }   /* 16px: stops the phone zooming into the field */
+
+/* ── Desktop and tablet: compact bottom stack (same idea as the phone) ──────────────────────────
+   Location chip, next-step box (release code, pay), safety reminder and the message box all sit under the
+   conversation. At full size they filled the room and pushed the Send button out of view, so on screens wider
+   than a phone they are smaller, and the conversation keeps its share of the height. */
+@media (min-width: 769px) {
+  .jr-attach-preview { padding: var(--space-2) var(--space-3) 0; }
+  .jr-attach-chip { gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); }
+  .jr-attach-thumb { width: 32px; height: 32px; }
+  .jr-attach-name { font-size: var(--text-xs); }
+  .jr-attach-sub { font-size: var(--text-xs); }
+  .jr-attach-note { margin-top: 0; line-height: 1.3; }
+
+  .jr-dock { max-height: 22vh; gap: var(--space-1); padding: var(--space-1) var(--space-3) 0; }
+  .jr-dock-card { padding: var(--space-1) var(--space-3); }
+  .jr-dock-text { margin-top: 0; line-height: 1.3; }
+  .jr-dock-actions,
+  .jr-dock-form { margin-top: var(--space-1); }
+  .jr-dock-card .jr-flow-code { margin-top: var(--space-1); padding: 0 var(--space-3); }
+  .jr-dock-card .jr-flow-code-digits { font-size: var(--text-base); }
+
+  /* Safety reminder: heading and one short line side by side; the info icon holds the rest */
+  .jr-reminder { margin: var(--space-1) var(--space-3); padding: var(--space-1) var(--space-2); }
+  .jr-reminder-text { display: flex; align-items: center; gap: var(--space-2); }
+  .jr-reminder-head { flex-shrink: 0; }
+  .jr-reminder-short {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .msg-input-bar { gap: var(--space-2); padding: var(--space-2) var(--space-3); }
+  .msg-chat-body { min-height: 120px; }   /* the conversation never collapses to nothing */
+}

@@ -367,6 +367,13 @@
         var ctx = JSON.parse(rawCtx);
         sessionStorage.removeItem('st_chat_context');
         await openOrCreateThread(ctx);
+        /* Arrived from a booking card: show its Job Details (the side column is already open on wide screens) */
+        try {
+          if (sessionStorage.getItem('st_open_details') === '1') {
+            sessionStorage.removeItem('st_open_details');
+            if (window.innerWidth < 1044 && window.JRDetails && window.JRDetails.openSheet) window.JRDetails.openSheet();
+          }
+        } catch(e2) {}
       } catch(e) {
         showToast('Could not open conversation: ' + e.message, 'error');
       }
@@ -395,6 +402,43 @@
   function renderThreadList() {
     JRList.render({ threads:_threads, user:_user, role:_role, activeId:_active });
   }
+
+  /* ════════════════════════════════════════════════
+     CATCH-UP FOR LIVE MESSAGES
+     Realtime is the fast path. This is the safety net: it fetches the latest messages of the open
+     conversation every few seconds, when the tab is shown again, when the network returns and when the live
+     connection reconnects, so nobody has to refresh the page to see a new message. Rows already on screen are
+     skipped (JRThread.append ignores an id it has drawn). Own messages are left to the send path.
+  ════════════════════════════════════════════════ */
+  var _threadChanDown = false, _pollTimer = null, _catching = false;
+  var POLL_MS = 5000;
+
+  async function catchUpMessages(threadId) {
+    if (_catching || !_user || !threadId || _active !== threadId) return;
+    _catching = true;
+    try {
+      var r = await window.supabase.from('messages').select('*').eq('thread_id', threadId)
+        .order('created_at', { ascending: false }).limit(30);
+      if (_active !== threadId || r.error || !r.data) return;
+      r.data.slice().reverse().forEach(function(m) {
+        if (m.sender_id === _user.id) return;
+        JRThread.onRealtimeInsert(m);
+      });
+    } catch (e) { /* the next round tries again */ }
+    finally { _catching = false; }
+  }
+
+  function startMessagePoll() {
+    if (_pollTimer) return;
+    _pollTimer = window.setInterval(function() {
+      if (document.hidden || !_active) return;
+      catchUpMessages(_active);
+    }, POLL_MS);
+  }
+
+  document.addEventListener('visibilitychange', function() { if (!document.hidden && _active) catchUpMessages(_active); });
+  window.addEventListener('online', function() { if (_active) catchUpMessages(_active); });
+  window.addEventListener('focus', function() { if (_active) catchUpMessages(_active); });
 
   /* ════════════════════════════════════════════════
      OPEN THREAD
@@ -440,7 +484,16 @@
           JRRoom.refresh();
         }
       })
-      .subscribe();
+      .subscribe(function(status) {
+        /* If the live connection drops (sleeping tab, weak network) and comes back, fetch what was missed */
+        if (_active !== threadId) return;
+        if (status === 'SUBSCRIBED') {
+          if (_threadChanDown) { _threadChanDown = false; catchUpMessages(threadId); }
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          _threadChanDown = true;
+        }
+      });
+    startMessagePoll();
 
     /* Live request cards: separate channel, only once the step 5 table exists
        (so a missing table can never break live messages) */
@@ -461,6 +514,8 @@
       .channel('money:'+threadId)
       .on('postgres_changes', { event:'*', schema:'public', table:'payment_requests', filter:'thread_id=eq.'+threadId }, function(payload) {
         JRThread.onMoneyChange(payload.new);
+        /* Once a payment lands the tasker is allowed to see the customer's exact location: re-read the job details */
+        if (payload.new && payload.new.status === 'paid' && window.JRDetails && window.JRDetails.refreshExtra) window.JRDetails.refreshExtra();
         JRList.refreshOne(t, _role).then(function(){ renderThreadList(); JRRoom.refresh(); }).catch(function(){});
       })
       .subscribe();

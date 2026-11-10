@@ -598,9 +598,14 @@
 
     var sum = el('div', 'jr-confirm-text');
     sum.appendChild(el('strong', null, naira(total)));
-    sum.appendChild(document.createTextNode(' held in escrow. Tasker earns '));
-    sum.appendChild(el('strong', null, naira(earning)));
-    sum.appendChild(document.createTextNode(' (' + naira(fee) + ' fee).'));
+    if (S.role === 'tasker') {
+      /* Only the tasker sees their earning and the fee. A customer is never shown the platform fee. */
+      sum.appendChild(document.createTextNode(' held in escrow. Tasker earns '));
+      sum.appendChild(el('strong', null, naira(earning)));
+      sum.appendChild(document.createTextNode(' (' + naira(fee) + ' fee).'));
+    } else {
+      sum.appendChild(document.createTextNode(' held safely in escrow until you confirm the job is done.'));
+    }
     card.appendChild(sum);
 
     if (code) {
