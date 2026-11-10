@@ -224,7 +224,7 @@
     var actions = '<div class="ap-actions"><a class="ap-btn" href="' + taskHref + '">View Task Details</a>';
     if (g === 'pending') {
       actions += '<a class="ap-btn ap-btn-text" href="make-offer.html?task=' + encodeURIComponent(t.id || '') + '&amp;edit=1">Edit Offer</a>' +
-        '<button type="button" class="ap-btn ap-btn-quiet" data-act="withdraw" data-id="' + id + '">Withdraw Application</button>';
+        '<button type="button" class="ap-btn ap-btn-quiet" data-act="withdraw" data-id="' + id + '">Withdraw offer</button>';
     } else if (g === 'accepted') {
       actions = '<div class="ap-actions">' + (a.ownerId ? '<button type="button" class="ap-btn ap-btn-primary" data-act="message" data-id="' + id + '">' + icon('chat') + 'Message Customer</button>' : '') +
         '<a class="ap-btn" href="dashboard-tasker.html?panel=bookings">View Booking Details</a><a class="ap-btn ap-btn-text" href="' + taskHref + '">View Task</a>';
@@ -309,7 +309,7 @@
       await window.withdrawMyApplication(current.id);
       state.apps = state.apps.filter(function (a) { return a !== current; });
       $('apWithdrawDlg').close(); render();
-      if (window.showToast) window.showToast('Application withdrawn');
+      if (window.showToast) window.showToast('Offer withdrawn');
     } catch (x) {
       $('apWithdrawDlg').close();
       if (window.showToast) window.showToast(x.message || 'Could not withdraw');

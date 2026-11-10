@@ -504,7 +504,50 @@
     }
     function run(id) { return function () { open(id); }; }
 
+    /* Withdraw offer: only while the offer behind this conversation is still pending. The status is read once per conversation. */
+    var OFFER = { id: '', status: null, busy: false };
+    function toastMsg(m, t) { if (window.JRThread && window.JRThread.toast) window.JRThread.toast(m, t); }
+    function offerPending(x) {
+      var th = x.thread;
+      if (!th || th.context_type !== 'task_application' || !th.context_id || !window.supabase) return false;
+      var id = String(th.context_id);
+      if (OFFER.id !== id) {
+        OFFER.id = id; OFFER.status = null;
+        window.supabase.from('task_applications').select('status').eq('id', id).maybeSingle().then(function (r) {
+          if (OFFER.id !== id) return;
+          OFFER.status = (r && r.data && r.data.status) || 'unknown';
+          if (window.JRRequests) window.JRRequests.update();
+        }, function () { /* no button */ });
+        return false;
+      }
+      return OFFER.status === 'pending' ? null : false;
+    }
+    function withdrawOffer() {
+      if (OFFER.busy || !OFFER.id) return;
+      if (!window.confirm('Withdraw your offer? The client will be told. It still counts toward your offer limit, so you do not get it back.')) return;
+      OFFER.busy = true;
+      var done = function () { OFFER.busy = false; };
+      (async function () {
+        try {
+          /* messages.html does not load db.js, so the same database function is called directly */
+          var r = await window.supabase.rpc('withdraw_offer', { p_application: OFFER.id });
+          if (r.error) {
+            var code = String(r.error.message || '');
+            throw new Error(code === 'offer_not_pending' ? 'Only an offer that is still waiting for an answer can be withdrawn.' : (r.error.details || 'Could not withdraw your offer.'));
+          }
+          OFFER.status = 'withdrawn';
+          if (window.JRRequests) { window.JRRequests.close(); window.JRRequests.update(); }
+          toastMsg('Offer withdrawn');
+        } catch (e) { toastMsg((e && e.message) || 'Could not withdraw your offer.', 'error'); }
+        done();
+      })();
+    }
+
     return [
+      { id: 'withdraw_offer', roles: ['tasker'], group: G.ISSUE, icon: I.cancel,
+        label: 'Withdraw offer', hint: 'Take back your offer. It still counts toward your limit',
+        rule: offerPending, run: withdrawOffer },
+
       { id: 'custom_request', roles: ['tasker'], group: G.MONEY, icon: I.chat, kind: 'custom',
         label: 'Custom request', hint: 'Ask for anything else, with or without an amount',
         rule: needJob, run: run('custom_request') },

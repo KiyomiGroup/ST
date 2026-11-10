@@ -373,6 +373,11 @@
       note.hidden = false; note.textContent = 'The customer cancelled your accepted offer, so you cannot send another offer on this task.';
       return;
     }
+    if (applied && state.myApplication.status === 'pending') {
+      /* A pending offer can be taken back. The offer still counts toward the tasker's limit (the database gives nothing back). */
+      setOffer('Withdraw offer', 'Withdraw offer', false);
+      return;
+    }
     if (applied) {
       setOffer('Offer Sent', 'Offer Sent', true);
       /* Chat rule (stage M4): the tasker can message only after the customer accepts the offer */
@@ -390,6 +395,23 @@
     if (!user) return toLogin();
     if (!state.isTasker) return toast('Switch to a tasker account to make offers.');
     window.location.href = 'make-offer.html?task=' + encodeURIComponent(state.task.id);
+  }
+
+  /* One button, two jobs: "Make an Offer" starts an offer; "Withdraw offer" (shown while the offer is pending) takes it back */
+  async function offerAction() {
+    var app = state.myApplication;
+    if (!(app && app.id && app.status === 'pending')) return startOffer();
+    if (state.withdrawing) return;
+    if (!window.confirm('Withdraw your offer? The client will be told. It still counts toward your offer limit, so you do not get it back.')) return;
+    state.withdrawing = true;
+    try {
+      if (typeof window.withdrawMyApplication !== 'function') throw new Error('Could not withdraw. Please reload the page.');
+      await window.withdrawMyApplication(app.id);
+      state.myApplication = null;
+      renderActions();
+      toast('Offer withdrawn');
+    } catch (e) { toast((e && e.message) || 'Could not withdraw your offer.'); }
+    state.withdrawing = false;
   }
 
   /* Chat rule (stage M4): a tasker can message the customer only after the customer ACCEPTS their offer */
@@ -448,8 +470,8 @@
     $('tdShare').addEventListener('click', shareTask);
     $('tdCopy').addEventListener('click', copyLink);
     $('tdSave').addEventListener('click', toggleSaved);
-    $('tdOfferBtn').addEventListener('click', startOffer);
-    $('tdBarOffer').addEventListener('click', startOffer);
+    $('tdOfferBtn').addEventListener('click', offerAction);
+    $('tdBarOffer').addEventListener('click', offerAction);
     $('tdMessageBtn').addEventListener('click', messagePoster);
     $('tdBarMsg').addEventListener('click', messagePoster);
     $('tdOffersMore').addEventListener('click', function () { state.offersExpanded = !state.offersExpanded; renderOffers(); });
