@@ -52,6 +52,7 @@ function svcNormalize(row, user) {
     service_name: row.service_name || row.service || 'Service',
     category: row.category || 'other',
     price: Number(row.price) || 0,
+    price_max: Number(row.price_max) || 0,   /* Stage 3: 0 = fixed price */
     unit: svcNormUnit(row.rate_unit),
     location: row.location || '',
     description: row.description || '',
@@ -225,7 +226,7 @@ function svcBuildCard(s) {
   return stServiceCard({
     service_name: s.service_name, category: s.category, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
-    price: s.price, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
+    price: s.price, price_max: s.price_max, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
     turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
   });
 }

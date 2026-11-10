@@ -539,7 +539,7 @@ async function hideUnpublishedLocal(rows, idKey) {
 async function fetchServices({ category = '', limit = 60 } = {}) {
   /* Step 1: fetch services without the users join (avoids RLS issues for anon visitors) */
   let q = window.supabase.from('services').select(
-    'id, service_name, category, price, rate_unit, location, description, photo, user_id, available, created_at'
+    'id, service_name, category, price, price_max, rate_unit, location, description, photo, user_id, available, created_at'
   ).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
 
@@ -559,7 +559,7 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
     }
     return svcData.map(s => ({
       id: String(s.id), service_name: s.service_name, category: s.category,
-      pricing_type: 'per_job', price: s.price,
+      pricing_type: 'per_job', price: s.price, price_max: s.price_max || null,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
       available: s.available !== false,
@@ -594,7 +594,7 @@ async function fetchMyServices() {
   if (!svcErr && svcData?.length > 0) {
     return svcData.map(s => ({
       id: String(s.id), service_name: s.service_name, category: s.category,
-      pricing_type: s.pricing_type || 'per_job', price: s.price,
+      pricing_type: s.pricing_type || 'per_job', price: s.price, price_max: s.price_max || null,
       rate_unit: s.rate_unit || '/hour', location: s.location,
       description: s.description, photo: s.photo, user_id: s.user_id,
       available: s.available,

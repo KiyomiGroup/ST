@@ -24,8 +24,8 @@
 
   async function loadService(id) {
     var sb = window.supabase;
-    var FULL = 'id, user_id, service_name, category, price, rate_unit, description, location, photo, specialties, available';
-    var BASE = 'id, user_id, service_name, category, price, rate_unit, description, location, photo, available';
+    var FULL = 'id, user_id, service_name, category, price, price_max, rate_unit, description, location, photo, specialties, available';
+    var BASE = 'id, user_id, service_name, category, price, price_max, rate_unit, description, location, photo, available';
     var r = await sb.from('services').select(FULL).eq('id', id).maybeSingle();
     if (r.error) r = await sb.from('services').select(BASE).eq('id', id).maybeSingle();   /* specialties column not in this database yet */
     return r.data || null;
@@ -60,8 +60,10 @@
 
     var price = Number(svc.price), unit = text(svc.rate_unit).replace(/^\//, '');
     var priceEl = $('sdPrice'); priceEl.textContent = '';
+    var priceMax = Number(svc.price_max);
     if (price > 0) {
-      priceEl.appendChild(document.createTextNode(NAIRA + price.toLocaleString('en-NG')));
+      var priceTxt = NAIRA + price.toLocaleString('en-NG') + (priceMax > price ? ' \u2013 ' + NAIRA + priceMax.toLocaleString('en-NG') : '');
+      priceEl.appendChild(document.createTextNode(priceTxt));
       if (unit) { var sm = document.createElement('small'); sm.textContent = ' per ' + unit; priceEl.appendChild(sm); }
     } else { priceEl.textContent = 'Ask for a quote'; }
 

@@ -54,7 +54,7 @@
     if (sr.error) { renderError(sr.error.message); return; }
     if (sr.data && sr.data.length) {
       rows = sr.data.map(function (s) {
-        return { id: String(s.id), name: s.service_name, category: s.category, price: s.price, unit: s.rate_unit,
+        return { id: String(s.id), name: s.service_name, category: s.category, price: s.price, priceMax: s.price_max, unit: s.rate_unit,
           location: s.location, description: s.description, photo: s.photo, available: s.available,
           availability: s.availability_status, created: s.created_at, fromServices: true, status: s.listing_status };
       });
@@ -87,7 +87,7 @@
     state.services = rows.map(function (s) {
       return {
         id: s.id, name: s.name || 'Untitled service', category: s.category || '', location: s.location || '',
-        description: s.description || '', price: Number(s.price) || 0, unit: unitLabel(s.unit),
+        description: s.description || '', price: Number(s.price) || 0, priceMax: Number(s.priceMax) || 0, unit: unitLabel(s.unit),
         photo: safeUrl(s.photo || ''), availability: s.availability || '', created: s.created,
         group: s.status === 'paused' ? 'paused' : (s.available === false ? 'draft' : 'live'), fromServices: s.fromServices,
         bookings: counts[s.id] || 0
@@ -134,7 +134,7 @@
   function figures(s) {
     var avail = s.group === 'paused' ? 'Paused' : s.group === 'draft' ? 'Not live yet' : (AVAIL[s.availability] || '\u2014');
     return '<div class="ap-figures">' +
-      '<div><div class="ap-fig-label">Rate</div><div class="ap-fig-value">' + (s.price ? naira(s.price) : '\u2014') +
+      '<div><div class="ap-fig-label">Rate</div><div class="ap-fig-value">' + (s.price ? naira(s.price) + (s.priceMax > s.price ? ' \u2013 ' + naira(s.priceMax) : '') : '\u2014') +
         (s.price ? ' <span class="sv-unit">/ ' + esc(s.unit) + '</span>' : '') + '</div></div>' +
       '<div><div class="ap-fig-label">Availability</div><div class="sv-fig-text">' + esc(avail) + '</div></div>' +
       '<div><div class="ap-fig-label">Bookings</div><div class="ap-fig-value' + (s.bookings ? ' is-offer' : '') + '">' +

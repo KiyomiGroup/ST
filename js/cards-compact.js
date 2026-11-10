@@ -164,7 +164,7 @@
       /* No rating and no verified tick passed in: the rating comes from a data-rating-user span (js/rating-badge.js), never from a column. */
       var tc = fromHtml(root.stTaskerCard({
         id: s.id, user_id: s.user_id, provider_name: s.provider_name, service_name: s.service_name,
-        location: s.location, photo: s.photo, isLocal: s.isLocal, href: th, hideAvailability: true, price: s.price, rate_unit: s.rate_unit,
+        location: s.location, photo: s.photo, isLocal: s.isLocal, href: th, hideAvailability: true, price: s.price, price_max: s.price_max, rate_unit: s.rate_unit,
         home: true, verified: s.verified, specialties: s.specialties, rating: s.rating, reviews: s.reviews
       }));
       if (tc) {

@@ -50,6 +50,11 @@
 .ps-rate-input::-webkit-outer-spin-button, .ps-rate-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .ps-units { grid-template-columns: repeat(5, minmax(0, 1fr)); min-height: 56px; padding: var(--space-1); }
 .ps-units .pt-segment-opt > span { padding: var(--space-2); font-size: var(--text-sm); white-space: nowrap; }
+.ps-rate-mode { margin-bottom: var(--space-4); }
+.ps-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 56px; padding: var(--space-1); }
+.ps-modes .pt-segment-opt > span { padding: var(--space-2); font-size: var(--text-sm); white-space: nowrap; }
+.ps-rate-max { margin-top: var(--space-3); }
+.ps-rate-max[hidden] { display: none; }
 .ps-rate-grid + .pt-help { margin-top: var(--space-4); }
 .ps-rate-amount .pt-help, .ps-rate-amount .pt-error { margin-top: var(--space-2); }
 

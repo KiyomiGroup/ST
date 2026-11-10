@@ -181,12 +181,27 @@
             </div>
 
             <div class="pt-group ps-group-rate">
+              <div class="ps-rate-mode">
+                <span class="pt-label" id="rateModeLabel">Pricing</span>
+                <input type="hidden" id="svcRateMode" value="fixed" />
+                <div class="pt-segment ps-modes" id="rateModes" role="radiogroup" aria-labelledby="rateModeLabel">
+                  <label class="pt-segment-opt"><input type="radio" name="rateMode" value="fixed" checked /><span>Fixed price</span></label>
+                  <label class="pt-segment-opt"><input type="radio" name="rateMode" value="range" /><span>Price range</span></label>
+                </div>
+              </div>
               <div class="ps-rate-grid">
                 <div class="ps-rate-amount">
-                  <label class="pt-label" for="svcPrice"><span class="pt-desk">Rate Amount</span><span class="pt-mob">Rate</span> <span class="pt-req" aria-hidden="true">*</span></label>
+                  <label class="pt-label" for="svcPrice"><span class="pt-desk" id="rateAmountLabel">Rate Amount</span><span class="pt-mob" id="rateAmountLabelMob">Rate</span> <span class="pt-req" aria-hidden="true">*</span></label>
                   <div class="pt-field pt-budget-field">
                     <span class="pt-naira" aria-hidden="true">&#8358;</span>
                     <input type="number" inputmode="numeric" id="svcPrice" class="pt-input pt-budget ps-rate-input" placeholder="12,500" min="0" step="1" required autocomplete="off" />
+                  </div>
+                  <div class="ps-rate-max" id="rateMaxWrap" hidden>
+                    <label class="pt-label" for="svcPriceMax">To <span class="pt-req" aria-hidden="true">*</span></label>
+                    <div class="pt-field pt-budget-field">
+                      <span class="pt-naira" aria-hidden="true">&#8358;</span>
+                      <input type="number" inputmode="numeric" id="svcPriceMax" class="pt-input pt-budget ps-rate-input" placeholder="20,000" min="0" step="1" autocomplete="off" />
+                    </div>
                   </div>
                   <div id="rateParsedHint" class="pt-help" aria-live="polite"></div>
                 </div>
@@ -433,24 +448,58 @@
     function verifyUrl() { return 'verify.html?return=' + encodeURIComponent(window.location.href) + '&action=post_service'; }
     var savedServiceId   = null;
 
+    function isRange() { return document.getElementById('svcRateMode').value === 'range'; }
+
     function getRateValues() {
       var priceVal = parseFloat(document.getElementById('svcPrice').value);
+      var maxVal   = parseFloat(document.getElementById('svcPriceMax').value);
       var unitVal  = document.getElementById('svcRateUnit').value;
-      return { numericValue: isNaN(priceVal) ? 0 : priceVal, rateUnit: '/' + unitVal };
+      var range    = isRange();
+      return {
+        numericValue: isNaN(priceVal) ? 0 : priceVal,
+        maxValue: range && !isNaN(maxVal) ? maxVal : null,
+        isRange: range,
+        rateUnit: '/' + unitVal
+      };
+    }
+
+    /* Fixed price / Price range: show the "To" box and relabel the first one "From" */
+    function setRateMode(mode) {
+      var range = mode === 'range';
+      document.getElementById('svcRateMode').value = range ? 'range' : 'fixed';
+      document.getElementById('rateMaxWrap').hidden = !range;
+      document.getElementById('svcPriceMax').required = range;
+      document.getElementById('rateAmountLabel').textContent = range ? 'From' : 'Rate Amount';
+      document.getElementById('rateAmountLabelMob').textContent = range ? 'From' : 'Rate';
+      var radios = document.getElementsByName('rateMode');
+      for (var i = 0; i < radios.length; i++) radios[i].checked = radios[i].value === (range ? 'range' : 'fixed');
+      onRateInput();
     }
 
     function onRateInput() {
       var hint  = document.getElementById('rateParsedHint');
       var price = parseFloat(document.getElementById('svcPrice').value);
+      var max   = parseFloat(document.getElementById('svcPriceMax').value);
       var unit  = document.getElementById('svcRateUnit').value;
-      if (!document.getElementById('svcPrice').value) { hint.className = 'pt-help'; hint.textContent = ''; return; }
+      var range = isRange();
+      if (!document.getElementById('svcPrice').value && !(range && document.getElementById('svcPriceMax').value)) { hint.className = 'pt-help'; hint.textContent = ''; return; }
       if (isNaN(price) || price <= 0) {
         hint.className = 'pt-error';
         hint.textContent = 'Enter a valid amount';
         return;
       }
+      if (range && document.getElementById('svcPriceMax').value) {
+        if (isNaN(max) || max <= price) {
+          hint.className = 'pt-error';
+          hint.textContent = 'The "To" amount must be more than the "From" amount';
+          return;
+        }
+        hint.className = 'pt-help';
+        hint.textContent = 'Your range: \u20a6' + price.toLocaleString() + ' to \u20a6' + max.toLocaleString() + ' / ' + unit;
+        return;
+      }
       hint.className = 'pt-help';
-      hint.textContent = 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
+      hint.textContent = range ? '' : 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
     }
 
     function onCategoryChange(val) {
@@ -532,6 +581,10 @@
             document.getElementById('svcPrice').value = Number(draft.price);
             var rawUnit = (draft.rate_unit || '/job').replace('/', '');
             document.getElementById('svcRateUnit').value = rawUnit || 'job';
+            if (draft.price_max && Number(draft.price_max) > Number(draft.price)) {
+              document.getElementById('svcPriceMax').value = Number(draft.price_max);
+              setRateMode('range');
+            }
             onRateInput();
           }
           updateDescCount();
@@ -542,6 +595,10 @@
       } catch(e) { /* non-fatal */ }
 
       document.getElementById('svcPrice').addEventListener('input', onRateInput);
+      document.getElementById('svcPriceMax').addEventListener('input', onRateInput);
+      document.getElementById('rateModes').addEventListener('change', function (ev) {
+        if (ev.target && ev.target.name === 'rateMode') setRateMode(ev.target.value);
+      });
       document.getElementById('svcRateUnit').addEventListener('change', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
@@ -631,6 +688,7 @@
       if (!serviceName)                                          { showErr('Please enter a service name.'); return; }
       if (!category)                                             { showErr('Please select a category.'); return; }
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
+      if (rateValues.isRange && (!rateValues.maxValue || rateValues.maxValue <= rateValues.numericValue)) { showErr('For a price range, the "To" amount must be more than the "From" amount.'); return; }
       if (!location)                                             { showErr('Please enter your location.'); return; }
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
 
@@ -694,6 +752,7 @@
           category:     category,
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
+          price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
           location:     location,
           description:  description,
           photo:        photoUrl || null,
@@ -715,6 +774,7 @@
         /* specialties/availability_status column doesn't exist yet
            (migration_search_filters.sql not run) — retry without them */
         if (svcRes.error && svcRes.error.code === '42703') {
+          if (rateValues.isRange && /price_max/.test(svcRes.error.message || '')) throw new Error('Price range is not switched on yet. Ask the site owner to run the price range SQL, or choose Fixed price.');
           var legacyPayload = { user_id: payload.user_id, service_name: payload.service_name,
             category: payload.category, price: payload.price, rate_unit: payload.rate_unit,
             location: payload.location, description: payload.description, photo: payload.photo,

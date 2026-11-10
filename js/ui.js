@@ -362,6 +362,9 @@ const ST_ICON = (function () {
 window.ST_ICON = ST_ICON;
 
 const ST_NGN = n => '₦' + Number(n || 0).toLocaleString('en-NG');
+/* Stage 3: a price range shows as "₦5,000–₦20,000"; a fixed price (no price_max) is unchanged. */
+const ST_IS_RANGE = (min, max) => Number(min) > 0 && Number(max) > Number(min);
+const ST_PRICE = (min, max) => ST_IS_RANGE(min, max) ? ST_NGN(min) + '–' + ST_NGN(max) : ST_NGN(min);
 const ST_CAT_EMOJI = { barber:'💈', electrician:'⚡', cleaning:'🧹', mechanic:'🔧', plumber:'🚰', plumbing:'🚰', beauty:'💄', other:'🛠️' };
 /* Category picture for a card: the green icon from js/categories.js when it is loaded, else the old emoji */
 function stCatPic(cat) {
@@ -490,8 +493,8 @@ function stServiceCard(s) {
       ${s.description ? `<p class="st-card-desc">${e(s.description)}</p>` : ''}
     </div>
     <div class="st-card-foot st-card-foot--plain">
-      <div class="st-card-foot-info"><span class="st-card-foot-label">${priced ? 'Starting From' : 'Pricing'}</span>
-        <span class="st-card-price">${priced ? ST_NGN(s.price) + (s.unit ? ` <small>/${e(s.unit)}</small>` : '') : 'Ask for a quote'}</span></div>
+      <div class="st-card-foot-info"><span class="st-card-foot-label">${priced ? (ST_IS_RANGE(s.price, s.price_max) ? 'Price range' : 'Starting From') : 'Pricing'}</span>
+        <span class="st-card-price">${priced ? ST_PRICE(s.price, s.price_max) + (s.unit ? ` <small>/${e(s.unit)}</small>` : '') : 'Ask for a quote'}</span></div>
       <a href="${e(s.href)}" class="st-card-cta">Book Service</a>
     </div>
   </article>`;
@@ -551,7 +554,7 @@ function stTaskerCard(s) {
       <div class="st-portfolio-strip">${work.map(u => `<img src="${e(u)}" alt="" loading="lazy" onerror="this.remove()" />`).join('')}</div>
     </div>` : ''}
     <div class="st-card-foot st-card-foot--plain">
-      <span class="st-price-pill">${ST_NGN(s.price)}<i></i><small>${e(stLabel(unit) || 'Job')}</small></span>
+      <span class="st-price-pill">${ST_PRICE(s.price, s.price_max)}<i></i><small>${e(stLabel(unit) || 'Job')}</small></span>
       <a href="${e(s.href)}" class="st-card-cta">${ST_ICON.arrowUR}View Profile</a>
     </div>
   </article>`;
@@ -629,7 +632,7 @@ function stServiceCardHome(s) {
   const avatar = `<span class="st-home-avatar"${stAvAttr(s, 'chip')}><img class="st-logo-ph" src="images/logo-mark.png" alt="" aria-hidden="true" />${s.providerPhoto ? `<img src="${e(s.providerPhoto)}" alt="" loading="lazy" onerror="this.remove()" />` : ''}</span>`;
   const priced = Number(s.price) > 0;
   const unit = String(s.unit || '').replace('/', '').trim();
-  const priceHtml = priced ? ST_NGN(s.price) + (unit ? '/' + e(unit.charAt(0).toUpperCase() + unit.slice(1)) : '') : 'Ask for a quote';
+  const priceHtml = priced ? ST_PRICE(s.price, s.price_max) + (unit ? '/' + e(unit.charAt(0).toUpperCase() + unit.slice(1)) : '') : 'Ask for a quote';
   return `<article class="st-card st-card--service st-card--home fade-up" data-href="${e(s.href)}"${s.service_id ? ` data-service-id="${e(s.service_id)}"` : ''}>
     <div class="st-home-media">${media}
       ${s.categoryLabel ? `<div class="st-home-chips"><span class="st-chip st-chip--glass">${e(s.categoryLabel)}</span></div>` : ''}
@@ -681,7 +684,7 @@ function stTaskerCardHome(s) {
       ${shown.length ? `<div class="st-home-skills"><span class="st-home-skills-label">Skills</span>
         <div class="st-home-skill-list">${shown.map(k => `<span class="st-chip st-chip--skill">${e(k)}</span>`).join('')}${more > 0 ? `<span class="st-chip st-chip--skill">+${more}</span>` : ''}</div></div>` : ''}
       <div class="st-home-tasker-foot">
-        ${Number(s.price) > 0 ? `<span class="st-home-pill">${ST_NGN(s.price)}<i></i><small>${e(stLabel(unit) || 'Job')}</small></span>` : ''}
+        ${Number(s.price) > 0 ? `<span class="st-home-pill">${ST_PRICE(s.price, s.price_max)}<i></i><small>${e(stLabel(unit) || 'Job')}</small></span>` : ''}
         <a href="${e(s.href)}" class="st-home-view">${ST_ICON.send}View Profile</a>
       </div>
     </div>

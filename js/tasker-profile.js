@@ -22,6 +22,8 @@
   /* ── small helpers ───────────────────────────────────────── */
   function icon(name) { return '<svg class="ap-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
   function money(n) { var v = Number(n); return isFinite(v) && v > 0 ? NAIRA + v.toLocaleString('en-NG') : ''; }
+  /* Stage 3: a service with a price range shows "from – to"; no price_max means a fixed price. */
+  function moneyRange(min, max) { var a = money(min), b = Number(max) > Number(min) ? money(max) : ''; return a && b ? a + ' \u2013 ' + b : a; }
   function parseDetails(raw) {
     if (!raw) return {};
     if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { return {}; } }
@@ -156,12 +158,12 @@
 
   function renderServices(m) {
     $('tpServices').innerHTML = m.services.map(function (x, i) {
-      var price = money(x.price), short = text(x.description);
+      var price = moneyRange(x.price, x.price_max), short = text(x.description), isRng = Number(x.price_max) > Number(x.price);
       if (short.length > 160) short = short.slice(0, 157).replace(/\s+\S*$/, '') + '\u2026';
       return '<button type="button" class="tp-service" data-svc="' + i + '" aria-label="View details: ' + esc(x.title) + '">' +
         '<span class="tp-service-icon">' + icon('briefcase') + '</span>' +
         '<span class="tp-service-body"><strong>' + esc(x.title) + '</strong>' + (short ? '<p>' + esc(short) + '</p>' : '') +
-        (price ? '<span class="tp-service-price"><span class="tp-service-from">From</span><span class="tp-service-amount">' + esc(price) + '</span>' +
+        (price ? '<span class="tp-service-price">' + (isRng ? '' : '<span class="tp-service-from">From</span>') + '<span class="tp-service-amount">' + esc(price) + '</span>' +
           (text(x.price_note) ? '<span class="tp-service-unit">' + esc(x.price_note) + '</span>' : '') + '</span>' : '') +
         '</span></button>';
     }).join('');
@@ -172,7 +174,7 @@
   function openService(i) {
     var m = state.model, x = m && m.services[i]; if (!x) return;
     state.svcOpen = i;
-    var price = money(x.price);
+    var price = moneyRange(x.price, x.price_max);
     var img = $('tpSvcImg');
     if (x.photo && /^https?:\/\//i.test(x.photo)) { img.src = x.photo; img.alt = x.title; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; }
     setText('tpSvcTitle', x.title);
@@ -439,8 +441,8 @@
     var listings = [];
     try {
       var owner = String(tasker.user_id || id);
-      var SVC_FULL = 'id, service_name, description, price, rate_unit, available, is_main, created_at, category, location, photo, specialties';
-      var SVC_BASE = 'id, service_name, description, price, rate_unit, available, created_at, category, location, photo';
+      var SVC_FULL = 'id, service_name, description, price, price_max, rate_unit, available, is_main, created_at, category, location, photo, specialties';
+      var SVC_BASE = 'id, service_name, description, price, price_max, rate_unit, available, created_at, category, location, photo';
       var lr = await sb.from('services').select(SVC_FULL).eq('user_id', owner).eq('available', true).order('created_at', { ascending: false }).limit(12);
       if (lr.error) {   /* is_main or specialties not in this database yet: ask again with the older columns */
         lr = await sb.from('services').select(SVC_BASE).eq('user_id', owner).eq('available', true).order('created_at', { ascending: false }).limit(12);
@@ -450,7 +452,7 @@
       listings = rows.map(function (x) {
         var unit = text(x.rate_unit).replace(/^\//, '');
         return {
-          id: x.id, title: x.service_name, description: text(x.description), price: x.price, rate_unit: x.rate_unit || '',
+          id: x.id, title: x.service_name, description: text(x.description), price: x.price, price_max: x.price_max, rate_unit: x.rate_unit || '',
           price_note: unit ? 'per ' + unit : '', category: text(x.category), location: text(x.location), photo: text(x.photo),
           specialties: list(x.specialties).map(text).filter(Boolean)
         };

@@ -759,6 +759,7 @@
         location: s.location || 'Lagos',
         price: Number(s.price || s.rate_value || s.rate || 0),
         unit:  s.rate_unit || s.rateUnit || '',
+        priceMax: Number(s.price_max || 0),
         photo: s.photo || s.photo_url || '',
         rating: null,   /* M10c: filled from rating_summary in _enrichProviders; never from services.rating or taskers.rating */
         verified: !!(s.is_verified || s.verified),
@@ -792,7 +793,7 @@
       /* Card design: js/ui.js (stTaskerCard). Rating and price only when the row has them; no verified tick, no invented availability. */
       return stTaskerCard({
         id: p.uid || p.id, user_id: p.uid, provider_name: p.name, service_name: p.service, location: p.location,
-        rating: p.rating, photo: p.photo, price: p.price, rate_unit: p.unit, href: _profileUrl(p), hideAvailability: true
+        rating: p.rating, photo: p.photo, price: p.price, price_max: p.priceMax, rate_unit: p.unit, href: _profileUrl(p), hideAvailability: true
       });
     }
 
