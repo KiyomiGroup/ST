@@ -307,3 +307,13 @@ a.bk-person-name:hover { text-decoration: underline; }
 }
 
 .bk-figures--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Full-details pop-up on a new request (js/bookings.js openDetails) */
+.bk-dialog--wide { width: min(560px, calc(100% - 2 * var(--space-4))); max-height: calc(100% - 2 * var(--space-4)); overflow-y: auto; }
+.bk-detail-list { display: grid; gap: var(--space-2); margin: 0; }
+.bk-detail-row { display: flex; gap: var(--space-3); font-size: var(--text-sm); }
+.bk-detail-row dt { flex: 0 0 7rem; color: var(--color-text-secondary); }
+.bk-detail-row dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.bk-detail-desc { font-size: var(--text-sm); }
+.bk-detail-desc p { margin: var(--space-1) 0 0; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bk-card.is-pending { cursor: pointer; }

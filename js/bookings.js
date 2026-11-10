@@ -332,7 +332,8 @@
   function actions(v) {
     var id = esc(v.id), paid = v.raw.payment_status === 'paid';
     if (v.group === 'pending') {
-      return '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Confirm Booking</button>' +
+      return '<button type="button" class="bk-btn" data-act="details" data-id="' + id + '">' + icon('info') + 'View Full Details</button>' +
+        '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + id + '">' + icon('check') + 'Confirm Booking</button>' +
         (paid ? '' : '<button type="button" class="bk-btn bk-btn-quiet" data-act="decline" data-id="' + id + '">Decline</button>');
     }
     if (v.group === 'cancelled') return '';
@@ -500,6 +501,37 @@
     } catch (e) { btn.disabled = false; toast(e.message || 'Could not confirm this booking.'); }
   }
 
+  /* Full job details in a pop-up, so the tasker knows the whole job before accepting. Everything is escaped text.
+     The street address is not shown here: the database releases it to the tasker only after the customer pays. */
+  function row(label, value) {
+    return value ? '<div class="bk-detail-row"><dt>' + esc(label) + '</dt><dd>' + esc(value) + '</dd></div>' : '';
+  }
+  function openDetails(v) {
+    var j = v.job || {};
+    var price = v.amount || v.budget;
+    var html =
+      '<h2 class="bk-dialog-title" id="bkDetailTitle">' + esc(v.title) + '</h2>' +
+      '<dl class="bk-detail-list">' +
+        row('Customer', v.customer) +
+        row('When', v.when) +
+        row('Area', j.area || v.location) +
+        row('How soon', j.urgent ? 'Urgent' : (j.flexible ? 'Flexible' : '')) +
+        row('Price offered', price ? naira(price) : '') +
+        row('Category', v.category) +
+      '</dl>' +
+      '<div class="bk-detail-desc"><strong>What needs doing</strong><p>' + esc(j.description || v.note || 'The customer did not add more details.') + '</p></div>' +
+      (window.STBookingJob && j.photos && j.photos.length ? window.STBookingJob.html({ photos: j.photos, area: '', urgent: false, flexible: false }, '', esc, icon) : '') +
+      '<p class="bk-state-text">' + icon('lock') + ' The customer\u2019s exact street address is shared with you automatically once they have paid.</p>' +
+      '<div class="bk-actions bk-dialog-actions">' +
+        '<button type="button" class="bk-btn" data-close>Close</button>' +
+        '<button type="button" class="bk-btn bk-btn-quiet" data-act="decline" data-id="' + esc(v.id) + '">Decline</button>' +
+        '<button type="button" class="bk-btn bk-btn-primary" data-act="confirm" data-id="' + esc(v.id) + '">' + icon('check') + 'Confirm Booking</button>' +
+      '</div>';
+    $('bkDetailBody').innerHTML = html;
+    current = v;
+    $('bkDetailDlg').showModal();
+  }
+
   function openDialog(id, v, textId, text) {
     current = v;
     if (textId) $(textId).textContent = text;
@@ -532,6 +564,7 @@
   function onAction(btn) {
     var v = find(btn.dataset.id); if (!v) return;
     switch (btn.dataset.act) {
+      case 'details': openDetails(v); break;
       case 'confirm': doConfirm(v, btn); break;
       case 'decline': showError($('bkDeclineError'), ''); openDialog('bkDeclineDlg', v, 'bkDeclineText',
         'Decline \u201C' + v.title + '\u201D from ' + v.customer + '? They will be told you can\u2019t take it, and they have not been charged.'); break;
@@ -565,6 +598,12 @@
   $('bkList').addEventListener('click', function (e) {
     var act = e.target.closest('[data-act]');
     if (act) onAction(act);
+    /* Tapping a new request itself (not a link, button or photo) opens its full details */
+    else if (!e.target.closest('a, button, input, textarea, select, label, .bk-job-thumb')) {
+      var cardEl = e.target.closest('.bk-card.is-pending');
+      var pv = cardEl && find(cardEl.dataset.id);
+      if (pv) openDetails(pv);
+    }
     if (e.target.closest('#bkClear')) resetFilters();
     if (e.target.closest('#bkRetry')) {
       $('bkList').setAttribute('aria-busy', 'true');
@@ -582,6 +621,15 @@
     dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
   });
   $('bkDeclineGo').addEventListener('click', doDecline);
+  /* Confirm / Decline from inside the details pop-up: close it first, then run the same action as on the card */
+  $('bkDetailDlg').addEventListener('click', function (e) {
+    var act = e.target.closest('[data-act]');
+    if (!act) return;
+    var id = act.dataset.id, kind = act.dataset.act;
+    $('bkDetailDlg').close();
+    var cardBtn = document.querySelector('#bkList .bk-card[data-id="' + String(id).replace(/"/g, '') + '"] [data-act="' + kind + '"]');
+    if (cardBtn) onAction(cardBtn);
+  });
   /* A customer photo that fails to load falls back to initials */
   $('bkList').addEventListener('error', function (e) {
     var img = e.target;

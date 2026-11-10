@@ -367,13 +367,6 @@
         var ctx = JSON.parse(rawCtx);
         sessionStorage.removeItem('st_chat_context');
         await openOrCreateThread(ctx);
-        /* Arrived from a booking card: show its Job Details (the side column is already open on wide screens) */
-        try {
-          if (sessionStorage.getItem('st_open_details') === '1') {
-            sessionStorage.removeItem('st_open_details');
-            if (window.innerWidth < 1044 && window.JRDetails && window.JRDetails.openSheet) window.JRDetails.openSheet();
-          }
-        } catch(e2) {}
       } catch(e) {
         showToast('Could not open conversation: ' + e.message, 'error');
       }

@@ -464,9 +464,8 @@
   var find = function (id) { return state.rows.filter(function (v) { return String(v.id) === String(id); })[0]; };
 
   /* Open the booking's chat on the Messages page */
-  function openChat(v, withDetails) {
+  function openChat(v) {
     try {
-      if (withDetails) sessionStorage.setItem('st_open_details', '1');   /* messages.html opens the Job Details on arrival */
       sessionStorage.setItem('st_chat_context', JSON.stringify({
         contextType: 'booking', contextId: String(v.id), taskerId: String(v.taskerId), customerId: String(state.user.id)
       }));
@@ -505,12 +504,6 @@
   $('bkList').addEventListener('click', function (e) {
     var act = e.target.closest('[data-act]');
     if (act) onAction(act);
-    /* Tapping the card itself (not a button, link or the quote form) opens the booking's Job Room with its details */
-    else if (!e.target.closest('a, button, input, textarea, select, label, .bk-job-thumb')) {
-      var cardEl = e.target.closest('.bk-card');
-      var cv = cardEl && find(cardEl.dataset.id);
-      if (cv && cv.group !== 'pending' && cv.group !== 'cancelled') openChat(cv, true);
-    }
     if (e.target.closest('#bkClear')) resetFilters();
     if (e.target.closest('#bkRetry')) {
       $('bkList').setAttribute('aria-busy', 'true');
