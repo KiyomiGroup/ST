@@ -285,6 +285,8 @@
     EP.repaintPhoto();
     paintVerify(res[2]);
     $('epViewPublic').href = 'tasker-profile.html?id=' + encodeURIComponent(user.id);
+    /* Download Flyer: opens your public page in a new tab with the flyer window already open (the form here stays as it is) */
+    $('epHeroFlyer').href = 'tasker-profile.html?id=' + encodeURIComponent(user.id) + '&flyer=1';
     if (new URLSearchParams(location.search).get('from') === 'onboarding') $('epWelcome').hidden = false;
 
     paintBio();

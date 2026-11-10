@@ -985,6 +985,11 @@
       state.isOwner = !!(user && user.id === state.id);
       await loadReal(state.id);
       /* Arriving from a service's details page (?book=<service id>): open the booking pop-up for that service */
+      /* Arriving from Edit Profile's Download Flyer button (?flyer=1): open the owner's flyer window */
+      if (params.get('flyer') === '1' && state.isOwner) {
+        var fb = $('tpFlyerBtn');
+        if (fb && !fb.hidden) window.setTimeout(function () { fb.click(); }, 0);
+      }
       var bookId = params.get('book');
       if (bookId && state.model && !state.isOwner) {
         var want = state.model.services.filter(function (x) { return String(x.id) === String(bookId); })[0];

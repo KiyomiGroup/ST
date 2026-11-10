@@ -271,6 +271,7 @@
 
 /* ── Edit-page hero extras (Save button + action stack). The shared hero itself is in css/profile-pages.css ── */
 .ep-hero-save {
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
   min-width: 168px; height: 44px; padding: 0 var(--space-5); cursor: pointer;
   border: 0; border-radius: var(--radius-pill); background: var(--color-forest-700); color: var(--color-text-on-primary);
   font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
