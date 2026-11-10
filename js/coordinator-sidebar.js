@@ -14,6 +14,7 @@
 
 (function () {
   var rows = [], q = '', current = '', failed = false;
+  var onTaskerPage = document.body.classList.contains('co-page--tasker');
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -29,8 +30,7 @@
   }
   function isUuid(v) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || '')); }
 
-  function draw() {
-    var ul = $('coSideTaskers'), empty = $('coSideEmpty');
+  function fill(ul, empty, rowClass) {
     if (!ul) return;
     ul.textContent = '';
     var term = q.trim().toLowerCase();
@@ -38,7 +38,7 @@
     shown.forEach(function (r) {
       var li = el('li');
       var isCur = r.id === current;
-      var a = el('a', 'co-side-trow' + (isCur ? ' is-current' : ''));
+      var a = el('a', rowClass + (isCur && rowClass === 'co-side-trow' ? ' is-current' : ''));
       a.href = 'coordinator-tasker.html?id=' + encodeURIComponent(r.id);
       a.setAttribute('aria-label', r.name + ', ' + statusLabel(r.status));
       if (isCur) a.setAttribute('aria-current', 'page');
@@ -56,6 +56,12 @@
       if (failed) { empty.hidden = false; empty.textContent = 'We couldn\u2019t load your Local Taskers just now.'; }
       else empty.textContent = rows.length ? 'No Local Taskers match that filter.' : 'No Local Taskers assigned to you yet.';
     }
+  }
+
+  /* The desktop sidebar list is left alone on the Local Tasker page (coordinator-tasker-shell.js fills it there); the phone menu list is always ours. */
+  function draw() {
+    if (!onTaskerPage) fill($('coSideTaskers'), $('coSideEmpty'), 'co-side-trow');
+    fill($('coDrawerTaskers'), $('coDrawerEmpty'), 'co-drawer-trow');
   }
 
   async function loadRoster(userId) {
@@ -77,10 +83,11 @@
       });
       failed = false;
       draw();
-      var cap = $('coSideCap');
-      if (cap && window.STCo && typeof window.STCo.plan === 'function') {
+      var caps = [$('coDrawerCap')];
+      if (!onTaskerPage) caps.push($('coSideCap'));
+      if (window.STCo && typeof window.STCo.plan === 'function') {
         var plan = await window.STCo.plan();
-        if (plan) { cap.textContent = ids.length + '/' + plan.capacity; cap.hidden = false; }
+        if (plan) caps.forEach(function (cap) { if (cap) { cap.textContent = ids.length + '/' + plan.capacity; cap.hidden = false; } });
       }
     } catch (e) {
       console.error('[coordinator sidebar roster]', e);
@@ -100,15 +107,13 @@
   }
 
   function start(detail) {
-    var onTaskerPage = document.body.classList.contains('co-page--tasker');
     var onOverview = !!$('coMsgsList');
-    if (onTaskerPage) return;   /* coordinator-tasker-shell.js fills the list and the badge on that page */
     var id = new URLSearchParams(window.location.search).get('id');
     current = isUuid(id) ? id : '';
     var f = $('coSideFilter');
-    if (f) f.addEventListener('input', function () { q = this.value; draw(); });
+    if (f && !onTaskerPage) f.addEventListener('input', function () { q = this.value; draw(); });
     loadRoster(detail.userId);
-    if (!onOverview) loadUnread();
+    if (!onOverview && !onTaskerPage) loadUnread();   /* the overview and Local Tasker scripts set the badge there */
   }
 
   var started = false;
