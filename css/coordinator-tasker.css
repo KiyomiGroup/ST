@@ -154,3 +154,18 @@
 @media (min-width: 768px) {
   .co-page--tasker .co-er-amounts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* ── Profile & Services tab layout (Stage T6) ──────────────── */
+/* Layout only: the cards, ids and the script that fills them are unchanged. Phones: one column. */
+.co-pf .co-pf-card { min-width: 0; }
+.co-pf .co-photo-thumb { border-radius: var(--radius-co-card); }
+.co-pf .co-svc-item { background: var(--co-field); border-radius: var(--radius-co-card); }
+@media (min-width: 768px) {
+  .co-pf .co-svc-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-4); align-items: start; }
+  .co-pf .co-svc-item > * { grid-column: 1; }
+  .co-pf .co-svc-item > .co-fact-link { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin-top: 0; }
+}
+@media (min-width: 1044px) {
+  .co-pf:not([hidden]) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); align-items: start; }
+  .co-pf .co-pf-wide { grid-column: 1 / -1; }
+}

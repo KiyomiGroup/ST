@@ -1,4 +1,4 @@
-# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T5)
+# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T6)
 
 Self-contained: read this and you can continue without the chat.
 
@@ -15,8 +15,15 @@ Owner rules (from CLAUDE.md / AGENTS.md and the owner's standing requests): foll
 | **T3 (done)** | Bookings tab: this Local Tasker's bookings, same groups as the Bookings page, each opens `coordinator-booking.html?id=` | no |
 | **T4 (done)** | Messages tab: this Local Tasker's conversations (list), opening `coordinator-chat.html?booking=` (linked out; embedding the thread was not chosen) | no |
 | **T5 (done)** | Earnings tab: payouts and your commission for this Local Tasker | **yes: one new read-only function** |
-| T6 | Profile & Services restyled to the reference (bio, rates table, portfolio, identity, representation) using the existing loaders | no |
+| **T6 (done)** | Profile & Services restyled to the reference layout using the existing loaders | no |
 | T7 | QA at 390 / 820 / 1360, design-system note, final handoff | no |
+
+## T6: what was built (Profile & Services layout)
+Changed files: `coordinator-tasker.html` (layout classes only: `co-pf` on the panel, `co-pf-card` on each card, `co-pf-wide` on the privacy note, Services, Photos and Flyer), `css/coordinator-tasker.css` (one small block), this file. No JS change, no SQL, no new ids: `js/coordinator-tasker.js` and `js/coordinator-flyer.js` still fill every card as before.
+- Desktop (from 1044px): two columns. Contact and Profile side by side; Services, Photos and Flyer full width; Payout, Publishing, Verification and Agreement in pairs. Services become rows with "Edit service" at the right (from 768px). Photos are rounded tiles, 4 across. Phones and tablets: one column, as before.
+- Checked in real Chromium at 390, 820 and 1360px with sample content: no sideways scroll, layout looked at. `node tools/check-design-system.js`: no new or edited file is reported.
+- Left out of the reference (no data or no page behind it): Public listing toggle and "Readiness 4/4" strip, "Vetted by Lucy" line, Operating hub / radius and WhatsApp tiles, NIN and guarantor wording, the fixed "10% / 24h dispute warranty" agreement card, "Save all changes" bar (each card edits on its own page).
+- Owner action: upload `coordinator-tasker.html`, `css/coordinator-tasker.css`, `COORDINATOR-TASKER-HANDOFF.md`. Nothing else. T5 files must already be uploaded.
 
 ## T5: what was built (Earnings tab)
 Changed files: `coordinator-tasker.html` (tab on, panel `#coPanelEarnings`, script tag), `css/coordinator-tasker.css` (small `.co-er-*` block), `js/coordinator-tasker-earnings.js` (new), `sql/coordinator-flow/t5-tasker-earnings.sql` (new), `sql/coordinator-flow/t5-rollback.sql` (new), this file.
@@ -124,4 +131,4 @@ The references show £ and example names. The site pays and quotes in ₦; every
 
 ## Owner action
 None. No SQL, nothing to delete on GitHub or Supabase. Upload the changed files to the same paths (replace `coordinator-tasker.html`, `DESIGN-SYSTEM.md`; add the three new files).
-Next stage: T6 (Profile & Services restyle).
+Next stage: T7 (QA).
