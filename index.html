@@ -697,7 +697,7 @@
           service_name: s.service_name || s.provider_name || 'Service', categoryLabel: (s.category || '').replace(/_/g, ' '),
           description: (s.description || '').slice(0, 90), photo: s.photo || '', provider: s.provider_name || '', location: s.location || 'Lagos',
           price: s.price, unit: String(PRICING_LABELS[s.pricing_type] || '/job').replace('/', ''),
-          href: uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : 'find-taskers.html', user_id: uid
+          href: s.id ? 'service-details.html?id=' + encodeURIComponent(String(s.id)) : (uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : 'find-taskers.html'), user_id: uid
         });
       }).join('');
     }

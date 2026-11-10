@@ -162,9 +162,11 @@
 .tp-service-body p { margin-top: var(--space-1); font-size: var(--text-sm); line-height: 1.5; color: var(--pt-ink-muted); overflow-wrap: anywhere; }
 .tp-service:hover { background: var(--pt-field-strong); }
 .tp-service:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
-.tp-service-price { flex-shrink: 0; text-align: right; font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 800; letter-spacing: -0.02em; }
-.tp-service-price small { font-size: var(--text-sm); font-weight: 600; color: var(--pt-ink-muted); }
-.tp-service-price em { display: block; font-family: var(--font-body); font-size: var(--text-xs); font-style: normal; font-weight: 500; letter-spacing: 0; color: var(--pt-ink-muted); }
+.tp-service { align-items: flex-start; }
+.tp-service-body { display: flex; flex-direction: column; gap: var(--space-1); }
+.tp-service-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.tp-service-from, .tp-service-unit { font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500; letter-spacing: 0; color: var(--pt-ink-muted); }
+.tp-service-amount { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; letter-spacing: 0; color: var(--pt-ink); }
 
 /* Portfolio */
 .tp-portfolio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
@@ -336,8 +338,6 @@
   .tp-card { padding: var(--space-4); scroll-margin-top: calc(var(--nav-height) + var(--space-9)); }
   .tp-title { font-size: var(--text-md); }
   .tp-offers, .tp-certs { grid-template-columns: minmax(0, 1fr); }
-  .tp-service { flex-wrap: wrap; }
-  .tp-service-price { width: 100%; padding-left: calc(44px + var(--space-4)); text-align: left; }
   .tp-portfolio { grid-template-columns: minmax(0, 1fr); }
 
   /* Message button + Book bar floats at the bottom of the screen (this page has no bottom tab bar). */

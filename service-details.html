@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Service details — StreetTasker</title>
+  <script>window.ST_PAGE_TITLE = 'Service details';</script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/service-details.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <div id="navbar-placeholder"></div>
+
+  <main class="st-page st-page--narrow sd-page" id="sdPage">
+
+    <p class="st-panel-note sd-state" id="sdLoading" role="status" aria-live="polite">Loading service…</p>
+
+    <section class="st-panel sd-missing" id="sdMissing" hidden>
+      <h1 class="st-panel-title">Service not found</h1>
+      <p class="st-panel-note">This service may have been removed or paused, or the link is incomplete.</p>
+      <a href="find-services.html" class="btn btn-primary">Browse services</a>
+    </section>
+
+    <div class="sd-content" id="sdContent" hidden>
+
+      <section class="st-hero" aria-labelledby="sdTitle">
+        <span class="st-hero-chip"><span class="st-hero-dot"></span><span id="sdCat">Service</span></span>
+        <h1 class="st-hero-title" id="sdTitle"></h1>
+        <p class="st-hero-lead" id="sdLoc" hidden></p>
+      </section>
+
+      <section class="st-panel sd-media" id="sdMedia" hidden>
+        <img class="sd-photo" id="sdPhoto" alt="" />
+      </section>
+
+      <section class="st-panel sd-rate" aria-label="Price and booking">
+        <div class="sd-rate-info">
+          <span class="sd-rate-label">Starting from</span>
+          <span class="sd-rate-price" id="sdPrice"></span>
+        </div>
+        <a class="btn btn-primary btn-lg sd-book" id="sdBook" href="find-services.html">Book service</a>
+      </section>
+
+      <section class="st-panel" aria-labelledby="sdAboutTitle">
+        <h2 class="st-panel-title" id="sdAboutTitle">About this service</h2>
+        <div class="sd-prose" id="sdDesc"></div>
+        <div class="sd-tags" id="sdTags" hidden></div>
+      </section>
+
+      <section class="st-panel sd-provider" aria-labelledby="sdProvTitle">
+        <h2 class="st-panel-title" id="sdProvTitle">Offered by</h2>
+        <div class="sd-prov-row">
+          <span class="sd-prov-avatar" id="sdProvAvatar" aria-hidden="true"></span>
+          <div class="sd-prov-who">
+            <strong id="sdProvName"></strong>
+            <span class="st-panel-note" id="sdProvLoc"></span>
+          </div>
+          <a class="btn btn-outline" id="sdProvLink" href="find-taskers.html">View profile</a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/saved.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/service-details.js"></script>
+</body>
+</html>

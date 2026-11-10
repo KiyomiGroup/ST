@@ -220,7 +220,7 @@ function svcRender(page = 1) {
 function svcBuildCard(s) {
   const cat  = svcCategoryMeta(s.category);
   const desc = s.description.length > 100 ? s.description.slice(0, 100) + '…' : s.description;
-  const href = s.user_id ? `tasker-profile.html?id=${encodeURIComponent(s.user_id)}` : 'find-services.html';
+  const href = s.id ? `service-details.html?id=${encodeURIComponent(String(s.id))}` : (s.user_id ? `tasker-profile.html?id=${encodeURIComponent(s.user_id)}` : 'find-services.html');
   /* Card markup lives in js/ui.js (stServiceCard). Rating, turnaround and perk only show when the row has them. */
   return stServiceCard({
     service_name: s.service_name, category: s.category, categoryLabel: cat.label, emoji: cat.emoji,

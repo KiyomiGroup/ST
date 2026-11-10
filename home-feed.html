@@ -780,6 +780,8 @@
     }
 
     function _profileUrl(p) { return p.uid ? 'tasker-profile.html?id=' + encodeURIComponent(p.uid) : 'find-taskers.html'; }
+    /* A service card opens that service's own details page; the tasker's profile is one tap away from there. */
+    function _serviceUrl(p) { return p.id ? 'service-details.html?id=' + encodeURIComponent(p.id) : _profileUrl(p); }
 
     function taskerCardHtml(p) {
       /* Card design: js/ui.js (stTaskerCard). Rating and price only when the row has them; no verified tick, no invented availability. */
@@ -793,7 +795,7 @@
       return stServiceCard({
         service_name: p.service || p.name, categoryLabel: p.category, description: p.desc, photo: p.photo,
         provider: p.name, location: p.location, price: p.price, unit: String(p.unit || '').replace('/', ''),
-        rating: p.rating, href: _profileUrl(p), user_id: p.uid
+        rating: p.rating, href: _serviceUrl(p), user_id: p.uid
       });
     }
 
@@ -1021,7 +1023,7 @@
         row.stSetItems(list.map(p => STCompact.serviceCard({
           service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
           description: String(p.desc || '').slice(0, 90), photo: p.photo, provider: p.name, location: p.location,
-          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _profileUrl(p), user_id: p.uid
+          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _serviceUrl(p), user_id: p.uid
         })));   /* none found: the row hides itself */
       } catch (e) {
         if (!_cuLive(host, tok)) return;
@@ -1263,7 +1265,7 @@
         row.stSetItems(list.map(p => STCompact.serviceCard({
           service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
           description: String(p.desc || '').slice(0, 90), photo: p.photo, provider: p.name, location: p.location,
-          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _profileUrl(p), user_id: p.uid
+          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _serviceUrl(p), user_id: p.uid
         })));
       } catch (e) { row.stOnRetry(_tkServices); row.stSetState('error'); }
     }

@@ -160,9 +160,10 @@
       if (short.length > 160) short = short.slice(0, 157).replace(/\s+\S*$/, '') + '\u2026';
       return '<button type="button" class="tp-service" data-svc="' + i + '" aria-label="View details: ' + esc(x.title) + '">' +
         '<span class="tp-service-icon">' + icon('briefcase') + '</span>' +
-        '<span class="tp-service-body"><strong>' + esc(x.title) + '</strong>' + (short ? '<p>' + esc(short) + '</p>' : '') + '</span>' +
-        (price ? '<span class="tp-service-price"><span><small>from</small> ' + esc(price) + '</span>' + (text(x.price_note) ? '<em>' + esc(x.price_note) + '</em>' : '') + '</span>' : '') +
-        '</button>';
+        '<span class="tp-service-body"><strong>' + esc(x.title) + '</strong>' + (short ? '<p>' + esc(short) + '</p>' : '') +
+        (price ? '<span class="tp-service-price"><span class="tp-service-from">From</span><span class="tp-service-amount">' + esc(price) + '</span>' +
+          (text(x.price_note) ? '<span class="tp-service-unit">' + esc(x.price_note) + '</span>' : '') + '</span>' : '') +
+        '</span></button>';
     }).join('');
     $('secServices').hidden = !m.services.length;
   }
@@ -983,6 +984,12 @@
       var user = await currentUser();
       state.isOwner = !!(user && user.id === state.id);
       await loadReal(state.id);
+      /* Arriving from a service's details page (?book=<service id>): open the booking pop-up for that service */
+      var bookId = params.get('book');
+      if (bookId && state.model && !state.isOwner) {
+        var want = state.model.services.filter(function (x) { return String(x.id) === String(bookId); })[0];
+        if (want) { state.bookSvc = want; openBooking('book'); }
+      }
       /* S4j: count this profile view (the server skips the tasker's own views and counts one per person per day). */
       if (window.STActivity && !state.isOwner && state.tasker && state.tasker.user_id) STActivity.profile(state.tasker.user_id);
     } catch (err) {

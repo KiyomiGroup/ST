@@ -466,7 +466,17 @@ async function syncNavbarAuthState() {
     const role = await getUserRole(user);
     if (role === 'coordinator') { await _turnAwayCoordinator(); return; }
     if (!role && await _sendAdminToAdminArea()) return;
-    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
+    let name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
+    /* A tasker edits their name on Edit Profile (taskers.name), which never touches the sign-up name stored with the
+       login. So for a tasker the name shown in the menu comes from their own tasker profile, or an edit would show
+       for one page and then switch back to the old sign-up name. */
+    if (role === 'tasker') {
+      try {
+        const tr = await window.supabase.from('taskers').select('name').eq('user_id', String(user.id)).maybeSingle();
+        const tn = tr && tr.data && String(tr.data.name || '').trim();
+        if (tn) name = tn;
+      } catch (e) { /* keep the sign-up name */ }
+    }
 
     /* Cache in localStorage for instant next-page render */
     try {
