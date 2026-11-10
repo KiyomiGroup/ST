@@ -61,6 +61,7 @@
     var price = Number(svc.price), unit = text(svc.rate_unit).replace(/^\//, '');
     var priceEl = $('sdPrice'); priceEl.textContent = '';
     var priceMax = Number(svc.price_max);
+    var rateLbl = document.querySelector('.sd-rate-label'); if (rateLbl) rateLbl.textContent = priceMax > Number(svc.price) ? 'Price range' : 'Starting from';
     if (price > 0) {
       var priceTxt = NAIRA + price.toLocaleString('en-NG') + (priceMax > price ? ' \u2013 ' + NAIRA + priceMax.toLocaleString('en-NG') : '');
       priceEl.appendChild(document.createTextNode(priceTxt));
@@ -103,7 +104,32 @@
       } catch (e) { /* link stays hidden */ }
     }
 
+    /* Stage 4: a Sales service lists its products (name, price, photo). Nothing shows for other categories. */
+    $('sdProducts').hidden = true;
+    if (String(svc.category) === 'sales') {
+      $('sdBook').textContent = isOwner ? 'Edit my services' : 'Order now';
+      loadProducts(svc.id);
+    }
+
     $('sdLoading').hidden = true; $('sdMissing').hidden = true; $('sdContent').hidden = false;
+  }
+
+  async function loadProducts(serviceId) {
+    try {
+      var r = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', serviceId).order('position');
+      var rows = (r && r.data) || [];
+      var list = $('sdProdList'); list.textContent = '';
+      rows.forEach(function (p) {
+        var li = document.createElement('li'); li.className = 'sd-prod';
+        var img = text(p.image_url);
+        var thumb = document.createElement('span'); thumb.className = 'sd-prod-img';
+        if (/^https?:\/\//i.test(img)) { var im = document.createElement('img'); im.alt = ''; im.loading = 'lazy'; im.src = img; im.addEventListener('error', function () { im.remove(); }); thumb.appendChild(im); }
+        var nm = document.createElement('strong'); nm.className = 'sd-prod-name'; nm.textContent = text(p.name);
+        var pr = document.createElement('span'); pr.className = 'sd-prod-price'; pr.textContent = NAIRA + Number(p.price).toLocaleString('en-NG');
+        li.appendChild(thumb); li.appendChild(nm); li.appendChild(pr); list.appendChild(li);
+      });
+      $('sdProducts').hidden = !rows.length;
+    } catch (e) { /* products stay hidden */ }
   }
 
   async function init() {

@@ -32,3 +32,12 @@
   .sd-book { width: 100%; }
   .sd-prov-row .btn { width: 100%; }
 }
+
+/* ── Products of a Sales service (Stage 4) ── */
+.sd-prod-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.sd-prod { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-form); }
+.sd-prod-img { display: block; aspect-ratio: 1 / 1; border-radius: var(--radius-form); overflow: hidden; background: var(--color-bg-subtle, var(--gray-50)); }
+.sd-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sd-prod-name { font-size: var(--text-sm); color: var(--color-text); overflow-wrap: anywhere; }
+.sd-prod-price { font-family: var(--font-heading); font-weight: 800; color: var(--color-text); }
+@media (min-width: 769px) { .sd-prod-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

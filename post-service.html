@@ -143,6 +143,7 @@
                   <option value="financial">Financial Services</option>
                   <option value="legal">Legal &amp; Advocacy</option>
                   <option value="events">Event Planning</option>
+                  <option value="sales">Sales (sell products)</option>
                   <option value="other">Other</option>
                 </select>
                 <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
@@ -219,6 +220,22 @@
                 </div>
               </div>
               <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg><span><strong>Pro Tip:</strong> Fair local pricing attracts repeat clients and higher ratings. You can modify this per custom quotation later.</span></p>
+            </div>
+          </section>
+
+          <!-- ── Sales products (Stage 4): shown only when the category is Sales ───────── -->
+          <section class="pt-section" id="secProducts" aria-labelledby="secProductsTitle" hidden>
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">2</span>
+              <div>
+                <h2 class="pt-section-title" id="secProductsTitle">Products you sell</h2>
+                <p class="pt-section-sub">Add up to 6 products with a price and a photo. Customers order and pay in chat.</p>
+              </div>
+              <span class="ps-section-chip">Up to 6</span>
+            </div>
+            <div class="pt-group">
+              <div class="ps-products" id="psProducts"></div>
+              <p class="pt-help" id="psProductsHint" aria-live="polite"></p>
             </div>
           </section>
 
@@ -451,6 +468,11 @@
     function isRange() { return document.getElementById('svcRateMode').value === 'range'; }
 
     function getRateValues() {
+      if (isSales()) {   /* price comes from the products */
+        var prices = readProducts().items.map(function (p) { return p.price; });
+        var lo = prices.length ? Math.min.apply(null, prices) : 0, hi = prices.length ? Math.max.apply(null, prices) : 0;
+        return { numericValue: lo, maxValue: hi > lo ? hi : null, isRange: hi > lo, rateUnit: '/item' };
+      }
       var priceVal = parseFloat(document.getElementById('svcPrice').value);
       var maxVal   = parseFloat(document.getElementById('svcPriceMax').value);
       var unitVal  = document.getElementById('svcRateUnit').value;
@@ -502,7 +524,124 @@
       hint.textContent = range ? '' : 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
     }
 
+    /* ── Stage 4: Sales category (products) ───────────────────────────────────────────── */
+    var PS_MAX_PRODUCTS = 6, PS_MAX_IMG = 5 * 1024 * 1024;
+    function isSales() { return document.getElementById('svcCategory').value === 'sales'; }
+
+    function buildProductRows() {
+      var box = document.getElementById('psProducts');
+      if (box.children.length) return;
+      for (var i = 0; i < PS_MAX_PRODUCTS; i++) {
+        var n = i + 1, row = document.createElement('div');
+        row.className = 'ps-product';
+        row.innerHTML =
+          '<div class="ps-product-head"><strong>Product ' + n + '</strong>' + (n > 1 ? '<span class="pt-hint">Optional</span>' : '<span class="pt-hint">Required</span>') + '</div>' +
+          '<div class="pt-field"><input type="text" class="pt-input ps-p-name" maxlength="60" placeholder="Product name" autocomplete="off" aria-label="Product ' + n + ' name" /></div>' +
+          '<div class="pt-field pt-budget-field"><span class="pt-naira" aria-hidden="true">&#8358;</span><input type="number" inputmode="numeric" class="pt-input pt-budget ps-rate-input ps-p-price" min="0" step="1" placeholder="Price" autocomplete="off" aria-label="Product ' + n + ' price" /></div>' +
+          '<div class="ps-product-photo"><span class="ps-p-thumb" hidden><img alt="" /></span>' +
+          '<label class="btn btn-outline btn-sm ps-p-pick"><span class="ps-p-pick-text">Add photo</span><input type="file" class="ps-p-file" accept="image/jpeg,image/png,image/webp" hidden /></label>' +
+          '<button type="button" class="btn btn-outline btn-sm ps-p-clear" hidden>Remove photo</button></div>';
+        box.appendChild(row);
+      }
+      box.addEventListener('change', function (ev) {
+        if (!ev.target.classList.contains('ps-p-file')) return;
+        var row = ev.target.closest('.ps-product'), f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        if (!/^image\/(jpeg|png|webp)$/.test(f.type)) { showToast('Use a JPG, PNG or WebP photo.'); ev.target.value = ''; return; }
+        if (f.size > PS_MAX_IMG) { showToast('That photo is over 5 MB. Choose a smaller one.'); ev.target.value = ''; return; }
+        row._file = f; setThumb(row, URL.createObjectURL(f));
+      });
+      box.addEventListener('click', function (ev) {
+        if (!ev.target.classList.contains('ps-p-clear')) return;
+        var row = ev.target.closest('.ps-product');
+        row._file = null; row.dataset.url = ''; row.querySelector('.ps-p-file').value = ''; setThumb(row, '');
+      });
+      box.addEventListener('input', updateProductsHint);
+    }
+
+    function setThumb(row, src) {
+      var th = row.querySelector('.ps-p-thumb');
+      if (src) th.querySelector('img').src = src; else th.querySelector('img').removeAttribute('src');
+      th.hidden = !src;
+      row.querySelector('.ps-p-clear').hidden = !src;
+      row.querySelector('.ps-p-pick-text').textContent = src ? 'Change photo' : 'Add photo';
+    }
+
+    function readProducts() {
+      var out = [], err = '';
+      document.querySelectorAll('#psProducts .ps-product').forEach(function (row, i) {
+        var name = row.querySelector('.ps-p-name').value.trim();
+        var raw = row.querySelector('.ps-p-price').value;
+        var price = parseFloat(raw);
+        if (!name && !raw && !row._file && !row.dataset.url) return;
+        if (!name || isNaN(price) || price <= 0) { err = err || 'Product ' + (i + 1) + ' needs a name and a price.'; return; }
+        out.push({ position: i + 1, name: name, price: price, file: row._file || null, url: row.dataset.url || '', row: row });
+      });
+      return { items: out, error: err };
+    }
+
+    function updateProductsHint() {
+      var hint = document.getElementById('psProductsHint'), r = readProducts().items;
+      if (!r.length) { hint.textContent = ''; return; }
+      var prices = r.map(function (p) { return p.price; }), lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
+      hint.textContent = r.length + (r.length === 1 ? ' product' : ' products') + ' listed. Customers will see ' + (hi > lo ? '\u20a6' + lo.toLocaleString() + ' to \u20a6' + hi.toLocaleString() : '\u20a6' + lo.toLocaleString()) + ' per item.';
+    }
+
+    /* Sales: show the products form, hide the one-price form; the service price becomes the lowest-to-highest product price */
+    function applySalesMode(on) {
+      buildProductRows();
+      document.getElementById('secProducts').hidden = !on;
+      document.getElementById('secPricing').closest('section').hidden = on;
+      document.getElementById('svcPrice').required = !on;
+      document.getElementById('svcPriceMax').required = !on && isRange();
+      var unit = document.getElementById('svcRateUnit');
+      if (on) { unit.value = 'item'; }
+      else if (unit.value === 'item') { unit.value = 'job'; var r = document.querySelector('input[name="rateUnit"][value="job"]'); if (r) r.checked = true; }
+    }
+
+    async function loadProducts(serviceId) {
+      try {
+        var res = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', serviceId).order('position');
+        if (res.error || !res.data) return;
+        buildProductRows();
+        var rows = document.querySelectorAll('#psProducts .ps-product');
+        res.data.forEach(function (p) {
+          var row = rows[(p.position || 1) - 1]; if (!row) return;
+          row.querySelector('.ps-p-name').value = p.name || '';
+          row.querySelector('.ps-p-price').value = Number(p.price) || '';
+          row.dataset.url = p.image_url || ''; setThumb(row, p.image_url || '');
+        });
+        updateProductsHint();
+      } catch (e) { /* non-fatal: the form just opens empty */ }
+    }
+
+    async function saveProducts(serviceId, userId) {
+      var items = readProducts().items, rows = [];
+      for (var k = 0; k < items.length; k++) {
+        var p = items[k], url = p.url;
+        if (p.file) {
+          var ext = p.file.type === 'image/png' ? 'png' : p.file.type === 'image/webp' ? 'webp' : 'jpg';
+          var path = 'services/prod-' + userId + '-' + Date.now() + '-' + p.position + '.' + ext;
+          var up = await window.supabase.storage.from('service-images').upload(path, p.file, { cacheControl: '3600', upsert: true });
+          if (up.error) throw new Error('The photo for product ' + p.position + ' could not be uploaded. Try a smaller photo.');
+          url = window.supabase.storage.from('service-images').getPublicUrl(path).data.publicUrl;
+        }
+        rows.push({ service_id: serviceId, user_id: userId, position: p.position, name: p.name, price: p.price, image_url: url || null });
+        p.row.dataset.url = url || ''; p.row._file = null;
+      }
+      var up2 = await window.supabase.from('service_products').upsert(rows, { onConflict: 'service_id,position' });
+      if (up2.error) {
+        if (up2.error.code === '42P01') throw new Error('Product selling is not switched on yet. Ask the site owner to run the Sales SQL.');
+        throw up2.error;
+      }
+      /* products the tasker removed */
+      var keep = rows.map(function (r) { return r.position; }).join(',');
+      var del = await window.supabase.from('service_products').delete().eq('service_id', serviceId).not('position', 'in', '(' + keep + ')');
+      if (del.error) throw del.error;
+    }
+
     function onCategoryChange(val) {
+      applySalesMode(val === 'sales');
       var wrap = document.getElementById('otherCategoryWrap');
       if (wrap) wrap.hidden = val !== 'other';
       /* a short "includes" line so providers see what the category covers */
@@ -587,6 +726,7 @@
             }
             onRateInput();
           }
+          if (isSales()) { applySalesMode(true); loadProducts(draft.id); }
           updateDescCount();
           if (window.psUpdateProgress) window.psUpdateProgress();
           document.getElementById('formSubtitle').textContent =
@@ -687,6 +827,11 @@
 
       if (!serviceName)                                          { showErr('Please enter a service name.'); return; }
       if (!category)                                             { showErr('Please select a category.'); return; }
+      if (isSales()) {
+        var pr = readProducts();
+        if (pr.error) { showErr(pr.error); return; }
+        if (!pr.items.length) { showErr('Add at least one product with a name and a price.'); return; }
+      }
       if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
       if (rateValues.isRange && (!rateValues.maxValue || rateValues.maxValue <= rateValues.numericValue)) { showErr('For a price range, the "To" amount must be more than the "From" amount.'); return; }
       if (!location)                                             { showErr('Please enter your location.'); return; }
@@ -785,6 +930,7 @@
         }
         if (svcRes.error) throw svcRes.error;
         savedServiceId = svcRes.data && svcRes.data.id;
+        if (isSales() && savedServiceId) await saveProducts(savedServiceId, postUser.id);   /* Stage 4 */
 
         /* Save Draft: stay on the page. The listing stays unpublished and the public taskers row is untouched */
         if (asDraft) {

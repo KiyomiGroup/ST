@@ -9,7 +9,7 @@
 
 /* Same category values as the post-service.html dropdown */
 /* Categories come from js/categories.js (shared with the post pages); each keeps value / label / emoji */
-const SVC_CATEGORIES = (window.STCat ? window.STCat.list : [{ value: 'other', label: 'Other', emoji: '🛠️' }]).map(c => ({ value: c.value, label: c.label, short: c.short || c.label, emoji: c.emoji }));
+const SVC_CATEGORIES = (window.STCat ? window.STCat.serviceList : [{ value: 'other', label: 'Other', emoji: '🛠️' }]).map(c => ({ value: c.value, label: c.label, short: c.short || c.label, emoji: c.emoji }));
 const SVC_KNOWN = new Set(SVC_CATEGORIES.map(c => c.value));
 const SVC_UNIT_LABEL = { hour: 'Per hour', job: 'Per job', day: 'Per day', session: 'Per session', visit: 'Per visit', week: 'Per week', month: 'Per month' };
 const SVC_AVAIL_LABEL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
@@ -27,7 +27,7 @@ function svcDefaultFilters() {
 /* ── Helpers ─────────────────────────────────────────────────── */
 function svcCategoryMeta(value) {
   /* old saved values (electrician, barber...) resolve to their group; custom text under Other keeps its own label */
-  const hit = SVC_CATEGORIES.find(c => c.value === value) || (window.STCat && STCat.list.find(c => c.value === STCat.resolve(value).value && STCat.resolve(value).value !== 'other'));
+  const hit = SVC_CATEGORIES.find(c => c.value === value) || (window.STCat && STCat.serviceList.find(c => c.value === STCat.resolve(value).value && STCat.resolve(value).value !== 'other'));
   if (hit) return hit;
   /* Custom categories typed under "Other" are saved as snake_case */
   const label = String(value || 'other').replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase());

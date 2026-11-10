@@ -29,6 +29,7 @@
     financial: '<rect x="4" y="6" width="34" height="52" rx="5"/><rect x="9" y="11" width="24" height="12" rx="2" fill="var(--color-bg)"/><text x="21" y="21" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" font-family="Manrope, Arial, sans-serif">$</text><path d="M10 30h6v5h-6zM20 30h6v5h-6zM30 30h4v5h-4zM10 39h6v5h-6zM20 39h6v5h-6zM30 39h4v5h-4zM10 48h6v5h-6zM20 48h6v5h-6zM30 48h4v5h-4z" fill="var(--color-bg)"/><rect x="40" y="16" width="20" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="36" r="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="36" r="2.5"/>',
     legal: '<g transform="rotate(-40 14 46)"><rect x="2" y="36" width="24" height="11" rx="2.5"/><rect x="12" y="47" width="4" height="15" rx="1.5"/></g><path d="M2 61h24v3H2z"/><path d="M40 6h4v46h-4z"/><path d="M30 52h24v5H30z"/><circle cx="42" cy="7" r="3.5"/><path d="M25 14h34v4H25z"/><path d="M30 18l-6 14M30 18l6 14M54 18l-6 14M54 18l6 14" stroke="currentColor" stroke-width="2" fill="none"/><path d="M23 32h14a7 7 0 0 1-14 0zM47 32h14a7 7 0 0 1-14 0z"/>',
     events: '<path d="M2 3h60v6H2z"/><path d="M2 9h15c-3 12-3 26 3 46H2z"/><path d="M62 9H47c3 12 3 26-3 46h18z"/><path d="M26 9h12l-3 8H29z"/><path d="M29 17h6l9 38H20z" fill-opacity=".28"/><circle cx="26" cy="30" r="2"/><circle cx="38" cy="26" r="2"/><circle cx="33" cy="40" r="2"/><circle cx="44" cy="36" r="2"/><g transform="rotate(-12 44 52)"><rect x="30" y="45" width="28" height="14" rx="2.5"/><path d="M44 46v12" stroke="var(--color-bg)" stroke-width="2" stroke-dasharray="3 2"/></g>',
+    sales: '<path d="M8 22h48l3 36H5z"/><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
     other: '<path d="M10 54l24-24 8 8-24 24z"/><path d="M40 6a12 12 0 0 0-10 17l-6 6 10 10 6-6A12 12 0 0 0 54 20l-8 4-6-6 4-8z"/>'
   };
 
@@ -51,6 +52,8 @@
     { value: 'financial',   label: 'Financial Services',       short: 'Financial',    emoji: '🧮', services: ['Accounting & bookkeeping', 'Tax preparation', 'Payroll processing', 'Financial planning', 'Audit support'] },
     { value: 'legal',       label: 'Legal & Advocacy',         short: 'Legal',        emoji: '⚖️', services: ['Legal consulting', 'Contract drafting & review', 'Document notarisation', 'Dispute mediation'] },
     { value: 'events',      label: 'Event Planning',           short: 'Events',       emoji: '🎉', services: ['Event planning', 'DJ & live sound', 'Photography & videography', 'Security detail', 'Decor & staging', 'MC & event hosting'] },
+    /* Sellers only (Stage 4): taskers who sell products. Not a task category, so STCat.list leaves it out; STCat.serviceList has it. */
+    { value: 'sales',       label: 'Sales (products)',         short: 'Sales',        emoji: '🛍️', sellers: true, services: ['Clothing & fashion', 'Food & snacks', 'Beauty products', 'Electronics & accessories', 'Home & kitchen items', 'Crafts & art'] },
     { value: 'other',       label: 'Other',                    short: 'Other',        emoji: '🛠️', services: [] }
   ];
 
@@ -167,11 +170,13 @@
   root.STCat = {
     detect: detect,
     expand: expand,
-    list: LIST, icons: I, resolve: resolve, matches: matches, iconHtml: iconHtml,
+    list: LIST.filter(function (c) { return !c.sellers; }),   /* task side: no Sales */
+    serviceList: LIST,                                         /* service side: with Sales */
+    icons: I, resolve: resolve, matches: matches, iconHtml: iconHtml,
     get: function (v) { return resolve(v); },
     label: function (v) { return resolve(v).label; },
     emoji: function (v) { return resolve(v).emoji; },
     /* <option> markup for a <select> */
-    optionsHtml: function () { return LIST.map(function (c) { return '<option value="' + c.value + '">' + c.label + '</option>'; }).join(''); }
+    optionsHtml: function () { return LIST.filter(function (c) { return !c.sellers; }).map(function (c) { return '<option value="' + c.value + '">' + c.label + '</option>'; }).join(''); }
   };
 })(window);
