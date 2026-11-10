@@ -95,8 +95,20 @@
 
     var so = $('coSignOut'); if (so) so.addEventListener('click', signOut);
     var dso = $('coDrawerSignOut'); if (dso) dso.addEventListener('click', signOut);
+    var sso = $('coSideSignOut'); if (sso) sso.addEventListener('click', signOut);
     wireMenus();
     wireBell();
+    loadSidebarScript();
+  }
+
+  /* The sidebar's Local Taskers list is filled by js/coordinator-sidebar.js on every page (the Local Tasker page fills it itself,
+     with its own "new" counts). Loaded here so no page has to add a script tag. */
+  function loadSidebarScript() {
+    if (document.getElementById('coSidebarScript')) return;
+    var s = document.createElement('script');
+    s.id = 'coSidebarScript';
+    s.src = 'js/coordinator-sidebar.js';
+    document.body.appendChild(s);
   }
 
   function wireMenus() {
@@ -152,12 +164,15 @@
 
   function wireBell() {
     try {
-      var btn = $('coBellBtn');
-      if (!btn) return;
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        loadPanel(function () {
-          if (window.ST && window.ST.notifPanel) window.ST.notifPanel.toggle(btn);
+      ['coBellBtn', 'coSideBellBtn'].forEach(function (id) {
+        var btn = $(id);
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          loadPanel(function () {
+            if (!(window.ST && window.ST.notifPanel)) return;
+            window.ST.notifPanel.toggle(btn);
+          });
         });
       });
       /* Load the panel now so the live "new notification" dot works without a first click. */
@@ -174,7 +189,7 @@
       if (!uid) return;
       var r = await sb.from('notifications').select('id').eq('user_id', uid).eq('is_read', false).limit(1);
       if (!r.error && r.data && r.data.length) {
-        var dot = $('navNotifDot'); if (dot) dot.hidden = false;
+        ['navNotifDot', 'coSideBellDot'].forEach(function (id) { var dot = $(id); if (dot) dot.hidden = false; });
       }
     } catch (e) { /* no dot is the safe answer */ }
   }
@@ -183,6 +198,8 @@
     var display = name || 'Coordinator';
     var set = function (id, text) { var el = $(id); if (el) el.textContent = text; };
     set('coAvatarInitials', initialsOf(display));
+    set('coSideInitials', initialsOf(display));
+    set('coSideName', display);
     set('coMenuName', display);
     set('coDrawerName', display);
     set('coWelcomeName', firstNameOf(display));
@@ -246,6 +263,7 @@
 
       var gate = $('coGate'); if (gate) gate.hidden = true;
       document.body.classList.remove('co-guarding');
+      window.STCoordinatorReady = { userId: session.user.id, displayName: name };
       document.dispatchEvent(new CustomEvent('coordinator:ready', {
         detail: { userId: session.user.id, displayName: name }
       }));

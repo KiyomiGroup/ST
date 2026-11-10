@@ -476,7 +476,7 @@
   --shadow-co-panel:  0 24px 48px -16px rgba(0, 0, 0, 0.35);   /* = --shadow-gc-card */
   --co-header-height: 72px;
   --co-bottom-nav-height: calc(72px + max(var(--safe-bottom), var(--space-3)));   /* 72px bar + the home-bar clearance */
-  --co-sidebar-width: 260px;   /* coordinator overview sidebar (desktop, from 1044px) */
+  --co-sidebar-width: 280px;   /* coordinator sidebar: every coordinator page, desktop from 1044px */
 }
 
 /* ── Auth pages (login, signup, onboarding): colours that were raw in styles.css ──

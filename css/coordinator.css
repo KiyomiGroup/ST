@@ -125,21 +125,6 @@ body.co-guarding .co-app { display: none; }
 .co-brand img { height: 22px; width: auto; display: block; }
 .co-brand-tag { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-green); }
 
-.co-nav {
-  display: none; align-items: center; gap: var(--space-1);
-  margin: 0 auto; padding: var(--space-1);
-  background: var(--co-nav-dark); border-radius: var(--radius-pill);
-}
-.co-nav-link {
-  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
-  font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600;
-  color: var(--color-text-on-primary); text-decoration: none; white-space: nowrap;
-  transition: background var(--t) var(--ease);
-}
-a.co-nav-link:hover { background: var(--co-dark-active); }
-.co-nav-link[aria-current="page"] { background: var(--co-green-mid); }
-.co-nav-link.is-soon { opacity: 0.55; cursor: default; }
-
 .co-account { position: relative; margin-left: auto; }
 .co-avatar, .co-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -371,8 +356,7 @@ body.co-drawer-open { overflow: hidden; }
 
 /* Desktop (nav row needs 1044px): pill nav replaces hamburger and bottom bar */
 @media (min-width: 1044px) {
-  .co-menu-btn, .co-bottom-nav, .co-drawer { display: none; }
-  .co-nav { display: flex; }
+  .co-menu-btn, .co-bottom-nav, .co-drawer, .co-header { display: none; }
   .co-main { padding-bottom: var(--space-8); }
   .co-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0 var(--space-7); }
   .co-tasker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -467,7 +451,7 @@ body.co-drawer-open { overflow: hidden; }
 }
 @media (min-width: 1044px) {
   .co-edit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: start; gap: var(--space-5); }
-  .co-edit-aside { position: sticky; top: calc(var(--co-header-height) + var(--space-4)); }
+  .co-edit-aside { position: sticky; top: var(--space-4); }
 }
 
 /* Profile hero identity row and shared page hero bits (all coordinator pages) */
@@ -672,3 +656,110 @@ body.co-drawer-open { overflow: hidden; }
 #coDcFactsBox { margin-bottom: var(--space-4); }
 /* B2c: the hidden attribute must win over .co-form-actions { display: flex } inside the "Quote declined" card */
 #coDc .co-form-actions[hidden], #coDc .co-pub-reason[hidden] { display: none; }
+
+/* ── Sidebar (every coordinator page, desktop from 1044px) ─────
+   One full-height column fixed to the left edge, like a normal app sidebar. The page content sits to its right.
+   Below 1044px it is hidden and the header, drawer and bottom bar are used. The sidebar scrolls as a whole only
+   when the window is too short to fit the list at its minimum height (six Local Taskers). */
+.co-sidebar { display: none; }
+@media (min-width: 1044px) {
+  .co-app { padding-left: var(--co-sidebar-width); }
+  .co-sidebar {
+    display: flex; flex-direction: column; gap: var(--space-1);
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 45; width: var(--co-sidebar-width);
+    padding: var(--space-4) var(--space-3) 0; overflow-y: auto;
+    background: var(--color-bg); border-right: 1px solid var(--color-border);
+  }
+  .co-sb-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-2) var(--space-4); }
+  .co-sb-bell { margin-left: 0; }
+
+  .co-side-nav { display: flex; flex-direction: column; gap: var(--space-1); flex-shrink: 0; }
+  .co-side-link {
+    display: flex; align-items: center; gap: var(--space-3); min-height: 44px;
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+    color: var(--co-ink); text-decoration: none;
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600;
+    transition: background var(--t) var(--ease);
+  }
+  .co-side-link svg { flex-shrink: 0; color: var(--co-ink-muted); }
+  a.co-side-link:hover { background: var(--co-field); }
+  a.co-side-link:focus-visible, .co-side-trow:focus-visible, .co-side-add:focus-visible, .co-sb-signout:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+  .co-side-link[aria-current="page"] { background: var(--co-mint-soft); color: var(--co-green); }
+  .co-side-link[aria-current="page"] svg { color: var(--co-green); }
+  .co-side-link.is-soon { opacity: 0.55; cursor: default; }
+  .co-side-badge {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; margin-left: auto; padding: 0 var(--space-2);
+    border-radius: var(--radius-pill); background: var(--co-green); color: var(--color-text-on-primary); font-size: var(--text-xs); font-weight: 800;
+  }
+  .co-side-badge[hidden] { display: none; }
+
+  /* Local Taskers list: grows to fill the sidebar, never shorter than six rows, scrolls inside after that. */
+  .co-side-taskers {
+    display: flex; flex-direction: column; flex: 1 1 0; gap: var(--space-2);
+    min-height: calc(var(--space-9) * 4 + var(--space-9)); margin-top: var(--space-3); padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+  .co-side-label {
+    margin: var(--space-1) var(--space-3) var(--space-1);
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-ink-muted);
+  }
+  .co-side-label--row { display: flex; align-items: center; justify-content: space-between; }
+  .co-side-cap { padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--co-field); color: var(--co-ink-muted); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0; }
+  .co-side-cap[hidden], .co-side-empty[hidden] { display: none; }
+  .co-side-filter { position: relative; display: block; flex-shrink: 0; }
+  .co-side-filter svg { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--co-ink-muted); pointer-events: none; }
+  .co-side-filter input {
+    width: 100%; min-height: 40px; padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-3) + var(--space-5));
+    border: 1px solid transparent; border-radius: var(--radius-pill); background: var(--co-field); color: var(--co-ink);
+    font-family: var(--font-body); font-size: var(--text-sm); outline: none;
+  }
+  .co-side-filter input::placeholder { color: var(--co-ink-muted); }
+  .co-side-filter input:focus { border-color: var(--co-green); background: var(--color-bg); }
+  .co-side-tlist { list-style: none; flex: 1 1 0; min-height: calc(var(--space-9) * 4); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: 0; }
+  .co-side-trow {
+    display: flex; align-items: center; gap: var(--space-3); min-height: calc(var(--space-7) + var(--space-1));
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--co-ink); text-decoration: none;
+  }
+  .co-side-trow:hover { background: var(--co-field); }
+  .co-side-trow.is-current { background: var(--co-mint-soft); }
+  .co-side-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--co-ink-muted); }
+  .co-side-dot--published { background: var(--co-green); }
+  .co-side-dot--inactive { background: var(--co-danger); }
+  .co-side-ttext { display: flex; flex-direction: column; min-width: 0; }
+  .co-side-tname { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .co-side-tsub { font-size: var(--text-xs); color: var(--co-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .co-side-new {
+    flex-shrink: 0; margin-left: auto; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
+    background: var(--co-green); color: var(--color-text-on-primary); font-size: var(--text-xs); font-weight: 800; white-space: nowrap;
+  }
+  .co-side-empty { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--co-ink-muted); }
+
+  .co-side-add {
+    display: flex; align-items: center; justify-content: center; gap: var(--space-2); flex-shrink: 0;
+    margin-top: var(--space-3); padding: var(--space-3) var(--space-4);
+    border: 1.5px dashed var(--co-green); border-radius: var(--radius-pill);
+    color: var(--co-green); text-decoration: none;
+    font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700;
+    transition: background var(--t) var(--ease);
+  }
+  .co-side-add:hover { background: var(--co-mint-soft); }
+
+  /* Account row, stuck to the bottom like the reference */
+  .co-sb-foot {
+    position: sticky; bottom: 0; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-3);
+    margin: var(--space-3) calc(-1 * var(--space-3)) 0; padding: var(--space-3) var(--space-4);
+    background: var(--color-bg); border-top: 1px solid var(--color-border);
+  }
+  .co-sb-avatar {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--co-nav-dark); color: var(--color-text-on-primary); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700;
+  }
+  .co-sb-user { flex: 1; min-width: 0; }
+  .co-sb-name { font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--co-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .co-sb-sub { font-size: var(--text-xs); color: var(--co-ink-muted); }
+  .co-sb-signout {
+    flex-shrink: 0; padding: var(--space-2) var(--space-3); border: none; border-radius: var(--radius-pill); cursor: pointer;
+    background: var(--co-field); color: var(--co-ink); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700;
+  }
+  .co-sb-signout:hover { background: var(--co-mint-soft); }
+}

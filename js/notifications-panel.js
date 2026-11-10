@@ -187,7 +187,7 @@
 
   /* ── nav dots ────────────────────────────────────────────── */
   function setDots(on) {
-    ['navNotifDot', 'navDrawerNotifDot', 'navDrawerNotifDotTasker'].forEach(function (id) {
+    ['navNotifDot', 'navDrawerNotifDot', 'navDrawerNotifDotTasker', 'coSideBellDot'].forEach(function (id) {
       var el = document.getElementById(id); if (el) el.hidden = !on;
     });
     var m = document.getElementById('navMobileNotifDot'); if (m) m.style.display = on ? '' : 'none';
@@ -311,6 +311,13 @@
     /* Phones: a sheet under the nav (CSS). Desktop: under the bell, right edges lined up */
     if (window.matchMedia('(max-width: 768px)').matches || !openerEl) { panel.style.top = panel.style.left = panel.style.right = ''; return; }
     var r = openerEl.getBoundingClientRect();
+    /* The coordinator sidebar bell (data-np-side) is at the far left: the panel opens to its right, level with it, instead of under it. */
+    if (openerEl.hasAttribute('data-np-side')) {
+      panel.style.top = Math.round(Math.max(12, r.top)) + 'px';
+      panel.style.left = Math.round(r.right + 32) + 'px';
+      panel.style.right = 'auto';
+      return;
+    }
     panel.style.top = Math.round(r.bottom + 10) + 'px';
     panel.style.right = Math.max(12, Math.round(window.innerWidth - r.right)) + 'px';
     panel.style.left = 'auto';
