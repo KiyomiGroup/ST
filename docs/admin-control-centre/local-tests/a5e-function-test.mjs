@@ -15,12 +15,15 @@ const ENV = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_ANON_KEY: 'anon', 
 function world(o = {}) {
   const log = [];
   const callerRpc = { admin_invite_precheck: () => o.pre ?? { ok: true, email: 'new@example.com', roles: ['content'] },
-                      admin_invite_finish: () => o.fin ?? { ok: true, user_id: 'new-id' } };
+                      admin_invite_finish: () => o.fin ?? { ok: true, user_id: 'new-id' },
+                      admin_invite_resend_check: () => o.rchk ?? { ok: true, email: 'late@example.com' },
+                      admin_invite_resend_record: () => o.rrec ?? { ok: true } };
   const serviceRpc = { admin_invite_auth_lookup: () => o.lookup ?? { exists: false, user_id: null, confirmed: false, site_account: false, is_admin: false } };
   const createClient = (url, key, opts) => {
     const isService = key === 'service';
     return {
-      auth: { getUser: async (t) => (t === 'good' ? { data: { user: { id: 'caller' } }, error: null } : { data: null, error: { message: 'bad' } }),
+      auth: { resetPasswordForEmail: async (email, op) => { log.push(['reset', email, op, opts?.global?.headers?.Authorization]); return o.resetFail ? { data: null, error: { status: o.resetFail, message: 'smtp secret' } } : { data: {}, error: null }; },
+              getUser: async (t) => (t === 'good' ? { data: { user: { id: 'caller' } }, error: null } : { data: null, error: { message: 'bad' } }),
               admin: { inviteUserByEmail: async (email, op) => { log.push(['invite', email, op]); return o.inviteFail ? { data: null, error: { status: 500, message: 'smtp' } } : { data: { user: { id: 'new-id' } }, error: null }; } } },
       rpc: async (n, a) => { log.push([isService ? 'service' : 'caller', n, a, opts?.global?.headers?.Authorization]);
         const f = (isService ? serviceRpc : callerRpc)[n]; return f ? { data: f(a), error: null } : { data: null, error: { code: 'XX', message: 'no ' + n } }; },
@@ -60,6 +63,20 @@ chk(r.status === 502 && r.body.error === 'invite_failed' && !r.log.some((x) => x
 r = await run({ approval_id: AID }, { world: { fin: { ok: false, error: 'That approval has expired.' } } });
 chk(r.status === 409 && /expired/.test(r.body.message) && /no admin access/.test(r.body.message), '18 finish refuses after the login was made: says the login has no admin access');
 r = await run({ approval_id: AID }); chk(r.headers.get('cache-control') === 'no-store', '19 responses are not cached');
+const UID = '22222222-2222-4222-8222-222222222222';
+r = await run({ user_id: UID });
+chk(r.status === 200 && r.body.ok && r.body.resent === true && r.body.email === 'late@example.com', '20 resend happy path');
+chk(JSON.stringify(r.log.map((x) => x[1])) === JSON.stringify(['admin_invite_resend_check', 'late@example.com', 'admin_invite_resend_record']), '21 resend order: check, email, record');
+const rs = r.log.find((x) => x[0] === 'reset');
+chk(rs[2].redirectTo === 'https://streettasker.com/admin/accept-invite.html' && !rs[3], '22 resend email lands on the accept page and is sent with NO user token');
+chk(r.log.filter((x) => x[0] === 'caller').every((x) => x[3] === 'Bearer good') && !r.log.some((x) => x[0] === 'invite'), '23 check and record use the caller token; no login is created');
+r = await run({ user_id: UID, email: 'evil@example.com' }); chk(r.log.find((x) => x[0] === 'reset')[1] === 'late@example.com', '24 a body email is ignored: the address comes from the database');
+r = await run({ user_id: UID }, { world: { rchk: { ok: false, error: 'That person has already chosen a password.' } } });
+chk(r.status === 409 && /already chosen/.test(r.body.message) && !r.log.some((x) => x[0] === 'reset'), '25 check refuses: no email sent');
+r = await run({ user_id: UID }, { world: { resetFail: 429 } }); chk(r.status === 429 && !r.log.some((x) => x[1] === 'admin_invite_resend_record') && !JSON.stringify(r.body).includes('smtp'), '26 email provider rate limit: 429, nothing recorded, no leak');
+r = await run({ user_id: UID }, { world: { resetFail: 500 } }); chk(r.status === 502 && !r.log.some((x) => x[1] === 'admin_invite_resend_record'), '27 email failure: 502, nothing recorded');
+r = await run({ user_id: 'nope' }); chk(r.status === 400 && !r.log.length, '28 bad user id: 400');
+r = await run({ user_id: UID }, { auth: 'Bearer bad' }); chk(r.status === 401 && !r.log.length, '29 resend with bad token: 401');
 const bad = results.filter((x) => !x[0]);
 for (const [ok, t] of results) console.log((ok ? 'PASS ' : 'FAIL ') + t);
 console.log(`RESULT: ${bad.length ? bad.length + ' FAILED' : 'ALL PASS'} (${results.length} checks)`);

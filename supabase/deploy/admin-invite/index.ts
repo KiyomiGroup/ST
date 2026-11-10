@@ -16,8 +16,12 @@
 // Deploy with "Verify JWT" ON. In Supabase Auth, URL Configuration, the Redirect URLs list must contain
 //   https://streettasker.com/admin/accept-invite.html  (and the www address if used).
 //
-// Request  (POST, JSON, Authorization: Bearer <admin access token>):  { approval_id: uuid }
-// Response: 200 { ok: true, email, email_sent: boolean, existing_login: boolean }
+// RESEND mode (body { user_id }): emails a fresh "choose a password" link to an admin who was invited but has not set a password yet.
+//   admin_invite_resend_check (as the caller) -> Auth resetPasswordForEmail with the accept page as the landing -> admin_invite_resend_record.
+//   It grants nothing (the admin row already exists), so no new approval; the database allows 3 per person per 24 hours.
+//
+// Request  (POST, JSON, Authorization: Bearer <admin access token>):  { approval_id: uuid }  or  { user_id: uuid }
+// Response: 200 { ok: true, email, email_sent: boolean, existing_login: boolean }  (resend: { ok, email, email_sent: true, resent: true })
 //           4xx/5xx { ok: false, error: <code>, message }
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -68,14 +72,37 @@ export async function handleInvite(req: Request, deps: { env: (n: string) => str
   if (raw.length > 2_000) return fail(req, 413, "too_large", "Request too large.");
   let body: any;
   try { body = JSON.parse(raw); } catch { return fail(req, 400, "bad_input", "Body must be JSON."); }
+  const resendUser = typeof body?.user_id === "string" ? body.user_id.trim() : "";
   const approvalId = typeof body?.approval_id === "string" ? body.approval_id.trim() : "";
-  if (!UUID_RE.test(approvalId)) return fail(req, 400, "bad_input", "Say which approved invite to send.");
+  if (resendUser) {
+    if (!UUID_RE.test(resendUser)) return fail(req, 400, "bad_input", "Say which admin to send the invitation to.");
+  } else if (!UUID_RE.test(approvalId)) return fail(req, 400, "bad_input", "Say which approved invite to send.");
 
   // The database sees the CALLER (their token), so its own permission and requester checks apply.
   const asCaller = deps.createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // RESEND: a fresh link for an invited admin who has not chosen a password yet.
+  if (resendUser) {
+    const chk = await asCaller.rpc("admin_invite_resend_check", { p_user: resendUser });
+    if (chk.error) {
+      console.error("admin_invite_resend_check failed", chk.error.code, chk.error.message);
+      return fail(req, chk.error.code === "42501" ? 403 : 500, "server_error", "Could not check this admin. Nothing was done.");
+    }
+    if (!chk.data?.ok) return fail(req, 409, "not_allowed", String(chk.data?.error ?? "An invitation cannot be sent again to this person."));
+    const anon = deps.createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const sent = await anon.auth.resetPasswordForEmail(chk.data.email, { redirectTo: `${allowedOrigin(req)}/admin/accept-invite.html` });
+    if (sent.error) {
+      console.error("resetPasswordForEmail failed", sent.error.status, sent.error.message);
+      const limited = sent.error.status === 429;
+      return fail(req, limited ? 429 : 502, "send_failed", limited ? "Too many emails were sent recently. Wait a few minutes and try again." : "The email could not be sent. Try again later.");
+    }
+    const rec = await asCaller.rpc("admin_invite_resend_record", { p_user: resendUser });
+    if (rec.error || !rec.data?.ok) console.error("admin_invite_resend_record failed", rec.error?.code, rec.error?.message ?? rec.data?.error);
+    return json(req, 200, { ok: true, email: chk.data.email, email_sent: true, resent: true });
+  }
 
   // 2. Is this approval good to send?
   const pre = await asCaller.rpc("admin_invite_precheck", { p_approval: approvalId });

@@ -219,9 +219,9 @@ AdminShell.init({ page: 'team', title: 'Admin team', permission: 'admin.team.vie
   }
   inviteOpen.addEventListener('click', drawInvite);
 
-  async function sendInvite(id) {
+  async function callInvite(payload) {
     var res;
-    try { res = await window.supabase.functions.invoke('admin-invite', { body: { approval_id: id } }); } catch (e) { res = { error: e }; }
+    try { res = await window.supabase.functions.invoke('admin-invite', { body: payload }); } catch (e) { res = { error: e }; }
     if (res && !res.error && res.data && res.data.ok) return res.data;
     var msg = 'The server could not answer. Nothing was changed.';
     try {
@@ -233,12 +233,39 @@ AdminShell.init({ page: 'team', title: 'Admin team', permission: 'admin.team.vie
   }
 
   async function loadInvites() {
-    var res;
+    var res, res2;
     try { res = await window.supabase.rpc('admin_invites_mine'); } catch (e) { res = { error: e }; }
+    try { res2 = await window.supabase.rpc('admin_invite_setup_pending'); } catch (e) { res2 = { error: e }; }
     AC.clear(invList);
     var rows = (res && !res.error && res.data && res.data.rows) || [];
-    if (!rows.length) { invList.hidden = true; return; }
+    var setup = (res2 && !res2.error && res2.data && res2.data.rows) || [];
+    if (!rows.length && !setup.length) { invList.hidden = true; return; }
     invList.hidden = false;
+    if (setup.length) {
+      invList.appendChild(h('h2', 'ad-card-title', 'Invited, not set up yet'));
+      invList.appendChild(h('p', 'ad-note', 'These people were invited but have not chosen a password. If the email expired or never arrived, send it again (3 times a day at most per person). A person who has set a password never appears here.'));
+      var ul0 = h('ul', 'ad-rows');
+      setup.forEach(function (r) {
+        var li = h('li'); var box = h('div', 'ad-panel');
+        box.appendChild(add(h('div', 'ad-row-top'), h('strong', null, (r.name ? r.name + ' ' : '') + '(' + (r.email || '') + ')'), h('span', 'badge badge-blue', 'No password yet')));
+        box.appendChild(h('p', 'ad-hint', 'Invited ' + when(r.invited_at) + ' · sent again ' + (r.resends_24h || 0) + ' time(s) in the last 24 hours'));
+        var err = h('p', 'ad-error'); err.hidden = true; err.setAttribute('role', 'alert');
+        var b = h('button', 'btn btn-outline', 'Send again'); b.type = 'button'; var armed = false;
+        b.addEventListener('click', async function () {
+          err.hidden = true;
+          if (!armed) { armed = true; b.textContent = 'Press again to email ' + r.email; return; }
+          b.disabled = true;
+          var d = await callInvite({ user_id: r.user_id });
+          b.disabled = false; armed = false; b.textContent = 'Send again';
+          if (!d.ok) { err.textContent = d.message || 'It could not be sent. Nothing was changed.'; err.hidden = false; return; }
+          ctx.toast('A new email was sent to ' + d.email + '.'); loadInvites();
+        });
+        add(box, err, add(h('div', 'ad-actions ad-actions--tight'), b));
+        ul0.appendChild(add(li, box));
+      });
+      invList.appendChild(ul0);
+    }
+    if (!rows.length) return;
     invList.appendChild(h('h2', 'ad-card-title', 'Your invitations'));
     invList.appendChild(h('p', 'ad-note', 'An invitation is sent only after a different Super Admin approves it on the Pending approvals page. Then you send it here, once, before it expires.'));
     var ul = h('ul', 'ad-rows');
@@ -255,7 +282,7 @@ AdminShell.init({ page: 'team', title: 'Admin team', permission: 'admin.team.vie
           err.hidden = true;
           if (!armed) { armed = true; b.textContent = 'Press again to send to ' + r.email; return; }
           b.disabled = true;
-          var d = await sendInvite(r.id);
+          var d = await callInvite({ approval_id: r.id });
           b.disabled = false; armed = false; b.textContent = 'Send the invitation';
           if (!d.ok) { err.textContent = d.message || 'It could not be sent. Nothing was changed.'; err.hidden = false; return; }
           ctx.toast(d.email_sent ? 'Invitation sent to ' + d.email + '.' : d.email + ' already had a login, so no email was sent. Tell them to sign in at the admin sign-in page.');

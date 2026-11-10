@@ -37,14 +37,15 @@ def mine(status, action='admin.team.change'):
             'previous_value': {'permissions': ['bookings.view']}, 'reason': 'y' * 12, 'requested_at': '2026-11-09T10:00:00Z', 'expires_at': '2026-11-12T10:00:00Z', 'seconds_left': 200000}
 
 def fake(scn):
-    return """(function(){ var scn=%s, T=%s, R=%s, M=%s; window.__calls=[]; var applied=false, sent=false;
+    return """(function(){ var scn=%s, T=%s, R=%s, M=%s; window.__calls=[]; var applied=false, sent=false, resent=false;
   window.supabase={ auth:{ getSession:function(){return Promise.resolve({data:{session: scn.noSession?null:{user:{id:'me'}}}});}, signOut:function(){window.__signedOut=true;return Promise.resolve({});}, updateUser:function(a){window.__calls.push({n:'updateUser',a:a}); console.log('__CALL__'+JSON.stringify({n:'updateUser',a:a}));return Promise.resolve(scn.pwFail?{error:{message:'weak'}}:{data:{},error:null});} },
-   functions:{ invoke:function(n,o){ window.__calls.push({n:'invoke:'+n,a:(o&&o.body)||{}}); return new Promise(function(res){ setTimeout(function(){ if(scn.sendFail){ res({data:null,error:{context:{json:function(){return Promise.resolve({ok:false,message:scn.sendFail});}}}}); } else { sent=true; res({data:{ok:true,email:'new@example.com',email_sent:!scn.existingLogin,existing_login:!!scn.existingLogin},error:null}); } },5); }); } },
+   functions:{ invoke:function(n,o){ window.__calls.push({n:'invoke:'+n,a:(o&&o.body)||{}}); return new Promise(function(res){ setTimeout(function(){ if(scn.sendFail){ res({data:null,error:{context:{json:function(){return Promise.resolve({ok:false,message:scn.sendFail});}}}}); } else { if(o&&o.body&&o.body.user_id) resent=true; else sent=true; res({data:{ok:true,email:'new@example.com',email_sent:!scn.existingLogin,existing_login:!!scn.existingLogin},error:null}); } },5); }); } },
    rpc:function(n,a){ window.__calls.push({n:n,a:a||{}}); console.log('__CALL__'+JSON.stringify({n:n,a:a||{}})); return new Promise(function(res){ setTimeout(function(){ res(h(n,a||{})); },5); }); } };
   function ok(d){return {data:d,error:null};}
   function h(n,a){
    if(n==='admin_my_access'&&scn.notAdmin) return ok({active:false});
    if(n==='admin_invite_request'){ if(scn.reqFail) return ok({ok:false,error:'This email already has a customer, Tasker or coordinator account. Use a separate email made only for admin work.'}); return ok({ok:true,id:'inv-new'}); }
+   if(n==='admin_invite_setup_pending') return ok({rows: (scn.setup&&!resent)?scn.setup:[]});
    if(n==='admin_invites_mine') return ok({rows: sent?[]:(scn.invites||[])});
    if(n==='admin_my_access') return ok({active:true,display_name:'Test Admin',roles:['super_admin'],permissions:scn.perms,mfa_required:false,mfa_ok:true});
    if(n==='admin_team_list') return ok(T);
@@ -175,6 +176,26 @@ with sync_playwright() as p:
     cx.close()
     pg, cx, errs = open_page(b, 'accept-invite', {'perms': [], 'noSession': True}); pg.wait_for_selector('#aiMsg:not([hidden])', timeout=8000)
     chk('expired' in txt(pg, '#aiIntro') and pg.locator('#aiForm').is_hidden(), '30 no session (expired or used link): no form, clear message')
+    cx.close()
+
+
+    # ---------------- resend: invited, no password yet
+    SETUP = [{'user_id': 'u-77', 'email': 'late@example.com', 'name': 'Late Joiner', 'invited_at': '2026-11-08T10:00:00Z', 'resends_24h': 1}]
+    pg, cx, errs = open_page(b, 'team', {'perms': MGR, 'setup': SETUP}); pg.wait_for_selector('#tmInvites li')
+    chk('Invited, not set up yet' in txt(pg, '#tmInvites') and 'late@example.com' in txt(pg, '#tmInvites') and 'sent again 1 time' in txt(pg, '#tmInvites'), '31 admin with no password is listed with the resend count')
+    pg.locator('#tmInvites button', has_text='Send again').click()
+    chk(not calls(pg, 'invoke:admin-invite') and 'Press again' in txt(pg, '#tmInvites button'), '32 first press sends nothing')
+    pg.locator('#tmInvites button').click(); pg.wait_for_timeout(300)
+    c = calls(pg, 'invoke:admin-invite')
+    chk(len(c) == 1 and c[0]['a'] == {'user_id': 'u-77'}, '33 second press calls the function with ONLY the user id')
+    chk('new email was sent' in pg.locator('#adToasts').inner_text() and pg.locator('#tmInvites li').count() == 0, '34 success toast; list reloads')
+    cx.close()
+    pg, cx, errs = open_page(b, 'team', {'perms': MGR, 'setup': SETUP, 'sendFail': 'The invitation was already sent again 3 times in the last 24 hours. Try again tomorrow.'}); pg.wait_for_selector('#tmInvites li')
+    pg.locator('#tmInvites button').click(); pg.locator('#tmInvites button').click(); pg.wait_for_timeout(300)
+    chk('3 times' in txt(pg, '#tmInvites .ad-error') and pg.locator('#tmInvites li').count() == 1, '35 limit refusal shown; row stays')
+    cx.close()
+    pg, cx, errs = open_page(b, 'team', {'perms': MGR, 'setup': [dict(SETUP[0], name='<img src=x onerror=window.__xss=1>')]}); pg.wait_for_selector('#tmInvites li')
+    chk(pg.evaluate('() => window.__xss') is None and not errs, '36 name shown as text; no page errors')
     cx.close()
 
     b.close()
