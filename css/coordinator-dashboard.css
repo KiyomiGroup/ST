@@ -64,24 +64,45 @@
 .co-req-tab.is-alert:not(.is-active) { color: var(--co-danger); }
 
 .co-req-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
-.co-req-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-lg); }
+.co-req-item { padding: var(--space-4); background: var(--co-field); border-radius: var(--radius-co-card); }
 .co-req-item.is-issue { background: var(--co-danger-soft); }
+.co-req-desk { display: none; }
+.co-req-phone { display: flex; flex-direction: column; gap: var(--space-3); }
+.co-req-amount { font-family: var(--font-heading); font-weight: 800; color: var(--co-green); white-space: nowrap; }
+.co-req-when { font-size: var(--text-xs); color: var(--co-ink-muted); }
+.co-req-btn-icon { display: inline-flex; margin-right: var(--space-2); vertical-align: middle; }
+
+/* Phone card: avatar, name, amount, sentence, full-width button */
+.co-req-phead { display: flex; align-items: center; gap: var(--space-3); }
+.co-req-avatar { width: 48px; height: 48px; font-size: var(--text-sm); flex-shrink: 0; }
+.co-req-pwho { flex: 1; min-width: 0; }
+.co-req-pname { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700; color: var(--co-ink); overflow-wrap: anywhere; }
+.co-req-psub { font-size: var(--text-xs); font-weight: 600; color: var(--co-ink-muted); overflow-wrap: anywhere; }
+.co-req-phead .co-req-amount { font-size: var(--text-base); align-self: flex-start; }
+.co-req-sentence { font-size: var(--text-base); line-height: 1.5; color: var(--co-ink); overflow-wrap: anywhere; }
+.co-req-pbtn { min-height: 52px; border-radius: var(--radius-pill); }
+
+/* Tablet and up: chip + time, big amount, title, customer / assigned, ref + date, one button */
 .co-req-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .co-req-tags { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-width: 0; }
-.co-req-when { font-size: var(--text-xs); color: var(--co-ink-muted); }
-.co-req-amount { font-family: var(--font-heading); font-size: var(--text-md); font-weight: 800; color: var(--co-ink); white-space: nowrap; }
-.co-req-title { font-size: var(--text-md); color: var(--co-ink); overflow-wrap: anywhere; }
-.co-req-meta { font-size: var(--text-sm); color: var(--co-ink-muted); overflow-wrap: anywhere; }
-.co-req-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-1); }
-.co-req-sub { font-size: var(--text-xs); font-weight: 600; color: var(--co-ink-muted); }
-.co-req-foot .btn { min-height: 44px; }
+.co-req-title { margin-top: var(--space-3); font-size: var(--text-md); color: var(--co-ink); overflow-wrap: anywhere; }
+.co-req-meta { margin-top: var(--space-1); font-size: var(--text-base); color: var(--co-ink-muted); overflow-wrap: anywhere; }
+.co-req-meta strong { color: var(--co-ink); font-weight: 600; }
+.co-req-meta .co-req-assigned { color: var(--co-green); }
+.co-req-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+.co-req-sub { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--co-ink-muted); }
+.co-req-sub-icon { display: inline-flex; color: var(--co-green); }
+.co-req-foot .btn { min-height: 44px; border-radius: var(--radius-pill); }
 .co-req-more { padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
 .co-req-chip--quote { background: var(--co-notice-soft); color: var(--co-green); }
 .co-req .co-empty { background: var(--co-field); box-shadow: none; }
 
 @media (min-width: 768px) {
   .co-req { padding: var(--space-5); }
-  .co-req-item { padding: var(--space-4) var(--space-5); }
+  .co-req-item { padding: var(--space-5); }
+  .co-req-desk { display: block; }
+  .co-req-phone { display: none; }
+  .co-req-amount { font-size: var(--text-xl); }
 }
 .co-req-item.is-issue .co-status { background: var(--color-bg); }
 
