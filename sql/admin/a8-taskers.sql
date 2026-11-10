@@ -12,7 +12,8 @@
 --   admin_tasker_account_check(id, action, reason)    read   taskers.suspend   can this login be suspended / restored? (called by the Edge Function)
 --   admin_tasker_account_record(id, action, reason)   write  taskers.suspend   writes the flag and the audit row (called by the Edge Function)
 --
--- A "Regular Tasker" here is a users row whose role is 'tasker' or whose roles contain 'tasker'. Local Taskers have their own screen (A10).
+-- A "Regular Tasker" here is a users row whose role is 'tasker' or whose roles contain 'tasker' AND that has NO local_tasker_profiles row.
+-- (Local Taskers also get a users row with role 'tasker'; before this fix they leaked into this list.) Local Taskers have their own screen (A10).
 -- Suspension only BLOCKS THE LOGIN (Edge Function admin-account-action, now with target "tasker") and RECORDS it. It does NOT hide the public
 -- profile or services (hiding a service is stage A14), does not touch services, wallets, withdrawals, bookings, disputes, reviews or refunds.
 -- NEVER written here: rating, wallet, commission, verification, membership. NEVER returned: street address, bank account number (last 4 only),
@@ -36,7 +37,8 @@ $pre$;
 -- 1. Helpers (no browser access) -----------------------------------------------------------------------------------------
 create or replace function public._a8_is_tasker(p_id uuid)
 returns boolean language sql stable security definer set search_path = public, pg_temp as $f$
-  select exists (select 1 from public.users u where u.id = p_id and (u.role = 'tasker' or 'tasker' = any (coalesce(u.roles::text[], '{}'::text[]))))
+  select exists (select 1 from public.users u where u.id = p_id and (u.role = 'tasker' or 'tasker' = any (coalesce(u.roles::text[], '{}'::text[])))
+                 and not exists (select 1 from public.local_tasker_profiles lp where lp.tasker_user_id = u.id))
 $f$;
 create or replace function public._a8_mask_email(p text)
 returns text language sql immutable as $f$
@@ -101,6 +103,7 @@ begin
       from public.users u
       left join lateral (select x.* from public.taskers x where x.user_id = u.id::text order by x.created_at desc nulls last limit 1) t on true
      where (u.role = 'tasker' or 'tasker' = any (coalesce(u.roles::text[], '{}'::text[])))
+       and not exists (select 1 from public.local_tasker_profiles lp where lp.tasker_user_id = u.id)   -- Local Taskers are a separate screen (A10)
   ), f as (
     select b.* from base b
      where (v_filter = 'all' or (v_filter = 'active' and not b.suspended) or (v_filter = 'suspended' and b.suspended)

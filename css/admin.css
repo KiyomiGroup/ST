@@ -315,3 +315,108 @@ body.ad-body {
 .ad-secretbox { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-primary); border-radius: var(--radius-form); background: var(--color-primary-soft); }
 .ad-secretbox .form-input { min-height: var(--admin-touch-min); overflow-wrap: anywhere; }
 .ad-secretbox .ad-field { margin-top: 0; }
+
+/* ============================================================
+   TYPE AND SPACING SCALE (stage A8b, 2026-11-10)
+   Why: styles.css gives every h1/h2/h3 a big fluid size, tight line height and a
+   negative letter-spacing, so un-classed headings inside admin cards came out huge
+   and uneven, and sections had no gap between them. This block fixes the scale once
+   for every admin page. Tokens only. Scale (desktop):
+     h1 page title 24px   h2 section 20px   h3 / card title 16px   body 14px   hint 12px
+   Spacing: 24px between page sections, 16px between cards, 12px under a title,
+   8px between related items.
+   ============================================================ */
+
+/* Headings: one fixed scale, no fluid sizes, normal tracking. */
+.ad-body h1, .ad-body h2, .ad-body h3, .ad-body h4 { letter-spacing: 0; line-height: 1.3; }
+.ad-body h1 { font-size: var(--text-xl); font-weight: 800; }
+.ad-body h2 { font-size: var(--text-md); font-weight: 700; }
+.ad-body h3, .ad-body h4 { font-size: var(--text-base); font-weight: 700; }
+.ad-body p { font-size: var(--text-sm); line-height: 1.5; margin: 0 0 var(--space-3); }
+.ad-body p:last-child { margin-bottom: 0; }
+.ad-pagehead h1 { font-size: var(--text-xl); }
+.ad-body .ad-card-title, .ad-body .ad-panel-title, .ad-body .ad-state-title { font-size: var(--text-base); margin: 0 0 var(--space-3); }
+.ad-body .ad-box-title { margin-bottom: var(--space-3); }
+.ad-body .ad-card-title:only-child, .ad-body .ad-panel-title:only-child { margin-bottom: 0; }
+.ad-body .ad-card > .ad-card-title + * { margin-top: 0; }
+
+/* The page title shows once: in the page, not again in the top bar (the top bar title stays on phones, where the page title scrolls away). */
+@media (min-width: 769px) { .ad-topbar-title { visibility: hidden; } }
+.ad-topbar-title { font-size: var(--text-base); }
+
+/* Page head: title, then a short intro that stays a readable width. */
+.ad-pagehead { margin-bottom: var(--space-5); }
+.ad-pagehead h1 { margin: 0 0 var(--space-2); }
+.ad-pagehead p { margin: 0; max-width: var(--admin-measure); color: var(--color-text-secondary); }
+
+/* Sections on a page: 24px apart. Cards stacked inside one block stay 16px apart (rules above). */
+.ad-main > div > * + * { margin-top: var(--space-5); }
+.ad-main > div > .ad-pagehead + * { margin-top: 0; }
+.ad-card + .ad-card, .ad-box + .ad-box { margin-top: var(--space-4); }
+
+/* Inside a card: a heading, then a gap, then the body; blocks 12px apart. */
+.ad-card > * + * { margin-top: var(--space-3); }
+.ad-card > .ad-card-title + * { margin-top: 0; }
+.ad-card > .ad-note, .ad-card > .ad-hint { margin-bottom: 0; }
+.ad-card > .ad-hint + .ad-hint { margin-top: var(--space-1); }
+.ad-panel > * { margin-top: 0; }
+
+/* Badges: never touching, wrap neatly. */
+.ad-hint:has(> .badge), .ad-row-top, .ad-roles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.ad-hint:has(> .badge) { margin-top: var(--space-3); }
+.ad-body .ad-row-top .ad-card-title, .ad-body .ad-row-top h2 { margin: 0; flex: 1 1 auto; min-width: 0; }
+
+/* List and detail columns: a real gap between them and between the stacked parts of the detail. */
+.ad-split { gap: var(--space-5); }
+.ad-split-detail > div > * + * { margin-top: var(--space-4); }
+.ad-split-detail > div > .ad-tabs { margin-top: var(--space-4); margin-bottom: 0; }
+.ad-split-detail > div > .ad-tabs + * { margin-top: var(--space-4); }
+.ad-split-list .ad-card > .ad-hint { line-height: 1.5; }
+.ad-tabs { gap: var(--space-2); margin: 0; }
+
+/* "Choose ... to see the profile": a quiet empty panel instead of loose text touching the card above. */
+.ad-split-detail > div > .ad-note:only-child {
+  margin: 0; padding: var(--space-6) var(--space-5); text-align: center;
+  background: var(--color-bg); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-form);
+}
+
+/* Rows in a list: room to breathe, one line of meta text at a constant size. */
+.ad-rows { margin-top: var(--space-4); gap: var(--space-3); }
+.ad-row { padding: var(--space-3) var(--space-4); gap: var(--space-2); }
+.ad-row-title { font-size: var(--text-base); }
+.ad-row .ad-hint { margin: 0; }
+
+/* Definition rows and contact rows. */
+.ad-dl { gap: var(--space-3) var(--space-5); line-height: 1.4; }
+.ad-dl dt { font-size: var(--text-sm); }
+.ad-contact { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--color-border); }
+.ad-contact:first-of-type { border-top: 0; padding-top: 0; }
+.ad-contact > .ad-hint { margin: 0; min-width: 4.5rem; }
+.ad-contact > div:empty { display: none; }
+.ad-contact > strong { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: var(--text-sm); }
+.ad-contact > div { flex: 1 1 100%; }
+
+/* Forms inside cards. */
+.ad-card .ad-form, .ad-card .ad-field + .ad-field { margin-top: var(--space-3); }
+.ad-field label, .ad-filter-label { font-size: var(--text-sm); font-weight: 600; line-height: 1.4; }
+.ad-filters { gap: var(--space-4); }
+.ad-filters .ad-actions { margin-top: 0; }
+.ad-actions { gap: var(--space-3); }
+.ad-hint { font-size: var(--text-xs); line-height: 1.5; }
+
+/* Tables: the wrapper class that the page scripts actually use, plus a steady cell size. */
+.ad-table-wrap { overflow-x: auto; margin-top: var(--space-3); }
+.ad-table th, .ad-table td { vertical-align: top; line-height: 1.4; }
+.ad-table th { font-size: var(--text-xs); text-transform: none; }
+.ad-pager { align-items: center; }
+
+/* Dashboard blocks and the lists in them. */
+.ad-dash-section { margin-bottom: var(--space-5); }
+.ad-grid { margin-top: var(--space-4); }
+.ad-feed, .ad-list, .ad-sub { margin-top: var(--space-3); }
+
+@media (max-width: 768px) {
+  .ad-main > div > * + * { margin-top: var(--space-4); }
+  .ad-split { gap: var(--space-4); }
+  .ad-pagehead { margin-bottom: var(--space-4); }
+}

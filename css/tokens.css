@@ -655,4 +655,5 @@
   --admin-login-width:    420px;
   --admin-icon-size:      20px;
   --admin-touch-min:      44px;     /* smallest tap target */
+  --admin-measure:        72ch;     /* longest line of intro text, so it stays readable */
 }
