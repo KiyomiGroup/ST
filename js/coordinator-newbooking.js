@@ -7,6 +7,7 @@
    If the database step has not been run yet, the detail has no customer_chat_recorded flag and this card stays hidden.
    Everything typed is set with textContent / value.
    Mounted by coordinator-booking.js and coordinator-chat.js: STCoNew.mount(detail, { reload }).
+   Update 2026-11-10: in the chat, saving moves straight to the next form (STCoChat.advance).
    ============================================================ */
 'use strict';
 
@@ -136,7 +137,8 @@
       });
       if (res.error) throw res.error;
       requestId = null;
-      await ctx.reload();
+      if (window.STCoChat && window.STCoChat.advance) await window.STCoChat.advance('Customer chat recorded. The quote is unlocked.');   // in the chat: go straight to the next form
+      else await ctx.reload();
     } catch (err) {
       console.error('[coordinator new booking]', err);
       showError(messageFor(err));

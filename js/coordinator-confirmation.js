@@ -228,7 +228,8 @@
       });
       if (res.error) throw res.error;
       requestId = null;                   // a saved call is finished; the next one gets a new id
-      await ctx.reload();
+      if (window.STCoChat && window.STCoChat.advance) await window.STCoChat.advance('Answer recorded.');   // in the chat: go straight to the next form
+      else await ctx.reload();
     } catch (err) {
       console.error('[coordinator confirmation]', err);
       showError(messageFor(err));

@@ -96,6 +96,12 @@ body {
   overscroll-behavior-x: none;
   -moz-osx-font-smoothing: grayscale;
 }
+/* Installed web app (iPhone): html AND body both set to overflow-x:hidden turns the body into its own scroll box, and iOS then lets
+   position:fixed things (the bottom nav) drift with the page until the app is closed and reopened. "clip" cuts off sideways overflow
+   the same way without making a scroll box, so the nav stays pinned. Browsers without "clip" keep the old rule above. */
+@supports (overflow-x: clip) {
+  body { overflow-x: clip; }
+}
 
 /* Capitalize first letter of user-facing content */
 .tc-name, .tc-service, .live-name, .task-row-title,
@@ -2856,7 +2862,8 @@ img { max-width: 100%; height: auto; }
     display: flex; align-items: center; justify-content: space-around;
     position: fixed; left: 50%;
     bottom: calc(var(--space-2) + var(--corner-clear));
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);   /* own layer: stays pinned while the page rubber-bands in the installed app */
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
     width: 358px; max-width: calc(100% - 20px);
     height: 77px; z-index: 950;
     /* Solid, no blur: the bar floats over page content and must stay readable (visibility over effect) */

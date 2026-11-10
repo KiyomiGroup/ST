@@ -205,12 +205,24 @@
     switch (d.lt_status) {
       case 'assigned':
       case 'awaiting_tasker_confirmation': {
+        if (d.customer_chat_recorded === false) {      // Stage 2: the customer chat is recorded here, in the chat
+          var n0 = card('', 'Chat with the customer, then record it', 'Confirm the date, price, place and details in this chat. While you chat, phone the Local Tasker.');
+          var n0a = actions(n0);
+          n0a.appendChild(btn('Record the customer chat', true, function () { open('coNb'); }));
+          n0a.appendChild(btn('Record the Local Tasker’s answer', false, function () { open('coCf'); }));
+          host.appendChild(n0); return true;
+        }
         var a = card('', 'Contact the Local Tasker', 'Phone them and ask whether they can do this job, and at what price. Then record their answer.');
         actions(a).appendChild(btn('Record their answer', true, function () { open('coCf'); }));
         host.appendChild(a); return true;
       }
       case 'tasker_confirmed':
       case 'quote_declined': {
+        if (d.customer_chat_recorded === false) {      // Stage 2: the quote stays locked until the customer chat is recorded, so say so here
+          var n1 = card('', 'Record the customer chat to unlock the quote', 'Write down what you agreed with the customer in this chat: date, price, place and details. The quote opens right after.');
+          actions(n1).appendChild(btn('Record the customer chat', true, function () { open('coNb'); }));
+          host.appendChild(n1); return true;
+        }
         var q = card('', d.lt_status === 'quote_declined' ? 'The customer declined the quote' : 'Send the price to the customer',
           d.lt_status === 'quote_declined' ? 'Revise the price or check with the Local Tasker, then send the quote again.' : 'List what the customer is paying for. They approve the quote, then pay.');
         actions(q).appendChild(btn(d.lt_status === 'quote_declined' ? 'Revise the quote' : 'Send the quote', true, function () { open('coQt'); }));
@@ -240,7 +252,7 @@
     if (d.payment_status === 'paid' && S.msStamp !== d && !S.msLoading) { S.msStamp = d; loadMs(d); }
     var pl = d.payment_status === 'paid' ? customerPlace() : null, ms = S.msFor === d.booking_id && S.ms ? (S.ms.ok ? S.ms.next + ':' + S.ms.done.length : 'x') : '';
     var asked = Object.keys(S.asked).filter(function (k) { return k.indexOf(d.booking_id) === 0; }).join(',');
-    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : '', ms, pl ? pl.id : '', S.force === d.booking_id ? 'f' : '', asked].join('|');
+    var sig = [d.booking_id, d.lt_status, d.payment_status, d.open, d.customer_chat_recorded, S.codeFor === d.booking_id && S.code ? S.code.state + S.code.remaining : '', ms, pl ? pl.id : '', S.force === d.booking_id ? 'f' : '', asked].join('|');
     if (sig === S.sig && !host.hidden) return;
     S.sig = sig;
     host.textContent = '';

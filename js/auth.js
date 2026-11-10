@@ -538,7 +538,7 @@ async function syncNavbarAuthState() {
    (log-in <-> sign-up, the verification email, Google) and open it once they are in.
    Only a page on this site is accepted, so a link can never send anyone to another site.
    Order of what wins after log-in: ?redirect  >  the target saved at sign-up (same email)  >
-   first-time default (tasker -> post-service.html, customer -> post-task.html)  >  home. */
+   first-time default (home-feed.html for everyone)  >  home. */
 const POST_LOGIN_KEY  = 'st_post_login';    /* sessionStorage: survives the Google round trip in this tab */
 const POST_SIGNUP_KEY = 'st_post_signup';   /* localStorage: survives the verification email (same browser) */
 const POST_LOGIN_MAX_AGE  = 30 * 60 * 1000;
@@ -614,7 +614,8 @@ function isFirstLogin(user) {
 async function markWelcomed() {
   try { await window.supabase.auth.updateUser({ data: { st_welcomed: true } }); } catch (e) {}
 }
-function firstLoginUrl(role) { return role === 'tasker' ? 'post-service.html' : 'post-task.html'; }
+/* New people land on the homepage. A tasker with no live service then gets the "Post a service" reminder pop-up (js/tasker-live-nudge.js). */
+function firstLoginUrl(role) { return 'home-feed.html'; }
 
 /* Logged-out visitors who click Sign Up / Log in / Become a Tasker from a page get sent back to
    that page afterwards. Runs for every <a> on the site, including ones added later. */

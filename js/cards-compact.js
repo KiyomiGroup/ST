@@ -131,6 +131,29 @@
     return card;
   }
 
+  /* PRO / PREMIUM on tasker cards: the label slot is filled once the server has answered for the whole row (ONE call per row).
+     A Local Tasker already has its own "Local Tasker" chip in that slot, so it is left alone. Free and Starter people get nothing. */
+  function decorateMembership(scope) {
+    try {
+      if (!root.STMembership || !root.STMembership.load) return;
+      var spans = scope.querySelectorAll('[data-rating-user][data-rating-role="tasker"]');
+      var ids = [];
+      Array.prototype.forEach.call(spans, function (sp) { ids.push(sp.getAttribute('data-rating-user')); });
+      if (!ids.length) return;
+      root.STMembership.load(ids).then(function () {
+        Array.prototype.forEach.call(spans, function (sp) {
+          var tag = root.STMembership.html(sp.getAttribute('data-rating-user'), { small: true });   /* two fixed words, never user text */
+          if (!tag) return;
+          var card = sp.closest ? sp.closest('.st-card--tasker') : null;
+          var lead = card ? card.querySelector('.st-home-lead') : null;
+          if (lead) { if (!lead.firstElementChild && !lead.textContent.trim()) lead.innerHTML = tag; return; }
+          var line = sp.parentNode;
+          if (line && !line.querySelector('.membership-label')) line.insertAdjacentHTML('beforeend', tag);
+        });
+      }).catch(function () { /* no label is the safe result */ });
+    } catch (e) { /* label is optional */ }
+  }
+
   /* ── Tasker card ──
      s: { id, user_id, provider_name, service_name, location, distance_km, photo, verified, isLocal, href }
      The rating is a data-rating-user span: js/rating-badge.js fills it from rating_summary, or leaves it empty. */
@@ -368,6 +391,7 @@
       msg.hidden = true; view.hidden = false; sec.hidden = false;
       track.removeAttribute('aria-busy');
       if (root.STRating && root.STRating.decorate) { try { root.STRating.decorate(track); } catch (e) { /* badges stay empty */ } }
+      decorateMembership(track);
       root.requestAnimationFrame(updateArrows);
     }
     /* M12b: a plain message with an optional link (for example "Add your location" -> profile). Text is set with textContent; the link goes through safeHref. */

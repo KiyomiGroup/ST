@@ -506,6 +506,23 @@
     reloadThread(false); loadList(true);
   }
 
+  /* Update 2026-11-10 (Stage 2): after a card saves in the chat, move straight to the next form so the whole booking can be run from the chat.
+     Order: customer chat recorded > Local Tasker's answer > quote. Nothing here sends or changes anything; it only opens the next form. */
+  function nextPane() {
+    var d = S.detail; if (!d || !d.open || d.frozen) return null;
+    var chatDone = d.customer_chat_recorded !== false;
+    if (d.lt_status === 'tasker_confirmed' || d.lt_status === 'quote_declined') return chatDone ? 'coQt' : 'coNb';
+    if (d.lt_status === 'assigned' || d.lt_status === 'awaiting_tasker_confirmation') return chatDone ? 'coCf' : 'coNb';
+    return null;
+  }
+  async function advance(message) {
+    await reloadDetail();
+    if (message) toast(message, false);
+    if ($('ccActions').hidden) return;
+    var k = nextPane();
+    if (k && paneAvailable(k)) showPane(k); else closeActions();
+  }
+
   /* ── open / reload a conversation ─────────────────────────── */
   function showRoom(on) {
     $('ccEmpty').hidden = on; $('ccHead').hidden = !on; $('ccStrip').hidden = !on;
@@ -707,7 +724,7 @@
     reloadThread: reloadThread, refreshAll: refreshAll, loadList: loadList, reloadDetail: reloadDetail,
     /* the docked panel's "Ask in the chat": a plain customer-visible message, sent the normal way */
     sendText: function (body) { submit({ requestId: uuid(), body: body, kind: 'message', failed: false }); },
-    openActions: openActions, closeActions: closeActions,
+    openActions: openActions, closeActions: closeActions, advance: advance,
     redraw: function () { if (S.thread) renderTimeline(); }
   };
 

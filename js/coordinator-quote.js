@@ -73,12 +73,17 @@
   function render() {
     var d = ctx.detail, card = $('coQt');
     $('coQtSummary').hidden = true; $('coQtForm').hidden = true; $('coQtHistBox').hidden = true;
+    if ($('coQtUnlockRow')) $('coQtUnlockRow').hidden = true;
     if (!relevant(d) || !data) { card.hidden = true; return; }
     card.hidden = false;
     var cur = data.current, conf = data.confirmed, st = d.lt_status;
     var canBuild = active(d) && (st === 'tasker_confirmed' || st === 'quote_declined') && !!conf;
     if (canBuild && d.customer_chat_recorded === false) {      // B1: the quote is locked until the customer chat is recorded
-      $('coQtLead').textContent = 'The quote is locked. Chat with the customer and record it in the “New booking” card first. Then you can send the quote.';
+      var inChat = !!$('coQtUnlockRow') && !!window.STCoChat;     // Stage 2: in the chat, one tap opens the form that unlocks the quote
+      $('coQtLead').textContent = inChat
+        ? 'The quote is locked until you record what you agreed with the customer in this chat. It takes a minute, and the quote opens right after.'
+        : 'The quote is locked. Chat with the customer and record it in the “New booking” card first. Then you can send the quote.';
+      if (inChat) $('coQtUnlockRow').hidden = false;
       return;
     }
     if (canBuild) {
@@ -143,7 +148,7 @@
     if (hint === 'booking_closed') return 'This booking is closed, so no quote can be sent.';
     if (hint === 'dispute_open') return 'A problem report is open on this booking, so no quote can be sent right now.';
     if (hint === 'invalid_transition') return 'A quote can’t be sent at this step. Reload the page to see where the booking is.';
-    if (hint === 'customer_chat_required') return 'Record your chat with the customer first (the “New booking” card). The quote is locked until then.';
+    if (hint === 'customer_chat_required') return window.STCoChat ? 'Record the customer chat first (“Record the customer chat” in the Actions list). The quote is locked until then.' : 'Record your chat with the customer first (the “New booking” card). The quote is locked until then.';
     if (hint === 'confirmation_required' || hint === 'second_check_pending' || hint === 'exceeds_confirmed' || hint === 'bad_input') return msg || 'We couldn’t send that.';
     return 'We couldn’t send the quote just now. Check your connection and try again. Nothing was sent.';
   }
@@ -160,7 +165,8 @@
       });
       if (res.error) throw res.error;
       requestId = null;
-      await ctx.reload();
+      if (window.STCoChat && window.STCoChat.advance) await window.STCoChat.advance('Quote sent to the customer.');
+      else await ctx.reload();
     } catch (err) {
       console.error('[coordinator quote]', err);
       showError(messageFor(err));
@@ -191,6 +197,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     var f = $('coQtForm'); if (!f) return;
     f.addEventListener('submit', submit);
+    var u = $('coQtUnlock'); if (u) u.addEventListener('click', function () { if (window.STCoChat) window.STCoChat.openActions('coNb'); });
     ['coQtTransport', 'coQtMaterials', 'coQtOther'].forEach(function (id) { $(id).addEventListener('input', previewTotal); });
   });
 

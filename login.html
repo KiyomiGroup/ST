@@ -453,7 +453,7 @@
             showToast('Welcome back! Redirecting...');
             setTimeout(() => { window.location.href = redirect; }, 800);
           } else if (first) {
-            showToast(role === 'tasker' ? 'Welcome! Let\'s post your first service.' : 'Welcome! Let\'s post your first task.');
+            showToast('Welcome to StreetTasker!');
             setTimeout(() => { window.location.href = window.ST.auth.firstLoginUrl(role); }, 800);
           } else if (role === 'tasker') {
             try {
