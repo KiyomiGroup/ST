@@ -20,7 +20,7 @@
     return 'Expires in ' + Math.max(1, m) + ' min';
   }
 
-  /* opts: { reasonLabel, buttons: [{ label, primary, min, sure, check(), fn, args(text), done }], onDone(), extra: [nodes put above the reason] } */
+  /* opts: { reasonLabel, buttons: [{ label, primary, min, sure, check(), fn, args(text), run(text) (optional: replaces the rpc call, must resolve to { data: { ok, error } } or { error }), done }], onDone(), extra: [nodes put above the reason] } */
   function form(opts) {
     var f = h('form', 'ad-form'); f.noValidate = true;
     uid += 1; var rid = 'acWhy' + uid;
@@ -42,7 +42,7 @@
         if (armed !== def) { disarm(); armed = def; b.textContent = 'Press again to confirm'; sure.textContent = def.sure(); sure.hidden = false; return; }
         btns.forEach(function (x) { x.el.disabled = true; });
         var res;
-        try { res = await window.supabase.rpc(def.fn, def.args(text)); } catch (e) { res = { error: e }; }
+        try { res = def.run ? await def.run(text) : await window.supabase.rpc(def.fn, def.args(text)); } catch (e) { res = { error: e }; }
         btns.forEach(function (x) { x.el.disabled = false; });
         disarm();
         var r = res && res.data;
