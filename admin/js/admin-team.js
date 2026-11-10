@@ -2,7 +2,9 @@
    Reads: rpc admin_team_list, admin_role_directory (role names), admin_team_changes_mine (my open requests).
    Writes (A5d, only with admin.team.manage): admin_team_request_change (set roles, suspend, reactivate) and admin_team_apply_change.
    A request changes NOTHING. A different Super Admin approves it on Pending approvals, then the person who asked applies it here.
-   Nobody can change their own row (no button). The server checks every rule again. No invite yet (A5e). All text via textContent. */
+   Nobody can change their own row (no button). The server checks every rule again. All text via textContent.
+   A5e: Invite an admin. Ask (admin_invite_request) -> a different Super Admin approves -> the asker presses Send, which calls the
+   Edge Function admin-invite with ONLY the approval id (the email and roles come from the approved request). */
 'use strict';
 AdminShell.init({ page: 'team', title: 'Admin team', permission: 'admin.team.view' }).then(function (ctx) {
   var root = document.getElementById('tmRoot');
@@ -170,14 +172,116 @@ AdminShell.init({ page: 'team', title: 'Admin team', permission: 'admin.team.vie
     editBox.appendChild(card);
   }
 
+  /* ---------- A5e: invite an admin ---------- */
+  var inviteBox = h('div'); inviteBox.id = 'tmInvite';
+  var invList = h('section', 'ad-card'); invList.id = 'tmInvites'; invList.hidden = true;
+  var inviteBar = h('div', 'ad-actions ad-actions--tight');
+  var inviteOpen = h('button', 'btn btn-primary', 'Invite an admin'); inviteOpen.type = 'button'; inviteOpen.id = 'tmInviteOpen';
+  inviteBar.appendChild(inviteOpen);
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function drawInvite() {
+    AC.clear(inviteBox);
+    var card = h('section', 'ad-card');
+    card.appendChild(h('h2', 'ad-card-title', 'Invite a new admin'));
+    card.appendChild(h('p', 'ad-note', 'This only sends a request. Nothing is created until a different Super Admin approves it, and then you press Send. Use an email made only for admin work: an email that already has a customer, Tasker or coordinator account is refused. Check the email carefully: the invitation goes to that address.'));
+    var f1 = h('div', 'ad-field'); var l1 = h('label', null, 'Email address'); l1.htmlFor = 'tmInvEmail';
+    var em = h('input', 'form-input'); em.type = 'email'; em.id = 'tmInvEmail'; em.maxLength = 200; em.autocomplete = 'off';
+    add(f1, l1, em);
+    var f2 = h('div', 'ad-field'); var l2 = h('label', null, 'Name (optional)'); l2.htmlFor = 'tmInvName';
+    var nm = h('input', 'form-input'); nm.type = 'text'; nm.id = 'tmInvName'; nm.maxLength = 80; nm.autocomplete = 'off';
+    add(f2, l2, nm);
+    var fs = h('fieldset'); fs.appendChild(h('legend', 'ad-filter-label', 'Roles'));
+    var boxes = [];
+    state.roleList.forEach(function (ro) {
+      var lb = h('label', 'ad-check'); var cb = h('input'); cb.type = 'checkbox'; cb.value = ro.key;
+      boxes.push(cb); add(lb, cb, h('span', null, ro.label)); fs.appendChild(lb);
+    });
+    var picked = function () { return boxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); };
+    var emailVal = function () { return em.value.trim().toLowerCase(); };
+    card.appendChild(AC.form({
+      extra: [f1, f2, fs],
+      buttons: [{ label: 'Ask to invite', primary: true, fn: 'admin_invite_request', done: 'Request sent. A different Super Admin must approve it on Pending approvals.',
+        check: function () {
+          if (!EMAIL_RE.test(emailVal())) return 'Enter a valid email address.';
+          if (!state.roleList.length) return 'The role list could not be loaded.';
+          return picked().length ? null : 'Choose at least one role.';
+        },
+        sure: function () { return 'You are asking to invite ' + emailVal() + ' as: ' + picked().map(roleLabel).join(', ') + '. Press the button again to send the request.'; },
+        args: function (t) { return { p_email: emailVal(), p_roles: picked(), p_reason: t, p_name: nm.value.trim() || null }; } }],
+      onDone: function (msg) { AC.clear(inviteBox); ctx.toast(msg); loadInvites(); }
+    }));
+    var close = h('button', 'btn btn-ghost', 'Close'); close.type = 'button';
+    close.addEventListener('click', function () { AC.clear(inviteBox); });
+    card.appendChild(add(h('div', 'ad-actions ad-actions--tight'), close));
+    inviteBox.appendChild(card);
+    em.focus();
+  }
+  inviteOpen.addEventListener('click', drawInvite);
+
+  async function sendInvite(id) {
+    var res;
+    try { res = await window.supabase.functions.invoke('admin-invite', { body: { approval_id: id } }); } catch (e) { res = { error: e }; }
+    if (res && !res.error && res.data && res.data.ok) return res.data;
+    var msg = 'The server could not answer. Nothing was changed.';
+    try {
+      var ctxr = res && res.error && res.error.context;
+      if (ctxr && typeof ctxr.json === 'function') { var j = await ctxr.json(); if (j && j.message) msg = j.message; }
+      else if (res && res.data && res.data.message) msg = res.data.message;
+    } catch (e) { /* keep the general message */ }
+    return { ok: false, message: msg };
+  }
+
+  async function loadInvites() {
+    var res;
+    try { res = await window.supabase.rpc('admin_invites_mine'); } catch (e) { res = { error: e }; }
+    AC.clear(invList);
+    var rows = (res && !res.error && res.data && res.data.rows) || [];
+    if (!rows.length) { invList.hidden = true; return; }
+    invList.hidden = false;
+    invList.appendChild(h('h2', 'ad-card-title', 'Your invitations'));
+    invList.appendChild(h('p', 'ad-note', 'An invitation is sent only after a different Super Admin approves it on the Pending approvals page. Then you send it here, once, before it expires.'));
+    var ul = h('ul', 'ad-rows');
+    rows.forEach(function (r) {
+      var li = h('li'); var box = h('div', 'ad-panel');
+      var roles = (r.roles || []).map(roleLabel).join(', ');
+      box.appendChild(add(h('div', 'ad-row-top'), h('strong', null, (r.email || '') + (r.name ? ' (' + r.name + ')' : '') + ': ' + roles),
+        h('span', 'badge ' + (r.status === 'approved' ? 'badge-green' : 'badge-blue'), r.status === 'approved' ? 'Approved' : 'Waiting for approval')));
+      box.appendChild(h('p', 'ad-hint', 'Asked ' + when(r.requested_at)));
+      if (r.status === 'approved') {
+        var err = h('p', 'ad-error'); err.hidden = true; err.setAttribute('role', 'alert');
+        var b = h('button', 'btn btn-primary', 'Send the invitation'); b.type = 'button'; var armed = false;
+        b.addEventListener('click', async function () {
+          err.hidden = true;
+          if (!armed) { armed = true; b.textContent = 'Press again to send to ' + r.email; return; }
+          b.disabled = true;
+          var d = await sendInvite(r.id);
+          b.disabled = false; armed = false; b.textContent = 'Send the invitation';
+          if (!d.ok) { err.textContent = d.message || 'It could not be sent. Nothing was changed.'; err.hidden = false; return; }
+          ctx.toast(d.email_sent ? 'Invitation sent to ' + d.email + '.' : d.email + ' already had a login, so no email was sent. Tell them to sign in at the admin sign-in page.');
+          loadAll();
+        });
+        add(box, err, add(h('div', 'ad-actions ad-actions--tight'), b));
+      } else {
+        box.appendChild(h('p', 'ad-note', 'Waiting for another Super Admin to approve it.'));
+      }
+      ul.appendChild(add(li, box));
+    });
+    invList.appendChild(ul);
+  }
+
   async function loadAll() {
-    state.editing = null; AC.clear(editBox);
+    state.editing = null; AC.clear(editBox); AC.clear(inviteBox);
     if (canManage) {
       try { var rr = await window.supabase.rpc('admin_role_directory'); if (rr && !rr.error && rr.data) state.roleList = rr.data.roles || []; } catch (e) { /* roles list stays empty; the form says so */ }
     }
     await load();
-    if (canManage) chg.load();
+    if (canManage) { chg.load(); loadInvites(); }
   }
-  if (canManage) { root.insertBefore(chg.node, document.getElementById('tmBody')); root.insertBefore(editBox, document.getElementById('tmBody')); }
+  if (canManage) {
+    var tb0 = document.getElementById('tmBody');
+    root.insertBefore(inviteBar, tb0); root.insertBefore(inviteBox, tb0); root.insertBefore(invList, tb0);
+    root.insertBefore(chg.node, tb0); root.insertBefore(editBox, tb0);
+  }
   loadAll();
 });

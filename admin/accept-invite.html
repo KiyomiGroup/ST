@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Accept admin invitation · StreetTasker</title>
+</head>
+<body class="ad-body">
+  <!-- Admin invitation: the link in the invite email lands here with a short-lived sign-in. The person chooses a password. -->
+  <div class="ad-login">
+    <div class="ad-card ad-login-card">
+      <div class="ad-login-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <h1>Welcome to StreetTasker Admin</h1>
+      <p class="ad-note" id="aiIntro">Checking your invitation…</p>
+
+      <div class="ad-banner" id="aiMsg" role="alert" hidden></div>
+
+      <form id="aiForm" novalidate hidden>
+        <div class="ad-field">
+          <label for="aiPw1">Choose a password (at least 12 characters)</label>
+          <input class="form-input" type="password" id="aiPw1" name="new-password" autocomplete="new-password" required />
+        </div>
+        <div class="ad-field">
+          <label for="aiPw2">Type it again</label>
+          <input class="form-input" type="password" id="aiPw2" name="confirm-password" autocomplete="new-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" id="aiBtn">Save password and continue</button>
+      </form>
+
+      <p class="ad-login-foot"><a href="/admin/login.html">Go to admin sign in</a></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-accept-invite.js"></script>
+</body>
+</html>

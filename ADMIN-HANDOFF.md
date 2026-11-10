@@ -14,7 +14,9 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-09, after A5d)
+## CURRENT STATE (2026-11-09, after A5e)
+**A5e (invite a new admin) is written**: `sql/admin/a5e-invite.sql` (+ rollback), Edge Function `admin-invite` (`supabase/functions/` and a one-file copy in `supabase/deploy/`), `admin/accept-invite.html`, and an Invite panel on Admin team. Ask, a different Super Admin approves, the asker presses Send; the browser sends only the approval id. **Browser pages: 30 checks pass against a fake Supabase; function logic: 19 checks pass in Node with fake clients; the SQL and the function were NOT run on Supabase or Deno; nothing deployed.** See `docs/admin-control-centre/handoffs/A5e.md` (what to do now: item 18).
+
 **A5d (team and role changes through approvals) is written**: `sql/admin/a5d-team-write.sql` (+ rollback; five browser functions, three internal helpers), `admin/js/admin-change.js` (shared), `admin-team.js` and `admin-roles.js` extended. A Super Admin asks, a different Super Admin approves on Pending approvals, the asker applies once. Rules: no self-change, last Super Admin protected, `approvals.decide` never given to another role, suspend also removes the `support_staff` row. **Pages run against a fake Supabase (43 checks, `local-tests/a5d-browser-test.py`; A5c's 41 still pass). The SQL was NOT run anywhere (no Postgres) and nothing is on Supabase or deployed. A5c SQL is recorded applied per the owner's no-error convention (not tested).** Read `handoffs/A5d.md` (item 11 has a safe two-admin test). **NEXT: A5e** (`admin-invite` Edge Function), or A7, A8, A11. The A5c paragraph below is kept for history.
 
 ## PREVIOUS STATE (2026-11-09, after A5c)
