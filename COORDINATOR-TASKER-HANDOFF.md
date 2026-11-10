@@ -1,4 +1,4 @@
-# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T6)
+# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T7, FINAL)
 
 Self-contained: read this and you can continue without the chat.
 
@@ -16,7 +16,16 @@ Owner rules (from CLAUDE.md / AGENTS.md and the owner's standing requests): foll
 | **T4 (done)** | Messages tab: this Local Tasker's conversations (list), opening `coordinator-chat.html?booking=` (linked out; embedding the thread was not chosen) | no |
 | **T5 (done)** | Earnings tab: payouts and your commission for this Local Tasker | **yes: one new read-only function** |
 | **T6 (done)** | Profile & Services restyled to the reference layout using the existing loaders | no |
-| T7 | QA at 390 / 820 / 1360, design-system note, final handoff | no |
+| **T7 (done)** | QA at 390 / 820 / 1360, design-system note, final handoff | no |
+
+## T7: QA and close-out
+Changed files: `DESIGN-SYSTEM.md` (one short section), `coordinator-tasker.html` and `css/coordinator-tasker.css` (Earnings list set to one column so the four amounts per job are not cramped), this file. No SQL.
+- Real Chromium at 390, 820 and 1360px: every tab (Overview, Bookings, Messages, Earnings, Profile & Services) has no sideways scroll; Earnings was run with the REAL script and stubbed data (3 jobs: paid, on the way, on hold) and screenshots were looked at on phone and desktop; Profile & Services was looked at with sample content in T6. Overview, Bookings and Messages were only checked for overflow in this stage (their layout was written in T2-T4 and checked by script then).
+- Scripts: Earnings 20 checks; `node tools/check-design-system.js` reports none of the coordinator-tasker files (it still fails on older files that are not part of this work: six legal pages, css/legal.css, css/local-tasker-public.css, css/map-view.css, js/map-view.js, gift-cards.html, index.html).
+- Still NOT verified by anyone: the real Supabase with a real coordinator session (all reads were stubbed), the new SQL function `local_tasker_earnings` (never run), Safari / iOS, a screen reader, a coordinator with only one Local Tasker.
+- Open decisions you may still want (left out because no data or page exists): client rating in the header and Overview, private Coordinator Dossier note (needs a table), Create custom quote, Block schedule / vacation, monthly PDF statement, CSV export, embedding the chat thread inside the Messages tab, a real completion date in `local_booking_list`.
+- Owner action: upload `DESIGN-SYSTEM.md`, `coordinator-tasker.html`, `css/coordinator-tasker.css`, `COORDINATOR-TASKER-HANDOFF.md`. T5's SQL must already have been run.
+- The Local Tasker page work (T1-T7) is finished.
 
 ## T6: what was built (Profile & Services layout)
 Changed files: `coordinator-tasker.html` (layout classes only: `co-pf` on the panel, `co-pf-card` on each card, `co-pf-wide` on the privacy note, Services, Photos and Flyer), `css/coordinator-tasker.css` (one small block), this file. No JS change, no SQL, no new ids: `js/coordinator-tasker.js` and `js/coordinator-flyer.js` still fill every card as before.
@@ -131,4 +140,4 @@ The references show £ and example names. The site pays and quotes in ₦; every
 
 ## Owner action
 None. No SQL, nothing to delete on GitHub or Supabase. Upload the changed files to the same paths (replace `coordinator-tasker.html`, `DESIGN-SYSTEM.md`; add the three new files).
-Next stage: T7 (QA).
+All stages (T1-T7) are done.

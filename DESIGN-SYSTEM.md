@@ -498,6 +498,9 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 
 ---
 
+### Coordinator Local Tasker page: Bookings, Messages, Earnings, Profile & Services (2026-11-10, stages T3-T6)
+Bookings and Messages tabs reuse `.co-toolbar`, `.co-search`, `.co-filters`, `.co-bk-*` and `.co-msgs-*`. Earnings (`#coPanelEarnings`, prefix `co-er-`) reuses the Overview tiles (`.co-stat--tile`) and the booking cards (`.co-bk-item`), adding only `.co-er-amounts` (a 2-column grid of amounts, 4 columns from 768px) and `.co-er-list` (one column). Profile & Services (`.co-pf`) is layout only: one column on phones, two columns from 1044px, with `.co-pf-wide` cards spanning both; services are rows from 768px. A grid or flex `display` on an element that can be `hidden` is always set with `:not([hidden])`. No new tokens.
+
 ## Palette merge and auth tokens (2026-10-29)
 
 - `--gc-*` and `--co-*` values that were identical to a `--pt-*` or `--color-forest-*` value now alias it (for example `--co-green` and `--gc-green` are `var(--pt-green)`, `--co-hero-start` is `var(--color-forest-800)`). Computed values are unchanged (checked: all 367 custom properties resolve to the same value before and after). Change the `--pt-*` value and the gift cards and coordinator portal follow.
