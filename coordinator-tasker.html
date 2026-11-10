@@ -124,7 +124,7 @@
           <!-- Tabs not built yet are disabled and greyed out. A stage turns one on by removing `disabled` and adding its panel. -->
           <div class="co-tabs" id="coTabs" role="tablist" aria-label="Local Tasker sections" data-default="overview">
             <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1">Overview</button>
-            <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
+            <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1" disabled title="Coming soon">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Earnings</button>
             <button type="button" class="co-tab" role="tab" id="coTabProfile" data-tab="profile" data-label="Profile &amp; Services" aria-controls="coPanelProfile" aria-selected="true" tabindex="0">Profile &amp; Services</button>
@@ -230,6 +230,33 @@
                 </ul>
               </section>
             </div>
+          </div>
+        </section>
+
+        <!-- Stage T3: Bookings tab (js/coordinator-tasker-bookings.js). Same groups and cards as coordinator-bookings.html, for this Local Tasker only. -->
+        <section class="co-tpanel" id="coPanelBookings" role="tabpanel" aria-labelledby="coTabBookings" hidden>
+          <p class="co-section-sub" id="coTbSummary">Bookings for this Local Tasker.</p>
+          <div class="co-banner" id="coTbError" role="alert" hidden>
+            <span>We couldn&rsquo;t load these bookings just now.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coTbRetry">Try again</button>
+          </div>
+          <div class="co-toolbar" id="coTbToolbar" hidden>
+            <label class="co-search">
+              <span class="co-visually-hidden">Search these bookings</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="coTbSearch" placeholder="Search by job, customer or reference" autocomplete="off" />
+            </label>
+            <div class="co-filters" id="coTbTabs" role="group" aria-label="Show bookings that"></div>
+          </div>
+          <p class="co-loading" id="coTbLoading">Loading bookings&hellip;</p>
+          <ul class="co-bk-list" id="coTbList" hidden></ul>
+          <div class="co-empty" id="coTbEmpty" hidden>
+            <p class="co-empty-title">No bookings yet</p>
+            <p class="co-empty-text">When a customer books this Local Tasker, the booking appears here with the next thing you need to do.</p>
+          </div>
+          <div class="co-empty" id="coTbNoMatch" hidden>
+            <p class="co-empty-title" id="coTbNoMatchTitle">Nothing here</p>
+            <p class="co-empty-text" id="coTbNoMatchText">No bookings match.</p>
           </div>
         </section>
 
@@ -352,5 +379,6 @@
   <script src="js/coordinator-tasker-shell.js"></script>
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-tasker-overview.js"></script>
+  <script src="js/coordinator-tasker-bookings.js"></script>
 </body>
 </html>
