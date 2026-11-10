@@ -27,6 +27,7 @@
     ] },
     { group: 'People', items: [
       { key: 'customers', label: 'Customers', href: 'customers.html', icon: 'users', any: ['customers.view'], built: true },
+      { key: 'taskers', label: 'Regular Taskers', href: 'taskers.html', icon: 'users', any: ['taskers.view'], built: true },
       { key: 'local-taskers', label: 'Local Taskers', href: 'local-taskers.html', icon: 'users', any: ['local_taskers.view'], built: true },
       { key: 'coordinators', label: 'Coordinators',   href: 'coordinators.html', icon: 'users', any: ['coordinators.view', 'coordinators.applications.review'], built: true }
     ] },

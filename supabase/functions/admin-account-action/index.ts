@@ -1,13 +1,13 @@
 // Edge Function: admin-account-action  (Stage A7)
-// Suspends or restores a CUSTOMER login. Suspend = block the login in Supabase Auth (a "ban") AND record it; restore = lift the ban AND record it.
+// Suspends or restores a CUSTOMER or a regular TASKER login (body field "target": "customer" (default) or "tasker"; stage A7, extended in A8). Suspend = block the login in Supabase Auth (a "ban") AND record it; restore = lift the ban AND record it.
 // It never deletes or hides anything: bookings, disputes, reviews and refunds are not touched.
 //
 // Order (the browser sends only { user_id, action, reason }):
 //   1. Who is calling? Verify the access token with Auth.
-//   2. admin_customer_account_check  (as the caller): permission customers.suspend, a real customer, not an admin / coordinator / Tasker /
-//      yourself, state fits the action, reason 10 to 300 characters.
+//   2. admin_<target>_account_check  (as the caller): permission customers.suspend or taskers.suspend, a real customer or Tasker (a customer login that is also a Tasker
+//      is refused for the customer target), not an admin / coordinator / yourself, state fits the action, reason 10 to 300 characters.
 //   3. Auth ban (suspend) or unban (restore), with the service-role key (kept on the server).
-//   4. admin_customer_account_record (as the caller): writes admin_account_flags and the audit row.
+//   4. admin_<target>_account_record (as the caller): writes admin_account_flags and the audit row.
 //   If step 4 fails, step 3 is undone (best effort) and the person is told. Nothing is half-done silently.
 // Limits: a ban stops new sign-ins and token refreshes. A session that is already open can keep working until its access token expires
 // (Supabase default: up to 1 hour). Deploy with "Verify JWT" ON. Secrets SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY are supplied by the platform.
@@ -51,16 +51,18 @@ export async function handleAction(req: Request, deps: { env: (n: string) => str
   const userId = typeof body?.user_id === "string" ? body.user_id.trim() : "";
   const action = body?.action === "suspend" || body?.action === "restore" ? body.action : "";
   const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
-  if (!UUID_RE.test(userId)) return fail(req, 400, "bad_input", "Say which customer.");
+  const target = body?.target === undefined || body?.target === "customer" ? "customer" : body?.target === "tasker" ? "tasker" : "";
+  if (!target) return fail(req, 400, "bad_input", "The target must be customer or tasker.");
+  if (!UUID_RE.test(userId)) return fail(req, 400, "bad_input", "Say which " + target + ".");
   if (!action) return fail(req, 400, "bad_input", "The action must be suspend or restore.");
   if (reason.length < 10 || reason.length > 300) return fail(req, 400, "bad_input", "Write a reason of at least 10 characters (300 at most).");
 
   const asCaller = deps.createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
 
-  const chk = await asCaller.rpc("admin_customer_account_check", { p_id: userId, p_action: action, p_reason: reason });
+  const chk = await asCaller.rpc(`admin_${target}_account_check`, { p_id: userId, p_action: action, p_reason: reason });
   if (chk.error) {
-    console.error("admin_customer_account_check failed", chk.error.code, chk.error.message);
-    return fail(req, chk.error.code === "42501" ? 403 : 500, "server_error", "Could not check this customer. Nothing was done.");
+    console.error(`admin_${target}_account_check failed`, chk.error.code, chk.error.message);
+    return fail(req, chk.error.code === "42501" ? 403 : 500, "server_error", "Could not check this " + target + ". Nothing was done.");
   }
   if (!chk.data?.ok) return fail(req, 409, "not_allowed", String(chk.data?.error ?? "This cannot be done."));
 
@@ -70,15 +72,15 @@ export async function handleAction(req: Request, deps: { env: (n: string) => str
     return fail(req, 502, "auth_failed", "The login could not be " + (action === "suspend" ? "blocked" : "unblocked") + ". Nothing was changed.");
   }
 
-  const rec = await asCaller.rpc("admin_customer_account_record", { p_id: userId, p_action: action, p_reason: reason });
+  const rec = await asCaller.rpc(`admin_${target}_account_record`, { p_id: userId, p_action: action, p_reason: reason });
   if (rec.error || !rec.data?.ok) {
-    if (rec.error) console.error("admin_customer_account_record failed", rec.error.code, rec.error.message);
+    if (rec.error) console.error(`admin_${target}_account_record failed`, rec.error.code, rec.error.message);
     const undo = await service.auth.admin.updateUserById(userId, { ban_duration: action === "suspend" ? "none" : BAN });
     if (undo.error) console.error("UNDO FAILED: login state differs from the record for", userId, undo.error.message);
     const why = rec.error ? "The server could not record it." : String(rec.data?.error ?? "It could not be recorded.");
-    return fail(req, 409, "record_failed", why + (undo.error ? " The login block could not be undone: check this customer in Supabase Authentication, Users." : " Nothing was changed."));
+    return fail(req, 409, "record_failed", why + (undo.error ? " The login block could not be undone: check this " + target + " in Supabase Authentication, Users." : " Nothing was changed."));
   }
-  return json(req, 200, { ok: true, action, user_id: userId });
+  return json(req, 200, { ok: true, action, target, user_id: userId });
 }
 
 Deno.serve((req: Request) => handleAction(req, { env: (n: string) => Deno.env.get(n), createClient }));

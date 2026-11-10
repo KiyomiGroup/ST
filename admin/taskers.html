@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Regular Taskers · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Regular Taskers</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="adBk" hidden>
+          <div class="ad-pagehead">
+            <h1>Regular Taskers</h1>
+            <p>Taskers who apply to tasks and offer services. Search and open a profile to see contact details (masked), services, offers, bookings, reviews, verification and plan. Money is read only and needs the payouts permission. A suspension blocks the sign-in only: services, bookings, wallets, disputes, reviews and refunds are never changed or deleted, and the public profile stays visible until the services stage.</p>
+          </div>
+          <section class="ad-card">
+            <form class="ad-filters" id="tkFilters" novalidate>
+              <label class="ad-filter ad-filter--grow"><span class="ad-filter-label">Search (name, email, WhatsApp, category or Tasker id)</span>
+                <input class="form-input" id="tkSearch" type="search" maxlength="80" autocomplete="off" /></label>
+              <label class="ad-filter"><span class="ad-filter-label">Show</span>
+                <select class="form-input" id="tkFilter"></select></label>
+              <div class="ad-actions"><button type="submit" class="btn btn-primary">Apply</button><button type="button" class="btn" id="tkReset">Reset</button></div>
+            </form>
+          </section>
+          <div id="tkBody" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-change.js"></script>
+  <script src="/admin/js/admin-taskers.js"></script>
+</body>
+</html>
