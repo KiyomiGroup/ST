@@ -1260,7 +1260,10 @@ function openMessagesPanel() {
       }
 
       /* Safe name — user.email can be null for Google OAuth */
-      var name = (user.user_metadata && user.user_metadata.name)
+      var savedName = '';
+      try { savedName = localStorage.getItem('st_name') || ''; } catch (e) { /* storage blocked */ }   /* refreshed on every profile save */
+      var name = savedName
+        || (user.user_metadata && user.user_metadata.name)
         || (user.email ? user.email.split('@')[0] : null)
         || 'Tasker';
       var greetEl = document.getElementById('dashGreeting');

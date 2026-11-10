@@ -247,6 +247,9 @@
       if (name) localStorage.setItem('st_name', name);
       if (avatarUrl) localStorage.setItem('st_avatar', avatarUrl); else localStorage.removeItem('st_avatar');
     } catch (e) { /* storage unavailable */ }
+    /* The login's own copy of the name (user_metadata.name) feeds the "Good afternoon, <name>" greeting and the dashboard
+       welcome. Keep it in step with the saved name, or those keep showing the old one. Best effort. */
+    try { if (name && window.supabase && window.supabase.auth) window.supabase.auth.updateUser({ data: { name: name } }).catch(function () {}); } catch (e) { /* the saved name is still right */ }
     var initials = EP.initials(name, 'U');
     [['navAvatarImg', 'navAvatarInitial'], ['navMobileAvatarImg', 'navMobileAvatarInitial']].forEach(function (pair) {
       var img = $(pair[0]), init = $(pair[1]);

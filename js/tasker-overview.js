@@ -170,7 +170,8 @@
     state.wallet = results[3];
     var tasker = results[4];
     var me = results[5] || {};
-    state.name = me.first_name || (me.name ? String(me.name).split(' ')[0] : '') ||
+    /* the name the tasker edits on Edit Profile lives in taskers.name; users.name is not changed there */
+    state.name = (tasker && tasker.name ? String(tasker.name).trim().split(' ')[0] : '') || me.first_name || (me.name ? String(me.name).split(' ')[0] : '') ||
       ((user.user_metadata && user.user_metadata.name) ? String(user.user_metadata.name).split(' ')[0] : '');
     state.location = (tasker && tasker.location) || '';
     state.openTasks = results[6] || [];

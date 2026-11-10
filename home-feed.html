@@ -626,7 +626,10 @@
     function renderWelcome(user, role) {
       const hour = new Date().getHours();
       const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-      const name = user.user_metadata?.name?.split(' ')[0]
+      let savedName = '';
+      try { savedName = localStorage.getItem('st_name') || ''; } catch (e) { /* storage blocked */ }   /* refreshed on every profile save */
+      const name = savedName.split(' ')[0]
+        || user.user_metadata?.name?.split(' ')[0]
         || user.email?.split('@')[0]
         || '';
       const el = document.getElementById('welcomeGreeting');
