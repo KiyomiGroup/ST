@@ -108,6 +108,7 @@
     $('sdProducts').hidden = true;
     if (String(svc.category) === 'sales') {
       $('sdBook').textContent = isOwner ? 'Edit my services' : 'Order now';
+      if (!isOwner && uid) $('sdBook').href = 'tasker-profile.html?id=' + encodeURIComponent(uid) + '&order=' + encodeURIComponent(String(svc.id));
       loadProducts(svc.id);
     }
 

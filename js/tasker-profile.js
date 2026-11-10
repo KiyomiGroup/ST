@@ -709,6 +709,7 @@
     if (state.demo) return openDemoBooking();
     if (!state.id) return;
     if (await blockIfUnverified()) return;
+    if (mode === 'order') return openOrder(user, m);   /* Stage 4b: products */
 
     var today = new Date().toISOString().split('T')[0];
     var pick = state.bookSvc || null;   /* a service chosen from the Services tab: its own name and price */
@@ -760,9 +761,119 @@
     if (typeof window.initLocationInput === 'function') window.initLocationInput({ inputId: 'bkArea', dropdownId: 'bkAreaSuggestions', gps: true, mode: 'area' });
   }
 
+  /* ── Stage 4b: order products from a Sales service ─────────────────────────────────────────────────
+     The order is a normal booking request (so the seller accepts it, the chat opens, and the amount is agreed and paid
+     in the chat like any job): title "Order: 2 x Tote bag", the lines and total in the description, and the total as the
+     amount offered. No date, time, urgency or photos are asked. */
+  function orderTotal() {
+    var total = 0, count = 0;
+    document.querySelectorAll('#tpBookBody .tp-ord-row').forEach(function (row) {
+      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      total += q * Number(row.getAttribute('data-price')); count += q;
+    });
+    var el = $('ordTotal'); if (el) el.textContent = NAIRA + total.toLocaleString('en-NG');
+    return { total: total, count: count };
+  }
+
+  async function openOrder(user, m) {
+    var pick = state.bookSvc;
+    if (!pick || !pick.id) return;
+    var r = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', pick.id).order('position');
+    var prods = (r && r.data) || [];
+    if (!prods.length) { state.bookSvc = pick; return openBooking('book'); }   /* no products listed: the normal booking form */
+    var savedLoc = await savedLocation(user);
+    var body = $('tpBookBody');
+    resetBkPhotos();
+    var rows = prods.map(function (p) {
+      var img = text(p.image_url);
+      return '<div class="tp-ord-row" data-price="' + esc(String(Number(p.price))) + '" data-name="' + esc(text(p.name)) + '">' +
+        '<span class="tp-ord-img">' + (/^https?:\/\//i.test(img) ? '<img src="' + esc(img) + '" alt="" loading="lazy" />' : '') + '</span>' +
+        '<span class="tp-ord-info"><strong>' + esc(text(p.name)) + '</strong><span>' + esc(NAIRA + Number(p.price).toLocaleString('en-NG')) + '</span></span>' +
+        '<input type="number" inputmode="numeric" class="form-input tp-ord-qty" min="0" max="50" step="1" value="0" aria-label="Quantity of ' + esc(text(p.name)) + '" /></div>';
+    }).join('');
+    body.innerHTML =
+      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
+      '<h2 class="tp-dialog-title" id="tpBookTitle">Order from ' + esc(m.first) + '</h2>' +
+      '<p class="tp-dialog-lead">Choose how many of each. ' + esc(m.first) + ' accepts your order, then you agree the final amount and pay in the chat.</p>' +
+      '<div class="tp-ord-list">' + rows + '</div>' +
+      '<div class="tp-dialog-sum"><span>Total</span><strong id="ordTotal">' + NAIRA + '0</strong></div>' +
+      '<div class="form-group"><label class="form-label" for="bkArea">Delivery area *</label>' +
+        '<div class="tp-bk-loc"><input type="text" id="bkArea" class="form-input" maxlength="' + AREA_MAX + '" autocomplete="off" value="' + esc(savedLoc) + '" placeholder="e.g. Lekki Phase 1, Lagos" /><div id="bkAreaSuggestions" class="location-suggestions"></div></div></div>' +
+      '<div class="form-group"><label class="form-label" for="bkStreet">Street address or landmark <span class="tp-bk-tag">(optional)</span></label>' +
+        '<input type="text" id="bkStreet" class="form-input" maxlength="' + STREET_MAX + '" autocomplete="off" placeholder="e.g. 14 Allen Avenue, near the bus stop" />' +
+        '<p class="tp-bk-help">Only the seller can see this, and only after they accept.</p></div>' +
+      '<div class="form-group"><label class="form-label" for="ordNotes">Note to the seller <span class="tp-bk-tag">(optional)</span></label>' +
+        '<textarea id="ordNotes" class="form-textarea" rows="2" maxlength="150" placeholder="Size, colour, delivery or pick-up wishes…"></textarea></div>' +
+      '<p class="ap-error" id="bkErr" role="alert" hidden></p>' +
+      '<button type="button" class="btn btn-primary tp-dialog-submit" id="bkSubmitBtn" data-mode="order">Send order</button>' +
+      '<p class="tp-dialog-foot">All communication and payment stay on StreetTasker. No phone numbers shared.</p>';
+    body.querySelectorAll('.tp-ord-qty').forEach(function (q) { q.addEventListener('input', orderTotal); });
+    openDialog($('tpBookDialog'));
+    if (typeof window.initLocationInput === 'function') window.initLocationInput({ inputId: 'bkArea', dropdownId: 'bkAreaSuggestions', gps: true, mode: 'area' });
+  }
+
+  async function submitOrder(user) {
+    var err = $('bkErr'), btn = $('bkSubmitBtn'), body = $('tpBookBody');
+    function fail(msg, el) { err.textContent = msg; err.hidden = false; if (el) el.focus(); }
+    var lines = [];
+    body.querySelectorAll('.tp-ord-row').forEach(function (row) {
+      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      if (q > 0) lines.push({ name: row.getAttribute('data-name'), qty: q, price: Number(row.getAttribute('data-price')) });
+    });
+    if (!lines.length) return fail('Choose at least one product (set a quantity of 1 or more).');
+    var areaVal = text($('bkArea').value), streetVal = text($('bkStreet').value), noteVal = text($('ordNotes').value);
+    if (areaVal.length < AREA_MIN) return fail('Please tell us the delivery area (for example Lekki Phase 1).', $('bkArea'));
+    var total = lines.reduce(function (a, l) { return a + l.qty * l.price; }, 0);
+    var money2 = function (n) { return NAIRA + Number(n).toLocaleString('en-NG'); };
+    var jobTitle = ('Order: ' + lines.map(function (l) { return l.qty + ' x ' + l.name; }).join(', ')).slice(0, JOB_MAX);
+    var desc = lines.map(function (l) { return l.qty + ' x ' + l.name + ' @ ' + money2(l.price) + ' = ' + money2(l.qty * l.price); }).join('\n') + '\nTotal: ' + money2(total) + (noteVal ? '\nNote: ' + noteVal : '');
+    if (desc.length > DESC_MAX) desc = lines.map(function (l) { return l.qty + ' x ' + l.name; }).join(', ') + '\nTotal: ' + money2(total) + (noteVal ? '\nNote: ' + noteVal : '');
+    desc = desc.slice(0, DESC_MAX);
+    err.hidden = true; btn.disabled = true;
+    var btnLabel = btn.textContent; btn.textContent = 'Sending…';
+    try {
+      var today = new Date().toISOString().split('T')[0];
+      var row = { customer_id: user.id, tasker_id: state.id, status: 'pending', scheduled_time: today + ' — Delivery to be agreed' };
+      var ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
+        notes: (jobTitle + '\n' + desc).trim(),
+        job_title: jobTitle, job_description: desc, job_area: areaVal, job_urgency: 'flexible', job_photos: [], amount: total
+      })).select('id').single();
+      if (ins.error && /job_(title|description|area|urgency|photos)|amount|PGRST204|42703/.test((ins.error.code || '') + ' ' + (ins.error.message || ''))) {
+        ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
+          notes: jobTitle + '\n' + desc + '\nArea: ' + areaVal + '\nPrice offered: ' + money2(total)
+        })).select('id').single();
+      }
+      if (ins.error) throw ins.error;
+      var bookingId = ins.data.id, addressSaved = true;
+      if (streetVal) {
+        try { var pr = await window.supabase.from('booking_private').insert({ booking_id: bookingId, address: streetVal }); if (pr.error) throw pr.error; }
+        catch (e) { addressSaved = false; }
+      }
+      var who = (user.user_metadata && user.user_metadata.name) || (user.email && user.email.split('@')[0]) || 'A customer';
+      try {
+        await window.supabase.from('notifications').insert({
+          user_id: state.id, type: 'new_booking', title: 'New Order',
+          message: who + ' ordered ' + lines.map(function (l) { return l.qty + ' x ' + l.name; }).join(', ').slice(0, 100) + ' (' + money2(total) + ') for delivery in ' + areaVal + '.',
+          data: { booking_id: bookingId, from: user.id }, is_read: false
+        });
+      } catch (e) { /* the notification is a courtesy: the order itself is saved */ }
+      body.innerHTML =
+        '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
+        '<h2 class="tp-dialog-title">Order sent</h2>' +
+        '<p class="tp-dialog-lead">Your order of <strong>' + esc(money2(total)) + '</strong> has been sent. Once the seller accepts, you can agree the final amount and pay in the chat. We will notify you.</p>' +
+        (addressSaved ? '' : '<p class="ap-error">We could not save your street address. Please send it to the seller in chat once they reply.</p>') +
+        '<a href="customer-bookings.html" class="btn btn-primary tp-dialog-submit">View My Bookings</a>' +
+        '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Close</button></div>';
+    } catch (e) {
+      btn.disabled = false; btn.textContent = btnLabel;
+      fail((e && e.message) || 'The order could not be sent. Please try again.');
+    }
+  }
+
   async function submitBooking(mode) {
     var user = await currentUser(); if (!user) return;
     if (await blockIfUnverified()) return;   /* checked again at send: the pop-up may have been open a while */
+    if (mode === 'order') return submitOrder(user);   /* Stage 4b: products */
     var jobVal = text($('bkJob').value), areaVal = text($('bkArea').value), streetVal = text($('bkStreet').value), dateVal = text($('bkDate').value), timeVal = $('bkTime').value, descVal = text($('bkNotes').value);
     var urgencyVal = state.bkUrgency === 'urgent' ? 'Urgent' : 'Flexible';
     var err = $('bkErr'), btn = $('bkSubmitBtn'), body = $('tpBookBody');
@@ -1053,6 +1164,11 @@
       if (bookId && state.model && !state.isOwner) {
         var want = state.model.services.filter(function (x) { return String(x.id) === String(bookId); })[0];
         if (want) { state.bookSvc = want; openBooking('book'); }
+      }
+      var orderId = params.get('order');
+      if (orderId && state.model && !state.isOwner) {
+        var wantO = state.model.services.filter(function (x) { return String(x.id) === String(orderId); })[0];
+        if (wantO) { state.bookSvc = wantO; openBooking('order'); }
       }
       /* S4j: count this profile view (the server skips the tasker's own views and counts one per person per day). */
       if (window.STActivity && !state.isOwner && state.tasker && state.tasker.user_id) STActivity.profile(state.tasker.user_id);

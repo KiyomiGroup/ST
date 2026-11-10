@@ -632,3 +632,12 @@ html:has(.tp-dialog-book[open]) { overflow: hidden; }   /* the page behind stays
 .tp-svc-own[hidden] { display: none; }
 .tp-svc-dialog .tp-areas { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .tp-svc-dialog .tp-areas[hidden] { display: none; }
+
+/* ── Order products from a Sales service (Stage 4b) ── */
+.tp-ord-list { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+.tp-ord-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 76px; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-form); }
+.tp-ord-img { width: 52px; height: 52px; border-radius: var(--radius-form); overflow: hidden; background: var(--pt-field); }
+.tp-ord-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tp-ord-info { display: grid; gap: var(--space-1); min-width: 0; font-size: var(--text-sm); }
+.tp-ord-info strong { overflow-wrap: anywhere; }
+.tp-ord-qty { text-align: center; }
