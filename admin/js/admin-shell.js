@@ -1,5 +1,5 @@
 /* ============================================================
-   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4; Activity log on in A6; Disputes on in A13; Coordinators on in A9; Pending approvals on in A5a)
+   StreetTasker Admin: admin/js/admin-shell.js (stage A3a; Help menu item on in A3c; Dashboard on in A4; Activity log on in A6; Disputes on in A13; Coordinators on in A9; Pending approvals on in A5a; Admin team and Roles on in A5c)
    The one shared script of every admin page. It:
      1. checks the sign-in and asks the database who the admin is (rpc admin_my_access);
      2. shows "No access", "Two-step needed", or an error with Retry, instead of the page, when it should;
@@ -34,6 +34,8 @@
       { key: 'disputes',  label: 'Disputes',          href: 'disputes.html',  icon: 'flag',   any: ['disputes.manage'], built: true }
     ] },
     { group: 'System', items: [
+      { key: 'team',      label: 'Admin team',        href: 'team.html',      icon: 'users',  any: ['admin.team.view'], built: true },
+      { key: 'roles',     label: 'Roles and permissions', href: 'roles.html', icon: 'check',  any: ['admin.team.view', 'admin.roles.manage'], built: true },
       { key: 'audit',     label: 'Activity log',      href: 'audit.html',     icon: 'list',   any: ['audit_logs.view'], built: true }
     ] },
     { group: 'General', items: [
