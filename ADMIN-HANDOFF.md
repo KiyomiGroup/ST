@@ -11,10 +11,13 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 4. `docs/admin-control-centre/02-SCREEN-SPECS.md`: every screen, its data, actions, permissions and layout.
 5. `docs/admin-control-centre/03-OWNER-DECISIONS.md`: open decisions with defaults.
 6. The owner's master brief, saved as `docs/admin-control-centre/00-BRIEF.md` (business requirement; the repo wins where they disagree).
-7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5c.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
+7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-09, after A5c)
+## CURRENT STATE (2026-11-09, after A5d)
+**A5d (team and role changes through approvals) is written**: `sql/admin/a5d-team-write.sql` (+ rollback; five browser functions, three internal helpers), `admin/js/admin-change.js` (shared), `admin-team.js` and `admin-roles.js` extended. A Super Admin asks, a different Super Admin approves on Pending approvals, the asker applies once. Rules: no self-change, last Super Admin protected, `approvals.decide` never given to another role, suspend also removes the `support_staff` row. **Pages run against a fake Supabase (43 checks, `local-tests/a5d-browser-test.py`; A5c's 41 still pass). The SQL was NOT run anywhere (no Postgres) and nothing is on Supabase or deployed. A5c SQL is recorded applied per the owner's no-error convention (not tested).** Read `handoffs/A5d.md` (item 11 has a safe two-admin test). **NEXT: A5e** (`admin-invite` Edge Function), or A7, A8, A11. The A5c paragraph below is kept for history.
+
+## PREVIOUS STATE (2026-11-09, after A5c)
 **A5c (Admin team and Roles, read only) is written**: `sql/admin/a5c-team-read.sql` (+ rollback; two read functions `admin_team_list`, `admin_role_directory`), `admin/team.html`, `admin/roles.html`, `admin/js/admin-team.js`, `admin/js/admin-roles.js`, two menu items in `admin-shell.js`. **Pages run against a fake Supabase (41 checks, `local-tests/a5c-browser-test.py`). The SQL was NOT run anywhere (no Postgres in this build environment) and nothing is on Supabase or deployed.** **Owner's `a3c-admin-report.sql` output (2026-11-09): `admin@streettasker.com` and `kiyomigroups@gmail.com` are both active Super Admins with a verified authenticator app, so a second active Super Admin exists (D-A10 met; two real admins can now decide approvals).** Both logins are still also customer `users` rows (0 bookings, empty wallets); `admin@streettasker.com`'s coordinator row is `deactivated`. The owner wants `admin@streettasker.com` not to stay a customer (separate small stage, not done). Read `handoffs/A5c.md`. **NEXT: A5d** (team and role changes through approvals), or A7, A8, A11. The A5b paragraph below is kept for history.
 
 ## PREVIOUS STATE (2026-11-09, after A5b)
@@ -34,7 +37,7 @@ Key facts: admin tables and functions are in `DATABASE-CHANGES.md`. Rule R-SELF 
 **Known, not caused by admin work:** `node tools/check-design-system.js` fails on the repo as uploaded (older root pages without the page shell; no admin file is listed). Do not edit the baseline to hide it.
 **Security alert (not an admin stage):** `ARCHITECTURE.md` Part C item 6 (exposed service-role key and two secrets). Never copy a secret into a file or message. Rotation (S1): the owner will do it herself at the end of the admin stages; do not ask her about it.
 
-## NEXT STAGE: owner's choice (default **A5d**: team and role changes through approvals; A5e is the `admin-invite` Edge Function)
+## NEXT STAGE: owner's choice (default **A5e**: the `admin-invite` Edge Function)
 Read the owner's report on A12b first: did the three SQL files print DONE, what do the Bookings tabs and the Problems queue show, does a booking's Timeline show anything (`job_events.booking_id` is still a guess). Fix any failure first. Other candidates: A7 customers, A8 regular Taskers, A11 verification (`00-PLAN.md` stage table). **Build environment tip:** a scratch Postgres works if you create a non-root user (`useradd pgtest`), `initdb` as that user in `/var/tmp/pgdata` and start it with `-p 5544 -k /var/tmp`; `local-tests/run-a12b.sh <repo root>` loads every admin SQL file in order and runs the A12a/A12b tests; Playwright is preinstalled for `node local-tests/a12b-browser-test.js <repo root>`. Run SQL tests for every stage: they have found real bugs.
 
 ## Owner rules (carry into every stage)
@@ -79,4 +82,5 @@ Read the owner's report on A12b first: did the three SQL files print DONE, what 
 | A12a (Bookings, Local bookings, Tasks, read only; `a12a-*.sql`) | Written 2026-11-09; fake-Supabase browser tests (32); **SQL never run (no Postgres in the build environment)**; not deployed. A10 SQL reported applied (DONE) the same day. |
 | A12b (Local booking operations; `a12b-*.sql`) | Written 2026-11-09 from the owner's pasted real function sources; scratch-Postgres SQL tests (65), fake-Supabase browser tests (54); SQL not run on Supabase; not deployed. Also fixed an array-append bug in A10 and A12a SQL (re-run both). A12a recorded applied per the no-error convention. |
 | A5c (Admin team and Roles, read only; `a5c-*.sql`) | Written 2026-11-09; fake-Supabase browser tests (41); SQL not run anywhere; not deployed. |
-| A5d, A5e, A7, A8, A11, A14 to A28 | Not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |
+| A5d (team and role changes through approvals; `a5d-*.sql`) | Written 2026-11-09; fake-Supabase browser tests (43); SQL not run anywhere; not deployed. A5c recorded applied per the no-error convention. |
+| A5e, A7, A8, A11, A14 to A28 | Not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |

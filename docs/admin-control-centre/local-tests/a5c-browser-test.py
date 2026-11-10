@@ -54,7 +54,7 @@ def open_page(browser, page_name, scn, w=1280):
     return page, ctx, errs
 def calls(page): return page.evaluate('() => window.__calls.map(c => c.n)')
 def txt(page, s): return page.locator(s).first.inner_text()
-SUPER = ['admin.team.view', 'admin.team.manage', 'admin.roles.manage', 'approvals.view', 'audit_logs.view']
+SUPER = ['admin.team.view', 'approvals.view', 'audit_logs.view']   # view only: A5d adds buttons for admin.team.manage and admin.roles.manage (see a5d-browser-test.py)
 
 with sync_playwright() as p:
     b = p.chromium.launch()
