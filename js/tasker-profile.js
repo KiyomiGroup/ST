@@ -590,24 +590,33 @@
     return true;
   }
 
-  /* Price summary for the customer (Stage 3). Shows the tasker's rate and what to expect, never the platform fee.
-     Only a per-job rate gives a total; hourly or daily rates depend on the time the job takes, so no total is guessed. */
-  function priceSummary(mode, m) {
-    var rate = money(m.rateValue), unit = String(m.rateUnit || '').replace(/^\//, '').toLowerCase();
+  /* Price summary for the customer. The price shown is the price of the service being booked (the service picked
+     from the Services tab, otherwise the tasker's main rate). It is both the booking price and the estimated total.
+     The platform fee is never shown. */
+  function priceSummary(mode, price, unitRaw) {
+    var rate = money(price), unit = String(unitRaw || '').replace(/^\//, '').toLowerCase();
     var rows, note;
     if (mode === 'quote' || !rate) {
       rows = '<div class="tp-bk-price-row"><span>Price</span><strong>' + (mode === 'quote' ? 'Quote after review' : 'To be agreed') + '</strong></div>';
       note = 'The tasker will price the job once they have seen your request. You only pay after you agree.';
-    } else if (unit === 'job') {
-      rows = '<div class="tp-bk-price-row tp-bk-price-total"><span>Estimated total</span><strong>' + esc(rate) + '</strong></div>';
-      note = 'The final price is agreed in chat before you pay. You are not charged for sending a request.';
     } else {
-      rows = '<div class="tp-bk-price-row"><span>Rate</span><strong>' + esc(rate + ' /' + unit) + '</strong></div>' +
-             '<div class="tp-bk-price-row"><span>Total</span><strong>Depends on the time needed</strong></div>';
+      var shown = esc(rate + (unit && unit !== 'job' ? ' /' + unit : ''));
+      rows = '<div class="tp-bk-price-row"><span>Booking price</span><strong>' + shown + '</strong></div>' +
+             '<div class="tp-bk-price-row tp-bk-price-total"><span>Estimated total</span><strong>' + shown + '</strong></div>';
       note = 'The final price is agreed in chat before you pay. You are not charged for sending a request.';
     }
     return '<div class="tp-bk-price" aria-label="Price summary">' + rows +
       '<p class="tp-bk-price-note">' + icon('shield') + '<span>' + esc(note) + ' Your payment is held in escrow until you sign off the work.</span></p></div>';
+  }
+
+  /* "Price you want to pay": starts at the service price, the customer can change it. Not shown for quote requests
+     (the tasker names the price there). */
+  function offerField(mode, price) {
+    if (mode === 'quote') return '';
+    var rate = money(price);
+    return '<div class="form-group"><label class="form-label" for="bkOffer">Price you want to pay (' + NAIRA + ')' + (rate ? ' *' : ' <span class="tp-bk-tag">(optional)</span>') + '</label>' +
+      '<input type="text" id="bkOffer" class="form-input" inputmode="numeric" autocomplete="off" maxlength="10" value="' + (Number(price) > 0 ? esc(String(Math.round(Number(price)))) : '') + '" placeholder="e.g. 15000" />' +
+      '<p class="tp-bk-help">' + (rate ? 'The service price is ' + esc(rate) + '. Keep it, or enter the amount you want to pay. ' : 'Enter the amount you want to pay, or leave it empty. ') + 'The tasker can accept it or suggest another price in chat.</p></div>';
   }
 
   /* The customer's saved location (users.location) pre-fills the Area field. Read once, kept on state. */
@@ -700,7 +709,8 @@
       '<div class="form-group"><label class="form-label" for="bkDate">Preferred date *</label><input type="date" id="bkDate" class="form-input" min="' + today + '" value="' + (urgent ? today : '') + '" /></div>' +
       '<div class="form-group"><label class="form-label" for="bkTime">Preferred time</label><select id="bkTime" class="form-select">' +
         '<option value="">Choose a time\u2026</option><option>Morning (7am \u2013 12pm)</option><option>Afternoon (12pm \u2013 5pm)</option><option>Evening (5pm \u2013 9pm)</option><option' + (urgent ? ' selected' : '') + '>Flexible</option></select></div>' +
-      priceSummary(mode, m) +
+      offerField(mode, pick ? pick.price : m.rateValue) +
+      priceSummary(mode, pick ? pick.price : m.rateValue, rateUnitTxt) +
       '<p class="ap-error" id="bkErr" role="alert" hidden></p>' +
       '<button type="button" class="btn btn-primary tp-dialog-submit" id="bkSubmitBtn" data-mode="' + esc(mode) + '">' + (mode === 'quote' ? 'Send Quote Request' : (mode === 'callout' ? 'Send Callout Request' : 'Send Booking Request')) + '</button>' +
       '<p class="tp-dialog-foot">All communication stays on StreetTasker. No phone numbers shared.</p>';
@@ -719,6 +729,13 @@
     if (descVal.length < DESC_MIN) return fail('Please describe the job (at least ' + DESC_MIN + ' characters) so the tasker knows what to expect.', $('bkNotes'));
     if (areaVal.length < AREA_MIN) return fail('Please tell us the area where the job is (for example Lekki Phase 1).', $('bkArea'));
     if (!dateVal) return fail('Please select a preferred date.', $('bkDate'));
+    var offerEl = $('bkOffer'), offerVal = null;
+    if (offerEl) {
+      var digits = String(offerEl.value || '').replace(/[^0-9]/g, '');
+      if (digits) offerVal = parseInt(digits, 10);
+      if (offerEl.value.trim() && (!offerVal || offerVal < 1)) return fail('Please enter the price you want to pay as a number, for example 15000.', offerEl);
+      if (offerVal && offerVal > 10000000) return fail('That price looks too high. Please check the amount.', offerEl);
+    }
     err.hidden = true; btn.disabled = true;
     var btnLabel = btn.textContent;
     btn.textContent = state.bkPhotos.length ? 'Uploading photos\u2026' : 'Sending\u2026';
@@ -735,12 +752,12 @@
       var ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
         notes: (tag + jobVal + '\n' + descVal).trim(),
         job_title: jobVal, job_description: descVal, job_area: areaVal, job_urgency: urgencyVal.toLowerCase(), job_photos: photoUrls
-      })).select('id').single();
+      }, offerVal ? { amount: offerVal } : {})).select('id').single();
       var columnsMissing = false;
-      if (ins.error && /job_(title|description|area|urgency|photos)|PGRST204|42703/.test((ins.error.code || '') + ' ' + (ins.error.message || ''))) {
+      if (ins.error && /job_(title|description|area|urgency|photos)|amount|PGRST204|42703/.test((ins.error.code || '') + ' ' + (ins.error.message || ''))) {
         columnsMissing = true;
         ins = await window.supabase.from('bookings').insert(Object.assign({}, row, {
-          notes: buildNotes(tag, jobVal, descVal, areaVal, '', urgencyVal, photoUrls)   /* no street address in the open notes */
+          notes: buildNotes(tag, jobVal, descVal, areaVal, '', urgencyVal, photoUrls) + (offerVal ? '\nPrice offered: ' + NAIRA + offerVal.toLocaleString('en-NG') : '')   /* no street address in the open notes */
         })).select('id').single();
       }
       if (ins.error) throw ins.error;
@@ -762,7 +779,7 @@
         await window.supabase.from('notifications').insert({
           user_id: state.id, type: 'new_booking',
           title: mode === 'callout' ? 'Emergency Callout Request' : (mode === 'quote' ? 'New Quote Request' : 'New Booking Request'),
-          message: who + (mode === 'quote' ? ' asked for a quote for ' : ' wants to book ') + svcName + ' in ' + areaVal + ' on ' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + '. Job: ' + jobVal.slice(0, 80) + (urgencyVal === 'Urgent' ? ' (urgent)' : ''),
+          message: who + (mode === 'quote' ? ' asked for a quote for ' : ' wants to book ') + svcName + ' in ' + areaVal + ' on ' + dateVal + (timeVal ? ' (' + timeVal + ')' : '') + '. Job: ' + jobVal.slice(0, 80) + (urgencyVal === 'Urgent' ? ' (urgent)' : '') + (offerVal ? '. Price offered: ' + NAIRA + offerVal.toLocaleString('en-NG') : ''),
           data: { booking_id: bookingId, from: user.id }, is_read: false
         });
       } catch (e) { /* the notification is a courtesy: the request itself is saved */ }
@@ -770,7 +787,7 @@
       body.innerHTML =
         '<div class="tp-dialog-done"><span class="tp-dialog-done-icon">' + icon('check') + '</span>' +
         '<h2 class="tp-dialog-title">Request sent</h2>' +
-        '<p class="tp-dialog-lead">Your request for <strong>' + esc(jobVal) + '</strong> in <strong>' + esc(areaVal) + '</strong> has been sent for <strong>' + esc(dateVal + (timeVal ? ' (' + timeVal + ')' : '')) + '</strong>' + (urgencyVal === 'Urgent' ? ' and marked urgent' : '') + (photoUrls.length ? ', with ' + photoUrls.length + (photoUrls.length === 1 ? ' photo' : ' photos') : '') + '. The tasker will respond shortly.</p>' +
+        '<p class="tp-dialog-lead">Your request for <strong>' + esc(jobVal) + '</strong> in <strong>' + esc(areaVal) + '</strong> has been sent for <strong>' + esc(dateVal + (timeVal ? ' (' + timeVal + ')' : '')) + '</strong>' + (urgencyVal === 'Urgent' ? ' and marked urgent' : '') + (offerVal ? ', with your price of <strong>' + esc(NAIRA + offerVal.toLocaleString('en-NG')) + '</strong>' : '') + (photoUrls.length ? ', with ' + photoUrls.length + (photoUrls.length === 1 ? ' photo' : ' photos') : '') + '. The tasker will respond shortly.</p>' +
         (addressSaved ? '' : '<p class="ap-error">We could not save your street address. Please send it to the tasker in chat once they reply.</p>') +
         '<p class="tp-dialog-lead">You can chat with the provider once they accept your request. We will notify you.</p>' +
         '<a href="customer-bookings.html" class="btn btn-primary tp-dialog-submit">View My Bookings</a>' +
