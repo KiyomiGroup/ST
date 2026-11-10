@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Join StreetTasker — Sign Up</title>
-  <meta name="description" content="Join StreetTasker to hire trusted local taskers or start earning as a tasker." />
+  <meta name="description" content="Join StreetTasker to find trusted people near you for any job, or start earning money doing the work you are good at." />
   <meta name="robots" content="noindex, follow" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -35,7 +35,7 @@
       </div>
       <div class="av2-chooser-heading">
         <h1>Join StreetTasker</h1>
-        <p>First, tell us what you want to do</p>
+        <p>What do you need today?</p>
       </div>
 
       <div class="av2-role-grid">
@@ -44,10 +44,10 @@
           <div class="av2-role-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3"/><path d="M4 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="14.5" r="3.5"/><line x1="20" y1="17" x2="22" y2="19"/></svg>
           </div>
-          <h3>Hire Taskers</h3>
-          <p>Post tasks and book skilled workers near you to get things done efficiently.</p>
+          <h3>I need something done</h3>
+          <p>Find a plumber, cleaner, driver, tailor or helper near you. Post a job or book someone directly.</p>
           <button type="button" class="btn btn-primary btn-lg" onclick="showStep('customer')">
-            I need help
+            Find help
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
@@ -58,31 +58,21 @@
           <div class="av2-role-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           </div>
-          <h3>Work as Tasker</h3>
-          <p>Offer your skills, set your own schedule, and earn money locally on your terms.</p>
+          <h3>I want to earn money</h3>
+          <p>Do the work you are good at and get paid. You set your price and choose your jobs.</p>
           <a href="onboarding-tasker.html" class="btn btn-outline btn-lg" onclick="event.preventDefault(); showStep('tasker');">
-            I want to work
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
-        </div>
-        </div>
-
-        <!-- Coordinator card (owner request 2026-11-07). A coordinator account is separate from customer and tasker accounts and is
-             not created here: new people send a request, pass the test, then create the coordinator account on coordinator-signup.html. -->
-        <div class="av2-role-card-wrap av2-role-card-wrap--work">
-        <div class="av2-role-card av2-role-card--work av2-role-card--coord">
-          <div class="av2-role-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          </div>
-          <h3>Be a Coordinator</h3>
-          <p>Meet, register and support Local Taskers in your area. Send a request to get started.</p>
-          <a href="coordinator-apply.html" class="btn btn-outline btn-lg">
-            Request to be a coordinator
+            Start earning
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
         </div>
         </div>
       </div>
+
+      <p class="av2-chooser-note">On StreetTasker, people who do the jobs are called Taskers. Not sure which to pick? You can add the other later with the same email.</p>
+
+      <!-- Coordinators: a small link, not a card. A coordinator account is separate from customer and tasker accounts and is
+           not created here: new people send a request, pass the test, then create the coordinator account on coordinator-signup.html. -->
+      <p class="av2-coord-link">Want to help local artisans get online? <a href="coordinator-apply.html">Become a coordinator</a></p>
 
       <div class="av2-login-pill">Already have an account? <a href="login.html">Log in</a></div>
     </div>
@@ -101,13 +91,13 @@
 
           <!-- mobile copy: "Join the Community" -->
           <div class="av2-form-heading av2-form-heading--mobile">
-            <h1>Join the Community</h1>
-            <p>Sign up to find the perfect tasker for your needs.</p>
+            <h1>Find help near you</h1>
+            <p>Create an account to post a job or book someone you can trust.</p>
           </div>
           <!-- desktop copy: "Join StreetTasker" -->
           <div class="av2-form-heading av2-form-heading--desktop">
-            <h1>Join StreetTasker</h1>
-            <p>Create an account to start hiring top taskers in your neighborhood.</p>
+            <h1>Find help near you</h1>
+            <p>Create an account to post a job or book someone you can trust, close to home.</p>
           </div>
 
           <!-- desktop: OAuth appears first, full-width, labelled -->
@@ -229,13 +219,13 @@
 
           <!-- mobile copy: "Join as a Tasker" -->
           <div class="av2-form-heading av2-form-heading--mobile">
-            <h1>Join as a Tasker</h1>
-            <p>Turn your skills into earnings. Help your community today.</p>
+            <h1>Start earning on StreetTasker</h1>
+            <p>Turn your skills into money. People near you are looking for help.</p>
           </div>
           <!-- desktop copy: "Join StreetTasker" -->
           <div class="av2-form-heading av2-form-heading--desktop">
-            <h1>Join StreetTasker</h1>
-            <p>Turn your skills into earnings. Help your neighbors and grow your income.</p>
+            <h1>Start earning on StreetTasker</h1>
+            <p>Turn your skills into money. People near you are looking for help.</p>
           </div>
 
           <!-- desktop: OAuth appears first, full-width, labelled -->
@@ -301,7 +291,7 @@
             <div class="form-error" id="taskerSignupError"></div>
 
             <button type="submit" class="btn btn-lg av2-submit-btn" id="taskerSignupBtn">
-              <span class="av2-submit-label--mobile">Become a Tasker</span>
+              <span class="av2-submit-label--mobile">Create my account</span>
               <span class="av2-submit-label--desktop">Create Account</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
