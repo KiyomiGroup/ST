@@ -122,7 +122,7 @@
               </section>
 
               <section class="ap-card tp-card" id="secServices" aria-labelledby="hServices" hidden>
-                <h2 class="tp-title" id="hServices"><svg class="ap-i" aria-hidden="true"><use href="#i-briefcase"/></svg>Core Services &amp; Fixed Estimates</h2>
+                <h2 class="tp-title" id="hServices"><svg class="ap-i" aria-hidden="true"><use href="#i-briefcase"/></svg>Services</h2>
                 <div class="tp-services" id="tpServices"></div>
               </section>
 
@@ -264,6 +264,21 @@
       <p class="tp-lightbox-title" id="tpLightboxTitle"></p>
       <p class="tp-lightbox-text" id="tpLightboxText"></p>
       <p class="tp-lightbox-meta" id="tpLightboxMeta"></p>
+    </div>
+  </dialog>
+
+  <!-- Service details (opens from the Services tab) -->
+  <dialog class="ap-dialog tp-dialog tp-svc-dialog" id="tpSvcDialog" aria-labelledby="tpSvcTitle">
+    <button type="button" class="tp-dialog-x" data-close aria-label="Close"><svg class="ap-i" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <img id="tpSvcImg" class="tp-svc-img" alt="" hidden />
+    <div class="tp-dialog-body">
+      <span class="tp-eyebrow-sm" id="tpSvcCat"></span>
+      <h2 class="tp-dialog-title" id="tpSvcTitle"></h2>
+      <div class="tp-dialog-sum"><span>Rate</span><strong id="tpSvcPrice"></strong></div>
+      <div class="tp-prose" id="tpSvcDesc"></div>
+      <p class="tp-svc-loc" id="tpSvcLoc"></p>
+      <div class="tp-areas" id="tpSvcTags" hidden></div>
+      <button type="button" class="btn btn-primary tp-dialog-submit" id="tpSvcBook"><span id="tpSvcBookLabel">Book this service</span></button>
     </div>
   </dialog>
 

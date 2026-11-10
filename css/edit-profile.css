@@ -176,9 +176,12 @@
   .ep-verify { flex-wrap: wrap; padding: var(--space-4); border-radius: var(--radius-xl); }
   .ep-verify .btn { width: 100%; }
 
-  /* Save bar sticks to the screen, sitting just above the floating bottom tab bar (8px + the corner clearance under the 77px bar, + 12px breathing room). */
+  /* Save bar is FIXED to the screen, always visible just above the floating bottom tab bar (8px + the corner clearance under the 77px bar, + 12px breathing room).
+     It is the same width as the tab bar. The form gets bottom room so the last field is never hidden behind it. */
+  .ep-main { padding-bottom: calc(52px + var(--space-6)); }
   .ep-actions {
-    position: sticky; bottom: calc(97px + var(--corner-clear)); z-index: 5;
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(97px + var(--corner-clear)); z-index: 40;
+    width: 358px; max-width: calc(100% - 20px);
     justify-content: stretch; padding: 0;
   }
   .ep-actions .btn-primary { flex: 1 1 auto; width: 100%; height: 52px; box-shadow: var(--shadow-lg); }

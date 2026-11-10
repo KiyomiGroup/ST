@@ -155,14 +155,34 @@
   }
 
   function renderServices(m) {
-    $('tpServices').innerHTML = m.services.map(function (x) {
-      var price = money(x.price);
-      return '<div class="tp-service"><span class="tp-service-icon">' + icon('briefcase') + '</span>' +
-        '<div class="tp-service-body"><strong>' + esc(x.title) + '</strong>' + (text(x.description) ? '<p>' + esc(x.description) + '</p>' : '') + '</div>' +
-        (price ? '<div class="tp-service-price"><span><small>from</small> ' + esc(price) + '</span>' + (text(x.price_note) ? '<em>' + esc(x.price_note) + '</em>' : '') + '</div>' : '') +
-        '</div>';
+    $('tpServices').innerHTML = m.services.map(function (x, i) {
+      var price = money(x.price), short = text(x.description);
+      if (short.length > 160) short = short.slice(0, 157).replace(/\s+\S*$/, '') + '\u2026';
+      return '<button type="button" class="tp-service" data-svc="' + i + '" aria-label="View details: ' + esc(x.title) + '">' +
+        '<span class="tp-service-icon">' + icon('briefcase') + '</span>' +
+        '<span class="tp-service-body"><strong>' + esc(x.title) + '</strong>' + (short ? '<p>' + esc(short) + '</p>' : '') + '</span>' +
+        (price ? '<span class="tp-service-price"><span><small>from</small> ' + esc(price) + '</span>' + (text(x.price_note) ? '<em>' + esc(x.price_note) + '</em>' : '') + '</span>' : '') +
+        '</button>';
     }).join('');
     $('secServices').hidden = !m.services.length;
+  }
+
+  /* Service details: opens THIS service (its own description, price, place and photo), not the tasker's profile. */
+  function openService(i) {
+    var m = state.model, x = m && m.services[i]; if (!x) return;
+    state.svcOpen = i;
+    var price = money(x.price);
+    var img = $('tpSvcImg');
+    if (x.photo && /^https?:\/\//i.test(x.photo)) { img.src = x.photo; img.alt = x.title; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; }
+    setText('tpSvcTitle', x.title);
+    setText('tpSvcCat', x.category ? x.category.replace(/[_-]+/g, ' ') : '');
+    setText('tpSvcPrice', price ? price + (x.price_note ? ' ' + x.price_note : '') : 'Price to be agreed');
+    $('tpSvcDesc').innerHTML = paras(x.description).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') || '<p>No extra details have been added for this service yet.</p>';
+    setText('tpSvcLoc', x.location ? 'Available around ' + x.location : '');
+    $('tpSvcTags').innerHTML = x.specialties.map(function (t) { return '<span class="tp-area">' + esc(t) + '</span>'; }).join('');
+    $('tpSvcTags').hidden = !x.specialties.length;
+    setText('tpSvcBookLabel', state.isOwner ? 'Edit My Services' : 'Book this service');
+    openDialog($('tpSvcDialog'));
   }
 
   function renderPortfolio(items) {
@@ -267,29 +287,39 @@
      Pressing Reviews swaps the About content for the reviews right where it was, so a long list of reviews never
      means scrolling past everything else. Sections still hide themselves when they have no data (the `hidden` attribute);
      the view switch only adds .is-tab-off. */
-  var TAB_ABOUT = ['secAbout', 'secLocal', 'secServices', 'secPortfolio', 'secCerts'];
+  var TAB_ABOUT = ['secAbout', 'secLocal', 'secPortfolio', 'secCerts'];
+  var TAB_SECTIONS = { about: TAB_ABOUT, services: ['secServices'], reviews: ['secReviews'] };
+  var TAB_TARGET = { about: 'secAbout', services: 'secServices', reviews: 'secReviews' };
   function paintTab() {
-    var showReviews = state.tab === 'reviews' && !$('secReviews').hidden;
-    TAB_ABOUT.forEach(function (id) { if ($(id)) $(id).classList.toggle('is-tab-off', showReviews); });
-    $('secReviews').classList.toggle('is-tab-off', !showReviews);
+    var cur = state.tab;
+    if (!TAB_SECTIONS[cur] || !TAB_SECTIONS[cur].some(function (id) { return $(id) && !$(id).hidden; })) cur = 'about';
+    Object.keys(TAB_SECTIONS).forEach(function (k) {
+      TAB_SECTIONS[k].forEach(function (id) { if ($(id)) $(id).classList.toggle('is-tab-off', k !== cur); });
+    });
     Array.prototype.forEach.call($('tpTabs').children, function (a) {
-      if (a.getAttribute('data-tab') === (showReviews ? 'reviews' : 'about')) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      if (a.getAttribute('data-tab') === cur) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
     });
   }
   function setTab(name) { state.tab = name; paintTab(); }
   function buildTabs() {
-    var hasAbout = TAB_ABOUT.some(function (id) { return $(id) && !$(id).hidden; });
-    var hasReviews = !$('secReviews').hidden;
-    if (!hasReviews) state.tab = 'about';
+    var has = function (k) { return TAB_SECTIONS[k].some(function (id) { return $(id) && !$(id).hidden; }); };
     var items = [];
-    if (hasAbout) items.push(['about', 'About']);
-    if (hasReviews) items.push(['reviews', 'Reviews' + (state.model && state.model.reviewCount ? ' (' + state.model.reviewCount + ')' : '')]);
+    if (has('about')) items.push(['about', 'About']);
+    if (has('services')) items.push(['services', 'Services' + (state.model && state.model.services.length ? ' (' + state.model.services.length + ')' : '')]);
+    if (has('reviews')) items.push(['reviews', 'Reviews' + (state.model && state.model.reviewCount ? ' (' + state.model.reviewCount + ')' : '')]);
+    if (!items.some(function (d) { return d[0] === state.tab; })) state.tab = '';
     $('tpTabsWrap').hidden = items.length < 2;
     $('tpTabs').innerHTML = items.map(function (d) {
-      return '<a href="#' + (d[0] === 'about' ? 'secAbout' : 'secReviews') + '" class="tp-tab" data-tab="' + d[0] + '">' + esc(d[1]) + '</a>';
+      return '<a href="#' + TAB_TARGET[d[0]] + '" class="tp-tab" data-tab="' + d[0] + '">' + esc(d[1]) + '</a>';
     }).join('');
-    if (items.length < 2) { TAB_ABOUT.forEach(function (id) { if ($(id)) $(id).classList.remove('is-tab-off'); }); $('secReviews').classList.remove('is-tab-off'); return; }
-    if (!state.tab) state.tab = (window.location.hash === '#secReviews' && hasReviews) ? 'reviews' : 'about';
+    if (items.length < 2) {
+      Object.keys(TAB_SECTIONS).forEach(function (k) { TAB_SECTIONS[k].forEach(function (id) { if ($(id)) $(id).classList.remove('is-tab-off'); }); });
+      return;
+    }
+    if (!state.tab) {
+      var h = window.location.hash;
+      state.tab = (h === '#secReviews' && has('reviews')) ? 'reviews' : (h === '#secServices' && has('services')) ? 'services' : items[0][0];
+    }
     paintTab();
   }
 
@@ -383,17 +413,29 @@
       portfolio = localPhotos.map(function (p) { return { image_url: p.url, title: p.caption, description: '', location: '' }; });
     }
 
-    /* "Services & Rates" shows the tasker's live service listings (My Services), not a separate list typed on Edit Profile.
-       So what a person promotes is what customers and the flyer see. No listings = the section stays hidden. */
+    /* "Published Services" shows the tasker's live service listings (My Services), for normal taskers AND published
+       Local Taskers (the coordinator's published services are the same services rows). Only available = true rows are
+       public, so drafts and hidden listings never show. No listings = the section stays hidden. */
     var listings = [];
-    if (!isLocal) {
-      try {
-        var lr = await sb.from('services').select('service_name, description, price, rate_unit, available').eq('user_id', String(tasker.user_id || id)).eq('available', true).order('created_at', { ascending: false }).limit(8);
-        listings = (lr.data || []).map(function (x) {
-          return { title: x.service_name, description: text(x.description).slice(0, 160), price: x.price, price_note: text(x.rate_unit).replace(/^\//, '') ? 'per ' + text(x.rate_unit).replace(/^\//, '') : '' };
-        });
-      } catch (_s) { listings = []; }
-    }
+    try {
+      var owner = String(tasker.user_id || id);
+      var SVC_FULL = 'id, service_name, description, price, rate_unit, available, is_main, created_at, category, location, photo, specialties';
+      var SVC_BASE = 'id, service_name, description, price, rate_unit, available, created_at, category, location, photo';
+      var lr = await sb.from('services').select(SVC_FULL).eq('user_id', owner).eq('available', true).order('created_at', { ascending: false }).limit(12);
+      if (lr.error) {   /* is_main or specialties not in this database yet: ask again with the older columns */
+        lr = await sb.from('services').select(SVC_BASE).eq('user_id', owner).eq('available', true).order('created_at', { ascending: false }).limit(12);
+      }
+      var rows = lr.data || [];
+      rows.sort(function (x, y) { return (y.is_main ? 1 : 0) - (x.is_main ? 1 : 0); });   /* the main service first (stable for the rest) */
+      listings = rows.map(function (x) {
+        var unit = text(x.rate_unit).replace(/^\//, '');
+        return {
+          id: x.id, title: x.service_name, description: text(x.description), price: x.price, rate_unit: x.rate_unit || '',
+          price_note: unit ? 'per ' + unit : '', category: text(x.category), location: text(x.location), photo: text(x.photo),
+          specialties: list(x.specialties).map(text).filter(Boolean)
+        };
+      });
+    } catch (_s) { listings = []; }
     var revData = await fetchReviews(tasker.user_id || id);
     var cov = (d.coverage && typeof d.coverage === 'object') ? d.coverage : {};
     var model = buildModel({
@@ -618,8 +660,10 @@
     if (!state.id) return;
 
     var today = new Date().toISOString().split('T')[0];
-    var svc = m.service || 'this service';
-    var rate = money(m.rateValue);
+    var pick = state.bookSvc || null;   /* a service chosen from the Services tab: its own name and price */
+    var svc = (pick && pick.title) || m.service || 'this service';
+    var rate = pick ? money(pick.price) : money(m.rateValue);
+    var rateUnitTxt = pick ? (text(pick.rate_unit) || '') : m.rateUnit;
     var title = mode === 'quote' ? 'Request a quote' : (mode === 'callout' ? 'Emergency callout' : 'Book ' + svc);
     var lead = mode === 'quote' ? 'Describe the job and ' + m.first + ' will reply with a quote.' : (mode === 'callout' ? 'Tell ' + m.first + ' what is wrong. Choose today if it is urgent.' : 'Fill in the details below and send your request.');
     var urgent = mode === 'callout';
@@ -632,7 +676,7 @@
       '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
       '<h2 class="tp-dialog-title" id="tpBookTitle">' + esc(title) + '</h2>' +
       '<p class="tp-dialog-lead">' + esc(lead) + '</p>' +
-      '<div class="tp-dialog-sum"><span>' + esc(svc) + '</span><strong>' + esc(rate ? rate + ' ' + m.rateUnit : 'Price to be agreed') + '</strong></div>' +
+      '<div class="tp-dialog-sum"><span>' + esc(svc) + '</span><strong>' + esc(rate ? rate + ' ' + rateUnitTxt : 'Price to be agreed') + '</strong></div>' +
       '<div class="form-group"><label class="form-label" for="bkJob">' + jobLabel + '</label>' +
         '<input type="text" id="bkJob" class="form-input" maxlength="' + JOB_MAX + '" autocomplete="off" placeholder="e.g. Fix a leaking kitchen tap" /></div>' +
       '<div class="form-group"><div class="tp-bk-row"><label class="form-label" for="bkNotes">Describe the job *</label><span class="tp-bk-count" id="bkCount" aria-live="polite">0 / ' + DESC_MAX + '</span></div>' +
@@ -841,6 +885,7 @@
   /* ── wiring ──────────────────────────────────────────────── */
   function bookAction() {
     if (state.isOwner) { window.location.href = 'edit-profile-tasker.html'; return; }
+    state.bookSvc = null;
     openBooking('book');
   }
 
@@ -859,8 +904,21 @@
     $('tpPortfolio').addEventListener('error', function (e) { if (e.target && e.target.tagName === 'IMG') e.target.hidden = true; }, true);
     $('tpLightboxClose').addEventListener('click', function () { closeDialog($('tpLightbox')); });
 
+    /* Services: a click opens that service's details */
+    $('tpServices').addEventListener('click', function (e) { var b = e.target.closest('.tp-service'); if (b) openService(Number(b.getAttribute('data-svc'))); });
+    $('tpSvcDialog').addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) return closeDialog($('tpSvcDialog'));
+      if (e.target.closest('#tpSvcBook')) {
+        var x = state.model && state.model.services[state.svcOpen];
+        closeDialog($('tpSvcDialog'));
+        if (state.isOwner) { window.location.href = 'my-services.html'; return; }
+        state.bookSvc = x || null;
+        openBooking('book');
+      }
+    });
+
     /* Dialogs: backdrop click, close buttons, submit, retry */
-    ['tpBookDialog', 'tpLightbox'].forEach(function (id) {
+    ['tpBookDialog', 'tpLightbox', 'tpSvcDialog'].forEach(function (id) {
       var dlg = $(id);
       dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDialog(dlg); });
     });
