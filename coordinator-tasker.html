@@ -126,7 +126,7 @@
             <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1">Overview</button>
             <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
-            <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Earnings</button>
+            <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1">Earnings</button>
             <button type="button" class="co-tab" role="tab" id="coTabProfile" data-tab="profile" data-label="Profile &amp; Services" aria-controls="coPanelProfile" aria-selected="true" tabindex="0">Profile &amp; Services</button>
           </div>
         </section>
@@ -287,6 +287,63 @@
           </div>
         </section>
 
+        <!-- Stage T5: Earnings tab (js/coordinator-tasker-earnings.js). Reads rpc local_tasker_earnings. Read-only. -->
+        <section class="co-tpanel" id="coPanelEarnings" role="tabpanel" aria-labelledby="coTabEarnings" hidden>
+          <p class="co-section-sub" id="coTeSummary">Payouts and your commission on this Local Tasker&rsquo;s released jobs.</p>
+          <div class="co-banner" id="coTeError" role="alert" hidden>
+            <span>We couldn&rsquo;t load these earnings just now.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coTeRetry">Try again</button>
+          </div>
+          <p class="co-banner" id="coTeAttn" role="status" hidden></p>
+          <section class="co-ov-stats" aria-label="Earnings summary">
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Paid to Local Tasker</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-er="paid">&mdash;</p>
+              <p class="co-stat-note" data-er="paid-note">Sent to the Local Tasker</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Payout on the way</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-er="way">&mdash;</p>
+              <p class="co-stat-note" data-er="way-note">Waiting out the 24 hours or being sent</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Your commission</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-er="comm">&mdash;</p>
+              <p class="co-stat-note" data-er="comm-note">Added to your wallet</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Commission on the way</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-er="commway">&mdash;</p>
+              <p class="co-stat-note" data-er="commway-note">Added 24 hours after the release code</p>
+            </article>
+          </section>
+          <div class="co-toolbar" id="coTeToolbar" hidden>
+            <div class="co-filters" id="coTeTabs" role="group" aria-label="Show payouts that"></div>
+          </div>
+          <p class="co-loading" id="coTeLoading">Loading earnings&hellip;</p>
+          <ul class="co-bk-list" id="coTeList" hidden></ul>
+          <div class="co-empty" id="coTeEmpty" hidden>
+            <p class="co-empty-title">No payouts yet</p>
+            <p class="co-empty-text">When a job for this Local Tasker is released with the customer&rsquo;s code, the payout and your commission appear here.</p>
+          </div>
+          <div class="co-empty" id="coTeNoMatch" hidden>
+            <p class="co-empty-title">Nothing here</p>
+            <p class="co-empty-text">No payouts in this group right now.</p>
+          </div>
+        </section>
+
         <!-- Profile &amp; Services: the existing cards, unchanged in this stage (restyled to the reference in a later stage). -->
         <section class="co-tpanel" id="coPanelProfile" role="tabpanel" aria-labelledby="coTabProfile">
         <div class="co-proxy" role="note"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><p>Private to you and StreetTasker administrators. Customers never see the phone number or the full name here.</p></div>
@@ -408,5 +465,6 @@
   <script src="js/coordinator-tasker-overview.js"></script>
   <script src="js/coordinator-tasker-bookings.js"></script>
   <script src="js/coordinator-tasker-messages.js"></script>
+  <script src="js/coordinator-tasker-earnings.js"></script>
 </body>
 </html>

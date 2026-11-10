@@ -1,4 +1,4 @@
-# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T4)
+# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T5)
 
 Self-contained: read this and you can continue without the chat.
 
@@ -14,9 +14,19 @@ Owner rules (from CLAUDE.md / AGENTS.md and the owner's standing requests): foll
 | **T2 (done)** | Overview tab: stat tiles, open bookings, "action needed", 6-month chart, quick actions | no |
 | **T3 (done)** | Bookings tab: this Local Tasker's bookings, same groups as the Bookings page, each opens `coordinator-booking.html?id=` | no |
 | **T4 (done)** | Messages tab: this Local Tasker's conversations (list), opening `coordinator-chat.html?booking=` (linked out; embedding the thread was not chosen) | no |
-| T5 | Earnings tab: payouts and coordinator commission for this Local Tasker | maybe |
+| **T5 (done)** | Earnings tab: payouts and your commission for this Local Tasker | **yes: one new read-only function** |
 | T6 | Profile & Services restyled to the reference (bio, rates table, portfolio, identity, representation) using the existing loaders | no |
 | T7 | QA at 390 / 820 / 1360, design-system note, final handoff | no |
+
+## T5: what was built (Earnings tab)
+Changed files: `coordinator-tasker.html` (tab on, panel `#coPanelEarnings`, script tag), `css/coordinator-tasker.css` (small `.co-er-*` block), `js/coordinator-tasker-earnings.js` (new), `sql/coordinator-flow/t5-tasker-earnings.sql` (new), `sql/coordinator-flow/t5-rollback.sql` (new), this file.
+- SQL: `local_tasker_earnings(p_tasker, p_limit)`, read-only, security definer, `is_active_coordinator` + the Local Tasker must be assigned to the caller; only bookings in `local_booking_state` with `coordinator_id = caller` are returned (same scoping as `local_booking_payout_state`). It returns one row per released job (`local_payouts`, `release_key = 'final'`) with job value (`base_amount`), fees taken (`fee_total`), what the Local Tasker gets (`amount`), the payout phase (waiting / due / processing / paid / review / failed / reversed), and the coordinator's commission from `local_booking_commission_holds` (pending or credited). Totals are computed over ALL rows; the list is capped at 200 (newest first) and says so when capped.
+- Tab: 4 tiles (Paid to Local Tasker, Payout on the way, Your commission, Commission on the way), a "needs attention" line only when a payout is on hold or failed, filters All / Paid out / On the way / Needs attention, one card per job (opens `coordinator-booking.html?id=`). Job title and customer come from the booking list the frame already read; if that list fails the cards still show with the reference only. If the earnings cannot be read: error with Try again, never "no payouts".
+- Tested: fake-DOM run of the real script, 20 checks (lazy load, rpc arguments, tiles, cards, title/customer join, commission wording, attention line, filter counts, error is not "empty", empty state, booking list unreadable). `node tools/check-design-system.js`: no new or edited file is reported (it still fails on the six older legal pages). NOT tested: the real SQL (not run), real browser layout at 390 / 820 / 1360.
+- Owner action: run `sql/coordinator-flow/t5-tasker-earnings.sql` in the Supabase SQL editor (its last select must show two `true`), then upload the changed files. Nothing to delete. Undo: `t5-rollback.sql` (the tab then shows its error banner).
+
+### Left out of the Earnings reference (no real data or not built)
+"Total earned" with "+18.4% MoM", progress bar, "100% on-time settlement rate" (no such figures exist); bank account card and payout threshold (the payout account is in the Profile & Services tab); Export CSV, Download Payout Statement (PDF) and the tax ledger (nothing behind them); the Coordinator Fee Agreement card (fixed percentages are not shown, only real amounts); page pagination (the list shows up to 200).
 
 ## T4: what was built (Messages tab)
 Changed files: `coordinator-tasker.html` (tab on, panel `#coPanelMessages`, script tag), `js/coordinator-tasker-messages.js` (new), `COORDINATOR-TASKER-HANDOFF.md`. No CSS change (reuses `.co-msgs-*`, `.co-filters`), no SQL.
@@ -114,4 +124,4 @@ The references show £ and example names. The site pays and quotes in ₦; every
 
 ## Owner action
 None. No SQL, nothing to delete on GitHub or Supabase. Upload the changed files to the same paths (replace `coordinator-tasker.html`, `DESIGN-SYSTEM.md`; add the three new files).
-Until T5 is pushed, the Earnings tab is greyed out.
+Next stage: T6 (Profile & Services restyle).
