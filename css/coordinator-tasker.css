@@ -170,3 +170,11 @@
   .co-pf .co-pf-wide { grid-column: 1 / -1; }
 }
 .co-page--tasker .co-er-list:not([hidden]) { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* ── Sidebar on short screens (bug fix) ────────────────────── */
+/* The sidebar has a fixed height; on a short window the Local Taskers block shrank to nothing and the "Add Local Tasker" button
+   printed over its heading and filter. The block now keeps a minimum height and the sidebar scrolls when it does not fit. */
+@media (min-width: 1044px) {
+  .co-page--tasker .co-side { overflow-y: auto; }
+  .co-page--tasker .co-side-taskers { min-height: calc(var(--space-9) * 2); }
+}

@@ -18,6 +18,9 @@ Owner rules (from CLAUDE.md / AGENTS.md and the owner's standing requests): foll
 | **T6 (done)** | Profile & Services restyled to the reference layout using the existing loaders | no |
 | **T7 (done)** | QA at 390 / 820 / 1360, design-system note, final handoff | no |
 
+## Bug fix 2026-11-10: sidebar on short windows
+`css/coordinator-tasker.css` only (a small block at the end, from 1044px, scoped to `.co-page--tasker`). On a short window the "My Local Taskers" block shrank to ~13px and the "Add Local Tasker" button printed over its heading and filter. The block now keeps a minimum height and the sidebar scrolls when it does not fit. The coordinator Overview page (`coordinator-dashboard.html`) uses the same sidebar CSS and likely has the same fault; it was not changed. No SQL.
+
 ## T7: QA and close-out
 Changed files: `DESIGN-SYSTEM.md` (one short section), `coordinator-tasker.html` and `css/coordinator-tasker.css` (Earnings list set to one column so the four amounts per job are not cramped), this file. No SQL.
 - Real Chromium at 390, 820 and 1360px: every tab (Overview, Bookings, Messages, Earnings, Profile & Services) has no sideways scroll; Earnings was run with the REAL script and stubbed data (3 jobs: paid, on the way, on hold) and screenshots were looked at on phone and desktop; Profile & Services was looked at with sample content in T6. Overview, Bookings and Messages were only checked for overflow in this stage (their layout was written in T2-T4 and checked by script then).
