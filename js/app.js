@@ -294,6 +294,13 @@ async function stBoot() {
   pwaScript.defer = true;
   document.body.appendChild(pwaScript);
 
+  /* Tasker with no live service: a pop-up that says the profile is hidden from customers and links to Post a Service.
+     Loaded here so the pages that run app.js need no edit. */
+  const nudgeScript = document.createElement('script');
+  nudgeScript.src = 'js/tasker-live-nudge.js';
+  nudgeScript.defer = true;
+  document.body.appendChild(nudgeScript);
+
   console.log('[StreetTasker] App ready ✓');
 
   /* The page loader waits for the page's own data too (initPage may return a promise). */
