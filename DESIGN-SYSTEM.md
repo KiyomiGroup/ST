@@ -492,6 +492,10 @@ The nav block uses tokens for colours, font family and size, and most spacing. T
 
 `coordinator-tasker.html?id=<tasker>[&tab=<tab>]` is one page with tabs: Overview, Bookings, Messages, Earnings, Profile & Services. `body.co-page--tasker`; styles in `css/coordinator-tasker.css` (loads after `css/coordinator-dashboard.css`, which supplies the same dark sidebar as the overview). Header card `.co-th`, tab bar `.co-tabs` / `.co-tab` (pills on phones, underline from 768px; the open tab is `aria-selected`), panels `.co-tpanel`, phone/tablet tasker switcher `.co-tsw`. A tab that is not built yet is a `disabled` button, greyed out, with no panel; a stage turns it on by removing `disabled` and adding its `role="tabpanel"` section. Only tokens are used. Reference items with no data behind them are left out on purpose (see `COORDINATOR-TASKER-HANDOFF.md`).
 
+### Coordinator Local Tasker page: Overview tab (2026-11-09, stage T2)
+
+`#coPanelOverview` in `coordinator-tasker.html`, styles in `css/coordinator-tasker.css` (prefix `co-ov-`), script `js/coordinator-tasker-overview.js`. Four stat tiles (`.co-stat--tile`, value in `--text-xl`), then Open bookings (`.co-req` / `.co-req-item`), Past 6 months bars (`.co-ov-bars`; bar height is the custom property `--bar`, 0 to 100, set by the script), Action needed (`.co-attn`) and Quick actions (`.co-ov-qa`, pill links). Phones and tablets: one column in the order Action needed, Open bookings, Past 6 months, Quick actions (`order`, with `display: contents` on the two column wrappers); from 1044px: main column plus a rail of `20rem`. Existing parts are reused, no new tokens. Only real figures are shown; a figure that cannot be read stays a dash.
+
 ---
 
 ## Palette merge and auth tokens (2026-10-29)

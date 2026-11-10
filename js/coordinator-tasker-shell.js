@@ -55,6 +55,8 @@
     var crumb = $('coCrumbTab'); if (crumb) crumb.textContent = btn.getAttribute('data-label') || btn.textContent;
     if (opts.focus) btn.focus();
     keepInView(btn);
+    /* Stage T2: tab panels load their own data the first time they are opened */
+    document.dispatchEvent(new CustomEvent('coordinator-tasker:tab', { detail: { tab: btn.getAttribute('data-tab') } }));
     if (opts.remember) {
       /* keep ?id=... and any other flags; only the tab changes, so a refresh or a shared link opens the same tab */
       try {
@@ -210,10 +212,23 @@
     if (n > 0) b.textContent = n > 98 ? '99+' : String(n);
   }
 
+  /* The two lists are read once and shared with the tab panels (window.STCoTasker), so a tab never repeats a call the frame already made.
+     Pass true to read again (the Try again buttons). A list that cannot be read resolves to null, never to a guess. */
+  var listCache = {};
+  function safe(p) { return Promise.resolve(p).then(function (r) { return r && !r.error && Array.isArray(r.data) ? r.data : null; }, function () { return null; }); }
+  function readList(key, rpcName, args, again) {
+    if (again || !listCache[key]) listCache[key] = safe(window.supabase.rpc(rpcName, args));
+    return listCache[key];
+  }
+  window.STCoTasker = {
+    id: taskerId,
+    bookings: function (again) { return readList('bookings', 'local_booking_list', { p_limit: 200 }, again); },
+    chats: function (again) { return readList('chats', 'coordinator_chat_list', { p_limit: 100 }, again); },
+    isOpenForMe: isOpenForMe
+  };
+
   async function loadCounts() {
-    var sb = window.supabase;
-    function safe(p) { return Promise.resolve(p).then(function (r) { return r && !r.error && Array.isArray(r.data) ? r.data : null; }, function () { return null; }); }
-    var out = await Promise.all([safe(sb.rpc('local_booking_list', { p_limit: 200 })), safe(sb.rpc('coordinator_chat_list', { p_limit: 100 }))]);
+    var out = await Promise.all([window.STCoTasker.bookings(), window.STCoTasker.chats()]);
     var bookings = out[0], chats = out[1];
     var taskerOf = {};
     if (bookings) {

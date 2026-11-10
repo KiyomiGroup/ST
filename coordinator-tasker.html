@@ -122,12 +122,114 @@
           </div>
 
           <!-- Tabs not built yet are disabled and greyed out. A stage turns one on by removing `disabled` and adding its panel. -->
-          <div class="co-tabs" id="coTabs" role="tablist" aria-label="Local Tasker sections" data-default="profile">
-            <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1" disabled title="Coming soon">Overview</button>
+          <div class="co-tabs" id="coTabs" role="tablist" aria-label="Local Tasker sections" data-default="overview">
+            <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1">Overview</button>
             <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1" disabled title="Coming soon">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Earnings</button>
             <button type="button" class="co-tab" role="tab" id="coTabProfile" data-tab="profile" data-label="Profile &amp; Services" aria-controls="coPanelProfile" aria-selected="true" tabindex="0">Profile &amp; Services</button>
+          </div>
+        </section>
+
+        <!-- Stage T2: Overview tab. Real numbers only (js/coordinator-tasker-overview.js); a figure it cannot read stays a dash. -->
+        <section class="co-tpanel" id="coPanelOverview" role="tabpanel" aria-labelledby="coTabOverview">
+          <div class="co-banner" id="coOvError" role="alert" hidden>
+            <span>We couldn&rsquo;t load this overview just now.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coOvRetry">Try again</button>
+          </div>
+
+          <section class="co-ov-stats" aria-label="Summary">
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Jobs this month</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-ov="jobs">&mdash;</p>
+              <p class="co-stat-note" data-ov="jobs-note">Completed jobs</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Active bookings</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-ov="active">&mdash;</p>
+              <p class="co-stat-note" data-ov="active-note">Open right now</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Needs your action</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-ov="action">&mdash;</p>
+              <p class="co-stat-note" data-ov="action-note">Bookings waiting for you</p>
+            </article>
+            <article class="co-stat co-stat--tile co-ov-tile">
+              <div class="co-stat-top">
+                <p class="co-stat-label">Completed this month</p>
+                <span class="co-icon-badge co-stat-icon co-stat-icon--plain"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+              </div>
+              <p class="co-stat-value co-ov-value" data-ov="value">&mdash;</p>
+              <p class="co-stat-note" data-ov="value-note">Booking value, before fees</p>
+            </article>
+          </section>
+
+          <div class="co-ov-body">
+            <div class="co-ov-main">
+              <section class="co-card co-req co-ov-book" aria-labelledby="coOvBookTitle">
+                <div class="co-req-head">
+                  <div>
+                    <h2 id="coOvBookTitle">Open bookings</h2>
+                    <p class="co-section-sub">Bookings for this Local Tasker that are not closed yet.</p>
+                  </div>
+                  <a class="co-fact-link co-req-all" href="coordinator-bookings.html">View all bookings &rarr;</a>
+                </div>
+                <p class="co-loading" id="coOvBookLoading">Loading bookings&hellip;</p>
+                <ul class="co-req-list" id="coOvBookList" hidden></ul>
+                <div class="co-empty co-req-empty" id="coOvBookEmpty" hidden>
+                  <p class="co-empty-title">No open bookings</p>
+                  <p class="co-empty-text">When a customer books this Local Tasker, the request will be listed here.</p>
+                </div>
+              </section>
+
+              <section class="co-card co-ov-chart" aria-labelledby="coOvChartTitle">
+                <div class="co-req-head">
+                  <div>
+                    <h2 id="coOvChartTitle">Past 6 months</h2>
+                    <p class="co-section-sub">Value of completed jobs, by the month of the last step.</p>
+                  </div>
+                </div>
+                <p class="co-loading" id="coOvChartLoading">Loading&hellip;</p>
+                <ul class="co-ov-bars" id="coOvBars" hidden></ul>
+                <p class="co-ov-chart-foot" id="coOvChartFoot" hidden></p>
+                <div class="co-empty co-req-empty" id="coOvChartEmpty" hidden>
+                  <p class="co-empty-title">No completed jobs yet</p>
+                  <p class="co-empty-text">The chart fills in as this Local Tasker&rsquo;s jobs are completed.</p>
+                </div>
+              </section>
+            </div>
+
+            <div class="co-ov-rail">
+              <section class="co-card co-attn co-ov-attn" aria-labelledby="coOvAttnTitle">
+                <div class="co-attn-head">
+                  <h2 id="coOvAttnTitle" class="co-card-title">Action needed</h2>
+                  <span class="co-attn-count" id="coOvAttnCount" hidden></span>
+                </div>
+                <p class="co-loading" id="coOvAttnLoading">Checking&hellip;</p>
+                <ul class="co-attn-list" id="coOvAttnList" hidden></ul>
+                <p class="co-card-lead co-attn-empty" id="coOvAttnEmpty" hidden>Nothing needs attention for this Local Tasker.</p>
+                <p class="co-card-lead co-attn-note" id="coOvAttnNote" role="status" hidden></p>
+              </section>
+
+              <section class="co-card co-ov-qas" aria-labelledby="coOvQaTitle">
+                <h2 id="coOvQaTitle" class="co-card-title">Quick actions</h2>
+                <ul class="co-ov-qa-list">
+            <li><a class="co-ov-qa" id="coQaService" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add a service</span><svg class="co-ov-qa-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a></li>
+            <li><a class="co-ov-qa" id="coQaPhotos" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Manage photos</span><svg class="co-ov-qa-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a></li>
+            <li><a class="co-ov-qa" id="coQaPayout" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg><span>Payout account</span><svg class="co-ov-qa-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a></li>
+            <li><a class="co-ov-qa" id="coQaPublish" href="coordinator-taskers.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Public listing</span><svg class="co-ov-qa-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a></li>
+                </ul>
+              </section>
+            </div>
           </div>
         </section>
 
@@ -248,5 +350,7 @@
   <script src="js/coordinator-flyer.js"></script>
   <script src="js/coordinator-tasker.js"></script>
   <script src="js/coordinator-tasker-shell.js"></script>
+  <script src="js/coordinator-bookings-common.js"></script>
+  <script src="js/coordinator-tasker-overview.js"></script>
 </body>
 </html>
