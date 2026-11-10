@@ -125,7 +125,7 @@
           <div class="co-tabs" id="coTabs" role="tablist" aria-label="Local Tasker sections" data-default="overview">
             <button type="button" class="co-tab" role="tab" id="coTabOverview" data-tab="overview" data-label="Overview" aria-controls="coPanelOverview" aria-selected="false" tabindex="-1">Overview</button>
             <button type="button" class="co-tab" role="tab" id="coTabBookings" data-tab="bookings" data-label="Bookings" aria-controls="coPanelBookings" aria-selected="false" tabindex="-1">Bookings<span class="co-tab-count" id="coCountBookings" hidden></span></button>
-            <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1" disabled title="Coming soon">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
+            <button type="button" class="co-tab" role="tab" id="coTabMessages" data-tab="messages" data-label="Messages" aria-controls="coPanelMessages" aria-selected="false" tabindex="-1">Messages<span class="co-tab-count co-tab-count--new" id="coCountMessages" hidden></span></button>
             <button type="button" class="co-tab" role="tab" id="coTabEarnings" data-tab="earnings" data-label="Earnings" aria-controls="coPanelEarnings" aria-selected="false" tabindex="-1" disabled title="Coming soon">Earnings</button>
             <button type="button" class="co-tab" role="tab" id="coTabProfile" data-tab="profile" data-label="Profile &amp; Services" aria-controls="coPanelProfile" aria-selected="true" tabindex="0">Profile &amp; Services</button>
           </div>
@@ -260,6 +260,33 @@
           </div>
         </section>
 
+        <!-- Stage T4: Messages tab (js/coordinator-tasker-messages.js). This Local Tasker's conversations; each opens coordinator-chat.html?booking=. -->
+        <section class="co-tpanel" id="coPanelMessages" role="tabpanel" aria-labelledby="coTabMessages" hidden>
+          <p class="co-section-sub" id="coTmSummary">Conversations for this Local Tasker&rsquo;s bookings.</p>
+          <div class="co-banner" id="coTmError" role="alert" hidden>
+            <span>We couldn&rsquo;t load these conversations just now.</span>
+            <button type="button" class="co-link-btn co-banner-retry" id="coTmRetry">Try again</button>
+          </div>
+          <div class="co-toolbar" id="coTmToolbar" hidden>
+            <label class="co-search">
+              <span class="co-visually-hidden">Search these conversations</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="coTmSearch" placeholder="Search by customer or message" autocomplete="off" />
+            </label>
+            <div class="co-filters" id="coTmTabs" role="group" aria-label="Show conversations that"></div>
+          </div>
+          <p class="co-loading" id="coTmLoading">Loading conversations&hellip;</p>
+          <ul class="co-msgs-list" id="coTmList" hidden></ul>
+          <div class="co-empty" id="coTmEmpty" hidden>
+            <p class="co-empty-title">No conversations yet</p>
+            <p class="co-empty-text">When a customer books this Local Tasker, the conversation will appear here.</p>
+          </div>
+          <div class="co-empty" id="coTmNoMatch" hidden>
+            <p class="co-empty-title" id="coTmNoMatchTitle">Nothing here</p>
+            <p class="co-empty-text" id="coTmNoMatchText">No conversations match.</p>
+          </div>
+        </section>
+
         <!-- Profile &amp; Services: the existing cards, unchanged in this stage (restyled to the reference in a later stage). -->
         <section class="co-tpanel" id="coPanelProfile" role="tabpanel" aria-labelledby="coTabProfile">
         <div class="co-proxy" role="note"><span class="co-icon-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><p>Private to you and StreetTasker administrators. Customers never see the phone number or the full name here.</p></div>
@@ -380,5 +407,6 @@
   <script src="js/coordinator-bookings-common.js"></script>
   <script src="js/coordinator-tasker-overview.js"></script>
   <script src="js/coordinator-tasker-bookings.js"></script>
+  <script src="js/coordinator-tasker-messages.js"></script>
 </body>
 </html>

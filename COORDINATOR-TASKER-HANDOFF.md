@@ -1,4 +1,4 @@
-# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T3)
+# Coordinator: Local Tasker page (tabs) — handoff (2026-11-09, updated for T4)
 
 Self-contained: read this and you can continue without the chat.
 
@@ -13,10 +13,18 @@ Owner rules (from CLAUDE.md / AGENTS.md and the owner's standing requests): foll
 | **T1 (done)** | Page shell: top row, tasker switcher, header card, tab bar, dark sidebar with "N new" badges, counts. The existing profile cards sit unchanged in the Profile & Services tab. | no |
 | **T2 (done)** | Overview tab: stat tiles, open bookings, "action needed", 6-month chart, quick actions | no |
 | **T3 (done)** | Bookings tab: this Local Tasker's bookings, same groups as the Bookings page, each opens `coordinator-booking.html?id=` | no |
-| T4 | Messages tab: this Local Tasker's conversations (list), opening `coordinator-chat.html?booking=` (owner to decide: link out vs. embed the thread) | no |
+| **T4 (done)** | Messages tab: this Local Tasker's conversations (list), opening `coordinator-chat.html?booking=` (linked out; embedding the thread was not chosen) | no |
 | T5 | Earnings tab: payouts and coordinator commission for this Local Tasker | maybe |
 | T6 | Profile & Services restyled to the reference (bio, rates table, portfolio, identity, representation) using the existing loaders | no |
 | T7 | QA at 390 / 820 / 1360, design-system note, final handoff | no |
+
+## T4: what was built (Messages tab)
+Changed files: `coordinator-tasker.html` (tab on, panel `#coPanelMessages`, script tag), `js/coordinator-tasker-messages.js` (new), `COORDINATOR-TASKER-HANDOFF.md`. No CSS change (reuses `.co-msgs-*`, `.co-filters`), no SQL.
+- Owner did not answer the link-out vs embed question, so the default was used: each row opens `coordinator-chat.html?booking=<id>`. Embedding the thread can be a later stage.
+- Lists only conversations the coordinator handles (`access = 'coordinator'`) for THIS Local Tasker (a chat row has no Local Tasker id, so it is matched through its booking in the booking list). Newest first, All / Unread, search by customer or message text, unread count in the summary line. Payment requests and Job Room system lines show as "Payment request" / "Job Room update" like the overview.
+- Both lists come from the frame (`STCoTasker`), no extra call; loads on first open; if either list cannot be read: error with Try again, never "no conversations".
+- Tested: jsdom with the real scripts, 16 checks; T2 (37) and T3 (14) still pass. Browser layout NOT looked at.
+- Owner action: upload `coordinator-tasker.html`, `COORDINATOR-TASKER-HANDOFF.md` and new `js/coordinator-tasker-messages.js`. T2 and T3 files must already be uploaded.
 
 ## T3: what was built (Bookings tab)
 Changed files: `coordinator-tasker.html` (tab turned on, panel `#coPanelBookings`, script tag), `js/coordinator-tasker-bookings.js` (new), `COORDINATOR-TASKER-HANDOFF.md`. No CSS change (reuses `.co-toolbar`, `.co-search`, `.co-filters`, `.co-bk-*`), no SQL.
@@ -106,4 +114,4 @@ The references show £ and example names. The site pays and quotes in ₦; every
 
 ## Owner action
 None. No SQL, nothing to delete on GitHub or Supabase. Upload the changed files to the same paths (replace `coordinator-tasker.html`, `DESIGN-SYSTEM.md`; add the three new files).
-Until T4-T5 are pushed, the Messages and Earnings tabs are greyed out.
+Until T5 is pushed, the Earnings tab is greyed out.
