@@ -183,7 +183,26 @@
     $('tpSvcTags').innerHTML = x.specialties.map(function (t) { return '<span class="tp-area">' + esc(t) + '</span>'; }).join('');
     $('tpSvcTags').hidden = !x.specialties.length;
     setText('tpSvcBookLabel', state.isOwner ? 'Edit My Services' : 'Book this service');
+    /* A tasker looking at another tasker's service is pointed to their own My Services page */
+    $('tpSvcOwn').hidden = true;
+    if (!state.isOwner) viewerIsTasker().then(function (yes) { if (state.svcOpen === i) $('tpSvcOwn').hidden = !yes; });
     openDialog($('tpSvcDialog'));
+  }
+
+  /* True when the signed-in viewer is on a tasker account (customers and signed-out visitors: false). Asked once. */
+  function viewerIsTasker() {
+    if (!state.tasker$) {
+      state.tasker$ = (async function () {
+        try {
+          var A = window.ST && window.ST.auth;
+          var u = await currentUser();
+          if (!u || !A || !A.checkCustomerOnly) return false;
+          var c = await A.checkCustomerOnly(u);
+          return !!(c && c.loggedIn && c.ok === false);
+        } catch (e) { return false; }
+      })();
+    }
+    return state.tasker$;
   }
 
   function renderPortfolio(items) {
@@ -643,7 +662,8 @@
       '<p class="tp-dialog-lead">Only customer accounts can book a service. ' + (c.hasCustomer ? 'You already have one, so just switch to it.' : 'You can create a customer account with the same email in one tap.') + '</p>' +
       '<p class="ap-error" id="bkSwitchErr" role="alert" hidden></p>' +
       '<button type="button" class="btn btn-primary tp-dialog-submit" data-role-switch="' + (c.hasCustomer ? 'switch' : 'create') + '">' + (c.hasCustomer ? 'Switch to customer account' : 'Create customer account') + '</button>' +
-      '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Not now</button></div>';
+      '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Not now</button>' +
+      '<p class="tp-svc-own">Want to offer your own services? <a href="my-services.html">Add your own services</a></p></div>';
     openDialog($('tpBookDialog'));
     return true;
   }

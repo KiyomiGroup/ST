@@ -627,5 +627,8 @@ html:has(.tp-dialog-book[open]) { overflow: hidden; }   /* the page behind stays
 .tp-svc-dialog .tp-dialog-sum { margin-bottom: 0; }
 .tp-svc-dialog .tp-eyebrow-sm:empty, .tp-svc-loc:empty { display: none; }
 .tp-svc-loc { font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.tp-svc-own { margin: 0; text-align: center; font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.tp-svc-own a { font-weight: 600; text-decoration: underline; }
+.tp-svc-own[hidden] { display: none; }
 .tp-svc-dialog .tp-areas { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .tp-svc-dialog .tp-areas[hidden] { display: none; }

@@ -13,6 +13,10 @@
 .sd-rate-price { font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: var(--color-text); }
 .sd-rate-price small { font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500; color: var(--color-text-secondary); }
 .sd-book { min-width: 180px; justify-content: center; }
+.sd-own { flex-basis: 100%; margin: 0; text-align: right; font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.sd-own a { font-weight: 600; text-decoration: underline; }
+.sd-own[hidden] { display: none; }
+@media (max-width: 640px) { .sd-own { text-align: center; } }
 
 .sd-prose { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); font-size: var(--text-base); line-height: 1.7; color: var(--color-text-secondary); overflow-wrap: anywhere; }
 .sd-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }

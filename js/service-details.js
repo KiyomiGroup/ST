@@ -47,7 +47,7 @@
     return out;
   }
 
-  function render(svc, prov, isOwner) {
+  function render(svc, prov, isOwner, me) {
     var title = text(svc.service_name) || 'Service';
     document.title = title + ' — StreetTasker';
     $('sdTitle').textContent = title;
@@ -92,6 +92,15 @@
     if (isOwner) { book.textContent = 'Edit my services'; book.href = 'my-services.html'; }
     else { book.textContent = 'Book service'; book.href = uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) + '&book=' + encodeURIComponent(String(svc.id)) : 'find-taskers.html'; }
 
+    /* A tasker looking at another tasker's service is pointed to their own My Services page */
+    $('sdOwn').hidden = true;
+    if (!isOwner && me) {
+      try {
+        var A = window.ST && window.ST.auth;
+        if (A && A.checkCustomerOnly) A.checkCustomerOnly(me).then(function (c) { $('sdOwn').hidden = !(c && c.loggedIn && c.ok === false); }).catch(function () {});
+      } catch (e) { /* link stays hidden */ }
+    }
+
     $('sdLoading').hidden = true; $('sdMissing').hidden = true; $('sdContent').hidden = false;
   }
 
@@ -117,7 +126,7 @@
         var visible = await ST.db.hideUnpublishedLocal([svc], 'user_id');
         if (!visible.length) return missing();
       }
-      render(svc, await loadProvider(svc.user_id), isOwner);
+      render(svc, await loadProvider(svc.user_id), isOwner, me);
     } catch (err) {
       console.error('[service-details]', err);
       missing();
