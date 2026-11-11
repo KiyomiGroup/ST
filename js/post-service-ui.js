@@ -94,6 +94,9 @@
       catSelect.value = chip.getAttribute('data-category');
       catSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
+  }
+  /* The category select changes through the picker (js/category-picker.js), not the old chips, so this must not depend on #svcChips */
+  if (catSelect) {
     catSelect.addEventListener('change', function () {
       if (typeof window.onCategoryChange === 'function') window.onCategoryChange(catSelect.value);
     });

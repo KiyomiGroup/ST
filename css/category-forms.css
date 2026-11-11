@@ -1,0 +1,12 @@
+/* ============================================================
+   STREETTASKER — category-forms.css   (Categories Stage 3)
+   Extra bits for the category questions on Post a Service (js/category-forms.js).
+   Everything else uses the shared .pt-* form classes. Tokens only.
+   ============================================================ */
+
+.cf-group[hidden] { display: none; }
+.cf-chips { padding: 0; border-radius: var(--radius-form); }
+.cf-chips.has-error, .cf-yesno.has-error { box-shadow: 0 0 0 2px var(--pt-danger); }
+.cf-chips.has-error { padding: var(--space-2); }
+.cf-unit { flex: none; margin-left: var(--space-3); font-size: var(--text-sm); color: var(--pt-ink-muted); }
+.cf-note { margin: 0 0 var(--space-5); font-size: var(--text-xs); line-height: 1.5; color: var(--pt-ink-muted); }

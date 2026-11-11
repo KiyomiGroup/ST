@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/categories.css?v=3" />
   <link rel="stylesheet" href="css/category-picker.css" />
+  <link rel="stylesheet" href="css/category-forms.css" />
   <link rel="stylesheet" href="css/post-task.css" />
   <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -160,6 +161,20 @@
 
               <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-info"/></svg><span>Optional &mdash; helps customers find you in localized neighborhood search.</span></p>
             </div>
+          </section>
+
+          <!-- ── Service Details (Categories Stage 3): questions that depend on the category and what you offer.
+               Drawn by js/category-forms.js; hidden for categories that have no form yet (and for Sales and Other). ── -->
+          <section class="pt-section" id="secDetails" aria-labelledby="secDetailsTitle" hidden>
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">2</span>
+              <div>
+                <h2 class="pt-section-title" id="secDetailsTitle">Service Details</h2>
+                <p class="pt-section-sub">A few quick answers so customers know exactly what you offer.</p>
+              </div>
+              <span class="ps-section-chip">Step 1.2</span>
+            </div>
+            <div id="catFields"></div>
           </section>
 
           <!-- ── Section 3 · Pricing & Rate ─────────────────────── -->
@@ -442,6 +457,7 @@
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
   <script src="js/category-picker.js"></script>
+  <script src="js/category-forms.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/saved.js"></script>
   <script src="js/app.js"></script>
@@ -590,6 +606,7 @@
       var unit = document.getElementById('svcRateUnit');
       if (on) { unit.value = 'item'; }
       else if (unit.value === 'item') { unit.value = 'job'; var r = document.querySelector('input[name="rateUnit"][value="job"]'); if (r) r.checked = true; }
+      renumberSections();
     }
 
     async function loadProducts(serviceId) {
@@ -633,6 +650,17 @@
       if (del.error) throw del.error;
     }
 
+    /* Sections are numbered by what is showing: the category questions and the Sales products come and go */
+    function renumberSections() {
+      var n = 0;
+      document.querySelectorAll('#serviceForm > .pt-section').forEach(function (s) {
+        if (s.hidden) return;
+        n++;
+        var num = s.querySelector('.pt-section-num'); if (num) num.textContent = n;
+        var chip = s.querySelector('.ps-section-chip'); if (chip && /^Step 1\./.test(chip.textContent)) chip.textContent = 'Step 1.' + n;
+      });
+    }
+
     function onCategoryChange(val) {
       applySalesMode(val === 'sales');
       var wrap = document.getElementById('otherCategoryWrap');
@@ -641,6 +669,8 @@
     window.onCategoryChange = onCategoryChange;
     /* Category picker: searchable, and it asks for the subcategory too (js/category-picker.js) */
     if (window.STCatPicker) STCatPicker.init({ select: 'svcCategory', sub: 'svcSubcategory', mount: 'catPicker', other: 'svcCategoryOther', title: 'What type of work do you want to offer?' });
+    /* Category questions (Cleaning, Repairs, Moving & Delivery so far): js/category-forms.js draws them under Service Basics */
+    if (window.STCatForms) STCatForms.mount({ box: 'catFields', section: 'secDetails', select: 'svcCategory', sub: 'svcSubcategory', onChange: renumberSections });
 
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
@@ -689,6 +719,7 @@
           /* the subcategory (Plumbing, Tailoring...) and the picker button */
           if (draft.subcategory) document.getElementById('svcSubcategory').value = draft.subcategory;
           if (window.STCatPicker) STCatPicker.sync();
+          if (window.STCatForms) STCatForms.setValues(draft.details);   /* the category answers saved last time */
           if (draft.location)     document.getElementById('svcLocation').value    = draft.location;
           if (draft.description)  document.getElementById('svcDescription').value = draft.description;
           if (draft.availability_status) document.getElementById('svcAvailability').value = draft.availability_status;
@@ -807,6 +838,10 @@
       if (!category)                                             { showErr('Please select a category.'); return; }
       var subcategory = (document.getElementById('svcSubcategory').value || '').trim();
       if (category !== 'other' && !subcategory)                  { showErr('Choose what you offer under ' + (window.STCat ? STCat.label(category) : 'this category') + '. If it is not listed, pick "Other (not listed)".'); return; }
+      if (window.STCatForms) {   /* the category questions: mark each one that is missing and jump to the first */
+        var cf = STCatForms.check();
+        if (!cf.ok) { showErr('Please answer the highlighted questions under Service Details.'); STCatForms.focusField(cf.firstKey); return; }
+      }
       if (isSales()) {
         var pr = readProducts();
         if (pr.error) { showErr(pr.error); return; }
@@ -876,6 +911,7 @@
           service_name: serviceName,
           category:     category,
           subcategory:  category === 'other' ? null : subcategory,   /* Categories Stage 1: needs sql/categories/c1-subcategory-details.sql */
+          details:      window.STCatForms ? STCatForms.collect() : null,   /* Categories Stage 3: the category answers (jsonb); null when the category has no form */
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
@@ -889,20 +925,21 @@
 
 
         /* Upsert: update existing draft or insert fresh record */
-        var svcRes;
-        if (savedServiceId) {
-          svcRes = await window.supabase.from('services')
-            .update(payload).eq('id', savedServiceId).select('id').single();
-        } else {
-          svcRes = await window.supabase.from('services')
-            .insert(payload).select('id').single();
+        function writeService(p) {
+          return savedServiceId
+            ? window.supabase.from('services').update(p).eq('id', savedServiceId).select('id').single()
+            : window.supabase.from('services').insert(p).select('id').single();
         }
-        /* Categories Stage 1 SQL not run yet: save without the subcategory (keeping everything else) and carry on */
-        if (svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204') && /subcategory/.test(svcRes.error.message || '')) {
-          delete payload.subcategory;
-          svcRes = savedServiceId
-            ? await window.supabase.from('services').update(payload).eq('id', savedServiceId).select('id').single()
-            : await window.supabase.from('services').insert(payload).select('id').single();
+        var svcRes = await writeService(payload);
+        /* Categories SQL not run yet (subcategory / details columns missing): save without them and carry on */
+        var droppedCols = [];
+        for (var attempt = 0; attempt < 2 && svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204'); attempt++) {
+          var colMsg = svcRes.error.message || '', dropped = false;
+          ['subcategory', 'details'].forEach(function (col) {
+            if (new RegExp(col).test(colMsg) && Object.prototype.hasOwnProperty.call(payload, col)) { if (payload[col] != null) droppedCols.push(col); delete payload[col]; dropped = true; }
+          });
+          if (!dropped) break;
+          svcRes = await writeService(payload);
         }
         /* specialties/availability_status column doesn't exist yet
            (migration_search_filters.sql not run) — retry without them */
@@ -918,6 +955,7 @@
         }
         if (svcRes.error) throw svcRes.error;
         savedServiceId = svcRes.data && svcRes.data.id;
+        if (droppedCols.length) showToast('Saved, but the category answers could not be stored yet. Ask the site owner to run the Categories SQL (sql/categories).');
         if (isSales() && savedServiceId) await saveProducts(savedServiceId, postUser.id);   /* Stage 4 */
 
         /* Save Draft: stay on the page. The listing stays unpublished and the public taskers row is untouched */

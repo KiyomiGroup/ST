@@ -21,3 +21,18 @@
 - sql/categories/c1-subcategory-details.sql (+ c1-rollback.sql): services.subcategory (text) and services.details (jsonb, for Stage 3). RUN THIS FIRST in Supabase.
   Until it runs, saving still works; the subcategory is just not stored.
 - css/tokens.css: --z-picker. tests/category-search.test.js (new).
+
+
+## Categories Stage 3 (2026-11-11): the form engine, piloted on Cleaning, Repairs, Moving & Delivery
+- js/category-forms.js (new): category questions described as DATA (`SCHEMAS`) and drawn by one engine. Field types: select, multi, yesno, text, textarea, number.
+  Questions can be limited to subcategories (`subs`, `notSubs`, with named `groups`) or to an earlier answer (`when`). API: STCatForms.has / fieldsFor / validate / describe / mount / setValues / collect / check.
+  Pilot schemas: `cleaning`, `handyman` (Repairs), `logistics` (Moving & Delivery). Every other category (and Sales and Other) shows no extra section yet and saves `details = null`.
+- Saved in `services.details` (jsonb, column from Stage 1): flat, e.g. `{"_v":1,"supplies":"Either","team_size":3,"property_types":["Office"]}`. Only questions that are SHOWN for the chosen subcategory are saved.
+- css/category-forms.css (new): a few rules for the new section; everything else is the shared .pt-* form classes. No new tokens.
+- post-service.html: new "Service Details" section under Service Basics (`#secDetails`, drawn into `#catFields`); validated on Save / Save Draft (each missing question is marked, focus jumps to the first);
+  saved with the listing; restored when a draft or an existing service is opened. Section numbers and "Step 1.x" chips now follow what is showing (renumberSections).
+  The save retry now copes with EITHER `subcategory` or `details` missing in the database (Stage 1 SQL not run): it saves without them and tells the tasker.
+- js/post-service-ui.js: FIXED a Stage 1-2 bug. The category change listener (which calls onCategoryChange) was only attached when the old `#svcChips` row existed, and the picker replaced it.
+  Result: choosing Sales never showed the products form, and choosing Other never showed the "describe your category" box. The listener no longer depends on `#svcChips`.
+- tests/category-forms.test.js (new, 17 tests): schemas only name real subcategories, fields are well formed, every subcategory (and Other) gets questions, validation, dropping hidden answers, describe().
+- No new SQL. Needs `sql/categories/c1-subcategory-details.sql` (Stage 1) to have been run, same as before.
