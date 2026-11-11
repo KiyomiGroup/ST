@@ -8,7 +8,7 @@
 //
 // Never logged: the body, signature, API key, webhook secret, session token, scores or personal data.
 import { verifyDiditSignature } from "../_shared/didit-signature.ts";
-import { extractDecisionFlags } from "./decision.ts";
+import { extractDecisionFlags, extractLegalName } from "./decision.ts";
 
 export interface Deps {
   env: (name: string) => string | undefined;
@@ -94,6 +94,7 @@ export async function handleWebhook(req: Request, deps: Deps): Promise<Response>
 
   // Approved is only trusted after the decision is re-fetched from Didit with our API key.
   let flags: ReturnType<typeof extractDecisionFlags> | null = null;
+  let legalName: string | null = null; // VR1: handed only to idv_store_name, never logged
   if (status === "Approved") {
     try {
       const res = await deps.fetch(`${DIDIT_API}/v3/session/${encodeURIComponent(sessionId)}/decision/`, {
@@ -105,7 +106,9 @@ export async function handleWebhook(req: Request, deps: Deps): Promise<Response>
         console.error(`didit-webhook: decision fetch failed (${res.status})`);
         return reply(500, { ok: false, error: "decision_unavailable" });
       }
-      flags = extractDecisionFlags(await res.json());
+      const decisionJson = await res.json();
+      flags = extractDecisionFlags(decisionJson);
+      legalName = extractLegalName(decisionJson);
     } catch {
       console.error("didit-webhook: decision fetch failed (network)");
       return reply(500, { ok: false, error: "decision_unavailable" });
@@ -152,6 +155,21 @@ export async function handleWebhook(req: Request, deps: Deps): Promise<Response>
   if (result.retry === true) {
     console.error(`didit-webhook: retry requested (${String(result.reason)})`);
     return reply(500, { ok: false, error: "retry" });
+  }
+
+  // VR1: keep the verified name (word tokens only, made by SQL) so a bank account name can be matched later.
+  // Not fatal: if it fails the person is simply asked to verify again at their first withdrawal. Nothing is logged but the code.
+  if (legalName !== null) {
+    try {
+      const res = await deps.fetch(`${supaUrl.replace(/\/+$/, "")}/rest/v1/rpc/idv_store_name`, {
+        method: "POST",
+        headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_session_id: sessionId, p_full_name: legalName }),
+      });
+      if (!res.ok) console.error(`didit-webhook: name store failed (${res.status})`);
+    } catch {
+      console.error("didit-webhook: name store failed (network)");
+    }
   }
   return reply(200, { ok: true, outcome: String(result.outcome ?? "applied") });
 }

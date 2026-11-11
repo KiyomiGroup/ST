@@ -1,7 +1,9 @@
 // DEPLOY BUNDLE for didit-sync: generated, do not edit. Source files are in supabase/functions/.
 // ===== didit-webhook/decision.ts =====
 // Reads a Didit decision (GET /v3/session/{id}/decision/) and reduces it to the booleans
-// idv_apply_event needs. Pure: no network, no logging. Returns NO scores, media or personal data.
+// idv_apply_event needs. Pure: no network, no logging. extractDecisionFlags returns NO scores, media or personal data.
+// extractLegalName (VR1) is the ONE exception: it returns the verified name string, which the caller passes straight to
+// the SQL function idv_store_name (that keeps only normalised word tokens). Never log its result.
 // Field names follow DIDIT-API-FACTS.md. Anything missing counts as "not shown to be OK" (false / null),
 // so a surprise in Didit's reply can only push a person to review, never to VERIFIED.
 
@@ -52,6 +54,30 @@ export function extractDecisionFlags(raw: unknown): DecisionFlags {
     nin_database_match: nin,
     nigerian_doc: nigerian,
   };
+}
+
+// VR1: the person's legal name from the ID document. Field names (full_name, or first_name + last_name) are UNVERIFIED
+// against a real Didit sandbox response; confirm before relying on it. Returns null when there is no usable name.
+// Only APPROVED documents count. If several documents disagree, null (we never guess which name is right).
+const clean = (v: unknown): string => (typeof v === "string" ? v.trim().replace(/\s+/g, " ") : "");
+
+export function extractLegalName(raw: unknown): string | null {
+  const root = (typeof raw === "object" && raw !== null ? raw : {}) as Item;
+  const decision = (typeof root.decision === "object" && root.decision !== null ? root.decision : root) as Item;
+  const names = new Set<string>();
+  for (const d of items(decision, "id_verifications")) {
+    if (d.status !== "Approved") continue;
+    let n = clean(d.full_name);
+    if (!n) n = [clean(d.first_name), clean(d.last_name)].filter(Boolean).join(" ");
+    if (n && n.length <= 200) names.add(n.toLowerCase());
+  }
+  if (names.size !== 1) return null;
+  for (const d of items(decision, "id_verifications")) {
+    if (d.status !== "Approved") continue;
+    const n = clean(d.full_name) || [clean(d.first_name), clean(d.last_name)].filter(Boolean).join(" ");
+    if (n) return n;
+  }
+  return null;
 }
 
 // ===== didit-sync/handler.ts =====
@@ -294,6 +320,14 @@ export async function handleSync(req: Request, deps: Deps): Promise<Response> {
     }
     if (typeof applied.data.status === "string") status = applied.data.status;
     changed = applied.data.changed === true;
+    // VR1: keep the verified name (SQL stores word tokens only, and only when the attempt is VERIFIED). Not fatal.
+    if (flags !== null && status === "VERIFIED") {
+      const legalName = extractLegalName(raw);
+      if (legalName !== null) {
+        const n = await rpc(deps, supa, serviceKey, serviceKey, "idv_store_name", { p_session_id: sessionId, p_full_name: legalName });
+        if (!n.ok) console.error(`didit-sync: name store failed (${n.hint ?? n.status})`);
+      }
+    }
   }
 
   // 7. Came back from Didit and there is still no final answer: show PENDING (server decision, never the page's).

@@ -33,6 +33,7 @@ interface Opts {
   didit?: unknown; diditStatus?: number; diditThrows?: boolean; diditText?: string;
   apply?: Record<string, unknown>; applyErr?: { status: number; body: unknown }; applyThrows?: boolean;
   pending?: Record<string, unknown>; pendingErr?: { status: number; body: unknown };
+  nameErr?: { status: number; body: unknown };
 }
 function setup(o: Opts = {}) {
   const calls: Call[] = [];
@@ -63,6 +64,10 @@ function setup(o: Opts = {}) {
       if (o.applyThrows) throw new Error("boom");
       if (o.applyErr) return json(o.applyErr.body, o.applyErr.status);
       return json({ outcome: "applied", changed: true, status: "VERIFIED", ...(o.apply ?? {}) });
+    }
+    if (u.endsWith("/rpc/idv_store_name")) {
+      if (o.nameErr) return json(o.nameErr.body, o.nameErr.status);
+      return json({ stored: true, words: 3 });
     }
     if (u.endsWith("/rpc/idv_mark_pending")) {
       if (o.pendingErr) return json(o.pendingErr.body, o.pendingErr.status);
@@ -317,4 +322,34 @@ test("nothing secret is ever logged, on any path", async () => {
     const out = await captureLogs(() => handleSync(req({ mode: "proxy", local_tasker_user_id: TARGET, returned: true }), s.deps));
     for (const x of secrets) assert.ok(!out.includes(x), `leak of ${x} in: ${out}`);
   }
+});
+
+// ---- VR1: verified legal name ----
+const NAMED = { ...GOOD_DECISION, id_verifications: [{ status: "Approved", issuing_state: "NGA", full_name: "Chinedu Emmanuel Okafor", date_of_birth: "1990-01-01", document_number: "A1234567" }] };
+const nameCalls = (calls: Call[]) => calls.filter((c) => c.url.endsWith("/rpc/idv_store_name"));
+
+test("VR1 sync: VERIFIED with a name -> idv_store_name gets the session and the name only", async () => {
+  const { calls, deps } = setup({ didit: NAMED });
+  const r = await handleSync(req({ mode: "self" }), deps);
+  assert.equal(r.status, 200);
+  const n = nameCalls(calls); assert.equal(n.length, 1);
+  assert.deepEqual(JSON.parse(String(n[0].init.body)), { p_session_id: SESSION, p_full_name: "Chinedu Emmanuel Okafor" });
+  assert.ok(!JSON.stringify(await r.clone().json()).includes("Okafor"), "response must not carry the name");
+});
+
+test("VR1 sync: no name in the decision, or not VERIFIED, or non-Approved -> no name call", async () => {
+  const a = setup({ didit: GOOD_DECISION }); await handleSync(req({ mode: "self" }), a.deps); assert.equal(nameCalls(a.calls).length, 0);
+  const b = setup({ didit: NAMED, apply: { status: "REVIEW_REQUIRED" } }); await handleSync(req({ mode: "self" }), b.deps); assert.equal(nameCalls(b.calls).length, 0);
+  const c = setup({ didit: { status: "In Progress" } }); await handleSync(req({ mode: "self" }), c.deps); assert.equal(nameCalls(c.calls).length, 0);
+});
+
+test("VR1 sync: a failed name store is not fatal and the name is never logged", async () => {
+  const logs: string[] = []; const orig = console.error; console.error = (...a: unknown[]) => { logs.push(a.join(" ")); };
+  try {
+    const { deps } = setup({ didit: NAMED, nameErr: { status: 500, body: { message: "Chinedu Emmanuel Okafor" } } });
+    const r = await handleSync(req({ mode: "self" }), deps);
+    assert.equal(r.status, 200);
+  } finally { console.error = orig; }
+  assert.ok(logs.length > 0);
+  assert.ok(!logs.join("\n").includes("Okafor"));
 });

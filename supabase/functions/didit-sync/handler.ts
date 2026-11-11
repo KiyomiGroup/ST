@@ -16,7 +16,7 @@
 // reads only their own row, a coordinator only an assigned Local Tasker. The browser never names a Didit session;
 // the session id comes from our own table. Didit's reply is never trusted for identity: only for status.
 // Never logged: tokens, API keys, session ids, user ids, Didit response bodies.
-import { extractDecisionFlags } from "../didit-webhook/decision.ts";
+import { extractDecisionFlags, extractLegalName } from "../didit-webhook/decision.ts";
 
 export interface Deps {
   env: (name: string) => string | undefined;
@@ -238,6 +238,14 @@ export async function handleSync(req: Request, deps: Deps): Promise<Response> {
     }
     if (typeof applied.data.status === "string") status = applied.data.status;
     changed = applied.data.changed === true;
+    // VR1: keep the verified name (SQL stores word tokens only, and only when the attempt is VERIFIED). Not fatal.
+    if (flags !== null && status === "VERIFIED") {
+      const legalName = extractLegalName(raw);
+      if (legalName !== null) {
+        const n = await rpc(deps, supa, serviceKey, serviceKey, "idv_store_name", { p_session_id: sessionId, p_full_name: legalName });
+        if (!n.ok) console.error(`didit-sync: name store failed (${n.hint ?? n.status})`);
+      }
+    }
   }
 
   // 7. Came back from Didit and there is still no final answer: show PENDING (server decision, never the page's).

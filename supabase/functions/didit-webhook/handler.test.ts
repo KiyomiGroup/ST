@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, createHash } from "node:crypto";
 import { handleWebhook, toIso } from "./handler.ts";
-import { extractDecisionFlags } from "./decision.ts";
+import { extractDecisionFlags, extractLegalName } from "./decision.ts";
 
 const SECRET = "test-webhook-secret-123";
 const API_KEY = "test-didit-api-key-456";
@@ -286,4 +286,58 @@ test("decision flags: worst NIN result wins (a no_match is never hidden by a ful
 });
 test("decision flags: non-Nigeria database validation is ignored", () => {
   assert.equal(extractDecisionFlags({ database_validations: [{ status: "Approved", issuing_state: "GHA", match_type: "full_match" }] }).nin_database_match, "not_run");
+});
+
+// ---- VR1: verified legal name ----
+const doc = (over: Record<string, unknown>) => ({ ...GOOD_DECISION, id_verifications: [{ status: "Approved", issuing_state: "NGA", ...over }] });
+const nameCalls = (calls: Call[]) => calls.filter((c) => c.url.endsWith("/rpc/idv_store_name"));
+
+test("VR1 extractLegalName: full_name, first+last, wrapped in decision, and the rejects", () => {
+  assert.equal(extractLegalName(doc({ full_name: "  Chinedu   Okafor " })), "Chinedu Okafor");
+  assert.equal(extractLegalName(doc({ first_name: "Chinedu", last_name: "Okafor" })), "Chinedu Okafor");
+  assert.equal(extractLegalName({ decision: doc({ full_name: "Ada Eze" }) }), "Ada Eze");
+  assert.equal(extractLegalName(doc({})), null);                                   // no name fields
+  assert.equal(extractLegalName(doc({ status: "Declined", full_name: "Ada Eze" })), null); // not approved
+  assert.equal(extractLegalName(doc({ full_name: "x".repeat(201) })), null);        // too long
+  assert.equal(extractLegalName(null), null);
+  assert.equal(extractLegalName("junk"), null);
+  const two = { id_verifications: [{ status: "Approved", full_name: "Ada Eze" }, { status: "Approved", full_name: "Ngozi Eze" }] };
+  assert.equal(extractLegalName(two), null);                                        // documents disagree
+  const same = { id_verifications: [{ status: "Approved", full_name: "Ada Eze" }, { status: "Approved", full_name: "ADA EZE" }] };
+  assert.equal(extractLegalName(same), "Ada Eze");
+});
+
+test("VR1 extractDecisionFlags still returns no name or personal data", () => {
+  const f = extractDecisionFlags(doc({ full_name: "Chinedu Okafor", document_number: "A1" }));
+  assert.ok(!JSON.stringify(f).includes("Okafor"));
+  assert.deepEqual(Object.keys(f).sort(), ["document_ok", "face_match_ok", "liveness_ok", "nigerian_doc", "nin_database_match"]);
+});
+
+test("VR1 webhook: Approved with a name -> apply first, then idv_store_name with session and name only", async () => {
+  const { calls, deps } = setup({ decision: doc({ full_name: "Chinedu Okafor", date_of_birth: "1990-01-01" }) });
+  const r = await handleWebhook(req(evt({ status: "Approved" })), deps);
+  assert.equal(r.status, 200);
+  const n = nameCalls(calls); assert.equal(n.length, 1);
+  assert.deepEqual(rpcBody(n[0]), { p_session_id: "sess-1", p_full_name: "Chinedu Okafor" });
+  const order = rpcCalls(calls).map((c) => c.url.split("/").pop());
+  assert.deepEqual(order, ["idv_apply_event", "idv_store_name"]);
+  assert.ok(!JSON.stringify(rpcBody(rpcCalls(calls)[0])).includes("Okafor"), "idv_apply_event must not carry the name");
+});
+
+test("VR1 webhook: no name, or not Approved -> no name call; a failing name store is not fatal and never logged", async () => {
+  const a = setup({ decision: GOOD_DECISION }); await handleWebhook(req(evt({ status: "Approved" })), a.deps); assert.equal(nameCalls(a.calls).length, 0);
+  const b = setup(); await handleWebhook(req(evt({ status: "In Progress" })), b.deps); assert.equal(nameCalls(b.calls).length, 0);
+  const logs: string[] = []; const orig = console.error; console.error = (...x: unknown[]) => { logs.push(x.join(" ")); };
+  try {
+    const calls: Call[] = [];
+    const f = (async (url: string, init: RequestInit) => {
+      calls.push({ url: String(url), init });
+      if (String(url).includes("/decision/")) return new Response(JSON.stringify(doc({ full_name: "Chinedu Okafor" })), { status: 200 });
+      if (String(url).endsWith("/rpc/idv_store_name")) return new Response("Chinedu Okafor", { status: 500 });
+      return new Response(JSON.stringify({ outcome: "applied" }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const r = await handleWebhook(req(evt({ status: "Approved" })), { env: (n: string) => ENV[n], fetch: f, now: () => NOW_MS });
+    assert.equal(r.status, 200);
+  } finally { console.error = orig; }
+  assert.ok(logs.length > 0); assert.ok(!logs.join("\n").includes("Okafor"));
 });

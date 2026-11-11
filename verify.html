@@ -184,9 +184,9 @@
         <!-- Consent: ONE agreement box whose text links to the full Data Consent Notice (data-consent.html, opens in a new tab),
              the way Jumio, CoinJar, Revolut and Envato do. The notice text is in docs/verification/CONSENT-WORDING.md and is NOT
              legal text: a lawyer must approve it before launch (D-V8). If its meaning changes after launch, bump
-             idv_consent_version() and data-consent-version together (v1 -> v2), so older consents stop counting. -->
+             idv_consent_version() and data-consent-version together (v1 -> v2), so older consents stop counting. Now v2 (VR1: the verified name is kept). -->
         <section class="st-panel" id="consentSection" aria-label="Agreement">
-          <div class="vf-consent" id="consentBlock" data-consent-version="v1">
+          <div class="vf-consent" id="consentBlock" data-consent-version="v2">
             <div class="vf-check" id="consentSelf">
               <input type="checkbox" id="consentCheck" />
               <label for="consentCheck">I have read the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity.</label>
