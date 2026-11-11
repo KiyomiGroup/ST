@@ -14,7 +14,7 @@
   var REDIRECT_DELAY_MS = 1500;
   var GATE_NOTICE = 'Your account needs identity verification before you can use StreetTasker. Until then your tasks and services stay hidden.';
   var RETURN_FLAG_MAX_AGE_MS = 6 * 60 * 60 * 1000;
-  var PANELS_WITH_START = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1 };
+  var PANELS_WITH_START = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1, REVIEW_REQUIRED: 1 };   /* REVIEW_REQUIRED: the person can try again (a rejected or unclear ID must not be a dead end) */
 
   /* ── helpers shared with other pages ─────────────────────── */
 
