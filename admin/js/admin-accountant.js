@@ -67,6 +67,12 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
     if (content && content.nodeType) td.appendChild(content); else td.textContent = content == null ? '' : content;
     tr.appendChild(td); return td;
   }
+  /* Details and forms open in their own full-width row under the line, so long amounts never get squeezed into the button column. */
+  function detailRow(t, cols) {
+    var tr = el('tr', 'ad-detail-row'), td = el('td'); td.colSpan = cols; td.setAttribute('data-label', '');
+    var holder = el('div', 'ad-detail'); td.appendChild(holder); tr.appendChild(td);
+    return { tr: tr, holder: holder };
+  }
   function stamp(v) { $('acStamp').textContent = v ? 'Read from the server at ' + when(v) + '.' : ''; }
 
   /* ---------------- daily reports and the "I sent it" record ---------------- */
@@ -151,7 +157,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
       if (r.status === 'sent') st.appendChild(el('span', 'ad-row-sub', ' ' + [naira(r.sent_kobo), r.sent_at ? when(r.sent_at) : ''].filter(Boolean).join(', ')));
       cell(tr, 'Status', st);
       var act = el('td'); act.setAttribute('data-label', '');
-      var holder = el('div', 'ad-detail');
+      var dr = detailRow(t, 6), holder = dr.holder;
       var det = el('button', 'btn ad-btn-small', 'Details'); det.type = 'button';
       det.addEventListener('click', function () {
         if (holder.dataset.open === 'facts') { clear(holder); holder.dataset.open = ''; return; }
@@ -163,8 +169,8 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
         b.addEventListener('click', function () { openSendForm(r, holder, b); });
         act.appendChild(b);
       }
-      act.appendChild(holder); tr.appendChild(act);
-      t.body.appendChild(tr);
+      tr.appendChild(act);
+      t.body.appendChild(tr); t.body.appendChild(dr.tr);
     });
     box.appendChild(t.wrap);
     if (!canRecord) box.appendChild(el('p', 'ad-hint', 'You can read the reports. Recording that money was sent needs the Record permission.'));
@@ -278,6 +284,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
     var t = tableOf('Ledger', ['Date', 'Label', 'Direction', 'Amount', 'Reference or note', 'Source', '']);
     var dirText = { 'in': 'Money in', out: 'Money out', memo: 'Record only' };
     entries.forEach(function (e) {
+      var extra = null;
       var tr = el('tr'); if (e.reversed) tr.className = 'ad-muted';
       cell(tr, 'Date', when(e.entry_at));
       var lab = el('span'); lab.appendChild(el('span', null, e.title || e.label));
@@ -294,12 +301,12 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
       var act = el('td'); act.setAttribute('data-label', '');
       var canRev = canRecord && !e.auto && !e.reversed && e.label !== 'reversal' && ((e.label !== 'capital_in' && e.label !== 'capital_repaid') || canCapital);
       if (canRev) {
-        var holder = el('div', 'ad-detail');
+        var dr = detailRow(t, 7), holder = dr.holder; extra = dr.tr;
         var b = el('button', 'btn ad-btn-small', 'Reverse'); b.type = 'button';
         b.addEventListener('click', function () { reverseForm(e, holder, b); });
-        act.appendChild(b); act.appendChild(holder);
+        act.appendChild(b);
       }
-      tr.appendChild(act); t.body.appendChild(tr);
+      tr.appendChild(act); t.body.appendChild(tr); if (extra) t.body.appendChild(extra);
     });
     box.appendChild(t.wrap);
   }

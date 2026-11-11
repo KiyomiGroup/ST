@@ -58,6 +58,10 @@ const FULL = ['accounting.view', 'accounting.record', 'accounting.capital'];
   chk(await page.evaluate(() => window.__xss) === undefined && (await txt(page, '#acLedger')).includes('<img src=x'), '6 markup in a note shown as text, did not run');
   let led = await txt(page, '#acLedger');
   chk(led.includes('Reversed') && led.includes('Site') && led.includes('Typed') && led.includes('₦5,000'), '7 ledger shows reversed, site and typed lines');
+  await page.locator('#acReports button', { hasText: 'Details' }).first().click();
+  const w = await page.evaluate(() => { const d = document.querySelector('#acReports .ad-detail dd'); return d ? d.getBoundingClientRect().width : 0; });
+  chk(w > 150, '7b opened details are wide enough to read (dd width ' + Math.round(w) + 'px, was squeezed to one character per line)');
+  await page.locator('#acReports button', { hasText: 'Details' }).first().click();
   chk(await page.locator('#acLedger button', { hasText: 'Reverse' }).count() === 2, '8 reverse offered only on typed, not-reversed lines (hosting, capital)');
   // mark sent: differing amount without reason refused client side, no call made
   await page.locator('#acReports button', { hasText: 'Record as sent' }).click();
@@ -90,7 +94,7 @@ const FULL = ['accounting.view', 'accounting.record', 'accounting.capital'];
   chk((await calls(page, 'admin_accountant_reverse'))[0].a.p_entry === 3, '16 reversal sent for the chosen entry');
   // filters
   await page.locator('#fLabel').selectOption('capital_in'); await page.locator('#acLedForm button[type=submit]').click();
-  await page.waitForFunction(() => document.querySelectorAll('#acLedger tbody tr').length === 1);
+  await page.waitForFunction(() => document.querySelectorAll('#acLedger tbody tr:not(.ad-detail-row)').length === 1);
   let lg = (await calls(page, 'admin_accountant_ledger')).pop(); chk(lg.a.p_label === 'capital_in' && lg.a.p_offset === 0, '17 label filter sent to the server');
   await page.locator('#fFrom').fill('2026-11-01'); await page.locator('#acLedForm button[type=submit]').click(); await page.waitForTimeout(100);
   lg = (await calls(page, 'admin_accountant_ledger')).pop(); chk(lg.a.p_from === '2026-10-31T23:00:00.000Z', '18 date filter uses Nigeria midnight (UTC+1)');

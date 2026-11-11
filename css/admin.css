@@ -420,3 +420,7 @@ body.ad-body {
   .ad-split { gap: var(--space-4); }
   .ad-pagehead { margin-bottom: var(--space-4); }
 }
+
+/* A15b-2: details and forms open in a full-width row under a table line; hidden while empty */
+.ad-detail-row:has(.ad-detail:empty) { display: none; }
+.ad-detail-row > td { padding-top: 0; }
