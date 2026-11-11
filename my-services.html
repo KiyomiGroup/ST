@@ -71,19 +71,15 @@
         </select><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
       </div>
 
+      <!-- Phones: the Post a Service button sits right under the hero so it is reachable without scrolling a long list. Desktop keeps the hero button. -->
+      <a class="ap-btn ap-btn-primary ap-btn-block sv-add-top" href="post-service.html"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg>Post a Service</a>
+
       <div class="ap-layout has-side" id="svLayout">
         <div class="ap-main">
           <div class="ap-list" id="svList" aria-live="polite" aria-busy="true">
             <div class="ap-state"><p class="ap-state-text">Loading your services…</p></div>
           </div>
           <button type="button" class="ap-btn ap-more" id="svMore" hidden>Load More Services</button>
-
-          <section class="ap-mobile-only ap-cta">
-            <span class="ap-cta-icon"><svg class="ap-i" aria-hidden="true"><use href="#i-plus"/></svg></span>
-            <h2 class="ap-state-title">Offer something new?</h2>
-            <p class="ap-state-text">Each service you list is another way for customers to find you.</p>
-            <a class="ap-btn ap-btn-block" href="post-service.html">Post a Service</a>
-          </section>
         </div>
 
         <aside class="ap-side" aria-label="Service summary">

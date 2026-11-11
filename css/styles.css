@@ -1054,6 +1054,8 @@ p  { color: var(--text-secondary); font-weight: 400; }
 .footer-bottom { flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .footer-bottom p { color: var(--text-muted); font-size: var(--text-xs); }
 .footer-bottom .footer-credit { font-weight: 600; color: var(--text-secondary); }
+.footer-bottom .footer-credit a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.footer-bottom .footer-credit a:hover { color: var(--text-primary); }
 .footer-sprint   { display: none; }
 
 /* ── Toast ───────────────────────────────────────────────────── */

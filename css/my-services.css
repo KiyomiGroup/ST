@@ -47,3 +47,9 @@
 @media (max-width: 768px) {
   .sv-hero.pg-hero { order: 1; border-radius: 0; padding-bottom: var(--space-4); }
 }
+
+/* ── Post a Service button under the hero (phones only; desktop has it inside the hero) ── */
+.sv-add-top { display: none; }
+@media (max-width: 768px) {
+  .sv-add-top { display: inline-flex; order: 2; gap: var(--space-2); height: 48px; margin-bottom: var(--space-4); }
+}
