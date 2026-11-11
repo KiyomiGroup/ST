@@ -34,6 +34,8 @@
     ] },
     { group: 'Marketplace', items: [
       { key: 'bookings',  label: 'Bookings and Tasks', href: 'bookings.html', icon: 'list', any: ['bookings.view'], built: true },
+      { key: 'services', label: 'Services', href: 'services.html', icon: 'list', any: ['listings.moderate', 'taskers.view'], built: true },
+      { key: 'reviews', label: 'Reviews and community', href: 'reviews.html', icon: 'flag', any: ['reviews.moderate', 'trust.flags.view', 'community.moderate'], built: true },
       { key: 'disputes',  label: 'Disputes',          href: 'disputes.html',  icon: 'flag',   any: ['disputes.manage'], built: true }
     ] },
     { group: 'Money', items: [

@@ -16,6 +16,8 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
 ## CURRENT STATE (2026-11-11, after A15)
+**A14a written (read half of A14): `sql/admin/a14-trust-read.sql` (+ rollback, `a14b-introspect.sql`), `admin/services.html`, `admin/reviews.html`, `admin/js/admin-trust.js`, two menu items. Read only: services list, reviews, flagged users, community posts and comments. NO hide yet: the public policies and `profile_reviews` function must be read first (`a14b-introspect.sql`). SQL syntax-checked only, NOT run; page: 23 fake-Supabase checks pass; not deployed.** See `handoffs/A14a.md`. NEXT: owner runs `a14b-introspect.sql`, then A14b.
+
 **A15 written (picked by me when the owner said "pick a next stage"): `sql/admin/a15-transactions.sql` (+ rollback, introspect), `admin/transactions.html`, `admin/js/admin-transactions.js`, menu item "Transactions" (Money). Read only: a unified labelled payments table (job, Job Room, subscription, coordinator plan, gift card, urgent fee, refund), a site-agreement check (never Paystack), and a Donations section with masked donor emails. `AdminShell.init` now accepts an array of permissions. SQL syntax-checked only, NOT run; page: 23 fake-Supabase checks pass; not deployed.** See `handoffs/A15.md` (item 10: columns I had to guess; run `a15-introspect.sql`). NEXT: owner's choice (A14 needs her `a14-introspect.sql` result, A16, M1 needs her go).
 
 ## PREVIOUS STATE (2026-11-11, after A15b-3)

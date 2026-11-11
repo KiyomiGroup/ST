@@ -21,11 +21,9 @@ select section, detail from (
    where p.schemaname = 'public' and p.tablename in ('services', 'reviews', 'profile_reviews', 'comments', 'feed_posts')
   union all
   select 4, 'COUNTS',
-         'services=' || (select count(*) from public.services)
-         || ', reviews=' || coalesce((select count(*)::text from public.reviews), '-')
-         || ', profile_reviews=' || coalesce(case when to_regclass('public.profile_reviews') is not null then (select count(*)::text from public.profile_reviews) end, 'table missing')
-         || ', comments=' || coalesce(case when to_regclass('public.comments') is not null then (select count(*)::text from public.comments) end, 'table missing')
-         || ', feed_posts=' || coalesce(case when to_regclass('public.feed_posts') is not null then (select count(*)::text from public.feed_posts) end, 'table missing')
+         (select string_agg(t || '=' || case when to_regclass('public.' || t) is null then 'table missing'
+                  else (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from public.%I', t), false, true, '')))[1]::text end, ', ')
+            from unnest(array['services', 'reviews', 'profile_reviews', 'comments', 'feed_posts']) t)
   union all
   select 5, 'FUNCTION ' || p.proname, 'args (' || pg_get_function_identity_arguments(p.oid) || ') returns ' || pg_get_function_result(p.oid)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace

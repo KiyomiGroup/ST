@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Services · StreetTasker Admin</title>
+</head>
+<body class="ad-body" data-page="services">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Services</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="svRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Services</h1>
+            <p>Every service listing a Tasker has published. Read only. There is no hide or restore here yet: hiding a listing has to be wired into the rules the public site reads, and that is the next step. &ldquo;Paused&rdquo; is the subscription pause flag; it is not a moderation decision. No report table for listings exists yet, so no report counts are shown.</p>
+          </div>
+          <section class="ad-card ad-dash-section" aria-labelledby="svSumTitle">
+            <h2 class="ad-card-title" id="svSumTitle">Overview</h2>
+            <div id="svSummary"></div>
+            <h3 class="ad-card-title">Categories (read only)</h3>
+            <div id="svCats"></div>
+          </section>
+          <section class="ad-card ad-dash-section" aria-labelledby="svListTitle">
+            <h2 class="ad-card-title" id="svListTitle">Listings</h2>
+            <div class="ad-filters">
+              <label class="ad-filter ad-filter--grow"><span class="ad-filter-label">Search (service, category, Tasker or place)</span>
+                <input class="form-input" id="svSearch" type="search" maxlength="80" autocomplete="off" /></label>
+              <div class="ad-actions"><button type="button" class="btn" id="svGo">Search</button></div>
+            </div>
+            <div class="ad-tabs" role="group" aria-label="Show listings" id="svTabs"></div>
+            <p class="ad-hint" id="svCount" aria-live="polite"></p>
+            <div id="svList"></div>
+            <div class="ad-actions ad-pager" id="svPager" hidden>
+              <button type="button" class="btn" id="svNewer">Newer</button>
+              <button type="button" class="btn" id="svOlder">Older</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-trust.js"></script>
+</body>
+</html>
