@@ -36,3 +36,9 @@
   Result: choosing Sales never showed the products form, and choosing Other never showed the "describe your category" box. The listener no longer depends on `#svcChips`.
 - tests/category-forms.test.js (new, 17 tests): schemas only name real subcategories, fields are well formed, every subcategory (and Other) gets questions, validation, dropping hidden answers, describe().
 - No new SQL. Needs `sql/categories/c1-subcategory-details.sql` (Stage 1) to have been run, same as before.
+
+
+## Categories Stage 4a (2026-11-11): questions for Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring
+- js/category-forms.js: five new schemas (`home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). Every subcategory and Other has at least two questions. Towing and Roadside Assistance skip the workshop question; Garden Design and Interior Design skip the tools question; repair-type Fashion work skips fabric.
+- tests/category-forms.test.js: PILOT list extended; the "no form yet" check now uses Security, Health and Legal; new batch A tests.
+- No SQL, HTML or CSS changes. Existing listings in these categories have details = null until the tasker edits them.

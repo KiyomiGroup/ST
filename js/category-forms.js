@@ -40,7 +40,7 @@
   var OTHER_SUB = 'Other (not listed)';
   var CHIP_MAX = 5;   /* a one-answer question with more options than this becomes a dropdown */
 
-  /* ── The pilot schemas: Cleaning, Repairs, Moving & Delivery (picked because their shapes differ most) ── */
+  /* ── Pilot schemas (Stage 3): Cleaning, Repairs, Moving & Delivery. Batch A (Stage 4a) follows below. ── */
   var SCHEMAS = {};
 
   SCHEMAS.cleaning = {
@@ -110,6 +110,136 @@
       { key: 'storage_features', label: 'Storage features', type: 'multi', subs: ['Warehousing'], hint: 'Optional', options: ['24-hour security', 'CCTV', 'Fire safety', 'Dry & ventilated'] },
       { key: 'freight_modes', label: 'How can you ship?', type: 'multi', required: true, subs: ['International Freight Forwarding'], options: ['Air', 'Sea', 'Road'] },
       { key: 'customs', label: 'Do you handle customs clearance?', type: 'yesno', required: true, subs: ['International Freight Forwarding'] }
+    ]
+  };
+
+  /* ═══ Stage 4, batch A ═══════════════════════════════════════════════════════════════════════════
+     Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring.
+     Questions are my own design (the Category Directory "Listing fields" lists were never supplied); keys are settled once listings exist. */
+
+  SCHEMAS.home_furniture = {
+    groups: {
+      design:  ['Interior Decoration', 'Interior Design'],
+      fixings: ['Wall Mounting', 'TV Installation', 'Shelf Installation', 'Curtain Installation', 'Blind Installation'],
+      supply:  ['Furniture Repair', 'Upholstery', 'Cabinet Installation', 'Curtain Installation', 'Blind Installation', 'Wallpaper Installation', 'Home Improvement', 'Interior Decoration'],
+      pieces:  ['Furniture Assembly', 'Furniture Repair', 'Upholstery']
+    },
+    fields: [
+      { key: 'tools', label: 'Do you bring your own tools?', type: 'yesno', required: true, notSubs: '@design' },
+      { key: 'materials', label: 'Materials and fittings', type: 'select', required: true, subs: '@supply', options: ['Client supplies', 'I supply (charged at cost)', 'Either'] },
+      { key: 'furniture_types', label: 'Furniture you work on', type: 'multi', required: true, subs: '@pieces', options: ['Beds & wardrobes', 'Sofas & chairs', 'Tables & desks', 'Cabinets & shelves', 'Office furniture'] },
+      { key: 'wall_types', label: 'Walls you can fix into', type: 'multi', required: true, subs: '@fixings', options: ['Concrete or block', 'Drywall or POP', 'Tiled walls', 'Wood panels'] },
+      { key: 'tv_size', label: 'Largest TV you mount', type: 'select', required: true, subs: ['TV Installation'], options: ['Up to 43 inch', '44 to 65 inch', '66 inch or bigger'] },
+      { key: 'design_services', label: 'What do you offer?', type: 'multi', required: true, subs: '@design', options: ['Space planning', 'Colour schemes', 'Furniture sourcing', '3D visuals', 'Styling and accessories'] },
+      { key: 'site_visit', label: 'Do you visit the home before quoting?', type: 'yesno', required: true, subs: '@design' },
+      { key: 'organise_areas', label: 'Areas you organise', type: 'multi', required: true, subs: ['Home Organisation'], options: ['Wardrobes', 'Kitchen & pantry', 'Garage or store', 'Home office', "Children's rooms"] },
+      { key: 'smart_systems', label: 'Smart systems you set up', type: 'multi', required: true, subs: ['Home Automation'], options: ['Smart lighting', 'Smart locks & doorbells', 'CCTV link-up', 'Voice assistants', 'Whole-home control'] },
+      { key: 'improvement_jobs', label: 'Jobs you do', type: 'multi', required: true, subs: ['Home Improvement'], options: ['POP ceilings', 'Flooring', 'Tiling', 'Doors & windows', 'Kitchen & bathroom upgrades'] },
+      { key: 'warranty', label: 'Guarantee on your work', type: 'select', options: ['None', '7 days', '30 days', '3 months', '6 months or more'], hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.landscaping = {
+    groups: {
+      sized:    ['Gardening', 'Landscaping', 'Lawn Mowing', 'Weed Removal', 'Garden Maintenance', 'Hedge Trimming', 'Outdoor Cleaning', 'Pressure Washing', 'Paving & Hardscaping', 'Irrigation Installation'],
+      cuttings: ['Gardening', 'Lawn Mowing', 'Tree Trimming', 'Hedge Trimming', 'Weed Removal', 'Garden Maintenance'],
+      build:    ['Landscaping', 'Garden Design', 'Irrigation Installation', 'Paving & Hardscaping', 'Outdoor Decoration', 'Plant Care', 'Gardening'],
+      regular:  ['Gardening', 'Lawn Mowing', 'Hedge Trimming', 'Garden Maintenance', 'Pool Cleaning', 'Plant Care']
+    },
+    fields: [
+      { key: 'equipment', label: 'Tools and equipment', type: 'select', required: true, notSubs: ['Garden Design'], options: ['I bring them', 'Client provides', 'Either'] },
+      { key: 'materials', label: 'Plants, soil and materials', type: 'select', required: true, subs: '@build', options: ['Client supplies', 'I supply (charged at cost)', 'Either'] },
+      { key: 'property_types', label: 'Places you work in', type: 'multi', required: true, options: ['Home gardens', 'Estates & compounds', 'Offices & commercial', 'Schools, churches & halls'] },
+      { key: 'max_area', label: 'Largest area you take on', type: 'select', required: true, subs: '@sized', options: ['Up to 100 sqm', '100 to 500 sqm', '500 to 2,000 sqm', 'Over 2,000 sqm'] },
+      { key: 'tree_height', label: 'Highest trees you trim', type: 'select', required: true, subs: ['Tree Trimming'], options: ['Up to 3 metres', 'Up to 6 metres', 'Above 6 metres'] },
+      { key: 'safety_gear', label: 'Do you use climbing and safety equipment?', type: 'yesno', required: true, subs: ['Tree Trimming'] },
+      { key: 'pool_chemicals', label: 'Are pool chemicals included in your price?', type: 'yesno', required: true, subs: ['Pool Cleaning'] },
+      { key: 'irrigation_types', label: 'Systems you install', type: 'multi', required: true, subs: ['Irrigation Installation'], options: ['Drip lines', 'Sprinklers', 'Borehole or pump connection', 'Timers & controllers'] },
+      { key: 'design_output', label: 'What the customer receives', type: 'multi', required: true, subs: ['Garden Design'], options: ['Layout plan', 'Plant list', '3D visual', 'Site supervision'] },
+      { key: 'waste_removal', label: 'Do you take away the cuttings and waste?', type: 'yesno', required: true, subs: '@cuttings' },
+      { key: 'recurring', label: 'Do you offer weekly or monthly visits?', type: 'yesno', subs: '@regular', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.automotive = {
+    groups: {
+      mobileOnly: ['Vehicle Towing', 'Roadside Assistance'],
+      makes:      ['Car Mechanic', 'Auto Electrician', 'Vehicle Diagnostics', 'Vehicle Servicing', 'Car Air Conditioning Repair', 'Motorcycle Repair', 'Auto Parts Installation', 'Car Body Work'],
+      parts:      ['Car Mechanic', 'Auto Electrician', 'Car Body Work', 'Tyre Replacement', 'Battery Replacement', 'Car Air Conditioning Repair', 'Auto Parts Installation', 'Windscreen Repair', 'Vehicle Servicing', 'Motorcycle Repair'],
+      washing:    ['Car Wash', 'Car Detailing', 'Car Interior Cleaning'],
+      reports:    ['Vehicle Diagnostics', 'Vehicle Inspection']
+    },
+    fields: [
+      { key: 'service_location', label: 'Where do you work?', type: 'select', required: true, notSubs: '@mobileOnly', options: ['At my workshop', 'I come to the customer', 'Both'] },
+      { key: 'vehicle_types', label: 'Vehicles you work on', type: 'multi', required: true, notSubs: ['Motorcycle Repair'], options: ['Cars', 'SUVs & jeeps', 'Buses & vans', 'Trucks', 'Motorcycles'] },
+      { key: 'makes', label: 'Makes you know well', type: 'multi', required: true, subs: '@makes', options: ['Japanese', 'European', 'American', 'Korean', 'Chinese'] },
+      { key: 'parts', label: 'Spare parts', type: 'select', required: true, subs: '@parts', options: ['Client supplies', 'I supply (charged at cost)', 'Either'] },
+      { key: 'scanner', label: 'Do you use a computer diagnostic scanner?', type: 'yesno', required: true, subs: ['Vehicle Diagnostics', 'Auto Electrician'] },
+      { key: 'written_report', label: 'Do you give a written report?', type: 'yesno', required: true, subs: '@reports' },
+      { key: 'wash_types', label: 'What is included?', type: 'multi', required: true, subs: '@washing', options: ['Exterior wash', 'Interior vacuum', 'Engine bay', 'Polish & wax', 'Ceramic coating', 'Steam cleaning'] },
+      { key: 'tyre_services', label: 'Tyre services', type: 'multi', required: true, subs: ['Tyre Replacement'], options: ['Fitting', 'Balancing', 'Wheel alignment', 'Puncture repair'] },
+      { key: 'body_jobs', label: 'Body work you do', type: 'multi', required: true, subs: ['Car Body Work'], options: ['Dents', 'Panel beating', 'Spray painting', 'Bumper repair', 'Rust treatment'] },
+      { key: 'wrap_types', label: 'Wrapping you do', type: 'multi', required: true, subs: ['Vehicle Wrapping'], options: ['Full wrap', 'Partial wrap', 'Colour change', 'Branding & adverts', 'Paint protection film'] },
+      { key: 'towing_truck', label: 'Type of tow truck', type: 'select', required: true, subs: ['Vehicle Towing'], options: ['Flatbed', 'Hook and chain', 'Both'] },
+      { key: 'coverage', label: 'How far do you travel?', type: 'select', required: true, subs: '@mobileOnly', options: ['Within my city', 'Between cities'] },
+      { key: 'roadside_help', label: 'Help you give on the road', type: 'multi', required: true, subs: ['Roadside Assistance'], options: ['Jump start', 'Flat tyre', 'Fuel delivery', 'Lock-out', 'Winching'] },
+      { key: 'response_time', label: 'How fast can you reach a customer?', type: 'select', required: true, subs: '@mobileOnly', options: ['Within 30 minutes', 'Within 1 hour', 'Within 2 hours', 'Booked in advance only'] },
+      { key: 'open_24h', label: 'Do you work day and night?', type: 'yesno', subs: '@mobileOnly', hint: 'Optional' },
+      { key: 'warranty', label: 'Guarantee on your work', type: 'select', notSubs: '@mobileOnly', options: ['None', '7 days', '30 days', '3 months', '6 months or more'], hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.grooming = {
+    groups: {
+      hair:     ['Hair Styling', 'Hair Braiding', 'Hair Treatment', 'Hair Colouring'],
+      nails:    ['Nail Technology', 'Manicure & Pedicure'],
+      parties:  ['Makeup Artistry', 'Hair Styling', 'Hair Braiding', 'Nail Technology', 'Manicure & Pedicure', 'Spa Services']
+    },
+    fields: [
+      { key: 'service_location', label: 'Where do you work?', type: 'select', required: true, options: ['At my salon or shop', 'I come to the customer', 'Both'] },
+      { key: 'clients', label: 'Who do you serve?', type: 'multi', required: true, options: ['Women', 'Men', 'Children'] },
+      { key: 'products', label: 'Products and materials', type: 'select', required: true, options: ['I use my own', 'Client provides', 'Either'] },
+      { key: 'sterilise', label: 'Do you sterilise your tools between clients?', type: 'yesno', required: true },
+      { key: 'hair_types', label: 'Hair you work with', type: 'multi', required: true, subs: '@hair', options: ['Natural hair', 'Relaxed hair', 'Weave & extensions', 'Locs', 'Wigs'] },
+      { key: 'braid_styles', label: 'Styles you do', type: 'multi', required: true, subs: ['Hair Braiding'], options: ['Cornrows', 'Box braids', 'Knotless braids', 'Twists', 'Crochet', 'Ghana weaving'] },
+      { key: 'barber_services', label: 'Services you offer', type: 'multi', required: true, subs: ['Barbing'], options: ['Haircut', 'Beard trim', 'Shaving', 'Hair dye', "Children's cuts"] },
+      { key: 'wig_services', label: 'Wig work you do', type: 'multi', required: true, subs: ['Wig Making'], options: ['Custom wigs', 'Ventilating', 'Frontal or closure install', 'Revamping', 'Colouring'] },
+      { key: 'makeup_types', label: 'Makeup you do', type: 'multi', required: true, subs: ['Makeup Artistry'], options: ['Bridal', 'Events & parties', 'Photoshoots & film', 'Special effects', 'Makeup lessons'] },
+      { key: 'nail_services', label: 'Nail services', type: 'multi', required: true, subs: '@nails', options: ['Acrylic', 'Gel', 'Natural nail care', 'Nail art', 'Pedicure', 'Removal'] },
+      { key: 'lash_styles', label: 'Lash styles', type: 'multi', required: true, subs: ['Eyelash Extensions'], options: ['Classic', 'Volume', 'Hybrid', 'Lash lift'] },
+      { key: 'brow_services', label: 'Brow services', type: 'multi', required: true, subs: ['Eyebrow Services'], options: ['Threading', 'Waxing', 'Microblading', 'Tinting', 'Shaping'] },
+      { key: 'skin_services', label: 'Skin services', type: 'multi', required: true, subs: ['Skincare Services'], options: ['Facials', 'Acne care', 'Chemical peels', 'Anti-ageing', 'Skin consultation'] },
+      { key: 'massage_types', label: 'Massage types', type: 'multi', required: true, subs: ['Massage Therapy'], options: ['Relaxation', 'Deep tissue', 'Sports', 'Prenatal', 'Foot'] },
+      { key: 'spa_services', label: 'Spa services', type: 'multi', required: true, subs: ['Spa Services'], options: ['Facials', 'Body scrubs & wraps', 'Steam or sauna', 'Massage', 'Full packages'] },
+      { key: 'waxing_areas', label: 'Areas you wax', type: 'multi', required: true, subs: ['Body Waxing'], options: ['Face', 'Arms & legs', 'Underarms', 'Bikini area', 'Full body'] },
+      { key: 'grooming_services', label: 'Services you offer', type: 'multi', required: true, subs: ['Personal Grooming'], options: ['Shaving & beard care', 'Skin & hair routine', 'Wedding grooming', 'Grooming advice'] },
+      { key: 'group_bookings', label: 'Can you serve a group (for example a bridal party)?', type: 'yesno', subs: '@parties', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.fashion = {
+    groups: {
+      making: ['Tailoring', 'Dressmaking', 'Suit Making', 'Traditional Wear', 'Bridal Wear', 'Fashion Design', 'Embroidery', 'Beadwork'],
+      garments: ['Tailoring', 'Dressmaking', 'Suit Making', 'Traditional Wear', 'Bridal Wear', 'Fashion Design', 'Pattern Making', 'Clothing Alterations'],
+      fixing: ['Clothing Alterations', 'Clothing Repairs', 'Shoe Repair', 'Bag Repair'],
+      fitted: ['Tailoring', 'Dressmaking', 'Suit Making', 'Traditional Wear', 'Bridal Wear']
+    },
+    fields: [
+      { key: 'fabric_by', label: 'Who supplies the fabric?', type: 'select', required: true, subs: '@making', options: ['Client', 'Me', 'Either'] },
+      { key: 'turnaround_days', label: 'Usual turnaround', type: 'number', required: true, min: 1, max: 180, unit: 'days', placeholder: 'e.g. 7' },
+      { key: 'garment_types', label: 'Clothes you make or alter', type: 'multi', required: true, subs: '@garments', options: ["Women's wear", "Men's wear", "Children's wear", 'Native & traditional', 'Corporate & uniforms'] },
+      { key: 'fittings', label: 'Fittings before delivery', type: 'select', required: true, subs: ['Suit Making', 'Bridal Wear', 'Tailoring', 'Dressmaking'], options: ['One fitting', 'Two fittings', 'Three or more'] },
+      { key: 'measure_home', label: "Do you take measurements at the customer's home?", type: 'yesno', subs: '@fitted', hint: 'Optional' },
+      { key: 'design_services', label: 'What do you offer?', type: 'multi', required: true, subs: ['Fashion Design'], options: ['Custom designs', 'Collections', 'Sketches & tech packs', 'Sample making', 'Production runs'] },
+      { key: 'pattern_outputs', label: 'What the customer receives', type: 'multi', required: true, subs: ['Pattern Making'], options: ['Paper patterns', 'Digital patterns', 'Size grading', 'Tech packs'] },
+      { key: 'fix_jobs', label: 'Jobs you do', type: 'multi', required: true, subs: ['Clothing Alterations', 'Clothing Repairs'], options: ['Hemming', 'Taking in or letting out', 'Zips', 'Resizing', 'Patching & darning', 'Buttons'] },
+      { key: 'shoe_jobs', label: 'Shoe work you do', type: 'multi', required: true, subs: ['Shoe Repair'], options: ['Resoling', 'Heel repair', 'Stitching', 'Cleaning & polishing', 'Stretching'] },
+      { key: 'bag_jobs', label: 'Bag work you do', type: 'multi', required: true, subs: ['Bag Repair'], options: ['Zips', 'Straps & handles', 'Stitching', 'Lining', 'Leather repair'] },
+      { key: 'embroidery_types', label: 'Embroidery you do', type: 'multi', required: true, subs: ['Embroidery'], options: ['Machine embroidery', 'Hand embroidery', 'Logos & monograms', 'Names & lettering'] },
+      { key: 'bead_items', label: 'Beadwork you make', type: 'multi', required: true, subs: ['Beadwork'], options: ['Jewellery', 'Bridal accessories', 'Traditional caps & accessories', 'Bag & shoe decoration', 'Wall art'] },
+      { key: 'styling_services', label: 'Styling you offer', type: 'multi', required: true, subs: ['Fashion Styling'], options: ['Personal wardrobe', 'Event outfits', 'Photoshoot styling', 'Shopping with the client', 'Wardrobe clear-out'] },
+      { key: 'rush_orders', label: 'Do you take rush orders?', type: 'yesno', hint: 'Optional' },
+      { key: 'pickup', label: 'Do you offer pickup and delivery?', type: 'yesno', hint: 'Optional' }
     ]
   };
 

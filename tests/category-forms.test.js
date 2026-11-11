@@ -12,7 +12,7 @@ const ctx = { window: win };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'categories.js'), 'utf8'), ctx);
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'category-forms.js'), 'utf8'), ctx);
 const S = win.STCat, F = win.STCatForms;
-const PILOT = ['cleaning', 'handyman', 'logistics'];
+const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion'];
 const OTHER = F.OTHER_SUB;
 const plain = (x) => JSON.parse(JSON.stringify(x));   /* objects from the vm sandbox have a different prototype */
 
@@ -22,7 +22,7 @@ function groupList(schema, spec) { return typeof spec === 'string' ? (schema.gro
 
 test('the three pilot categories have a form; the others do not yet', () => {
   PILOT.forEach(c => assert.ok(F.has(c), c));
-  ['sales', 'other', 'fashion', 'security', 'health'].forEach(c => assert.ok(!F.has(c), c + ' should not have a form yet'));
+  ['sales', 'other', 'security', 'health', 'legal'].forEach(c => assert.ok(!F.has(c), c + ' should not have a form yet'));
 });
 
 test('every subcategory named in a schema really exists in that category', () => {
@@ -151,7 +151,7 @@ test('text is trimmed and spaces collapsed', () => {
 });
 
 test('categories without a form save nothing (null) and never block', () => {
-  const r = F.validate('fashion', 'Tailoring', { anything: 1 });
+  const r = F.validate('security', 'Event Security', { anything: 1 });
   assert.ok(r.ok && r.clean === null);
   assert.ok(F.validate('sales', 'Phones & Accessories', {}).ok);
 });
@@ -168,4 +168,53 @@ test('describe turns saved answers into readable lines for customers', () => {
   assert.strictEqual(lines[3].label, 'Do you offer weekly or monthly visits');
   assert.deepStrictEqual(plain(F.describe('fashion', 'Tailoring', { a: 1 })), []);
   assert.deepStrictEqual(plain(F.describe('cleaning', 'Office Cleaning', null)), []);
+});
+
+/* ── Stage 4, batch A: Home & Furniture, Gardening, Automotive, Beauty, Fashion ── */
+const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion'];
+
+test('batch A: every subcategory (and Other) is asked at least two questions', () => {
+  BATCH_A.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
+    assert.ok(keys(cat, sub).length >= 2, cat + ' / ' + sub + ' has fewer than two questions');
+  }));
+});
+
+test('batch A: questions follow the type of work', () => {
+  assert.ok(keys('home_furniture', 'TV Installation').includes('tv_size'));
+  assert.ok(!keys('home_furniture', 'Wall Mounting').includes('tv_size'));
+  assert.ok(!keys('home_furniture', 'Interior Design').includes('tools'));
+  assert.ok(keys('landscaping', 'Tree Trimming').includes('safety_gear'));
+  assert.ok(!keys('landscaping', 'Lawn Mowing').includes('tree_height'));
+  assert.ok(!keys('landscaping', 'Garden Design').includes('equipment'));
+  assert.ok(keys('automotive', 'Vehicle Towing').includes('towing_truck'));
+  assert.ok(!keys('automotive', 'Vehicle Towing').includes('service_location'));
+  assert.ok(!keys('automotive', 'Car Wash').includes('towing_truck'));
+  assert.ok(!keys('automotive', 'Motorcycle Repair').includes('vehicle_types'));
+  assert.ok(keys('grooming', 'Hair Braiding').includes('braid_styles'));
+  assert.ok(!keys('grooming', 'Barbing').includes('braid_styles'));
+  assert.ok(keys('grooming', 'Makeup Artistry').includes('group_bookings'));
+  assert.ok(keys('fashion', 'Shoe Repair').includes('shoe_jobs'));
+  assert.ok(!keys('fashion', 'Shoe Repair').includes('fabric_by'));
+  assert.ok(keys('fashion', 'Bridal Wear').includes('fittings'));
+});
+
+test('batch A: a full valid answer saves clean, versioned and flat; a missing required answer blocks', () => {
+  const ok = F.validate('fashion', 'Bridal Wear', { fabric_by: 'Either', turnaround_days: 21, garment_types: ["Women's wear"], fittings: 'Two fittings', measure_home: true, shoe_jobs: ['Resoling'] });
+  assert.ok(ok.ok, JSON.stringify(ok.errors));
+  const c = plain(ok.clean);
+  assert.strictEqual(c._v, 1);
+  assert.strictEqual(c.shoe_jobs, undefined);   /* hidden for Bridal Wear, so dropped */
+  const bad = F.validate('automotive', 'Vehicle Towing', { vehicle_types: ['Cars'], towing_truck: 'Flatbed', coverage: 'Within my city', response_time: 'Within 1 hour' });
+  assert.ok(bad.ok, JSON.stringify(bad.errors));
+  const missing = F.validate('grooming', 'Hair Braiding', { service_location: 'Both', clients: ['Women'], products: 'Either', sterilise: true, hair_types: ['Locs'] });
+  assert.ok(!missing.ok && missing.errors.braid_styles);
+});
+
+test('batch A: changing the type of work inside a category keeps shared answers and drops the rest', () => {
+  const vals = { tools: true, materials: 'Either', furniture_types: ['Sofas & chairs'] };
+  const r = F.validate('home_furniture', 'Upholstery', vals);
+  assert.ok(r.ok, JSON.stringify(r.errors));
+  const r2 = F.validate('home_furniture', 'Wall Mounting', { tools: true, wall_types: ['Concrete or block'], furniture_types: ['Sofas & chairs'] });
+  assert.ok(r2.ok, JSON.stringify(r2.errors));
+  assert.strictEqual(plain(r2.clean).furniture_types, undefined);
 });
