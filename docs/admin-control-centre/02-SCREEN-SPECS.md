@@ -27,13 +27,14 @@ Read `01-WHAT-NEEDS-ADMIN.md` first. Names marked **NEW** do not exist yet. Name
 
 Names follow the brief and are extended for what the site really has. Final spelling is fixed in A1 and recorded in `DATABASE-CHANGES.md`.
 
-`customers.view|edit|suspend` · `taskers.view|manage|suspend` · `local_taskers.view|manage` · `coordinators.view|manage|assign` · `coordinators.applications.review` · `admin.team.view|manage` · `admin.roles.manage` · `verification.view|review` · `bookings.view|manage` · `local_bookings.reassign` · `local_bookings.unlock` · `disputes.view|manage` · `disputes.refund.record` · `reviews.moderate` · `listings.moderate` · `community.moderate` · `trust.flags.view|manage` · `transactions.view` · `revenue.view` · `payouts.view` · `withdrawals.view` · `giftcards.view|manage` · `referrals.view` · `subscriptions.view|plans.edit|payments.view|revenue.view|override|adjust|credits.grant|review.resolve` · `coordinator_plans.view` · `notifications.send|broadcast` · `content.manage` · `analytics.view` · `settings.view|manage` · `audit_logs.view` · `approvals.view|request` · `approvals.decide` (Super Admin only) · `pii.reveal` · `export.run`.
+`customers.view|edit|suspend` · `taskers.view|manage|suspend` · `local_taskers.view|manage` · `coordinators.view|manage|assign` · `coordinators.applications.review` · `admin.team.view|manage` · `admin.roles.manage` · `verification.view|review` · `bookings.view|manage` · `local_bookings.reassign` · `local_bookings.unlock` · `disputes.view|manage` · `disputes.refund.record` · `reviews.moderate` · `listings.moderate` · `community.moderate` · `trust.flags.view|manage` · `transactions.view` · `revenue.view` · `payouts.view` · `withdrawals.view` · `giftcards.view|manage` · `referrals.view` · `subscriptions.view|plans.edit|payments.view|revenue.view|override|adjust|credits.grant|review.resolve` · `coordinator_plans.view` · `notifications.send|broadcast` · `content.manage` · `analytics.view` · `settings.view|manage` · `audit_logs.view` · `accounting.view|record|capital.request` · `approvals.view|request` · `approvals.decide` (Super Admin only) · `pii.reveal` · `export.run`.
 
 | Role | Gets |
 |---|---|
 | Super Admin | Everything, plus `approvals.decide`, `admin.*`. Explicitly assigned. At least two recommended (D-A10). |
 | Operations Admin | customers, taskers, local_taskers, coordinators (+assign), bookings, local_bookings.*, listings, community, analytics.view |
 | Finance Admin | transactions, revenue, payouts, withdrawals, giftcards.view, referrals.view, subscriptions.view/payments/revenue, coordinator_plans.view, export.run. **No money-moving function exists for anyone.** |
+| Accountant (planned, A15b-1) | Money only: accounting.view|record|capital.request, transactions.view, revenue.view, payouts.view, withdrawals.view, giftcards.view, referrals.view, subscriptions.view/payments.view/revenue.view, coordinator_plans.view, export.run. Cannot see people, bookings, verification or content. Cannot edit a ledger entry or repay capital without an approval. |
 | Verification Admin | verification.view/review, local_taskers.view, coordinators.view |
 | Support Admin | disputes.*, trust.flags.*, reviews.moderate, customers.view, taskers.view, bookings.view, pii.reveal (limited) |
 | Content Admin | content.manage, notifications.send (not broadcast), listings.moderate, community.moderate |
@@ -118,6 +119,12 @@ Format: **Purpose** · **Data** · **Shows** · **Actions (permission; approval?
 - **Data.** `payment_intents` (CONFIRMED exists; purposes `request, booking, topup, tier_upgrade, subscription`), `payment_requests`, `escrow_payments`, `payments`, `job_refunds`, `subscription_receipts`, coordinator tier payments (`tier_upgrade`), gift-card orders, urgent fee (`URG-`, browser-verified, flagged).
 - **Shows.** One table with a **Purpose** column and filter: Job payment, Subscription, Coordinator plan, Gift card, Urgent fee, Other. Reference, customer, tasker, booking, amount (naira from kobo), provider, status, date, refund status, reconciliation status (matched / needs review / unverified).
 - **Actions.** Read-only. Export (`export.run`, logged). "Mark reconciled" only if A15 finds a field for it, and then it needs a reason.
+
+### S14b Accountant dashboard (NEW, not in brief) · STAGES A15b-1 to A15b-3
+- **Spec.** `04-ACCOUNTANT-ADMIN.md` (section 0 is the full list of money flows and the ten dashboard blocks).
+- **Data.** Reads `payment_intents`, `payment_requests`, `escrow_payments`, `gift_card_*`, `subscription_receipts`, coordinator plan payments, `donations`, payout and withdrawal rows, `job_refunds`, `referral_rewards`. New `admin_topup_batches` (A15b-2) and `admin_money_ledger` (A15b-3).
+- **Shows.** Top-up needed now, cash position (typed), money in, owed to others, paid out, platform income and costs (profit), Local Taskers and coordinators, settlements expected versus received, capital (₦200,000, repaid, outstanding), ledger.
+- **Actions.** Record a top-up, a settlement received, an expense, capital in; request a capital repayment (needs a different Super Admin's approval). Nothing calls Paystack; nothing changes a wallet, escrow or payment.
 
 ### S15 Revenue and Commissions (brief 15) · STAGE A16
 - **Shows.** Four separate reports with their own definitions printed under each number: (1) regular Tasker commission (12% via `platform_fee_rate_for_booking`; excludes Local Taskers), (2) subscription revenue (paid receipts, plan only; add-ons separate if enabled), (3) coordinator plan revenue (tier upgrades), (4) other platform income (gift-card fees if any, to be confirmed). By day, week, month.

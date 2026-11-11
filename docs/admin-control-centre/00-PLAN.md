@@ -26,7 +26,7 @@ Rules that follow from the site:
 4. **Admin identity comes only from `admin_users`.** Never from `users.role` and never from `user_metadata` (users can edit their own metadata).
 5. **MFA (TOTP) required for admin accounts.** `admin_has()` checks the session level (`aal2`) once the owner has enrolled, controlled by a setting so the owner cannot lock herself out on day one (D-A2).
 6. **Existing support console is kept.** `support_staff`, `_is_support()` and all `support_*` functions stay. `_is_support()` is extended (never narrowed) to also accept `admin_has('disputes.manage')`.
-7. **Money.** No admin function calls Paystack. No admin function changes a wallet, an escrow row or a payment status. "Record" functions only write a note or an adjustment row.
+7. **Money.** No admin function calls Paystack. No admin function changes a wallet, an escrow row or a payment status. "Record" functions only write a note or an adjustment row. **Exception that is not an exception (2026-11-10):** the accountant admin (A15b) only shows numbers and records what the human did in Paystack; it still calls nothing. See `04-ACCOUNTANT-ADMIN.md`.
 8. **Identity.** No admin function writes a verified flag. Only existing `idv_*` functions change verification, as they do today.
 9. **Do not edit** `verify*`, `didit-*`, `idv_*`, `task_applications`, subscription SQL or payment Edge Functions (standing rule from earlier projects). Wrap or read only.
 
@@ -37,7 +37,7 @@ All new objects are additive, safe to run twice, with a rollback file, RLS on, a
 | Object | Purpose |
 |---|---|
 | `admin_users(user_id pk -> auth.users, display_name, status, created_by, created_at, last_seen_at, removed_at)` | Who is an admin. Status `active` / `suspended` / `removed`. |
-| `admin_roles(key pk, label, is_system)` | `super_admin`, `operations`, `finance`, `verification`, `support`, `content` |
+| `admin_roles(key pk, label, is_system)` | `super_admin`, `operations`, `finance`, `verification`, `support`, `content`, and (planned, A15b-1) `accountant` |
 | `admin_permissions(key pk, label, group_name, sensitive bool)` | The vocabulary in `02` section 1 |
 | `admin_role_permissions(role_key, permission_key)` | Role to permission |
 | `admin_user_roles(user_id, role_key, granted_by, granted_at)` | An admin may hold several roles |
@@ -107,8 +107,10 @@ Standing owner rules apply to every stage: **one stage per session, then stop an
 | **A13** | Disputes (move the support console) | `admin/disputes.html` reusing `support_*` functions; `_is_support()` extended; `support.html` kept until proven | Same | Same cases, same outcomes as `support.html`; local bookings appear; subscription payments do not | **P1 (H5, H11)** |
 | **A14** | Services, reviews, reports, community | `admin/services.html`, `reviews.html`; hide with reason **in a NEW column or table, never a new `listing_status` value (it allows only `active` and `paused`)**; flagged users (H12; the flag lives on `users`: `contact_violations`, `is_flagged`, `flagged_reason`) | Same | Hide/unhide logged and reversible; no negative-review removal reason | P2 |
 | **A15** | Transactions and reconciliation | `admin/transactions.html`; purpose filter; export; **includes a Donations tab** (table `donations`, permission `donations.view`: flagged, stuck and receipt-not-sent donations; donor email masked) | Same | Job, subscription, coordinator, gift-card and urgent-fee rows are labelled apart | P2 |
+| **A15b** | **PLANNED 2026-11-10 (spec only, nothing written).** Accountant admin, built in three parts: **A15b-1** role `accountant` and the read-only money dashboard (every money flow, `04-ACCOUNTANT-ADMIN.md` section 0.1); **A15b-2** daily 9 pm WAT batch, top-up recording and reminders; **A15b-3** ledger, settlements, expenses and the owner's ₦200,000 capital (repayment needs approval) | `04-ACCOUNTANT-ADMIN.md`; `admin/accountant.html`; `a15b-introspect.sql`, then `a15b-*.sql` (+ rollbacks); permissions `accounting.view`, `accounting.record`, `accounting.capital.request` | Owner answers D-A18 to D-A26; owner runs `a15b-introspect.sql` and sends the result | Accountant sees money only; 9 pm cutoff boundary tests; closed batch never changes; ledger entries never edited; capital repayment refused without an approved request; no Paystack call; no wallet, escrow or payment change | P1 |
 | **A16** | Revenue and commissions | `admin/revenue.html`; four separate reports | Same | Local Tasker earnings excluded from commission; definitions printed | P2 |
 | **A17** | Earnings and payouts watch | `admin/payouts.html` (regular and Local sections) | Same | Stuck and failed withdrawals visible; no money-moving control | P2 (H9) |
+| **M1** | **PLANNED, NOT ADMIN, needs the owner's explicit go.** Earnings instead of a tasker wallet, automatic payout after clearing, `awaiting_funds` state, balance check before each transfer | See `04-ACCOUNTANT-ADMIN.md` section 9; touches payment functions (rule 9 exception) | Owner go; Paystack settlement test results | Payout never sent twice; short balance waits instead of failing; existing wallet balances paid out first | P1 |
 | **A18** | Subscriptions, read-only | `admin/subscriptions.html` from the real subscription schema (tables are now known: `subscriptions`, `subscription_plans`, `subscription_receipts`, `subscription_events`, `subscription_payment_details`, `subscription_settings`, `subscription_admin_log`, `offer_credits`, `offer_usage`); also report the row count of `subscription_card_authorizations` (rule R-C) | **`ADMIN-REQUIREMENTS.md` and `docs/subscription/`** | Overview, plans, subscribers, payments, timeline, review cases | P2 |
 | **A19** | Subscription writes with approvals | Wrappers for the real subscription functions using `admin_consume_approval` | Same, plus confirmed signatures | Every write refused without a valid approval; reason >= 10 chars; event row written | P3 |
 | **A20** | Coordinator plans | `admin/coordinator-plans.html` | Same | Revenue kept apart from subscriptions | P3 |
@@ -125,7 +127,7 @@ Standing owner rules apply to every stage: **one stage per session, then stop an
 
 **Separate security stage S1 (not part of the admin build; the owner decides when).** Move the three literal secrets out of the `push-notifications` trigger and the `gift-card-deliveries` cron job into Supabase Vault and rotate them (`ARCHITECTURE.md` Part C item 6). Needs the owner's go, because rotating the service-role key breaks every Edge Function until its environment value is updated. It does not block A1.
 
-**Recommended order** (launch-blockers first, read-only before write): A0, A1, A2, A3, A4, A6, **A13, A9, A10, A12**, A5, A7, A8, A11, A15, A17, A16, A18, A14, A27, A19, A20, A21, A22, A23, A24, A25, A26, A28. A5 can move earlier if the owner wants staff accounts sooner.
+**Recommended order** (launch-blockers first, read-only before write): A0, A1, A2, A3, A4, A6, **A13, A9, A10, A12**, A5, A7, A8, A11, A15, **A15b**, A17, A16 (M1 when the owner says go), A18, A14, A27, A19, A20, A21, A22, A23, A24, A25, A26, A28. A5 can move earlier if the owner wants staff accounts sooner.
 
 ## 7. Testing approach (honest about what is possible)
 

@@ -131,7 +131,7 @@
     var when = lagosDate(info.next);
     var s = 'Earnings from a job can be withdrawn ' + (info.hours ? info.hours + (info.hours === 1 ? ' hour' : ' hours') : 'a while') + ' after the customer paid.';
     if (when) s += ' Next available: ' + when + '.';
-    return s + ' Once you have been on StreetTasker for 4 weeks with no disputes, your withdrawals are immediate.';
+    return s;
   }
 
   /* ── Countdown to the next withdrawal + the (i) details toggle ──

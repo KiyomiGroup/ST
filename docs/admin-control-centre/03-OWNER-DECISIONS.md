@@ -12,6 +12,11 @@
 - **D-A14 (answered by A0):** the limit exists as per-tier capacity in the database, not as a fixed 10 (`ARCHITECTURE.md` B5).
 - **D-A16 (answered by A0):** codes are still used by sign-up; no separate Codes screen.
 
+- **Float source (2026-11-10, owner):** top-ups start from her personal money; later Paystack settlements refill it, so over time she stops using personal money. Recorded as the `source` field and the owner-funded float in `04-ACCOUNTANT-ADMIN.md` section 5.
+- **Money flow (2026-11-10, owner, in chat):** every day at 9 pm Nigeria time the day's customer money (job payments and gift cards) is totalled, shown on an admin page and emailed to the admin; the admin tops up the Paystack Balance by hand and records it; payments after 9 pm go to the next day's batch; payouts keep the 24 hour clearing; Local Tasker-style automatic payout is wanted for regular taskers too (stage M1). Recorded as A15b and M1; see `04-ACCOUNTANT-ADMIN.md`.
+
+- **Accountant admin and capital (2026-11-10, owner):** the admin that handles money is called **Accountant**, handles money only, and shows every income, outgoing, spending, subscription, gift card, commission, payout and Local Tasker flow separately. The business starts with **₦200,000** of her own money as payout float; she expects that ₦200,000 back later. Recorded as A15b-1 to A15b-3 in `04-ACCOUNTANT-ADMIN.md`.
+
 Reply with the ID and "ok" or your change, for example "D-A1 ok, D-A7 later". Anything left unanswered uses the proposed default. None of these block A0 (the read-only SQL checks).
 
 | ID | Question | Proposed default | Why it matters |
@@ -33,6 +38,15 @@ Reply with the ID and "ok" or your change, for example "D-A1 ok, D-A7 later". An
 | **D-A15** | What does "suspend" mean for each person type? | Customer: cannot sign in to book or post; open bookings and disputes continue. Tasker: hidden from search, cannot take new work, open jobs continue. Local Tasker: unpublished, coordinator told. Nothing is deleted. | Money may be held on an open job; suspension must not strand it. |
 | **D-A16** | Coordinator codes (H8): are they still used after Stage D-2 closed code redemption? | A0 checks. If unused, no Codes screen. | Avoids building a screen for a removed feature. |
 | **D-A17** | The urgent-task fee is verified only in the browser (your issue X1, `js/tasks.js`). | Not part of admin. Admin labels it "unverified" in Transactions. Fix as a separate security stage. | A payment that the server never checked should not look trusted in finance reports. |
+| **D-A18** | Cutoff time | 9:00 pm Africa/Lagos (WAT, UTC+1, no daylight saving) = 20:00 UTC, by the time the server confirmed the payment. | The owner's own rule. Confirmation time, not the customer's click, so a late webhook cannot reopen a closed day. |
+| **D-A19** | What should "suggested top-up" be? | `due`: payouts falling due before the next cutoff, minus the balance she types. Income total shown beside it. Switchable to `income` (the day's total money in) in settings. | Income and what is due differ day to day. A top-up of income alone can be too small and leave payouts awaiting funds. Over time they match. |
+| **D-A20** | Gift card sales: add to the top-up? | No by default: shown as "keep in client money account". Gift-funded jobs are covered by payouts due. Switchable (`topup_include_gift_sales`). | Gift cards never expire, so the money may sit unused for a long time. Moving it all to Paystack is allowed but not needed. |
+| **D-A21** | Read the real Paystack Balance automatically? | No. She types it. | Rule 7: no admin function calls Paystack. A read-only balance function is possible later as a separate decision. |
+| **D-A22** | Who gets `accounting.view` and `accounting.record`? | The new Accountant role and Super Admin only. Reminders go to everyone with `accounting.view`. | Money visibility. |
+| **D-A23** | Does repaying the owner's ₦200,000 need a second person's approval? | Yes: the Accountant requests, a different Super Admin approves, the record is written once. | It is money going to the owner personally; two people must see it. |
+| **D-A24** | Expense categories | Paystack fees, Hosting and database, Email, ID verification, Domain, Marketing, Tax, Other. | The Accountant needs fixed groups so costs add up. Change the list if yours differ. |
+| **D-A25** | Does the Accountant see customer and tasker names? | Names masked; booking or payment reference shown. Reveal only through the existing logged reveal. | Least privilege. |
+| **D-A26** | The existing `finance` role | Stays read only and unchanged. `accountant` is a new role. | Avoids changing a role that already exists. |
 
 ## What to do now (after A0)
 
