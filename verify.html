@@ -105,7 +105,10 @@
             <span class="badge badge-amber">Pending</span>
             <p class="verify-status-msg">We are waiting for the verification result.</p>
             <p class="verify-status-sub">This page only shows a result once our server has confirmed it. You can leave and come back.</p>
-            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+            <div class="verify-actions">
+              <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+              <button type="button" class="btn btn-ghost" data-action="retry">Start again</button>
+            </div>
           </div>
 
           <div data-status-panel="VERIFIED" hidden>
@@ -117,7 +120,11 @@
           <div data-status-panel="REVIEW_REQUIRED" hidden>
             <span class="badge badge-amber">Needs attention</span>
             <p class="verify-status-msg">Your verification requires additional attention.</p>
-            <p class="verify-status-sub">You do not need to submit again. We will notify you when there is an update.</p>
+            <p class="verify-status-sub">If your ID was not accepted, you can try again now. Use an original, valid government-issued ID (for example an international passport, driver's licence or national ID card), not a passport photograph. If you do not try again, we will notify you when there is an update.</p>
+            <div class="verify-actions">
+              <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
+              <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
+            </div>
           </div>
 
           <div data-status-panel="FAILED" hidden>
