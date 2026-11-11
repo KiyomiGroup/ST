@@ -37,12 +37,32 @@
         <button type="submit" class="btn btn-primary" id="aiBtn">Save password and continue</button>
       </form>
 
+      <section id="aiEnrol" hidden aria-labelledby="aiEnrolTitle">
+        <h2 class="ad-card-title" id="aiEnrolTitle">Set up two-step verification</h2>
+        <p class="ad-note">Admin sign-in needs a 6-digit code from an authenticator app. Set it up now, once; you will need it every time you sign in.</p>
+        <ol class="ad-steps">
+          <li>Open an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, Authy or 1Password).</li>
+          <li>Scan this picture. If you cannot scan, type the set-up key instead.</li>
+        </ol>
+        <img class="ad-qr" id="aiQr" alt="QR code for your authenticator app" />
+        <p class="ad-hint">Set-up key (keep it private):</p>
+        <p class="ad-secret" id="aiSecret"></p>
+        <form class="ad-form" id="aiEnrolForm" novalidate>
+          <div class="ad-field">
+            <label for="aiCode">Then enter the 6-digit code from the app</label>
+            <input class="form-input ad-code-input" type="text" id="aiCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required />
+          </div>
+          <button type="submit" class="btn btn-primary" id="aiEnrolBtn">Verify and continue</button>
+        </form>
+      </section>
+
       <p class="ad-login-foot"><a href="/admin/login.html">Go to admin sign in</a></p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-mfa.js"></script>
   <script src="/admin/js/admin-accept-invite.js"></script>
 </body>
 </html>
