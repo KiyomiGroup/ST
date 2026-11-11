@@ -35,6 +35,7 @@
   <title>Verify Your Identity — StreetTasker</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/verify.css" />
+  <link rel="stylesheet" href="css/verify-page.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -42,7 +43,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
 </head>
-<body>
+<body class="st-shell">
 <!--
   Stage V3a markup + V3b behaviour (js/verify.js). Ship these two files and css/verify.css TOGETHER, in one commit.
   js/verify.js reads the status from the server, shows exactly ONE [data-status-panel], records consent, calls the
@@ -52,149 +53,159 @@
 
   <div id="navbar-placeholder"></div>
 
-  <main class="verify-page">
-    <div class="verify-wrap">
+  <main class="st-page st-page--narrow vf-page">
 
-      <!-- Header -->
-      <header class="verify-header">
-        <div class="icon-box verify-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <polyline points="9 12 11 14 15 10"/>
-          </svg>
+    <!-- Hero: the shared page-shell hero (same as Learn and Invite & Earn) -->
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Identity check</span>
+      <h1 class="st-hero-title">Verify your identity</h1>
+      <p class="st-hero-lead" id="verifyLead">
+        StreetTasker connects real people. Verifying your identity helps keep everyone safe, service providers and customers alike.
+      </p>
+    </section>
+
+    <!-- Loading (V3b hides it once the server status has been read) -->
+    <div id="verifyLoading" class="vf-loading" role="status" aria-live="polite">
+      <span class="verify-sr">Loading your verification status</span>
+      <div class="skel vf-skel-long"></div>
+      <div class="skel vf-skel-short"></div>
+    </div>
+
+    <!-- Message area (V3b writes plain text into these; never HTML) -->
+    <div id="verifyError" class="st-notice st-notice--danger vf-notice" role="alert" hidden></div>
+    <div id="verifyNotice" class="st-notice st-notice--info vf-notice" role="status" aria-live="polite" hidden></div>
+
+    <!-- Who is this for: self mode (the person) or proxy mode (a coordinator for a Local Tasker). V3b sets data-mode. -->
+    <div id="verifyMain" class="vf-main" data-mode="self" hidden>
+
+      <!-- ===== STATUS PANELS: V3b shows exactly one ===== -->
+      <section class="st-panel vf-status" aria-labelledby="verifyStatusHeading">
+        <h2 class="verify-sr" id="verifyStatusHeading">Verification status</h2>
+
+        <!-- The six messages below are the owner's wording (brief, phase 7). Do not reword them. -->
+        <div class="vf-state" data-status-panel="NOT_STARTED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <span class="badge badge-gray">Not started</span>
+          <p class="vf-status-msg">Your identity verification has not been completed.</p>
+          <p class="vf-status-sub">Tick the agreement box below, then start. It uses your phone or computer camera.</p>
         </div>
-        <h1 class="verify-title">Verify your identity</h1>
-        <p class="verify-lead" id="verifyLead">
-          StreetTasker connects real people. Verifying your identity helps keep everyone safe, service providers and customers alike.
-        </p>
-      </header>
 
-      <!-- Loading (V3b hides it once the server status has been read) -->
-      <div id="verifyLoading" class="verify-loading" role="status" aria-live="polite">
-        <span class="verify-sr">Loading your verification status</span>
-        <div class="skel verify-skel-long"></div>
-        <div class="skel verify-skel-short"></div>
-      </div>
-
-      <!-- Message area (V3b writes plain text into these; never HTML) -->
-      <div id="verifyError" class="verify-alert verify-alert-danger" role="alert" hidden></div>
-      <div id="verifyNotice" class="verify-alert verify-alert-info" role="status" aria-live="polite" hidden></div>
-
-      <!-- Who is this for: self mode (the person) or proxy mode (a coordinator for a Local Tasker). V3b sets data-mode. -->
-      <div id="verifyMain" data-mode="self" hidden>
-
-        <!-- ===== STATUS PANELS: V3b shows exactly one ===== -->
-        <section class="card verify-status" aria-labelledby="verifyStatusHeading">
-          <h2 class="verify-sr" id="verifyStatusHeading">Verification status</h2>
-
-          <!-- The six messages below are the owner's wording (brief, phase 7). Do not reword them. -->
-          <div data-status-panel="NOT_STARTED" hidden>
-            <span class="badge badge-gray">Not started</span>
-            <p class="verify-status-msg">Your identity verification has not been completed.</p>
-            <p class="verify-status-sub">Tick the agreement box below, then start. It uses your phone or computer camera.</p>
-          </div>
-
-          <div data-status-panel="IN_PROGRESS" hidden>
-            <span class="badge badge-amber">In progress</span>
-            <p class="verify-status-msg">Your identity verification is currently underway.</p>
-            <p class="verify-status-sub">If you left before finishing, you can continue where you stopped.</p>
+        <div class="vf-state" data-status-panel="IN_PROGRESS" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span>
+          <span class="badge badge-amber">In progress</span>
+          <p class="vf-status-msg">Your identity verification is currently underway.</p>
+          <p class="vf-status-sub">If you left before finishing, you can continue where you stopped.</p>
+          <div class="vf-actions">
             <button type="button" class="btn btn-primary" data-action="resume">Continue verification</button>
           </div>
+        </div>
 
-          <div data-status-panel="PENDING" hidden>
-            <span class="badge badge-amber">Pending</span>
-            <p class="verify-status-msg">We are waiting for the verification result.</p>
-            <p class="verify-status-sub">This page only shows a result once our server has confirmed it. You can leave and come back.</p>
-            <div class="verify-actions">
-              <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
-              <button type="button" class="btn btn-ghost" data-action="retry">Start again</button>
-            </div>
+        <div class="vf-state" data-status-panel="PENDING" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span>
+          <span class="badge badge-amber">Pending</span>
+          <p class="vf-status-msg">We are waiting for the verification result.</p>
+          <p class="vf-status-sub">This page only shows a result once our server has confirmed it. You can leave and come back.</p>
+          <div class="vf-actions">
+            <button type="button" class="btn btn-outline" data-action="refresh">Check again</button>
+            <button type="button" class="btn btn-ghost" data-action="retry">Start again</button>
           </div>
+        </div>
 
-          <div data-status-panel="VERIFIED" hidden>
-            <span class="badge badge-green">Verified</span>
-            <p class="verify-status-msg">Your identity has been successfully verified.</p>
+        <div class="vf-state" data-status-panel="VERIFIED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="badge badge-green">Verified</span>
+          <p class="vf-status-msg">Your identity has been successfully verified.</p>
+          <div class="vf-actions">
             <a id="verifyContinueBtn" href="index.html" class="btn btn-primary">Continue</a>
           </div>
-
-          <div data-status-panel="REVIEW_REQUIRED" hidden>
-            <span class="badge badge-amber">Needs attention</span>
-            <p class="verify-status-msg">Your verification requires additional attention.</p>
-            <p class="verify-status-sub">If your ID was not accepted, you can try again now. Use an original, valid government-issued ID (for example an international passport, driver's licence or national ID card), not a passport photograph. If you do not try again, we will notify you when there is an update.</p>
-            <div class="verify-actions">
-              <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
-              <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
-            </div>
-          </div>
-
-          <div data-status-panel="FAILED" hidden>
-            <span class="badge badge-gray">Not completed</span>
-            <p class="verify-status-msg">Your verification could not be completed. Follow the instructions to try again or contact support.</p>
-            <ul class="verify-list">
-              <li>Use a valid ID that has not expired.</li>
-              <li>Place the ID on a plain surface in good light, with all four corners in view and no glare.</li>
-              <li>Look straight at the camera, and make sure your face is clearly visible.</li>
-            </ul>
-            <div class="verify-actions">
-              <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
-              <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
-            </div>
-          </div>
-
-          <!-- Two extra states that the brief's six do not cover. The wording is NOT from the owner: please approve or change it. -->
-          <div data-status-panel="RESUBMIT_REQUESTED" hidden>
-            <span class="badge badge-amber">Action required</span>
-            <p class="verify-status-msg">Action required: please redo the steps you are asked to repeat.</p>
-            <button type="button" class="btn btn-primary" data-action="resume">Continue verification</button>
-          </div>
-
-          <div data-status-panel="EXPIRED" hidden>
-            <span class="badge badge-gray">Expired</span>
-            <p class="verify-status-msg">Your verification has expired. Please verify again.</p>
-            <button type="button" class="btn btn-primary" data-action="retry">Verify again</button>
-          </div>
-        </section>
-
-        <!-- ===== START AREA (shown by V3b for NOT_STARTED, FAILED, EXPIRED) ===== -->
-        <div id="verifyStart" hidden>
-
-          <section class="card verify-section" aria-labelledby="verifyWhyHeading">
-            <h2 class="verify-h2" id="verifyWhyHeading">Why we verify</h2>
-            <p class="verify-text">We check that you are the person on your ID before you can offer or book services, so people on StreetTasker can trust who they are dealing with.</p>
-
-            <h2 class="verify-h2">What you need</h2>
-            <ul class="verify-list">
-              <li>A valid government-issued ID.</li>
-              <li>A phone or computer with a camera.</li>
-              <li>A few minutes in a well-lit place.</li>
-            </ul>
-          </section>
-
-          <!-- Consent: ONE agreement box whose text links to the full Data Consent Notice (data-consent.html, opens in a new tab),
-               the way Jumio, CoinJar, Revolut and Envato do. The notice text is in docs/verification/CONSENT-WORDING.md and is NOT
-               legal text: a lawyer must approve it before launch (D-V8). If its meaning changes after launch, bump
-               idv_consent_version() and data-consent-version together (v1 -> v2), so older consents stop counting. -->
-          <section class="card verify-section" id="consentSection" aria-label="Agreement">
-            <div class="verify-consent" id="consentBlock" data-consent-version="v1">
-              <div class="consent-check" id="consentSelf">
-                <input type="checkbox" id="consentCheck" />
-                <label for="consentCheck">I have read the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity.</label>
-              </div>
-              <p class="verify-text verify-consent-done" id="consentDone" hidden>Your consent is recorded. <a href="data-consent.html" target="_blank" rel="noopener">Read the Data Consent Notice</a></p>
-            </div>
-
-            <button type="button" class="btn btn-primary btn-full" id="verifyStartBtn" data-action="start" disabled>
-              Start verification
-            </button>
-          </section>
         </div>
 
-        <!-- ===== COORDINATOR PROXY MODE (shown by V3c only for an assigned Local Tasker) ===== -->
-        <section class="card verify-section" id="proxyPanel" aria-labelledby="proxyHeading" hidden>
-          <h2 class="verify-h2" id="proxyHeading">Verification for <span id="proxyName"></span></h2>
-          <p class="verify-text">You are starting identity verification for a Local Tasker you manage. Explain the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> to them first. Only Didit's result can mark them verified; nothing on this page can.</p>
+        <div class="vf-state" data-status-panel="REVIEW_REQUIRED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <span class="badge badge-amber">Needs attention</span>
+          <p class="vf-status-msg">Your verification requires additional attention.</p>
+          <p class="vf-status-sub">If your ID was not accepted, you can try again now. Use an original, valid government-issued ID (for example an international passport, driver's licence or national ID card), not a passport photograph. If you do not try again, we will notify you when there is an update.</p>
+          <div class="vf-actions">
+            <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
+            <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
+          </div>
+        </div>
 
-          <div id="proxyConsentFields">
+        <div class="vf-state" data-status-panel="FAILED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <span class="badge badge-gray">Not completed</span>
+          <p class="vf-status-msg">Your verification could not be completed. Follow the instructions to try again or contact support.</p>
+          <ul class="vf-tips">
+            <li>Use a valid ID that has not expired.</li>
+            <li>Place the ID on a plain surface in good light, with all four corners in view and no glare.</li>
+            <li>Look straight at the camera, and make sure your face is clearly visible.</li>
+          </ul>
+          <div class="vf-actions">
+            <button type="button" class="btn btn-primary" data-action="retry">Try again</button>
+            <a class="btn btn-ghost" href="mailto:support@streettasker.com">Contact support</a>
+          </div>
+        </div>
+
+        <!-- Two extra states that the brief's six do not cover. The wording is NOT from the owner: please approve or change it. -->
+        <div class="vf-state" data-status-panel="RESUBMIT_REQUESTED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <span class="badge badge-amber">Action required</span>
+          <p class="vf-status-msg">Action required: please redo the steps you are asked to repeat.</p>
+          <div class="vf-actions">
+            <button type="button" class="btn btn-primary" data-action="resume">Continue verification</button>
+          </div>
+        </div>
+
+        <div class="vf-state" data-status-panel="EXPIRED" hidden>
+          <span class="vf-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <span class="badge badge-gray">Expired</span>
+          <p class="vf-status-msg">Your verification has expired. Please verify again.</p>
+          <div class="vf-actions">
+            <button type="button" class="btn btn-primary" data-action="retry">Verify again</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== START AREA (shown by V3b for NOT_STARTED, FAILED, EXPIRED) ===== -->
+      <div class="vf-start" id="verifyStart" hidden>
+
+        <section class="st-panel" aria-labelledby="verifyWhyHeading">
+          <h2 class="st-panel-title" id="verifyWhyHeading">Why we verify</h2>
+          <p class="st-panel-note">We check that you are the person on your ID before you can offer or book services, so people on StreetTasker can trust who they are dealing with.</p>
+
+          <h2 class="vf-subtitle">What you need</h2>
+          <ol class="vf-needs">
+            <li><span class="vf-need-num" aria-hidden="true">1</span><span>A valid government-issued ID.</span></li>
+            <li><span class="vf-need-num" aria-hidden="true">2</span><span>A phone or computer with a camera.</span></li>
+            <li><span class="vf-need-num" aria-hidden="true">3</span><span>A few minutes in a well-lit place.</span></li>
+          </ol>
+        </section>
+
+        <!-- Consent: ONE agreement box whose text links to the full Data Consent Notice (data-consent.html, opens in a new tab),
+             the way Jumio, CoinJar, Revolut and Envato do. The notice text is in docs/verification/CONSENT-WORDING.md and is NOT
+             legal text: a lawyer must approve it before launch (D-V8). If its meaning changes after launch, bump
+             idv_consent_version() and data-consent-version together (v1 -> v2), so older consents stop counting. -->
+        <section class="st-panel" id="consentSection" aria-label="Agreement">
+          <div class="vf-consent" id="consentBlock" data-consent-version="v1">
+            <div class="vf-check" id="consentSelf">
+              <input type="checkbox" id="consentCheck" />
+              <label for="consentCheck">I have read the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and I consent to StreetTasker and Didit processing my ID photo, selfie and face comparison (biometric data) to verify my identity.</label>
+            </div>
+            <p class="vf-consent-done" id="consentDone" hidden>Your consent is recorded. <a href="data-consent.html" target="_blank" rel="noopener">Read the Data Consent Notice</a></p>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-full" id="verifyStartBtn" data-action="start" disabled>
+            Start verification
+          </button>
+        </section>
+      </div>
+
+      <!-- ===== COORDINATOR PROXY MODE (shown by V3c only for an assigned Local Tasker) ===== -->
+      <section class="st-panel" id="proxyPanel" aria-labelledby="proxyHeading" hidden>
+        <h2 class="st-panel-title" id="proxyHeading">Verification for <span id="proxyName"></span></h2>
+        <p class="st-panel-note">You are starting identity verification for a Local Tasker you manage. Explain the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> to them first. Only Didit's result can mark them verified; nothing on this page can.</p>
+
+        <div class="vf-fields" id="proxyConsentFields">
           <div class="form-group">
             <label class="form-label" for="proxyMethod">How did the Local Tasker give consent?</label>
             <select id="proxyMethod" class="form-input">
@@ -209,29 +220,28 @@
             <input type="text" id="proxyEvidence" class="form-input" maxlength="200" autocomplete="off" />
             <div class="form-helper">For example a note or message reference. Do not type ID numbers here.</div>
           </div>
-          <div class="consent-check">
+          <div class="vf-check">
             <input type="checkbox" id="proxyConsentCheck" />
             <label for="proxyConsentCheck">I explained the <a href="data-consent.html" target="_blank" rel="noopener">Data Consent Notice</a> and this Local Tasker agreed to the identity check.</label>
           </div>
-          </div>
-          <button type="button" class="btn btn-primary btn-full" id="proxyStartBtn" data-action="proxy-start" disabled>
-            Start verification for this Local Tasker
-          </button>
+        </div>
+        <button type="button" class="btn btn-primary btn-full" id="proxyStartBtn" data-action="proxy-start" disabled>
+          Start verification for this Local Tasker
+        </button>
 
-          <div id="proxyLinkBox" class="verify-linkbox" hidden>
-            <p class="verify-text">Open this link on your phone, then hand the phone to the Local Tasker so they can take the photo of their ID and the selfie. Do not send the link to anyone else.</p>
-            <input type="text" id="proxyLinkInput" class="form-input" readonly autocomplete="off" />
-            <div class="verify-actions">
-              <button type="button" class="btn btn-outline" id="proxyCopyBtn">Copy link</button>
-              <a class="btn btn-primary" id="proxyOpenLink" href="#" rel="noopener">Open on this phone</a>
-            </div>
+        <div id="proxyLinkBox" class="vf-linkbox" hidden>
+          <p class="st-panel-note">Open this link on your phone, then hand the phone to the Local Tasker so they can take the photo of their ID and the selfie. Do not send the link to anyone else.</p>
+          <input type="text" id="proxyLinkInput" class="form-input" readonly autocomplete="off" />
+          <div class="vf-actions">
+            <button type="button" class="btn btn-outline" id="proxyCopyBtn">Copy link</button>
+            <a class="btn btn-primary" id="proxyOpenLink" href="#" rel="noopener">Open on this phone</a>
           </div>
-          <div class="verify-actions verify-actions-spaced">
-            <a class="btn btn-ghost" id="proxyBackLink" href="coordinator-taskers.html">Back to Local Tasker</a>
-          </div>
-        </section>
+        </div>
+        <div class="vf-actions">
+          <a class="btn btn-ghost" id="proxyBackLink" href="coordinator-taskers.html">Back to Local Tasker</a>
+        </div>
+      </section>
 
-      </div>
     </div>
   </main>
 
