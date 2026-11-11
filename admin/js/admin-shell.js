@@ -36,7 +36,8 @@
       { key: 'disputes',  label: 'Disputes',          href: 'disputes.html',  icon: 'flag',   any: ['disputes.manage'], built: true }
     ] },
     { group: 'Money', items: [
-      { key: 'accountant', label: 'Accountant', href: 'accountant.html', icon: 'chart', any: ['accounting.view'], built: true }
+      { key: 'accountant', label: 'Accountant', href: 'accountant.html', icon: 'chart', any: ['accounting.view'], built: true },
+      { key: 'payouts', label: 'Earnings and payouts', href: 'payouts.html', icon: 'list', any: ['payouts.view'], built: true }
     ] },
     { group: 'System', items: [
       { key: 'team',      label: 'Admin team',        href: 'team.html',      icon: 'users',  any: ['admin.team.view'], built: true },

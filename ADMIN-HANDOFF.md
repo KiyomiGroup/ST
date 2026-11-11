@@ -15,7 +15,10 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 7. The newest file in `docs/admin-control-centre/handoffs/` (now `A15b-followup.md`; older: `A15b.md`, `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-11, after A15b-2)
+## CURRENT STATE (2026-11-11, after A17)
+**A17 written: `sql/admin/a17-payouts.sql` (+ rollback), `admin/payouts.html`, `admin/js/admin-payouts.js`, menu item. SQL: 18 checks on a scratch Postgres; page: 17 checks against a fake Supabase; NOT run on Supabase, not deployed.** See `handoffs/A17.md`. **Open idea (owner, 2026-11-11):** set up the authenticator app on `admin/accept-invite.html` right after the invitee chooses a password, so new admins never need `a3c-mfa-off.sql`. Safe because the one-time invite link has just proven mailbox control; `AdminMfa.startEnrol` and `verify` already exist. Not built; needs the owner's go. Today a user with no authenticator app cannot open My profile while two-step is required (shell gate), hence the off/on trick. A15b-2 below is unchanged.
+
+## PREVIOUS STATE (2026-11-11, after A15b-2)
 **A15b-2 written: `admin/accountant.html` + `admin/js/admin-accountant.js` + menu item. No new SQL. 26 fake-Supabase browser checks pass; not run against real Supabase; not deployed.** Read `handoffs/A15b2.md`. NEXT: owner's choice (A17, A11, A15b-3, M1).
 
 ## PREVIOUS STATE (2026-11-11, later: owner ran the pending SQL; verification and encoding fixes)
