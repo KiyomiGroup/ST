@@ -74,6 +74,27 @@
             <div id="acProfit" aria-live="polite"></div>
           </section>
 
+          <section class="ad-card ad-dash-section" aria-labelledby="acCashTitle">
+            <h2 class="ad-card-title" id="acCashTitle">Cash position</h2>
+            <p class="ad-hint">The balances below are typed in by the accountant from the bank and the Paystack dashboard, with the date he read them. The site cannot see a real balance. &ldquo;Owed&rdquo; comes from site records.</p>
+            <div id="acCash" aria-live="polite"></div>
+            <form class="ad-form" id="acCashForm" novalidate hidden>
+              <h3>Record a balance</h3>
+              <div class="ad-field"><label for="cAccount">Account</label><select class="form-input" id="cAccount"><option value="bank_client">Client money bank account</option><option value="bank_operating">Operating bank account</option><option value="paystack_balance">Paystack Balance</option></select></div>
+              <div class="ad-field"><label for="cAmount">Balance (&#8358;)</label><input class="form-input" id="cAmount" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+              <div class="ad-field"><label for="cDate">Date you read it</label><input class="form-input" id="cDate" type="date" /></div>
+              <div class="ad-field"><label for="cNote">Note (optional)</label><input class="form-input" id="cNote" maxlength="300" autocomplete="off" /></div>
+              <p class="ad-error" id="cError" role="alert" hidden></p>
+              <button type="submit" class="btn btn-primary" id="cSave">Save balance</button>
+            </form>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acSetTitle">
+            <h2 class="ad-card-title" id="acSetTitle">Settlements</h2>
+            <p class="ad-hint">Record each Paystack settlement under &ldquo;Record a money step&rdquo; (Paystack settlement paid into the bank). Each one is compared with an <strong>estimate</strong>: payments confirmed since the previous settlement&rsquo;s day, minus the Paystack collection fees typed for the same days. The estimate is not Paystack&rsquo;s own figure; &ldquo;matched&rdquo; means within &#8358;50.</p>
+            <div id="acSettle" aria-live="polite"></div>
+          </section>
+
           <section class="ad-card ad-dash-section" aria-labelledby="acCapTitle">
             <h2 class="ad-card-title" id="acCapTitle">Owner capital</h2>
             <p class="ad-hint">Money the owner put in is a loan to the business, not income. All time, from typed entries.</p>

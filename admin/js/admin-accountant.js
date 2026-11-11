@@ -187,7 +187,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
     if (m || !res.data) { ctx.showError(box, m || 'The profit could not be read.', loadProfit); return; }
     var d = res.data; clear(box);
     var grid = el('div', 'ad-grid');
-    grid.appendChild(stat('Income', naira(d.income_kobo), 'Commission on released jobs, subscription payments, and the transfer fee and stamp duty deducted from taskers. From site records.'));
+    grid.appendChild(stat('Income', naira(d.income_kobo), 'Commission on released jobs, subscription payments, coordinator plan payments, and the transfer fee and stamp duty deducted from taskers. From site records.'));
     grid.appendChild(stat('Costs', naira(d.costs_kobo), 'Fees and expenses typed in below. Entered by the accountant.'));
     grid.appendChild(stat(d.complete ? 'Profit' : 'Profit (not final)', naira(d.profit_kobo), 'Income minus costs. Gift cards sold, donations, wallet top-ups, customer or tasker money and owner capital are never income.', d.complete ? null : 'warn'));
     box.appendChild(grid);
@@ -203,7 +203,6 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
       g[1].forEach(function (x) { var tr = el('tr'); cell(tr, 'Line', x.title); cell(tr, 'Amount', naira(x.amount_kobo)); t.body.appendChild(tr); });
       box.appendChild(t.wrap);
     });
-    box.appendChild(el('p', 'ad-hint', 'Coordinator plan payments are not counted yet, so income may be understated.'));
     stamp(d.generated_at);
   }
 
@@ -224,6 +223,86 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
     grid.appendChild(stat('Outstanding', naira(inK - outK), 'Put in minus repaid. Reversed entries are not counted.', (inK - outK) < 0 ? 'danger' : null));
     box.appendChild(grid);
     box.appendChild(el('p', 'ad-hint', 'This page cannot see the real bank or Paystack balance. Do not take money back unless the cash held covers what is still owed to taskers and gift card holders.'));
+  }
+
+
+  /* ---------------- cash position (A15b-3) ---------------- */
+  var ACCT_LABEL = { bank_client: 'Client money bank account', bank_operating: 'Operating bank account', paystack_balance: 'Paystack Balance' };
+  async function loadCash() {
+    var box = $('acCash'); clear(box); box.appendChild(ctx.skeleton(2));
+    var res = await call('admin_accountant_cash');
+    var m = fail(res);
+    if (m || !res.data) { ctx.showError(box, m || 'The cash position could not be read.', loadCash); return; }
+    var d = res.data; clear(box);
+    var grid = el('div', 'ad-grid');
+    (d.accounts || []).forEach(function (a) {
+      grid.appendChild(stat(ACCT_LABEL[a.account] || a.account, a.as_of ? naira(a.balance_kobo) : 'Not recorded',
+        a.as_of ? 'Typed by the accountant, read on ' + reportDay(a.as_of) + (a.stale ? '. This is more than 7 days old.' : '.') : 'No balance has been typed in yet.', a.stale ? 'warn' : null));
+    });
+    grid.appendChild(stat('Cash held (typed)', d.accounts_recorded === 3 ? naira(d.cash_total_kobo) : 'Not available', d.accounts_recorded === 3 ? 'The three balances above added together.' : 'Record all three balances to see a total.'));
+    box.appendChild(grid);
+    var g2 = el('div', 'ad-grid');
+    g2.appendChild(stat('Owed to Regular Taskers', naira(d.owed_taskers_kobo), 'Wallet balances plus clearing, from site records.'));
+    g2.appendChild(stat('Owed to Local Taskers', naira(d.owed_local_kobo), 'Payouts queued or processing, from site records.'));
+    g2.appendChild(stat('Capital outstanding', naira(d.capital_outstanding_kobo), 'Owner money still to be repaid.'));
+    g2.appendChild(stat('Safe to take back', naira(d.safe_to_take_back_kobo), 'Cash held minus what is owed to taskers. It does NOT subtract gift card balances, so it can be too high.', d.safe_to_take_back_kobo != null && d.capital_outstanding_kobo > d.safe_to_take_back_kobo ? 'warn' : null));
+    box.appendChild(g2);
+    if (d.safe_to_take_back_kobo != null && d.capital_outstanding_kobo > 0 && d.capital_outstanding_kobo > d.safe_to_take_back_kobo) {
+      var b = el('div', 'ad-banner'); b.appendChild(el('strong', null, 'Do not repay the full capital yet.'));
+      b.appendChild(el('p', 'ad-hint', 'The cash held does not cover the capital outstanding after what is owed to taskers.')); box.appendChild(b);
+    }
+    if (d.notes && d.notes.length) box.appendChild(el('p', 'ad-hint', 'Some site figures could not be read, so the owed amounts may show as Not available.'));
+    if (d.history && d.history.length) {
+      var t = tableOf('Recent balances', ['Read on', 'Account', 'Balance', 'Note']);
+      d.history.forEach(function (h) { var tr = el('tr'); cell(tr, 'Read on', reportDay(h.as_of)); cell(tr, 'Account', ACCT_LABEL[h.account] || h.account); cell(tr, 'Balance', naira(h.balance_kobo)); cell(tr, 'Note', h.note || ''); t.body.appendChild(tr); });
+      box.appendChild(t.wrap);
+    }
+  }
+  function setupCash() {
+    if (!canRecord) return;
+    var f = $('acCashForm'); f.hidden = false; $('cDate').max = lagosToday(); $('cDate').value = lagosToday();
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var err = $('cError'); err.hidden = true;
+      function bad(t) { err.textContent = t; err.hidden = false; }
+      var t = String($('cAmount').value || '').replace(/[,\s₦]/g, ''), k;
+      if (/^0+(\.0{1,2})?$/.test(t)) k = 0; else k = toKobo(t);
+      if (k == null) return bad('Enter the balance as a plain number, for example 250000 or 250000.50.');
+      if (!$('cDate').value || $('cDate').value > lagosToday()) return bad('Enter the date you read it (not in the future).');
+      $('cSave').disabled = true;
+      var res = await call('admin_accountant_cash_record', { p_account: $('cAccount').value, p_balance_kobo: k, p_as_of: $('cDate').value, p_note: $('cNote').value.trim() || null });
+      $('cSave').disabled = false;
+      var m = fail(res); if (m) return bad(m);
+      ctx.toast('Balance saved.', 'success'); $('cAmount').value = ''; $('cNote').value = '';
+      loadCash();
+    });
+  }
+
+  /* ---------------- settlements (A15b-3) ---------------- */
+  async function loadSettle() {
+    var box = $('acSettle'); clear(box); box.appendChild(ctx.skeleton(2));
+    var res = await call('admin_accountant_settlements', { p_limit: 24 });
+    var m = fail(res);
+    if (m || !res.data) { ctx.showError(box, m || 'The settlements could not be read.', loadSettle); return; }
+    var d = res.data, aw = d.awaiting || {}; clear(box);
+    var grid = el('div', 'ad-grid');
+    grid.appendChild(stat('Not yet received (estimate)', naira(aw.expected_kobo), 'Payments confirmed ' + (aw.since ? 'since ' + reportDay(aw.since) : 'so far') + ' (' + naira(aw.payments_kobo) + ') minus typed collection fees (' + naira(aw.fees_kobo) + '). An estimate, not Paystack\u2019s figure.'));
+    box.appendChild(grid);
+    var items = d.items || [];
+    if (!items.length) { box.appendChild(el('p', 'ad-note', 'No settlement has been recorded yet.')); return; }
+    var t = tableOf('Settlements', ['Settled on', 'Received', 'Estimate', 'Difference', 'Result', 'Reference']);
+    items.forEach(function (s) {
+      var tr = el('tr');
+      cell(tr, 'Settled on', reportDay(s.settled_on));
+      cell(tr, 'Received', naira(s.received_kobo));
+      cell(tr, 'Estimate', naira(s.expected_kobo));
+      cell(tr, 'Difference', naira(s.difference_kobo));
+      cell(tr, 'Result', badge(s.status === 'matched' ? 'Matched' : 'Difference'));
+      cell(tr, 'Reference', s.reference || '');
+      t.body.appendChild(tr);
+    });
+    box.appendChild(t.wrap);
+    box.appendChild(el('p', 'ad-hint', 'Estimate for a settlement = payments confirmed from the previous settlement\u2019s day up to the day before this one, minus collection fees typed for those days. A difference is a prompt to check the Paystack statement, not proof of an error.'));
   }
 
   /* ---------------- ledger ---------------- */
@@ -270,7 +349,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
       var m = fail(res);
       if (m) { err.textContent = m; err.hidden = false; return; }
       ctx.toast('Reversal added to the ledger.', 'success');
-      await Promise.all([loadLedger(), loadProfit(), loadCapital()]);
+      await Promise.all([loadLedger(), loadProfit(), loadCapital(), loadSettle(), loadCash()]);
     });
     clear(holder); holder.appendChild(form); holder.dataset.open = '1'; btn.textContent = 'Close';
   }
@@ -370,7 +449,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
       ctx.toast('Added to the ledger.', 'success');
       $('rAmount').value = ''; $('rNote').value = ''; $('rRef').value = '';
       offset = 0;
-      await Promise.all([loadLedger(), loadProfit(), loadCapital()]);
+      await Promise.all([loadLedger(), loadProfit(), loadCapital(), loadSettle(), loadCash()]);
     });
   }
 
@@ -384,7 +463,7 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
     stamp(res.data.generated_at);
     drawDue(); drawReports();
   }
-  function loadAll() { return Promise.all([loadReports(), loadProfit(), loadCapital(), loadLedger()]); }
+  function loadAll() { return Promise.all([loadReports(), loadProfit(), loadCapital(), loadCash(), loadSettle(), loadLedger()]); }
 
   var today = lagosToday();
   $('pFrom').value = today.slice(0, 8) + '01'; $('pTo').value = today;
@@ -395,5 +474,6 @@ AdminShell.init({ page: 'accountant', title: 'Accountant', permission: 'accounti
   $('pNewer').addEventListener('click', function () { offset = Math.max(0, offset - PAGE); loadLedger(); });
   $('pOlder').addEventListener('click', function () { offset += PAGE; loadLedger(); });
   setupForm();
+  setupCash();
   loadAll();
 });
