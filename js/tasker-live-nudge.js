@@ -85,8 +85,10 @@
 
   /* Wait out a guided tour (up to ~15 s) instead of landing on top of it. */
   function showWhenFree(msg, tries) {
-    if (document.querySelector('.st-tour') && tries > 0) return window.setTimeout(function () { showWhenFree(msg, tries - 1); }, 5000);
-    if (document.querySelector('.st-tour')) return;
+    /* also wait for the "try your ID check again" pop-up (js/verify-retry-nudge.js) so the two never stack */
+    var busy = '.st-tour, .st-vnudge';
+    if (document.querySelector(busy) && tries > 0) return window.setTimeout(function () { showWhenFree(msg, tries - 1); }, 5000);
+    if (document.querySelector(busy)) return;
     store(false, SEEN_KEY, '1');
     show(msg);
   }

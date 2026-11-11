@@ -294,6 +294,13 @@ async function stBoot() {
   pwaScript.defer = true;
   document.body.appendChild(pwaScript);
 
+  /* Identity check that did not go through (failed, needs attention, expired, repeat steps): a pop-up asking them to try again.
+     Loaded here so the pages that run app.js need no edit. */
+  const verifyRetryScript = document.createElement('script');
+  verifyRetryScript.src = 'js/verify-retry-nudge.js';
+  verifyRetryScript.defer = true;
+  document.body.appendChild(verifyRetryScript);
+
   /* Tasker with no live service: a pop-up that says the profile is hidden from customers and links to Post a Service.
      Loaded here so the pages that run app.js need no edit. */
   const nudgeScript = document.createElement('script');

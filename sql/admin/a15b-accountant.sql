@@ -185,7 +185,7 @@ returns bigint language sql immutable as $$ select round(coalesce(p, 0) * 100)::
 
 create or replace function public._acct_naira(p_kobo bigint)
 returns text language sql immutable as $$
-  select '₦' || to_char(coalesce(p_kobo, 0) / 100.0, 'FM999,999,990.00') $$;
+  select chr(8358) || to_char(coalesce(p_kobo, 0) / 100.0, 'FM999,999,990.00') $$;
 
 -- ---------- 5. release events: ONE source of truth for "a release code was entered" ------------------
 -- Real sources (from the owner's introspect of 2026-11-11, functions job_submit_code and _release_escrow):
@@ -461,10 +461,10 @@ begin
     for j in select value from jsonb_array_elements(r.lines) loop
       v_i := v_i + 1;
       exit when v_i > 20;
-      v_list := v_list || E'\n' || '• Job ' || (j->>'job') || ' (' || (j->>'kind') || '): '
+      v_list := v_list || E'\n' || chr(8226) || ' Job ' || (j->>'job') || ' (' || (j->>'kind') || '): '
                 || public._acct_naira((j->>'tasker_kobo')::bigint);
     end loop;
-    if r.jobs_released > 20 then v_list := v_list || E'\n' || '… and ' || (r.jobs_released - 20) || ' more in the report.'; end if;
+    if r.jobs_released > 20 then v_list := v_list || E'\n' || chr(8230) || ' and ' || (r.jobs_released - 20) || ' more in the report.'; end if;
     v_title := 'Pay out ' || public._acct_naira(r.tasker_kobo) || ' to Paystack today';
     v_body  := r.jobs_released || ' job(s) were released by release code for ' || to_char(r.report_date, 'DD Mon YYYY')
                || '. Amount to put in Paystack for taskers within 24 hours: ' || public._acct_naira(r.tasker_kobo)
