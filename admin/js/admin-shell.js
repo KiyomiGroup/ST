@@ -38,6 +38,7 @@
     ] },
     { group: 'Money', items: [
       { key: 'accountant', label: 'Accountant', href: 'accountant.html', icon: 'chart', any: ['accounting.view'], built: true },
+      { key: 'transactions', label: 'Transactions', href: 'transactions.html', icon: 'list', any: ['transactions.view', 'donations.view'], built: true },
       { key: 'payouts', label: 'Earnings and payouts', href: 'payouts.html', icon: 'list', any: ['payouts.view'], built: true }
     ] },
     { group: 'System', items: [
@@ -265,7 +266,7 @@
           toast: toast, skeleton: skeleton, showEmpty: showEmpty, showNoResults: showNoResults,
           showError: showError, showNoPermission: showNoPermission, signOut: signOut
         };
-        if (opts.permission && !hasPerm(access, opts.permission)) { showNoPermission(content, opts.permission); return; }
+        if (opts.permission && !(Array.isArray(opts.permission) ? hasAny(access, opts.permission) : hasPerm(access, opts.permission))) { showNoPermission(content, Array.isArray(opts.permission) ? opts.permission.join(' or ') : opts.permission); return; }
         resolve(ctx);
       }
       run();

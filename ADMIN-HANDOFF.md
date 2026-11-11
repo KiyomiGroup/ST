@@ -15,7 +15,10 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 7. The newest file in `docs/admin-control-centre/handoffs/` (now `A15b-followup.md`; older: `A15b.md`, `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-11, after A15b-3)
+## CURRENT STATE (2026-11-11, after A15)
+**A15 written (picked by me when the owner said "pick a next stage"): `sql/admin/a15-transactions.sql` (+ rollback, introspect), `admin/transactions.html`, `admin/js/admin-transactions.js`, menu item "Transactions" (Money). Read only: a unified labelled payments table (job, Job Room, subscription, coordinator plan, gift card, urgent fee, refund), a site-agreement check (never Paystack), and a Donations section with masked donor emails. `AdminShell.init` now accepts an array of permissions. SQL syntax-checked only, NOT run; page: 23 fake-Supabase checks pass; not deployed.** See `handoffs/A15.md` (item 10: columns I had to guess; run `a15-introspect.sql`). NEXT: owner's choice (A14 needs her `a14-introspect.sql` result, A16, M1 needs her go).
+
+## PREVIOUS STATE (2026-11-11, after A15b-3)
 **A15b-3 written: `sql/admin/a15b3-ledger-extras.sql` (+ rollback), `admin/accountant.html` and `admin/js/admin-accountant.js` extended with Cash position and Settlements. Adds settlement matching against an estimate, typed cash balances with a safe-to-take-back line, a database guard that refuses repaying more capital than is outstanding, and coordinator plan income in profit. SQL syntax-checked only, NOT run anywhere (no Postgres here); page: 37 fake-Supabase checks pass; not deployed.** See `handoffs/A15b3.md` (item 10: re-run it after any re-run of `a15b-accountant.sql`). NEXT: owner's choice (A14, M1, A15). A11 and A17 below.
 
 ## PREVIOUS STATE (2026-11-11, after A11)
@@ -126,5 +129,6 @@ Read the owner's report on A12b first: did the three SQL files print DONE, what 
 | A8 (Regular Taskers, `a8-*.sql`) | Written 2026-11-10; fake-Supabase browser tests (34) and fake-client function tests (27); SQL not run; function not redeployed. A7 recorded applied per the no-error convention. |
 | A15b (Accountant admin) and M1 (earnings and automatic payout) | Planned 2026-11-10; spec only in `04-ACCOUNTANT-ADMIN.md`; nothing written or run. |
 | A11 (Identity verification, `a11-*.sql`) | Written 2026-11-11 from the owner's schema dump; read only; fake-Supabase browser tests (21); SQL never run; not deployed. A17 and A5f recorded applied per the no-error convention. |
+| A15 (Transactions and donations, `a15-*.sql`) | Written 2026-11-11; read only; SQL syntax-checked only, never run; fake-Supabase page tests (23); not deployed. A15b-3 recorded applied per the no-error convention. |
 | A15b-3 (settlements, cash, capital guard; `a15b3-*.sql`) | Written 2026-11-11; SQL syntax-checked only, never run; fake-Supabase page tests (37); not deployed. A11 recorded applied per the no-error convention. |
 | A5e, A7, A14 to A28 | A5e and A7 written (see above); A11 and A14 to A28 not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |

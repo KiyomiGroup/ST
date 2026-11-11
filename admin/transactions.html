@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Transactions · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Transactions</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="txRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Transactions</h1>
+            <p>Every money record in one place, labelled by what it was for: job payments, Job Room payments, subscriptions, coordinator plans, gift cards, urgent fees and refunds. Read only. It never moves money, never calls Paystack and never changes a payment. &ldquo;Matched&rdquo; only means the site&rsquo;s own records agree with each other; it does not mean Paystack was asked. Amounts are in naira.</p>
+          </div>
+          <div id="txAlerts" aria-live="polite"></div>
+          <section class="ad-card ad-dash-section" aria-labelledby="txSumTitle">
+            <h2 class="ad-card-title" id="txSumTitle">Overview</h2>
+            <div id="txSummary"></div>
+          </section>
+          <section class="ad-card ad-dash-section" aria-labelledby="txListTitle">
+            <h2 class="ad-card-title" id="txListTitle">Payments</h2>
+            <div class="ad-tabs" role="group" aria-label="Show payments by kind" id="txKinds"></div>
+            <div class="ad-tabs" role="group" aria-label="Show payments by status" id="txStatus"></div>
+            <p class="ad-hint" id="txCount" aria-live="polite"></p>
+            <div id="txList"></div>
+            <div class="ad-actions ad-pager" id="txPager" hidden>
+              <button type="button" class="btn" id="txNewer">Newer</button>
+              <button type="button" class="btn" id="txOlder">Older</button>
+            </div>
+          </section>
+          <section class="ad-card ad-dash-section" id="dnCard" aria-labelledby="dnTitle" hidden>
+            <h2 class="ad-card-title" id="dnTitle">Donations</h2>
+            <p class="ad-hint">Donations are kept apart from platform income. Donor email is masked.</p>
+            <div id="dnSummary"></div>
+            <div class="ad-tabs" role="group" aria-label="Show donations" id="dnTabs"></div>
+            <p class="ad-hint" id="dnCount" aria-live="polite"></p>
+            <div id="dnList"></div>
+            <div class="ad-actions ad-pager" id="dnPager" hidden>
+              <button type="button" class="btn" id="dnNewer">Newer</button>
+              <button type="button" class="btn" id="dnOlder">Older</button>
+            </div>
+          </section>
+          <p class="ad-note" id="txStamp"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-transactions.js"></script>
+</body>
+</html>
