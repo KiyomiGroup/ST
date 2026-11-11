@@ -15,7 +15,10 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 7. The newest file in `docs/admin-control-centre/handoffs/` (now `A15b-followup.md`; older: `A15b.md`, `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-11, after A17)
+## CURRENT STATE (2026-11-11, after A11)
+**A11 written: `sql/admin/a11-verification.sql` (+ rollback), `admin/verification.html`, `admin/js/admin-verification.js`, menu item "Identity verification" (People). Read only: three functions (`admin_verification_overview`, `_list`, `_detail`), results only, no ID numbers, no way to mark anyone verified. Page: 21 checks against a fake Supabase; SQL NOT run anywhere (no Postgres here); not on Supabase, not deployed.** See `handoffs/A11.md`. NEXT: owner's choice (A15b-3, A14, M1, A15).
+
+## PREVIOUS STATE (2026-11-11, after A17)
 **A17 written: `sql/admin/a17-payouts.sql` (+ rollback), `admin/payouts.html`, `admin/js/admin-payouts.js`, menu item. SQL: 18 checks on a scratch Postgres; page: 17 checks against a fake Supabase; NOT run on Supabase, not deployed.** See `handoffs/A17.md`. **Built 2026-11-11 (small change A5f, `handoffs/A5f-invite-mfa.md`): the authenticator app is now set up on `admin/accept-invite.html` right after the invitee chooses a password, so new admins no longer need `a3c-mfa-off.sql`. 11 fake-Supabase checks pass; not run on real Auth; not deployed.** Accounts that already exist still hit this: today a user with no authenticator app cannot open My profile while two-step is required (shell gate), hence the off/on trick. A15b-2 below is unchanged.
 
 ## PREVIOUS STATE (2026-11-11, after A15b-2)
@@ -119,4 +122,5 @@ Read the owner's report on A12b first: did the three SQL files print DONE, what 
 | A5d (team and role changes through approvals; `a5d-*.sql`) | Written 2026-11-09; fake-Supabase browser tests (43); SQL not run anywhere; not deployed. A5c recorded applied per the no-error convention. |
 | A8 (Regular Taskers, `a8-*.sql`) | Written 2026-11-10; fake-Supabase browser tests (34) and fake-client function tests (27); SQL not run; function not redeployed. A7 recorded applied per the no-error convention. |
 | A15b (Accountant admin) and M1 (earnings and automatic payout) | Planned 2026-11-10; spec only in `04-ACCOUNTANT-ADMIN.md`; nothing written or run. |
-| A5e, A7, A11, A14 to A28 | A5e and A7 written (see above); A11 and A14 to A28 not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |
+| A11 (Identity verification, `a11-*.sql`) | Written 2026-11-11 from the owner's schema dump; read only; fake-Supabase browser tests (21); SQL never run; not deployed. A17 and A5f recorded applied per the no-error convention. |
+| A5e, A7, A14 to A28 | A5e and A7 written (see above); A11 and A14 to A28 not started. See `docs/admin-control-centre/00-PLAN.md` section 6. |

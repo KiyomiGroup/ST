@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Identity verification · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Identity verification</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="ivRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Identity verification</h1>
+            <p>A read-only view of the identity checks done by the provider (Didit). It shows results only: the status, three pass or fail checks, the NIN match word and the reason codes. It never shows ID numbers, photos or dates of birth, and it has no button that marks anyone verified. A person becomes verified only when the provider says so. Membership (PRO or PREMIUM) is a different thing and is not shown here.</p>
+          </div>
+          <div id="ivAlerts" aria-live="polite"></div>
+          <section class="ad-card ad-dash-section" aria-labelledby="ivSumTitle">
+            <h2 class="ad-card-title" id="ivSumTitle">Overview</h2>
+            <div id="ivSummary"></div>
+          </section>
+          <section class="ad-card ad-dash-section" aria-labelledby="ivListTitle">
+            <h2 class="ad-card-title" id="ivListTitle">Checks</h2>
+            <div class="ad-tabs" role="group" aria-label="Show checks by status" id="ivTabs"></div>
+            <div class="ad-tabs" role="group" aria-label="Show checks by kind of person" id="ivKinds"></div>
+            <p class="ad-hint" id="ivCount" aria-live="polite"></p>
+            <div id="ivList"></div>
+            <div class="ad-actions ad-pager" id="ivPager" hidden>
+              <button type="button" class="btn" id="ivNewer">Newer</button>
+              <button type="button" class="btn" id="ivOlder">Older</button>
+            </div>
+          </section>
+          <p class="ad-note" id="ivStamp"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-verification.js"></script>
+</body>
+</html>

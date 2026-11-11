@@ -29,7 +29,8 @@
       { key: 'customers', label: 'Customers', href: 'customers.html', icon: 'users', any: ['customers.view'], built: true },
       { key: 'taskers', label: 'Regular Taskers', href: 'taskers.html', icon: 'users', any: ['taskers.view'], built: true },
       { key: 'local-taskers', label: 'Local Taskers', href: 'local-taskers.html', icon: 'users', any: ['local_taskers.view'], built: true },
-      { key: 'coordinators', label: 'Coordinators',   href: 'coordinators.html', icon: 'users', any: ['coordinators.view', 'coordinators.applications.review'], built: true }
+      { key: 'coordinators', label: 'Coordinators',   href: 'coordinators.html', icon: 'users', any: ['coordinators.view', 'coordinators.applications.review'], built: true },
+      { key: 'verification', label: 'Identity verification', href: 'verification.html', icon: 'check', any: ['verification.view'], built: true }
     ] },
     { group: 'Marketplace', items: [
       { key: 'bookings',  label: 'Bookings and Tasks', href: 'bookings.html', icon: 'list', any: ['bookings.view'], built: true },
