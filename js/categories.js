@@ -30,51 +30,87 @@
     legal: '<g transform="rotate(-40 14 46)"><rect x="2" y="36" width="24" height="11" rx="2.5"/><rect x="12" y="47" width="4" height="15" rx="1.5"/></g><path d="M2 61h24v3H2z"/><path d="M40 6h4v46h-4z"/><path d="M30 52h24v5H30z"/><circle cx="42" cy="7" r="3.5"/><path d="M25 14h34v4H25z"/><path d="M30 18l-6 14M30 18l6 14M54 18l-6 14M54 18l6 14" stroke="currentColor" stroke-width="2" fill="none"/><path d="M23 32h14a7 7 0 0 1-14 0zM47 32h14a7 7 0 0 1-14 0z"/>',
     events: '<path d="M2 3h60v6H2z"/><path d="M2 9h15c-3 12-3 26 3 46H2z"/><path d="M62 9H47c3 12 3 26-3 46h18z"/><path d="M26 9h12l-3 8H29z"/><path d="M29 17h6l9 38H20z" fill-opacity=".28"/><circle cx="26" cy="30" r="2"/><circle cx="38" cy="26" r="2"/><circle cx="33" cy="40" r="2"/><circle cx="44" cy="36" r="2"/><g transform="rotate(-12 44 52)"><rect x="30" y="45" width="28" height="14" rx="2.5"/><path d="M44 46v12" stroke="var(--color-bg)" stroke-width="2" stroke-dasharray="3 2"/></g>',
     sales: '<path d="M8 22h48l3 36H5z"/><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
+    construction: '<path d="M4 46h56v8H4z"/><path d="M10 46c0-15 9-26 22-26s22 11 22 26z"/><path d="M27 12h10v12H27z"/><path d="M30 24h4v22h-4z" fill="var(--color-bg)"/>',
+    home_furniture: '<rect x="12" y="14" width="40" height="18" rx="6"/><rect x="4" y="26" width="14" height="24" rx="6"/><rect x="46" y="26" width="14" height="24" rx="6"/><rect x="14" y="34" width="36" height="16" rx="3"/><path d="M12 50h5v8h-5zM47 50h5v8h-5z"/>',
+    fashion: '<path d="M22 6L3 16l6 13 8-4v33h30V25l8 4 6-13L42 6c-1 5-5 8-10 8s-9-3-10-8z"/>',
+    assistance: '<rect x="10" y="9" width="44" height="52" rx="5"/><rect x="22" y="3" width="20" height="11" rx="3"/><path d="M19 32l6 6 11-12" fill="none" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 50h26" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round"/>',
+    professional: '<path d="M10 60V14l26-9v55z"/><path d="M36 24h18v36H36z"/><path d="M18 18h6v6h-6zM18 30h6v6h-6zM18 42h6v6h-6zM42 32h6v6h-6zM42 44h6v6h-6z" fill="var(--color-bg)"/>',
+    security: '<path d="M32 3l23 8v17c0 15-9 27-23 33C18 55 9 43 9 28V11z"/><path d="M20 31l8 8 16-17" fill="none" stroke="var(--color-bg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    marketing: '<path d="M5 25h15l27-15v44L20 39H5z"/><path d="M20 39l4 19h9l-4-19z"/><path d="M53 24c5 4 5 14 0 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
     other: '<path d="M10 54l24-24 8 8-24 24z"/><path d="M40 6a12 12 0 0 0-10 17l-6 6 10 10 6-6A12 12 0 0 0 54 20l-8 4-6-6 4-8z"/>'
   };
 
-  /* value = what is saved on a task or service. label = what people read. */
+  /* One category: C(value, label, short, emoji, subcategories, extra).
+     subcategories = "Name|word,word;Name|word" : the words after | are things people type that should find that subcategory
+     (plumber finds Plumbing). Each subcategory lives in ONE category; search reaches it from any word that fits.
+     Every category also offers "Other (not listed)" (OTHER_SUB), added by the picker, so no service is left without a home. */
+  var OTHER_SUB = 'Other (not listed)';
+  function C(value, label, short, emoji, subs, extra) {
+    var list = subs.split(';').map(function (item) {
+      var p = item.split('|');
+      return { name: p[0].trim(), words: (p[1] || '').split(',').map(function (w) { return w.trim().toLowerCase(); }).filter(Boolean) };
+    }).filter(function (x) { return x.name; });
+    var c = { value: value, label: label, short: short, emoji: emoji, subs: list, services: list.map(function (x) { return x.name; }) };
+    if (extra) { for (var k in extra) { if (Object.prototype.hasOwnProperty.call(extra, k)) c[k] = extra[k]; } }
+    return c;
+  }
+
+  /* value = what is saved on a task or service (old values kept, so saved data still matches). label = what people read. */
   var LIST = [
-    { value: 'cleaning',    label: 'Cleaning Services',        short: 'Cleaning',     emoji: '🧹', services: ['Deep house cleaning', 'Move-in / move-out cleaning', 'Post-construction cleaning', 'Carpet & upholstery cleaning', 'Window washing', 'Tile & grout scrubbing', 'Mold remediation', 'Air duct cleaning', 'Chimney sweeping', 'Laundry & ironing'] },
-    { value: 'laundry',     label: 'Laundry Services',         short: 'Laundry',      emoji: '🧺', services: ['Wash & fold', 'Ironing & pressing', 'Dry cleaning', 'Laundry pickup & delivery', 'Duvet & bedding cleaning', 'Stain removal', 'Shoe & sneaker cleaning', 'Curtain & rug washing', 'Bulk & business laundry'] },
-    { value: 'grooming',    label: 'Grooming & Barber',        short: 'Grooming',     emoji: '💈', services: ['Haircutting & styling', 'Beard trimming & shaping', 'Hair coloring', 'Manicure & pedicure', 'Facial treatments', 'Massage therapy', 'Body waxing', 'Eyebrow threading', 'Makeup application', 'Spray tanning'] },
-    { value: 'automotive',  label: 'Automotive Services',      short: 'Automotive',   emoji: '🚗', services: ['Mobile car detailing', 'Oil change', 'Tire replacement & balancing', 'Brake repair', 'Engine diagnostics', 'Windshield repair', 'Auto body restoration', 'Towing', 'Roadside assistance', 'Vehicle wrapping'] },
-    { value: 'handyman',    label: 'Handyman & Trades',        short: 'Handyman',     emoji: '🛠️', services: ['Plumbing repair', 'Electrical wiring', 'HVAC installation & maintenance', 'Roof repair', 'Carpentry', 'Painting & drywall', 'Locksmith services', 'Pest control', 'Pool maintenance', 'Appliance repair'] },
-    { value: 'landscaping', label: 'Landscaping',              short: 'Landscaping',  emoji: '🌿', services: ['Lawn mowing & turf care', 'Tree trimming & removal', 'Garden design', 'Irrigation system installation', 'Pressure washing', 'Snow removal', 'Hardscaping & paving', 'Gutter cleaning'] },
-    { value: 'hospitality', label: 'Hospitality & Catering',   short: 'Hospitality',  emoji: '🥂', services: ['Catering', 'Bartending', 'Waitstaff services', 'Private chef', 'Party equipment rental', 'Floral design', 'Venue rental'] },
-    { value: 'business',    label: 'Business & Professional',  short: 'Business',     emoji: '💼', services: ['Human resources management', 'Business strategy consulting', 'Translation & interpretation', 'Virtual assistance', 'Payroll processing', 'Office administration'] },
-    { value: 'it_tech',     label: 'IT & Tech Support',        short: 'IT & Tech',    emoji: '💻', services: ['Custom software development', 'Website design', 'Network administration', 'Cybersecurity auditing', 'Cloud infrastructure management', 'Hardware repair', 'Data recovery', 'Technical support'] },
-    { value: 'creative',    label: 'Creative & Marketing',     short: 'Creative',     emoji: '🎨', services: ['Graphic design', 'Copywriting', 'Search engine optimization', 'Social media management', 'Brand strategy', 'Video editing', '3D modeling', 'Voiceover recording', 'Print production'] },
-    { value: 'logistics',   label: 'Logistics & Freight',      short: 'Logistics',    emoji: '🚚', services: ['Local moving', 'International freight forwarding', 'Warehousing', 'Courier & parcel delivery', 'Junk removal', 'Inventory management', 'Supply chain consulting', 'White glove delivery'] },
-    { value: 'health',      label: 'Health & Wellness',        short: 'Health',       emoji: '❤️', services: ['Personal fitness training', 'Nutrition coaching', 'Physical therapy', 'Mental health counseling', 'Acupuncture', 'Chiropractic care', 'Nursing assistance', 'Lactation consulting'] },
-    { value: 'pet',         label: 'Pet Services',             short: 'Pets',         emoji: '🐾', services: ['Dog walking', 'Pet grooming', 'Veterinary care', 'Pet sitting', 'Animal training', 'Aquarium maintenance', 'Mobile vet care'] },
-    { value: 'education',   label: 'Education & Tutoring',     short: 'Education',    emoji: '🎓', services: ['Private tutoring', 'Language instruction', 'Music lessons', 'Test preparation', 'Driving instruction', 'Career coaching', 'Corporate skill training'] },
-    { value: 'financial',   label: 'Financial Services',       short: 'Financial',    emoji: '🧮', services: ['Accounting & bookkeeping', 'Tax preparation', 'Payroll processing', 'Financial planning', 'Audit support'] },
-    { value: 'legal',       label: 'Legal & Advocacy',         short: 'Legal',        emoji: '⚖️', services: ['Legal consulting', 'Contract drafting & review', 'Document notarisation', 'Dispute mediation'] },
-    { value: 'events',      label: 'Event Planning',           short: 'Events',       emoji: '🎉', services: ['Event planning', 'DJ & live sound', 'Photography & videography', 'Security detail', 'Decor & staging', 'MC & event hosting'] },
-    /* Sellers only (Stage 4): taskers who sell products. Not a task category, so STCat.list leaves it out; STCat.serviceList has it. */
-    { value: 'sales',       label: 'Sales (products)',         short: 'Sales',        emoji: '🛍️', sellers: true, services: ['Clothing & fashion', 'Food & snacks', 'Beauty products', 'Electronics & accessories', 'Home & kitchen items', 'Crafts & art'] },
-    { value: 'other',       label: 'Other',                    short: 'Other',        emoji: '🛠️', services: [] }
+    C('cleaning',    'Cleaning & Housekeeping',      'Cleaning',     '🧹', 'House Cleaning|cleaner,maid;Deep Cleaning;Office Cleaning;Commercial Cleaning;Post-Construction Cleaning;Move-in / Move-out Cleaning;Carpet Cleaning;Upholstery Cleaning|sofa;Window Cleaning;Housekeeping|house help;Kitchen Cleaning;Bathroom Cleaning|toilet;Fumigation Coordination|fumigation;Waste Removal|refuse,rubbish;Tile & Grout Scrubbing;Mold Remediation|mould;Air Duct Cleaning;Chimney Sweeping'),
+    C('handyman',    'Repairs & Maintenance',        'Repairs',      '🛠️', 'Plumbing|plumber,pipe,leak,borehole;Electrical Repairs|electrician,wiring,socket;Appliance Repair;Air Conditioning Repair|ac,hvac,aircon;Generator Repair|generator,gen;Refrigerator Repair|fridge,freezer;Washing Machine Repair;Television Repair|tv;Locksmith|lock,key;Painting|painter,paint;Roofing Repairs|roof,leaking roof;Window Repairs;Door Repairs;Pest Control|cockroach,rat,termite;Water System Repairs|water tank,pump;Solar Installation & Repairs|solar,inverter;Inverter & Battery Services|inverter,ups'),
+    C('construction','Building & Construction',     'Construction', '🏗️', 'Masonry|mason;Bricklaying|bricklayer;Carpentry|carpenter,woodwork;Tiling|tiler,tiles;Plastering;POP Installation|pop,ceiling;Roofing;Welding|welder;Plumbing Installation;Electrical Installation;Flooring;Ceiling Installation;Fencing;Gate Installation;Concrete Work|concrete;Structural Repairs;General Labour|labourer,labor;Demolition;Aluminium Fabrication|aluminum,aluminium'),
+    C('logistics',   'Moving & Delivery',            'Moving',       '🚚', 'House Moving|movers;Office Relocation;Furniture Moving;Local Delivery;Parcel Delivery;Dispatch Rider|rider,bike;Shopping Delivery;Document Delivery;Heavy Item Transportation|haulage;Loading & Unloading;Packing & Unpacking;Courier Services|courier;Errand Delivery;International Freight Forwarding|freight,shipping;Warehousing|warehouse;Junk Removal;White Glove Delivery;Van & Truck Hire|truck,van'),
+    C('sales',       'Sales & Products',             'Sales',        '🛍️', 'Phones & Accessories|phone;Computers & Electronics|laptop;Home Appliances;Fashion & Clothing|clothes;Shoes & Footwear|shoes;Bags & Accessories|bag;Furniture;Home & Kitchen;Beauty & Cosmetics;Personal Care Products;Food & Groceries|snacks;Drinks & Beverages;Sports & Fitness Equipment;Books & Stationery;Toys & Games;Baby Products;Building Materials;Automotive Parts|spare parts;Agricultural Products|farm;Handmade Products|crafts;Other Products', { sellers: true }),
+    C('creative',    'Design & Creative',            'Design',       '🎨', 'Graphic Design|graphics,flyer;Logo Design|logo;UI/UX Design|ui,ux;Web Design;App Design;Illustration;Branding & Identity|brand;Motion Graphics;Video Editing;Animation;Photo Editing|photoshop;Social Media Design;Presentation Design|slides;Printing & Artwork|print;3D Design|3d;Product Design;Content Creation|content creator;Voiceover Recording|voice over'),
+    C('it_tech',     'Technology & IT',              'IT & Tech',    '💻', 'Computer Support;Laptop Repair;Phone Repair|screen;Software Installation;Software Development|developer,programmer;Website Development|website,web developer;IT Support;Network Installation|wifi,router;Data Recovery;Database Management;Cybersecurity Services|cyber;Hardware Installation;Smart Home Installation;Technical Troubleshooting;Cloud & Server Management'),
+    C('events',      'Events & Entertainment',       'Events',       '🎉', 'Event Planning|planner;Event Coordination;Event Decoration|decor;Photography|photographer;Videography|videographer;DJs|dj;MCs & Hosts|mc,host,emcee;Live Music|band;Performers|dancer,comedian;Ushers;Event Setup;Equipment Rental|canopy,chairs,tent;Sound Engineering|sound;Lighting;Wedding Services|wedding;Party Planning|birthday;Event Staffing;Venue Rental|hall;Floral Design|flowers'),
+    C('grooming',    'Beauty & Personal Care',       'Beauty',       '💈', 'Hair Styling|hairdresser,stylist;Hair Braiding|braids,braider;Barbing|barber,haircut;Makeup Artistry|makeup,mua;Nail Technology|nails;Manicure & Pedicure;Skincare Services|facial;Massage Therapy|massage;Personal Grooming;Eyelash Extensions|lashes;Eyebrow Services|brows;Wig Making|wig;Hair Treatment;Spa Services|spa;Body Waxing;Hair Colouring|dye'),
+    C('education',   'Education & Lessons',          'Education',    '🎓', 'Academic Tutoring|tutor;Mathematics Lessons|maths;English Lessons;Science Lessons;Language Lessons|french,yoruba;Computer Training;Music Lessons;Instrument Lessons|piano,guitar;Dance Lessons;Art Lessons;Exam Preparation|jamb,waec,neco;Professional Training;Skill Development;Coding Lessons|coding;Driving Lessons|driving;Online Tutoring;Career Coaching;Corporate Skill Training'),
+    C('landscaping', 'Gardening & Outdoor',          'Gardening',    '🌿', 'Gardening|gardener;Landscaping;Lawn Mowing|grass;Tree Trimming|tree;Plant Care;Garden Design;Irrigation Installation;Outdoor Cleaning;Hedge Trimming;Weed Removal;Garden Maintenance;Pool Cleaning|swimming pool;Outdoor Decoration;Pressure Washing;Paving & Hardscaping|interlock;Gutter Cleaning'),
+    C('automotive',  'Automotive Services',          'Automotive',   '🚗', 'Car Mechanic|mechanic;Auto Electrician;Car Wash;Car Detailing;Car Body Work|panel beater;Vehicle Diagnostics;Tyre Replacement|tire,vulcanizer;Battery Replacement;Vehicle Towing|towing;Motorcycle Repair|bike repair;Vehicle Servicing|oil change;Car Air Conditioning Repair;Auto Parts Installation;Vehicle Inspection;Car Interior Cleaning;Windscreen Repair|windshield;Vehicle Wrapping;Roadside Assistance'),
+    C('home_furniture','Home & Furniture',          'Home',         '🛋️', 'Furniture Assembly;Furniture Repair;Interior Decoration;Interior Design;Wall Mounting;TV Installation|tv mount;Curtain Installation|curtains;Blind Installation|blinds;Shelf Installation;Cabinet Installation;Upholstery|upholsterer;Home Organisation|organiser,declutter;Wallpaper Installation;Home Automation;Home Improvement'),
+    C('business',    'Business & Administration',    'Business',     '💼', 'Virtual Assistant|va;Data Entry;Administrative Assistant|secretary;Business Research;Market Research;Customer Support;Email Management;Document Preparation;Transcription|transcriber;Project Coordination;Spreadsheet Management|excel;Office Assistance;Recruitment Assistance|recruiter,hiring;Business Registration|cac'),
+    C('fashion',     'Fashion & Tailoring',          'Fashion',      '👗', 'Tailoring|tailor,seamstress;Fashion Design|fashion designer;Clothing Alterations|alteration;Dressmaking;Suit Making;Traditional Wear|native,aso ebi;Bridal Wear;Clothing Repairs;Embroidery;Shoe Repair|cobbler;Bag Repair;Fashion Styling;Pattern Making;Beadwork'),
+    C('pet',         'Pet Services',                 'Pets',         '🐾', 'Pet Sitting;Dog Walking;Pet Grooming;Pet Feeding;Pet Boarding;Pet Transportation;Basic Pet Training|dog training;Aquarium Maintenance|fish tank;Pet Photography;Veterinary Care|vet;Mobile Vet Care'),
+    C('assistance',  'Personal Assistance & Errands','Errands',      '🧾', 'Personal Shopping;Grocery Shopping|groceries;Errand Running|errand;Queue Assistance|queue;Personal Assistant|pa;Home Assistance;Document Collection;Document Submission;Appointment Assistance;Elderly Assistance|elderly;Event Assistance;Local Guide|guide;Waiting Services'),
+    C('professional','Professional Services',       'Professional', '🏢', 'Business Consultancy|consultant;Translation|translator;Interpretation|interpreter;Professional Writing|writer;CV & Resume Writing|cv,resume;Grant Writing;Technical Writing;Architecture|architect;Engineering Consultancy|engineer;Property Consultancy|estate agent,surveyor;HR Consultancy;Career Guidance'),
+    C('hospitality', 'Food & Catering',              'Food',         '🥂', 'Catering|caterer;Private Chef|chef;Home Cooking|cook;Meal Preparation|meal prep;Baking|baker;Cake Making|cakes;Small Chops;Food Supply;Bartending|bartender;Wait Staff|waiter,waitress;Kitchen Assistance;Food Delivery;Event Catering;Pastry Making'),
+    C('security',    'Security & Safety',            'Security',     '🛡️', 'Event Security|bouncer;Security Guard Services|guard;Access Control;CCTV Monitoring;CCTV Installation|cctv,camera;Fire Safety Equipment Installation|fire extinguisher;Safety Inspection;Workplace Safety Assistance;Security System Maintenance|alarm'),
+    C('laundry',     'Laundry & Dry Cleaning',       'Laundry',      '🧺', 'Wash & Fold|washing;Laundry & Ironing|iron;Ironing & Pressing;Dry Cleaning;Laundry Pickup & Delivery;Duvet & Bedding Cleaning;Stain Removal;Shoe & Sneaker Cleaning|sneakers;Curtain & Rug Washing;Bulk & Business Laundry'),
+    C('health',      'Health & Wellness',            'Health',       '❤️', 'Personal Fitness Training|personal trainer,gym,fitness;Nutrition Coaching|nutritionist,dietitian;Physiotherapy|physio;Mental Health Counselling|counsellor,therapist;Acupuncture;Chiropractic Care;Nursing Assistance|nurse;Caregiving & Home Care|caregiver;Lactation Consulting;Yoga Instruction|yoga'),
+    C('financial',   'Financial Services',           'Financial',    '🧮', 'Accounting|accountant;Bookkeeping|bookkeeper;Tax Preparation|tax;Financial Planning;Financial Consultancy;Audit Support|audit;Payroll Processing|payroll'),
+    C('legal',       'Legal & Advocacy',             'Legal',        '⚖️', 'Legal Consultation|lawyer;Contract Drafting & Review|contract;Document Notarisation|notary;Dispute Mediation|mediation;Tenancy Agreements;Land & Property Documents|land title'),
+    C('marketing',   'Marketing & Advertising',      'Marketing',    '📣', 'Copywriting|copywriter;Search Engine Optimisation|seo;Social Media Management|social media;Brand Strategy;Digital Advertising|ads;Email Marketing;Influencer Marketing|influencer;Content Marketing;Promotions & Street Marketing|flyer distribution'),
+    C('other',       'Other',                        'Other',        '🛠️', '')
   ];
 
   /* Values saved before this list existed (and common free-text) -> the group they belong to */
   var ALIASES = {
-    electrician: 'handyman', electrical: 'handyman', plumber: 'handyman', plumbing: 'handyman', carpentry: 'handyman', carpenter: 'handyman',
-    painting: 'handyman', painter: 'handyman', repairs: 'handyman', assembly: 'handyman', appliance: 'handyman',
-    barber: 'grooming', beauty: 'grooming', makeup: 'grooming', hair: 'grooming', nails: 'grooming',
+    electrician: 'handyman', electrical: 'handyman', plumber: 'handyman', plumbing: 'handyman', painting: 'handyman', painter: 'handyman',
+    repairs: 'handyman', repair: 'handyman', maintenance: 'handyman', appliance: 'handyman', handyman: 'handyman', trades: 'handyman', assembly: 'handyman',
+    carpentry: 'construction', carpenter: 'construction', mason: 'construction', bricklayer: 'construction', tiler: 'construction', welder: 'construction', builder: 'construction', building: 'construction',
+    barber: 'grooming', beauty: 'grooming', makeup: 'grooming', hair: 'grooming', nails: 'grooming', salon: 'grooming', personalcare: 'grooming',
     mechanic: 'automotive', auto: 'automotive', car: 'automotive',
-    moving: 'logistics', delivery: 'logistics', courier: 'logistics', freight: 'logistics',
-    gardening: 'landscaping', lawn: 'landscaping', garden: 'landscaping',
-    cleaner: 'cleaning',
+    moving: 'logistics', delivery: 'logistics', courier: 'logistics', freight: 'logistics', dispatch: 'logistics',
+    gardening: 'landscaping', lawn: 'landscaping', garden: 'landscaping', outdoor: 'landscaping',
+    cleaner: 'cleaning', housekeeping: 'cleaning',
     laundromat: 'laundry', dryclean: 'laundry', drycleaning: 'laundry', ironing: 'laundry', washing: 'laundry',
-    cooking: 'hospitality', chef: 'hospitality', catering: 'hospitality',
-    photography: 'events', photographer: 'events', security: 'events',
-    tutoring: 'education', tutor: 'education', lesson: 'education',
-    tech: 'it_tech', it: 'it_tech', software: 'it_tech',
-    marketing: 'creative', design: 'creative',
+    cooking: 'hospitality', chef: 'hospitality', catering: 'hospitality', food: 'hospitality', foodcatering: 'hospitality',
+    photography: 'events', photographer: 'events', entertainment: 'events', wedding: 'events', eventplanning: 'events',
+    security: 'security', guard: 'security', safety: 'security',
+    tutoring: 'education', tutor: 'education', lesson: 'education', lessons: 'education',
+    tech: 'it_tech', it: 'it_tech', software: 'it_tech', technology: 'it_tech',
+    design: 'creative', graphics: 'creative',
+    marketing: 'marketing', advertising: 'marketing',
     accounting: 'financial', finance: 'financial', tax: 'financial',
     lawyer: 'legal', law: 'legal',
-    petcare: 'pet', pets: 'pet', fitness: 'health', wellness: 'health', event: 'events', eventplanning: 'events'
+    tailor: 'fashion', tailoring: 'fashion', seamstress: 'fashion', fashiondesigner: 'fashion',
+    errands: 'assistance', errand: 'assistance', personalassistant: 'assistance', personalshopping: 'assistance',
+    consultant: 'professional', consulting: 'professional', translator: 'professional', architect: 'professional', engineer: 'professional',
+    furniture: 'home_furniture', interior: 'home_furniture', homeimprovement: 'home_furniture', upholstery: 'home_furniture',
+    administration: 'business', admin: 'business',
+    petcare: 'pet', pets: 'pet', fitness: 'health', wellness: 'health', nurse: 'health', physio: 'health', event: 'events'
   };
 
   var BY = {};
@@ -124,7 +160,7 @@
     landscaping: ['lawn', 'garden', 'grass', 'tree!', 'hedge', 'landscap', 'irrigation', 'pressure wash', 'paving', 'interlock', 'gutter', 'flower bed', 'weeding', 'compound sweep'],
     hospitality: ['catering', 'caterer', 'cook!', 'cooking', 'chef!', 'bartend', 'waiter', 'waitress', 'waitstaff', 'small chops', 'jollof', 'buffet', 'canape', 'food for', 'party food', 'party rice', 'meal prep', 'cocktail'],
     business:    ['virtual assistant', 'hr!', 'human resource', 'business plan', 'business strateg', 'translat', 'interpret', 'secretar', 'office admin', 'company registration', 'cac registration', 'consultant', 'consulting', 'data entry', 'bookkeeper for my business', 'proposal writing', 'pitch deck'],
-    it_tech:     ['website', 'web site', 'web develop', 'web design', 'app develop', 'mobile app', 'software', 'laptop', 'computer', 'pc!', 'phone repair', 'screen repair', 'wifi', 'wi-fi', 'router', 'network', 'cctv', 'cyber', 'data recovery', 'install windows', 'programmer', 'developer', 'wordpress', 'tech support', 'printer', 'it support', 'hosting', 'domain name'],
+    it_tech:     ['website', 'web site', 'web develop', 'web design', 'app develop', 'mobile app', 'software', 'laptop', 'computer', 'pc!', 'phone repair', 'screen repair', 'wifi', 'wi-fi', 'router', 'network', 'cyber', 'data recovery', 'install windows', 'programmer', 'developer', 'wordpress', 'tech support', 'printer', 'it support', 'hosting', 'domain name'],
     creative:    ['logo!', 'graphic', 'flyer', 'branding', 'copywrit', 'social media', 'seo!', 'video edit', 'animation', 'illustrat', 'voiceover', 'voice over', 'content writ', 'poster', 'banner', '3d model', 'photo edit', 'photoshop', 'canva', 'jingle'],
     logistics:   ['moving', 'move my', 'relocat', 'dispatch', 'courier', 'deliver', 'pick up', 'pickup', 'haulage', 'freight', 'truck', 'van hire', 'luggage', 'parcel', 'junk removal', 'warehous', 'carry my', 'shipping', 'bike rider', 'errand'],
     health:      ['physio', 'fitness', 'personal trainer', 'gym!', 'nurse!', 'nursing', 'therap', 'nutrition', 'dietitian', 'diet plan', 'counsel', 'caregiver', 'elderly care', 'midwife', 'lactation', 'yoga', 'blood pressure', 'injection', 'home care', 'workout'],
@@ -132,7 +168,15 @@
     education:   ['tutor', 'lesson', 'teach', 'maths', 'mathematics', 'english class', 'jamb', 'waec', 'neco', 'ielts', 'exam prep', 'coaching class', 'learn to', 'driving lesson', 'driving school', 'piano', 'guitar', 'homework', 'french class', 'coding class', 'music lesson'],
     financial:   ['accountant', 'accounting', 'bookkeep', 'tax!', 'tax return', 'audit', 'financial plan', 'invoic', 'payroll', 'vat!', 'financial statement'],
     legal:       ['lawyer', 'solicitor', 'barrister', 'legal', 'contract!', 'agreement!', 'notar', 'affidavit', 'court!', 'tenancy agreement', 'land title', 'will drafting', 'mediation', 'litigation', 'power of attorney', 'attorney'],
-    events:      ['event!', 'event planner', 'wedding', 'party', 'parties', 'photograph', 'videograph', 'dj!', 'mc!', 'decor', 'bridal', 'birthday', 'usher', 'bouncer', 'bodyguard', 'security guard', 'sound system', 'canopy', 'tent!', 'chairs for', 'live band', 'anniversary', 'burial', 'naming ceremony']
+    events:      ['event!', 'event planner', 'wedding', 'party', 'parties', 'photograph', 'videograph', 'dj!', 'mc!', 'decor', 'bridal', 'birthday', 'usher', 'sound system', 'canopy', 'tent!', 'chairs for', 'live band', 'anniversary', 'burial', 'naming ceremony']
+,
+    construction:['mason!', 'bricklay', 'tiling', 'tiler', 'plaster', 'pop ceiling', 'welding', 'welder', 'concrete', 'foundation', 'demolition', 'fencing', 'screeding', 'building work', 'construction', 'aluminium', 'aluminum'],
+    home_furniture: ['furniture assembly', 'assemble my', 'wall mount', 'mount my tv', 'tv bracket', 'curtain!', 'blinds', 'wallpaper', 'interior design', 'upholster', 'shelf install', 'shelves', 'wardrobe install'],
+    fashion:     ['tailor', 'seamstress', 'dressmak', 'sew!', 'sewing', 'alteration', 'ankara', 'aso ebi', 'asoebi', 'embroider', 'beadwork', 'fashion design', 'shoe repair', 'cobbler'],
+    assistance:  ['errand!', 'personal shopper', 'queue for me', 'stand in line', 'grocery shopping', 'personal assistant', 'collect my document', 'run an errand', 'elderly assist'],
+    professional:['architect', 'surveyor', 'cv writing', 'resume writing', 'grant writ', 'technical writ', 'engineering consult', 'property consult', 'career guidance', 'professional writ'],
+    security:    ['security guard', 'bouncer', 'bodyguard', 'cctv', 'access control', 'fire extinguisher', 'fire safety', 'safety inspection', 'alarm system', 'security system', 'guard!'],
+    marketing:   ['marketing', 'advert', 'influencer', 'email campaign', 'brand strateg', 'promotion!', 'flyer distribution', 'google ads', 'facebook ads', 'instagram ads']
   };
   var KW_RX = null;
   function kwRegexes() {
@@ -167,8 +211,75 @@
     return tie ? null : best;
   }
 
+
+  /* ── Search for the category picker ────────────────────────────────────────────────────────────────────────
+     search("plumber") -> [{ value: 'handyman', label: 'Repairs & Maintenance', sub: 'Plumbing', score }, ...]
+     Looks at subcategory names, the extra words listed after | in each subcategory, and category names.
+     A typed word matches the START of a word ("plumb" finds Plumbing); endings like -er, -ers, -ing are also tried
+     ("plumber" -> "plumb"). Every typed word must match. Best match first. opts.sellers = false hides Sales. */
+  function norm(s) { return String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function variants(w) {
+    var out = [w];
+    ['ers', 'er', 'ing', 'ian', 'ist', 'or', 's'].forEach(function (suf) {
+      if (w.length - suf.length >= 3 && w.slice(-suf.length) === suf) out.push(w.slice(0, -suf.length));
+    });
+    return out;
+  }
+  function wordHit(targetWords, vars) {
+    for (var i = 0; i < targetWords.length; i++) for (var j = 0; j < vars.length; j++) if (targetWords[i].indexOf(vars[j]) === 0) return true;
+    return false;
+  }
+  function allTokensHit(tokens, text) {
+    var words = norm(text).split(' ');
+    for (var t = 0; t < tokens.length; t++) if (!wordHit(words, variants(tokens[t]))) return false;
+    return true;
+  }
+  function search(query, opts) {
+    var q = norm(query), out = [];
+    if (!q) return out;
+    var tokens = q.split(' ').filter(function (t) { return t.length > 0; });
+    var withSales = !(opts && opts.sellers === false);
+    LIST.forEach(function (c, order) {
+      if (c.sellers && !withSales) return;
+      if (c.value === 'other') return;
+      var catScore = 0;
+      if (norm(c.label) === q || norm(c.short) === q) catScore = 90;
+      else if (norm(c.label).indexOf(q) === 0 || norm(c.short).indexOf(q) === 0) catScore = 70;
+      else if (allTokensHit(tokens, c.label + ' ' + c.short)) catScore = 45;
+      if (catScore) out.push({ value: c.value, label: c.label, sub: null, score: catScore, order: order });
+      c.subs.forEach(function (sub) {
+        var n = norm(sub.name), score = 0;
+        if (n === q) score = 100;
+        else if (n.indexOf(q) === 0) score = 85;
+        else if (allTokensHit(tokens, sub.name)) score = 65;
+        else if (sub.words.some(function (w) { return allTokensHit(tokens, w); })) score = 60;
+        else if (tokens.length > 1 && allTokensHit(tokens, sub.name + ' ' + sub.words.join(' ') + ' ' + c.label)) score = 40;
+        if (score) out.push({ value: c.value, label: c.label, sub: sub.name, score: score, order: order });
+      });
+    });
+    /* nothing by name: fall back to the keyword detector the "Other" box uses (it knows full phrases) */
+    if (!out.length) {
+      var g = detect(query, '');
+      if (!g) { g = detect('', query); }
+      if (g && BY[g] && !(BY[g].sellers && !withSales)) out.push({ value: g, label: BY[g].label, sub: null, score: 20, order: LIST.indexOf(BY[g]) });
+    }
+    out.sort(function (a, b) { return b.score - a.score || a.order - b.order; });
+    return out.slice(0, 12);
+  }
+
+  /* subcategory names of a category, ending with "Other (not listed)" (Other itself has none) */
+  function subsOf(value) {
+    var c = resolve(value);
+    if (c.value === 'other') return [];
+    return c.subs.map(function (x) { return x.name; }).concat([OTHER_SUB]);
+  }
+
   root.STCat = {
     detect: detect,
+    search: search,
+    subsOf: subsOf,
+    OTHER_SUB: OTHER_SUB,
+    popular: ['cleaning', 'handyman', 'logistics', 'grooming', 'hospitality', 'fashion', 'automotive', 'sales'],
     expand: expand,
     list: LIST.filter(function (c) { return !c.sellers; }),   /* task side: no Sales */
     serviceList: LIST,                                         /* service side: with Sales */

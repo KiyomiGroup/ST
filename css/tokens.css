@@ -584,6 +584,7 @@
   --tour-dur:         200ms;                    /* move / fade time; 0 when the person prefers reduced motion */
   --tour-arrow:       12px;                     /* tooltip pointer size */
   --z-tour:           9000;                     /* above the nav drawer (2000) and install banner (960), below toasts (9999) */
+  --z-picker:         2100;                     /* category picker sheet (js/category-picker.js): above the nav drawer (2000), below the tour (9000) and toasts (9999) */
 }
 
 /* ── Home cards (homepage design, DESIGN-SYSTEM.md 4.15, css/home-cards.css) ──

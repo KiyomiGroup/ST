@@ -533,3 +533,7 @@ Print artwork for "My Promotional Flyer": `css/flyer.css`, `js/flyer-template.js
 
 ### Coordinator sidebar collapse
 From 1044px the coordinator sidebar can collapse to an icon rail (`body.co-sb-collapsed`, width `--co-sidebar-width-collapsed`, toggle `#coSideToggle`, choice kept in `localStorage` key `st_co_sb`). `coordinator-chat.html` shows its three-column layout only when there is room (1520px expanded, 1310px collapsed); otherwise two columns, with booking details from the info button.
+
+## Category picker (categories Stage 2, 2026-11-11)
+
+`js/category-picker.js` + `css/category-picker.css`: the searchable category sheet on Post a Service (full-height sheet on phones, centred dialog from 640px). Tokens only. One new token: `--z-picker: 2100` (above the nav drawer, below the tour and toasts). The scrim reuses `--drawer-overlay`.

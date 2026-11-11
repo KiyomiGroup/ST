@@ -6,6 +6,7 @@
   <title>Post a Service — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/categories.css?v=3" />
+  <link rel="stylesheet" href="css/category-picker.css" />
   <link rel="stylesheet" href="css/post-task.css" />
   <link rel="stylesheet" href="css/post-service.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
@@ -120,10 +121,12 @@
 
             <div class="pt-group ps-group-category">
               <div class="pt-label-row">
-                <label class="pt-label" for="svcCategory">Category <span class="pt-req" aria-hidden="true">*</span></label>
+                <label class="pt-label" for="cpTrigger">Category <span class="pt-req" aria-hidden="true">*</span></label>
                 <span class="pt-hint pt-mob">Helps customers find you</span>
               </div>
-              <div class="pt-field pt-select-wrap">
+              <!-- Category + what you offer: a searchable picker (js/category-picker.js). The select and the hidden field below hold the answers. -->
+              <div class="cp" id="catPicker"></div>
+              <div class="pt-select-wrap" hidden>
                 <select id="svcCategory" class="pt-input pt-select" required>
                   <option value="">Select a category...</option>
                   <option value="cleaning">Cleaning Services</option>
@@ -146,8 +149,8 @@
                   <option value="sales">Sales (sell products)</option>
                   <option value="other">Other</option>
                 </select>
-                <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
               </div>
+              <input type="hidden" id="svcSubcategory" value="" />
 
               <div class="ps-other" id="otherCategoryWrap" hidden>
                 <div class="pt-field">
@@ -155,17 +158,6 @@
                 </div>
               </div>
 
-              <div class="ps-quick">
-                <span class="pt-label pt-label-sm pt-desk">Quick Select Popular:</span>
-                <div class="pt-chips" id="svcChips" role="group" aria-label="Popular categories">
-                  <button type="button" class="pt-chip" data-category="cleaning" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-brush"/></svg><span><span class="pt-desk">House Cleaning</span><span class="pt-mob">Cleaning</span></span></button>
-                  <button type="button" class="pt-chip" data-category="electrician" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-zap"/></svg><span>Electrician</span></button>
-                  <button type="button" class="pt-chip" data-category="plumber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-faucet"/></svg><span>Plumber</span></button>
-                  <button type="button" class="pt-chip" data-category="barber" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-scissors"/></svg><span>Barber / Hair</span></button>
-                  <button type="button" class="pt-chip" data-category="carpentry" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-hammer"/></svg><span><span class="pt-desk">Carpentry &amp; Craft</span><span class="pt-mob">Carpentry</span></span></button>
-                  <button type="button" class="pt-chip" data-category="painting" aria-pressed="false"><svg class="pt-i" aria-hidden="true"><use href="#i-paint-roller"/></svg><span>Painting</span></button>
-                </div>
-              </div>
               <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-info"/></svg><span>Optional &mdash; helps customers find you in localized neighborhood search.</span></p>
             </div>
           </section>
@@ -449,6 +441,7 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/category-picker.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/saved.js"></script>
   <script src="js/app.js"></script>
@@ -644,28 +637,10 @@
       applySalesMode(val === 'sales');
       var wrap = document.getElementById('otherCategoryWrap');
       if (wrap) wrap.hidden = val !== 'other';
-      /* a short "includes" line so providers see what the category covers */
-      var sel = document.getElementById('svcCategory');
-      var hint = document.getElementById('svcCategoryIncludes');
-      if (!hint && sel && sel.closest('.ps-group-category')) {
-        hint = document.createElement('p'); hint.id = 'svcCategoryIncludes'; hint.className = 'pt-help';
-        sel.closest('.pt-field').insertAdjacentElement('afterend', hint);
-      }
-      if (hint && window.STCat) {
-        var svcs = (STCat.get(val).services || []);
-        hint.textContent = svcs.length ? 'Includes: ' + svcs.slice(0, 6).join(', ') + (svcs.length > 6 ? ' and more' : '') : '';
-        hint.hidden = !svcs.length;
-      }
     }
     window.onCategoryChange = onCategoryChange;
-    /* Quick Select chips: first eight categories with their icons (the dropdown has all of them) */
-    (function () {
-      var box = document.getElementById('svcChips');
-      if (!box || !window.STCat) return;
-      box.innerHTML = STCat.list.filter(function (c) { return c.value !== 'other'; }).slice(0, 8).map(function (c) {
-        return '<button type="button" class="pt-chip" data-category="' + c.value + '" aria-pressed="false">' + STCat.iconHtml(c.value) + '<span>' + c.short + '</span></button>';
-      }).join('');
-    })();
+    /* Category picker: searchable, and it asks for the subcategory too (js/category-picker.js) */
+    if (window.STCatPicker) STCatPicker.init({ select: 'svcCategory', sub: 'svcSubcategory', mount: 'catPicker', other: 'svcCategoryOther', title: 'What type of work do you want to offer?' });
 
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
@@ -700,7 +675,7 @@
           savedServiceId = draft.id;
           if (draft.service_name) document.getElementById('svcName').value        = draft.service_name;
           if (draft.category) {
-            var knownCats = window.STCat ? STCat.list.map(function (c) { return c.value; }) : ['other'];
+            var knownCats = window.STCat ? STCat.serviceList.map(function (c) { return c.value; }) : ['other'];
             /* a draft saved with an old value (barber, plumber...) opens on its group */
             if (window.STCat && draft.category && !knownCats.includes(draft.category) && STCat.resolve(draft.category).value !== 'other') draft.category = STCat.resolve(draft.category).value;
             if (knownCats.includes(draft.category)) {
@@ -711,6 +686,9 @@
               onCategoryChange('other');
             }
           }
+          /* the subcategory (Plumbing, Tailoring...) and the picker button */
+          if (draft.subcategory) document.getElementById('svcSubcategory').value = draft.subcategory;
+          if (window.STCatPicker) STCatPicker.sync();
           if (draft.location)     document.getElementById('svcLocation').value    = draft.location;
           if (draft.description)  document.getElementById('svcDescription').value = draft.description;
           if (draft.availability_status) document.getElementById('svcAvailability').value = draft.availability_status;
@@ -827,6 +805,8 @@
 
       if (!serviceName)                                          { showErr('Please enter a service name.'); return; }
       if (!category)                                             { showErr('Please select a category.'); return; }
+      var subcategory = (document.getElementById('svcSubcategory').value || '').trim();
+      if (category !== 'other' && !subcategory)                  { showErr('Choose what you offer under ' + (window.STCat ? STCat.label(category) : 'this category') + '. If it is not listed, pick "Other (not listed)".'); return; }
       if (isSales()) {
         var pr = readProducts();
         if (pr.error) { showErr(pr.error); return; }
@@ -895,6 +875,7 @@
           user_id:      postUser.id,
           service_name: serviceName,
           category:     category,
+          subcategory:  category === 'other' ? null : subcategory,   /* Categories Stage 1: needs sql/categories/c1-subcategory-details.sql */
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
@@ -915,6 +896,13 @@
         } else {
           svcRes = await window.supabase.from('services')
             .insert(payload).select('id').single();
+        }
+        /* Categories Stage 1 SQL not run yet: save without the subcategory (keeping everything else) and carry on */
+        if (svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204') && /subcategory/.test(svcRes.error.message || '')) {
+          delete payload.subcategory;
+          svcRes = savedServiceId
+            ? await window.supabase.from('services').update(payload).eq('id', savedServiceId).select('id').single()
+            : await window.supabase.from('services').insert(payload).select('id').single();
         }
         /* specialties/availability_status column doesn't exist yet
            (migration_search_filters.sql not run) — retry without them */
