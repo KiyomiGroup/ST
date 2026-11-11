@@ -109,23 +109,31 @@ revoke all on sequence public.accountant_ledger_id_seq from anon, authenticated;
 
 -- ---------- 2. labels ---------------------------------------------------------------------------
 insert into public.accountant_labels (key, title, group_name, direction, manual, sort_order) values
-  -- written by the site's own records
+  -- written by the site's own records (auto)
   ('customer_payment_job',    'Customer payment for a job (card or bank, Paystack)',       'Money in',          'in',   false, 10),
   ('wallet_topup',            'Customer wallet top-up (Paystack)',                         'Money in',          'in',   false, 11),
-  ('donation_received',       'Donation received',                                         'Money in',          'in',   false, 12),
-  ('escrow_released_tasker',  'Tasker share released by release code (owed to tasker)',    'Release by code',   'memo', false, 20),
-  ('platform_commission',     'Platform commission earned on a released job',              'Platform income',   'memo', false, 21),
-  ('escrow_cancelled',        'Escrow cancelled (job cancelled, money not released)',      'Release by code',   'memo', false, 22),
-  ('tasker_withdrawal_sent',  'Withdrawal sent to a tasker bank account',                  'Money out',         'out',  false, 30),
-  ('transfer_fee',            'Transfer fee on a withdrawal (as recorded by the site)',    'Fees and costs',    'out',  false, 31),
-  ('withdrawal_failed',       'Withdrawal attempt that failed (no money moved)',           'Failed attempts',   'memo', false, 32),
+  ('gift_card_sold',          'Gift card sold (customer money, not income)',               'Money in',          'in',   false, 12),
+  ('donation_received',       'Donation received (kept apart, not income)',                'Money in',          'in',   false, 13),
+  ('other_paystack_payment',  'Other Paystack payment (plan, urgent fee or similar; see the note)', 'Money in', 'in',   false, 14),
+  ('escrow_released_tasker',  'Tasker earnings released by release code (owed to the tasker)', 'Release by code', 'memo', false, 20),
+  ('coordinator_commission',  'Coordinator commission earned on a released Local job',     'Release by code',   'memo', false, 21),
+  ('platform_commission',     'Platform commission earned on a released job',              'Platform income',   'memo', false, 22),
+  ('subscription_income',     'Subscription payment received (platform income)',           'Platform income',   'memo', false, 23),
+  ('transfer_fee',            'Transfer fee deducted from the tasker (covers the Paystack transfer fee)', 'Platform income', 'memo', false, 24),
+  ('stamp_duty_charged',      'Stamp duty deducted from the tasker (covers Paystack stamp duty)',         'Platform income', 'memo', false, 25),
+  ('gift_card_used_on_job',   'Gift card value used to pay a job',                         'Release by code',   'memo', false, 26),
+  ('escrow_cancelled',        'Escrow cancelled (job cancelled, money not released)',      'Release by code',   'memo', false, 27),
+  ('tasker_withdrawal_sent',  'Withdrawal sent to a tasker bank account (after the fee)',  'Money out',         'out',  false, 30),
+  ('local_payout_sent',       'Local Tasker payout sent to the bank account',              'Money out',         'out',  false, 31),
+  ('refund_paid',             'Refund paid to a customer',                                 'Money out',         'out',  false, 33),
+  ('withdrawal_failed',       'Withdrawal attempt that failed (no money moved)',           'Failed attempts',   'memo', false, 34),
   -- typed in by the accountant
-  ('paystack_topup',          'Top-up of the Paystack Balance from the bank',              'Moves between accounts', 'memo', true, 50),
+  ('paystack_topup',          'Money the accountant sent to Paystack for released jobs',   'Moves between accounts', 'memo', true, 50),
   ('settlement_received',     'Paystack settlement paid into the bank',                    'Moves between accounts', 'in',   true, 51),
   ('commission_moved',        'Platform commission moved to the operating account',        'Moves between accounts', 'memo', true, 52),
-  ('paystack_fee_collection', 'Paystack fee on a customer payment (from the statement)',   'Fees and costs',    'out',  true, 60),
+  ('paystack_fee_collection', 'Paystack fee on customer payments (from the statement)',    'Fees and costs',    'out',  true, 60),
   ('paystack_fee_transfer',   'Paystack transfer fee (from the statement)',                'Fees and costs',    'out',  true, 61),
-  ('paystack_stamp_duty',     'Stamp duty charged by Paystack',                            'Fees and costs',    'out',  true, 62),
+  ('paystack_stamp_duty',     'Stamp duty charged by Paystack (from the statement)',       'Fees and costs',    'out',  true, 62),
   ('expense_hosting',         'Hosting and database',                                      'Fees and costs',    'out',  true, 63),
   ('expense_email',           'Email service',                                             'Fees and costs',    'out',  true, 64),
   ('expense_id_verification', 'ID verification service',                                   'Fees and costs',    'out',  true, 65),
@@ -135,11 +143,21 @@ insert into public.accountant_labels (key, title, group_name, direction, manual,
   ('expense_other',           'Other expense (the note must say what)',                    'Fees and costs',    'out',  true, 69),
   ('capital_in',              'Owner put money into the business (a loan, not income)',    'Owner capital',     'in',   true, 80),
   ('capital_repaid',          'Owner took money back (repaying the loan)',                 'Owner capital',     'out',  true, 81),
-  ('refund_paid',             'Refund paid to a customer',                                 'Money out',         'out',  true, 33),
   ('reversal',                'Reversal of an earlier entry (mistake fixed)',              'Corrections',       'memo', true, 99)
 on conflict (key) do update
   set title = excluded.title, group_name = excluded.group_name, direction = excluded.direction,
       manual = excluded.manual, sort_order = excluded.sort_order;
+
+-- v2 clean-up (2026-11-11): lines copied automatically by the first version used the wrong source for release
+-- by code. Automatic lines are always rebuilt from the site's records, so they are removed here and rebuilt by the
+-- next sync. Typed lines (auto = false) and any report already marked "sent" are never touched.
+do $clean$
+begin
+  alter table public.accountant_ledger disable trigger accountant_ledger_no_change;
+  delete from public.accountant_ledger where auto;
+  alter table public.accountant_ledger enable trigger accountant_ledger_no_change;
+  delete from public.accountant_daily_reports where status <> 'sent';
+end $clean$;
 
 -- ---------- 3. role and permissions -------------------------------------------------------------
 insert into public.admin_roles (key, label) values ('accountant', 'Accountant') on conflict (key) do nothing;
@@ -169,26 +187,61 @@ create or replace function public._acct_naira(p_kobo bigint)
 returns text language sql immutable as $$
   select '₦' || to_char(coalesce(p_kobo, 0) / 100.0, 'FM999,999,990.00') $$;
 
--- ---------- 5. ledger sync: copies the site's own money records into the labelled ledger ------------
+-- ---------- 5. release events: ONE source of truth for "a release code was entered" ------------------
+-- Real sources (from the owner's introspect of 2026-11-11, functions job_submit_code and _release_escrow):
+--   * A regular job writes wallet_transactions type 'escrow_release' (amount = the tasker share) at the moment of release.
+--   * A Local Tasker job writes local_payouts release_key 'final' (amount = the tasker share) at that moment.
+--   * A job paid by gift card has NO escrow row, so it must come from these two tables, not from escrow_payments.
+-- Commission: regular = platform_fee of the released escrow rows (or booking amount minus tasker share when there is no
+-- escrow row, the gift card case); Local = platform_share and coordinator_share of the commission hold (or the whole fee
+-- when no coordinator is assigned).
+create or replace function public._acct_release_events(p_from timestamptz, p_to timestamptz)
+returns table (src_table text, src_id text, booking_ref text, booking_id uuid, kind text, released_at timestamptz,
+               tasker_kobo bigint, coord_kobo bigint, platform_kobo bigint)
+language sql stable security definer set search_path = public, pg_temp as $$
+  select * from (
+    select 'wallet_transactions'::text as src_table, to_jsonb(w)->>'id' as src_id, left(w.booking_id::text, 8) as booking_ref,
+           w.booking_id, 'regular'::text as kind, (to_jsonb(w)->>'created_at')::timestamptz as released_at,
+           public._acct_kobo(w.amount) as tasker_kobo, 0::bigint as coord_kobo,
+           case when exists (select 1 from public.escrow_payments e where e.booking_id = w.booking_id and e.status = 'released')
+                then (select coalesce(sum(public._acct_kobo(e.platform_fee)), 0) from public.escrow_payments e
+                       where e.booking_id = w.booking_id and e.status = 'released')
+                else public._acct_kobo(greatest(coalesce(b.amount, 0) - w.amount, 0)) end as platform_kobo
+      from public.wallet_transactions w
+      left join public.bookings b on b.id = w.booking_id
+     where w.type = 'escrow_release' and w.booking_id is not null and to_jsonb(w)->>'id' is not null
+    union all
+    select 'local_payouts', p.id::text, left(p.booking_id::text, 8), p.booking_id, 'local', p.created_at,
+           public._acct_kobo(p.amount),
+           public._acct_kobo(coalesce(h.coordinator_share, 0)),
+           case when h.booking_id is not null then public._acct_kobo(h.platform_share) else public._acct_kobo(p.fee_total) end
+      from public.local_payouts p
+      left join public.local_booking_commission_holds h on h.booking_id = p.booking_id
+     where p.release_key = 'final'
+  ) x
+  where x.released_at is not null
+    and (p_from is null or x.released_at >= p_from) and (p_to is null or x.released_at < p_to)
+$$;
+
+-- ---------- 5b. ledger sync: copies the site's own money records into the labelled ledger ------------
 -- Idempotent: one ledger line per (source table, source row, label). Safe to run any number of times.
--- Sources read here (columns proven): payment_intents, escrow_payments, withdrawals, donations.
--- NOT yet labelled (their columns have not been seen; see a15b-introspect.sql): gift card orders and holds,
--- subscription and coordinator plan receipts, refunds (job_refunds), referral rewards, local payouts sent,
--- coordinator commission payouts. Until then they are missing from the ledger and the page says so.
+-- Not labelled yet: coordinator plan payments (they arrive as 'other_paystack_payment'), referral rewards (no money),
+-- wallet debits and credits other than the ones below.
 create or replace function public._acct_sync_ledger()
 returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
 declare n_total integer := 0; n integer; v_notes jsonb := '[]'::jsonb;
 begin
-  -- A. customer payments and wallet top-ups confirmed by Paystack
+  -- A. Paystack payments confirmed
   begin
     insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
     select i.paid_at,
-           case when i.purpose = 'topup' then 'wallet_topup' else 'customer_payment_job' end,
+           case when i.purpose = 'topup' then 'wallet_topup' when i.booking_id is not null then 'customer_payment_job' else 'other_paystack_payment' end,
            public._acct_kobo(i.amount), i.reference, left(coalesce(i.booking_id::text, ''), 8),
            'payment_intents', i.id::text,
            case when i.purpose = 'topup' then 'Wallet top-up'
-                else 'Job payment: tasker share ' || public._acct_naira(public._acct_kobo(i.tasker_amount))
-                     || ', platform fee ' || public._acct_naira(public._acct_kobo(i.platform_fee)) end
+                when i.booking_id is not null then 'Job payment: tasker share ' || public._acct_naira(public._acct_kobo(i.tasker_amount))
+                     || ', platform fee ' || public._acct_naira(public._acct_kobo(i.platform_fee))
+                else 'Purpose: ' || coalesce(i.purpose, 'unknown') end
       from public.payment_intents i
      where i.status = 'paid' and i.paid_at is not null
     on conflict do nothing;
@@ -196,137 +249,179 @@ begin
   exception when others then v_notes := v_notes || to_jsonb('payment_intents: ' || sqlerrm);
   end;
 
-  -- B. release by code: tasker share owed and platform commission earned (one pair per escrow row)
+  -- B. release by code: tasker earnings owed, coordinator commission, platform commission
+  begin
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, booking_ref, source_table, source_id, note)
+    select ev.released_at, 'escrow_released_tasker', ev.tasker_kobo, ev.booking_ref, ev.src_table, ev.src_id,
+           'Release code entered (' || ev.kind || ' job). To be paid out within 24 hours.'
+      from public._acct_release_events(null, null) ev
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, booking_ref, source_table, source_id, note)
+    select ev.released_at, 'platform_commission', ev.platform_kobo, ev.booking_ref, ev.src_table, ev.src_id,
+           'Commission on a released ' || ev.kind || ' job.'
+      from public._acct_release_events(null, null) ev
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, booking_ref, source_table, source_id, note)
+    select ev.released_at, 'coordinator_commission', ev.coord_kobo, ev.booking_ref, ev.src_table, ev.src_id,
+           'Coordinator share of the fee on a released Local job (held 24 hours, then credited).'
+      from public._acct_release_events(null, null) ev
+     where ev.coord_kobo > 0
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+  exception when others then v_notes := v_notes || to_jsonb('release events: ' || sqlerrm);
+  end;
+
+  -- C. cancelled escrow
   begin
     insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
-    select e.released_at, 'escrow_released_tasker', public._acct_kobo(e.tasker_amount), e.reference,
-           left(coalesce(e.booking_id::text, ''), 8), 'escrow_payments', e.id::text,
-           'Release code entered. Tasker share to be paid out within 24 hours.'
-      from public.escrow_payments e
-     where e.status = 'released' and e.released_at is not null
-    on conflict do nothing;
-    get diagnostics n = row_count; n_total := n_total + n;
-
-    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
-    select e.released_at, 'platform_commission', public._acct_kobo(e.platform_fee), e.reference,
-           left(coalesce(e.booking_id::text, ''), 8), 'escrow_payments', e.id::text,
-           'Commission on a released job.'
-      from public.escrow_payments e
-     where e.status = 'released' and e.released_at is not null
-    on conflict do nothing;
-    get diagnostics n = row_count; n_total := n_total + n;
-
-    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
-    select coalesce(nullif(to_jsonb(e)->>'updated_at', '')::timestamptz, nullif(to_jsonb(e)->>'cancelled_at', '')::timestamptz, e.paid_at, now()),
-           'escrow_cancelled', public._acct_kobo(e.amount), e.reference,
-           left(coalesce(e.booking_id::text, ''), 8), 'escrow_payments', e.id::text,
-           'Escrow cancelled; any refund is recorded separately.'
-      from public.escrow_payments e
-     where e.status = 'cancelled'
+    select coalesce(nullif(to_jsonb(e)->>'updated_at', '')::timestamptz, e.paid_at, now()),
+           'escrow_cancelled', public._acct_kobo(e.amount), e.reference, left(coalesce(e.booking_id::text, ''), 8),
+           'escrow_payments', e.id::text, 'Escrow cancelled; any refund is recorded separately.'
+      from public.escrow_payments e where e.status = 'cancelled'
     on conflict do nothing;
     get diagnostics n = row_count; n_total := n_total + n;
   exception when others then v_notes := v_notes || to_jsonb('escrow_payments: ' || sqlerrm);
   end;
 
-  -- C. withdrawals: money sent, the transfer fee beside it, and failed attempts (no money moved)
+  -- D. withdrawals. The site keeps the fee inside the amount: the tasker receives amount minus fee.
+  --    Fee tiers (withdrawal_fee): up to 5,000 = 10; under 10,000 = 25; up to 50,000 = 75 (25 + 50 stamp duty); above = 100 (50 + 50).
   begin
     insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
-    select coalesce(nullif(to_jsonb(w)->>'processed_at', '')::timestamptz, nullif(to_jsonb(w)->>'completed_at', '')::timestamptz,
-                    nullif(to_jsonb(w)->>'updated_at', '')::timestamptz, nullif(to_jsonb(w)->>'created_at', '')::timestamptz, now()),
-           case when to_jsonb(w)->>'status' = 'success' then 'tasker_withdrawal_sent' else 'withdrawal_failed' end,
-           public._acct_kobo((to_jsonb(w)->>'amount')::numeric),
-           coalesce(to_jsonb(w)->>'reference', to_jsonb(w)->>'paystack_reference'),
-           'withdrawals', to_jsonb(w)->>'id',
-           case when to_jsonb(w)->>'status' = 'success' then 'Withdrawal paid to the tasker bank account.'
-                else 'Failed: ' || left(coalesce(to_jsonb(w)->>'reason', to_jsonb(w)->>'failure_reason', to_jsonb(w)->>'error', 'no reason recorded'), 200) end
-      from public.withdrawals w
-     where to_jsonb(w)->>'status' in ('success', 'failed') and to_jsonb(w)->>'id' is not null
+    select coalesce(w.settled_at, w.updated_at, w.created_at),
+           case when w.status = 'success' then 'tasker_withdrawal_sent' else 'withdrawal_failed' end,
+           public._acct_kobo(case when w.status = 'success' then coalesce(w.net_amount, w.amount - coalesce(w.fee, 0)) else w.amount end),
+           coalesce(w.paystack_transfer_code, w.reference), 'withdrawals', w.id::text,
+           case when w.status = 'success' then 'Withdrawal paid to the tasker bank account (amount after the fee).'
+                else 'Failed, no money moved: ' || left(coalesce(w.failure_reason, 'no reason recorded'), 200) end
+      from public.withdrawals w where w.status in ('success', 'failed')
     on conflict do nothing;
     get diagnostics n = row_count; n_total := n_total + n;
 
     insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
-    select coalesce(nullif(to_jsonb(w)->>'processed_at', '')::timestamptz, nullif(to_jsonb(w)->>'completed_at', '')::timestamptz,
-                    nullif(to_jsonb(w)->>'updated_at', '')::timestamptz, nullif(to_jsonb(w)->>'created_at', '')::timestamptz, now()),
-           'transfer_fee', public._acct_kobo((to_jsonb(w)->>'fee')::numeric),
-           coalesce(to_jsonb(w)->>'reference', to_jsonb(w)->>'paystack_reference'),
-           'withdrawals', to_jsonb(w)->>'id',
-           'Fee on a successful withdrawal, as the site recorded it. Check it against the Paystack statement.'
-      from public.withdrawals w
-     where to_jsonb(w)->>'status' = 'success' and to_jsonb(w)->>'id' is not null
-       and coalesce((to_jsonb(w)->>'fee')::numeric, 0) > 0
+    select coalesce(w.settled_at, w.updated_at, w.created_at), 'transfer_fee',
+           public._acct_kobo(coalesce(w.fee, 0) - case when coalesce(w.fee, 0) >= 75 then 50 else 0 end),
+           coalesce(w.paystack_transfer_code, w.reference), 'withdrawals', w.id::text,
+           'Deducted from the tasker. Paystack bills the real transfer fee separately: enter it from the statement.'
+      from public.withdrawals w where w.status = 'success' and coalesce(w.fee, 0) > 0
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
+    select coalesce(w.settled_at, w.updated_at, w.created_at), 'stamp_duty_charged', 5000,
+           coalesce(w.paystack_transfer_code, w.reference), 'withdrawals', w.id::text,
+           'Stamp duty deducted from the tasker on a withdrawal above 10,000.'
+      from public.withdrawals w where w.status = 'success' and coalesce(w.fee, 0) >= 75
     on conflict do nothing;
     get diagnostics n = row_count; n_total := n_total + n;
   exception when others then v_notes := v_notes || to_jsonb('withdrawals: ' || sqlerrm);
   end;
 
-  -- D. donations
+  -- E. Local Tasker payouts sent directly (they do not go through the wallet)
+  begin
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
+    select coalesce(p.paid_at, p.sent_at), 'local_payout_sent',
+           public._acct_kobo(coalesce(p.send_amount, p.amount - coalesce(p.transfer_fee, 0))),
+           coalesce(p.transfer_reference, p.reference), left(p.booking_id::text, 8), 'local_payouts', p.id::text,
+           'Local Tasker payout sent to the bank account.'
+      from public.local_payouts p where p.paid_at is not null or p.sent_at is not null
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
+    select coalesce(p.paid_at, p.sent_at), 'transfer_fee', public._acct_kobo(p.transfer_fee),
+           coalesce(p.transfer_reference, p.reference), left(p.booking_id::text, 8), 'local_payouts', p.id::text,
+           'Transfer fee on a Local Tasker payout, as the site recorded it.'
+      from public.local_payouts p where (p.paid_at is not null or p.sent_at is not null) and coalesce(p.transfer_fee, 0) > 0
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+  exception when others then v_notes := v_notes || to_jsonb('local_payouts: ' || sqlerrm);
+  end;
+
+  -- F. donations
   begin
     insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
     select d.paid_at, 'donation_received', coalesce(d.paid_kobo, d.amount::bigint * 100), d.reference,
            'donations', d.id::text, 'Donation (kept apart: not platform income).'
-      from public.donations d
-     where d.status = 'paid' and d.paid_at is not null
+      from public.donations d where d.status = 'paid' and d.paid_at is not null
     on conflict do nothing;
     get diagnostics n = row_count; n_total := n_total + n;
   exception when others then v_notes := v_notes || to_jsonb('donations: ' || sqlerrm);
+  end;
+
+  -- G. gift cards: sold (customer money), and value used to pay a job
+  begin
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
+    select o.paid_at, 'gift_card_sold', o.amount::bigint * 100, o.reference, 'gift_card_orders', o.id::text,
+           'Gift card sold. Customer money: not income and not part of the release-code payout.'
+      from public.gift_card_orders o where o.paid_at is not null
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, booking_ref, source_table, source_id, note)
+    select h.created_at, 'gift_card_used_on_job', h.amount::bigint * 100, h.reference, left(coalesce(h.booking_id::text, ''), 8),
+           'gift_card_holds', h.id::text, 'Gift card value used to pay a job. The tasker is paid when the release code is entered.'
+      from public.gift_card_holds h where h.status = 'captured'
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+  exception when others then v_notes := v_notes || to_jsonb('gift cards: ' || sqlerrm);
+  end;
+
+  -- H. subscription payments (platform income)
+  begin
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
+    select r.paid_at, 'subscription_income', r.amount_kobo, r.reference, 'subscription_receipts', r.id::text,
+           'Plan: ' || coalesce(r.plan_name, r.plan, 'unknown') || ' (' || coalesce(r.kind, 'payment') || ')'
+      from public.subscription_receipts r where r.paid_at is not null
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+  exception when others then v_notes := v_notes || to_jsonb('subscription_receipts: ' || sqlerrm);
+  end;
+
+  -- I. refunds recorded by support
+  begin
+    insert into public.accountant_ledger (entry_at, label, amount_kobo, reference, source_table, source_id, note)
+    select f.created_at, 'refund_paid', public._acct_kobo(f.amount), f.paystack_ref, 'job_refunds', f.id::text,
+           'Refund recorded after a dispute. ' || left(coalesce(f.note, ''), 150)
+      from public.job_refunds f
+    on conflict do nothing;
+    get diagnostics n = row_count; n_total := n_total + n;
+  exception when others then v_notes := v_notes || to_jsonb('job_refunds: ' || sqlerrm);
   end;
 
   return jsonb_build_object('added', n_total, 'problems', v_notes);
 end $$;
 
 -- ---------- 6. build one day's report ------------------------------------------------------------
--- Counts jobs whose escrow row has status 'released' and released_at inside the window. released_at is the
--- moment the release code was accepted (set by the release functions; b4b-commission-hold.sql shows it for
--- Local bookings; the regular job_submit_code source was NOT in the repo: see handoff item "check first").
--- A report already marked 'sent' is never rewritten. A report not yet sent is refreshed if built again.
+-- Counts every release code entered inside the window (see _acct_release_events). A report already marked
+-- 'sent' is never rewritten. A report not yet sent is refreshed if built again.
 create or replace function public._acct_build_report(p_end timestamptz)
 returns public.accountant_daily_reports language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   v_start timestamptz := p_end - interval '24 hours';
   v_date date := (p_end at time zone 'Africa/Lagos')::date;
   r public.accountant_daily_reports;
-  v_n integer := 0; v_tasker bigint := 0; v_reg bigint := 0; v_loc bigint := 0; v_plat bigint := 0; v_cust bigint := 0;
-  v_coord bigint; v_lines jsonb := '[]'::jsonb;
+  v_n integer; v_tasker bigint; v_reg bigint; v_loc bigint; v_coord bigint; v_plat bigint; v_lines jsonb;
 begin
   select * into r from public.accountant_daily_reports where report_date = v_date;
   if found and r.status = 'sent' then return r; end if;
 
-  select count(*),
-         coalesce(sum(public._acct_kobo(e.tasker_amount)), 0),
-         coalesce(sum(public._acct_kobo(e.tasker_amount)) filter (where not coalesce(public.is_local_tasker_user(e.tasker_id), false)), 0),
-         coalesce(sum(public._acct_kobo(e.tasker_amount)) filter (where coalesce(public.is_local_tasker_user(e.tasker_id), false)), 0),
-         coalesce(sum(public._acct_kobo(e.platform_fee)), 0),
-         coalesce(sum(public._acct_kobo(e.amount)), 0)
-    into v_n, v_tasker, v_reg, v_loc, v_plat, v_cust
-    from public.escrow_payments e
-   where e.status = 'released' and e.released_at >= v_start and e.released_at < p_end;
-
-  -- one line per released payment: short job code, kind, amounts. No names, no contacts.
-  select coalesce(jsonb_agg(jsonb_build_object(
-           'job', left(coalesce(e.booking_id::text, ''), 8),
-           'kind', case when coalesce(public.is_local_tasker_user(e.tasker_id), false) then 'local' else 'regular' end,
-           'released_at', e.released_at,
-           'tasker_kobo', public._acct_kobo(e.tasker_amount),
-           'platform_kobo', public._acct_kobo(e.platform_fee),
-           'customer_kobo', public._acct_kobo(e.amount)) order by e.released_at), '[]'::jsonb)
-    into v_lines
-    from public.escrow_payments e
-   where e.status = 'released' and e.released_at >= v_start and e.released_at < p_end;
-
-  -- coordinator commission on Local jobs released in the window (null when it cannot be read)
-  begin
-    select coalesce(sum(public._acct_kobo((to_jsonb(c)->>'coordinator_share')::numeric)), 0) into v_coord
-      from public.local_booking_commissions c
-     where exists (select 1 from public.escrow_payments e
-                    where e.booking_id::text = to_jsonb(c)->>'booking_id'
-                      and e.status = 'released' and e.released_at >= v_start and e.released_at < p_end);
-  exception when others then v_coord := null;
-  end;
+  select count(*), coalesce(sum(tasker_kobo), 0),
+         coalesce(sum(tasker_kobo) filter (where kind = 'regular'), 0),
+         coalesce(sum(tasker_kobo) filter (where kind = 'local'), 0),
+         coalesce(sum(coord_kobo), 0), coalesce(sum(platform_kobo), 0),
+         coalesce(jsonb_agg(jsonb_build_object('job', booking_ref, 'kind', kind, 'released_at', released_at,
+                  'tasker_kobo', tasker_kobo, 'coord_kobo', coord_kobo, 'platform_kobo', platform_kobo) order by released_at), '[]'::jsonb)
+    into v_n, v_tasker, v_reg, v_loc, v_coord, v_plat, v_lines
+    from public._acct_release_events(v_start, p_end);
 
   insert into public.accountant_daily_reports as t
     (report_date, window_start, window_end, jobs_released, tasker_kobo, regular_kobo, local_kobo,
      coordinator_kobo, platform_kobo, customer_kobo, lines, status, built_at)
-  values (v_date, v_start, p_end, v_n, v_tasker, v_reg, v_loc, v_coord, v_plat, v_cust, v_lines,
+  values (v_date, v_start, p_end, v_n, v_tasker, v_reg, v_loc, v_coord, v_plat, v_tasker + v_coord + v_plat, v_lines,
           case when v_n = 0 then 'no_release' else 'to_send' end, now())
   on conflict (report_date) do update
     set window_start = excluded.window_start, window_end = excluded.window_end, jobs_released = excluded.jobs_released,
@@ -402,7 +497,7 @@ begin
                             'to_send_kobo', r.tasker_kobo, 'notified', v_sent, 'sync', v_sync);
 end $$;
 
-revoke all on function public._acct_sync_ledger(), public._acct_build_report(timestamptz), public.accountant_close_day(),
+revoke all on function public._acct_release_events(timestamptz, timestamptz), public._acct_sync_ledger(), public._acct_build_report(timestamptz), public.accountant_close_day(),
   public._acct_kobo(numeric), public._acct_naira(bigint), public._acct_ledger_guard() from public, anon, authenticated;
 
 -- ---------- 8. browser functions (each checks the permission itself) --------------------------------
@@ -536,12 +631,57 @@ begin
   return jsonb_build_object('ok', true, 'id', v_id);
 end $$;
 
-revoke all on function public.admin_accountant_reports(integer), public.admin_accountant_report(date),
+-- PROFIT. Income = commission on released jobs + subscription payments + the transfer fee and stamp duty deducted from
+-- taskers. Costs = everything the accountant typed under "Fees and costs". Profit = income minus costs.
+-- Never counted as income: gift cards sold, donations, wallet top-ups, customer or tasker money, owner capital.
+-- Not counted yet: coordinator plan payments (they sit under 'other_paystack_payment' until their purpose is confirmed).
+-- "complete" is false while any main cost category has no entry in the range, so the page must say the profit is not final.
+create or replace function public.admin_accountant_profit(p_from timestamptz default null, p_to timestamptz default null)
+returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare v_income bigint; v_cost bigint; v_missing jsonb;
+begin
+  perform public.admin_require('accounting.view');
+  select coalesce(sum(l.amount_kobo), 0) into v_income
+    from public.accountant_ledger l
+   where l.label in ('platform_commission', 'subscription_income', 'transfer_fee', 'stamp_duty_charged')
+     and (p_from is null or l.entry_at >= p_from) and (p_to is null or l.entry_at < p_to)
+     and not exists (select 1 from public.accountant_ledger z where z.reverses = l.id);
+  select coalesce(sum(l.amount_kobo), 0) into v_cost
+    from public.accountant_ledger l join public.accountant_labels a on a.key = l.label
+   where a.group_name = 'Fees and costs' and a.direction = 'out'
+     and (p_from is null or l.entry_at >= p_from) and (p_to is null or l.entry_at < p_to)
+     and not exists (select 1 from public.accountant_ledger z where z.reverses = l.id);
+  select coalesce(jsonb_agg(a.title order by a.sort_order), '[]'::jsonb) into v_missing
+    from public.accountant_labels a
+   where a.key in ('paystack_fee_collection', 'paystack_fee_transfer', 'expense_hosting', 'expense_email', 'expense_id_verification', 'expense_domain')
+     and not exists (select 1 from public.accountant_ledger l
+                      where l.label = a.key and (p_from is null or l.entry_at >= p_from) and (p_to is null or l.entry_at < p_to)
+                        and not exists (select 1 from public.accountant_ledger z where z.reverses = l.id));
+  return jsonb_build_object('ok', true, 'generated_at', now(),
+    'income', (select coalesce(jsonb_agg(jsonb_build_object('label', t.label, 'title', t.title, 'amount_kobo', t.s) order by t.sort_order), '[]'::jsonb)
+                 from (select l.label, a.title, a.sort_order, sum(l.amount_kobo) s
+                         from public.accountant_ledger l join public.accountant_labels a on a.key = l.label
+                        where l.label in ('platform_commission', 'subscription_income', 'transfer_fee', 'stamp_duty_charged')
+                          and (p_from is null or l.entry_at >= p_from) and (p_to is null or l.entry_at < p_to)
+                          and not exists (select 1 from public.accountant_ledger z where z.reverses = l.id)
+                        group by l.label, a.title, a.sort_order) t),
+    'costs', (select coalesce(jsonb_agg(jsonb_build_object('label', t.label, 'title', t.title, 'amount_kobo', t.s) order by t.sort_order), '[]'::jsonb)
+                from (select l.label, a.title, a.sort_order, sum(l.amount_kobo) s
+                        from public.accountant_ledger l join public.accountant_labels a on a.key = l.label
+                       where a.group_name = 'Fees and costs' and a.direction = 'out'
+                         and (p_from is null or l.entry_at >= p_from) and (p_to is null or l.entry_at < p_to)
+                         and not exists (select 1 from public.accountant_ledger z where z.reverses = l.id)
+                       group by l.label, a.title, a.sort_order) t),
+    'income_kobo', v_income, 'costs_kobo', v_cost, 'profit_kobo', v_income - v_cost,
+    'complete', jsonb_array_length(v_missing) = 0, 'missing_cost_entries', v_missing);
+end $$;
+
+revoke all on function public.admin_accountant_reports(integer), public.admin_accountant_report(date), public.admin_accountant_profit(timestamptz, timestamptz),
   public.admin_accountant_mark_sent(date, bigint, text),
   public.admin_accountant_ledger(timestamptz, timestamptz, text, integer, integer),
   public.admin_accountant_record(text, bigint, date, text, text), public.admin_accountant_reverse(bigint, text)
   from public, anon;
-grant execute on function public.admin_accountant_reports(integer), public.admin_accountant_report(date),
+grant execute on function public.admin_accountant_reports(integer), public.admin_accountant_report(date), public.admin_accountant_profit(timestamptz, timestamptz),
   public.admin_accountant_mark_sent(date, bigint, text),
   public.admin_accountant_ledger(timestamptz, timestamptz, text, integer, integer),
   public.admin_accountant_record(text, bigint, date, text, text), public.admin_accountant_reverse(bigint, text)
@@ -561,8 +701,8 @@ end $cron$;
 -- ---------- 10. checks (read only): one row, every value should be true -------------------------------
 select
   (select count(*) = 3 from information_schema.tables where table_schema = 'public' and table_name in ('accountant_labels', 'accountant_ledger', 'accountant_daily_reports')) as tables_ok,
-  (select count(*) >= 25 from public.accountant_labels) as labels_ok,
+  (select count(*) >= 30 from public.accountant_labels) as labels_ok,
   (select count(*) = 3 from public.admin_permissions where key in ('accounting.view', 'accounting.record', 'accounting.capital')) as permissions_ok,
   exists (select 1 from public.admin_roles where key = 'accountant') as role_ok,
-  (select count(*) = 6 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'admin\_accountant\_%') as functions_ok,
+  (select count(*) = 7 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'admin\_accountant\_%') as functions_ok,
   exists (select 1 from pg_extension where extname = 'pg_cron') as pg_cron_installed;

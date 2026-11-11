@@ -1132,16 +1132,16 @@
       if (!root) return;
       root.textContent = '';
       CU.pointP = _cuResolvePoint();
-      /* Figma order: Taskers, Win Free Giftcards strip, Taskers near you, Service Categories, Gift strip, Services, Tasks */
       const hosts = {};
+      /* Owner order (2026-11-11): Services, Featured Taskers, Win Free Giftcards strip, Other Tasks, Taskers near you, Service Categories, Gift strip, My Tasks */
+      hosts.services = _cuHost(root, 'hfCuServices');
       hosts.feat = _cuHost(root, 'hfCuFeatured');
       root.appendChild(_tkStrip('Win Free Giftcards!', 'Invite friends', 'referrals.html'));
+      hosts.others = _cuHost(root, 'hfCuOthers');
       hosts.near = _cuHost(root, 'hfCuNear');
       hosts.explore = _cuHost(root, 'hfCuExplore');
       root.appendChild(_tkStrip('Gift Loved Ones', 'Buy Giftcard', 'gift-cards.html'));
-      hosts.services = _cuHost(root, 'hfCuServices');
       hosts.mine = _cuHost(root, 'hfCuMine');
-      hosts.others = _cuHost(root, 'hfCuOthers');
       _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuServices(hosts.services); _cuMine(hosts.mine); _cuOthers(hosts.others);
       const ref = document.getElementById('hfCuReferral');
       _wireReferral(ref, 'customer', 'Invite Friends. Earn Rewards.');

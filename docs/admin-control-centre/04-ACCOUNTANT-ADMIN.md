@@ -5,10 +5,11 @@
 1. **What the accountant sends to Paystack each day = the tasker money of jobs whose release code was entered that day.** Window: 9:00 pm WAT yesterday to 9:00 pm WAT today (20:00 to 20:00 UTC). Source: `escrow_payments` rows with `status = 'released'` and `released_at` inside the window. The 24 hour clearing gives 24 hours to put the money in Paystack.
 2. **At 9:00 pm WAT the site builds the report and emails every active admin with `accounting.view`** (Accountant, Finance, every Super Admin) through the existing `notifications` emailing. **Every day**, including a day with no release code: then the email says "No revenue to pay out today".
 3. **Gift card sales are not part of the payout** (a sale is not a release). This removes the old gift card problem (D-A20). A gift card used to pay a job is counted when that job is released, like any other job.
-4. **Capital is not a fixed ₦200,000.** It is any amount the owner puts in, recorded as `capital_in` (a loan, not income) and `capital_repaid`. Only a Super Admin (`accounting.capital`) records either. The approval step of D-A23 is not built yet; ask the owner whether she wants it.
+4. **Capital is not a fixed ₦200,000.** It is any amount the owner puts in, recorded as `capital_in` (a loan, not income) and `capital_repaid`. Only a Super Admin (`accounting.capital`) records either. **No second-admin approval** (owner decision 2026-11-11).
 5. **Every transaction is labelled** in `accountant_ledger` (labels in `accountant_labels`), including the transfer fee on each withdrawal, Paystack fees, stamp duty, expenses, settlements, top-ups and capital. The ledger is append only; a mistake is fixed by a `reversal` entry.
 6. **Website:** the promise of same-day withdrawal after 4 weeks was removed from `payments.html` (4.4, 6.1), `terms.html` (11.10A deleted, 11.12), `messages.html` and `js/wallet-data.js`. The 24 hour clearing applies to every tasker permanently.
-7. Built in `sql/admin/a15b-accountant.sql` (not run). The page `admin/accountant.html` is the next stage (A15b-2). The old `admin_topup_batches` design is dropped.
+7. The Accountant page has a **Profit** block (`admin_accountant_profit`): income minus typed costs, marked "not final" while a cost category has no entry.
+8. Built in `sql/admin/a15b-accountant.sql` (not run). The page `admin/accountant.html` is the next stage (A15b-2). The old `admin_topup_batches` design is dropped.
 
 ---
 

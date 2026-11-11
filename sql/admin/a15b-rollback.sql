@@ -10,10 +10,12 @@ drop function if exists public.admin_accountant_record(text, bigint, date, text,
 drop function if exists public.admin_accountant_ledger(timestamptz, timestamptz, text, integer, integer);
 drop function if exists public.admin_accountant_mark_sent(date, bigint, text);
 drop function if exists public.admin_accountant_report(date);
+drop function if exists public.admin_accountant_profit(timestamptz, timestamptz);
 drop function if exists public.admin_accountant_reports(integer);
 drop function if exists public.accountant_close_day();
 drop function if exists public._acct_build_report(timestamptz);
 drop function if exists public._acct_sync_ledger();
+drop function if exists public._acct_release_events(timestamptz, timestamptz);
 drop function if exists public._acct_naira(bigint);
 drop function if exists public._acct_kobo(numeric);
 drop table if exists public.accountant_daily_reports;
