@@ -12,10 +12,22 @@ Work is split into small stages so no session runs out of room. **Do ONE stage p
 5. `docs/admin-control-centre/03-OWNER-DECISIONS.md`: open decisions with defaults.
 5b. `docs/admin-control-centre/04-ACCOUNTANT-ADMIN.md`: the accountant admin (A15b) and earnings change (M1), planned 2026-11-10, nothing built yet.
 6. The owner's master brief, saved as `docs/admin-control-centre/00-BRIEF.md` (business requirement; the repo wins where they disagree).
-7. The newest file in `docs/admin-control-centre/handoffs/` (now `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
+7. The newest file in `docs/admin-control-centre/handoffs/` (now `A15b-followup.md`; older: `A15b.md`, `A5d.md`), and `ARCHITECTURE.md` (Parts B and C are the real database and the risks) and `IMPLEMENTATION-STATUS.md`.
 8. `AGENTS.md`, `CLAUDE.md`, `DESIGN-SYSTEM.md` before any page or style work. Then `css/tokens.css`.
 
-## CURRENT STATE (2026-11-11, after A15b part 1: accountant daily release report)
+## CURRENT STATE (2026-11-11, after A15b-2)
+**A15b-2 written: `admin/accountant.html` + `admin/js/admin-accountant.js` + menu item. No new SQL. 26 fake-Supabase browser checks pass; not run against real Supabase; not deployed.** Read `handoffs/A15b2.md`. NEXT: owner's choice (A17, A11, A15b-3, M1).
+
+## PREVIOUS STATE (2026-11-11, later: owner ran the pending SQL; verification and encoding fixes)
+**Owner report (2026-11-11): she ran the SQL for A3c, A4, A5c, A5d, A5e, A6, A7 and A8 on Supabase.** The printed results and any test results were not shown. Record them as applied, not proven, until she sends the output (the `*-check.sql` or DONE lines). The Edge Functions `admin-invite` (A5e) and `admin-account-action` (A7, A8) are still NOT deployed as far as any file says; the invite and the suspend buttons will not work until she deploys them from `supabase/deploy/`.
+
+**A15b part 1 is installed** (daily release report, ledger, role `accountant`, the 9 pm email arrived). **`admin/accountant.html` does not exist yet.** See `docs/admin-control-centre/handoffs/A15b-followup.md`.
+
+**Encoding bug (found 2026-11-11).** Symbols pasted into the Supabase SQL editor were stored garbled (the naira sign became three odd characters). RULE FOR EVERY FUTURE SQL FILE: write non-ASCII characters as codes (`chr(8358)` naira, `chr(8226)` bullet, `chr(8230)` ellipsis, `chr(9989)` tick), keep SQL files plain ASCII, and never paste symbols into the editor. Fixed so far: `_acct_naira`, `accountant_close_day`, `_release_escrow` (owner ran `a15b-fix-encoding.sql`); `_local_tasker_sync_public` and `local_booking_send_quote` are in `a15c-fix-encoding-2.sql` (run status not reported). Saved `taskers.rate` rows may still be garbled (a15c has a check and an optional repair). The `send-notification-email` source is not in the repo; the email layer was not the cause.
+
+**Site change outside the admin stages:** `verify.html`, `js/verify.js`, new `js/verify-retry-nudge.js`, `js/app.js` (one block), `js/tasker-live-nudge.js` (waits for the new pop-up). Needs the real `idv_apply_event` and `idv_start_attempt` sources to be sure a rejected ID reaches a clean retry.
+
+## PREVIOUS STATE (2026-11-11, after A15b part 1: accountant daily release report)
 Owner changed the accountant design: the daily payout = tasker money of jobs whose **release code** was entered that day (9 pm WAT to 9 pm WAT), emailed at 9 pm WAT every day (a "No revenue to pay out today" email when none); gift card sales are no longer part of it; capital is any amount; every transaction is labelled in an append-only ledger, including transfer fees. Same-day-after-4-weeks wording was removed from the public site. **Written: `sql/admin/a15b-accountant.sql` (+ rollback, introspect). NOT run anywhere, nothing deployed, no page yet.** Read `docs/admin-control-centre/handoffs/A15b.md` first (owner runs `a15b-introspect.sql` before the main file). NEXT: A15b-2, the page `admin/accountant.html`. The OWNER MONEY-FLOW DECISION of 2026-11-10 further down (daily top-up batch) is superseded by `04-ACCOUNTANT-ADMIN.md`'s decision of 2026-11-11. The A8b state below is kept for history.
 
 ## PREVIOUS STATE (2026-11-10, after A8b: admin polish and the Local Tasker leak)
@@ -56,7 +68,7 @@ Key facts: admin tables and functions are in `DATABASE-CHANGES.md`. Rule R-SELF 
 ## OWNER MONEY-FLOW DECISION (2026-11-10): read before any money-related stage
 Customer payments settle to the owner's bank the next business day; Paystack transfers draw from a separate Paystack Balance that she tops up herself. She decided on a **daily 9 pm (WAT) top-up routine**: the site totals the day's customer money, shows it on an admin page and emails it, she tops up Paystack by hand and records it. Payments after 9 pm go to the next day's batch. Payouts keep the 24 hour clearing. This is planned as **A15b (the Accountant admin: a new `accountant` role and money dashboard, daily 9 pm top-up, ledger, and the owner's ₦200,000 capital; read and record only)** and **M1 (website: earnings instead of a tasker wallet, automatic payout, `awaiting_funds` state, balance check)**. Spec: `docs/admin-control-centre/04-ACCOUNTANT-ADMIN.md`. **Nothing is built.** Open decisions D-A18 to D-A22 in `03-OWNER-DECISIONS.md`. Rule 7 still holds: no admin function calls Paystack. Do A15b only when the owner names it; M1 only on her explicit go (it touches payment functions, rule 9).
 
-## NEXT STAGE: owner's choice (default **A14**: services, reviews, reports; it adds the hide-a-service control A8 points to)
+## NEXT STAGE: owner's choice. Suggested: **A15b-2** (`admin/accountant.html`), then A17, then A11. First ask for the output of the SQL she ran (A3c to A8) and fix any failure before building on it.
 Read the owner's report on A12b first: did the three SQL files print DONE, what do the Bookings tabs and the Problems queue show, does a booking's Timeline show anything (`job_events.booking_id` is still a guess). Fix any failure first. Other candidates: A11 verification (`00-PLAN.md` stage table). **Build environment tip:** a scratch Postgres works if you create a non-root user (`useradd pgtest`), `initdb` as that user in `/var/tmp/pgdata` and start it with `-p 5544 -k /var/tmp`; `local-tests/run-a12b.sh <repo root>` loads every admin SQL file in order and runs the A12a/A12b tests; Playwright is preinstalled for `node local-tests/a12b-browser-test.js <repo root>`. Run SQL tests for every stage: they have found real bugs.
 
 ## Owner rules (carry into every stage)

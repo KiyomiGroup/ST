@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Accountant · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Accountant</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="acRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Accountant</h1>
+            <p>The daily amount to send to Paystack, the profit, and the ledger of every money step. This page only shows and records. It never moves money, never calls Paystack and never changes a wallet, escrow row or payment.</p>
+          </div>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acDueTitle">
+            <h2 class="ad-card-title" id="acDueTitle">Send to Paystack</h2>
+            <p class="ad-hint">Each day at 9:00 pm Nigeria time the site adds up the tasker money of jobs whose release code was entered since 9:00 pm the day before. That is the amount to put in Paystack for taskers within 24 hours. Commission is the platform&rsquo;s own money and is never part of it. From site records.</p>
+            <div id="acDue"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acRepTitle">
+            <h2 class="ad-card-title" id="acRepTitle">Daily reports</h2>
+            <p class="ad-hint">Newest first. A day stays &ldquo;To send&rdquo; until someone with permission records that the money was sent.</p>
+            <div id="acReports"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acProfitTitle">
+            <h2 class="ad-card-title" id="acProfitTitle">Profit</h2>
+            <form class="ad-filters" id="acProfitForm" novalidate>
+              <label class="ad-filter"><span class="ad-filter-label">From</span><input class="form-input" id="pFrom" type="date" /></label>
+              <label class="ad-filter"><span class="ad-filter-label">To</span><input class="form-input" id="pTo" type="date" /></label>
+              <div class="ad-actions">
+                <button type="submit" class="btn btn-primary">Show</button>
+                <button type="button" class="btn" id="pAll">All time</button>
+              </div>
+            </form>
+            <div id="acProfit" aria-live="polite"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acCapTitle">
+            <h2 class="ad-card-title" id="acCapTitle">Owner capital</h2>
+            <p class="ad-hint">Money the owner put in is a loan to the business, not income. All time, from typed entries.</p>
+            <div id="acCapital" aria-live="polite"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" id="acFormCard" aria-labelledby="acFormTitle" hidden>
+            <h2 class="ad-card-title" id="acFormTitle">Record a money step</h2>
+            <p class="ad-hint">Fees from the Paystack statement, expenses, settlements and capital. A new line is added to the ledger. A line is never edited or deleted; a mistake is fixed with a reversal. Amounts are in naira.</p>
+            <form class="ad-form" id="acForm" novalidate>
+              <div class="ad-field"><label for="rLabel">What is it</label><select class="form-input" id="rLabel"></select></div>
+              <div class="ad-field"><label for="rAmount">Amount (&#8358;)</label><input class="form-input" id="rAmount" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+              <div class="ad-field"><label for="rDate">Date it happened</label><input class="form-input" id="rDate" type="date" /></div>
+              <div class="ad-field"><label for="rNote">Note</label><input class="form-input" id="rNote" maxlength="300" autocomplete="off" /><p class="ad-hint" id="rNoteHint">At least 5 characters.</p></div>
+              <div class="ad-field"><label for="rRef">Reference (optional)</label><input class="form-input" id="rRef" maxlength="120" autocomplete="off" /></div>
+              <p class="ad-error" id="rError" role="alert" hidden></p>
+              <button type="submit" class="btn btn-primary" id="rSave">Add to the ledger</button>
+            </form>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="acLedTitle">
+            <h2 class="ad-card-title" id="acLedTitle">Ledger</h2>
+            <p class="ad-hint">Every labelled money step. &ldquo;Site&rdquo; lines are copied from the site&rsquo;s own records; &ldquo;Typed&rdquo; lines were entered by a person. Reversed lines are crossed out in the totals.</p>
+            <form class="ad-filters" id="acLedForm" novalidate>
+              <label class="ad-filter"><span class="ad-filter-label">Label</span><select class="form-input" id="fLabel"><option value="">All labels</option></select></label>
+              <label class="ad-filter"><span class="ad-filter-label">From</span><input class="form-input" id="fFrom" type="date" /></label>
+              <label class="ad-filter"><span class="ad-filter-label">To</span><input class="form-input" id="fTo" type="date" /></label>
+              <div class="ad-actions">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <button type="button" class="btn" id="fReset">Reset</button>
+              </div>
+            </form>
+            <div id="acTotals"></div>
+            <div id="acLedger" aria-live="polite"></div>
+            <div class="ad-actions ad-pager" id="acPager" hidden>
+              <button type="button" class="btn" id="pNewer">Newer</button>
+              <button type="button" class="btn" id="pOlder">Older</button>
+            </div>
+          </section>
+          <p class="ad-note" id="acStamp"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-accountant.js"></script>
+</body>
+</html>

@@ -35,6 +35,9 @@
       { key: 'bookings',  label: 'Bookings and Tasks', href: 'bookings.html', icon: 'list', any: ['bookings.view'], built: true },
       { key: 'disputes',  label: 'Disputes',          href: 'disputes.html',  icon: 'flag',   any: ['disputes.manage'], built: true }
     ] },
+    { group: 'Money', items: [
+      { key: 'accountant', label: 'Accountant', href: 'accountant.html', icon: 'chart', any: ['accounting.view'], built: true }
+    ] },
     { group: 'System', items: [
       { key: 'team',      label: 'Admin team',        href: 'team.html',      icon: 'users',  any: ['admin.team.view'], built: true },
       { key: 'roles',     label: 'Roles and permissions', href: 'roles.html', icon: 'check',  any: ['admin.team.view', 'admin.roles.manage'], built: true },
