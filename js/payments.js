@@ -88,8 +88,30 @@ async function _callFn(name, body) {
 /* Run a database function as the logged-in user; our own errors are readable */
 async function _rpc(name, args) {
   var r = await window.supabase.rpc(name, args || {});
-  if (r.error) throw new Error(r.error.message || 'Something went wrong. Please try again.');
+  if (r.error) {
+    var msg = r.error.message || 'Something went wrong. Please try again.';
+    if (r.error.hint === 'verification_required' || /need identity verification/i.test(msg)) throw _idvError(msg);
+    throw new Error(msg);
+  }
   return r.data;
+}
+
+/* VR3b: the server refused a payment because the customer's total would pass the limit and they are not verified.
+   The page catches err.code === 'verification_required' and shows the Verify dialog instead of an error. */
+function _idvError(msg) {
+  var e = new Error(msg || 'Payments above the limit need identity verification.');
+  e.code = 'verification_required';
+  return e;
+}
+
+/* VR3b: "does THIS amount need verification, and what is the limit?" Asked BEFORE the customer pays, so the dialog is not a surprise.
+   Returns { limit, verified, needsVerify } or null if it could not be checked (then nothing is blocked here; the server still enforces it). */
+async function getCustomerPaymentGate(amount) {
+  try {
+    var r = await window.supabase.rpc('customer_payment_gate_mine', { p_amount: Number(amount) || 0 });
+    if (r.error || !r.data || typeof r.data.needs_verify !== 'boolean') return null;
+    return { limit: Number(r.data.limit) || 0, verified: r.data.verified === true, needsVerify: r.data.needs_verify };
+  } catch (_e) { return null; }
 }
 
 /* Open the Paystack pop-up with the reference + amount the SERVER gave us.
@@ -537,7 +559,10 @@ async function initiatePayment({ requestId, bookingId, contextType, contextId, c
   }
 
   var init = await _callFn('payment-init', body);
-  if (!init.ok) throw new Error(init.data.error || 'Could not start the payment.');
+  if (!init.ok) {
+    if (init.data.reason === 'verification_required') throw _idvError(init.data.error);
+    throw new Error(init.data.error || 'Could not start the payment.');
+  }
 
   var reference = await _openPaystack(init.data, customerEmail || user.email,
     { user_id: user.id, booking_id: init.data.bookingId, request_id: init.data.requestId });
@@ -698,6 +723,7 @@ window.ST.payments = {
   payFromWallet,
   initiatePayment,
   getGiftQuote,
+  getCustomerPaymentGate,
   payWithGiftCards,
   markJobDone,
   confirmJobComplete,

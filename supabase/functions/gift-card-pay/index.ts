@@ -126,6 +126,7 @@ function dbFail(e: { code?: string; message?: string }, fallback: Fail): Fail {
   if (m.includes("price_changed")) return new Fail(409, "price_changed", "The amount changed. Please start again.");
   if (m.includes("gift_unavailable")) return new Fail(409, "gift_unavailable", "Your gift card balance changed. Please try again.");
   if (m.includes("hold_invalid") || m.includes("intent_not_open")) return new Fail(409, "hold_invalid", "This payment session has ended. Please start again.");
+  if (/need identity verification/i.test(m)) return new Fail(403, "verification_required", m);   // VR3a: payment total over the limit, not verified
   if (e.code === "P0001" && m && m.length < 200) return new Fail(409, "not_payable", m);   // a message written for the customer
   console.error("request gift payment failed:", m);
   return fallback;

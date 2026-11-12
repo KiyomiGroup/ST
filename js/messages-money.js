@@ -427,6 +427,32 @@
     });
   }
 
+  /* ── VR3b: payments over the limit need identity verification ─────
+     Shown BEFORE any money moves (from the gate check) or when the server refuses (verification_required).
+     Says nothing about fees. After verifying, the person comes back to this same chat. */
+  var ICON_SHIELD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>';
+  function verifyUrl() {
+    return 'verify.html?role=customer&return=' + encodeURIComponent(location.pathname + location.search + location.hash) + '&action=pay';
+  }
+  function showVerifyDialog(limit) {
+    var R = window.JRRequests;
+    var n = Number(limit) > 0 ? naira(limit) : 'the limit';
+    if (!(R && R.openView)) { toast('Payments above ' + n + ' need identity verification.', 'error'); return; }
+    R.openView('Verification needed', function (body, h) {
+      var back = body.querySelector('.jr-sheet-back');
+      if (back && back.parentNode) back.parentNode.removeChild(back);
+      body.appendChild(h.el('p', 'jr-sheet-lead', 'Payments above ' + n + ' need identity verification. It takes a few minutes, and you come straight back to this chat to pay.'));
+      var b = h.el('button', 'jr-sheet-item'); b.type = 'button';
+      var ic = h.el('span', 'jr-sheet-item-icon'); ic.innerHTML = ICON_SHIELD;
+      var tx = h.el('span', 'jr-sheet-item-text');
+      tx.appendChild(h.el('span', 'jr-sheet-item-label', 'Verify now'));
+      tx.appendChild(h.el('span', 'jr-sheet-item-hint', 'Your ID and a quick selfie.'));
+      b.appendChild(ic); b.appendChild(tx);
+      b.addEventListener('click', function () { window.location.href = verifyUrl(); });
+      body.appendChild(b);
+    });
+  }
+
   /* ── pay (customer) ──────────────────────────────────────── */
   /* HARDENED (step 6a): the browser only starts the payment. The SERVER decides the
      amount, confirms it with Paystack, marks the request paid, sets the agreed price,
@@ -444,6 +470,15 @@
       if (!(window.ST && window.ST.payments)) throw new Error('Payment module not loaded. Please refresh.');
       var meta = me.user_metadata || {};
       var P = window.ST.payments;
+      /* VR3b: ask first, so an unverified customer sees the dialog before choosing how to pay. If the check cannot run, carry on: the server decides. */
+      if (P.getCustomerPaymentGate) {
+        var gate = await P.getCustomerPaymentGate(Number(local.amount) || 0);
+        if (gate && gate.needsVerify) {
+          window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
+          showVerifyDialog(gate.limit);
+          return false;
+        }
+      }
       var method = 'paystack';
       /* How to pay: wallet (if it covers the amount), gift cards (main service payments only), Paystack. Ask only when there is a real choice. */
       var wallet = null, q = null;
@@ -494,6 +529,12 @@
       })();
       return true;
     } catch (e) {
+      if (e && e.code === 'verification_required') {   /* VR3b: the server refused; nothing was charged */
+        window.JRThread.onMoneyChange(Object.assign({}, local, { _busy: false }));
+        var lim = (/₦\s?([\d,]+)/.exec(e.message || '') || [])[1];
+        showVerifyDialog(lim ? Number(lim.replace(/,/g, '')) : 0);
+        return false;
+      }
       var msg = (e && e.message) || 'Payment failed. Please try again.';
       var closed = /closed|cancelled/i.test(msg);
       toast(msg, closed ? '' : 'error');

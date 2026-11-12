@@ -176,6 +176,10 @@
     var taskerId = proxy ? q0.get('id') : null;
     var state = { status: null, busy: false };
     if (proxy) main.setAttribute('data-mode', 'proxy');
+    if (q0.get('action') === 'pay') {   /* VR3b */
+      var leadP = $('verifyLead');
+      if (leadP) leadP.textContent = 'To pay this amount, we need to confirm your identity once. After that you go straight back to your chat.';
+    }
     if (q0.get('action') === 'withdraw') {
       var lead = $('verifyLead');
       if (lead) lead.textContent = 'To withdraw money, we need to confirm your identity once. The name on your ID is checked against the name on your bank account.';
