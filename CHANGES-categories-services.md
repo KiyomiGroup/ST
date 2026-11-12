@@ -83,3 +83,13 @@
 - js/ui.js (service card), js/services-search.js, find-services.html (Per item / Per unit filters), js/service-details.js + service-details.html, js/my-services.js + my-services.html: show the new wording.
 - sql/categories/p2-pricing-methods.sql (+ p2-rollback.sql): two new columns and checks. Run it, then the check queries at the bottom.
 - tests/pricing-methods.test.js (new).
+
+
+## Categories Stage 6b (2026-11-11): Sales upgrade
+- js/product-fields.js (new): which product questions fit which product type, checks, stock rules, delivery and pickup wording.
+- post-service.html + css/post-service.css: "More details" under each product (condition, brand, model, colour, size, expiry, original price, quantity, availability, negotiable; only the ones that fit), new "Delivery & pickup" section (saved in `details`), validation, restore of saved values, fallback when the SQL has not run.
+- js/service-details.js + css/service-details.css + service-details.html: richer product cards, delivery lines in "Service details".
+- js/tasker-profile.js + tasker-profile.html: the order pop-up lists only in-stock products and caps quantities.
+- js/services-search.js + find-services.html: delivery / pickup chips on Sales cards.
+- sql/categories/s1-sales-products.sql (+ s1-rollback.sql): 10 new `service_products` columns. Run after sql/pricing/p2-sales-products.sql.
+- tests/product-fields.test.js (new).

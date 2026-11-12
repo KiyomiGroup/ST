@@ -282,3 +282,20 @@
 }
 /* .pt-section sets display (and "contents" on mobile), which would beat the hidden attribute: Sales swaps the pricing and products sections */
 .pt-section[hidden] { display: none; }
+
+/* Sales: per-product details and delivery (Categories Stage 6b) */
+.ps-p-more { border-top: 1px solid var(--color-border); padding-top: var(--space-3); }
+.ps-p-more > summary { cursor: pointer; font-weight: 700; font-size: var(--text-sm); color: var(--color-text); }
+.ps-p-more > summary .pt-hint { margin-left: var(--space-2); font-weight: 400; }
+.ps-p-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin-top: var(--space-3); }
+.ps-pf { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ps-pf[hidden] { display: none; }
+.ps-check { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-base); cursor: pointer; }
+.ps-check input { flex: none; }
+.ps-ful-more { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin-top: var(--space-3); }
+.ps-ful-more[hidden] { display: none; }
+@media (min-width: 769px) {
+  .ps-p-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-ful-more { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-product .ps-p-more { grid-column: 1 / -1; }
+}

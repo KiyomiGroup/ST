@@ -49,3 +49,12 @@
 .sd-fact dd { margin: 0; font-size: var(--text-base); color: var(--color-text); overflow-wrap: anywhere; }
 .sd-facts-note { margin: var(--space-4) 0 0; }
 @media (max-width: 640px) { .sd-facts-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* Sales product details (Categories Stage 6b) */
+.sd-prod-was { font-family: var(--font-body); font-weight: 400; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.sd-prod-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.sd-prod-tag { display: inline-block; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--pt-field); font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); }
+.sd-prod-stock { font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); }
+.sd-prod-stock.is-low { color: var(--color-text); }
+.sd-prod.is-unavailable .sd-prod-img, .sd-prod.is-unavailable .sd-prod-name, .sd-prod.is-unavailable .sd-prod-price { opacity: 0.55; }
+.sd-prod-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }

@@ -768,7 +768,7 @@
   function orderTotal() {
     var total = 0, count = 0;
     document.querySelectorAll('#tpBookBody .tp-ord-row').forEach(function (row) {
-      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      var q = Math.max(0, Math.min(Number(row.getAttribute('data-max')) || 50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
       total += q * Number(row.getAttribute('data-price')); count += q;
     });
     var el = $('ordTotal'); if (el) el.textContent = NAIRA + total.toLocaleString('en-NG');
@@ -778,18 +778,22 @@
   async function openOrder(user, m) {
     var pick = state.bookSvc;
     if (!pick || !pick.id) return;
-    var r = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', pick.id).order('position');
+    var r = await window.supabase.from('service_products').select('*').eq('service_id', pick.id).order('position');
     var prods = (r && r.data) || [];
+    var listed = prods.length;
+    if (window.STProducts) prods = prods.filter(function (p) { return STProducts.canOrder(p); });   /* Categories Stage 6b: sold, out of stock and paused products cannot be ordered */
+    if (listed && !prods.length) { if (typeof showToast === 'function') showToast('These products are not available right now.'); return; }
     if (!prods.length) { state.bookSvc = pick; return openBooking('book'); }   /* no products listed: the normal booking form */
     var savedLoc = await savedLocation(user);
     var body = $('tpBookBody');
     resetBkPhotos();
     var rows = prods.map(function (p) {
       var img = text(p.image_url);
-      return '<div class="tp-ord-row" data-price="' + esc(String(Number(p.price))) + '" data-name="' + esc(text(p.name)) + '">' +
+      var mx = window.STProducts ? STProducts.maxQty(p) : 50;
+      return '<div class="tp-ord-row" data-max="' + mx + '" data-price="' + esc(String(Number(p.price))) + '" data-name="' + esc(text(p.name)) + '">' +
         '<span class="tp-ord-img">' + (/^https?:\/\//i.test(img) ? '<img src="' + esc(img) + '" alt="" loading="lazy" />' : '') + '</span>' +
         '<span class="tp-ord-info"><strong>' + esc(text(p.name)) + '</strong><span>' + esc(NAIRA + Number(p.price).toLocaleString('en-NG')) + '</span></span>' +
-        '<input type="number" inputmode="numeric" class="form-input tp-ord-qty" min="0" max="50" step="1" value="0" aria-label="Quantity of ' + esc(text(p.name)) + '" /></div>';
+        '<input type="number" inputmode="numeric" class="form-input tp-ord-qty" min="0" max="' + mx + '" step="1" value="0" aria-label="Quantity of ' + esc(text(p.name)) + '" /></div>';
     }).join('');
     body.innerHTML =
       '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
@@ -817,7 +821,7 @@
     function fail(msg, el) { err.textContent = msg; err.hidden = false; if (el) el.focus(); }
     var lines = [];
     body.querySelectorAll('.tp-ord-row').forEach(function (row) {
-      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      var q = Math.max(0, Math.min(Number(row.getAttribute('data-max')) || 50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
       if (q > 0) lines.push({ name: row.getAttribute('data-name'), qty: q, price: Number(row.getAttribute('data-price')) });
     });
     if (!lines.length) return fail('Choose at least one product (set a quantity of 1 or more).');

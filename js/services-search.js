@@ -288,7 +288,7 @@ function svcBuildCard(s) {
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, price_max: s.price_max, unit: s.unit, pricing: window.STPricing ? STPricing.describe({ price: s.price, price_max: s.price_max, rate_unit: '/' + s.unit, price_type: s.price_type, price_unit_label: s.price_unit_label }) : null, rating: s.rating, reviews_count: s.reviews_count,
     turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
-    facts: window.STCatForms ? STCatForms.badges(svcCatKey(s.category), s.subcategory, s.details, 3) : [],
+    facts: svcCatKey(s.category) === 'sales' ? (window.STProducts ? STProducts.cardBadges(s.details) : []) : (window.STCatForms ? STCatForms.badges(svcCatKey(s.category), s.subcategory, s.details, 3) : []),
   });
 }
 

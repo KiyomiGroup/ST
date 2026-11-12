@@ -50,7 +50,7 @@
     var box = $('sdFacts'), list = $('sdFactsList'), note = $('sdFactsNote');
     if (!box || !list) return;
     list.textContent = '';
-    var lines = window.STCatForms ? STCatForms.describe(catKey, sub, details) : [];
+    var lines = catKey === 'sales' ? (window.STProducts ? STProducts.describeFulfilment(details) : []) : (window.STCatForms ? STCatForms.describe(catKey, sub, details) : []);
     lines.forEach(function (l) {
       var row = document.createElement('div'); row.className = 'sd-fact';
       var dt = document.createElement('dt'); dt.textContent = l.label;
@@ -136,25 +136,39 @@
     if (String(svc.category) === 'sales') {
       $('sdBook').textContent = isOwner ? 'Edit my services' : 'Order now';
       if (!isOwner && uid) $('sdBook').href = 'tasker-profile.html?id=' + encodeURIComponent(uid) + '&order=' + encodeURIComponent(String(svc.id));
-      loadProducts(svc.id);
+      loadProducts(svc.id, sub);
     }
 
     $('sdLoading').hidden = true; $('sdMissing').hidden = true; $('sdContent').hidden = false;
   }
 
-  async function loadProducts(serviceId) {
+  async function loadProducts(serviceId, sub) {
     try {
-      var r = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', serviceId).order('position');
+      var r = await window.supabase.from('service_products').select('*').eq('service_id', serviceId).order('position');
       var rows = (r && r.data) || [];
       var list = $('sdProdList'); list.textContent = '';
+      function span(cls, txt) { var e = document.createElement('span'); e.className = cls; e.textContent = txt; return e; }
       rows.forEach(function (p) {
         var li = document.createElement('li'); li.className = 'sd-prod';
+        var P = window.STProducts;
         var img = text(p.image_url);
         var thumb = document.createElement('span'); thumb.className = 'sd-prod-img';
         if (/^https?:\/\//i.test(img)) { var im = document.createElement('img'); im.alt = ''; im.loading = 'lazy'; im.src = img; im.addEventListener('error', function () { im.remove(); }); thumb.appendChild(im); }
         var nm = document.createElement('strong'); nm.className = 'sd-prod-name'; nm.textContent = text(p.name);
-        var pr = document.createElement('span'); pr.className = 'sd-prod-price'; pr.textContent = NAIRA + Number(p.price).toLocaleString('en-NG');
-        li.appendChild(thumb); li.appendChild(nm); li.appendChild(pr); list.appendChild(li);
+        var pr = document.createElement('span'); pr.className = 'sd-prod-price';
+        pr.appendChild(document.createTextNode(NAIRA + Number(p.price).toLocaleString('en-NG')));
+        li.appendChild(thumb); li.appendChild(nm);
+        if (P) {
+          var pp = P.priceParts(p);
+          if (pp.was) { var old = document.createElement('s'); old.className = 'sd-prod-was'; old.textContent = pp.was; pr.appendChild(old); }
+          li.appendChild(pr);
+          if (pp.negotiable) li.appendChild(span('sd-prod-tag', 'Negotiable'));
+          var tags = P.badges(p, sub);
+          if (tags.length) { var ul = document.createElement('span'); ul.className = 'sd-prod-tags'; tags.forEach(function (t) { ul.appendChild(span('sd-prod-tag', t)); }); li.appendChild(ul); }
+          if (!P.canOrder(p)) { li.classList.add('is-unavailable'); li.appendChild(span('sd-prod-stock', P.stockLabel(p))); }
+          else if (typeof p.quantity === 'number' && p.quantity > 0 && p.quantity <= 5) li.appendChild(span('sd-prod-stock is-low', 'Only ' + p.quantity + ' left'));
+        } else { li.appendChild(pr); }
+        list.appendChild(li);
       });
       $('sdProducts').hidden = !rows.length;
     } catch (e) { /* products stay hidden */ }

@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 6a)
+# Categories project: handoff for the next AI (after Stage 6b)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -18,8 +18,8 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial. Owner chose QUESTIONS ONLY (no publishing hold) | Done (this stage) |
 | 5 | Show the answers to customers; category filters on Find Services | Done (this stage), see "Stage 5 notes" |
 | 6a | Pricing methods on Post a Service (11 ways to charge) | Done (this stage), see "Stage 6a notes" |
-| 6b | Sales upgrade (product listing steps, condition, inventory) | Next |
-| 6c | Reuse the category questions + budget on Post a Task | Not started |
+| 6b | Sales upgrade (condition, brand, quantity, stock status, delivery / pickup) | Done (this stage), see "Stage 6b notes" |
+| 6c | Reuse the category questions + budget on Post a Task | Next |
 
 ## How the pieces fit
 - `#svcCategory` (hidden select) and `#svcSubcategory` (hidden input) hold the answers from the picker. The picker fires a normal `change` event on the select.
@@ -124,5 +124,15 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - **Bug fixed while testing:** none new. Note for editors: do not call `setMethod('fixed')` after a draft restore; the chips are built and set once, before `initPage` runs.
 - **Tests:** `node --test tests/*.js tests/*.mjs` = 181 pass (`tests/pricing-methods.test.js` new). Browser run (Playwright 1280px and 390px, fake Supabase with a tasker user): 36 checks passed on Post a Service (chips, per-method boxes, blocking an empty unit name, exact rows saved for hourly / per unit / quote / range, save when the SQL is missing, restoring 4 kinds of saved listing); the Stage 5 browser run still passes. Harnesses are not in the zip. The fake user needs `user_metadata.role = 'tasker'` or the page shows "Not available".
 
-## NEXT: Stage 6b (Sales upgrade), then 6c (Post a Task)
-6b: re-read Category Directory sections 4A and 5 (Product Listings: 7 steps, condition Brand New / Fairly Used / Refurbished, brand, model, colour, size, quantity, delivery / pickup, inventory In Stock / Out / Sold / Paused). Open owner decisions (section 9): does Sales need seller verification, inventory and variations, buy directly or contact the seller. Ask before building. 6c: reuse `SCHEMAS` on `post-task.html` / `js/tasks.js`; tasks need `details` and `subcategory` columns (new SQL) and the Stage 5 display and filters on Find Tasks.
+## Stage 6b notes (Sales upgrade)
+- **Owner decisions in section 9 of the Category Directory were NOT answered; I assumed:** Sales stays open to every tasker (no seller verification added); inventory is a simple quantity + stock status per product, no variations (size / colour are plain text per product); buying stays "Order now", the seller accepts and the price is agreed in chat (unchanged). Say so if any of these should change.
+- **Per product (up to 6, as before):** original price (shows struck through when higher), quantity, availability (In stock / Out of stock / Sold / Paused), "price is negotiable", and under "More details" only the questions that fit what is sold: condition (Brand New / Fairly Used / Refurbished), brand, model, colour, size, expiry date. Groups are in `js/product-fields.js` (`GROUPS`: phones and electronics, clothes and shoes and bags, food and cosmetics and baby, furniture and kitchen, gear, other). Answers that do not fit are saved empty.
+- **Per listing:** new section "Delivery & pickup" (delivery, pickup, optional delivery fee where 0 = free and empty = agreed in chat, optional delivery time). At least one of delivery / pickup is required. Saved in `services.details` as `{_v:1, delivery, pickup, delivery_fee, delivery_time}`; no new column. Before this stage Sales saved `details = {}`.
+- **SQL:** `sql/categories/s1-sales-products.sql` (+ `s1-rollback.sql`) adds 10 columns to `service_products` with checks. Run it AFTER `sql/pricing/p2-sales-products.sql`. Until it runs, products still save without the new fields and the seller sees a toast.
+- **Customers see:** service page product cards (was / now price, Negotiable, condition / brand / model / size / colour tags, "Only N left", Sold / Out of stock / Paused marked and dimmed) and a "Service details" panel with how you get it, delivery fee and time. Find Services cards show "Delivery available" / "Pickup available" / "Free delivery".
+- **Ordering respects stock:** the order pop-up (`js/tasker-profile.js`, `openOrder`) lists only in-stock products, caps each quantity at the seller's quantity (max 50), and says "These products are not available right now" when none can be ordered. **The server does not check stock** (no SQL change to the order / booking path), and quantity is NOT reduced after an order; the seller edits it by hand. That is the main gap for a later stage.
+- **NOT done:** the first Sales step "Select product category" is the existing subcategory picker (no change); multiple product photos per product (still one); Find Services filters for Sales (condition, delivery, in stock only); `my-services` product counts; tasker profile product shelf (`js/tasker-profile.js` only changed in the order pop-up); the home-feed card.
+- **Tests:** `node --test tests/*.js tests/*.mjs` = 188 pass (`tests/product-fields.test.js` new, includes "every Sales subcategory is in exactly one group"). Browser run (Playwright, 1280px and 390px, fake Supabase, tasker user): 40 new checks on Post a Service and the service page; the Stage 5 and 6a browser runs still pass. NOT run: the order pop-up in a browser, and nothing against the real Supabase. Design check: no new warnings from these files (the legal / local-tasker / map-view CSS ones were already there).
+
+## NEXT: Stage 6c (Post a Task)
+Reuse `SCHEMAS` (and `STPricing` for the budget, section 5: "task requests: budget or budget range") on `post-task.html` / `js/tasks.js`: category -> required service (subcategory) -> description -> reference images -> location -> date -> budget -> review (Category Directory section 4C). Tasks need `details` and `subcategory` columns (new SQL, same pattern as `sql/categories/c1-subcategory-details.sql`), and the Stage 5 display and filters on Find Tasks. Ask the owner whether the Poster side uses the same questions as the Tasker side (the schemas are written for Taskers).

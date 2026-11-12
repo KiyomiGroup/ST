@@ -239,6 +239,31 @@
             </div>
           </section>
 
+          <!-- ── Delivery and pickup (Categories Stage 6b): Sales only, saved in services.details ── -->
+          <section class="pt-section" id="secFulfil" aria-labelledby="secFulfilTitle" hidden>
+            <div class="pt-section-head">
+              <span class="pt-section-num" aria-hidden="true">3</span>
+              <div>
+                <h2 class="pt-section-title" id="secFulfilTitle">Delivery &amp; pickup</h2>
+                <p class="pt-section-sub">How customers get what they order.</p>
+              </div>
+            </div>
+            <div class="pt-group">
+              <label class="ps-check"><input type="checkbox" id="fulDelivery" /> <span>I can deliver</span></label>
+              <label class="ps-check"><input type="checkbox" id="fulPickup" /> <span>Customers can pick up</span></label>
+              <div class="ps-ful-more" id="fulMore" hidden>
+                <div>
+                  <label class="pt-label" for="fulFee">Delivery fee <span class="pt-hint">Optional. Enter 0 for free delivery, or leave empty to agree it in the chat.</span></label>
+                  <div class="pt-field pt-budget-field"><span class="pt-naira" aria-hidden="true">&#8358;</span><input type="number" inputmode="numeric" id="fulFee" class="pt-input pt-budget" min="0" step="1" placeholder="2,000" autocomplete="off" /></div>
+                </div>
+                <div>
+                  <label class="pt-label" for="fulTime">Delivery time <span class="pt-hint">Optional</span></label>
+                  <div class="pt-field"><select id="fulTime" class="pt-input"><option value="">Choose</option></select></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- ── Section 4 · Location ───────────────────────────── -->
           <section class="pt-section" aria-labelledby="secLocation">
             <div class="pt-section-head">
@@ -450,6 +475,7 @@
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
   <script src="js/pricing-methods.js"></script>
+  <script src="js/product-fields.js"></script>
   <script src="js/category-picker.js"></script>
   <script src="js/category-forms.js"></script>
   <script src="js/ui.js"></script>
@@ -548,6 +574,50 @@
     var PS_MAX_PRODUCTS = 6, PS_MAX_IMG = 5 * 1024 * 1024;
     function isSales() { return document.getElementById('svcCategory').value === 'sales'; }
 
+    /* Per-product details (Categories Stage 6b). Questions that do not fit the product type are hidden and saved empty. */
+    function moreHtml(n) {
+      function sel(key, label, opts) { return '<label class="ps-pf" data-pf-wrap="' + key + '"><span class="pt-label">' + label + '</span><select class="pt-input ps-pf-in" data-pf="' + key + '" aria-label="Product ' + n + ' ' + label + '">' + opts + '</select></label>'; }
+      function txt(key, label, max, ph, wrap) { return '<label class="ps-pf" data-pf-wrap="' + (wrap || key) + '"><span class="pt-label">' + label + '</span><input type="text" class="pt-input ps-pf-in" data-pf="' + key + '" maxlength="' + max + '" placeholder="' + ph + '" autocomplete="off" aria-label="Product ' + n + ' ' + label + '" /></label>'; }
+      function num(key, label, ph) { return '<label class="ps-pf" data-pf-wrap="' + key + '"><span class="pt-label">' + label + '</span><input type="number" inputmode="numeric" min="0" step="1" class="pt-input ps-pf-in" data-pf="' + key + '" placeholder="' + ph + '" autocomplete="off" aria-label="Product ' + n + ' ' + label + '" /></label>'; }
+      var conds = '<option value="">Choose</option>' + STProducts.CONDITIONS.map(function (c) { return '<option>' + c + '</option>'; }).join('');
+      var stock = STProducts.STOCK.map(function (x) { return '<option value="' + x.key + '">' + x.label + '</option>'; }).join('');
+      return '<details class="ps-p-more"><summary>More details <span class="pt-hint">Condition, quantity, availability</span></summary><div class="ps-p-grid">' +
+        sel('condition', 'Condition', conds) + txt('brand', 'Brand', 40, 'e.g. Tecno') + txt('model', 'Model', 40, 'e.g. Spark 10') +
+        txt('colour', 'Colour', 30, 'e.g. Black') + txt('size', 'Size', 30, 'e.g. L or 42') +
+        '<label class="ps-pf" data-pf-wrap="expiry"><span class="pt-label">Expiry date</span><input type="date" class="pt-input ps-pf-in" data-pf="expiry_date" aria-label="Product ' + n + ' expiry date" /></label>' +
+        num('was_price', 'Original price (if discounted)', '\u20a6') + num('quantity', 'Quantity available', 'e.g. 5') + sel('stock_status', 'Availability', stock) +
+        '<label class="ps-check ps-pf-check" data-pf-wrap="negotiable"><input type="checkbox" class="ps-pf-in" data-pf="negotiable" /> <span>Price is negotiable</span></label>' +
+        '</div></details>';
+    }
+
+    function rowExtra(row) {
+      var o = {};
+      row.querySelectorAll('.ps-pf-in').forEach(function (el) { o[el.getAttribute('data-pf')] = el.type === 'checkbox' ? el.checked : el.value; });
+      return o;
+    }
+
+    /* show only the questions that fit what is being sold (Phones: brand, model, colour. Clothes: size. Food: expiry...) */
+    function applyProductFields() {
+      var fields = STProducts.fieldsFor((document.getElementById('svcSubcategory') || {}).value);
+      document.querySelectorAll('#psProducts [data-pf-wrap]').forEach(function (w) {
+        var k = w.getAttribute('data-pf-wrap');
+        var always = k === 'was_price' || k === 'quantity' || k === 'stock_status' || k === 'negotiable';
+        w.hidden = !always && fields.indexOf(k) === -1;
+      });
+    }
+
+    function readFulfilmentRaw() {
+      return { delivery: document.getElementById('fulDelivery').checked, pickup: document.getElementById('fulPickup').checked, delivery_fee: document.getElementById('fulFee').value, delivery_time: document.getElementById('fulTime').value };
+    }
+    function setFulfilment(d) {
+      d = d && typeof d === 'object' ? d : {};
+      document.getElementById('fulDelivery').checked = !!d.delivery;
+      document.getElementById('fulPickup').checked = !!d.pickup;
+      document.getElementById('fulFee').value = typeof d.delivery_fee === 'number' ? d.delivery_fee : '';
+      document.getElementById('fulTime').value = d.delivery_time || '';
+      document.getElementById('fulMore').hidden = !d.delivery;
+    }
+
     function buildProductRows() {
       var box = document.getElementById('psProducts');
       if (box.children.length) return;
@@ -560,7 +630,7 @@
           '<div class="pt-field pt-budget-field"><span class="pt-naira" aria-hidden="true">&#8358;</span><input type="number" inputmode="numeric" class="pt-input pt-budget ps-rate-input ps-p-price" min="0" step="1" placeholder="Price" autocomplete="off" aria-label="Product ' + n + ' price" /></div>' +
           '<div class="ps-product-photo"><span class="ps-p-thumb" hidden><img alt="" /></span>' +
           '<label class="btn btn-outline btn-sm ps-p-pick"><span class="ps-p-pick-text">Add photo</span><input type="file" class="ps-p-file" accept="image/jpeg,image/png,image/webp" hidden /></label>' +
-          '<button type="button" class="btn btn-outline btn-sm ps-p-clear" hidden>Remove photo</button></div>';
+          '<button type="button" class="btn btn-outline btn-sm ps-p-clear" hidden>Remove photo</button></div>' + moreHtml(n);
         box.appendChild(row);
       }
       box.addEventListener('change', function (ev) {
@@ -577,6 +647,8 @@
         row._file = null; row.dataset.url = ''; row.querySelector('.ps-p-file').value = ''; setThumb(row, '');
       });
       box.addEventListener('input', updateProductsHint);
+      box.addEventListener('toggle', applyProductFields, true);
+      applyProductFields();
     }
 
     function setThumb(row, src) {
@@ -588,14 +660,17 @@
     }
 
     function readProducts() {
-      var out = [], err = '';
+      var out = [], err = '', sub = (document.getElementById('svcSubcategory') || {}).value || '';
       document.querySelectorAll('#psProducts .ps-product').forEach(function (row, i) {
         var name = row.querySelector('.ps-p-name').value.trim();
         var raw = row.querySelector('.ps-p-price').value;
         var price = parseFloat(raw);
         if (!name && !raw && !row._file && !row.dataset.url) return;
         if (!name || isNaN(price) || price <= 0) { err = err || 'Product ' + (i + 1) + ' needs a name and a price.'; return; }
-        out.push({ position: i + 1, name: name, price: price, file: row._file || null, url: row.dataset.url || '', row: row });
+        var extra = rowExtra(row); extra.price = price;
+        var problem = STProducts.check(extra, sub);
+        if (problem) { err = err || 'Product ' + (i + 1) + ': ' + problem; return; }
+        out.push({ position: i + 1, name: name, price: price, extra: STProducts.toRow(extra, sub), file: row._file || null, url: row.dataset.url || '', row: row });
       });
       return { items: out, error: err };
     }
@@ -611,6 +686,7 @@
     function applySalesMode(on) {
       buildProductRows();
       document.getElementById('secProducts').hidden = !on;
+      document.getElementById('secFulfil').hidden = !on;
       document.getElementById('secPricing').closest('section').hidden = on;
       document.getElementById('svcPrice').required = !on;
       document.getElementById('svcPriceMax').required = !on && isRange();
@@ -620,7 +696,7 @@
 
     async function loadProducts(serviceId) {
       try {
-        var res = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', serviceId).order('position');
+        var res = await window.supabase.from('service_products').select('*').eq('service_id', serviceId).order('position');
         if (res.error || !res.data) return;
         buildProductRows();
         var rows = document.querySelectorAll('#psProducts .ps-product');
@@ -629,7 +705,13 @@
           row.querySelector('.ps-p-name').value = p.name || '';
           row.querySelector('.ps-p-price').value = Number(p.price) || '';
           row.dataset.url = p.image_url || ''; setThumb(row, p.image_url || '');
+          row.querySelectorAll('.ps-pf-in').forEach(function (el) {
+            var k = el.getAttribute('data-pf'), v = p[k];
+            if (el.type === 'checkbox') el.checked = !!v; else el.value = v == null ? (k === 'stock_status' ? 'in_stock' : '') : v;
+          });
+          if (p.condition || p.brand || p.quantity != null || p.was_price || (p.stock_status && p.stock_status !== 'in_stock')) row.querySelector('.ps-p-more').open = true;
         });
+        applyProductFields();
         updateProductsHint();
       } catch (e) { /* non-fatal: the form just opens empty */ }
     }
@@ -645,10 +727,16 @@
           if (up.error) throw new Error('The photo for product ' + p.position + ' could not be uploaded. Try a smaller photo.');
           url = window.supabase.storage.from('service-images').getPublicUrl(path).data.publicUrl;
         }
-        rows.push({ service_id: serviceId, user_id: userId, position: p.position, name: p.name, price: p.price, image_url: url || null });
+        rows.push(Object.assign({ service_id: serviceId, user_id: userId, position: p.position, name: p.name, price: p.price, image_url: url || null }, p.extra || {}));
         p.row.dataset.url = url || ''; p.row._file = null;
       }
       var up2 = await window.supabase.from('service_products').upsert(rows, { onConflict: 'service_id,position' });
+      if (up2.error && (up2.error.code === '42703' || up2.error.code === 'PGRST204') && rows.length) {
+        /* the Sales SQL (s1) has not run: save name, price and photo, and say the extra details were not kept */
+        var baseRows = rows.map(function (r) { return { service_id: r.service_id, user_id: r.user_id, position: r.position, name: r.name, price: r.price, image_url: r.image_url }; });
+        up2 = await window.supabase.from('service_products').upsert(baseRows, { onConflict: 'service_id,position' });
+        if (!up2.error) showToast('Products saved, but condition, quantity and availability could not be stored yet. Ask the site owner to run the Categories SQL (sql/categories).');
+      }
       if (up2.error) {
         if (up2.error.code === '42P01') throw new Error('Product selling is not switched on yet. Ask the site owner to run the Sales SQL.');
         throw up2.error;
@@ -684,6 +772,7 @@
     /* the price chooser exists before anything else runs, so a saved draft can pick its method */
     buildMethods();
     setMethod('fixed');
+    (function () { var ft = document.getElementById('fulTime'); STProducts.DELIVERY_TIMES.forEach(function (t) { var o = document.createElement('option'); o.value = t; o.textContent = t; ft.appendChild(o); }); })();
 
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
@@ -747,7 +836,7 @@
           /* an old listing that charged per hour / day / session / visit keeps that way of charging */
           if (!STPricing.get(draft.price_type) && draft.price) { var byUnit = { hour: 'hourly', day: 'daily', session: 'session', visit: 'visit', item: 'item' }[drUnit]; if (byUnit && drType !== 'range') drType = byUnit; else if (drType === 'from') drType = 'from'; }
           setMethod(drType);
-          if (isSales()) { applySalesMode(true); loadProducts(draft.id); }
+          if (isSales()) { applySalesMode(true); loadProducts(draft.id); setFulfilment(draft.details); }
           updateDescCount();
           if (window.psUpdateProgress) window.psUpdateProgress();
           document.getElementById('formSubtitle').textContent =
@@ -762,6 +851,8 @@
         if (b) setMethod(b.getAttribute('data-method'));
       });
       document.getElementById('svcUnitLabel').addEventListener('input', onRateInput);
+      document.getElementById('fulDelivery').addEventListener('change', function () { document.getElementById('fulMore').hidden = !this.checked; });
+      document.getElementById('svcCategory').addEventListener('change', function () { setTimeout(applyProductFields, 0); });
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
       document.getElementById('verifyAsideBtn').addEventListener('click', function() {
@@ -858,6 +949,8 @@
       if (isSales()) {
         var pr = readProducts();
         if (pr.error) { showErr(pr.error); return; }
+        var fulErr = STProducts.checkFulfilment(readFulfilmentRaw());
+        if (fulErr) { showErr(fulErr); return; }
         if (!pr.items.length) { showErr('Add at least one product with a name and a price.'); return; }
       }
       if (!isSales() && rateValues.problem) { showErr(rateValues.problem); return; }
@@ -923,7 +1016,7 @@
           service_name: serviceName,
           category:     category,
           subcategory:  category === 'other' ? null : subcategory,   /* Categories Stage 1: needs sql/categories/c1-subcategory-details.sql */
-          details:      (window.STCatForms && STCatForms.collect()) || {},   /* Categories Stage 3: the category answers (jsonb); {} when the category has no form (the column is NOT NULL) */
+          details:      isSales() ? STProducts.toDetails(readFulfilmentRaw()) : ((window.STCatForms && STCatForms.collect()) || {}),   /* Categories Stage 3: the category answers (jsonb); {} when the category has no form (the column is NOT NULL) */
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
