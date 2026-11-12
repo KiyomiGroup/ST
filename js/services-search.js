@@ -21,7 +21,7 @@ let SVC_PAGE = 1;
 let SVC_FILTERS = svcDefaultFilters();
 
 function svcDefaultFilters() {
-  return { search: '', location: '', category: '', units: [], availability: [], maxPrice: SVC_PRICE_MAX, specialty: '', sortBy: 'recent' };
+  return { search: '', location: '', category: '', sub: '', facets: {}, units: [], availability: [], maxPrice: SVC_PRICE_MAX, specialty: '', sortBy: 'recent' };
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -51,6 +51,8 @@ function svcNormalize(row, user) {
     user_id: row.user_id ? String(row.user_id) : '',
     service_name: row.service_name || row.service || 'Service',
     category: row.category || 'other',
+    subcategory: row.subcategory || '',   /* Categories Stage 1 (null before the SQL runs) */
+    details: row.details && typeof row.details === 'object' ? row.details : {},   /* Categories Stage 3: the tasker's answers */
     price: Number(row.price) || 0,
     price_max: Number(row.price_max) || 0,   /* Stage 3: 0 = fixed price */
     unit: svcNormUnit(row.rate_unit),
@@ -141,6 +143,8 @@ function svcFiltered() {
   if (f.category) {
     list = list.filter(s => window.STCat ? STCat.matches(s.category, f.category) : s.category === f.category);
   }
+  if (f.category && f.sub)   list = list.filter(s => s.subcategory === f.sub);
+  if (f.category && window.STCatForms && Object.keys(f.facets).length) list = list.filter(s => STCatForms.matchFacets(s.details, f.facets));
   if (f.units.length)        list = list.filter(s => f.units.includes(s.unit));
   if (f.availability.length) list = list.filter(s => f.availability.includes(s.availability));
   if (f.maxPrice < SVC_PRICE_MAX) list = list.filter(s => s.price <= f.maxPrice);
@@ -187,6 +191,60 @@ function svcUpdateCounts() {
   });
 }
 
+
+/* ── Type of work + category answers (Categories Stage 5) ─────── */
+function svcCatKey(rowCategory) { return window.STCat ? STCat.resolve(rowCategory).value : rowCategory; }
+
+/* the listings the sub and answer filters are counted from: same category (and type of work when one is chosen) */
+function svcInCategory(withSub) {
+  const f = SVC_FILTERS;
+  return SVC_ALL.filter(s => (!f.category || svcCatKey(s.category) === f.category) && (!withSub || !f.sub || s.subcategory === f.sub));
+}
+
+function svcBuildSubChips() {
+  const group = document.getElementById('svcSubGroup');
+  const wrap  = document.getElementById('svcSubChips');
+  if (!group || !wrap) return;
+  const cat = SVC_FILTERS.category;
+  const counts = {};
+  if (cat) svcInCategory(false).forEach(s => { if (s.subcategory) counts[s.subcategory] = (counts[s.subcategory] || 0) + 1; });
+  /* only types of work that have a live listing, in the order of the category list */
+  const subs = cat && window.STCat ? (STCat.subsOf(cat) || []).filter(n => counts[n]) : [];
+  group.hidden = subs.length === 0;
+  wrap.innerHTML = subs.map(n =>
+    `<button type="button" class="filter-chip${SVC_FILTERS.sub === n ? ' active' : ''}" data-sub="${escapeHtml(n)}">${escapeHtml(n)} <small>${counts[n]}</small></button>`
+  ).join('');
+}
+
+function svcBuildFacets() {
+  const host = document.getElementById('svcFacetGroups');
+  if (!host) return;
+  const cat = SVC_FILTERS.category;
+  const facets = cat && window.STCatForms ? STCatForms.facets(cat, SVC_FILTERS.sub) : [];
+  const pool = svcInCategory(true);
+  /* drop chosen answers whose question is no longer offered (the tasker changed type of work) */
+  Object.keys(SVC_FILTERS.facets).forEach(k => { if (!facets.some(x => x.key === k)) delete SVC_FILTERS.facets[k]; });
+  const html = facets.map(fc => {
+    const n = {};
+    pool.forEach(s => {
+      const v = s.details[fc.key];
+      if (v === undefined || v === null) return;
+      (Array.isArray(v) ? v : [typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)]).forEach(x => { n[x] = (n[x] || 0) + 1; });
+    });
+    const shown = fc.options.filter(o => n[o] || (SVC_FILTERS.facets[fc.key] || []).includes(o));
+    if (!shown.length) return '';   /* nobody answered this question yet: nothing to filter by */
+    const opts = shown.map(o => {
+      const on = (SVC_FILTERS.facets[fc.key] || []).includes(o);
+      return `<label class="filter-opt"><input type="checkbox" data-facet="${escapeHtml(fc.key)}" value="${escapeHtml(o)}"${on ? ' checked' : ''} /> <span>${escapeHtml(o)}</span> <span class="filter-opt-count">${n[o] || ''}</span></label>`;
+    }).join('');
+    return `<div class="filter-group svc-facet"><div class="filter-group-label"><span>${escapeHtml(fc.label)}</span></div>${opts}</div>`;
+  }).join('');
+  host.innerHTML = html;
+}
+
+/* after the category, the type of work or the data changed */
+function svcRefreshCategoryFilters() { svcBuildSubChips(); svcBuildFacets(); }
+
 /* ── Render ──────────────────────────────────────────────────── */
 function svcRender(page = 1) {
   SVC_PAGE = page;
@@ -228,6 +286,7 @@ function svcBuildCard(s) {
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
     price: s.price, price_max: s.price_max, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
     turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
+    facts: window.STCatForms ? STCatForms.badges(svcCatKey(s.category), s.subcategory, s.details, 3) : [],
   });
 }
 
@@ -240,7 +299,7 @@ function svcWire() {
 
   /* Category + specialty chips (single-select toggles, delegated so
      the data-built specialty chips work after they are rebuilt) */
-  const toggleChip = (wrapId, attr, key) => {
+  const toggleChip = (wrapId, attr, key, after) => {
     const wrap = document.getElementById(wrapId);
     if (!wrap) return;
     wrap.addEventListener('click', e => {
@@ -250,10 +309,21 @@ function svcWire() {
       wrap.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
       SVC_FILTERS[key] = '';
       if (!was) { chip.classList.add('active'); SVC_FILTERS[key] = chip.getAttribute(attr); }
+      if (after) after();
       svcRender(1);
     });
   };
-  toggleChip('svcCategoryChips', 'data-category', 'category');
+  toggleChip('svcCategoryChips', 'data-category', 'category', () => { SVC_FILTERS.sub = ''; SVC_FILTERS.facets = {}; svcRefreshCategoryFilters(); });
+  toggleChip('svcSubChips', 'data-sub', 'sub', () => { svcBuildFacets(); });
+  const facetHost = document.getElementById('svcFacetGroups');
+  if (facetHost) facetHost.addEventListener('change', e => {
+    const cb = e.target.closest('input[data-facet]');
+    if (!cb) return;
+    const k = cb.dataset.facet;
+    const on = [...facetHost.querySelectorAll('input[data-facet]:checked')].filter(x => x.dataset.facet === k).map(x => x.value);
+    if (on.length) SVC_FILTERS.facets[k] = on; else delete SVC_FILTERS.facets[k];
+    svcRender(1);
+  });
   toggleChip('svcSpecialtyChips', 'data-specialty', 'specialty');
 
   document.querySelectorAll('[name="svcAvail"]').forEach(cb => cb.addEventListener('change', () => {
@@ -303,6 +373,7 @@ function svcWire() {
     document.querySelectorAll('[name="svcAvail"], [name="svcUnit"]').forEach(c => { c.checked = false; });
     svcBuildCategoryChips();
     svcBuildSpecialtyChips();
+    svcRefreshCategoryFilters();
     svcRender(1);
   });
 
@@ -353,6 +424,7 @@ function initServicesPage() {
   svcLoad().then(() => {
     svcUpdateCounts();
     svcBuildSpecialtyChips();
+    svcRefreshCategoryFilters();
     svcRender(1);
   }).catch(err => {
     console.warn('[Services] load failed:', err && err.message);

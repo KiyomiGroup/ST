@@ -346,3 +346,72 @@ test('batch D: a missing licence blocks Legal and Physiotherapy; the optional ce
   const p = F.validate('health', 'Physiotherapy', { service_location: 'Online', client_groups: ['Adults'], physio_conditions: ['Joint pain'] });
   assert.ok(!p.ok && p.errors.licence_number);
 });
+
+/* ── Stage 5: showing answers and filtering by them ── */
+test('stage 5: every schema offers sound filter questions (short lists, no text boxes, no follow-ups)', () => {
+  Object.keys(F.SCHEMAS).forEach(cat => {
+    const all = F.facets(cat, '');
+    assert.ok(all.length <= 6, cat + ' offers too many filters');
+    subNames(cat).concat([OTHER]).forEach(sub => {
+      const fs_ = F.facets(cat, sub);
+      assert.ok(fs_.length <= 6, cat + ' / ' + sub);
+      const seen = new Set();
+      fs_.forEach(f => {
+        assert.ok(!seen.has(f.key), 'duplicate filter ' + cat + '.' + f.key); seen.add(f.key);
+        assert.ok(['select', 'multi', 'yesno'].includes(f.type));
+        assert.ok(f.options.length >= 2 && f.options.length <= 8);
+        const real = F.fieldsFor(cat, sub, {}).find(x => x.key === f.key);
+        assert.ok(real, cat + ' / ' + sub + ': ' + f.key + ' is not a question shown for this type of work');
+      });
+    });
+  });
+});
+
+test('stage 5: with only a category chosen, filters are limited to questions every type of work answers', () => {
+  const all = F.facets('cleaning', '').map(f => f.key);
+  assert.ok(all.includes('supplies'));
+  assert.ok(!all.includes('property_types'));   /* only some cleaning types ask it */
+  assert.ok(F.facets('cleaning', 'Deep Cleaning').map(f => f.key).includes('property_types'));
+  assert.deepStrictEqual(plain(F.facets('sales', '')), []);
+  assert.deepStrictEqual(plain(F.facets('other', 'x')), []);
+});
+
+test('stage 5: matchFacets uses OR inside a question and AND between questions', () => {
+  const d = { supplies: 'Either', property_types: ['Office', 'Apartment / flat'], recurring: true };
+  assert.ok(F.matchFacets(d, {}));
+  assert.ok(F.matchFacets(d, { supplies: ['Either', 'Client provides'] }));
+  assert.ok(!F.matchFacets(d, { supplies: ['I bring supplies'] }));
+  assert.ok(F.matchFacets(d, { property_types: ['Office'] }));
+  assert.ok(!F.matchFacets(d, { property_types: ['House / duplex'] }));
+  assert.ok(F.matchFacets(d, { recurring: ['Yes'] }));
+  assert.ok(!F.matchFacets(d, { recurring: ['No'] }));
+  assert.ok(F.matchFacets({ recurring: false }, { recurring: ['No'] }));
+  assert.ok(!F.matchFacets(d, { supplies: ['Either'], recurring: ['No'] }));
+  assert.ok(!F.matchFacets({}, { supplies: ['Either'] }), 'an unanswered question never matches');
+  assert.ok(!F.matchFacets(null, { supplies: ['Either'] }));
+  assert.ok(F.matchFacets(null, { supplies: [] }), 'an empty choice is no filter');
+});
+
+test('stage 5: badges are short, skip licence text and long answers, and never exceed the limit', () => {
+  const d = { supplies: 'Either', team_size: 3, property_types: ['Office', 'House / duplex', 'Apartment / flat'], _v: 1 };
+  assert.deepStrictEqual(plain(F.badges('cleaning', 'Deep Cleaning', d, 3)), ['Either', '3 people', 'Office \u00b7 House / duplex +1']);
+  assert.strictEqual(F.badges('cleaning', 'Deep Cleaning', d, 1).length, 1);
+  assert.deepStrictEqual(plain(F.badges('cleaning', 'Deep Cleaning', null)), []);
+  assert.deepStrictEqual(plain(F.badges('sales', '', { x: 'y' })), []);
+  const lic = F.badges('legal', 'Contract Drafting & Review', { licence_body: 'Bar association', licence_number: 'SCN12345', consult_mode: 'Online' }, 5);
+  assert.ok(!lic.some(t => /SCN12345|Bar association/.test(t)), 'licence text stays off cards');
+});
+
+test('stage 5: a typed licence or certificate gets the "not checked" note; nothing else does', () => {
+  const lines = F.describe('legal', 'Contract Drafting & Review', { licence_body: 'Bar association', licence_number: 'SCN12345', consult_mode: 'Online', contract_types: ['NDAs'], _v: 1 });
+  assert.ok(lines.some(l => l.key === 'licence_number'), 'licence number is shown to customers');
+  assert.ok(F.hasUncheckedClaim(lines));
+  assert.ok(!F.hasUncheckedClaim(F.describe('cleaning', 'Deep Cleaning', { supplies: 'Either', _v: 1 })));
+  assert.ok(!F.hasUncheckedClaim([]));
+});
+
+test('stage 5: details saved as {} (no form, or Sales / Other) describe to nothing and match no filter', () => {
+  assert.deepStrictEqual(plain(F.describe('sales', '', {})), []);
+  assert.deepStrictEqual(plain(F.describe('cleaning', 'Deep Cleaning', {})), []);
+  assert.ok(!F.matchFacets({}, { supplies: ['Either'] }));
+});

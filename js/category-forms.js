@@ -30,6 +30,8 @@
    STCatForms.fieldsFor(category, sub, values)    the fields shown now (pure)
    STCatForms.validate(category, sub, values)     { ok, errors: { key: message }, clean }
    STCatForms.describe(category, sub, details)    [{ key, label, text }] for showing answers to customers (Stage 5)
+   STCatForms.badges(category, sub, details, max) short labels for a card;  .hasUncheckedClaim(lines) true when a licence / certificate was typed
+   STCatForms.facets(category, sub)               questions a customer can filter by;  .matchFacets(details, { key: ['Option'] })
    STCatForms.mount({ box, section, select, sub, onChange })   the page hook (browser only)
    STCatForms.setValues(details) / .collect() / .check()       draft load, save, validate-and-mark-errors
    ============================================================ */
@@ -834,6 +836,61 @@
     return out;
   }
 
+  /* ── Stage 5: showing answers and filtering by them (pure, no DOM) ───────────────────────────── */
+  var NOTE_KEYS = ['licence_body', 'licence_number', 'certification_details'];   /* typed by the tasker, never checked by StreetTasker */
+  var FACET_MAX_OPTIONS = 8, FACET_MAX = 6;
+
+  /* True when describe() lines include something the tasker typed about a licence or certificate (the page adds an "not checked" note) */
+  function hasUncheckedClaim(lines) {
+    return (lines || []).some(function (l) { return NOTE_KEYS.indexOf(l.key) !== -1; });
+  }
+
+  /* Short labels for a card: up to `max` answers that read well on their own (one-answer questions, numbers, short lists). */
+  function badges(category, sub, details, max) {
+    var out = [], cap = typeof max === 'number' ? max : 3;
+    if (!has(category) || !details || typeof details !== 'object') return out;
+    fieldsFor(category, sub, details).forEach(function (f) {
+      if (out.length >= cap) return;
+      var v = details[f.key];
+      if (isEmpty(f, v) || NOTE_KEYS.indexOf(f.key) !== -1) return;
+      var t = '';
+      if (f.type === 'select') t = String(v);
+      else if (f.type === 'number') t = String(v) + (f.unit ? ' ' + f.unit : '');
+      else if (f.type === 'multi') t = v.slice(0, 2).join(' \u00b7 ') + (v.length > 2 ? ' +' + (v.length - 2) : '');
+      if (t && t.length <= 34) out.push(t);
+    });
+    return out;
+  }
+
+  /* Questions a customer can filter by: one-answer, several-answer and Yes/No questions with a short fixed list.
+     With only a category chosen: questions every type of work in it answers. With a type of work chosen: its own questions.
+     Questions that depend on another answer (`when`) are left out. */
+  function facets(category, sub) {
+    if (!has(category)) return [];
+    var list = sub ? candidates(category, sub) : SCHEMAS[category].fields.filter(function (f) { return !f.subs && !f.notSubs; });
+    var out = [];
+    list.forEach(function (f) {
+      if (out.length >= FACET_MAX || f.when) return;
+      if (f.type === 'yesno') out.push({ key: f.key, label: f.label.replace(/\?$/, ''), type: 'yesno', options: ['Yes', 'No'] });
+      else if ((f.type === 'select' || f.type === 'multi') && f.options.length <= FACET_MAX_OPTIONS) out.push({ key: f.key, label: f.label.replace(/\?$/, ''), type: f.type, options: f.options.slice() });
+    });
+    return out;
+  }
+
+  /* chosen = { key: ['Option', ...] }.  OR inside one question, AND between questions. A listing without an answer does not match. */
+  function matchFacets(details, chosen) {
+    var keys = Object.keys(chosen || {}).filter(function (k) { return Array.isArray(chosen[k]) && chosen[k].length; });
+    if (!keys.length) return true;
+    if (!details || typeof details !== 'object') return false;
+    return keys.every(function (k) {
+      var v = details[k], want = chosen[k];
+      if (v === undefined || v === null) return false;
+      if (typeof v === 'boolean') return want.indexOf(v ? 'Yes' : 'No') !== -1;
+      if (Array.isArray(v)) return v.some(function (x) { return want.indexOf(x) !== -1; });
+      return want.indexOf(String(v)) !== -1;
+    });
+  }
+
   /* ── Browser part: draws the fields and keeps the answers ────────────────────────────────────── */
   var M = null;   /* { box, section, sel, subEl, onChange, category, sub, values, rendered } */
 
@@ -995,6 +1052,7 @@
   root.STCatForms = {
     VERSION: VERSION, SCHEMAS: SCHEMAS, OTHER_SUB: OTHER_SUB,
     has: has, candidates: candidates, fieldsFor: fieldsFor, validate: validate, describe: describe,
+    badges: badges, facets: facets, matchFacets: matchFacets, hasUncheckedClaim: hasUncheckedClaim,
     mount: mount, setValues: setValues, collect: collect, check: check, focusField: focusField
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.STCatForms;

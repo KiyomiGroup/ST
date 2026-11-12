@@ -491,6 +491,7 @@ function stServiceCard(s) {
       ${s.isLocal ? stLocalTags() : ''}
       <h3 class="st-card-title">${e(s.service_name)}</h3>
       ${s.description ? `<p class="st-card-desc">${e(s.description)}</p>` : ''}
+      ${Array.isArray(s.facts) && s.facts.length ? `<ul class="st-card-facts" aria-label="Service details">${s.facts.slice(0, 3).map(f => `<li>${e(f)}</li>`).join('')}</ul>` : ''}
     </div>
     <div class="st-card-foot st-card-foot--plain">
       <div class="st-card-foot-info"><span class="st-card-foot-label">${priced ? (ST_IS_RANGE(s.price, s.price_max) ? 'Price range' : 'Starting From') : 'Pricing'}</span>

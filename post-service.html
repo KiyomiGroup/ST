@@ -669,7 +669,7 @@
     window.onCategoryChange = onCategoryChange;
     /* Category picker: searchable, and it asks for the subcategory too (js/category-picker.js) */
     if (window.STCatPicker) STCatPicker.init({ select: 'svcCategory', sub: 'svcSubcategory', mount: 'catPicker', other: 'svcCategoryOther', title: 'What type of work do you want to offer?' });
-    /* Category questions (Cleaning, Repairs, Moving & Delivery so far): js/category-forms.js draws them under Service Basics */
+    /* Category questions (every category except Sales and Other): js/category-forms.js draws them under Service Basics */
     if (window.STCatForms) STCatForms.mount({ box: 'catFields', section: 'secDetails', select: 'svcCategory', sub: 'svcSubcategory', onChange: renumberSections });
 
     async function initPage() {
@@ -911,7 +911,7 @@
           service_name: serviceName,
           category:     category,
           subcategory:  category === 'other' ? null : subcategory,   /* Categories Stage 1: needs sql/categories/c1-subcategory-details.sql */
-          details:      window.STCatForms ? STCatForms.collect() : null,   /* Categories Stage 3: the category answers (jsonb); null when the category has no form */
+          details:      (window.STCatForms && STCatForms.collect()) || {},   /* Categories Stage 3: the category answers (jsonb); {} when the category has no form (the column is NOT NULL) */
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
@@ -936,7 +936,7 @@
         for (var attempt = 0; attempt < 2 && svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204'); attempt++) {
           var colMsg = svcRes.error.message || '', dropped = false;
           ['subcategory', 'details'].forEach(function (col) {
-            if (new RegExp(col).test(colMsg) && Object.prototype.hasOwnProperty.call(payload, col)) { if (payload[col] != null) droppedCols.push(col); delete payload[col]; dropped = true; }
+            if (new RegExp(col).test(colMsg) && Object.prototype.hasOwnProperty.call(payload, col)) { if (col === 'details' ? Object.keys(payload[col] || {}).length : payload[col] != null) droppedCols.push(col); delete payload[col]; dropped = true; }
           });
           if (!dropped) break;
           svcRes = await writeService(payload);

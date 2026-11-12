@@ -100,6 +100,15 @@
             <div class="filter-chip-cloud" id="svcCategoryChips"></div>
           </div>
 
+          <!-- Type of work (shows after a category is chosen) -->
+          <div class="filter-group" id="svcSubGroup" hidden>
+            <div class="filter-group-label"><span>Type of work</span></div>
+            <div class="filter-chip-cloud" id="svcSubChips"></div>
+          </div>
+
+          <!-- Questions the taskers answered for this category (built from js/category-forms.js) -->
+          <div id="svcFacetGroups"></div>
+
           <!-- Availability -->
           <div class="filter-group">
             <div class="filter-group-label">
@@ -209,6 +218,7 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/category-forms.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/saved.js"></script>
   <script src="js/local-tasker-public.js"></script>

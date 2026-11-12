@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 4d, Stage 4 complete)
+# Categories project: handoff for the next AI (after Stage 5)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -16,8 +16,8 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Done |
 | 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Done |
 | 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial. Owner chose QUESTIONS ONLY (no publishing hold) | Done (this stage) |
-| 5 | Show the answers to customers; category filters on Find Services | Next |
-| 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Not started |
+| 5 | Show the answers to customers; category filters on Find Services | Done (this stage), see "Stage 5 notes" |
+| 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Next |
 
 ## How the pieces fit
 - `#svcCategory` (hidden select) and `#svcSubcategory` (hidden input) hold the answers from the picker. The picker fires a normal `change` event on the select.
@@ -100,5 +100,18 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - Health: `Nutrition Coaching`, `Personal Fitness Training`, `Yoga Instruction`, `Caregiving`, `Lactation Consulting` ask an optional certificate only. Owner may want some of these licensed later.
 - Tests: 87 pass. The "no form yet" test now only lists Sales and Other.
 
-## NEXT: Stage 5 (show answers to customers, filters)
-Read points 4, 5 and 7 under "Things the next AI must know". Use `STCatForms.describe()` everywhere answers are shown; add a GIN index (`sql/categories/c2-*.sql` + rollback) before filtering on `details`. Ask the owner for the filter design (decision #9 of the Category Directory document, which is still missing) before building filters. Existing listings have `details = null` and will show no answers until edited.
+## Stage 5 notes (answers shown to customers, filters)
+- **Files:** `js/category-forms.js` (new pure helpers), `js/service-details.js` + `service-details.html` + `css/service-details.css`, `js/services-search.js`, `find-services.html`, `css/find-services.css`, `js/ui.js` (service card), `css/cards-v2.css`, `post-service.html` (one-line bug fix), `sql/categories/c2-details-search.sql` + `c2-rollback.sql`, tests.
+- **Service page:** new "Service details" panel from `STCatForms.describe()`; the top chip now reads "Category · Type of work". If the tasker typed a licence / registration / certificate, a note under the panel says StreetTasker has not checked it. Nothing says "verified".
+- **Cards (Find Services):** up to 3 short answer chips from `STCatForms.badges()` (one-answer, number and short-list questions only; licence text never goes on cards). Home-feed cards are unchanged.
+- **Filters (Find Services):** choosing a category shows "Type of work" chips (only types that have a live listing, with counts) and one checkbox list per question from `STCatForms.facets(category, sub)`. Category only: questions every type of work answers (so `supplies` for Cleaning). Type of work chosen: that type's own questions. Max 6 questions, short fixed lists only (select, multi, Yes/No; no text boxes, no follow-up questions). Within a question the choices are OR, between questions AND. A listing that never answered a question does not match it. Options nobody has chosen yet are hidden. Filtering is in the browser (the page already loads up to 200 live services).
+- **Owner decision NOT yet made (assumed):** the filter design (decision #9 in the Category Directory document). I chose the above. If the owner wants other filters (e.g. price per unit, "verified only"), change `facets()` or add `filter: true` flags to schema fields.
+- **Bug fixed:** `details` is NOT NULL in c1 SQL but Post a Service sent `null` for Sales / Other / no-form saves (a not-null error, not a missing-column error, so the save could fail). It now sends `{}`. Old rows with `{}` or missing answers show no panel and match no answer filter.
+- **Bug fixed:** the "Products" panel on the service page showed for every service (the `hidden` attribute lost to the panel's display rule). `.sd-products[hidden]` now hides it.
+- **SQL (optional for now):** `sql/categories/c2-details-search.sql` adds a GIN index on `details` and a (category, subcategory) index; rollback in `c2-rollback.sql`. The page does not need it yet.
+- **NOT done in Stage 5:** `my-services` list and `coordinator-service-edit` still do not show or edit the answers; tasker profile and Find Taskers cards do not show them; the home-feed service card has no chips. Task Requests (`post-task`) still have no questions (Stage 6).
+- **Tests:** `node --test tests/*.js tests/*.mjs` = 176 pass. Browser run (Playwright, 1280px and 390px, fake Supabase, 4 sample services): 52 checks passed (filters, counts, Clear all, `?category=` link, service page panel, licence note, no sideways scroll). That harness is not in the zip. NOT tested against the real Supabase.
+- **Design check:** same two old warnings on `post-service.html` as the untouched original; no new ones from Stage 5 files.
+
+## NEXT: Stage 6 (pricing methods, Sales upgrade, Post a Task)
+Re-read the Category Directory document sections 4, 5 and 9: three listing types (product / service / task request), nine pricing methods (fixed, hourly, daily, per item, per session, per unit, starting price, negotiable, custom quotation). Reuse `SCHEMAS` for Post a Task. Open decisions in section 9 (seller verification, inventory, direct purchase) still need the owner.

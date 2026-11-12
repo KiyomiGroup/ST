@@ -54,3 +54,8 @@
     border-radius: var(--radius-card) var(--radius-card) 0 0;
   }
 }
+
+/* Category answers as filters (Categories Stage 5) */
+#svcSubGroup[hidden], .svc-facet[hidden] { display: none; }
+.svc-facet .filter-opt { align-items: flex-start; }
+.svc-facet .filter-opt input { margin-top: var(--space-1); flex-shrink: 0; }

@@ -1,7 +1,7 @@
 /* StreetTasker service details page (service-details.html). Page shell from styles.css; this file only lays out the blocks. Tokens only. */
 .sd-state { text-align: center; padding: var(--space-6) 0; }
 .sd-content { display: grid; gap: var(--space-5); }
-.sd-content[hidden], .sd-missing[hidden], .sd-state[hidden], .sd-media[hidden], .sd-tags[hidden], .st-hero-lead[hidden] { display: none; }
+.sd-content[hidden], .sd-missing[hidden], .sd-state[hidden], .sd-media[hidden], .sd-products[hidden], .sd-facts[hidden], .sd-facts-note[hidden], .sd-tags[hidden], .st-hero-lead[hidden] { display: none; }
 .sd-missing { display: grid; gap: var(--space-3); justify-items: start; }
 
 .sd-media { padding: 0; overflow: hidden; }
@@ -41,3 +41,11 @@
 .sd-prod-name { font-size: var(--text-sm); color: var(--color-text); overflow-wrap: anywhere; }
 .sd-prod-price { font-family: var(--font-heading); font-weight: 800; color: var(--color-text); }
 @media (min-width: 769px) { .sd-prod-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ── Category answers (Categories Stage 5) ── */
+.sd-facts-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-5); margin: var(--space-3) 0 0; }
+.sd-fact { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.sd-fact dt { font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); }
+.sd-fact dd { margin: 0; font-size: var(--text-base); color: var(--color-text); overflow-wrap: anywhere; }
+.sd-facts-note { margin: var(--space-4) 0 0; }
+@media (max-width: 640px) { .sd-facts-list { grid-template-columns: minmax(0, 1fr); } }

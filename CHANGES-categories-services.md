@@ -65,3 +65,13 @@
 - No publishing hold and no checking against any register (owner decision). Customers will see what the tasker typed.
 - tests/category-forms.test.js: PILOT list now covers all 24 categories with forms; new batch D tests.
 - No SQL, HTML or CSS changes.
+
+
+## Categories Stage 5 (2026-11-11): answers shown to customers, filters on Find Services
+- js/category-forms.js: new pure helpers `badges()`, `facets()`, `matchFacets()`, `hasUncheckedClaim()`. No engine change.
+- service-details.html / .js / .css: "Service details" panel (from `describe()`), "Category · Type of work" chip, "not checked by StreetTasker" note when a licence or certificate was typed. Loads `*` so the new columns come along. FIXED: the Products panel showed on every service.
+- find-services.html, js/services-search.js, css/find-services.css: "Type of work" chips and per-question filters under Category; Clear all resets them; `?category=` opens with them.
+- js/ui.js + css/cards-v2.css: service cards show up to 3 answer chips (`facts`).
+- post-service.html: FIXED `details` sent as `{}` instead of `null` (the column is NOT NULL). Comment fixed.
+- sql/categories/c2-details-search.sql (+ c2-rollback.sql): GIN index on `details`, (category, subcategory) index. Optional for now.
+- tests/category-forms.test.js: Stage 5 tests added (176 pass in all).

@@ -24,10 +24,8 @@
 
   async function loadService(id) {
     var sb = window.supabase;
-    var FULL = 'id, user_id, service_name, category, price, price_max, rate_unit, description, location, photo, specialties, available';
-    var BASE = 'id, user_id, service_name, category, price, price_max, rate_unit, description, location, photo, available';
-    var r = await sb.from('services').select(FULL).eq('id', id).maybeSingle();
-    if (r.error) r = await sb.from('services').select(BASE).eq('id', id).maybeSingle();   /* specialties column not in this database yet */
+    /* "*" so the Stage 1 columns (subcategory, details) come along when they exist and nothing breaks when they do not */
+    var r = await sb.from('services').select('*').eq('id', id).maybeSingle();
     return r.data || null;
   }
 
@@ -47,11 +45,31 @@
     return out;
   }
 
+  /* Category answers (Categories Stage 5). Labels and wording come from STCatForms.describe so they live in one place. */
+  function renderFacts(catKey, sub, details) {
+    var box = $('sdFacts'), list = $('sdFactsList'), note = $('sdFactsNote');
+    if (!box || !list) return;
+    list.textContent = '';
+    var lines = window.STCatForms ? STCatForms.describe(catKey, sub, details) : [];
+    lines.forEach(function (l) {
+      var row = document.createElement('div'); row.className = 'sd-fact';
+      var dt = document.createElement('dt'); dt.textContent = l.label;
+      var dd = document.createElement('dd'); dd.textContent = l.text;
+      row.appendChild(dt); row.appendChild(dd); list.appendChild(row);
+    });
+    if (note) note.hidden = !(window.STCatForms && STCatForms.hasUncheckedClaim(lines));
+    box.hidden = !lines.length;
+  }
+
   function render(svc, prov, isOwner, me) {
     var title = text(svc.service_name) || 'Service';
     document.title = title + ' — StreetTasker';
     $('sdTitle').textContent = title;
-    $('sdCat').textContent = text(svc.category).replace(/[_-]+/g, ' ') || 'Service';
+    var catKey = window.STCat ? STCat.resolve(svc.category).value : text(svc.category);
+    var catMeta = window.STCat && STCat.serviceList.find(function (c) { return c.value === catKey; });
+    var catLabel = (catMeta && catMeta.label) || text(svc.category).replace(/[_-]+/g, ' ') || 'Service';
+    var sub = text(svc.subcategory);
+    $('sdCat').textContent = sub && sub !== 'Other (not listed)' ? catLabel + ' \u00b7 ' + sub : catLabel;
     var loc = text(svc.location);
     $('sdLoc').textContent = loc ? 'Available around ' + loc : ''; $('sdLoc').hidden = !loc;
 
@@ -73,6 +91,8 @@
     (ps.length ? ps : ['The tasker has not added more details about this service yet.']).forEach(function (p) {
       var el = document.createElement('p'); el.textContent = p; desc.appendChild(el);
     });
+
+    renderFacts(catKey, sub, svc.details);
 
     var tags = Array.isArray(svc.specialties) ? svc.specialties.map(text).filter(Boolean) : [];
     var tagBox = $('sdTags'); tagBox.textContent = '';
