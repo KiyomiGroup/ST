@@ -154,6 +154,37 @@
     } catch (e) { /* label is optional */ }
   }
 
+  /* Verified tick in front of the name. Cards whose row did not say "verified" carry data-verify-user; one batched read of
+     taskers.is_verified / users.is_verified decides. A blocked or failed read leaves the card without a tick (nothing invented). */
+  function decorateVerified(scope) {
+    try {
+      if (!root.supabase || typeof root.stTaskerCard !== 'function' || typeof ST_ICON === 'undefined' || !ST_ICON.verified) return;
+      var heads = Array.prototype.slice.call(scope.querySelectorAll('[data-verify-user]'));
+      if (!heads.length) return;
+      var ids = [];
+      heads.forEach(function (h) { var id = h.getAttribute('data-verify-user'); if (ids.indexOf(id) === -1) ids.push(id); });
+      Promise.all([
+        root.supabase.from('taskers').select('user_id, is_verified').in('user_id', ids),
+        root.supabase.from('users').select('id, is_verified').in('id', ids)
+      ]).then(function (res) {
+        var ok = {};
+        ((res[0] && res[0].data) || []).forEach(function (r) { if (r.is_verified) ok[String(r.user_id)] = true; });
+        ((res[1] && res[1].data) || []).forEach(function (r) { if (r.is_verified) ok[String(r.id)] = true; });
+        heads.forEach(function (h) {
+          var id = h.getAttribute('data-verify-user');
+          h.removeAttribute('data-verify-user');
+          if (!ok[id] || h.querySelector('.st-home-tick')) return;
+          var tick = document.createElement('span');
+          tick.className = 'st-home-tick';
+          tick.title = 'Verified';
+          tick.setAttribute('aria-label', 'Verified');
+          tick.innerHTML = ST_ICON.verified;   /* static markup from js/ui.js, no user text */
+          h.insertBefore(tick, h.firstChild);
+        });
+      }).catch(function () { /* no tick is the safe result */ });
+    } catch (e) { /* tick is optional */ }
+  }
+
   /* ── Tasker card ──
      s: { id, user_id, provider_name, service_name, location, distance_km, photo, verified, isLocal, href }
      The rating is a data-rating-user span: js/rating-badge.js fills it from rating_summary, or leaves it empty. */
@@ -392,6 +423,7 @@
       track.removeAttribute('aria-busy');
       if (root.STRating && root.STRating.decorate) { try { root.STRating.decorate(track); } catch (e) { /* badges stay empty */ } }
       decorateMembership(track);
+      decorateVerified(track);
       root.requestAnimationFrame(updateArrows);
     }
     /* M12b: a plain message with an optional link (for example "Add your location" -> profile). Text is set with textContent; the link goes through safeHref. */

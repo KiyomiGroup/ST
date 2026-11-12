@@ -28,6 +28,7 @@
   <title>Customer Dashboard — Street Taskers</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/rating-badge.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -901,6 +902,9 @@
 
     /* ── Init ────────────────────────────────────────────────── */
     async function initPage() {
+      /* app.js and this page's own DOMContentLoaded handler both call initPage: run the page setup once. */
+      if (window.__custPageInit) return;
+      window.__custPageInit = true;
 
       /* Hide spinner immediately — never let it block the UI */
       var loadEl = document.getElementById('dashLoading');

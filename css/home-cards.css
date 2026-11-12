@@ -67,11 +67,14 @@
 .st-home-lead:empty { display: none; }
 .st-card--home .st-tasker-top { min-height: var(--space-5); }
 .st-card--home .st-rating, .st-card--home .rating-badge { font-size: var(--text-sm); }
+/* Profile card: the star rating sits in the top-right corner, whether or not a PRO / PREMIUM label is on the left */
+.st-card--home .st-tasker-top > .st-rating,
+.st-card--home .st-tasker-top > [data-rating-user]:not(:empty) { margin-inline-start: auto; }
 .st-card--home .rating-badge-count { font-size: var(--text-xs); }
 .st-home-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 .st-home-id { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; flex: 1 1 auto; }
 .st-home-name { margin: 0; display: flex; align-items: center; gap: var(--space-1); font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-card-title); min-width: 0; }
-.st-home-name > span:first-child { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-home-name > .st-home-name-text { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .st-home-tick { display: inline-flex; flex: 0 0 auto; color: var(--color-primary); }
 .st-home-tick svg { width: var(--text-base); height: var(--text-base); }
 .st-home-role { margin: 0; font-size: var(--text-sm); line-height: 1.3; color: var(--color-card-meta); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

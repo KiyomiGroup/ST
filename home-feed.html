@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/cards-v2.css?v=2" />
   <link rel="stylesheet" href="css/home-cards.css?v=2" />
   <link rel="stylesheet" href="css/onboarding.css" />
+  <link rel="stylesheet" href="css/rating-badge.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <style>
@@ -918,6 +919,7 @@
         provider_name: r.name || r.provider_name, service_name: r.service_name || r.service, location: r.location,
         distance_km: (r.distance_km != null && isFinite(dist)) ? dist : null,
         photo: r.photo_url || r.photo, isLocal: isLocal === true,
+        verified: (r.is_verified === true || r.verified === true || r.identity_verified === true) ? true : undefined,
         href: uid ? 'tasker-profile.html?id=' + encodeURIComponent(uid) : ''
       });
     }
