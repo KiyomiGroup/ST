@@ -41,6 +41,7 @@
     { group: 'Money', items: [
       { key: 'accountant', label: 'Accountant', href: 'accountant.html', icon: 'chart', any: ['accounting.view'], built: true },
       { key: 'transactions', label: 'Transactions', href: 'transactions.html', icon: 'list', any: ['transactions.view', 'donations.view'], built: true },
+      { key: 'revenue', label: 'Revenue and commissions', href: 'revenue.html', icon: 'chart', any: ['revenue.view'], built: true },
       { key: 'payouts', label: 'Earnings and payouts', href: 'payouts.html', icon: 'list', any: ['payouts.view'], built: true }
     ] },
     { group: 'System', items: [

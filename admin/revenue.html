@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Revenue and commissions · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Revenue and commissions</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="rvRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Revenue and commissions</h1>
+            <p>What the platform earned, in separate boxes. Each box has its own definition and is never added to another one. Read only: it never moves money, never calls Paystack and never changes a payment. Every number is an amount the site stored; nothing is worked out from a rate. Amounts are in naira. Days are Lagos days.</p>
+          </div>
+          <section class="ad-card">
+            <form class="ad-filters" id="rvFilters" novalidate>
+              <label class="ad-filter"><span class="ad-filter-label">Group by</span>
+                <select class="form-input" id="rvBucket">
+                  <option value="day">Day</option><option value="week" selected>Week (Monday start)</option><option value="month">Month</option>
+                </select></label>
+              <label class="ad-filter"><span class="ad-filter-label">From</span>
+                <input class="form-input" id="rvFrom" type="date" /></label>
+              <label class="ad-filter"><span class="ad-filter-label">To</span>
+                <input class="form-input" id="rvTo" type="date" /></label>
+              <div class="ad-actions"><button type="submit" class="btn btn-primary">Apply</button><button type="button" class="btn" id="rvReset">Reset</button></div>
+            </form>
+            <p class="ad-note" id="rvRange" aria-live="polite"></p>
+          </section>
+          <div id="rvAlerts" aria-live="polite"></div>
+          <section class="ad-card ad-dash-section" aria-labelledby="rvSumTitle">
+            <h2 class="ad-card-title" id="rvSumTitle">Earned in this period</h2>
+            <div id="rvSummary"></div>
+          </section>
+          <section class="ad-card ad-dash-section" aria-labelledby="rvSerTitle">
+            <h2 class="ad-card-title" id="rvSerTitle">By period</h2>
+            <div id="rvSeries"></div>
+          </section>
+          <section class="ad-card ad-dash-section" aria-labelledby="rvRowsTitle" id="rvRowsCard" hidden>
+            <h2 class="ad-card-title" id="rvRowsTitle">Rows behind the number</h2>
+            <p class="ad-hint" id="rvRowsCount" aria-live="polite"></p>
+            <div id="rvRows"></div>
+            <div class="ad-actions ad-pager" id="rvPager" hidden>
+              <button type="button" class="btn" id="rvNewer">Newer</button>
+              <button type="button" class="btn" id="rvOlder">Older</button>
+            </div>
+          </section>
+          <p class="ad-note" id="rvStamp"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-revenue.js"></script>
+</body>
+</html>
