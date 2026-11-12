@@ -85,7 +85,7 @@
       <header class="ps-header">
         <span class="ps-badge pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-badge-check"/></svg>Verified Tasker Network &bull; Guaranteed Payouts</span>
         <h1 class="pt-title">Post Your Service</h1>
-        <p class="pt-lede" id="formSubtitle">Fill in your details below. Your listing will be saved, then you'll verify your identity before it goes live.</p>
+        <p class="pt-lede" id="formSubtitle">Fill in your details below. Your listing goes live as soon as you save it.</p>
       </header>
 
       <!-- Sections 3-9 are rebuilt one at a time; until then the old fields sit in a card below Service Basics -->
@@ -375,13 +375,13 @@
 
           <!-- ── Section 7 · Action bar ─────────────────────────── -->
           <div class="pt-submit ps-submit">
-            <p class="pt-submit-note ps-submit-note pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>Your listing is saved as a draft first. You'll verify your identity in the next step before it goes public.</span></p>
+            <p class="pt-submit-note ps-submit-note pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>Your listing goes live when you save it. Use Save Draft to keep it private for now.</span></p>
             <div class="pt-submit-row ps-submit-row">
               <button type="button" class="pt-draft-btn ps-draft-btn pt-desk" id="saveDraftBtn">Save Draft</button>
               <button type="submit" class="pt-post-btn ps-post-btn" id="submitBtn"><span class="pt-post-label">Save &amp; Continue</span><svg class="pt-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
             </div>
             <p style="font-size:12px;line-height:1.5;color:#7A7A7A;margin:10px 0 0;text-align:center">By saving and publishing you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a>, <a href="payments.html" target="_blank" rel="noopener">Payment, Commission and Wallet Policy</a> and <a href="community.html" target="_blank" rel="noopener">Community Standards</a>.</p>
-            <p class="pt-submit-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><span>Saved as a draft first</span><span class="pt-dot" aria-hidden="true"></span><span>Verify to go live</span></p>
+            <p class="pt-submit-note pt-mob"><svg class="pt-i" aria-hidden="true"><use href="#i-check-circle"/></svg><span>Goes live when saved</span><span class="pt-dot" aria-hidden="true"></span><span>Save Draft keeps it private</span></p>
           </div>
         </form>
 
@@ -996,11 +996,12 @@
         }
         /* LISTING-PRECHECK-END */
 
-        /* Verified = the SERVER says VERIFIED (idv_my_status). The old checks (verifications.status,
-           users.is_verified) are browser-writable and are no longer trusted. If the read fails: not verified. */
+        /* VR5: nobody verifies to post. "isVerified" now means "the server says this person may publish" (idv_can_publish).
+           If the read fails: false, and the listing is saved as a draft. */
         var isVerified = false;
         try {
-          isVerified = !!(window.ST && window.ST.verify && await window.ST.verify.isUserVerified());
+          var pubState = (window.ST && window.ST.verify && window.ST.verify.canPublish) ? await window.ST.verify.canPublish() : null;
+          isVerified = !!(pubState && pubState.can_publish === true);
         } catch(e) { isVerified = false; }
 
         /*
@@ -1108,14 +1109,10 @@
             return;
           }
 
-          /* Show verify prompt — pass return URL so verify.html bounces back */
-          document.getElementById('verifyNowBtn').href = verifyUrl();
-          /* "Verify My Identity Now" in the sidebar: go straight to verification once saved */
-          if (goVerify) { window.location.href = verifyUrl(); return; }
-
-          document.getElementById('formCard').style.display    = 'none';
-          document.getElementById('verifyPrompt').style.display = 'block';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          /* VR5: no verify step. The server could not publish just now (for example the check failed), so the listing stays a saved draft. */
+          showToast('Saved as a draft. You can publish it from My Services.');
+          setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);
+          return;
         }
 
       } catch(err) {

@@ -312,7 +312,6 @@
                   <div class="pt-urgent-copy">
                     <div class="pt-urgent-title"><span class="pt-desk">Mark as Urgent</span><span class="pt-mob">Urgent Priority</span> <span class="pt-urgent-badge"><span class="pt-desk">URGENT</span><span class="pt-mob">TOP BUMP</span></span></div>
                     <p class="pt-urgent-note" id="urgentNote" hidden></p>
-                    <p class="pt-urgent-lock" id="urgentLock" role="status" hidden><span id="urgentLockText">You need to verify your identity to use this feature.</span> <a class="pt-urgent-lock-link" id="urgentVerifyLink" href="verify.html">Verify now</a></p>
                   </div>
                   <div class="pt-urgent-side">
                     <label class="pt-toggle" aria-label="Mark task as urgent for ₦1,500"><input type="checkbox" id="urgentToggle" name="urgent" /><span class="pt-toggle-track"></span></label>
@@ -436,18 +435,17 @@
     </div>
   </div>
 
-  <!-- Success modal — verify to publish -->
+  <!-- Success modal -->
   <div class="modal-overlay" id="taskSuccessModal" role="dialog" aria-modal="true">
     <div class="modal-box" style="max-width:440px;">
       <div id="modalVerifyNeeded">
         <div class="modal-icon" style="background:#fef3c7;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
-        <h2 style="margin-bottom:8px;">Task saved — verify to post</h2>
-        <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved. Verify your identity once to make it visible to taskers. It's quick and only done once.</p>
+        <h2 style="margin-bottom:8px;">Task saved</h2>
+        <p style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:20px;line-height:1.6;">Your task <strong>"<span data-task-title></span>"</strong> has been saved but is not live yet. Open My Tasks and try posting it again.</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a id="verifyToPostBtn" href="verify.html?role=customer&return=my-tasks.html" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Verify Now — Post Task Live</a>
-          <button class="btn btn-ghost" onclick="saveDraftTask()">Save as Draft — Verify Later</button>
+          <a href="my-tasks.html" class="btn btn-primary" style="text-decoration:none;justify-content:center;">Go to My Tasks</a>
         </div>
       </div>
       <div id="modalAlreadyVerified" style="display:none;">
