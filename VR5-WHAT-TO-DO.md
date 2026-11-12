@@ -18,7 +18,7 @@ Source: your ST-Real-Main zip of 2026-11-12 (VR4 already in it). Files in this z
 ## What changed
 - Dashboard: "Get Verified" button next to Save removed. Draft services say "Not live yet" with an Edit link instead of "Verify to Post".
 - My Services: the "Verify to Go Live" side card is gone; drafts get Edit as their main button.
-- Edit profile (tasker): the strip says the ID check comes at the first withdrawal; no Start button (only "Resubmit" after a rejected check). Customer: the "Verify ID now" button became one line saying the check is only asked over ₦10,000. The "ID not verified yet" chip is gone from both.
+- Edit profile (tasker and customer): the strip says verifying is optional (asked at the first withdrawal, or over ₦10,000 for customers) with a "Verify identity" button. When a person verifies, the profile-strength ring can reach 100% (that item was kept). The "ID not verified yet" chip is gone from both.
 - `verify.html` / `js/verify.js`: the "Your tasks and services stay hidden" notice is gone. A reason line shows from `action=withdraw` or `action=pay`. "Why we verify" now says money is the trigger.
 - `js/verify-retry-nudge.js`: the "try again" pop-up now shows only on the wallet page.
 - Terms, Privacy, Payments, Learn: one line each on when verification is asked.
@@ -35,8 +35,7 @@ Source: your ST-Real-Main zip of 2026-11-12 (VR4 already in it). Files in this z
 - **Which month and what counts is UNVERIFIED.** I count live checks that reached Didit, by Lagos calendar month. Open the Didit billing page and tell me whether a started check or only a passed check counts, and the month boundary. The card also shows how many passed.
 - **Not done: three verify blocks on post-service.html** (mobile "Quick verification" card, the step-2 `verifyPrompt` card, and the desktop sidebar "Identity Verification" card with its "Verify My Identity Now" button). They still say "verify before going live". Removing them changes the page layout, so tell me whether to remove them or replace them with something (I can do this as the next patch). Patches 3 to 5 already fix the subtitle and notes.
 - Wording is mine, not approved by you. Terms, Privacy and Payments text is not lawyer-approved. Their "Last updated" dates were not changed: set them to the day you release.
-- Profile-strength still counts "Verified identity" (10% tasker, 25% customer). I left it as it is; say if you want it removed.
 - The urgent fee is paid straight through Paystack in the browser, not through `payment-init`, so it is not in the customer ₦10,000 total (VR3).
-- `idv_reverify_run`: still not switched off. Tell me if it is scheduled.
+- `idv_reverify_run`: checked, no cron job runs it. Nothing to switch off.
 - Unused CSS you can delete later: `.sv-verify-btn` (css/my-services.css), `.pt-urgent-lock*` (css/post-task.css).
 - `node tools/check-design-system.js` FAILS, but it fails with exactly the same output on your unchanged 2026-11-12 zip (stale baseline: css/legal.css, local-tasker-public.css, map-view.css and others). VR5 adds no new violation.

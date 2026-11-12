@@ -97,13 +97,13 @@
       btn.hidden = true;
     } else {
       box.classList.add('is-todo');
-      /* VR5: nobody verifies up front. A tasker is asked at the first withdrawal, so no start button for a person who has not tried. */
-      title.textContent = v.status === 'rejected' ? 'Verification rejected' : 'ID check at your first withdrawal';
+      /* VR5: verifying is optional (it is asked at the first withdrawal anyway), but a tasker may do it here to get the trust badge and a full profile. */
+      title.textContent = v.status === 'rejected' ? 'Verification rejected' : 'Verify your identity';
       text.textContent = v.status === 'rejected'
         ? (v.reason || 'Please check your details and resubmit.')
-        : 'You can post services and take bookings without verifying. We ask for a quick ID check when you make your first withdrawal.';
-      btn.hidden = v.status !== 'rejected';
-      btn.textContent = 'Resubmit';
+        : 'Optional for now: you can post and take bookings without it, and we ask at your first withdrawal. Verify now to show a trust badge and finish your profile.';
+      btn.hidden = false;
+      btn.textContent = v.status === 'rejected' ? 'Resubmit' : 'Verify identity';
     }
   }
 

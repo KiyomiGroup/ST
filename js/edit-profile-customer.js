@@ -78,7 +78,7 @@
 
     S.verified = ver.verified;
     $('epIdStat').textContent = ver.verified ? 'Verified' : 'Not yet';
-    $('epIdNote').textContent = ver.verified ? 'NIN / BVN confirmed' : 'Asked only for payments over \u20A610,000';
+    $('epIdNote').textContent = ver.verified ? 'NIN / BVN confirmed' : 'Verify to earn a trust badge';
     $('epVerifyCta').hidden = ver.verified;
 
     EP.repaintPhoto();
