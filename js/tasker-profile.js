@@ -681,23 +681,8 @@
     }
   }
 
-  /* A customer must be VERIFIED before booking a service (the server answers, idv_my_status). If the answer cannot be read,
-     the booking does not open: no answer = no booking. Shows a dialog with a Verify now link and returns true when it blocked. */
-  async function blockIfUnverified() {
-    var V = window.ST && window.ST.verify;
-    var ok = false;
-    try { ok = !!(V && V.isUserVerified && await V.isUserVerified()); } catch (e) { ok = false; }
-    if (ok) return false;
-    var back = 'verify.html?return=' + encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search) + '&action=' + encodeURIComponent('book a service');
-    $('tpBookBody').innerHTML =
-      '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
-      '<div class="tp-dialog-done"><h2 class="tp-dialog-title" id="tpBookTitle">Verify your profile to book</h2>' +
-      '<p class="tp-dialog-lead">To keep everyone safe, you need to verify your identity before you can book a service. It only takes a few minutes.</p>' +
-      '<a class="btn btn-primary tp-dialog-submit" href="' + esc(back) + '">Verify now</a>' +
-      '<button type="button" class="btn btn-ghost tp-dialog-submit" data-close>Not now</button></div>';
-    openDialog($('tpBookDialog'));
-    return true;
-  }
+  /* VR4: booking no longer needs identity verification. The old "Verify your profile to book" dialog was removed here;
+     a payment over the limit is checked when the customer pays (VR3). */
 
   /* mode: 'book' | 'quote' | 'callout' */
   async function openBooking(mode) {
@@ -708,7 +693,6 @@
     var m = state.model; if (!m) return;
     if (state.demo) return openDemoBooking();
     if (!state.id) return;
-    if (await blockIfUnverified()) return;
     if (mode === 'order') return openOrder(user, m);   /* Stage 4b: products */
 
     var today = new Date().toISOString().split('T')[0];
@@ -768,7 +752,7 @@
   function orderTotal() {
     var total = 0, count = 0;
     document.querySelectorAll('#tpBookBody .tp-ord-row').forEach(function (row) {
-      var q = Math.max(0, Math.min(Number(row.getAttribute('data-max')) || 50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
       total += q * Number(row.getAttribute('data-price')); count += q;
     });
     var el = $('ordTotal'); if (el) el.textContent = NAIRA + total.toLocaleString('en-NG');
@@ -778,22 +762,18 @@
   async function openOrder(user, m) {
     var pick = state.bookSvc;
     if (!pick || !pick.id) return;
-    var r = await window.supabase.from('service_products').select('*').eq('service_id', pick.id).order('position');
+    var r = await window.supabase.from('service_products').select('position, name, price, image_url').eq('service_id', pick.id).order('position');
     var prods = (r && r.data) || [];
-    var listed = prods.length;
-    if (window.STProducts) prods = prods.filter(function (p) { return STProducts.canOrder(p); });   /* Categories Stage 6b: sold, out of stock and paused products cannot be ordered */
-    if (listed && !prods.length) { if (typeof showToast === 'function') showToast('These products are not available right now.'); return; }
     if (!prods.length) { state.bookSvc = pick; return openBooking('book'); }   /* no products listed: the normal booking form */
     var savedLoc = await savedLocation(user);
     var body = $('tpBookBody');
     resetBkPhotos();
     var rows = prods.map(function (p) {
       var img = text(p.image_url);
-      var mx = window.STProducts ? STProducts.maxQty(p) : 50;
-      return '<div class="tp-ord-row" data-max="' + mx + '" data-price="' + esc(String(Number(p.price))) + '" data-name="' + esc(text(p.name)) + '">' +
+      return '<div class="tp-ord-row" data-price="' + esc(String(Number(p.price))) + '" data-name="' + esc(text(p.name)) + '">' +
         '<span class="tp-ord-img">' + (/^https?:\/\//i.test(img) ? '<img src="' + esc(img) + '" alt="" loading="lazy" />' : '') + '</span>' +
         '<span class="tp-ord-info"><strong>' + esc(text(p.name)) + '</strong><span>' + esc(NAIRA + Number(p.price).toLocaleString('en-NG')) + '</span></span>' +
-        '<input type="number" inputmode="numeric" class="form-input tp-ord-qty" min="0" max="' + mx + '" step="1" value="0" aria-label="Quantity of ' + esc(text(p.name)) + '" /></div>';
+        '<input type="number" inputmode="numeric" class="form-input tp-ord-qty" min="0" max="50" step="1" value="0" aria-label="Quantity of ' + esc(text(p.name)) + '" /></div>';
     }).join('');
     body.innerHTML =
       '<button type="button" class="tp-dialog-x" data-close aria-label="Close">' + icon('close') + '</button>' +
@@ -821,7 +801,7 @@
     function fail(msg, el) { err.textContent = msg; err.hidden = false; if (el) el.focus(); }
     var lines = [];
     body.querySelectorAll('.tp-ord-row').forEach(function (row) {
-      var q = Math.max(0, Math.min(Number(row.getAttribute('data-max')) || 50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
+      var q = Math.max(0, Math.min(50, parseInt(row.querySelector('.tp-ord-qty').value, 10) || 0));
       if (q > 0) lines.push({ name: row.getAttribute('data-name'), qty: q, price: Number(row.getAttribute('data-price')) });
     });
     if (!lines.length) return fail('Choose at least one product (set a quantity of 1 or more).');
@@ -876,7 +856,6 @@
 
   async function submitBooking(mode) {
     var user = await currentUser(); if (!user) return;
-    if (await blockIfUnverified()) return;   /* checked again at send: the pop-up may have been open a while */
     if (mode === 'order') return submitOrder(user);   /* Stage 4b: products */
     var jobVal = text($('bkJob').value), areaVal = text($('bkArea').value), streetVal = text($('bkStreet').value), dateVal = text($('bkDate').value), timeVal = $('bkTime').value, descVal = text($('bkNotes').value);
     var urgencyVal = state.bkUrgency === 'urgent' ? 'Urgent' : 'Flexible';
