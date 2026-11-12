@@ -57,3 +57,11 @@
 - Roofing, Welding, Demolition and Structural Repairs ask a required safety-equipment question.
 - tests/category-forms.test.js: PILOT list extended, new batch C tests.
 - No SQL, HTML or CSS changes.
+
+
+## Categories Stage 4d (2026-11-11): questions for the regulated categories (Stage 4 complete)
+- js/category-forms.js: five new schemas (`professional`, `security`, `health`, `legal`, `financial`). Licensed work asks `licence_body` + `licence_number` (required); other work asks an optional certificate question. Legal asks it for every type of work.
+- Optional `licence_number` also added to Driving Lessons (education) and Electrical / Plumbing Installation (construction).
+- No publishing hold and no checking against any register (owner decision). Customers will see what the tasker typed.
+- tests/category-forms.test.js: PILOT list now covers all 24 categories with forms; new batch D tests.
+- No SQL, HTML or CSS changes.

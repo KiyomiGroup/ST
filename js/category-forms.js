@@ -608,6 +608,138 @@
     ]
   };
 
+  /* ═══ Stage 4, batch D (regulated) ═══════════════════════════════════════════════════════════════
+     Professional Services, Security & Safety, Health & Wellness, Legal & Advocacy, Financial Services.
+     Owner decision (2026-11-11): QUESTIONS ONLY, no publishing hold. Work that normally needs a licence asks for "licence_body" and "licence_number" (required).
+     Work that does not asks an optional "has_certification" (+ details). Nothing here is checked against any register. A hold or admin check can be added later without changing these keys. */
+
+  var LICENCE_BODY = { key: 'licence_body', label: 'Registered with', type: 'text', required: true, maxLength: 80, placeholder: 'e.g. the professional body or regulator' };
+  var LICENCE_NO = { key: 'licence_number', label: 'Registration or licence number', type: 'text', required: true, maxLength: 60, placeholder: 'Your number', hint: 'Shown to customers' };
+  var CERT_YN = { key: 'has_certification', label: 'Do you hold a relevant certificate or professional membership?', type: 'yesno', hint: 'Optional' };
+  var CERT_TXT = { key: 'certification_details', label: 'Which one?', type: 'text', required: true, maxLength: 120, placeholder: 'Name of the certificate or body', when: { key: 'has_certification', equals: true } };
+  function lic(subs) { return [Object.assign({ subs: subs }, LICENCE_BODY), Object.assign({ subs: subs }, LICENCE_NO)]; }
+  function cert(notSubs) { return [Object.assign({ notSubs: notSubs }, CERT_YN), Object.assign({ notSubs: notSubs }, CERT_TXT)]; }
+
+  SCHEMAS.professional = {
+    groups: {
+      licensed: ['Architecture', 'Engineering Consultancy', 'Property Consultancy'],
+      writing:  ['Professional Writing', 'CV & Resume Writing', 'Grant Writing', 'Technical Writing', 'Translation']
+    },
+    fields: [].concat(lic('@licensed'), cert('@licensed'), [
+      { key: 'work_mode', label: 'How do you work with clients?', type: 'select', required: true, options: ['Remote online', 'In person', 'Both'] },
+      { key: 'turnaround', label: 'Usual turnaround for a small job', type: 'select', required: true, subs: '@writing', options: ['Within 24 hours', '2 to 3 days', 'Within a week', 'More than a week'] },
+      { key: 'consult_areas', label: 'What you advise on', type: 'multi', required: true, subs: ['Business Consultancy'], options: ['Strategy', 'Operations', 'Sales growth', 'Business plans', 'Funding & investors', 'Start-ups'] },
+      { key: 'translation_languages', label: 'Languages you translate', type: 'multi', required: true, subs: ['Translation', 'Interpretation'], options: ['English', 'French', 'Spanish', 'Arabic', 'Mandarin', 'Yoruba', 'Igbo', 'Hausa'] },
+      { key: 'certified_translation', label: 'Do you provide certified translations?', type: 'yesno', required: true, subs: ['Translation'] },
+      { key: 'interpretation_types', label: 'Interpreting you do', type: 'multi', required: true, subs: ['Interpretation'], options: ['Conferences', 'Business meetings', 'Court & legal', 'Medical', 'Online calls'] },
+      { key: 'writing_types', label: 'Writing you do', type: 'multi', required: true, subs: ['Professional Writing'], options: ['Articles & blogs', 'Speeches', 'Business documents', 'Ghostwriting', 'Editing & proofreading'] },
+      { key: 'cv_services', label: 'What you offer', type: 'multi', required: true, subs: ['CV & Resume Writing'], options: ['CV writing', 'Cover letters', 'LinkedIn profile', 'Interview preparation'] },
+      { key: 'grant_types', label: 'Grants you write for', type: 'multi', required: true, subs: ['Grant Writing'], options: ['NGO & donor grants', 'Government grants', 'Business grants', 'Research grants', 'Proposals & reports'] },
+      { key: 'tech_writing_types', label: 'Writing you do', type: 'multi', required: true, subs: ['Technical Writing'], options: ['Manuals & guides', 'API documents', 'Reports', 'Proposals', 'Standard operating procedures'] },
+      { key: 'architecture_services', label: 'What you do', type: 'multi', required: true, subs: ['Architecture'], options: ['Building plans', '3D visuals', 'Site supervision', 'Renovation design', 'Planning approval drawings'] },
+      { key: 'engineering_fields', label: 'Fields you cover', type: 'multi', required: true, subs: ['Engineering Consultancy'], options: ['Civil & structural', 'Electrical', 'Mechanical', 'Chemical', 'Environmental', 'Site supervision'] },
+      { key: 'property_services', label: 'What you do', type: 'multi', required: true, subs: ['Property Consultancy'], options: ['Valuation', 'Sales & lettings', 'Property management', 'Investment advice'] },
+      { key: 'hr_services', label: 'What you do', type: 'multi', required: true, subs: ['HR Consultancy'], options: ['Recruitment', 'Policies & handbooks', 'Payroll & contracts', 'Training', 'Staff disputes'] },
+      { key: 'guidance_focus', label: 'Guidance you give', type: 'multi', required: true, subs: ['Career Guidance'], options: ['Career direction', 'Choosing subjects or courses', 'Interview practice', 'Job search', 'Changing careers'] }
+    ])
+  };
+
+  SCHEMAS.security = {
+    groups: {
+      licensed: ['Event Security', 'Security Guard Services', 'Fire Safety Equipment Installation', 'Safety Inspection'],
+      guards:   ['Event Security', 'Security Guard Services'],
+      supply:   ['Access Control', 'CCTV Installation', 'Fire Safety Equipment Installation', 'Security System Maintenance']
+    },
+    fields: [].concat(lic('@licensed'), cert('@licensed'), [
+      { key: 'coverage', label: 'How far do you travel?', type: 'select', required: true, options: ['Within my city', 'Between cities'] },
+      { key: 'guard_count', label: 'Guards you can supply', type: 'number', required: true, subs: '@guards', min: 1, max: 1000, unit: 'guards', placeholder: 'e.g. 10' },
+      { key: 'guards_trained', label: 'Are your guards trained?', type: 'yesno', required: true, subs: '@guards' },
+      { key: 'background_checked', label: 'Do you background-check your guards?', type: 'yesno', required: true, subs: '@guards' },
+      { key: 'shifts', label: 'Shifts you cover', type: 'multi', required: true, subs: '@guards', options: ['Day', 'Night', '24-hour', 'Events only'] },
+      { key: 'access_types', label: 'Systems you install', type: 'multi', required: true, subs: ['Access Control'], options: ['Biometric', 'Card & key fob', 'Gate barriers', 'Intercoms', 'Turnstiles', 'Visitor management'] },
+      { key: 'monitoring_modes', label: 'Monitoring you give', type: 'multi', required: true, subs: ['CCTV Monitoring'], options: ['Live monitoring', 'Recorded footage review', 'Alarm response', 'Phone app access', 'Reports'] },
+      { key: 'cctv_systems', label: 'Systems you install', type: 'multi', required: true, subs: ['CCTV Installation'], options: ['Analogue', 'IP cameras', 'Wireless', 'Solar powered'] },
+      { key: 'fire_items', label: 'What you install', type: 'multi', required: true, subs: ['Fire Safety Equipment Installation'], options: ['Extinguishers', 'Alarms & detectors', 'Sprinklers', 'Hydrants & hose reels', 'Emergency lighting', 'Safety signs'] },
+      { key: 'inspection_types', label: 'Inspections you do', type: 'multi', required: true, subs: ['Safety Inspection'], options: ['Fire safety', 'Electrical safety', 'Building safety', 'Workplace safety'] },
+      { key: 'written_report', label: 'Do you give a written report?', type: 'yesno', required: true, subs: ['Safety Inspection'] },
+      { key: 'workplace_services', label: 'What you do', type: 'multi', required: true, subs: ['Workplace Safety Assistance'], options: ['Safety audits', 'Staff safety training', 'Safety policies', 'First aid', 'Risk assessments'] },
+      { key: 'maintenance_types', label: 'Systems you maintain', type: 'multi', required: true, subs: ['Security System Maintenance'], options: ['CCTV', 'Alarms', 'Access control', 'Electric fences', 'Gates'] },
+      { key: 'equipment_supply', label: 'Equipment and parts', type: 'select', required: true, subs: '@supply', options: ['I supply', 'Client supplies', 'Either'] },
+      { key: 'emergency', label: 'Do you take emergency call-outs?', type: 'yesno', hint: 'Optional' }
+    ])
+  };
+
+  SCHEMAS.health = {
+    groups: {
+      licensed: ['Physiotherapy', 'Mental Health Counselling', 'Acupuncture', 'Chiropractic Care', 'Nursing Assistance'],
+      sessions: ['Personal Fitness Training', 'Yoga Instruction']
+    },
+    fields: [].concat(lic('@licensed'), cert('@licensed'), [
+      { key: 'service_location', label: 'Where do you work?', type: 'select', required: true, options: ['At my clinic or studio', 'I visit the client', 'Online', 'Any of these'] },
+      { key: 'client_groups', label: 'Who do you work with?', type: 'multi', required: true, options: ['Adults', 'Children', 'Older people', 'Women & new mothers', 'Athletes'] },
+      { key: 'session_types', label: 'Sessions you offer', type: 'multi', required: true, subs: '@sessions', options: ['One-to-one', 'Small groups', 'Classes'] },
+      { key: 'fitness_goals', label: 'Goals you train for', type: 'multi', required: true, subs: ['Personal Fitness Training'], options: ['Weight loss', 'Muscle building', 'Strength', 'Sports performance', 'General fitness', 'Recovery'] },
+      { key: 'yoga_styles', label: 'Styles you teach', type: 'multi', required: true, subs: ['Yoga Instruction'], options: ['Hatha', 'Vinyasa', 'Yin', 'Prenatal', 'Meditation', "Children's yoga"] },
+      { key: 'nutrition_goals', label: 'Goals you coach for', type: 'multi', required: true, subs: ['Nutrition Coaching'], options: ['Weight loss', 'Weight gain', 'Diabetes-friendly eating', 'Sports nutrition', 'Family & kids', 'Pregnancy nutrition'] },
+      { key: 'written_meal_plans', label: 'Do you give written meal plans?', type: 'yesno', required: true, subs: ['Nutrition Coaching'] },
+      { key: 'physio_conditions', label: 'Conditions you treat', type: 'multi', required: true, subs: ['Physiotherapy'], options: ['Back & neck pain', 'Sports injuries', 'Stroke recovery', 'After surgery', 'Joint pain', "Children's physiotherapy"] },
+      { key: 'counselling_focus', label: 'What you help with', type: 'multi', required: true, subs: ['Mental Health Counselling'], options: ['Anxiety & stress', 'Depression', 'Relationships', 'Grief', 'Trauma', 'Work stress', 'Substance use'] },
+      { key: 'confidential', label: 'Do you keep sessions confidential?', type: 'yesno', required: true, subs: ['Mental Health Counselling'] },
+      { key: 'acupuncture_conditions', label: 'Conditions you treat', type: 'multi', required: true, subs: ['Acupuncture'], options: ['Pain relief', 'Stress & sleep', 'Migraines', 'Digestive problems', 'Fertility support'] },
+      { key: 'chiro_conditions', label: 'Conditions you treat', type: 'multi', required: true, subs: ['Chiropractic Care'], options: ['Back pain', 'Neck pain', 'Headaches', 'Posture', 'Sports injuries'] },
+      { key: 'nursing_services', label: 'What you do', type: 'multi', required: true, subs: ['Nursing Assistance'], options: ['Wound dressing', 'Injections', 'Blood pressure & sugar checks', 'Care after surgery', 'Medication administration', 'Elderly care'] },
+      { key: 'caregiving_services', label: 'What you do', type: 'multi', required: true, subs: ['Caregiving & Home Care'], options: ['Personal care', 'Meals', 'Medication reminders', 'Mobility help', 'Companionship', 'Overnight care'] },
+      { key: 'shift_types', label: 'Shifts you work', type: 'multi', required: true, subs: ['Caregiving & Home Care'], options: ['Hourly', 'Day shift', 'Night shift', 'Live-in'] },
+      { key: 'lactation_services', label: 'What you help with', type: 'multi', required: true, subs: ['Lactation Consulting'], options: ['Breastfeeding support', 'Pumping & storage', 'Newborn feeding', 'Weaning advice'] },
+      { key: 'first_aid', label: 'Do you have first-aid training?', type: 'yesno', required: true, subs: ['Caregiving & Home Care', 'Nursing Assistance'] }
+    ])
+  };
+
+  SCHEMAS.legal = {
+    groups: {
+      advice: ['Legal Consultation', 'Dispute Mediation']
+    },
+    fields: [
+      { key: 'licence_body', label: 'Called to the bar / registered with', type: 'text', required: true, maxLength: 80, placeholder: 'e.g. the bar association or regulator' },
+      { key: 'licence_number', label: 'Enrolment or registration number', type: 'text', required: true, maxLength: 60, placeholder: 'Your number', hint: 'Shown to customers' },
+      { key: 'consult_mode', label: 'How do you meet clients?', type: 'select', required: true, options: ['Online', 'In my office', 'I visit the client', 'Any of these'] },
+      { key: 'practice_areas', label: 'Areas of law', type: 'multi', required: true, subs: '@advice', options: ['Property & land', 'Family', 'Business & contracts', 'Employment', 'Criminal', 'Immigration', 'Intellectual property'] },
+      { key: 'contract_types', label: 'Contracts you handle', type: 'multi', required: true, subs: ['Contract Drafting & Review'], options: ['Business contracts', 'Employment contracts', 'Partnership agreements', 'NDAs', 'Supply & service agreements', 'Loan agreements'] },
+      { key: 'notary_documents', label: 'Documents you notarise', type: 'multi', required: true, subs: ['Document Notarisation'], options: ['Affidavits', 'Declarations', 'Powers of attorney', 'Certified true copies', 'Documents for use abroad'] },
+      { key: 'mediation_types', label: 'Disputes you mediate', type: 'multi', required: true, subs: ['Dispute Mediation'], options: ['Family', 'Business & commercial', 'Landlord and tenant', 'Neighbours', 'Workplace'] },
+      { key: 'tenancy_services', label: 'What you do', type: 'multi', required: true, subs: ['Tenancy Agreements'], options: ['Landlord agreements', 'Tenant agreements', 'Eviction notices', 'Commercial leases', 'Reviewing existing agreements'] },
+      { key: 'land_documents', label: 'What you handle', type: 'multi', required: true, subs: ['Land & Property Documents'], options: ['Deeds of assignment', 'Title searches', 'Survey plan checks', 'Governor consent', 'Certificate of occupancy', 'Sale agreements'] },
+      { key: 'free_first_meeting', label: 'Is the first meeting free?', type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.financial = {
+    groups: {
+      licensed: ['Accounting', 'Audit Support', 'Tax Preparation', 'Financial Planning', 'Financial Consultancy'],
+      books:    ['Accounting', 'Bookkeeping', 'Payroll Processing', 'Audit Support'],
+      advice:   ['Financial Planning', 'Financial Consultancy']
+    },
+    fields: [].concat(lic('@licensed'), cert('@licensed'), [
+      { key: 'work_mode', label: 'How do you work with clients?', type: 'select', required: true, options: ['Remote online', 'In person', 'Both'] },
+      { key: 'client_types', label: 'Who do you work for?', type: 'multi', required: true, options: ['Individuals', 'Small businesses', 'Large companies', 'NGOs & churches', 'Start-ups'] },
+      { key: 'accounting_software', label: 'Software you use', type: 'multi', required: true, subs: '@books', options: ['QuickBooks', 'Sage', 'Zoho Books', 'Xero', 'Excel'] },
+      { key: 'accounting_services', label: 'What you do', type: 'multi', required: true, subs: ['Accounting'], options: ['Financial statements', 'Management accounts', 'Budgeting', 'Reconciliation', 'Year-end accounts'] },
+      { key: 'bookkeeping_frequency', label: 'How often do you update the books?', type: 'select', required: true, subs: ['Bookkeeping'], options: ['Daily', 'Weekly', 'Monthly', 'As needed'] },
+      { key: 'tax_types', label: 'Taxes you handle', type: 'multi', required: true, subs: ['Tax Preparation'], options: ['Personal income tax', 'Company income tax', 'VAT', 'PAYE', 'Withholding tax', 'Tax clearance'] },
+      { key: 'planning_areas', label: 'What you advise on', type: 'multi', required: true, subs: ['Financial Planning'], options: ['Budgeting & savings', 'Retirement', 'Investment guidance', 'Education funds', 'Debt management', 'Insurance review'] },
+      { key: 'consultancy_areas', label: 'What you advise on', type: 'multi', required: true, subs: ['Financial Consultancy'], options: ['Business finances', 'Funding & loans', 'Cash flow', 'Investor reports', 'Cost control'] },
+      { key: 'sells_products', label: 'Do you also sell investment or insurance products?', type: 'yesno', required: true, subs: '@advice' },
+      { key: 'audit_types', label: 'Support you give', type: 'multi', required: true, subs: ['Audit Support'], options: ['Preparing for an audit', 'Internal audit', 'Compliance checks', 'Fraud checks', 'Answering audit queries'] },
+      { key: 'payroll_services', label: 'What you do', type: 'multi', required: true, subs: ['Payroll Processing'], options: ['Salary calculation', 'Payslips', 'PAYE & pension remittance', 'Staff records', 'Statutory returns'] },
+      { key: 'max_employees', label: 'Largest team you handle', type: 'number', required: true, subs: ['Payroll Processing'], min: 1, max: 100000, unit: 'employees', placeholder: 'e.g. 50' },
+      { key: 'nda', label: 'Will you sign a confidentiality agreement?', type: 'yesno', hint: 'Optional' }
+    ])
+  };
+
+  /* Optional registration questions added to older schemas (owner decision 2026-11-11) */
+  SCHEMAS.education.fields.push({ key: 'licence_number', label: 'Driving school or instructor registration number', type: 'text', maxLength: 60, subs: ['Driving Lessons'], hint: 'Optional', placeholder: 'Your number' });
+  SCHEMAS.construction.fields.push({ key: 'licence_number', label: 'Trade registration or licence number', type: 'text', maxLength: 60, subs: ['Electrical Installation', 'Plumbing Installation'], hint: 'Optional', placeholder: 'Your number (also for gas work)' });
+
   /* ── Pure helpers (no DOM) ───────────────────────────────────────────────────────────────────── */
   function has(category) { return Object.prototype.hasOwnProperty.call(SCHEMAS, category); }
 

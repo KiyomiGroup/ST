@@ -12,7 +12,7 @@ const ctx = { window: win };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'categories.js'), 'utf8'), ctx);
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'category-forms.js'), 'utf8'), ctx);
 const S = win.STCat, F = win.STCatForms;
-const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry', 'professional', 'security', 'health', 'legal', 'financial'];
 const OTHER = F.OTHER_SUB;
 const plain = (x) => JSON.parse(JSON.stringify(x));   /* objects from the vm sandbox have a different prototype */
 
@@ -22,7 +22,7 @@ function groupList(schema, spec) { return typeof spec === 'string' ? (schema.gro
 
 test('the three pilot categories have a form; the others do not yet', () => {
   PILOT.forEach(c => assert.ok(F.has(c), c));
-  ['sales', 'other', 'security', 'health', 'legal'].forEach(c => assert.ok(!F.has(c), c + ' should not have a form yet'));
+  ['sales', 'other'].forEach(c => assert.ok(!F.has(c), c + ' should not have a form yet'));
 });
 
 test('every subcategory named in a schema really exists in that category', () => {
@@ -151,7 +151,7 @@ test('text is trimmed and spaces collapsed', () => {
 });
 
 test('categories without a form save nothing (null) and never block', () => {
-  const r = F.validate('security', 'Event Security', { anything: 1 });
+  const r = F.validate('sales', 'Phones & Accessories', { anything: 1 });
   assert.ok(r.ok && r.clean === null);
   assert.ok(F.validate('sales', 'Phones & Accessories', {}).ok);
 });
@@ -171,7 +171,7 @@ test('describe turns saved answers into readable lines for customers', () => {
 });
 
 /* ── Stage 4, batch A: Home & Furniture, Gardening, Automotive, Beauty, Fashion ── */
-const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry', 'professional', 'security', 'health', 'legal', 'financial'];
 
 test('batch A: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_A.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -220,7 +220,7 @@ test('batch A: changing the type of work inside a category keeps shared answers 
 });
 
 /* ── Stage 4, batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services ── */
-const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry', 'professional', 'security', 'health', 'legal', 'financial'];
 
 test('batch B: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_B.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -262,7 +262,7 @@ test('batch B: a vet must give a registration number; a full valid answer saves 
 });
 
 /* ── Stage 4, batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry ── */
-const BATCH_C = ['events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+const BATCH_C = ['events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry', 'professional', 'security', 'health', 'legal', 'financial'];
 
 test('batch C: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_C.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -304,4 +304,45 @@ test('batch C: required answers are enforced and hidden answers are dropped', ()
   assert.ok(!q.ok && q.errors.max_wait_hours);
   const n = F.validate('laundry', 'Bulk & Business Laundry', { pickup: 'Both', turnaround: 'Next day', methods: ['Machine wash'], business_customers: ['Hotels & guest houses'], max_kg_per_day: 200 });
   assert.ok(n.ok, JSON.stringify(n.errors));
+});
+
+/* ── Stage 4d: regulated categories (questions only, no publishing hold) ── */
+const BATCH_D = ['professional', 'security', 'health', 'legal', 'financial'];
+
+test('batch D: every subcategory (and Other) is asked at least two questions', () => {
+  BATCH_D.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
+    assert.ok(keys(cat, sub).length >= 2, cat + ' / ' + sub + ' has fewer than two questions');
+  }));
+});
+
+test('batch D: licensed work must give a registration, unlicensed work gets an optional certificate question', () => {
+  ['Architecture', 'Engineering Consultancy'].forEach(s => assert.ok(keys('professional', s).includes('licence_number'), s));
+  assert.ok(!keys('professional', 'Translation').includes('licence_number'));
+  assert.ok(keys('professional', 'Translation').includes('has_certification'));
+  assert.ok(keys('security', 'Security Guard Services').includes('licence_number'));
+  assert.ok(!keys('security', 'CCTV Installation').includes('licence_number'));
+  assert.ok(keys('health', 'Physiotherapy').includes('licence_number'));
+  assert.ok(!keys('health', 'Yoga Instruction').includes('licence_number'));
+  subNames('legal').concat([OTHER]).forEach(s => assert.ok(keys('legal', s).includes('licence_number'), 'legal ' + s));
+  assert.ok(keys('financial', 'Tax Preparation').includes('licence_number'));
+  assert.ok(!keys('financial', 'Bookkeeping').includes('licence_number'));
+  assert.ok(keys('pet', 'Veterinary Care').includes('vet_registration'));
+  assert.ok(keys('education', 'Driving Lessons').includes('licence_number'));
+  assert.ok(keys('construction', 'Electrical Installation').includes('licence_number'));
+  assert.ok(!keys('construction', 'Tiling').includes('licence_number'));
+});
+
+test('batch D: a missing licence blocks Legal and Physiotherapy; the optional certificate follow-up only shows after Yes', () => {
+  const base = { consult_mode: 'Online', contract_types: ['NDAs'] };
+  const bad = F.validate('legal', 'Contract Drafting & Review', base);
+  assert.ok(!bad.ok && bad.errors.licence_number && bad.errors.licence_body);
+  const ok = F.validate('legal', 'Contract Drafting & Review', Object.assign({ licence_body: 'Bar association', licence_number: 'SCN12345' }, base));
+  assert.ok(ok.ok, JSON.stringify(ok.errors));
+  assert.ok(!keys('health', 'Yoga Instruction', {}).includes('certification_details'));
+  assert.ok(keys('health', 'Yoga Instruction', { has_certification: true }).includes('certification_details'));
+  const y = F.validate('health', 'Yoga Instruction', { service_location: 'Online', client_groups: ['Adults'], session_types: ['Classes'], yoga_styles: ['Hatha'], has_certification: false, certification_details: 'x' });
+  assert.ok(y.ok, JSON.stringify(y.errors));
+  assert.strictEqual(plain(y.clean).certification_details, undefined);
+  const p = F.validate('health', 'Physiotherapy', { service_location: 'Online', client_groups: ['Adults'], physio_conditions: ['Joint pain'] });
+  assert.ok(!p.ok && p.errors.licence_number);
 });

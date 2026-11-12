@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 4c)
+# Categories project: handoff for the next AI (after Stage 4d, Stage 4 complete)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -14,9 +14,9 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 3 | Form engine `js/category-forms.js`, piloted on Cleaning, Repairs, Moving & Delivery | Done |
 | 4a | Batch A: Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring | Done |
 | 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Done |
-| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Done (this stage) |
-| 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial + licence hold | Next |
-| 5 | Show the answers to customers; category filters on Find Services | Not started |
+| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Done |
+| 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial. Owner chose QUESTIONS ONLY (no publishing hold) | Done (this stage) |
+| 5 | Show the answers to customers; category filters on Find Services | Next |
 | 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Not started |
 
 ## How the pieces fit
@@ -41,7 +41,7 @@ SCHEMAS.fashion = {
 Field options: `key` (never rename once live), `label`, `type`, `options`, `required`, `hint`, `placeholder`, `maxLength`, `min`/`max`/`unit`, `subs`, `notSubs`, `when: { key, equals | in }`. A `when` field must come AFTER the field it depends on.
 `tests/category-forms.test.js` already checks all pilot schemas; EXTEND its `PILOT` list with each new category. The tests fail if a schema names a subcategory that does not exist, repeats a key, has a select without options, or leaves any subcategory (or Other) with fewer than two questions.
 
-Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B (DONE, Stage 4b: keys `creative`, `it_tech`, `business`, `education`, `pet`). C (DONE, Stage 4c: keys `events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`). D (regulated) Professional Services, Security & Safety, Health, Legal, Financial.
+Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B (DONE, Stage 4b: keys `creative`, `it_tech`, `business`, `education`, `pet`). C (DONE, Stage 4c: keys `events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`). D (DONE, Stage 4d: keys `professional`, `security`, `health`, `legal`, `financial`) Professional Services, Security & Safety, Health, Legal, Financial.
 **Regulated categories (D)** also need a licence or qualification question and must be verified before going live. The engine has no "licence" type yet. Suggested: a required `text` question for the licence / registration number now, and a Stage 4D change so these categories never publish until the existing identity verification AND a manual licence check pass (look at how `window.ST.verify.holdForVerification` is used in `post-service.html` and add a second hold; do not invent a new publishing path without asking).
 
 ## Things the next AI must know
@@ -90,3 +90,15 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - Only Stage 4d (regulated categories + licence hold) is left in Stage 4: Professional Services, Security & Safety, Health & Wellness, Legal & Advocacy, Financial Services (plus the vet and driving-school questions raised in 4b). Ask the owner how licences are checked BEFORE coding a hold. The engine has no licence type; use a required `text` registration-number question.
 - Then Stage 5 (show answers to customers, filters) and Stage 6 (pricing methods, Sales upgrade, Post a Task).
 - Tests: 84 pass (same three test files). BATCH_C block at the bottom of the forms test.
+
+## Stage 4d notes (regulated categories) - Stage 4 is now complete
+- 24 of 26 categories have a form. Only Sales (own products section, upgraded in Stage 6) and the empty "Other" category have none.
+- **Owner decisions (2026-11-11):** regulated work gets QUESTIONS ONLY, no publishing hold; and optional registration questions were added to Driving Lessons (education) and Electrical / Plumbing Installation (construction, also covers gas work).
+- How it works: work that normally needs a licence asks a required `licence_body` ("Registered with") and `licence_number` (Architecture, Engineering, Property Consultancy; Event Security, Security Guards, Fire Safety Equipment, Safety Inspection; Physiotherapy, Mental Health Counselling, Acupuncture, Chiropractic, Nursing Assistance; ALL of Legal incl. Other; Accounting, Audit Support, Tax Preparation, Financial Planning, Financial Consultancy). Other work in those categories asks an optional `has_certification` yes/no, then a required `certification_details` only if Yes. Pets keep `vet_registration`. Driving and electrical/plumbing use an optional `licence_number`.
+- NOTHING is verified against any register and nothing blocks publishing. The text is shown to customers as typed. Stage 5 must display `licence_body` / `licence_number` (via `STCatForms.describe`) so customers can see them, and should NOT word it as "verified". A later admin check or hold can reuse these keys (look at `window.ST.verify.holdForVerification` in `post-service.html` around line 992 if the owner changes the decision).
+- Keys are shared across categories on purpose: `licence_body`, `licence_number`, `has_certification`, `certification_details`, `work_mode`, `coverage`, `turnaround`, `client_types`, `nda`, `emergency`, `first_aid`.
+- Health: `Nutrition Coaching`, `Personal Fitness Training`, `Yoga Instruction`, `Caregiving`, `Lactation Consulting` ask an optional certificate only. Owner may want some of these licensed later.
+- Tests: 87 pass. The "no form yet" test now only lists Sales and Other.
+
+## NEXT: Stage 5 (show answers to customers, filters)
+Read points 4, 5 and 7 under "Things the next AI must know". Use `STCatForms.describe()` everywhere answers are shown; add a GIN index (`sql/categories/c2-*.sql` + rollback) before filtering on `details`. Ask the owner for the filter design (decision #9 of the Category Directory document, which is still missing) before building filters. Existing listings have `details = null` and will show no answers until edited.
