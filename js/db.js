@@ -545,12 +545,14 @@ async function hideUnpublishedLocal(rows, idKey) {
   } catch (e) { return list; }
 }
 
-async function fetchServices({ category = '', limit = 60 } = {}) {
+async function fetchServices({ category = '', limit = 60, userIds = null } = {}) {
   /* Step 1: fetch services without the users join (avoids RLS issues for anon visitors) */
   let q = window.supabase.from('services').select(
     'id, service_name, category, price, price_max, rate_unit, location, description, photo, user_id, available, created_at'
   ).eq('available', true).order('created_at', { ascending: false }).limit(limit);
   if (category) q = q.eq('category', category);
+  /* userIds: only the listings of these people (the homepage asks for upgraded taskers by name). An empty list means nobody. */
+  if (Array.isArray(userIds)) { if (!userIds.length) return []; q = q.in('user_id', userIds); }
 
   const { data: svcDataRaw, error: svcErr } = await q;
   const svcData = svcDataRaw ? await hideUnpublishedLocal(svcDataRaw, 'user_id') : svcDataRaw;   /* HP2 */
@@ -575,6 +577,8 @@ async function fetchServices({ category = '', limit = 60 } = {}) {
       provider_name: nameMap[s.user_id] || 'Provider',
     }));
   }
+
+  if (Array.isArray(userIds)) return [];   /* a by-name ask never falls back to the whole taskers table */
 
   /* Fallback: pull from taskers table (rating column is TEXT — can't sort numerically).
      Public read: name the columns. phone and whatsapp are private (logged-out visitors
