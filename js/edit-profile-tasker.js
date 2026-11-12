@@ -57,7 +57,7 @@
       location: EP.val('epLocation'),
       chips: [
         EP.val('epHeadline'),
-        S.verified ? 'ID Verified' : 'ID not verified yet',
+        S.verified ? 'ID Verified' : '',
         certN ? certN + (certN === 1 ? ' credential' : ' credentials') : '',
         $('epAvailable').checked ? 'Available for bookings' : 'Not taking bookings'
       ]
@@ -97,12 +97,13 @@
       btn.hidden = true;
     } else {
       box.classList.add('is-todo');
-      title.textContent = v.status === 'rejected' ? 'Verification rejected' : 'Get Verified';
+      /* VR5: nobody verifies up front. A tasker is asked at the first withdrawal, so no start button for a person who has not tried. */
+      title.textContent = v.status === 'rejected' ? 'Verification rejected' : 'ID check at your first withdrawal';
       text.textContent = v.status === 'rejected'
         ? (v.reason || 'Please check your details and resubmit.')
-        : 'Verified taskers appear higher in search results and display a trust badge on their profile.';
-      btn.hidden = false;
-      btn.textContent = v.status === 'rejected' ? 'Resubmit' : 'Start Verification';
+        : 'You can post services and take bookings without verifying. We ask for a quick ID check when you make your first withdrawal.';
+      btn.hidden = v.status !== 'rejected';
+      btn.textContent = 'Resubmit';
     }
   }
 

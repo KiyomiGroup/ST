@@ -27,7 +27,7 @@
       tick: S.verified,
       location: EP.val('epLocation'),
       chips: [
-        S.verified ? 'ID Verified' : 'ID not verified yet',
+        S.verified ? 'ID Verified' : '',
         'Escrow protected'
       ]
     });
@@ -78,7 +78,7 @@
 
     S.verified = ver.verified;
     $('epIdStat').textContent = ver.verified ? 'Verified' : 'Not yet';
-    $('epIdNote').textContent = ver.verified ? 'NIN / BVN confirmed' : 'Verify to earn a trust badge';
+    $('epIdNote').textContent = ver.verified ? 'NIN / BVN confirmed' : 'Asked only for payments over \u20A610,000';
     $('epVerifyCta').hidden = ver.verified;
 
     EP.repaintPhoto();

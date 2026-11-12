@@ -3,6 +3,8 @@
    A pop-up for a signed-in person whose identity check did NOT go through, asking them to try again.
    Shown for these server statuses (idv_my_status): REVIEW_REQUIRED, FAILED, ABANDONED, EXPIRED, RESUBMIT_REQUESTED.
    NOT shown for NOT_STARTED, IN_PROGRESS, PENDING (still waiting) or VERIFIED: a person who is simply waiting must not be nagged.
+   VR5: nobody verifies up front any more, so this pop-up shows ONLY on the wallet page (where a first withdrawal needs a verified
+   identity). Anywhere else a person has nothing to verify for, so they are not nudged.
    At most once per browser session and per status, never on the pages listed in SKIP, never over a guided tour.
    "Maybe later" closes it. Reads one status; writes nothing. Fails quiet (any error or unclear answer = show nothing).
    Loaded by js/app.js, so the pages that run it need no edit.
@@ -13,6 +15,7 @@
   var SKIP = ['verify', 'verification-done', 'login', 'signup', 'reset-password', 'onboarding-tasker', '404', 'offline',
               'support', 'terms', 'privacy', 'cookies', 'data-consent', 'refunds', 'accessibility', 'ip-complaints',
               'design-system', 'flyer-preview'];
+  var ONLY = ['wallet'];   /* VR5: the only pages that may show the pop-up */
   var SEEN_PREFIX = 'st_verify_retry_seen_';
 
   function pageName() {
@@ -20,7 +23,7 @@
     return last.replace(/\.html$/i, '').toLowerCase() || 'index';
   }
   var page = pageName();
-  if (SKIP.indexOf(page) !== -1 || page.indexOf('coordinator') === 0 || window.location.pathname.indexOf('/admin/') !== -1) return;
+  if (ONLY.indexOf(page) === -1 || SKIP.indexOf(page) !== -1 || page.indexOf('coordinator') === 0 || window.location.pathname.indexOf('/admin/') !== -1) return;
 
   function store(get, key, val) {
     try { return get ? sessionStorage.getItem(key) : sessionStorage.setItem(key, val); } catch (e) { return null; }
@@ -36,7 +39,7 @@
       case 'ABANDONED':
         return { cta: 'Try again', title: 'Your ID check did not go through', text: 'We could not complete your identity verification. ' + ID_HELP };
       case 'EXPIRED':
-        return { cta: 'Verify again', title: 'Your verification has expired', text: 'Please verify your identity again to keep using StreetTasker. ' + ID_HELP };
+        return { cta: 'Verify again', title: 'Your verification has expired', text: 'Please verify your identity again before you withdraw. ' + ID_HELP };
       case 'RESUBMIT_REQUESTED':
         return { cta: 'Continue verification', title: 'Your verification needs another step', text: 'Please repeat the steps we asked for to finish verifying your identity.' };
       default:
@@ -75,7 +78,7 @@
     ic.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
     var h = document.createElement('h2'); h.id = 'stVNudgeTitle'; h.textContent = msg.title;
     var p = document.createElement('p'); p.textContent = msg.text;
-    var go = document.createElement('a'); go.className = 'st-vnudge-go'; go.href = 'verify.html'; go.textContent = msg.cta;
+    var go = document.createElement('a'); go.className = 'st-vnudge-go'; go.href = 'verify.html?role=tasker&return=wallet.html&action=withdraw'; go.textContent = msg.cta;
     var later = document.createElement('button'); later.type = 'button'; later.className = 'st-vnudge-later'; later.textContent = 'Maybe later';
     card.appendChild(ic); card.appendChild(h); card.appendChild(p); card.appendChild(go); card.appendChild(later);
     root.appendChild(card); document.body.appendChild(root);

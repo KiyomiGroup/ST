@@ -3,7 +3,7 @@
    Tasker "My Services" page (my-services.html).
    Loads the tasker's services (and booking counts), then filters,
    searches, sorts and renders service cards.
-   Actions: Edit (post-service.html?id=), Verify to Post (drafts),
+   Actions: Edit (post-service.html?id=),
    Delete (with confirmation).
 
    Data: services (fallback: legacy taskers table), bookings.service_id.
@@ -152,11 +152,8 @@
 
   function actions(s) {
     var id = esc(s.id), a = '';
-    if (s.group === 'draft') {
-      a += '<a class="ap-btn ap-btn-primary" href="verify.html?role=tasker&return=my-services.html">Verify to Post</a>';
-    }
     if (s.fromServices && s.group === 'paused') a += '<button type="button" class="ap-btn ap-btn-primary" data-act="reactivate" data-id="' + id + '">Reactivate</button>';
-    a += '<a class="ap-btn' + (s.group === 'draft' ? '' : ' ap-btn-primary') + '" href="post-service.html?id=' + encodeURIComponent(s.id) + '">Edit</a>';
+    a += '<a class="ap-btn ap-btn-primary" href="post-service.html?id=' + encodeURIComponent(s.id) + '">Edit</a>';
     if (s.fromServices && s.group !== 'paused') a += '<button type="button" class="ap-btn" data-act="pause" data-id="' + id + '">Pause</button>';
     if (s.fromServices) a += '<button type="button" class="ap-btn ap-btn-quiet sv-delete" data-act="delete" data-id="' + id + '">Delete</button>';
     return '<div class="ap-actions">' + a + '</div>';
@@ -184,7 +181,6 @@
     bar[0].style.width = all.length ? (draft / all.length * 100) + '%' : '0'; /* runtime width, allowed inline */
     bar[1].style.width = all.length ? (live / all.length * 100) + '%' : '0';
     $('sBarText').textContent = all.length ? live + ' of ' + all.length + ' live' : 'No services yet';
-    $('svVerifyCard').hidden = !draft;
     renderSlots();
   }
 

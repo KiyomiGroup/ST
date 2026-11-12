@@ -765,10 +765,6 @@ function openMessagesPanel() {
               <div class="tdb-row-wrap-lg">
                 <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
                 <button type="button" class="btn btn-ghost" onclick="switchPanel('mypage',document.querySelector('[data-panel=mypage]'));loadMyPage()">Cancel</button>
-                <a href="verify.html" class="btn btn-sm tdb-btn-amber">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  Get Verified
-                </a>
                 <span class="db-text-sm" id="profileSaveMsg" style="display:none;"></span>
               </div>
 
@@ -1393,7 +1389,7 @@ function openMessagesPanel() {
         svcHtml += '<div class="tdb-draft-box">' +
           '<div class="tdb-row-head">' +
             '<svg class="db-c-warning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-            '<span class="tdb-draft-title">Draft Services — Verify to Go Live</span>' +
+            '<span class="tdb-draft-title">Draft Services — Not live yet</span>' +
           '</div>' +
           draftSvcs.map(function(s) {
             return '<div class="tdb-draft-row">' +
@@ -1401,7 +1397,7 @@ function openMessagesPanel() {
                 '<div class="tdb-draft-name">' + escapeHtml(s.service_name || s.service || 'Service') + '</div>' +
                 '<div class="tdb-meta">₦' + Number(s.price||0).toLocaleString() + ' · ' + escapeHtml(s.location||'') + '</div>' +
               '</div>' +
-              '<a class="tdb-draft-link" href="verify.html?role=tasker&return=dashboard-tasker.html">Verify to Post</a>' +
+              '<a class="tdb-draft-link" href="post-service.html?id=' + encodeURIComponent(s.id) + '">Edit</a>' +
             '</div>';
           }).join('') +
         '</div>';

@@ -64,6 +64,20 @@ AdminShell.init({ page: 'verification', title: 'Identity verification', permissi
   var KINDS = [['all', 'Everyone'], ['tasker_regular', 'Regular Taskers'], ['tasker_local', 'Local Taskers'], ['coordinator', 'Coordinators'], ['customer', 'Customers']];
   var filt = 'all', kind = 'all', off = 0, req = 0, PAGE = 25;
 
+  /* VR5: live Didit checks started this calendar month against the free allowance (30). Amber from the warning number (25), red from the limit.
+     Reads admin_didit_usage (sql/verification-rework/vr5-didit-usage.sql). If that SQL is not installed yet, says so and shows nothing else. */
+  async function loadDiditUsage(sum, alerts) {
+    var res = await call('admin_didit_usage'), d = res && res.data;
+    if (res.error || !d || d.ok !== true) { sum.appendChild(el('p', 'ad-hint', 'Didit monthly count: not available (run vr5-didit-usage.sql).')); return; }
+    var cls = d.level === 'over' ? 'danger' : d.level === 'warn' ? 'warn' : null;
+    var g = el('div', 'ad-grid');
+    g.appendChild(stat('Didit checks this month', d.used + ' of ' + d.limit, 'Live checks started since ' + when(d.month_start) + '. ' + d.approved + ' of them passed.', cls));
+    sum.appendChild(g);
+    if (d.level === 'over') alerts.appendChild(el('p', 'ad-banner', 'The monthly Didit allowance of ' + d.limit + ' live checks is used up (' + d.used + '). Check the Didit billing page for what happens now.'));
+    else if (d.level === 'warn') alerts.appendChild(el('p', 'ad-banner ad-banner--info', d.used + ' of ' + d.limit + ' live Didit checks used this month. The allowance is nearly used up.'));
+    sum.appendChild(el('p', 'ad-hint', 'Counts live (not test) checks that reached Didit, by Lagos calendar month. Whether Didit counts a started check or only a passed one is still to be confirmed on its billing page.'));
+  }
+
   async function loadOverview() {
     var res = await call('admin_verification_overview');
     var m = fail(res), alerts = $('ivAlerts'), sum = $('ivSummary');
@@ -83,6 +97,7 @@ AdminShell.init({ page: 'verification', title: 'Identity verification', permissi
     g.appendChild(stat('Failed', String(bs.FAILED || 0), 'Did not pass.'));
     g.appendChild(stat('Total checks', String(d.total || 0), (d.sandbox_rows || 0) + ' are test (sandbox) checks.'));
     sum.appendChild(g);
+    await loadDiditUsage(sum, alerts);
     sum.appendChild(el('p', 'ad-hint', 'By status: ' + Object.keys(STATUS_LABEL).map(function (k) { return statusLabel(k) + ' ' + (bs[k] || 0); }).join(', ') + '.'));
     sum.appendChild(el('p', 'ad-hint', 'By kind: ' + ['tasker_regular', 'tasker_local', 'coordinator', 'customer'].map(function (k) { return kindLabel(k) + ' ' + (bk[k] || 0); }).join(', ') + '.'));
     var gt = d.gate;

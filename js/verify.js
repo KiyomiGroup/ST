@@ -12,7 +12,11 @@
   var CONSENT_FALLBACK_MSG = 'Something went wrong. Please try again.';
   var RETURN_FLAG = 'st_idv_out';
   var REDIRECT_DELAY_MS = 1500;
-  var GATE_NOTICE = 'Your account needs identity verification before you can use StreetTasker. Until then your tasks and services stay hidden.';
+  /* VR5: why we are asking, from the action= value on the link. Nothing is hidden while someone is unverified any more, so there is no general "you must verify" notice. */
+  var REASON_BY_ACTION = {
+    withdraw: 'We ask for this once, before your first withdrawal. Posting and booking do not need it.',
+    pay: 'We ask for this when your payments on StreetTasker go over \u20A610,000. Posting and booking do not need it.'
+  };
   var RETURN_FLAG_MAX_AGE_MS = 6 * 60 * 60 * 1000;
   var PANELS_WITH_START = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1, REVIEW_REQUIRED: 1, NEEDS_NAME: 1 };   /* REVIEW_REQUIRED: the person can try again (a rejected or unclear ID must not be a dead end) */
 
@@ -274,8 +278,8 @@
            Right after a real verification (status just changed, or the person just came back from Didit) the next step is
            their profile, unless they arrived with a return target. A person who is already verified is never bounced. */
         if (!proxy && !back) goToProfile((prev && prev !== 'VERIFIED') || state.cameBack === true);
-      } else if (!proxy && q0.get('gate') === '1') {
-        say($('verifyNotice'), GATE_NOTICE);
+      } else if (!proxy && REASON_BY_ACTION[q0.get('action')]) {
+        say($('verifyNotice'), REASON_BY_ACTION[q0.get('action')]);
       }
     }
 
