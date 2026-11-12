@@ -32,6 +32,7 @@
    STCatForms.describe(category, sub, details)    [{ key, label, text }] for showing answers to customers (Stage 5)
    STCatForms.badges(category, sub, details, max) short labels for a card;  .hasUncheckedClaim(lines) true when a licence / certificate was typed
    STCatForms.facets(category, sub)               questions a customer can filter by;  .matchFacets(details, { key: ['Option'] })
+   STCatForms.registerAudience(name, schemas) / .useAudience('poster' | 'tasker')   Poster wording for Post a Task (Stage 6c)
    STCatForms.mount({ box, section, select, sub, onChange })   the page hook (browser only)
    STCatForms.setValues(details) / .collect() / .check()       draft load, save, validate-and-mark-errors
    ============================================================ */
@@ -743,6 +744,12 @@
   SCHEMAS.construction.fields.push({ key: 'licence_number', label: 'Trade registration or licence number', type: 'text', maxLength: 60, subs: ['Electrical Installation', 'Plumbing Installation'], hint: 'Optional', placeholder: 'Your number (also for gas work)' });
 
   /* ── Pure helpers (no DOM) ───────────────────────────────────────────────────────────────────── */
+  /* ── Audiences (Categories Stage 6c): the same questions worded for the person hiring (Poster). Post a Task, Task details and Find Tasks
+     call STCatForms.useAudience('poster'); every other page keeps the Tasker wording. js/task-schemas.js registers the Poster schemas.
+     A category with no Poster schema simply has no questions on the task side yet. ── */
+  var AUDIENCES = { tasker: SCHEMAS };
+  function registerAudience(name, schemas) { AUDIENCES[name] = schemas; }
+  function useAudience(name) { SCHEMAS = Object.prototype.hasOwnProperty.call(AUDIENCES, name) ? AUDIENCES[name] : AUDIENCES.tasker; return SCHEMAS === AUDIENCES.tasker ? 'tasker' : name; }
   function has(category) { return Object.prototype.hasOwnProperty.call(SCHEMAS, category); }
 
   function subList(schema, spec) {
@@ -1007,6 +1014,7 @@
     M = { box: el(opts.box), section: el(opts.section), sel: el(opts.select), subEl: el(opts.sub), onChange: opts.onChange, category: '', sub: '', values: {} };
     if (!M.box || !M.section || !M.sel) { M = null; return; }
     M.sel.addEventListener('change', redraw);
+    if (M.subEl && M.subEl.tagName === 'SELECT') M.subEl.addEventListener('change', redraw);   /* a plain type-of-work dropdown (Post a Task); the picker on Post a Service fires the category change instead */
     M.box.addEventListener('input', onInput);
     M.box.addEventListener('change', onInput);
     M.box.addEventListener('click', onClick);
@@ -1050,7 +1058,7 @@
   }
 
   root.STCatForms = {
-    VERSION: VERSION, SCHEMAS: SCHEMAS, OTHER_SUB: OTHER_SUB,
+    VERSION: VERSION, SCHEMAS: SCHEMAS, OTHER_SUB: OTHER_SUB, registerAudience: registerAudience, useAudience: useAudience, AUDIENCES: AUDIENCES,
     has: has, candidates: candidates, fieldsFor: fieldsFor, validate: validate, describe: describe,
     badges: badges, facets: facets, matchFacets: matchFacets, hasUncheckedClaim: hasUncheckedClaim,
     mount: mount, setValues: setValues, collect: collect, check: check, focusField: focusField

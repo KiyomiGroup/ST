@@ -167,7 +167,7 @@
     var urgency = String(t.urgency || '').toLowerCase();
     if (urgency === 'immediate' || t.urgent === true) badges.push('<span class="td-badge td-badge--urgent">Urgent Need</span>');
     else if (urgency === 'scheduled') badges.push('<span class="td-badge td-badge--soft">Scheduled</span>');
-    if (text(t.category)) badges.push('<span class="td-badge td-badge--soft">' + esc(label(t.category)) + '</span>');
+    if (text(t.category)) badges.push('<span class="td-badge td-badge--soft">' + esc(label(t.category)) + (text(t.subcategory) && text(t.subcategory) !== 'Other (not listed)' ? ' \u00b7 ' + esc(text(t.subcategory)) : '') + '</span>');
     var posted = ago(t.created_at);
     if (posted) badges.push('<span class="td-posted">' + icon('clock') + 'Posted ' + esc(posted) + '</span>');
     $('tdBadges').innerHTML = badges.join('');
@@ -252,6 +252,27 @@
     if (brings.length) html += '<div class="td-logi"><h3 class="td-h3">' + icon('wrench') + 'Tasker brings</h3><ul>' + brings.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
     if (host.length) html += '<div class="td-logi"><h3 class="td-h3">' + icon('users') + 'Provided by the customer</h3><ul>' + host.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
     box.innerHTML = html; box.hidden = !html;
+  }
+
+  /* The Poster's answers (Categories Stage 6c), worded for the Poster by js/task-schemas.js */
+  function renderAnswers(t) {
+    var box = $('tdAnswers'), list = $('tdAnswersList');
+    if (!box || !list) return;
+    list.textContent = '';
+    var lines = [];
+    try {
+      if (window.STCatForms && window.STCat && text(t.category)) {
+        if (STCatForms.useAudience) STCatForms.useAudience('poster');
+        lines = STCatForms.describe(STCat.resolve(t.category).value, text(t.subcategory), t.details);
+      }
+    } catch (e) { lines = []; }
+    lines.forEach(function (l) {
+      var row = document.createElement('div'); row.className = 'td-answer';
+      var dt = document.createElement('dt'); dt.textContent = l.label;
+      var dd = document.createElement('dd'); dd.textContent = l.text;
+      row.appendChild(dt); row.appendChild(dd); list.appendChild(row);
+    });
+    box.hidden = !lines.length;
   }
 
   function renderMilestones(t) {
@@ -508,7 +529,7 @@
     state.isOwner = !!(state.viewer && state.posterId && String(state.viewer.id) === String(state.posterId));
 
     $('tdShareUrl').value = shareUrl();
-    renderHead(t); renderPhotos(t); renderScope(t); renderMilestones(t); renderLocation(t);
+    renderHead(t); renderPhotos(t); renderScope(t); renderAnswers(t); renderMilestones(t); renderLocation(t);
     paintSaved();
 
     /* Poster, their summary, offers and my own offer load together; each can fail without breaking the page */

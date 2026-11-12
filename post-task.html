@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/category-forms.css" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/categories.css?v=3" />
   <link rel="stylesheet" href="css/tasks.css" />
@@ -158,6 +159,20 @@
                     <label class="pt-segment-opt"><input type="radio" name="frequency" value="recurring" /><span>Recurring schedule</span></label>
                   </div>
                 </div>
+              </div>
+
+              <!-- Type of work + the questions for it (Categories Stage 6c). Shown after a category with types of work is chosen. -->
+              <div class="pt-group pt-group-sub" id="taskSubWrap" hidden>
+                <label class="pt-label" for="taskSubcategory">What kind of work is it? <span class="pt-req" aria-hidden="true">*</span></label>
+                <div class="pt-field pt-select-wrap">
+                  <select id="taskSubcategory" name="subcategory" class="pt-input pt-select"><option value="">Choose...</option></select>
+                  <svg class="pt-i pt-select-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+                </div>
+                <span class="pt-error" id="subcategoryError" role="alert"></span>
+              </div>
+              <div class="pt-group pt-group-catfields" id="secTaskDetails" hidden>
+                <p class="pt-label" id="taskDetailsLabel">A few quick answers <span class="pt-hint">Helps taskers give you the right price</span></p>
+                <div id="taskCatFields"></div>
               </div>
 
               <div class="pt-group pt-group-title">
@@ -464,6 +479,8 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/category-forms.js"></script>
+  <script src="js/task-schemas.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/saved.js"></script>
   <script src="js/app.js"></script>

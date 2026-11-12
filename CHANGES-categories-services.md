@@ -93,3 +93,13 @@
 - js/services-search.js + find-services.html: delivery / pickup chips on Sales cards.
 - sql/categories/s1-sales-products.sql (+ s1-rollback.sql): 10 new `service_products` columns. Run after sql/pricing/p2-sales-products.sql.
 - tests/product-fields.test.js (new).
+
+
+## Categories Stage 6c (2026-11-12): Post a Task with Poster questions
+- js/category-forms.js: audiences (`registerAudience`, `useAudience`), redraw on a type-of-work dropdown.
+- js/task-schemas.js (new): Poster-worded questions for Cleaning, Repairs & Maintenance, Moving & Delivery.
+- post-task.html + js/tasks.js: "What kind of work is it?" and "A few quick answers", validation, draft save / restore, payload.
+- js/db.js: `postTask` saves `subcategory` and `details`; retries without them if the c3 SQL has not run.
+- task-details.html / .js / .css: "About this work" panel, "Category · Type of work" badge.
+- sql/categories/c3-task-details.sql (+ c3-rollback.sql); sql/categories/s1-sales-products.sql now fails with a clear message when `service_products` is missing.
+- tests/task-schemas.test.js (new).

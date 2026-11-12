@@ -1,8 +1,17 @@
--- Categories Stage 6b: Sales upgrade. Run once in the Supabase SQL editor, AFTER sql/pricing/p2-sales-products.sql. Safe to run twice.
+-- Categories Stage 6b: Sales upgrade. Run once in the Supabase SQL editor, AFTER sql/pricing/p1-price-range.sql and sql/pricing/p2-sales-products.sql
+-- (p2 creates the service_products table; if you see 42P01 "relation public.service_products does not exist", run p1 then p2 first). Safe to run twice.
 -- Adds to public.service_products: condition, brand, model, colour, size, expiry_date, quantity, stock_status, negotiable, was_price.
 -- Delivery and pickup are saved in services.details (no change needed there).
 -- Until this runs, Post a Service still saves the products (name, price, photo), drops the new fields, and tells the seller.
 begin;
+
+-- Stop with a clear message if the Sales table does not exist yet.
+do $$
+begin
+  if to_regclass('public.service_products') is null then
+    raise exception 'public.service_products does not exist. Run sql/pricing/p2-sales-products.sql first (it creates the table), then run this file again.';
+  end if;
+end $$;
 
 alter table public.service_products add column if not exists condition    text;
 alter table public.service_products add column if not exists brand        text;

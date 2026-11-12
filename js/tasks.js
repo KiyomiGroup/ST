@@ -72,6 +72,7 @@ function initTaskForm() {
 
   if (window.TaskDrafts) TaskDrafts.init();
   populateCategorySelect();
+  initTaskDetails();   /* type of work + Poster questions (Categories Stage 6c) */
   setMinDeadline();
   wireCategoryChips();
   wireCharCounter();
@@ -123,6 +124,40 @@ function wireTitleExamples() {
     i = (i + 1) % TITLE_EXAMPLES.length;
     show();
   }, 2500);
+}
+
+/* ── Type of work and the questions for it (Categories Stage 6c) ─────────────────────────────
+   The Poster-worded questions come from js/task-schemas.js. Both lists redraw when the category or the type of work changes. */
+function initTaskDetails() {
+  const catSel = $id('taskCategory'), subSel = $id('taskSubcategory');
+  if (!catSel || !subSel || !window.STCat || !window.STCatForms) return;
+  if (STCatForms.useAudience) STCatForms.useAudience('poster');
+  catSel.addEventListener('change', () => { fillSubcategories(); });
+  subSel.addEventListener('change', () => { clearSubError(); });
+  /* registered after the category listener above, so the type-of-work list is rebuilt before the questions redraw */
+  STCatForms.mount({ box: 'taskCatFields', section: 'secTaskDetails', select: 'taskCategory', sub: 'taskSubcategory' });
+  fillSubcategories();
+}
+
+function fillSubcategories(keep) {
+  const catSel = $id('taskCategory'), subSel = $id('taskSubcategory'), wrap = $id('taskSubWrap');
+  if (!catSel || !subSel || !wrap || !window.STCat) return;
+  const subs = catSel.value && catSel.value !== 'other' ? (STCat.subsOf(catSel.value) || []) : [];
+  subSel.innerHTML = '<option value="">Choose...</option>' + subs.map(n => '<option>' + n.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>').join('');
+  subSel.value = keep && subs.indexOf(keep) !== -1 ? keep : '';
+  wrap.hidden = !subs.length;
+  clearSubError();
+}
+
+function clearSubError() { const e = $id('subcategoryError'); if (e) e.textContent = ''; }
+
+/* A category that has types of work needs one chosen. Returns true when fine. */
+function validateSubcategory() {
+  const catSel = $id('taskCategory'), subSel = $id('taskSubcategory'), err = $id('subcategoryError');
+  if (!catSel || !subSel || $id('taskSubWrap').hidden) return true;
+  if (subSel.value) { clearSubError(); return true; }
+  if (err) err.textContent = 'Please choose the kind of work';
+  return false;
 }
 
 /* ── Category: select + chips ───────────────────────────────── */
@@ -716,6 +751,9 @@ function readDraftFromForm() {
   d.urgency   = radioValue('urgency') || 'flexible';
   d.timeOfDay = radioValue('timeOfDay') || '';
   d.noBudget  = isNoBudget();
+  const subSel = $id('taskSubcategory');
+  d.subcategory = subSel && !$id('taskSubWrap').hidden ? subSel.value : '';
+  d.details = window.STCatForms && STCatForms.collect ? (STCatForms.collect() || {}) : {};   /* the answers to the category questions */
   /* never keep coordinates; only remember whether the area was confirmed */
   delete d.lat; delete d.lon; delete d.precise;
   d.locArea = (loc && loc.dataset.area === '1') ? '1' : '0';
@@ -756,6 +794,13 @@ function restoreDraft() {
     el.value = draft[k];
     if (k === 'location') { el.dataset.area = '1'; el.dataset.precise = '0'; }
   });
+  if (draft.category && $id('taskCategory')) {   /* type of work and its answers come back after the category */
+    fillSubcategories(draft.subcategory || '');
+    const sSel = $id('taskSubcategory');
+    if (sSel && sSel.value) sSel.dispatchEvent(new Event('change', { bubbles: true }));
+    else if (window.STCatForms && STCatForms.setValues) STCatForms.setValues({});
+    if (window.STCatForms && STCatForms.setValues && draft.details) STCatForms.setValues(draft.details);
+  }
   if (draft.frequency) setRadio('frequency', draft.frequency);
   if (draft.workMode)  setRadio('workMode', draft.workMode);
   if (draft.urgency)   setRadio('urgency', draft.urgency);
@@ -974,6 +1019,7 @@ async function handleTaskSubmit(e) {
   /* Run all validations (every one runs so every error shows) */
   const checks = [
     validateCategory(catInput),
+    validateSubcategory(),
     validateTitle(titleInput),
     validateDescription(descInput),
     validateBudget(budgetInput),
@@ -986,6 +1032,12 @@ async function handleTaskSubmit(e) {
     const firstBad = document.querySelector('.has-error');
     if (firstBad && firstBad.scrollIntoView) firstBad.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return;
+  }
+
+  /* The questions for this kind of work (Categories Stage 6c): mark each one that is missing and jump to the first */
+  if (window.STCatForms && STCatForms.check) {
+    const cf = STCatForms.check();
+    if (!cf.ok) { showToast('Please answer the highlighted questions.'); if (STCatForms.focusField) STCatForms.focusField(cf.firstKey); return; }
   }
 
   /* Location is needed for in-person work and must be confirmed (list or GPS) */
@@ -1006,6 +1058,8 @@ async function handleTaskSubmit(e) {
     location:    workMode === 'remote' ? 'Remote / Online' : locInput.value.trim(),
     deadline:    dlInput.value || null,
     category:    catInput.value || 'other',
+    subcategory: ($id('taskSubWrap') && !$id('taskSubWrap').hidden && $id('taskSubcategory').value) || '',
+    details:     (window.STCatForms && STCatForms.collect && STCatForms.collect()) || {},   /* Poster answers; {} when this category has no questions yet */
     urgent:      !!taskDraft.urgentPaid,
     taskType:    workMode === 'remote' ? 'remote' : 'one_off',
     urgency:     urgency,
@@ -1021,7 +1075,7 @@ async function handleTaskSubmit(e) {
   let autoCategory = '';
   if ((taskPayload.category === 'other' || !taskPayload.category) && window.STCat && typeof window.STCat.detect === 'function') {
     const found = window.STCat.detect(taskPayload.title, taskPayload.description);
-    if (found && found !== 'other') { taskPayload.category = found; autoCategory = found; }
+    if (found && found !== 'other') { taskPayload.category = found; autoCategory = found; taskPayload.subcategory = ''; taskPayload.details = {}; }
   }
 
   setPostLoading(submitBtn, true);
@@ -1052,6 +1106,8 @@ async function handleTaskSubmit(e) {
         location:    taskPayload.location,
         deadline:    taskPayload.deadline,
         category:    taskPayload.category,
+        subcategory: taskPayload.subcategory,
+        details:     taskPayload.details,
         urgent:      taskPayload.urgent,
         taskType:    taskPayload.taskType,
         urgency:     taskPayload.urgency,

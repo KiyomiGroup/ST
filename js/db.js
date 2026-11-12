@@ -41,7 +41,7 @@ function _parseRate(raw) {
 
 /* ─────────────────────────── TASKS ─────────────────────────── */
 
-async function postTask({ title, description, category, budget, noBudget = false, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null, frequency = 'one_off', workMode = 'in_person', timeOfDay = null, urgentPaid = false, urgentFee = 0, urgentPaymentRef = null, photoLabels = [] }) {
+async function postTask({ title, description, category, subcategory = '', details = null, budget, noBudget = false, location, deadline, urgent = false, photoUrls = [], taskType = 'one_off', urgency = null, frequency = 'one_off', workMode = 'in_person', timeOfDay = null, urgentPaid = false, urgentFee = 0, urgentPaymentRef = null, photoLabels = [] }) {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) throw new Error('Log in to post a task.');
 
@@ -81,7 +81,16 @@ async function postTask({ title, description, category, budget, noBudget = false
     no_budget:          !!noBudget,
   });
 
-  let { data, error } = await window.supabase.from('tasks').insert(extended).select().single();
+  /* Categories Stage 6c (sql/categories/c3-task-details.sql): the kind of work and the Poster's answers */
+  const withAnswers = Object.assign({}, extended, { subcategory: subcategory || null, details: details && typeof details === 'object' ? details : {} });
+
+  let { data, error } = await window.supabase.from('tasks').insert(withAnswers).select().single();
+
+  /* c3 SQL not run yet: post again without the two new fields, keeping everything else */
+  if (error && /subcategory|details/i.test(error.message || '') && /column|schema cache/i.test(error.message || '')) {
+    console.warn('[postTask] run sql/categories/c3-task-details.sql to keep the kind of work and answers:', error.message);
+    ({ data, error } = await window.supabase.from('tasks').insert(extended).select().single());
+  }
 
   /* If the migration has not been run yet (unknown column), post with the
      original columns so posting never breaks. */
