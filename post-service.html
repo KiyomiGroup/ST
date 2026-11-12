@@ -385,72 +385,12 @@
           </div>
         </form>
 
-        <!-- Mobile: verification explainer sits under the form, above the sticky bar -->
-        <section class="ps-quick-card pt-mob" aria-labelledby="qcTitle">
-          <span class="ps-quick-badge">Quick verification</span>
-          <h2 class="ps-quick-title" id="qcTitle">Almost live &mdash; one last step</h2>
-          <p class="ps-quick-copy">Your service details are preserved as a safe draft. To keep the community trusted, all Taskers verify their identity once before going live.</p>
-          <ol class="ps-quick-steps">
-            <li><span class="ps-quick-num">1</span><div><h3>Verify your identity</h3><p>Takes ~2 mins. We accept NIN, BVN, driver's licence, or passport.</p></div></li>
-            <li><span class="ps-quick-num">2</span><div><h3>Your listing goes live automatically</h3><p>Once approved, your draft is published with no extra steps needed.</p></div></li>
-            <li><span class="ps-quick-num">3</span><div><h3>Customers start finding you</h3><p>Appear on Find Services and start receiving job requests immediately.</p></div></li>
-          </ol>
-          <p class="ps-quick-note"><svg class="pt-i" aria-hidden="true"><use href="#i-shield"/></svg><span>Your draft is safe in your dashboard. You can return and verify anytime.</span></p>
-        </section>
       </div>
-
-      <!-- STEP 2: Verify prompt — revealed after save, form hidden -->
-      <section class="pt-card ps-verify" id="verifyPrompt" aria-labelledby="vpTitle">
-        <span class="pt-card-icon ps-verify-hero"><svg class="pt-i" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
-        <h2 class="ps-verify-title" id="vpTitle">Almost live &mdash; one last step</h2>
-        <p class="ps-verify-copy">Your listing has been saved. To keep the platform safe for customers, all providers verify their identity once before going live. It takes about 2 minutes.</p>
-
-        <div class="ps-draft-note">
-          <span class="ps-draft-note-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-cloud-upload"/></svg></span>
-          <p><strong>Your listing is saved as a draft.</strong> Nothing you filled in is lost. It goes live the moment you're verified.</p>
-        </div>
-
-        <ol class="pt-steps ps-steps">
-          <li><span class="pt-step-num">1</span><div><h3>Verify your identity</h3><p>Takes ~2 mins. We accept NIN, BVN, driver's licence, or passport.</p></div></li>
-          <li><span class="pt-step-num ps-step-idle">2</span><div><h3>Your listing goes live automatically</h3><p>Once approved, your draft is published with no extra steps needed.</p></div></li>
-          <li><span class="pt-step-num ps-step-idle">3</span><div><h3>Customers start finding you</h3><p>You appear on Find Services and receive bookings from day one.</p></div></li>
-        </ol>
-
-        <div class="ps-verify-actions">
-          <a id="verifyNowBtn" href="verify.html" class="pt-post-btn ps-verify-btn"><span class="pt-post-label">Verify My Identity Now</span><svg class="pt-i" aria-hidden="true"><use href="#i-badge-check"/></svg></a>
-          <button type="button" class="pt-draft-btn" onclick="goToDashboard()">Verify later &mdash; go to my dashboard</button>
-        </div>
-        <p class="ps-verify-foot">Your draft is safe. You can verify anytime from <a href="dashboard-tasker.html">My Dashboard</a>.</p>
-      </section>
 
         </div><!-- /.pt-main -->
 
         <!-- ── Section 8 · Desktop sidebar ─────────────────────── -->
-        <aside class="pt-aside pt-desk" aria-label="Verification and benefits">
-          <section class="pt-card ps-verify-card" aria-labelledby="vcTitle">
-            <div class="ps-verify-head">
-              <span class="ps-badge"><svg class="pt-i" aria-hidden="true"><use href="#i-shield"/></svg>Identity Verification</span>
-              <span class="pt-card-icon ps-verify-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-id-card"/></svg></span>
-            </div>
-            <h2 class="ps-verify-title" id="vcTitle">Almost Live &mdash; One Last Step</h2>
-            <p class="ps-verify-copy">Your listing is saved as a draft first. To keep the platform safe for customers, all providers verify their identity once before going live.</p>
-
-            <div class="ps-draft-note">
-              <span class="ps-draft-note-icon"><svg class="pt-i" aria-hidden="true"><use href="#i-cloud-upload"/></svg></span>
-              <p><strong>Nothing is lost.</strong> Your listing goes live as soon as you're approved.</p>
-            </div>
-
-            <ol class="pt-steps ps-steps">
-              <li><span class="pt-step-num">1</span><div><h3>Verify your identity</h3><p>Takes ~2 mins. We accept NIN, BVN, driver's licence, or passport.</p></div></li>
-              <li><span class="pt-step-num ps-step-idle">2</span><div><h3>Your listing goes live automatically</h3><p>Once approved, your draft is published with no extra steps needed.</p></div></li>
-              <li><span class="pt-step-num ps-step-idle">3</span><div><h3>Customers start finding you</h3><p>You appear on Find Services and receive bookings from day one.</p></div></li>
-            </ol>
-
-            <button type="button" class="pt-post-btn ps-verify-btn" id="verifyAsideBtn"><span class="pt-post-label">Verify My Identity Now</span><svg class="pt-i" aria-hidden="true"><use href="#i-badge-check"/></svg></button>
-            <a class="ps-verify-later" href="dashboard-tasker.html">Verify later &mdash; go to my dashboard</a>
-            <p class="ps-verify-foot">Your draft is safe. You can verify anytime from <a href="dashboard-tasker.html">My Dashboard</a>.</p>
-          </section>
-
+        <aside class="pt-aside pt-desk" aria-label="Benefits">
           <section class="pt-card ps-why" aria-labelledby="whyTitle">
             <h2 class="ps-why-title" id="whyTitle">Why Task with StreetTasker?</h2>
             <ul class="ps-why-list">
@@ -490,8 +430,6 @@
     'use strict';
     var uploadedPhotoUrl = null;
     var saveAsDraft = false;
-    var saveThenVerify = false;
-    function verifyUrl() { return 'verify.html?return=' + encodeURIComponent(window.location.href) + '&action=post_service'; }
     var savedServiceId   = null;
 
     function isRange() { return document.getElementById('svcRateMode').value === 'range'; }
@@ -840,7 +778,7 @@
           updateDescCount();
           if (window.psUpdateProgress) window.psUpdateProgress();
           document.getElementById('formSubtitle').textContent =
-            'You have a saved draft. Update the details below, then continue to verify.';
+            'You have a saved draft. Update the details below, then save to publish it.';
         }
       } catch(e) { /* non-fatal */ }
 
@@ -855,10 +793,6 @@
       document.getElementById('svcCategory').addEventListener('change', function () { setTimeout(applyProductFields, 0); });
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
-      document.getElementById('verifyAsideBtn').addEventListener('click', function() {
-        saveThenVerify = true;
-        document.getElementById('serviceForm').requestSubmit();
-      });
       document.getElementById('saveDraftBtn').addEventListener('click', function() {
         saveAsDraft = true;
         document.getElementById('serviceForm').requestSubmit();
@@ -924,8 +858,6 @@
       var draftBtn = document.getElementById('saveDraftBtn');
       /* Save Draft sets this flag then submits the form; Save & Continue leaves it false */
       var asDraft = saveAsDraft; saveAsDraft = false;
-      var goVerify = saveThenVerify; saveThenVerify = false;
-      var verifyAsideBtn = document.getElementById('verifyAsideBtn');
       errEl.style.display = 'none';
 
       var serviceName = document.getElementById('svcName').value.trim();
@@ -958,7 +890,7 @@
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
 
 
-      btn.disabled = true; draftBtn.disabled = true; verifyAsideBtn.disabled = true;
+      btn.disabled = true; draftBtn.disabled = true;
       btnLabel.textContent = asDraft ? 'Save & Continue' : 'Saving...';
       if (asDraft) draftBtn.textContent = 'Saving...';
 
@@ -1068,8 +1000,8 @@
 
         /* Save Draft: stay on the page. The listing stays unpublished and the public taskers row is untouched */
         if (asDraft) {
-          showToast('Draft saved. Finish and verify anytime from your dashboard.');
-          btn.disabled = false; draftBtn.disabled = false; verifyAsideBtn.disabled = false; draftBtn.textContent = 'Save Draft';
+          showToast('Draft saved. You can finish it anytime from My Services.');
+          btn.disabled = false; draftBtn.disabled = false; draftBtn.textContent = 'Save Draft';
           return;
         }
 
@@ -1117,7 +1049,7 @@
 
       } catch(err) {
         showErr((window.ST && window.ST.db && window.ST.db.isListingError && window.ST.db.isListingError(err) ? window.ST.db.listingErrorMessage(err) : err.message) || 'Failed to save. Please try again.');
-        btn.disabled = false; draftBtn.disabled = false; verifyAsideBtn.disabled = false;
+        btn.disabled = false; draftBtn.disabled = false;
         btnLabel.textContent = 'Save & Continue'; draftBtn.textContent = 'Save Draft';
       }
 
@@ -1129,11 +1061,6 @@
       }
     }
 
-    function goToDashboard() {
-      showToast('Draft saved. Verify from your dashboard whenever you\'re ready.');
-      setTimeout(function() { window.location.href = 'dashboard-tasker.html'; }, 1400);
-    }
-    window.goToDashboard = goToDashboard;
   </script>
   <script>
     /* ── Role guard: only taskers can post services ── */
