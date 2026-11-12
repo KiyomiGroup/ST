@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 4a)
+# Categories project: handoff for the next AI (after Stage 4b)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -13,8 +13,8 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 2 | Searchable picker: `js/category-picker.js`, `css/category-picker.css` | Done |
 | 3 | Form engine `js/category-forms.js`, piloted on Cleaning, Repairs, Moving & Delivery | Done (this stage) |
 | 4a | Batch A: Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring | Done (this stage) |
-| 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Next |
-| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Not started |
+| 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Done (this stage) |
+| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Next |
 | 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial + licence hold | Not started |
 | 5 | Show the answers to customers; category filters on Find Services | Not started |
 | 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Not started |
@@ -41,7 +41,7 @@ SCHEMAS.fashion = {
 Field options: `key` (never rename once live), `label`, `type`, `options`, `required`, `hint`, `placeholder`, `maxLength`, `min`/`max`/`unit`, `subs`, `notSubs`, `when: { key, equals | in }`. A `when` field must come AFTER the field it depends on.
 `tests/category-forms.test.js` already checks all pilot schemas; EXTEND its `PILOT` list with each new category. The tests fail if a schema names a subcategory that does not exist, repeats a key, has a select without options, or leaves any subcategory (or Other) with fewer than two questions.
 
-Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B Design, Technology, Business Admin, Education, Pet Services. C Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry. D (regulated) Professional Services, Security & Safety, Health, Legal, Financial.
+Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B (DONE, Stage 4b: keys `creative`, `it_tech`, `business`, `education`, `pet`). C Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry. D (regulated) Professional Services, Security & Safety, Health, Legal, Financial.
 **Regulated categories (D)** also need a licence or qualification question and must be verified before going live. The engine has no "licence" type yet. Suggested: a required `text` question for the licence / registration number now, and a Stage 4D change so these categories never publish until the existing identity verification AND a manual licence check pass (look at how `window.ST.verify.holdForVerification` is used in `post-service.html` and add a second hold; do not invent a new publishing path without asking).
 
 ## Things the next AI must know
@@ -66,10 +66,19 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 
 
 ## Stage 4a notes (batch A)
-- Only `js/category-forms.js` (5 new schemas, no engine change) and `tests/category-forms.test.js` changed. No SQL, no HTML, no CSS. Nothing to run in Supabase for this stage.
+- `js/category-forms.js` (5 new schemas, no engine change), `tests/category-forms.test.js` and `css/category-forms.css` (phone fix below) changed. No SQL, no HTML. Nothing to run in Supabase for this stage.
 - Keys now fixed for batch A: `home_furniture`, `landscaping` (Gardening & Outdoor), `automotive`, `grooming` (Beauty), `fashion`. Shared key names are reused on purpose (`materials`, `warranty`, `recurring`, `service_location`, `coverage`, `design_services`) so Stage 5 filters can treat them the same across categories.
 - The Category Directory document is STILL missing; the questions are my own design. If the owner supplies it, reconcile BEFORE listings exist in these categories (renaming a key orphans saved answers).
 - Test file: `BATCH_A` block at the bottom checks at least two questions for every subcategory and Other, plus examples of questions following the type of work. When you add batch B, extend `PILOT` and add a similar block.
 - `node tools/check-design-system.js` currently FAILS on files this project never touched (css/legal.css, css/local-tasker-public.css, css/map-view.css and some legal pages missing the page shell). It is not caused by this stage; do not edit the baseline to hide it.
 - Not browser-tested this stage (schema data only, same engine as Stage 3). Schema tests: `node --test tests/category-forms.test.js tests/category-search.test.js tests/category-detect.test.js` = 78 pass.
 - Comment in `post-service.html` (~line 672) still says "Cleaning, Repairs, Moving & Delivery so far"; harmless, fix it when that file is next touched.
+- **Phone layout fix (owner report):** chips wrap instead of scrolling sideways, and `#catFields` is `display: contents` under 768px so cards get the form gap. Do NOT add a block wrapper around question groups on phones; it breaks the card spacing. Any new chip row for answers must use `.cf-chips` (not bare `.pt-chips`).
+
+## Stage 4b notes (batch B)
+- Only `js/category-forms.js` (5 new schemas) and `tests/category-forms.test.js` changed, plus these two docs. No engine, SQL, HTML or CSS change. The phone layout fix lives in `css/category-forms.css` from the Stage 4a zip.
+- Keys fixed for batch B: `creative`, `it_tech`, `business`, `education`, `pet`. Shared names reused across categories for Stage 5 filters: `software`, `languages`, `service_mode`/`work_mode`, `coverage`, `parts`, `warranty`, `emergency`, `smart_systems` (same as Home Automation), `design_services`.
+- **Veterinary Care and Mobile Vet Care (inside Pet Services) are regulated.** They now ask a required `vet_registration` text answer only. Nothing holds the listing back yet. Stage 4d must decide whether these two subcategories join the licence-check hold (same mechanism as Professional, Health, Legal, Financial). Ask the owner.
+- Driving Lessons has no licence/driving-school question yet; consider it in 4d too.
+- Still no Category Directory document; all questions are my own design.
+- Tests: 81 pass (`node --test tests/category-forms.test.js tests/category-search.test.js tests/category-detect.test.js`). BATCH_B block at the bottom of the forms test.

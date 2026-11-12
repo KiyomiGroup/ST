@@ -42,3 +42,11 @@
 - js/category-forms.js: five new schemas (`home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). Every subcategory and Other has at least two questions. Towing and Roadside Assistance skip the workshop question; Garden Design and Interior Design skip the tools question; repair-type Fashion work skips fabric.
 - tests/category-forms.test.js: PILOT list extended; the "no form yet" check now uses Security, Health and Legal; new batch A tests.
 - No SQL, HTML or CSS changes. Existing listings in these categories have details = null until the tasker edits them.
+- css/category-forms.css (phone layout fix, reported by the owner): on phones (max-width 768px) the answer chips used the shared sideways-scrolling `.pt-chips` row, so options ran off the card ("Shop / commercial space" cut off). `.pt-chips.cf-chips` now wraps. Also `#catFields` is `display: contents` on phones so the form's gap sits between question cards (before, they touched and looked overlapped). Desktop unchanged. Checked at 390px with the real page markup (Playwright).
+
+
+## Categories Stage 4b (2026-11-11): questions for Design & Creative, Technology & IT, Business & Administration, Education & Lessons, Pet Services
+- js/category-forms.js: five new schemas (`creative`, `it_tech`, `business`, `education`, `pet`). Every subcategory and Other has at least two questions. Remote-only work (development, cloud, cybersecurity) asks "how do you work with clients" instead of shop/visit; Voiceover skips software; Online Tutoring skips "how do you teach"; Aquarium Maintenance skips pet types.
+- Veterinary Care and Mobile Vet Care ask for a veterinary registration number (required text). No publishing hold yet (Stage 4d).
+- tests/category-forms.test.js: PILOT list extended, new batch B tests.
+- No SQL, HTML or CSS changes.

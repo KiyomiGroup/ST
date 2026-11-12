@@ -12,7 +12,7 @@ const ctx = { window: win };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'categories.js'), 'utf8'), ctx);
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'category-forms.js'), 'utf8'), ctx);
 const S = win.STCat, F = win.STCatForms;
-const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion'];
+const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet'];
 const OTHER = F.OTHER_SUB;
 const plain = (x) => JSON.parse(JSON.stringify(x));   /* objects from the vm sandbox have a different prototype */
 
@@ -171,7 +171,7 @@ test('describe turns saved answers into readable lines for customers', () => {
 });
 
 /* ── Stage 4, batch A: Home & Furniture, Gardening, Automotive, Beauty, Fashion ── */
-const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion'];
+const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet'];
 
 test('batch A: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_A.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -217,4 +217,46 @@ test('batch A: changing the type of work inside a category keeps shared answers 
   const r2 = F.validate('home_furniture', 'Wall Mounting', { tools: true, wall_types: ['Concrete or block'], furniture_types: ['Sofas & chairs'] });
   assert.ok(r2.ok, JSON.stringify(r2.errors));
   assert.strictEqual(plain(r2.clean).furniture_types, undefined);
+});
+
+/* ── Stage 4, batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services ── */
+const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet'];
+
+test('batch B: every subcategory (and Other) is asked at least two questions', () => {
+  BATCH_B.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
+    assert.ok(keys(cat, sub).length >= 2, cat + ' / ' + sub + ' has fewer than two questions');
+  }));
+});
+
+test('batch B: questions follow the type of work', () => {
+  assert.ok(keys('creative', 'Voiceover Recording').includes('voice_languages'));
+  assert.ok(!keys('creative', 'Voiceover Recording').includes('software'));
+  assert.ok(!keys('creative', 'Logo Design').includes('voice_types'));
+  assert.ok(keys('it_tech', 'Website Development').includes('web_types'));
+  assert.ok(!keys('it_tech', 'Website Development').includes('service_mode'));
+  assert.ok(keys('it_tech', 'Phone Repair').includes('backs_up_data'));
+  assert.ok(!keys('it_tech', 'Network Installation').includes('laptop_repairs'));
+  assert.ok(keys('business', 'Transcription').includes('typing_speed'));
+  assert.ok(!keys('business', 'Market Research').includes('typing_speed'));
+  assert.ok(keys('business', 'Business Registration').includes('registration_types'));
+  assert.ok(keys('education', 'Driving Lessons').includes('provides_car'));
+  assert.ok(!keys('education', 'Online Tutoring').includes('lesson_modes'));
+  assert.ok(keys('education', 'Exam Preparation').includes('exams'));
+  assert.ok(keys('pet', 'Dog Walking').includes('walk_length'));
+  assert.ok(!keys('pet', 'Aquarium Maintenance').includes('pet_types'));
+  assert.ok(keys('pet', 'Mobile Vet Care').includes('vet_registration'));
+  assert.ok(!keys('pet', 'Pet Grooming').includes('vet_registration'));
+});
+
+test('batch B: a vet must give a registration number; a full valid answer saves flat and drops hidden answers', () => {
+  const vals = { pet_types: ['Dogs'], vet_services: ['Vaccinations'], coverage: 'Within my city' };
+  const bad = F.validate('pet', 'Mobile Vet Care', vals);
+  assert.ok(!bad.ok && bad.errors.vet_registration);
+  const ok = F.validate('pet', 'Mobile Vet Care', Object.assign({ vet_registration: 'VCN 12345', walk_length: 'Over 1 hour' }, vals));
+  assert.ok(ok.ok, JSON.stringify(ok.errors));
+  const c = plain(ok.clean);
+  assert.strictEqual(c._v, 1);
+  assert.strictEqual(c.walk_length, undefined);
+  const edu = F.validate('education', 'Mathematics Lessons', { lesson_modes: ['Online'], class_size: 'Small groups', levels: ['University'] });
+  assert.ok(edu.ok, JSON.stringify(edu.errors));
 });

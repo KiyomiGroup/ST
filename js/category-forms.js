@@ -243,6 +243,169 @@
     ]
   };
 
+  /* ═══ Stage 4, batch B ═══════════════════════════════════════════════════════════════════════════
+     Design & Creative, Technology & IT, Business & Administration, Education & Lessons, Pet Services.
+     Same rules as batch A. Veterinary Care and Mobile Vet Care ask for a registration number (text) now; holding them back until a manual check is a Stage 4d decision. */
+
+  SCHEMAS.creative = {
+    groups: {
+      noTools:  ['Voiceover Recording', 'Content Creation', 'Printing & Artwork'],
+      files:    ['Graphic Design', 'Logo Design', 'Illustration', 'Branding & Identity', 'Social Media Design', 'Presentation Design', 'Printing & Artwork', 'Photo Editing', '3D Design', 'Product Design'],
+      interface: ['UI/UX Design', 'Web Design', 'App Design'],
+      motion:   ['Motion Graphics', 'Animation']
+    },
+    fields: [
+      { key: 'software', label: 'Software you use', type: 'multi', required: true, notSubs: '@noTools', options: ['Photoshop', 'Illustrator', 'Figma', 'CorelDRAW', 'Canva', 'Blender', 'After Effects', 'Premiere Pro or Final Cut'] },
+      { key: 'revisions', label: 'Rounds of changes included', type: 'select', required: true, options: ['One round', 'Two rounds', 'Three rounds', 'Unlimited'] },
+      { key: 'turnaround_days', label: 'Usual turnaround', type: 'number', required: true, min: 1, max: 180, unit: 'days', placeholder: 'e.g. 5' },
+      { key: 'file_formats', label: 'Files you hand over', type: 'multi', required: true, subs: '@files', options: ['Editable source files', 'PNG or JPG', 'PDF', 'Vector (SVG or AI)'] },
+      { key: 'brand_pack', label: 'What the brand package includes', type: 'multi', required: true, subs: ['Branding & Identity'], options: ['Logo', 'Colour palette', 'Fonts', 'Brand guide', 'Stationery'] },
+      { key: 'social_platforms', label: 'Platforms you design for', type: 'multi', required: true, subs: ['Social Media Design'], options: ['Instagram', 'Facebook', 'TikTok', 'X (Twitter)', 'LinkedIn', 'WhatsApp status'] },
+      { key: 'design_scope', label: 'What you deliver', type: 'multi', required: true, subs: '@interface', options: ['Wireframes', 'Full screen designs', 'Clickable prototype', 'Design system', 'User research'] },
+      { key: 'builds_in_code', label: 'Do you also build the design in code?', type: 'yesno', subs: ['Web Design', 'App Design'], hint: 'Optional' },
+      { key: 'video_types', label: 'Videos you edit', type: 'multi', required: true, subs: ['Video Editing'], options: ['Social media clips', 'Weddings & events', 'Corporate videos', 'Music videos', 'YouTube', 'Adverts'] },
+      { key: 'animation_styles', label: 'Animation you do', type: 'multi', required: true, subs: '@motion', options: ['2D', '3D', 'Explainer videos', 'Logo animation', 'Character animation', 'Whiteboard'] },
+      { key: 'photo_jobs', label: 'Editing you do', type: 'multi', required: true, subs: ['Photo Editing'], options: ['Retouching', 'Background removal', 'Colour correction', 'Restoring old photos', 'Product photos'] },
+      { key: 'print_jobs', label: 'Print work you do', type: 'multi', required: true, subs: ['Printing & Artwork'], options: ['Flyers & posters', 'Banners & billboards', 'Business cards', 'T-shirt printing', 'Stickers & labels', 'Packaging'] },
+      { key: 'prints_it_yourself', label: 'Do you do the printing yourself?', type: 'yesno', required: true, subs: ['Printing & Artwork'] },
+      { key: 'three_d_types', label: '3D work you do', type: 'multi', required: true, subs: ['3D Design'], options: ['Product renders', 'Architectural visuals', 'Game assets', 'Models for 3D printing'] },
+      { key: 'product_scope', label: 'What you deliver', type: 'multi', required: true, subs: ['Product Design'], options: ['Concept sketches', 'CAD models', 'Prototypes', 'Packaging design'] },
+      { key: 'content_types', label: 'Content you create', type: 'multi', required: true, subs: ['Content Creation'], options: ['Short videos', 'Photos', 'Written posts', 'Social media posts', 'Podcasts'] },
+      { key: 'voice_types', label: 'Voice work you do', type: 'multi', required: true, subs: ['Voiceover Recording'], options: ['Adverts', 'Audiobooks', 'Explainer videos', 'Phone & IVR prompts', 'Documentaries'] },
+      { key: 'voice_languages', label: 'Languages you record in', type: 'multi', required: true, subs: ['Voiceover Recording'], options: ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa', 'French'] },
+      { key: 'has_studio', label: 'Do you have a recording setup?', type: 'yesno', required: true, subs: ['Voiceover Recording'] }
+    ]
+  };
+
+  SCHEMAS.it_tech = {
+    groups: {
+      remote:   ['Software Development', 'Website Development', 'Database Management', 'Cloud & Server Management', 'Cybersecurity Services'],
+      dev:      ['Software Development', 'Website Development'],
+      parts:    ['Laptop Repair', 'Phone Repair', 'Hardware Installation'],
+      repairs:  ['Laptop Repair', 'Phone Repair', 'Data Recovery'],
+      systems:  ['Computer Support', 'Technical Troubleshooting', 'IT Support', 'Software Installation']
+    },
+    fields: [
+      { key: 'service_mode', label: 'How do you work?', type: 'select', required: true, notSubs: '@remote', options: ['At my shop', 'I visit the customer', 'Remote online', 'Any of these'] },
+      { key: 'work_mode', label: 'How do you work with clients?', type: 'select', required: true, subs: '@remote', options: ['Remote online', 'Meetings in person', 'Both'] },
+      { key: 'os_types', label: 'Systems you support', type: 'multi', required: true, subs: '@systems', options: ['Windows', 'Mac', 'Linux', 'Printers & peripherals'] },
+      { key: 'install_types', label: 'What you install', type: 'multi', required: true, subs: ['Software Installation'], options: ['Operating systems', 'Office & business software', 'Antivirus', 'Design & video software', 'Accounting software'] },
+      { key: 'it_support_types', label: 'Support you give', type: 'multi', required: true, subs: ['IT Support'], options: ['Office IT support', 'Email & accounts', 'Printers & scanners', 'Servers', 'Ongoing support contract'] },
+      { key: 'laptop_repairs', label: 'Laptop repairs you do', type: 'multi', required: true, subs: ['Laptop Repair'], options: ['Screens', 'Keyboards', 'Battery & charging', 'Motherboard', 'Software & operating system', 'Overheating'] },
+      { key: 'phone_repairs', label: 'Phone repairs you do', type: 'multi', required: true, subs: ['Phone Repair'], options: ['Screens', 'Battery', 'Charging port', 'Water damage', 'Software & unlocking', 'Camera'] },
+      { key: 'brands', label: 'Brands you repair', type: 'text', required: true, subs: ['Laptop Repair', 'Phone Repair'], maxLength: 120, placeholder: 'e.g. HP, Dell, iPhone, Samsung' },
+      { key: 'parts', label: 'Spare parts', type: 'select', required: true, subs: '@parts', options: ['Client supplies', 'I supply (charged at cost)', 'Either'] },
+      { key: 'backs_up_data', label: "Do you back up the customer's data before work?", type: 'yesno', required: true, subs: ['Laptop Repair', 'Phone Repair'] },
+      { key: 'recovery_media', label: 'What you recover data from', type: 'multi', required: true, subs: ['Data Recovery'], options: ['Hard drives', 'SSDs', 'Flash drives & memory cards', 'Phones', 'Servers & RAID'] },
+      { key: 'no_fix_no_fee', label: 'Is it free if you cannot recover the data?', type: 'yesno', required: true, subs: ['Data Recovery'] },
+      { key: 'software_types', label: 'What you build', type: 'multi', required: true, subs: ['Software Development'], options: ['Mobile apps', 'Web apps', 'Desktop software', 'Automation & scripts', 'APIs & integrations'] },
+      { key: 'web_types', label: 'What you build', type: 'multi', required: true, subs: ['Website Development'], options: ['Business websites', 'Online stores', 'WordPress sites', 'Custom web apps', 'Landing pages', 'Domain & hosting setup'] },
+      { key: 'languages', label: 'Languages and tools you use', type: 'multi', required: true, subs: '@dev', options: ['JavaScript or TypeScript', 'Python', 'PHP', 'Java or Kotlin', 'C# or .NET', 'Swift or Flutter'] },
+      { key: 'databases', label: 'Databases you work with', type: 'multi', required: true, subs: ['Database Management'], options: ['MySQL', 'PostgreSQL', 'SQL Server', 'MongoDB', 'Firebase or Supabase', 'Oracle'] },
+      { key: 'cloud_platforms', label: 'Platforms you manage', type: 'multi', required: true, subs: ['Cloud & Server Management'], options: ['AWS', 'Azure', 'Google Cloud', 'DigitalOcean', 'Linux servers', 'cPanel hosting'] },
+      { key: 'security_services', label: 'Security work you do', type: 'multi', required: true, subs: ['Cybersecurity Services'], options: ['Security audit', 'Malware removal', 'Penetration testing', 'Staff training', 'Firewall & antivirus setup', 'Data protection compliance'] },
+      { key: 'network_jobs', label: 'Network work you do', type: 'multi', required: true, subs: ['Network Installation'], options: ['Home Wi-Fi', 'Office network & cabling', 'Routers & switches', 'Access points', 'Network troubleshooting'] },
+      { key: 'hardware_jobs', label: 'Hardware work you do', type: 'multi', required: true, subs: ['Hardware Installation'], options: ['PC & laptop upgrades', 'Printers & scanners', 'Servers & racks', 'POS terminals'] },
+      { key: 'smart_systems', label: 'Smart systems you set up', type: 'multi', required: true, subs: ['Smart Home Installation'], options: ['Smart lighting', 'Smart locks & doorbells', 'CCTV link-up', 'Voice assistants', 'Whole-home control'] },
+      { key: 'ongoing_support', label: 'Do you offer ongoing maintenance afterwards?', type: 'yesno', subs: '@remote', hint: 'Optional' },
+      { key: 'emergency', label: 'Do you take emergency call-outs?', type: 'yesno', notSubs: '@remote', hint: 'Optional' },
+      { key: 'warranty', label: 'Warranty on your work', type: 'select', subs: '@repairs', options: ['None', '7 days', '30 days', '3 months', '6 months or more'], hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.business = {
+    groups: {
+      office:   ['Virtual Assistant', 'Administrative Assistant', 'Data Entry', 'Email Management', 'Document Preparation', 'Spreadsheet Management', 'Project Coordination'],
+      lang:     ['Virtual Assistant', 'Customer Support', 'Transcription'],
+      typing:   ['Data Entry', 'Transcription'],
+      research: ['Business Research', 'Market Research'],
+      deskwork: ['Administrative Assistant', 'Office Assistance']
+    },
+    fields: [
+      { key: 'work_mode', label: 'Where do you work?', type: 'select', required: true, options: ['Remote online', "At the client's office", 'Both'] },
+      { key: 'engagement', label: 'How do you take work?', type: 'select', required: true, options: ['By the task or project', 'Part-time retainer', 'Full-time retainer'] },
+      { key: 'software', label: 'Tools you use', type: 'multi', required: true, subs: '@office', options: ['Microsoft Office', 'Google Workspace', 'CRM (HubSpot, Zoho)', 'Project tools (Trello, Asana)', 'Accounting software'] },
+      { key: 'languages', label: 'Languages you work in', type: 'multi', required: true, subs: '@lang', options: ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa', 'French'] },
+      { key: 'typing_speed', label: 'Typing speed', type: 'number', required: true, subs: '@typing', min: 10, max: 200, unit: 'words per minute', placeholder: 'e.g. 60' },
+      { key: 'data_entry_types', label: 'Data entry you do', type: 'multi', required: true, subs: ['Data Entry'], options: ['Typing from scans or paper', 'Spreadsheets', 'Databases & CRM', 'Online forms', 'Product listings'] },
+      { key: 'transcription_types', label: 'Recordings you transcribe', type: 'multi', required: true, subs: ['Transcription'], options: ['Interviews', 'Meetings', 'Lectures', 'Medical', 'Legal', 'Subtitles'] },
+      { key: 'support_channels', label: 'Channels you handle', type: 'multi', required: true, subs: ['Customer Support'], options: ['Phone calls', 'WhatsApp', 'Email', 'Live chat', 'Social media messages'] },
+      { key: 'research_outputs', label: 'What the customer receives', type: 'multi', required: true, subs: '@research', options: ['Written report', 'Spreadsheet of data', 'Slide deck', 'Competitor analysis', 'Surveys & interviews', 'Industry overview'] },
+      { key: 'email_tasks', label: 'Email work you do', type: 'multi', required: true, subs: ['Email Management'], options: ['Sorting the inbox', 'Replying for the client', 'Scheduling', 'Newsletters', 'Follow-ups'] },
+      { key: 'document_types', label: 'Documents you prepare', type: 'multi', required: true, subs: ['Document Preparation'], options: ['Letters & proposals', 'CVs & cover letters', 'Contract templates', 'Reports', 'Presentations', 'Forms & applications'] },
+      { key: 'sheet_skills', label: 'Spreadsheet work you do', type: 'multi', required: true, subs: ['Spreadsheet Management'], options: ['Formulas', 'Pivot tables', 'Dashboards & charts', 'Macros & automation', 'Clean-up'] },
+      { key: 'coordination_scope', label: 'Coordination you do', type: 'multi', required: true, subs: ['Project Coordination'], options: ['Project plans', 'Team follow-ups', 'Vendor management', 'Progress reports'] },
+      { key: 'office_tasks', label: 'Tasks you handle', type: 'multi', required: true, subs: '@deskwork', options: ['Filing', 'Reception', 'Errands', 'Stock & supplies', 'Meeting set-up'] },
+      { key: 'recruitment_stages', label: 'Recruitment work you do', type: 'multi', required: true, subs: ['Recruitment Assistance'], options: ['Job adverts', 'CV screening', 'Interview scheduling', 'Interviewing', 'Reference checks'] },
+      { key: 'registration_types', label: 'Registrations you handle', type: 'multi', required: true, subs: ['Business Registration'], options: ['Business name', 'Limited company', 'Tax registration', 'Trademark', 'Industry licences & permits'] },
+      { key: 'nda', label: 'Will you sign a confidentiality agreement?', type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.education = {
+    groups: {
+      academic: ['Academic Tutoring', 'Mathematics Lessons', 'English Lessons', 'Science Lessons', 'Exam Preparation', 'Online Tutoring', 'Language Lessons'],
+      ages:     ['Language Lessons', 'Computer Training', 'Music Lessons', 'Instrument Lessons', 'Dance Lessons', 'Art Lessons', 'Coding Lessons', 'Skill Development'],
+      certs:    ['Computer Training', 'Coding Lessons', 'Professional Training', 'Skill Development', 'Corporate Skill Training', 'Driving Lessons'],
+      subjects: ['Academic Tutoring', 'Online Tutoring']
+    },
+    fields: [
+      { key: 'lesson_modes', label: 'How do you teach?', type: 'multi', required: true, notSubs: ['Online Tutoring'], options: ['Online', "At the student's home", 'At my place or centre'] },
+      { key: 'class_size', label: 'Who do you teach?', type: 'select', required: true, options: ['One student at a time', 'Small groups', 'Large groups & classes'] },
+      { key: 'levels', label: 'Levels you teach', type: 'multi', required: true, subs: '@academic', options: ['Primary', 'Junior secondary', 'Senior secondary', 'University', 'Adult learners'] },
+      { key: 'ages', label: 'Ages you teach', type: 'multi', required: true, subs: '@ages', options: ['Children', 'Teenagers', 'Adults'] },
+      { key: 'subjects', label: 'Subjects you teach', type: 'text', required: true, subs: '@subjects', maxLength: 120, placeholder: 'e.g. Physics, Chemistry, Biology' },
+      { key: 'exams', label: 'Exams you prepare students for', type: 'multi', required: true, subs: ['Exam Preparation'], options: ['WAEC', 'NECO', 'JAMB', 'Post-UTME', 'IELTS or TOEFL', 'SAT, GRE or GMAT', 'Professional exams'] },
+      { key: 'languages_taught', label: 'Languages you teach', type: 'multi', required: true, subs: ['Language Lessons'], options: ['English', 'French', 'Spanish', 'Arabic', 'Mandarin', 'Yoruba', 'Igbo', 'Hausa'] },
+      { key: 'music_types', label: 'Music you teach', type: 'multi', required: true, subs: ['Music Lessons'], options: ['Singing', 'Music theory', 'Songwriting', 'Music production', 'Choir training'] },
+      { key: 'instruments', label: 'Instruments you teach', type: 'multi', required: true, subs: ['Instrument Lessons'], options: ['Piano or keyboard', 'Guitar', 'Drums', 'Violin', 'Saxophone or wind', 'Bass'] },
+      { key: 'dance_styles', label: 'Dance styles you teach', type: 'multi', required: true, subs: ['Dance Lessons'], options: ['Afrobeats', 'Hip hop', 'Ballet', 'Ballroom', 'Contemporary', 'Cultural & traditional'] },
+      { key: 'art_types', label: 'Art you teach', type: 'multi', required: true, subs: ['Art Lessons'], options: ['Drawing', 'Painting', 'Sculpture', 'Digital art', 'Crafts'] },
+      { key: 'computer_topics', label: 'What you teach', type: 'multi', required: true, subs: ['Computer Training'], options: ['Basic computer skills', 'Microsoft Office', 'Graphic design', 'Data analysis', 'Internet & email', 'Typing'] },
+      { key: 'coding_languages', label: 'What you teach', type: 'multi', required: true, subs: ['Coding Lessons'], options: ['Python', 'JavaScript', 'HTML & CSS', 'Java', 'Scratch (for kids)', 'Mobile apps'] },
+      { key: 'transmission', label: 'Car you teach in', type: 'multi', required: true, subs: ['Driving Lessons'], options: ['Manual', 'Automatic'] },
+      { key: 'provides_car', label: 'Do you provide the car?', type: 'yesno', required: true, subs: ['Driving Lessons'] },
+      { key: 'career_focus', label: 'Coaching you give', type: 'multi', required: true, subs: ['Career Coaching'], options: ['CV & cover letters', 'Interview practice', 'Changing careers', 'Job search strategy', 'LinkedIn profile'] },
+      { key: 'training_topics', label: 'Training you give', type: 'multi', required: true, subs: ['Professional Training', 'Skill Development', 'Corporate Skill Training'], options: ['Leadership & management', 'Sales & customer service', 'Digital skills', 'Finance & accounting', 'Vocational & trade skills', 'Communication & soft skills'] },
+      { key: 'certificate', label: 'Do students get a certificate?', type: 'yesno', subs: '@certs', hint: 'Optional' },
+      { key: 'materials_included', label: 'Are learning materials included?', type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.pet = {
+    groups: {
+      care:     ['Pet Sitting', 'Dog Walking', 'Pet Feeding', 'Pet Boarding'],
+      stays:    ['Pet Sitting', 'Dog Walking', 'Pet Boarding'],
+      place:    ['Pet Sitting', 'Pet Grooming', 'Basic Pet Training', 'Pet Photography'],
+      vets:     ['Veterinary Care', 'Mobile Vet Care'],
+      dogSizes: ['Dog Walking', 'Pet Boarding', 'Pet Grooming', 'Basic Pet Training']
+    },
+    fields: [
+      { key: 'pet_types', label: 'Pets you work with', type: 'multi', required: true, notSubs: ['Aquarium Maintenance'], options: ['Dogs', 'Cats', 'Birds', 'Fish', 'Small pets (rabbits, hamsters)', 'Reptiles'] },
+      { key: 'dog_sizes', label: 'Dog sizes you take', type: 'multi', required: true, subs: '@dogSizes', options: ['Small', 'Medium', 'Large', 'Extra large'] },
+      { key: 'service_location', label: 'Where do you work?', type: 'select', required: true, subs: '@place', options: ['At my place', 'I come to the customer', 'Both'] },
+      { key: 'max_pets', label: 'Most pets you look after at once', type: 'number', required: true, subs: '@stays', min: 1, max: 50, unit: 'pets', placeholder: 'e.g. 4' },
+      { key: 'walk_length', label: 'Length of a walk', type: 'select', required: true, subs: ['Dog Walking'], options: ['Up to 30 minutes', '30 to 60 minutes', 'Over 1 hour'] },
+      { key: 'boarding_setup', label: 'Your boarding space', type: 'multi', required: true, subs: ['Pet Boarding'], options: ['Home with a garden', 'Indoor only', 'Kennels', 'Air-conditioned'] },
+      { key: 'visits_per_day', label: 'Visits per day', type: 'select', required: true, subs: ['Pet Feeding'], options: ['Once a day', 'Twice a day', 'Three or more'] },
+      { key: 'daily_updates', label: 'Do you send the owner photo updates?', type: 'yesno', subs: '@care', hint: 'Optional' },
+      { key: 'medication', label: 'Can you give medication?', type: 'yesno', subs: '@care', hint: 'Optional' },
+      { key: 'first_aid', label: 'Do you have pet first-aid training?', type: 'yesno', subs: '@care', hint: 'Optional' },
+      { key: 'grooming_services', label: 'Grooming you do', type: 'multi', required: true, subs: ['Pet Grooming'], options: ['Bath & dry', 'Haircut or trim', 'Nail clipping', 'Ear & teeth cleaning', 'Flea & tick treatment'] },
+      { key: 'training_types', label: 'Training you give', type: 'multi', required: true, subs: ['Basic Pet Training'], options: ['Basic obedience', 'Puppy training', 'House training', 'Leash training', 'Behaviour problems'] },
+      { key: 'transport_vehicle', label: 'What you travel in', type: 'select', required: true, subs: ['Pet Transportation'], options: ['Car', 'Van', 'Enclosed pet taxi'] },
+      { key: 'safe_carriers', label: 'Do you use safe crates or carriers?', type: 'yesno', required: true, subs: ['Pet Transportation'] },
+      { key: 'coverage', label: 'How far do you travel?', type: 'select', required: true, subs: ['Pet Transportation', 'Mobile Vet Care'], options: ['Within my city', 'Between cities'] },
+      { key: 'tank_waters', label: 'Water types', type: 'multi', required: true, subs: ['Aquarium Maintenance'], options: ['Freshwater', 'Saltwater', 'Ponds'] },
+      { key: 'tank_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['Aquarium Maintenance'], options: ['Cleaning & water changes', 'New tank set-up', 'Filter & equipment repair', 'Fish health checks'] },
+      { key: 'photo_types', label: 'Photography you do', type: 'multi', required: true, subs: ['Pet Photography'], options: ['Studio', 'Outdoor', 'Events & birthdays', 'Pet portraits', 'Video'] },
+      { key: 'photo_delivery', label: 'Photos delivered', type: 'select', required: true, subs: ['Pet Photography'], options: ['Within 24 hours', 'Within 3 days', 'Within a week'] },
+      { key: 'vet_registration', label: 'Veterinary registration number', type: 'text', required: true, subs: '@vets', maxLength: 60, placeholder: 'Your registration number', hint: 'Checked before you go live' },
+      { key: 'vet_services', label: 'Care you give', type: 'multi', required: true, subs: '@vets', options: ['Check-ups', 'Vaccinations', 'Treating illness', 'Minor surgery', 'Deworming', 'Emergency care'] },
+      { key: 'years_experience', label: 'Years of experience', type: 'number', min: 0, max: 60, unit: 'years', hint: 'Optional', placeholder: 'e.g. 3' }
+    ]
+  };
+
   /* ── Pure helpers (no DOM) ───────────────────────────────────────────────────────────────────── */
   function has(category) { return Object.prototype.hasOwnProperty.call(SCHEMAS, category); }
 
