@@ -11,7 +11,7 @@
 /* Categories come from js/categories.js (shared with the post pages); each keeps value / label / emoji */
 const SVC_CATEGORIES = (window.STCat ? window.STCat.serviceList : [{ value: 'other', label: 'Other', emoji: '🛠️' }]).map(c => ({ value: c.value, label: c.label, short: c.short || c.label, emoji: c.emoji }));
 const SVC_KNOWN = new Set(SVC_CATEGORIES.map(c => c.value));
-const SVC_UNIT_LABEL = { hour: 'Per hour', job: 'Per job', day: 'Per day', session: 'Per session', visit: 'Per visit', week: 'Per week', month: 'Per month' };
+const SVC_UNIT_LABEL = { hour: 'Per hour', job: 'Per job', day: 'Per day', session: 'Per session', visit: 'Per visit', item: 'Per item', unit: 'Per unit', week: 'Per week', month: 'Per month' };
 const SVC_AVAIL_LABEL = { available_now: 'Available now', available_today: 'Available today', available_this_week: 'Available this week' };
 const SVC_PRICE_MAX = 200000;   /* slider max = "Any" */
 const SVC_PAGE_SIZE = 9;
@@ -56,6 +56,8 @@ function svcNormalize(row, user) {
     price: Number(row.price) || 0,
     price_max: Number(row.price_max) || 0,   /* Stage 3: 0 = fixed price */
     unit: svcNormUnit(row.rate_unit),
+    price_type: row.price_type || '',   /* Categories Stage 6a (null before p2-pricing-methods.sql) */
+    price_unit_label: row.price_unit_label || '',
     location: row.location || '',
     description: row.description || '',
     photo: row.photo || null,
@@ -284,7 +286,7 @@ function svcBuildCard(s) {
   return stServiceCard({
     service_name: s.service_name, category: s.category, categoryLabel: cat.label, emoji: cat.emoji,
     description: desc, photo: s.photo, provider: s.provider, location: s.location,
-    price: s.price, price_max: s.price_max, unit: s.unit, rating: s.rating, reviews_count: s.reviews_count,
+    price: s.price, price_max: s.price_max, unit: s.unit, pricing: window.STPricing ? STPricing.describe({ price: s.price, price_max: s.price_max, rate_unit: '/' + s.unit, price_type: s.price_type, price_unit_label: s.price_unit_label }) : null, rating: s.rating, reviews_count: s.reviews_count,
     turnaround: s.turnaround, perk: s.perk, href, isLocal: !!s.isLocal, user_id: s.user_id, service_id: s.id,
     facts: window.STCatForms ? STCatForms.badges(svcCatKey(s.category), s.subcategory, s.details, 3) : [],
   });

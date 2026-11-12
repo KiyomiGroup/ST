@@ -75,3 +75,11 @@
 - post-service.html: FIXED `details` sent as `{}` instead of `null` (the column is NOT NULL). Comment fixed.
 - sql/categories/c2-details-search.sql (+ c2-rollback.sql): GIN index on `details`, (category, subcategory) index. Optional for now.
 - tests/category-forms.test.js: Stage 5 tests added (176 pass in all).
+
+
+## Categories Stage 6a (2026-11-11): pricing methods
+- js/pricing-methods.js (new): the 11 ways to charge, `describe / check / toRow / typeOf`.
+- post-service.html: "How do you charge?" chips replace the Fixed / Range switch and the five unit buttons; "What is one unit?" box for Per unit; Custom quotation hides the price box; Negotiable makes it optional; "Customers will see: ..." preview; saves `price_type` and `price_unit_label`; the save still works if the SQL has not run; old drafts open on the matching chip.
+- js/ui.js (service card), js/services-search.js, find-services.html (Per item / Per unit filters), js/service-details.js + service-details.html, js/my-services.js + my-services.html: show the new wording.
+- sql/categories/p2-pricing-methods.sql (+ p2-rollback.sql): two new columns and checks. Run it, then the check queries at the bottom.
+- tests/pricing-methods.test.js (new).

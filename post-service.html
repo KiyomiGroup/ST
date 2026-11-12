@@ -190,12 +190,12 @@
 
             <div class="pt-group ps-group-rate">
               <div class="ps-rate-mode">
-                <span class="pt-label" id="rateModeLabel">Pricing</span>
+                <span class="pt-label" id="rateMethodLabel">How do you charge? <span class="pt-req" aria-hidden="true">*</span></span>
                 <input type="hidden" id="svcRateMode" value="fixed" />
-                <div class="pt-segment ps-modes" id="rateModes" role="radiogroup" aria-labelledby="rateModeLabel">
-                  <label class="pt-segment-opt"><input type="radio" name="rateMode" value="fixed" checked /><span>Fixed price</span></label>
-                  <label class="pt-segment-opt"><input type="radio" name="rateMode" value="range" /><span>Price range</span></label>
-                </div>
+                <input type="hidden" id="svcRateUnit" value="job" />
+                <input type="hidden" id="svcPriceType" value="fixed" />
+                <div class="pt-chips cf-chips" id="rateMethods" role="radiogroup" aria-labelledby="rateMethodLabel"></div>
+                <p class="pt-help" id="rateMethodHint" aria-live="polite"></p>
               </div>
               <div class="ps-rate-grid">
                 <div class="ps-rate-amount">
@@ -214,16 +214,9 @@
                   <div id="rateParsedHint" class="pt-help" aria-live="polite"></div>
                 </div>
 
-                <div class="ps-rate-unit">
-                  <span class="pt-label pt-desk" id="rateUnitLabel">Charging Unit <span class="pt-req" aria-hidden="true">*</span></span>
-                  <input type="hidden" id="svcRateUnit" value="job" />
-                  <div class="pt-segment ps-units" id="rateUnits" role="radiogroup" aria-labelledby="rateUnitLabel" aria-label="Charging unit">
-                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="hour" /><span><span class="pt-desk">/ hour</span><span class="pt-mob">/ hr</span></span></label>
-                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="job" checked /><span>/ job</span></label>
-                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="day" /><span>/ day</span></label>
-                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="session" /><span>/ session</span></label>
-                    <label class="pt-segment-opt"><input type="radio" name="rateUnit" value="visit" /><span>/ visit</span></label>
-                  </div>
+                <div class="ps-rate-unitname" id="rateUnitNameWrap" hidden>
+                  <label class="pt-label" for="svcUnitLabel">What is one unit? <span class="pt-req" aria-hidden="true">*</span></label>
+                  <div class="pt-field"><input type="text" id="svcUnitLabel" class="pt-input" maxlength="30" placeholder="e.g. square metre" autocomplete="off" /></div>
                 </div>
               </div>
               <p class="pt-help pt-help-icon pt-desk"><svg class="pt-i" aria-hidden="true"><use href="#i-bulb"/></svg><span><strong>Pro Tip:</strong> Fair local pricing attracts repeat clients and higher ratings. You can modify this per custom quotation later.</span></p>
@@ -456,6 +449,7 @@
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/pricing-methods.js"></script>
   <script src="js/category-picker.js"></script>
   <script src="js/category-forms.js"></script>
   <script src="js/ui.js"></script>
@@ -484,53 +478,70 @@
       }
       var priceVal = parseFloat(document.getElementById('svcPrice').value);
       var maxVal   = parseFloat(document.getElementById('svcPriceMax').value);
-      var unitVal  = document.getElementById('svcRateUnit').value;
-      var range    = isRange();
+      var type     = document.getElementById('svcPriceType').value;
+      var row      = STPricing.toRow(type, document.getElementById('svcPrice').value, document.getElementById('svcPriceMax').value, document.getElementById('svcUnitLabel').value) || { price: 0, price_max: null, rate_unit: '/job', price_type: 'fixed', price_unit_label: null };
       return {
-        numericValue: isNaN(priceVal) ? 0 : priceVal,
-        maxValue: range && !isNaN(maxVal) ? maxVal : null,
-        isRange: range,
-        rateUnit: '/' + unitVal
+        numericValue: row.price,
+        maxValue: row.price_max,
+        isRange: !!row.price_max,
+        rateUnit: row.rate_unit,
+        priceType: row.price_type,
+        unitLabel: row.price_unit_label,
+        problem: STPricing.check(type, document.getElementById('svcPrice').value, document.getElementById('svcPriceMax').value, document.getElementById('svcUnitLabel').value)
       };
     }
 
-    /* Fixed price / Price range: show the "To" box and relabel the first one "From" */
-    function setRateMode(mode) {
-      var range = mode === 'range';
-      document.getElementById('svcRateMode').value = range ? 'range' : 'fixed';
+    /* How do you charge? (Categories Stage 6a): one choice sets the price boxes, the unit and what customers read */
+    function buildMethods() {
+      var box = document.getElementById('rateMethods');
+      if (box.children.length) return;
+      STPricing.METHODS.forEach(function (m) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'pt-chip'; b.setAttribute('data-method', m.key); b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false');
+        b.textContent = m.label; box.appendChild(b);
+      });
+    }
+
+    function setMethod(key) {
+      var m = STPricing.get(key) || STPricing.get('fixed');
+      document.getElementById('svcPriceType').value = m.key;
+      document.getElementById('svcRateUnit').value = m.unit;
+      document.getElementById('svcRateMode').value = m.amount === 'range' ? 'range' : 'fixed';
+      var chips = document.querySelectorAll('#rateMethods .pt-chip');
+      for (var i = 0; i < chips.length; i++) {
+        var on = chips[i].getAttribute('data-method') === m.key;
+        chips[i].classList.toggle('is-active', on); chips[i].setAttribute('aria-checked', on ? 'true' : 'false');
+      }
+      document.getElementById('rateMethodHint').textContent = m.hint;
+      var range = m.amount === 'range', none = m.amount === 'none';
+      var amountBox = document.querySelector('.ps-rate-amount');
+      amountBox.hidden = none;
       document.getElementById('rateMaxWrap').hidden = !range;
-      document.getElementById('svcPriceMax').required = range;
-      document.getElementById('rateAmountLabel').textContent = range ? 'From' : 'Rate Amount';
-      document.getElementById('rateAmountLabelMob').textContent = range ? 'From' : 'Rate';
-      var radios = document.getElementsByName('rateMode');
-      for (var i = 0; i < radios.length; i++) radios[i].checked = radios[i].value === (range ? 'range' : 'fixed');
+      document.getElementById('svcPrice').required = !isSales() && (m.amount === 'one' || range);
+      document.getElementById('svcPriceMax').required = !isSales() && range;
+      document.getElementById('rateAmountLabel').textContent = range ? 'From' : (m.amount === 'optional' ? 'Starting idea (optional)' : 'Price');
+      document.getElementById('rateAmountLabelMob').textContent = range ? 'From' : 'Price';
+      document.getElementById('rateUnitNameWrap').hidden = !m.needsLabel;
       onRateInput();
     }
+
+    function setRateMode(mode) { setMethod(mode === 'range' ? 'range' : 'fixed'); }   /* old name, kept for the draft code */
 
     function onRateInput() {
       var hint  = document.getElementById('rateParsedHint');
       var price = parseFloat(document.getElementById('svcPrice').value);
       var max   = parseFloat(document.getElementById('svcPriceMax').value);
-      var unit  = document.getElementById('svcRateUnit').value;
+      var type  = document.getElementById('svcPriceType').value;
       var range = isRange();
       if (!document.getElementById('svcPrice').value && !(range && document.getElementById('svcPriceMax').value)) { hint.className = 'pt-help'; hint.textContent = ''; return; }
-      if (isNaN(price) || price <= 0) {
-        hint.className = 'pt-error';
-        hint.textContent = 'Enter a valid amount';
-        return;
+      if (isNaN(price) || price <= 0) { hint.className = 'pt-error'; hint.textContent = 'Enter a valid amount'; return; }
+      if (range && document.getElementById('svcPriceMax').value && (isNaN(max) || max <= price)) {
+        hint.className = 'pt-error'; hint.textContent = 'The "To" amount must be more than the "From" amount'; return;
       }
-      if (range && document.getElementById('svcPriceMax').value) {
-        if (isNaN(max) || max <= price) {
-          hint.className = 'pt-error';
-          hint.textContent = 'The "To" amount must be more than the "From" amount';
-          return;
-        }
-        hint.className = 'pt-help';
-        hint.textContent = 'Your range: \u20a6' + price.toLocaleString() + ' to \u20a6' + max.toLocaleString() + ' / ' + unit;
-        return;
-      }
+      var row = STPricing.toRow(type, price, max, document.getElementById('svcUnitLabel').value);
+      var d = row && STPricing.describe(row);
       hint.className = 'pt-help';
-      hint.textContent = range ? '' : 'Your rate: \u20a6' + price.toLocaleString() + ' / ' + unit;
+      hint.textContent = d && d.hasAmount ? 'Customers will see: ' + d.label + ' ' + d.text : '';
     }
 
     /* ── Stage 4: Sales category (products) ───────────────────────────────────────────── */
@@ -603,9 +614,7 @@
       document.getElementById('secPricing').closest('section').hidden = on;
       document.getElementById('svcPrice').required = !on;
       document.getElementById('svcPriceMax').required = !on && isRange();
-      var unit = document.getElementById('svcRateUnit');
-      if (on) { unit.value = 'item'; }
-      else if (unit.value === 'item') { unit.value = 'job'; var r = document.querySelector('input[name="rateUnit"][value="job"]'); if (r) r.checked = true; }
+      setMethod(document.getElementById('svcPriceType').value);   /* put the required flags back after Sales\n */
       renumberSections();
     }
 
@@ -672,6 +681,10 @@
     /* Category questions (every category except Sales and Other): js/category-forms.js draws them under Service Basics */
     if (window.STCatForms) STCatForms.mount({ box: 'catFields', section: 'secDetails', select: 'svcCategory', sub: 'svcSubcategory', onChange: renumberSections });
 
+    /* the price chooser exists before anything else runs, so a saved draft can pick its method */
+    buildMethods();
+    setMethod('fixed');
+
     async function initPage() {
       /* Auth check only — NO verification gate. Let them fill the form first. */
       var sess = await window.supabase.auth.getSession();
@@ -725,16 +738,15 @@
           if (draft.availability_status) document.getElementById('svcAvailability').value = draft.availability_status;
           if (Array.isArray(draft.specialties) && draft.specialties.length) document.getElementById('svcSpecialties').value = draft.specialties.join(', ');
           if (draft.photo)        { uploadedPhotoUrl = draft.photo; showPhotoPreview(draft.photo); }
-          if (draft.price) {
-            document.getElementById('svcPrice').value = Number(draft.price);
-            var rawUnit = (draft.rate_unit || '/job').replace('/', '');
-            document.getElementById('svcRateUnit').value = rawUnit || 'job';
-            if (draft.price_max && Number(draft.price_max) > Number(draft.price)) {
-              document.getElementById('svcPriceMax').value = Number(draft.price_max);
-              setRateMode('range');
-            }
-            onRateInput();
-          }
+          /* pricing: the saved method, or what an older listing was (one price = starting price, two = range, none = custom quotation) */
+          if (draft.price) document.getElementById('svcPrice').value = Number(draft.price);
+          if (draft.price_max && Number(draft.price_max) > Number(draft.price)) document.getElementById('svcPriceMax').value = Number(draft.price_max);
+          if (draft.price_unit_label) document.getElementById('svcUnitLabel').value = draft.price_unit_label;
+          var drType = STPricing.typeOf(draft);
+          var drUnit = String(draft.rate_unit || '').replace('/', '');
+          /* an old listing that charged per hour / day / session / visit keeps that way of charging */
+          if (!STPricing.get(draft.price_type) && draft.price) { var byUnit = { hour: 'hourly', day: 'daily', session: 'session', visit: 'visit', item: 'item' }[drUnit]; if (byUnit && drType !== 'range') drType = byUnit; else if (drType === 'from') drType = 'from'; }
+          setMethod(drType);
           if (isSales()) { applySalesMode(true); loadProducts(draft.id); }
           updateDescCount();
           if (window.psUpdateProgress) window.psUpdateProgress();
@@ -745,10 +757,11 @@
 
       document.getElementById('svcPrice').addEventListener('input', onRateInput);
       document.getElementById('svcPriceMax').addEventListener('input', onRateInput);
-      document.getElementById('rateModes').addEventListener('change', function (ev) {
-        if (ev.target && ev.target.name === 'rateMode') setRateMode(ev.target.value);
+      document.getElementById('rateMethods').addEventListener('click', function (ev) {
+        var b = ev.target.closest ? ev.target.closest('[data-method]') : null;
+        if (b) setMethod(b.getAttribute('data-method'));
       });
-      document.getElementById('svcRateUnit').addEventListener('change', onRateInput);
+      document.getElementById('svcUnitLabel').addEventListener('input', onRateInput);
       document.getElementById('svcDescription').addEventListener('input', updateDescCount);
       wireUpload();
       document.getElementById('verifyAsideBtn').addEventListener('click', function() {
@@ -847,8 +860,7 @@
         if (pr.error) { showErr(pr.error); return; }
         if (!pr.items.length) { showErr('Add at least one product with a name and a price.'); return; }
       }
-      if (!rateValues.numericValue || rateValues.numericValue <= 0) { showErr('Please enter your rate amount.'); return; }
-      if (rateValues.isRange && (!rateValues.maxValue || rateValues.maxValue <= rateValues.numericValue)) { showErr('For a price range, the "To" amount must be more than the "From" amount.'); return; }
+      if (!isSales() && rateValues.problem) { showErr(rateValues.problem); return; }
       if (!location)                                             { showErr('Please enter your location.'); return; }
       if (description.length < 20)                               { showErr('Description must be at least 20 characters.'); return; }
 
@@ -915,6 +927,8 @@
           price:        rateValues.numericValue,
           rate_unit:    rateValues.rateUnit,
           price_max:    rateValues.isRange ? rateValues.maxValue : null,   /* Stage 3: null = fixed price */
+          price_type:       isSales() ? null : rateValues.priceType,   /* Stage 6a: how the tasker charges; needs sql/categories/p2-pricing-methods.sql */
+          price_unit_label: isSales() ? null : rateValues.unitLabel,
           location:     location,
           description:  description,
           photo:        photoUrl || null,
@@ -933,10 +947,10 @@
         var svcRes = await writeService(payload);
         /* Categories SQL not run yet (subcategory / details columns missing): save without them and carry on */
         var droppedCols = [];
-        for (var attempt = 0; attempt < 2 && svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204'); attempt++) {
+        for (var attempt = 0; attempt < 4 && svcRes.error && (svcRes.error.code === '42703' || svcRes.error.code === 'PGRST204'); attempt++) {
           var colMsg = svcRes.error.message || '', dropped = false;
-          ['subcategory', 'details'].forEach(function (col) {
-            if (new RegExp(col).test(colMsg) && Object.prototype.hasOwnProperty.call(payload, col)) { if (col === 'details' ? Object.keys(payload[col] || {}).length : payload[col] != null) droppedCols.push(col); delete payload[col]; dropped = true; }
+          ['subcategory', 'details', 'price_type', 'price_unit_label'].forEach(function (col) {
+            if (new RegExp(col).test(colMsg) && Object.prototype.hasOwnProperty.call(payload, col)) { if (col === 'details' ? Object.keys(payload[col] || {}).length : payload[col] != null) droppedCols.push(col === 'details' || col === 'subcategory' ? 'answers' : 'pricing'); delete payload[col]; dropped = true; }
           });
           if (!dropped) break;
           svcRes = await writeService(payload);
@@ -955,7 +969,7 @@
         }
         if (svcRes.error) throw svcRes.error;
         savedServiceId = svcRes.data && svcRes.data.id;
-        if (droppedCols.length) showToast('Saved, but the category answers could not be stored yet. Ask the site owner to run the Categories SQL (sql/categories).');
+        if (droppedCols.length) showToast('Saved, but the ' + (droppedCols.indexOf('pricing') !== -1 ? 'pricing method' : 'category answers') + ' could not be stored yet. Ask the site owner to run the Categories SQL (sql/categories).');
         if (isSales() && savedServiceId) await saveProducts(savedServiceId, postUser.id);   /* Stage 4 */
 
         /* Save Draft: stay on the page. The listing stays unpublished and the public taskers row is untouched */

@@ -76,15 +76,22 @@
     var photo = text(svc.photo);
     if (/^https?:\/\//i.test(photo)) { $('sdPhoto').src = photo; $('sdPhoto').alt = title; $('sdMedia').hidden = false; }
 
-    var price = Number(svc.price), unit = text(svc.rate_unit).replace(/^\//, '');
+    /* Price block: wording comes from js/pricing-methods.js so cards, this page and My Services agree */
+    var pr = window.STPricing ? STPricing.describe(svc) : null;
     var priceEl = $('sdPrice'); priceEl.textContent = '';
-    var priceMax = Number(svc.price_max);
-    var rateLbl = document.querySelector('.sd-rate-label'); if (rateLbl) rateLbl.textContent = priceMax > Number(svc.price) ? 'Price range' : 'Starting from';
-    if (price > 0) {
-      var priceTxt = NAIRA + price.toLocaleString('en-NG') + (priceMax > price ? ' \u2013 ' + NAIRA + priceMax.toLocaleString('en-NG') : '');
-      priceEl.appendChild(document.createTextNode(priceTxt));
-      if (unit) { var sm = document.createElement('small'); sm.textContent = ' per ' + unit; priceEl.appendChild(sm); }
-    } else { priceEl.textContent = 'Ask for a quote'; }
+    var rateLbl = document.querySelector('.sd-rate-label');
+    if (pr) {
+      if (rateLbl) rateLbl.textContent = pr.label;
+      priceEl.appendChild(document.createTextNode(pr.amount));
+      if (pr.unit) { var sm = document.createElement('small'); sm.textContent = ' ' + pr.unit; priceEl.appendChild(sm); }
+    } else {
+      var price = Number(svc.price), unit = text(svc.rate_unit).replace(/^\//, ''), priceMax = Number(svc.price_max);
+      if (rateLbl) rateLbl.textContent = priceMax > price ? 'Price range' : 'Starting from';
+      if (price > 0) {
+        priceEl.appendChild(document.createTextNode(NAIRA + price.toLocaleString('en-NG') + (priceMax > price ? ' \u2013 ' + NAIRA + priceMax.toLocaleString('en-NG') : '')));
+        if (unit) { var sm2 = document.createElement('small'); sm2.textContent = ' per ' + unit; priceEl.appendChild(sm2); }
+      } else { priceEl.textContent = 'Ask for a quote'; }
+    }
 
     var desc = $('sdDesc'); desc.textContent = '';
     var ps = paras(svc.description);

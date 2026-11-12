@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 5)
+# Categories project: handoff for the next AI (after Stage 6a)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -17,7 +17,9 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Done |
 | 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial. Owner chose QUESTIONS ONLY (no publishing hold) | Done (this stage) |
 | 5 | Show the answers to customers; category filters on Find Services | Done (this stage), see "Stage 5 notes" |
-| 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Next |
+| 6a | Pricing methods on Post a Service (11 ways to charge) | Done (this stage), see "Stage 6a notes" |
+| 6b | Sales upgrade (product listing steps, condition, inventory) | Next |
+| 6c | Reuse the category questions + budget on Post a Task | Not started |
 
 ## How the pieces fit
 - `#svcCategory` (hidden select) and `#svcSubcategory` (hidden input) hold the answers from the picker. The picker fires a normal `change` event on the select.
@@ -113,5 +115,14 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - **Tests:** `node --test tests/*.js tests/*.mjs` = 176 pass. Browser run (Playwright, 1280px and 390px, fake Supabase, 4 sample services): 52 checks passed (filters, counts, Clear all, `?category=` link, service page panel, licence note, no sideways scroll). That harness is not in the zip. NOT tested against the real Supabase.
 - **Design check:** same two old warnings on `post-service.html` as the untouched original; no new ones from Stage 5 files.
 
-## NEXT: Stage 6 (pricing methods, Sales upgrade, Post a Task)
-Re-read the Category Directory document sections 4, 5 and 9: three listing types (product / service / task request), nine pricing methods (fixed, hourly, daily, per item, per session, per unit, starting price, negotiable, custom quotation). Reuse `SCHEMAS` for Post a Task. Open decisions in section 9 (seller verification, inventory, direct purchase) still need the owner.
+## Stage 6a notes (pricing methods)
+- **What:** Post a Service now asks "How do you charge?" with 11 chips: Fixed price, Per hour, Per day, Per item, Per session, Per visit, Per unit (asks "What is one unit?", e.g. square metre), Starting price, Price range, Negotiable (price optional), Custom quotation (no price). These are the 9 methods in the Category Directory (section 5) plus Price range and Per visit that the site already had. One list lives in `js/pricing-methods.js` (`STPricing`: METHODS, describe, check, toRow, typeOf); the form, cards, service page and My Services all read it, so wording agrees.
+- **Saved:** the old columns still carry the price (`price`, `price_max`, `rate_unit`: '/hour', '/item', '/unit'...). New `services.price_type` and `services.price_unit_label` (SQL `sql/categories/p2-pricing-methods.sql`, rollback `p2-rollback.sql`). If the SQL has not run, the save drops those two fields, says so in a toast and still saves.
+- **Old listings:** no `price_type`: one price reads "Starting From", two prices "Price range", no price "Ask for a quote". Opening an old draft picks the matching chip (an old per-hour listing opens as "Per hour").
+- **Custom quotation saves price 0.** Run the second query at the bottom of p2 to confirm no database rule demands price > 0. NOT checked against the real database. The Book button on a quote service still goes to the tasker's booking pop-up (unchanged); the owner may want a "Request a quote" flow later.
+- **Shown in:** Find Services cards (label + amount + unit), service page price block, My Services rate figure; Find Services has "Per item" and "Per unit" in the charging-unit filter. NOT changed: home-feed and index service cards (they still use the old price text), tasker profile, coordinator service edit, the price slider (a quote / negotiable service with no price passes any maximum price).
+- **Bug fixed while testing:** none new. Note for editors: do not call `setMethod('fixed')` after a draft restore; the chips are built and set once, before `initPage` runs.
+- **Tests:** `node --test tests/*.js tests/*.mjs` = 181 pass (`tests/pricing-methods.test.js` new). Browser run (Playwright 1280px and 390px, fake Supabase with a tasker user): 36 checks passed on Post a Service (chips, per-method boxes, blocking an empty unit name, exact rows saved for hourly / per unit / quote / range, save when the SQL is missing, restoring 4 kinds of saved listing); the Stage 5 browser run still passes. Harnesses are not in the zip. The fake user needs `user_metadata.role = 'tasker'` or the page shows "Not available".
+
+## NEXT: Stage 6b (Sales upgrade), then 6c (Post a Task)
+6b: re-read Category Directory sections 4A and 5 (Product Listings: 7 steps, condition Brand New / Fairly Used / Refurbished, brand, model, colour, size, quantity, delivery / pickup, inventory In Stock / Out / Sold / Paused). Open owner decisions (section 9): does Sales need seller verification, inventory and variations, buy directly or contact the seller. Ask before building. 6c: reuse `SCHEMAS` on `post-task.html` / `js/tasks.js`; tasks need `details` and `subcategory` columns (new SQL) and the Stage 5 display and filters on Find Tasks.

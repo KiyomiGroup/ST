@@ -494,8 +494,8 @@ function stServiceCard(s) {
       ${Array.isArray(s.facts) && s.facts.length ? `<ul class="st-card-facts" aria-label="Service details">${s.facts.slice(0, 3).map(f => `<li>${e(f)}</li>`).join('')}</ul>` : ''}
     </div>
     <div class="st-card-foot st-card-foot--plain">
-      <div class="st-card-foot-info"><span class="st-card-foot-label">${priced ? (ST_IS_RANGE(s.price, s.price_max) ? 'Price range' : 'Starting From') : 'Pricing'}</span>
-        <span class="st-card-price">${priced ? ST_PRICE(s.price, s.price_max) + (s.unit ? ` <small>/${e(s.unit)}</small>` : '') : 'Ask for a quote'}</span></div>
+      <div class="st-card-foot-info"><span class="st-card-foot-label">${s.pricing ? e(s.pricing.label) : (priced ? (ST_IS_RANGE(s.price, s.price_max) ? 'Price range' : 'Starting From') : 'Pricing')}</span>
+        <span class="st-card-price">${s.pricing ? e(s.pricing.amount) + (s.pricing.unit ? ` <small>${e(s.pricing.unit)}</small>` : '') : (priced ? ST_PRICE(s.price, s.price_max) + (s.unit ? ` <small>/${e(s.unit)}</small>` : '') : 'Ask for a quote')}</span></div>
       <a href="${e(s.href)}" class="st-card-cta">Book Service</a>
     </div>
   </article>`;
