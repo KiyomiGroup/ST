@@ -509,6 +509,7 @@
 </div>
         </div>
 
+        <p class="wl-bal-callout wl-wd-gate" id="wdGate" role="status" hidden><svg class="wl-i" aria-hidden="true"><use href="#i-shield-check"/></svg><span>Verify your identity to withdraw. The name on your ID must match the name on your bank account. <a class="wl-link" id="wdGateLink" href="verify.html">Verify now</a></span></p>
         <!-- Pay to: saved accounts (W6c fills #wdAccountList from #wdAccountTemplate; the default is pre-selected) -->
         <fieldset class="wl-acct-set" id="wdAccounts" aria-describedby="wdAccountsError">
           <legend class="wl-label">Pay to</legend>
@@ -535,7 +536,7 @@
           <button type="button" class="wl-preset" data-wd-preset="0.5">50%</button>
           <button type="button" class="wl-preset" data-wd-preset="1">Max</button>
         </div>
-        <p class="wl-wd-hint" id="wdLimits">Minimum &#8358;<span data-wd="min">500</span> and maximum &#8358;<span data-wd="max">500,000</span> per withdrawal, up to &#8358;<span data-wd="daily">1,000,000</span> a day. A small transfer fee is taken from the amount; you will see it before you confirm.</p>
+        <p class="wl-wd-hint" id="wdLimits">Minimum &#8358;<span data-wd="min">500</span> and maximum &#8358;<span data-wd="max">500,000</span> per withdrawal, up to &#8358;<span data-wd="daily">1,000,000</span> a day. A small transfer fee is taken from the amount; you will see it before you confirm. Your first withdrawal needs identity verification, and the bank account name must match the name on your ID.</p>
         <p class="wl-field-error" id="wdFormError" role="alert"></p>
       </div>
       <footer class="wl-modal-foot">
@@ -592,6 +593,22 @@
       </footer>
     </div>
 
+    <!-- Step 5 · Verification needed, or the account name does not match (VR2b). Shown when the server refuses
+         (verification_required, name_mismatch). W6c / VR2b fill [data-wd="gateTitle"] and [data-wd="gateMessage"]
+         and show ONE of the two action buttons. Nothing was debited. -->
+    <div class="wl-modal-panel" id="wdStep5" data-wd-step="5" hidden>
+      <div class="wl-modal-body wl-wd-done" role="alert">
+        <span class="wl-wd-done-icon" aria-hidden="true"><svg class="wl-i"><use href="#i-shield-check"/></svg></span>
+        <h3 class="wl-wd-done-title" tabindex="-1" data-wd="gateTitle">Verification needed</h3>
+        <p class="wl-wd-done-text" data-wd="gateMessage">Your first withdrawal needs a quick ID check.</p>
+      </div>
+      <footer class="wl-modal-foot">
+        <button type="button" class="wl-btn wl-btn-grey" data-wd-close>Close</button>
+        <a class="wl-btn" id="wdGateAction" href="verify.html" hidden>Verify my identity</a>
+        <button type="button" class="wl-btn" id="wdGateAdd" data-bank-open="add" hidden>Add a bank account</button>
+      </footer>
+    </div>
+
     <!-- One saved-account card. W6c clones this for each saved account and sets: the radio value
          (the account id), data-acct="bank", "name", "last4", and shows data-acct="default" for the default. -->
     <template id="wdAccountTemplate">
@@ -605,6 +622,7 @@
           </span>
           <span class="wl-acct-name" data-acct="name"></span>
           <span class="wl-acct-num">&bull;&bull;&bull;&bull; <span data-acct="last4"></span></span>
+          <span class="wl-acct-match" data-acct="match" hidden></span>
         </span>
         <span class="wl-acct-check" aria-hidden="true"><svg class="wl-i"><use href="#i-circle-check"/></svg></span>
       </label>

@@ -452,7 +452,27 @@ async function addBankAccount(bankCode, accountNumber) {
   _wdCheckAccount(bankCode, accountNumber);
   var d = await _wdCall({ action: 'account_add', bank_code: bankCode, account_number: accountNumber });
   if (typeof d.id !== 'string') throw _wdError('We could not save this account. Please try again.', 'account_failed');
-  return { id: d.id, bankName: d.bank_name, accountName: d.account_name, last4: d.last4, isDefault: !!d.is_default, alreadySaved: !!d.already_saved };
+  // VR2b: nameMatch is true / false, or null when no verified name is stored yet
+  return { id: d.id, bankName: d.bank_name, accountName: d.account_name, last4: d.last4, isDefault: !!d.is_default, alreadySaved: !!d.already_saved,
+           nameMatch: d.name_match === true ? true : d.name_match === false ? false : null };
+}
+
+/* VR2b: may this person withdraw, and does each saved account's name match their verified name?
+   The database decides (withdrawal_gate_mine) and checks again on every withdrawal; this is for display only.
+   Returns { needsVerify, identityOk, nameOnFile, matches: { <accountId>: true | false | null } } or NULL on ANY failure
+   (the popup then blocks nothing and the server still decides). Never throws, never logs values. */
+async function getWithdrawalGate() {
+  try {
+    var d = await _rpc('withdrawal_gate_mine');
+    if (!d || typeof d !== 'object' || typeof d.needs_verify !== 'boolean') return null;
+    var matches = {};
+    (Array.isArray(d.accounts) ? d.accounts : []).forEach(function (a) {
+      if (a && typeof a.id === 'string') matches[a.id] = a.name_match === true ? true : a.name_match === false ? false : null;
+    });
+    return { needsVerify: d.needs_verify, identityOk: d.identity_ok === true, nameOnFile: d.name_on_file === true, matches: matches };
+  } catch (_e) {
+    return null;
+  }
 }
 
 async function removeBankAccount(id) {
@@ -672,6 +692,7 @@ window.ST.payments = {
   listBankAccounts,
   getClearing,
   addBankAccount,
+  getWithdrawalGate,
   removeBankAccount,
   setDefaultBankAccount,
   payFromWallet,

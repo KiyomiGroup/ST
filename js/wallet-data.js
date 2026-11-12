@@ -484,7 +484,7 @@
     var listEl = document.getElementById('wdAccountList'), tpl = document.getElementById('wdAccountTemplate');
     var loadingEl = document.getElementById('wdAccountsLoading'), emptyEl = document.getElementById('wdAccountsEmpty');
     var acctErr = document.getElementById('wdAccountsError'), acctRetry = null;
-    var STEP_TEXT = { 1: 'Step 1 of 2 \u2022 Choose account and amount', 2: 'Step 2 of 2 \u2022 Review', 3: 'Processing', 4: 'Not completed' };
+    var STEP_TEXT = { 1: 'Step 1 of 2 \u2022 Choose account and amount', 2: 'Step 2 of 2 \u2022 Review', 3: 'Processing', 4: 'Not completed', 5: 'Check needed' };
     var MASK = '\u2022\u2022\u2022\u2022 ';
     var FEE_FAIL = 'We could not work out your transfer fee. Please try again.';
     // Server refusals that send the person back to step 1 (nothing was sent to the bank)
@@ -499,6 +499,11 @@
     var checking = false;     // the fee is being looked up
     var openId = 0;           // changes on open and close, so a late answer for an old popup is ignored
     var listSeq = 0;
+    var gate = null;          // VR2b: { needsVerify, matches } from the server, or null (unknown: nothing is blocked here, the server still decides)
+    var gateSeq = 0;
+    var GATE_VERIFY = 'Verify your identity to withdraw. Your first withdrawal needs a quick ID check.';
+    var GATE_STEP_VERIFY = 'Your first withdrawal needs a quick ID check. The name on your ID must match the name on your bank account.';
+    var GATE_NAME = 'The name on this bank account does not match your verified name. Choose another account or add one in your own name.';
 
     var digits = function (v) { return parseInt(String(v).replace(/[^0-9]/g, ''), 10) || 0; };
     // What can be withdrawn now: the balance minus what is still clearing (CR-2). The server decides.
@@ -528,6 +533,54 @@
       setAll('min', fmt(limits.min)); setAll('max', fmt(limits.max)); setAll('daily', fmt(limits.daily));
     }
     function resetConfirm() { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Withdrawal'; }
+
+    /* VR2b: identity and name check. The database decides on every withdrawal; this only warns early. */
+    function verifyUrl() {
+      // a coordinator checks on their own page (their consent notice is different); everyone else on verify.html
+      return COORD_SHELL ? 'coordinator-identity.html'
+        : 'verify.html?return=' + encodeURIComponent(location.pathname) + '&action=withdraw';
+    }
+    function selectedMismatch() {
+      var a = selectedAccount();
+      return !!(a && gate && !gate.needsVerify && gate.matches && gate.matches[a.id] === false);
+    }
+    function applyGate() {
+      var needs = !!(gate && gate.needsVerify);
+      var box = document.getElementById('wdGate'), link = document.getElementById('wdGateLink');
+      if (box) box.hidden = !needs;
+      if (link) link.setAttribute('href', verifyUrl());
+      $$('.wl-acct', listEl).forEach(function (card) {
+        var input = card.querySelector('input[name="wdAccount"]'), badge = card.querySelector('[data-acct="match"]');
+        var m = gate && !needs && input && gate.matches ? gate.matches[input.value] : null;
+        card.classList.toggle('wl-acct--mismatch', m === false);
+        if (!badge) return;
+        badge.hidden = m !== true && m !== false;
+        badge.className = 'wl-acct-match' + (m === true ? ' wl-acct-match--ok' : m === false ? ' wl-acct-match--bad' : '');
+        badge.textContent = m === true ? 'Name matches' : m === false ? 'Name does not match' : '';
+      });
+      errForm.textContent = selectedMismatch() ? GATE_NAME : (errForm.textContent === GATE_NAME ? '' : errForm.textContent);
+      refreshContinue();
+    }
+    function loadGate() {
+      var mine = ++gateSeq, pay = window.ST && window.ST.payments;
+      if (!pay || typeof pay.getWithdrawalGate !== 'function') return Promise.resolve();
+      return Promise.resolve().then(function () { return pay.getWithdrawalGate(); }).then(function (g) {
+        if (mine !== gateSeq) return;
+        gate = g; applyGate();
+      }, function () { if (mine === gateSeq) { gate = null; applyGate(); } });
+    }
+    /* The server refused for identity or name (nothing was debited): say why and offer the one next step. */
+    function showGate(code) {
+      var verify = code === 'verification_required';
+      setAll('gateTitle', verify ? 'Verification needed' : 'This account is not in your name');
+      setAll('gateMessage', verify ? GATE_STEP_VERIFY : GATE_NAME);   // fixed wording: the server text repeats the title
+      var go = document.getElementById('wdGateAction'), add = document.getElementById('wdGateAdd');
+      if (go) { go.hidden = !verify; go.setAttribute('href', verifyUrl()); }
+      if (add) add.hidden = verify;
+      showStep(5);
+      stepLine.textContent = verify ? 'Check needed' : 'Name check';
+      focusTitle('wdStep5');
+    }
 
     /* Saved accounts */
     function selectedAccount() {
@@ -562,6 +615,7 @@
         if (def) def.hidden = !a.isDefault;
         listEl.appendChild(card);
       });
+      applyGate();
       refreshContinue();
     }
     function showAccountsError(message) {
@@ -641,7 +695,8 @@
     }
     function refreshContinue() {
       var v = digits(amountIn.value);
-      continueBtn.disabled = checking || sending || v === 0 || amountProblem(v) !== '' || !selectedAccount();
+      continueBtn.disabled = checking || sending || v === 0 || amountProblem(v) !== '' || !selectedAccount()
+        || !!(gate && gate.needsVerify) || selectedMismatch();
     }
     function validateAmount(showEmpty) {
       var v = digits(amountIn.value);
@@ -671,6 +726,7 @@
       checking = false;
       amountIn.value = '';
       errForm.textContent = ''; errConfirm.textContent = '';
+      gate = null; gateSeq++; applyGate();
       resetConfirm();
       syncAvailable();
       setLimitsText();
@@ -684,6 +740,7 @@
       // numbers were read, read them again so an amount that is now allowed is not refused here.
       if (state.clearing && state.clearing.next_clear_at && Date.parse(state.clearing.next_clear_at) <= Date.now()) refreshWallet();
       loadAccounts('');
+      loadGate();
       loadLimits();
     }
     function close() {
@@ -715,7 +772,7 @@
       amountIn.value = v ? v.toLocaleString('en-NG') : '';
       validateAmount(false);
     });
-    listEl.addEventListener('change', function () { errForm.textContent = ''; refreshContinue(); });
+    listEl.addEventListener('change', function () { errForm.textContent = ''; applyGate(); });
     $$('[data-wd-preset]', modal).forEach(function (btn) {
       btn.addEventListener('click', function () {
         var v = Math.min(Math.floor(available() * parseFloat(btn.getAttribute('data-wd-preset'))), limits.max);
@@ -729,6 +786,7 @@
       if (!isOpen() || sending) return;
       var cur = selectedAccount();
       loadAccounts(cur ? cur.id : '');
+      loadGate();
     });
 
     form.addEventListener('submit', function (e) {
@@ -736,6 +794,8 @@
       if (checking || sending) return;
       validateAmount(true);
       if (continueBtn.disabled) {
+        if (gate && gate.needsVerify) { errForm.textContent = GATE_VERIFY; return; }
+        if (selectedMismatch()) { errForm.textContent = GATE_NAME; return; }
         if (!selectedAccount() && digits(amountIn.value) > 0 && amountProblem(digits(amountIn.value)) === '') {
           errForm.textContent = Object.keys(accounts).length ? 'Choose the bank account to pay to.' : 'Add a bank account first.';
         } else {
@@ -807,6 +867,11 @@
           // An unknown result never offers a blind "Try again", and neither does a refund that is still pending.
           showFailed(msg, !(err.unknown || code === 'refund_pending'));
           refreshWallet();
+          return;
+        }
+        if (code === 'verification_required' || code === 'name_mismatch') {
+          showGate(code);      // nothing was debited
+          loadGate();
           return;
         }
         if (BACK_TO_FORM.indexOf(code) !== -1) {
@@ -1180,7 +1245,9 @@
         bkChanged();
         if (bk.fromPopup) { bkClose(); return; }   // hand control back to the withdrawal popup
         bkPanel('list');
-        bkLoadList(res && res.alreadySaved ? 'That account was already saved.' : 'Account saved.');
+        var savedMsg = res && res.alreadySaved ? 'That account was already saved.' : 'Account saved.';
+        if (res && res.nameMatch === false) savedMsg += ' The name on it does not match your verified name, so you cannot withdraw to it.';
+        bkLoadList(savedMsg);
         bkFocusTitle();
       }, function (err) {
         bk.saving = false; bkSave.textContent = 'Save account'; bkSyncSave();

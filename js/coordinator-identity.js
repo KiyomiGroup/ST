@@ -14,7 +14,7 @@
   var RETURN_FLAG_MAX_AGE_MS = 6 * 60 * 60 * 1000;
   var LOGIN = 'coordinator-login.html';
   var FALLBACK_MSG = 'Something went wrong. Please try again.';
-  var START_PANELS = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1 };
+  var START_PANELS = { NOT_STARTED: 1, FAILED: 1, EXPIRED: 1, NEEDS_NAME: 1 };
   var state = { status: null, consentGiven: false, versionOk: true, busy: false, cameBack: false };
   var pageVersion = null;
 
@@ -77,6 +77,7 @@
 
   function render(s) {
     var status = s.status === 'ABANDONED' ? 'FAILED' : s.status;
+    if (status === 'VERIFIED' && s.needs_name === true) status = 'NEEDS_NAME';   // VR2b: verified before names were kept
     state.status = status;
     state.consentGiven = s.consent_given === true && s.consent_version === pageVersion;
     state.versionOk = !pageVersion || s.consent_version === pageVersion;
@@ -98,7 +99,13 @@
     try { coStatus = await myCoordinatorStatus(session.user.id); }
     catch (e) { showOnly('cidLoading'); say('cidError', 'We could not load your account. Please reload the page or try again later.'); setHidden($('cidLoading'), true); return; }
     if (!coStatus) { toLogin({ denied: 'no' }); return; }
-    if (coStatus === 'active') { showOnly('cidActive'); return; }
+    if (coStatus === 'active') {
+      // VR2b: an active coordinator verified before names were kept (or in the middle of the one more check) sees the check; everyone else sees the active page
+      var ra = await readStatus();
+      if (ra.data && ra.data.subject_kind === 'coordinator' && ra.data.needs_name === true) { render(ra.data); return; }
+      showOnly('cidActive');
+      return;
+    }
     if (coStatus !== 'pending') { showOnly('cidBlocked'); return; }
     var r = await readStatus();
     if (!r.data) {

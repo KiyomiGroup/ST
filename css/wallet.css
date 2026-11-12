@@ -533,6 +533,21 @@ html.wl-lock { overflow: hidden; }
   background: var(--pt-mint); color: var(--pt-green); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700;
 }
 .wl-acct-default[hidden] { display: none; }
+/* VR2b: does the saved account's name match the person's verified name? (shown only when the server says so) */
+.wl-acct-match {
+  align-self: flex-start; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
+  font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700;
+}
+.wl-acct-match[hidden] { display: none; }
+.wl-acct-match--ok { background: var(--color-bg); color: var(--pt-green); }
+.wl-acct-match--bad { background: var(--pt-danger-soft); color: var(--pt-danger); }
+.wl-acct--mismatch .wl-acct-name { color: var(--pt-ink-muted); }
+.wl-wd-gate { align-items: flex-start; margin: 0 0 var(--space-4); }
+.wl-wd-gate[hidden] { display: none; }
+.wl-wd-gate .wl-i { flex-shrink: 0; margin-top: 1px; }
+.wl-wd-gate .wl-link { display: inline; }
+a.wl-btn { text-decoration: none; }
+a.wl-btn[hidden], .wl-btn[hidden] { display: none; }
 .wl-acct-check { flex-shrink: 0; display: inline-flex; color: var(--pt-green); visibility: hidden; }
 .wl-acct-check .wl-i { width: 22px; height: 22px; }
 .wl-acct-input:checked ~ .wl-acct-check { visibility: visible; }
