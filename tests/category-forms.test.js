@@ -12,7 +12,7 @@ const ctx = { window: win };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'categories.js'), 'utf8'), ctx);
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'category-forms.js'), 'utf8'), ctx);
 const S = win.STCat, F = win.STCatForms;
-const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet'];
+const PILOT = ['cleaning', 'handyman', 'logistics', 'home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
 const OTHER = F.OTHER_SUB;
 const plain = (x) => JSON.parse(JSON.stringify(x));   /* objects from the vm sandbox have a different prototype */
 
@@ -171,7 +171,7 @@ test('describe turns saved answers into readable lines for customers', () => {
 });
 
 /* ── Stage 4, batch A: Home & Furniture, Gardening, Automotive, Beauty, Fashion ── */
-const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet'];
+const BATCH_A = ['home_furniture', 'landscaping', 'automotive', 'grooming', 'fashion', 'creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
 
 test('batch A: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_A.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -220,7 +220,7 @@ test('batch A: changing the type of work inside a category keeps shared answers 
 });
 
 /* ── Stage 4, batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services ── */
-const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet'];
+const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet', 'events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
 
 test('batch B: every subcategory (and Other) is asked at least two questions', () => {
   BATCH_B.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
@@ -259,4 +259,49 @@ test('batch B: a vet must give a registration number; a full valid answer saves 
   assert.strictEqual(c.walk_length, undefined);
   const edu = F.validate('education', 'Mathematics Lessons', { lesson_modes: ['Online'], class_size: 'Small groups', levels: ['University'] });
   assert.ok(edu.ok, JSON.stringify(edu.errors));
+});
+
+/* ── Stage 4, batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry ── */
+const BATCH_C = ['events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+
+test('batch C: every subcategory (and Other) is asked at least two questions', () => {
+  BATCH_C.forEach(cat => subNames(cat).concat([OTHER]).forEach(sub => {
+    assert.ok(keys(cat, sub).length >= 2, cat + ' / ' + sub + ' has fewer than two questions');
+  }));
+});
+
+test('batch C: questions follow the type of work', () => {
+  assert.ok(keys('events', 'Venue Rental').includes('venue_capacity'));
+  assert.ok(!keys('events', 'Venue Rental').includes('team_size'));
+  assert.ok(keys('events', 'DJs').includes('music_genres'));
+  assert.ok(!keys('events', 'Photography').includes('music_genres'));
+  assert.ok(keys('hospitality', 'Cake Making').includes('custom_designs'));
+  assert.ok(!keys('hospitality', 'Bartending').includes('kitchen_type'));
+  assert.ok(keys('hospitality', 'Food Delivery').includes('insulated'));
+  assert.ok(keys('assistance', 'Queue Assistance').includes('max_wait_hours'));
+  assert.ok(!keys('assistance', 'Local Guide').includes('transport'));
+  assert.ok(keys('assistance', 'Document Submission').includes('with_letter'));
+  assert.ok(keys('construction', 'Roofing').includes('safety_gear'));
+  assert.ok(!keys('construction', 'Tiling').includes('safety_gear'));
+  assert.ok(!keys('construction', 'General Labour').includes('materials'));
+  assert.ok(keys('construction', 'Demolition').includes('removes_debris'));
+  assert.ok(keys('marketing', 'Digital Advertising').includes('ad_spend'));
+  assert.ok(!keys('marketing', 'Promotions & Street Marketing').includes('work_mode'));
+  assert.ok(keys('laundry', 'Laundry Pickup & Delivery').includes('coverage'));
+  assert.ok(!keys('laundry', 'Laundry Pickup & Delivery').includes('pickup'));
+  assert.ok(keys('laundry', 'Dry Cleaning').includes('onsite_machines'));
+});
+
+test('batch C: required answers are enforced and hidden answers are dropped', () => {
+  const bad = F.validate('construction', 'Roofing', { tools: true, crew_size: 3, materials: 'Either', job_size: 'A whole house', roof_types: ['Aluminium sheets'] });
+  assert.ok(!bad.ok && bad.errors.safety_gear);
+  const ok = F.validate('construction', 'Roofing', { tools: true, crew_size: 3, materials: 'Either', job_size: 'A whole house', roof_types: ['Aluminium sheets'], safety_gear: true, tile_types: ['Floor tiles'] });
+  assert.ok(ok.ok, JSON.stringify(ok.errors));
+  const c = plain(ok.clean);
+  assert.strictEqual(c._v, 1);
+  assert.strictEqual(c.tile_types, undefined);
+  const q = F.validate('assistance', 'Queue Assistance', { availability_days: ['Weekdays'], queue_places: ['Banks'], max_wait_hours: 30 });
+  assert.ok(!q.ok && q.errors.max_wait_hours);
+  const n = F.validate('laundry', 'Bulk & Business Laundry', { pickup: 'Both', turnaround: 'Next day', methods: ['Machine wash'], business_customers: ['Hotels & guest houses'], max_kg_per_day: 200 });
+  assert.ok(n.ok, JSON.stringify(n.errors));
 });

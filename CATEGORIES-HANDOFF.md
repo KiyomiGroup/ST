@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 4b)
+# Categories project: handoff for the next AI (after Stage 4c)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -11,11 +11,11 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 0 | Decisions: 26 categories (20 from the Category Directory document merged with the 17 + Sales + Other already on the site), one home per subcategory, every category ends with "Other (not listed)", old saved values kept through aliases | Done |
 | 1 | `js/categories.js` (26 categories, subcategories, icons, keywords, aliases); `sql/categories/c1-*.sql` adds `services.subcategory` (text) and `services.details` (jsonb) | Done |
 | 2 | Searchable picker: `js/category-picker.js`, `css/category-picker.css` | Done |
-| 3 | Form engine `js/category-forms.js`, piloted on Cleaning, Repairs, Moving & Delivery | Done (this stage) |
-| 4a | Batch A: Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring | Done (this stage) |
-| 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Done (this stage) |
-| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Next |
-| 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial + licence hold | Not started |
+| 3 | Form engine `js/category-forms.js`, piloted on Cleaning, Repairs, Moving & Delivery | Done |
+| 4a | Batch A: Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring | Done |
+| 4b | Batch B: Design & Creative, Technology & IT, Business & Admin, Education, Pet Services | Done |
+| 4c | Batch C: Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry | Done (this stage) |
+| 4d | Batch D (regulated): Professional Services, Security & Safety, Health, Legal, Financial + licence hold | Next |
 | 5 | Show the answers to customers; category filters on Find Services | Not started |
 | 6 | Pricing methods, Sales upgrade, reuse schemas on Post a Task | Not started |
 
@@ -41,7 +41,7 @@ SCHEMAS.fashion = {
 Field options: `key` (never rename once live), `label`, `type`, `options`, `required`, `hint`, `placeholder`, `maxLength`, `min`/`max`/`unit`, `subs`, `notSubs`, `when: { key, equals | in }`. A `when` field must come AFTER the field it depends on.
 `tests/category-forms.test.js` already checks all pilot schemas; EXTEND its `PILOT` list with each new category. The tests fail if a schema names a subcategory that does not exist, repeats a key, has a select without options, or leaves any subcategory (or Other) with fewer than two questions.
 
-Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B (DONE, Stage 4b: keys `creative`, `it_tech`, `business`, `education`, `pet`). C Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry. D (regulated) Professional Services, Security & Safety, Health, Legal, Financial.
+Suggested batches (from the plan): A (DONE, Stage 4a: keys `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion`). B (DONE, Stage 4b: keys `creative`, `it_tech`, `business`, `education`, `pet`). C (DONE, Stage 4c: keys `events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`). D (regulated) Professional Services, Security & Safety, Health, Legal, Financial.
 **Regulated categories (D)** also need a licence or qualification question and must be verified before going live. The engine has no "licence" type yet. Suggested: a required `text` question for the licence / registration number now, and a Stage 4D change so these categories never publish until the existing identity verification AND a manual licence check pass (look at how `window.ST.verify.holdForVerification` is used in `post-service.html` and add a second hold; do not invent a new publishing path without asking).
 
 ## Things the next AI must know
@@ -82,3 +82,11 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - Driving Lessons has no licence/driving-school question yet; consider it in 4d too.
 - Still no Category Directory document; all questions are my own design.
 - Tests: 81 pass (`node --test tests/category-forms.test.js tests/category-search.test.js tests/category-detect.test.js`). BATCH_B block at the bottom of the forms test.
+
+## Stage 4c notes (batch C)
+- Only `js/category-forms.js` (6 new schemas) and `tests/category-forms.test.js` changed, plus these docs. No engine, SQL, HTML or CSS change.
+- Keys fixed for batch C: `events`, `hospitality` (Food & Catering), `assistance`, `construction`, `marketing`, `laundry`. Shared names again: `coverage`, `languages`, `engagement`, `warranty`, `max_guests`, `first_aid`, `same_day`, `health_certificate`.
+- Food & Catering asks an OPTIONAL food-handler health certificate (yes/no). If the owner wants it mandatory or checked, that belongs with Stage 4d verification. Building trades (electrical, plumbing, structural, roofing) only ask safety-equipment questions; no licence question yet.
+- Only Stage 4d (regulated categories + licence hold) is left in Stage 4: Professional Services, Security & Safety, Health & Wellness, Legal & Advocacy, Financial Services (plus the vet and driving-school questions raised in 4b). Ask the owner how licences are checked BEFORE coding a hold. The engine has no licence type; use a required `text` registration-number question.
+- Then Stage 5 (show answers to customers, filters) and Stage 6 (pricing methods, Sales upgrade, Post a Task).
+- Tests: 84 pass (same three test files). BATCH_C block at the bottom of the forms test.

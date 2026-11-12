@@ -406,6 +406,208 @@
     ]
   };
 
+  /* ═══ Stage 4, batch C ═══════════════════════════════════════════════════════════════════════════
+     Events & Entertainment, Food & Catering, Personal Assistance & Errands, Building & Construction, Marketing & Advertising, Laundry & Dry Cleaning.
+     Same rules as batches A and B. */
+
+  SCHEMAS.events = {
+    groups: {
+      planners: ['Event Planning', 'Event Coordination', 'Wedding Services', 'Party Planning'],
+      sized:    ['Event Planning', 'Event Coordination', 'Wedding Services', 'Party Planning', 'Event Decoration', 'Event Setup', 'MCs & Hosts'],
+      own:      ['Photography', 'Videography', 'DJs', 'Live Music', 'Sound Engineering', 'Lighting'],
+      music:    ['DJs', 'Live Music'],
+      media:    ['Photography', 'Videography'],
+      staff:    ['Ushers', 'Event Staffing'],
+      noTeam:   ['Venue Rental', 'Equipment Rental'],
+      noTravel: ['Venue Rental']
+    },
+    fields: [
+      { key: 'event_types', label: 'Events you work at', type: 'multi', required: true, options: ['Weddings', 'Birthdays & parties', 'Corporate events', 'Funerals & memorials', 'Religious events', 'Concerts & shows', 'Graduations & school events'] },
+      { key: 'coverage', label: 'How far do you travel?', type: 'select', required: true, notSubs: '@noTravel', options: ['Within my city', 'Between cities'] },
+      { key: 'team_size', label: 'People who will work the event (including you)', type: 'number', required: true, notSubs: '@noTeam', min: 1, max: 500, unit: 'people', placeholder: 'e.g. 3' },
+      { key: 'max_guests', label: 'Largest event you handle', type: 'number', required: true, subs: '@sized', min: 1, max: 100000, unit: 'guests', placeholder: 'e.g. 300' },
+      { key: 'planner_services', label: 'What you do', type: 'multi', required: true, subs: '@planners', options: ['Full planning', 'Day-of coordination', 'Budget & vendor management', 'Guest list & invitations', 'Venue sourcing'] },
+      { key: 'decor_types', label: 'Decoration you do', type: 'multi', required: true, subs: ['Event Decoration'], options: ['Balloons', 'Flowers', 'Lighting & drapes', 'Stage & backdrops', 'Table settings', 'Themed decor'] },
+      { key: 'flower_kind', label: 'Flowers you use', type: 'select', required: true, subs: ['Floral Design'], options: ['Fresh', 'Artificial', 'Both'] },
+      { key: 'floral_types', label: 'Arrangements you make', type: 'multi', required: true, subs: ['Floral Design'], options: ['Bouquets', 'Centrepieces', 'Aisle arrangements', 'Arches & backdrops', 'Car & venue decoration'] },
+      { key: 'own_equipment', label: 'Do you bring your own equipment?', type: 'yesno', required: true, subs: '@own' },
+      { key: 'shoot_types', label: 'What you shoot', type: 'multi', required: true, subs: ['Photography'], options: ['Weddings', 'Portraits', 'Corporate', 'Products', 'Events & parties', 'Fashion'] },
+      { key: 'video_outputs', label: 'What you deliver', type: 'multi', required: true, subs: ['Videography'], options: ['Highlight film', 'Full-length video', 'Live streaming', 'Drone footage', 'Same-day edit'] },
+      { key: 'delivery_time', label: 'Finished files delivered', type: 'select', required: true, subs: '@media', options: ['Same day', 'Within 3 days', 'Within 2 weeks', 'More than 2 weeks'] },
+      { key: 'music_genres', label: 'Music you play', type: 'multi', required: true, subs: '@music', options: ['Afrobeats', 'Gospel', 'Highlife', 'Hip hop', 'R&B', 'Amapiano', 'Juju & Fuji', 'Jazz'] },
+      { key: 'act_size', label: 'Size of your act', type: 'select', required: true, subs: ['Live Music'], options: ['Solo', 'Duo', 'Band of 3 to 5', 'Large band (6 or more)'] },
+      { key: 'languages', label: 'Languages you host in', type: 'multi', required: true, subs: ['MCs & Hosts'], options: ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa', 'French'] },
+      { key: 'performer_types', label: 'What you perform', type: 'multi', required: true, subs: ['Performers'], options: ['Dance', 'Comedy', 'Acrobatics', 'Cultural troupe', 'Magic', "Children's entertainment"] },
+      { key: 'staff_roles', label: 'Roles you can fill', type: 'multi', required: true, subs: '@staff', options: ['Ushers', 'Hostesses & hosts', 'Registration desk', 'Waiters & servers', 'Crowd marshals'] },
+      { key: 'setup_jobs', label: 'Set-up work you do', type: 'multi', required: true, subs: ['Event Setup'], options: ['Tents & canopies', 'Stage & backdrops', 'Chairs & tables', 'Sound & lighting rigging', 'Take-down & clean-up'] },
+      { key: 'gear_types', label: 'What you rent out', type: 'multi', required: true, subs: ['Equipment Rental'], options: ['Chairs & tables', 'Tents & canopies', 'Sound & lighting', 'Generators', 'Staging', 'Cooking & serving equipment'] },
+      { key: 'delivers_and_sets_up', label: 'Do you deliver and set up?', type: 'yesno', required: true, subs: ['Equipment Rental'] },
+      { key: 'venue_capacity', label: 'Capacity', type: 'number', required: true, subs: ['Venue Rental'], min: 1, max: 100000, unit: 'guests', placeholder: 'e.g. 250' },
+      { key: 'venue_features', label: 'What the venue has', type: 'multi', required: true, subs: ['Venue Rental'], options: ['Air conditioning', 'Parking', 'Stage', 'Backup power', 'Kitchen', 'Outdoor space'] }
+    ]
+  };
+
+  SCHEMAS.hospitality = {
+    groups: {
+      cooks:    ['Catering', 'Private Chef', 'Home Cooking', 'Meal Preparation', 'Event Catering', 'Small Chops'],
+      bakes:    ['Baking', 'Cake Making', 'Pastry Making', 'Small Chops'],
+      ordered:  ['Catering', 'Private Chef', 'Meal Preparation', 'Event Catering', 'Small Chops', 'Baking', 'Cake Making', 'Pastry Making', 'Food Supply'],
+      events:   ['Catering', 'Event Catering'],
+      noKitchen: ['Bartending', 'Wait Staff', 'Kitchen Assistance', 'Food Delivery'],
+      foodmade: ['Catering', 'Private Chef', 'Home Cooking', 'Meal Preparation', 'Event Catering', 'Small Chops', 'Baking', 'Cake Making', 'Pastry Making']
+    },
+    fields: [
+      { key: 'kitchen_type', label: 'Where do you cook?', type: 'select', required: true, notSubs: '@noKitchen', options: ['My own kitchen', "Customer's kitchen", 'Both'] },
+      { key: 'cuisines', label: 'Food you cook', type: 'multi', required: true, subs: '@cooks', options: ['Nigerian', 'Continental', 'Chinese or Asian', 'Indian', 'Grill & BBQ', 'Vegetarian & vegan'] },
+      { key: 'bake_types', label: 'What you bake', type: 'multi', required: true, subs: ['Baking', 'Pastry Making'], options: ['Bread', 'Cakes', 'Pies & pastries', 'Cookies', 'Doughnuts', 'Pizza'] },
+      { key: 'cake_types', label: 'Cakes you make', type: 'multi', required: true, subs: ['Cake Making'], options: ['Birthday cakes', 'Wedding cakes', "Children's themed cakes", 'Cupcakes', 'Cheesecakes'] },
+      { key: 'custom_designs', label: 'Do you make custom-designed cakes?', type: 'yesno', required: true, subs: ['Cake Making'] },
+      { key: 'chef_services', label: 'What you offer', type: 'multi', required: true, subs: ['Private Chef'], options: ['Dinner at home', 'Dinner parties', 'Weekly cooking', 'Cooking lessons'] },
+      { key: 'meal_plans', label: 'Meal plans you offer', type: 'multi', required: true, subs: ['Meal Preparation'], options: ['Weekly meal prep', 'Daily meals', 'Corporate lunches', 'Diet & fitness meals', 'Kids and baby food'] },
+      { key: 'home_meals', label: 'Meals you cook', type: 'multi', required: true, subs: ['Home Cooking'], options: ['Daily meals', 'Soups & stews', 'Rice dishes', 'Snacks', 'Traditional dishes'] },
+      { key: 'service_style', label: 'How you serve', type: 'multi', required: true, subs: '@events', options: ['Buffet', 'Plated service', 'Packs or takeaway', 'Live cooking stations'] },
+      { key: 'max_guests', label: 'Largest event you serve', type: 'number', required: true, subs: ['Catering', 'Event Catering', 'Small Chops'], min: 1, max: 100000, unit: 'guests', placeholder: 'e.g. 200' },
+      { key: 'brings_equipment', label: 'Do you bring serving equipment (tables, warmers, plates)?', type: 'yesno', required: true, subs: '@events' },
+      { key: 'lead_time', label: 'How early must orders be placed?', type: 'select', required: true, subs: '@ordered', options: ['Same day', '1 to 2 days', '3 to 7 days', 'More than a week'] },
+      { key: 'dietary', label: 'Special diets you cater for', type: 'multi', subs: '@foodmade', hint: 'Optional', options: ['Halal', 'Vegetarian', 'Vegan', 'Gluten-free', 'Diabetic-friendly', 'Allergy-safe'] },
+      { key: 'drink_services', label: 'What you serve', type: 'multi', required: true, subs: ['Bartending'], options: ['Cocktails', 'Mocktails', 'Spirits & mixed drinks', 'Coffee & tea bar', 'Full bar set-up'] },
+      { key: 'brings_bar', label: 'Do you bring the bar equipment and glasses?', type: 'yesno', required: true, subs: ['Bartending'] },
+      { key: 'staff_count', label: 'People you can supply', type: 'number', required: true, subs: ['Wait Staff'], min: 1, max: 500, unit: 'people', placeholder: 'e.g. 6' },
+      { key: 'uniform', label: 'Does your team wear uniforms?', type: 'yesno', subs: ['Wait Staff'], hint: 'Optional' },
+      { key: 'kitchen_tasks', label: 'Kitchen work you do', type: 'multi', required: true, subs: ['Kitchen Assistance'], options: ['Prep & chopping', 'Dishwashing', 'Plating', 'Clean-up', 'Cooking support'] },
+      { key: 'supply_items', label: 'What you supply', type: 'multi', required: true, subs: ['Food Supply'], options: ['Fresh produce', 'Meat & fish', 'Grains & staples', 'Frozen foods', 'Packaged goods', 'Drinks'] },
+      { key: 'bulk_orders', label: 'Do you take bulk orders?', type: 'yesno', subs: ['Food Supply'], hint: 'Optional' },
+      { key: 'delivery_vehicle', label: 'What you deliver with', type: 'select', required: true, subs: ['Food Delivery'], options: ['On foot', 'Bicycle', 'Motorbike', 'Car', 'Van'] },
+      { key: 'insulated', label: 'Do you use insulated bags or boxes?', type: 'yesno', required: true, subs: ['Food Delivery'] },
+      { key: 'delivery_radius', label: 'How far do you deliver?', type: 'select', required: true, subs: ['Food Delivery'], options: ['Within a few kilometres', 'Across my city'] },
+      { key: 'health_certificate', label: "Do you have a food handler's health certificate?", type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.assistance = {
+    groups: {
+      errands:  ['Personal Shopping', 'Grocery Shopping', 'Errand Running', 'Document Collection', 'Document Submission', 'Appointment Assistance', 'Event Assistance'],
+      shopping: ['Personal Shopping', 'Grocery Shopping', 'Errand Running'],
+      docs:     ['Document Collection', 'Document Submission'],
+      queues:   ['Queue Assistance', 'Waiting Services'],
+      retainer: ['Personal Assistant', 'Home Assistance']
+    },
+    fields: [
+      { key: 'availability_days', label: 'When are you available?', type: 'multi', required: true, options: ['Weekdays', 'Evenings', 'Weekends', 'Public holidays'] },
+      { key: 'transport', label: 'How do you get around?', type: 'multi', required: true, subs: '@errands', options: ['On foot', 'Public transport', 'Motorbike', 'Car'] },
+      { key: 'coverage', label: 'Where do you work?', type: 'select', required: true, subs: ['Personal Shopping', 'Grocery Shopping', 'Errand Running', 'Document Collection', 'Document Submission', 'Local Guide', 'Appointment Assistance'], options: ['Within my area', 'Across my city', 'Between cities'] },
+      { key: 'upfront_funds', label: 'Money for purchases', type: 'select', required: true, subs: '@shopping', options: ['Customer pays upfront', 'I pay and get refunded', 'Either'] },
+      { key: 'gives_receipts', label: 'Do you give receipts for every purchase?', type: 'yesno', required: true, subs: '@shopping' },
+      { key: 'doc_places', label: 'Places you go to', type: 'multi', required: true, subs: '@docs', options: ['Government offices', 'Banks', 'Embassies & immigration', 'Courts', 'Schools & universities', 'Post offices & couriers'] },
+      { key: 'with_letter', label: 'Can you act for someone with an authorisation letter?', type: 'yesno', required: true, subs: '@docs' },
+      { key: 'queue_places', label: 'Queues you wait in', type: 'multi', required: true, subs: '@queues', options: ['Banks', 'Government offices', 'Hospitals', 'Embassies', 'Tickets & events', 'Fuel stations'] },
+      { key: 'max_wait_hours', label: 'Longest wait you take on', type: 'number', required: true, subs: '@queues', min: 1, max: 24, unit: 'hours', placeholder: 'e.g. 4' },
+      { key: 'pa_services', label: 'What you do', type: 'multi', required: true, subs: ['Personal Assistant'], options: ['Calendar & appointments', 'Calls & messages', 'Travel bookings', 'Shopping & errands', 'Personal admin', 'Event organising'] },
+      { key: 'engagement', label: 'How do you take work?', type: 'select', required: true, subs: '@retainer', options: ['By the task', 'Part-time retainer', 'Full-time retainer'] },
+      { key: 'home_tasks', label: 'Help you give at home', type: 'multi', required: true, subs: ['Home Assistance'], options: ['Cleaning help', 'Cooking help', 'School pick-ups', 'Laundry', 'Supervising workmen', 'Paying bills'] },
+      { key: 'elder_care', label: 'Help you give', type: 'multi', required: true, subs: ['Elderly Assistance'], options: ['Companionship', 'Shopping & errands', 'Hospital visits', 'Meals', 'Medication reminders', 'Light housework'] },
+      { key: 'elder_experience', label: 'Have you cared for older people before?', type: 'yesno', required: true, subs: ['Elderly Assistance'] },
+      { key: 'first_aid', label: 'Do you have first-aid training?', type: 'yesno', subs: ['Elderly Assistance'], hint: 'Optional' },
+      { key: 'appointment_types', label: 'Appointments you help with', type: 'multi', required: true, subs: ['Appointment Assistance'], options: ['Hospital visits', 'Bank visits', 'Government offices', 'Embassy appointments', 'Booking appointments for the customer'] },
+      { key: 'event_tasks', label: 'Event help you give', type: 'multi', required: true, subs: ['Event Assistance'], options: ['Guest check-in', 'Gifts & souvenirs', 'Errands during the event', 'Setting up', 'Looking after guests'] },
+      { key: 'guide_types', label: 'Guiding you do', type: 'multi', required: true, subs: ['Local Guide'], options: ['City tours', 'Markets & shopping', 'Food & restaurants', 'Airport & arrival help', 'Business meetings', 'Translation'] },
+      { key: 'languages', label: 'Languages you speak', type: 'multi', required: true, subs: ['Local Guide'], options: ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa', 'French'] },
+      { key: 'same_day', label: 'Can you start on the same day?', type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.construction = {
+    groups: {
+      safety:  ['Roofing', 'Welding', 'Demolition', 'Structural Repairs'],
+      labour:  ['General Labour'],
+      noSupply: ['General Labour', 'Demolition'],
+      ceilings: ['POP Installation', 'Ceiling Installation'],
+      walls:   ['Masonry', 'Bricklaying']
+    },
+    fields: [
+      { key: 'tools', label: 'Do you bring your own tools?', type: 'yesno', required: true },
+      { key: 'crew_size', label: 'People on your crew (including you)', type: 'number', required: true, min: 1, max: 200, unit: 'people', placeholder: 'e.g. 4' },
+      { key: 'materials', label: 'Materials', type: 'select', required: true, notSubs: '@noSupply', options: ['Client supplies', 'I supply (charged at cost)', 'Either'] },
+      { key: 'job_size', label: 'Largest job you take on', type: 'select', required: true, notSubs: '@labour', options: ['Small repairs', 'A single room or small job', 'A whole house', 'Large or commercial projects'] },
+      { key: 'wall_jobs', label: 'Work you do', type: 'multi', required: true, subs: '@walls', options: ['Block walls', 'Brick walls', 'Fences & perimeter walls', 'Foundations', 'Retaining walls'] },
+      { key: 'carpentry_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['Carpentry'], options: ['Doors & windows', 'Roof carpentry', 'Wardrobes & cabinets', 'Furniture making', 'Formwork', 'Staircases'] },
+      { key: 'tile_types', label: 'Tiling you do', type: 'multi', required: true, subs: ['Tiling'], options: ['Floor tiles', 'Wall tiles', 'Bathrooms & kitchens', 'Outdoor & compound', 'Large-format or porcelain'] },
+      { key: 'plaster_jobs', label: 'Plastering you do', type: 'multi', required: true, subs: ['Plastering'], options: ['Interior', 'Exterior', 'Screeding', 'Textured finishes'] },
+      { key: 'ceiling_types', label: 'Ceilings you install', type: 'multi', required: true, subs: '@ceilings', options: ['POP', 'PVC', 'Wooden', 'Suspended grid', 'Gypsum board'] },
+      { key: 'roof_types', label: 'Roofs you work on', type: 'multi', required: true, subs: ['Roofing'], options: ['Aluminium sheets', 'Stone-coated tiles', 'Clay or concrete tiles', 'Long-span metal', 'Flat roofs & waterproofing'] },
+      { key: 'welding_jobs', label: 'Welding you do', type: 'multi', required: true, subs: ['Welding'], options: ['Gates & doors', 'Burglar proofing', 'Steel structures', 'Pipes & tanks', 'Sheet metal'] },
+      { key: 'plumbing_installs', label: 'Work you do', type: 'multi', required: true, subs: ['Plumbing Installation'], options: ['Water supply piping', 'Drainage & sewage', 'Bathrooms & kitchens', 'Water tanks & boreholes', 'Gas piping'] },
+      { key: 'electrical_installs', label: 'Work you do', type: 'multi', required: true, subs: ['Electrical Installation'], options: ['House wiring', 'Distribution boards', 'Lighting', 'Generator changeovers', 'Solar & inverter wiring', 'Earthing & lightning protection'] },
+      { key: 'floor_types', label: 'Floors you install', type: 'multi', required: true, subs: ['Flooring'], options: ['Tiles', 'Wood & laminate', 'Vinyl', 'Epoxy', 'Terrazzo', 'Carpet'] },
+      { key: 'fence_types', label: 'Fences you build', type: 'multi', required: true, subs: ['Fencing'], options: ['Block', 'Chain-link', 'Wrought iron', 'Electric fence', 'Wooden', 'Razor wire'] },
+      { key: 'gate_types', label: 'Gates you install', type: 'multi', required: true, subs: ['Gate Installation'], options: ['Swing gates', 'Sliding gates', 'Automatic gates', 'Pedestrian gates'] },
+      { key: 'concrete_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['Concrete Work'], options: ['Slabs & floors', 'Columns & beams', 'Drainage & culverts', 'Paving & interlock', 'Foundations'] },
+      { key: 'structural_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['Structural Repairs'], options: ['Cracks & settlement', 'Wall strengthening', 'Column & beam repair', 'Waterproofing', 'Building assessment'] },
+      { key: 'labour_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['General Labour'], options: ['Loading & carrying', 'Site clearing', 'Digging', 'Mixing & carrying materials', 'Site clean-up'] },
+      { key: 'demolition_jobs', label: 'Demolition you do', type: 'multi', required: true, subs: ['Demolition'], options: ['Interior strip-out', 'Walls', 'Whole buildings', 'Breaking concrete'] },
+      { key: 'removes_debris', label: 'Do you take the rubble away?', type: 'yesno', required: true, subs: ['Demolition'] },
+      { key: 'aluminium_jobs', label: 'Work you do', type: 'multi', required: true, subs: ['Aluminium Fabrication'], options: ['Windows', 'Doors', 'Partitions', 'Shopfronts', 'Curtain walls', 'Railings'] },
+      { key: 'safety_gear', label: 'Do you use safety equipment (helmets, harness, gloves)?', type: 'yesno', required: true, subs: '@safety' },
+      { key: 'site_visit', label: 'Do you visit the site and quote before starting?', type: 'yesno', notSubs: '@labour', hint: 'Optional' },
+      { key: 'warranty', label: 'Guarantee on your work', type: 'select', notSubs: '@noSupply', options: ['None', '3 months', '6 months', '1 year', 'More than 1 year'], hint: 'Optional' }
+    ]
+  };
+
+  SCHEMAS.marketing = {
+    groups: {
+      measured: ['Search Engine Optimisation', 'Social Media Management', 'Digital Advertising', 'Email Marketing', 'Influencer Marketing', 'Content Marketing'],
+      social:   ['Social Media Management', 'Digital Advertising', 'Influencer Marketing', 'Content Marketing']
+    },
+    fields: [
+      { key: 'work_mode', label: 'How do you work with clients?', type: 'select', required: true, notSubs: ['Promotions & Street Marketing'], options: ['Remote online', 'In person', 'Both'] },
+      { key: 'engagement', label: 'How do you take work?', type: 'select', required: true, options: ['One-off projects', 'Monthly retainer', 'Both'] },
+      { key: 'industries', label: 'Industries you have worked in', type: 'multi', required: true, options: ['Fashion & beauty', 'Food & hospitality', 'Real estate', 'Tech & finance', 'Education & health', 'Retail & e-commerce', 'Events & entertainment'] },
+      { key: 'sends_reports', label: 'Do you send performance reports?', type: 'yesno', required: true, subs: '@measured' },
+      { key: 'copy_types', label: 'Writing you do', type: 'multi', required: true, subs: ['Copywriting'], options: ['Website copy', 'Adverts', 'Product descriptions', 'Emails & newsletters', 'Scripts', 'Press releases'] },
+      { key: 'copy_languages', label: 'Languages you write in', type: 'multi', required: true, subs: ['Copywriting'], options: ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa', 'French'] },
+      { key: 'seo_services', label: 'SEO work you do', type: 'multi', required: true, subs: ['Search Engine Optimisation'], options: ['Keyword research', 'On-page SEO', 'Technical SEO', 'Link building', 'Google Maps (local SEO)', 'Site audits'] },
+      { key: 'platforms', label: 'Platforms you work on', type: 'multi', required: true, subs: '@social', options: ['Instagram', 'Facebook', 'TikTok', 'X (Twitter)', 'LinkedIn', 'YouTube', 'WhatsApp Business'] },
+      { key: 'smm_services', label: 'What you do', type: 'multi', required: true, subs: ['Social Media Management'], options: ['Posting', 'Content creation', 'Replying to followers', 'Growing followers', 'Setting up accounts'] },
+      { key: 'ad_platforms', label: 'Ad platforms you run', type: 'multi', required: true, subs: ['Digital Advertising'], options: ['Meta (Facebook & Instagram)', 'Google Ads', 'TikTok Ads', 'YouTube Ads', 'LinkedIn Ads'] },
+      { key: 'ad_spend', label: 'Ad spend', type: 'select', required: true, subs: ['Digital Advertising'], options: ['Customer pays the platform directly', 'I handle the ad spend', 'Either'] },
+      { key: 'email_services', label: 'What you do', type: 'multi', required: true, subs: ['Email Marketing'], options: ['Newsletter design', 'Automations', 'List building', 'Campaign reports'] },
+      { key: 'email_tools', label: 'Tools you use', type: 'multi', required: true, subs: ['Email Marketing'], options: ['Mailchimp', 'Brevo', 'Klaviyo', 'HubSpot', 'Zoho'] },
+      { key: 'influencer_services', label: 'What you do', type: 'multi', required: true, subs: ['Influencer Marketing'], options: ['Finding influencers', 'Managing campaigns', 'Contracts & payments', 'Reporting', 'Posting on my own pages'] },
+      { key: 'brand_services', label: 'What you do', type: 'multi', required: true, subs: ['Brand Strategy'], options: ['Brand positioning', 'Naming', 'Messaging & tone', 'Competitor research', 'Brand guidelines', 'Launch plans'] },
+      { key: 'content_formats', label: 'Content you create', type: 'multi', required: true, subs: ['Content Marketing'], options: ['Blog posts', 'Videos', 'Podcasts', 'Infographics', 'Case studies', 'Newsletters'] },
+      { key: 'street_types', label: 'What you do', type: 'multi', required: true, subs: ['Promotions & Street Marketing'], options: ['Flyer handouts', 'Product sampling', 'Roadshows', 'Brand ambassadors', 'Billboards & banners', 'Mobile vans & tricycles'] },
+      { key: 'promo_team', label: 'People you can put on the street', type: 'number', required: true, subs: ['Promotions & Street Marketing'], min: 1, max: 500, unit: 'people', placeholder: 'e.g. 10' },
+      { key: 'coverage', label: 'How far do you travel?', type: 'select', required: true, subs: ['Promotions & Street Marketing'], options: ['Within my city', 'Between cities'] }
+    ]
+  };
+
+  SCHEMAS.laundry = {
+    groups: {
+      washing: ['Wash & Fold', 'Laundry & Ironing', 'Duvet & Bedding Cleaning', 'Curtain & Rug Washing', 'Bulk & Business Laundry', 'Laundry Pickup & Delivery'],
+      ironing: ['Laundry & Ironing', 'Ironing & Pressing'],
+      noPickup: ['Laundry Pickup & Delivery']
+    },
+    fields: [
+      { key: 'pickup', label: 'Pickup and delivery', type: 'select', required: true, notSubs: '@noPickup', options: ['Customer drops off', 'I pick up and deliver', 'Both'] },
+      { key: 'coverage', label: 'Where do you pick up and deliver?', type: 'select', required: true, subs: '@noPickup', options: ['Within my area', 'Across my city'] },
+      { key: 'turnaround', label: 'Usual turnaround', type: 'select', required: true, options: ['Same day', 'Next day', '2 to 3 days', 'More than 3 days'] },
+      { key: 'methods', label: 'How you wash', type: 'multi', required: true, subs: '@washing', options: ['Machine wash', 'Hand wash', 'Steam', 'Line dry', 'Tumble dry'] },
+      { key: 'ironing_items', label: 'Ironing you do', type: 'multi', required: true, subs: '@ironing', options: ['Shirts & trousers', 'Native wear', 'Bedsheets', 'Uniforms', 'Suits'] },
+      { key: 'dry_clean_items', label: 'What you dry clean', type: 'multi', required: true, subs: ['Dry Cleaning'], options: ['Suits & jackets', 'Dresses & gowns', 'Native & lace wear', 'Leather & suede', 'Coats', 'Wedding gowns'] },
+      { key: 'onsite_machines', label: 'Do you dry clean on your own machines?', type: 'yesno', required: true, subs: ['Dry Cleaning'] },
+      { key: 'bedding_items', label: 'What you clean', type: 'multi', required: true, subs: ['Duvet & Bedding Cleaning'], options: ['Duvets', 'Comforters', 'Pillows', 'Mattress covers', 'Blankets', 'Mattresses'] },
+      { key: 'stain_types', label: 'Stains you treat', type: 'multi', required: true, subs: ['Stain Removal'], options: ['Food & drink', 'Ink & paint', 'Oil & grease', 'Blood & sweat', 'Old yellowing', 'Makeup'] },
+      { key: 'no_result_no_fee', label: 'Is it free if the stain does not come out?', type: 'yesno', required: true, subs: ['Stain Removal'] },
+      { key: 'shoe_services', label: 'What you do', type: 'multi', required: true, subs: ['Shoe & Sneaker Cleaning'], options: ['Deep cleaning', 'Whitening', 'Odour removal', 'Restoration', 'Waterproofing'] },
+      { key: 'shoe_types', label: 'Shoes you clean', type: 'multi', required: true, subs: ['Shoe & Sneaker Cleaning'], options: ['Sneakers', 'Leather shoes', 'Suede', 'Heels & formal shoes', 'Canvas'] },
+      { key: 'home_textiles', label: 'What you wash', type: 'multi', required: true, subs: ['Curtain & Rug Washing'], options: ['Curtains', 'Rugs & carpets', 'Cushion covers', 'Sofa covers', 'Blinds'] },
+      { key: 'business_customers', label: 'Businesses you serve', type: 'multi', required: true, subs: ['Bulk & Business Laundry'], options: ['Hotels & guest houses', 'Restaurants', 'Salons & spas', 'Clinics & hospitals', 'Schools', 'Offices'] },
+      { key: 'max_kg_per_day', label: 'Most you can wash in a day', type: 'number', required: true, subs: ['Bulk & Business Laundry'], min: 10, max: 100000, unit: 'kg', placeholder: 'e.g. 200' },
+      { key: 'contracts', label: 'Do you offer weekly or monthly contracts?', type: 'yesno', subs: ['Bulk & Business Laundry'], hint: 'Optional' },
+      { key: 'item_tags', label: 'Do you tag each item to avoid mix-ups?', type: 'yesno', hint: 'Optional' }
+    ]
+  };
+
   /* ── Pure helpers (no DOM) ───────────────────────────────────────────────────────────────────── */
   function has(category) { return Object.prototype.hasOwnProperty.call(SCHEMAS, category); }
 

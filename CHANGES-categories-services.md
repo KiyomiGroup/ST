@@ -50,3 +50,10 @@
 - Veterinary Care and Mobile Vet Care ask for a veterinary registration number (required text). No publishing hold yet (Stage 4d).
 - tests/category-forms.test.js: PILOT list extended, new batch B tests.
 - No SQL, HTML or CSS changes.
+
+
+## Categories Stage 4c (2026-11-11): questions for Events, Food & Catering, Personal Assistance, Building & Construction, Marketing, Laundry
+- js/category-forms.js: six new schemas (`events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`). Every subcategory and Other has at least two questions. Venue Rental asks capacity and features instead of team size; Bartending, Wait Staff and Food Delivery skip "where do you cook"; Local Guide skips transport; General Labour skips materials; Laundry Pickup & Delivery asks coverage instead of "drop off or pick up".
+- Roofing, Welding, Demolition and Structural Repairs ask a required safety-equipment question.
+- tests/category-forms.test.js: PILOT list extended, new batch C tests.
+- No SQL, HTML or CSS changes.
