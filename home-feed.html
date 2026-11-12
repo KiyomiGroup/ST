@@ -980,12 +980,18 @@
       } catch (e) { return {}; }
     }
     /* Stable sort: 1) plan (Premium, Pro, Starter, then everyone else: Standard and Local Taskers are the SAME level),
-       2) inside a plan, higher rating first (more reviews break a tie; no rating comes last), 3) then the order they already had.
-       rates = null keeps the old plan-only order (used where nearest-first matters). */
+       2) inside a plan, the better WEIGHTED rating first, 3) then the order they already had.
+       Weighted rating = (n / (n + 5)) x own average + (5 / (n + 5)) x the average of everyone rated in the row, so a few reviews pull
+       toward the middle and only many good reviews reach the top: 5.0 from 1 review ranks below 4.9 from 200. Not rated = last in its plan.
+       rates = null keeps the plan-only order (used where nearest-first matters). */
+    const CU_RATE_WEIGHT = 5;
     function _cuByPlan(list, idOf, ranks, rates) {
-      const av = x => { const r = rates && rates[String(idOf(x)).toLowerCase()]; return r && r.avg > 0 ? r.avg : 0; };
-      const ct = x => { const r = rates && rates[String(idOf(x)).toLowerCase()]; return r && r.avg > 0 ? (r.count || 0) : 0; };
-      return list.map((x, i) => ({ x, i, k: ranks[idOf(x)] || 0, a: av(x), c: ct(x) }))
+      const get = x => { const r = rates && rates[String(idOf(x)).toLowerCase()]; return r && r.avg > 0 && r.count > 0 ? r : null; };
+      let sum = 0, n = 0;
+      list.forEach(x => { const r = get(x); if (r) { sum += r.avg; n++; } });
+      const mean = n ? sum / n : 4;
+      const score = x => { const r = get(x); return r ? (r.count / (r.count + CU_RATE_WEIGHT)) * r.avg + (CU_RATE_WEIGHT / (r.count + CU_RATE_WEIGHT)) * mean : 0; };
+      return list.map((x, i) => ({ x, i, k: ranks[idOf(x)] || 0, a: score(x), c: (get(x) || {}).count || 0 }))
         .sort((a, b) => (b.k - a.k) || (b.a - a.a) || (b.c - a.c) || (a.i - b.i)).map(o => o.x);
     }
     /* Does this tasker work in the chosen category? A row's own category first, else the categories of their live services. */
