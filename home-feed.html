@@ -904,7 +904,7 @@
           const latest = await window.ST.db.fetchServices({ limit: 100 });
           let raw = latest;
           try {
-            const ids = Object.keys(await _cuRankMap()).slice(0, 120);
+            const ids = await _cuUpgradedIds(latest.map(r => String(r.user_id || '')));
             if (ids.length) {
               const have = new Set(latest.map(r => String(r.id)));
               const chunks = [];
@@ -922,8 +922,29 @@
       }
       return CU.svcP;
     }
-    /* user id -> plan rank (3 Premium, 2 Pro, 1 Starter). Best effort: no answer = nobody is ranked, order stays as it was. */
-    async function _cuRankMap() {
+    /* user id -> plan rank (3 Premium, 2 Pro, 1 Starter). Two sources, the higher rank wins:
+       1) homepage_featured_taskers (the featured feed: Premium, Pro, Starter), and
+       2) membership_for_users, the SAME function that draws the PREMIUM / PRO badge on the cards. Before, only (1) was used, so a tasker
+          who shows a PREMIUM badge but is missing from the featured feed was ranked like everyone else and sat at the back.
+       Best effort: no answer = nobody is ranked, order stays as it was. */
+    const CU_MEM = { map: {}, asked: new Set() };   /* membership answers for this refresh (cleared every minute) */
+    async function _cuMemberRanks(ids) {
+      const sb = window.supabase;
+      const want = [...new Set((ids || []).map(String).filter(id => id && !CU_MEM.asked.has(id)))].filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+      if (!want.length || !sb || typeof sb.rpc !== 'function') return;
+      want.forEach(id => CU_MEM.asked.add(id));
+      const chunks = [];
+      for (let i = 0; i < want.length; i += 150) chunks.push(want.slice(i, i + 150));
+      await Promise.all(chunks.map(async c => {
+        try {
+          const res = await sb.rpc('membership_for_users', { p_user_ids: c });
+          if (!res || res.error || !window.STMembership) { c.forEach(id => CU_MEM.asked.delete(id)); return; }
+          const found = STMembership.parse(res.data);
+          Object.keys(found).forEach(id => { const k = found[id] === 'PREMIUM' ? 3 : found[id] === 'PRO' ? 2 : 0; if (k) CU_MEM.map[id] = k; });
+        } catch (e) { c.forEach(id => CU_MEM.asked.delete(id)); }
+      }));
+    }
+    async function _cuRankMap(ids) {
       const map = {};
       try {
         (await _cuFeaturedRows()).forEach(r => {
@@ -932,7 +953,23 @@
           if (id && k && !(map[id] >= k)) map[id] = k;
         });
       } catch (e) { /* leave empty */ }
+      try {
+        await _cuMemberRanks(ids || []);
+        Object.keys(CU_MEM.map).forEach(id => { if (!(map[id] >= CU_MEM.map[id])) map[id] = CU_MEM.map[id]; });
+      } catch (e) { /* the featured feed alone still ranks */ }
       return map;
+    }
+    /* people who may be on a paid plan: the featured feed plus the server's featured_taskers list, so their older listings are fetched too */
+    async function _cuUpgradedIds(seen) {
+      const ids = new Set(Object.keys(await _cuRankMap(seen)));
+      try {
+        const sb = window.supabase;
+        if (sb && window.STMembership) {
+          const res = await sb.rpc('featured_taskers', { p_category: null, p_limit: null });
+          if (res && !res.error) STMembership.parseFeatured(res.data).forEach(id => ids.add(id));
+        }
+      } catch (e) { /* optional */ }
+      return [...ids].slice(0, 120);
     }
     /* Stable sort: upgraded first (Premium, Pro, Starter), then everyone else in the order they already had */
     function _cuByPlan(list, idOf, ranks) {
@@ -1075,7 +1112,7 @@
           if (!_cuTaskerInCat(r, cat, catsByUser)) return;
           all.push(Object.assign({}, r, { tasker_user_id: id, name: r.provider_name, photo_url: r.photo, tier: null }));
         });
-      const ranks = await _cuRankMap();
+      const ranks = await _cuRankMap(all.map(idOf));
       if (!_cuLive(host, tok)) return;
       const ordered = _cuByPlan(all, idOf, ranks).slice(0, 30);
       const sig = _cuSig(featured, idOf) + '#' + _cuSig(ordered, idOf);
@@ -1115,7 +1152,7 @@
           const by = _cuCatsByUser(raw);
           rows = rows.filter(r => _cuTaskerInCat(r, cat, by));
         }
-        const ranks = await _cuRankMap();
+        const ranks = await _cuRankMap(rows.map(r => String(r.user_id || r.tasker_user_id || '')));
         if (!_cuLive(host, tok)) return;
         const idOf = r => String(r.user_id || r.tasker_user_id || '');
         rows = _cuByPlan(rows, idOf, ranks).slice(0, CU.limit);   /* upgraded first, then nearest */
@@ -1144,11 +1181,17 @@
         let raw = await _cuServiceRows();
         if (!_cuLive(host, tok)) return;
         if (CU.cat) raw = raw.filter(r => window.STCat ? STCat.matches(r.category, CU.cat) : r.category === CU.cat);
-        const ranks = await _cuRankMap();
+        const ranks = await _cuRankMap(raw.map(r => String(r.user_id || r.uid || '')));
         if (!_cuLive(host, tok)) return;
         const placed = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
           .sort((a, b) => (b.score - a.score) || (a.i - b.i)).map(x => x.p);
-        const list = _cuByPlan(placed, p => p.uid, ranks).slice(0, CU.limit);
+        /* Front of the row: ONE main listing for each upgraded tasker (their first listing here), in plan order Premium, Pro, Starter.
+           Behind them: every other listing (other taskers, and the upgraded taskers' further listings) in the order they already had. */
+        const mainOf = new Map();
+        placed.forEach(p => { if (ranks[p.uid] && !mainOf.has(p.uid)) mainOf.set(p.uid, p); });
+        const front = _cuByPlan([...mainOf.values()], p => p.uid, ranks);
+        const frontSet = new Set(front);
+        const list = front.concat(placed.filter(p => !frontSet.has(p))).slice(0, CU.limit);
         const ok = await _cuVerifiedSet(list.map(p => p.uid));   /* the tick after the tasker's name */
         if (!_cuLive(host, tok)) return;
         if (silent) {
@@ -1337,7 +1380,7 @@
     function _cuRefresh() {
       if (_userRole === 'tasker' || document.hidden) return;
       _cuLastAt = Date.now();
-      CU.featP = null; CU.svcP = null;   /* forget the saved answers so the next ask goes to the database */
+      CU.featP = null; CU.svcP = null; CU_MEM.map = {}; CU_MEM.asked = new Set();   /* forget the saved answers so the next ask goes to the database */
       const g = id => document.getElementById(id);
       const svcs = g('hfCuServices'), feat = g('hfCuFeatured'), near = g('hfCuNear');
       if (svcs) _cuServices(svcs, true);
