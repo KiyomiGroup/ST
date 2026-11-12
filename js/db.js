@@ -106,8 +106,9 @@ async function postTask({ title, description, category, subcategory = '', detail
     try { Promise.resolve(window.supabase.rpc('set_task_map_point', { p_task_id: String(data.id) })).catch(function () {}); } catch (e) { /* never blocks posting */ }
   }
 
-  /* Notify nearby taskers (non-blocking), only for a task that is actually live */
-  if (canGoLive) { try { await _notifyTaskersOfNewTask(data); } catch(e) { /* silent */ } }
+  /* Taskers are NOT notified here any more (Categories 6f). A daily database job (sql/categories/n2-task-alerts.sql) sends each tasker
+     ONE "New tasks you might be interested in" email with the open tasks that match their services. That also covers tasks that go
+     live later, when the poster finishes verification, which this browser-side call never could. */
 
   /* V6c: a draft saved because the person is not verified yet is registered with the server, which
      publishes it by itself when they become VERIFIED (idv_hold_publish). If they got verified in the
@@ -355,6 +356,7 @@ async function _insertNotification({ userId, type, title, message, data = {} }) 
   if (error) console.warn('[Notify]', error.message);
 }
 
+/* Not called any more (see postTask). Kept only so nothing else that might reference it breaks; delete it once sure. */
 async function _notifyTaskersOfNewTask(task) {
   if (!task?.category) return;
   const { data: taskers } = await window.supabase.from('taskers')

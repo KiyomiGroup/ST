@@ -120,3 +120,10 @@
 - js/my-tasks.js, my-tasks.html, css/my-tasks.css: type of work + up to 3 answers on each task card.
 - tests/task-schemas.test.js: 10 new tests (209 pass in all).
 - No SQL.
+
+## Categories Stage 6f (2026-11-12): daily "New tasks you might be interested in" email for taskers (replaces task-to-service matching)
+- sql/categories/n2-task-alerts.sql (new) + n2-rollback.sql (new): `category_group()`, `task_alert_log`, `_task_alert_candidates()`, `send_task_alert_digests()`, pg_cron job `task-alert-digest` at 07:00 UTC. One notification (so one email and one push) per tasker per day, only when something new matches their services.
+- js/db.js: Post a Task no longer sends one notification per task (`_notifyTaskersOfNewTask` is not called any more).
+- tests/task-alerts.test.js (new): 5 tests, including SQL map = `STCat.resolve()`.
+- CATEGORIES-HANDOFF.md: 6f row, "Stage 6f notes", NEXT.
+
