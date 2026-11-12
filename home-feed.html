@@ -971,9 +971,22 @@
       } catch (e) { /* optional */ }
       return [...ids].slice(0, 120);
     }
-    /* Stable sort: upgraded first (Premium, Pro, Starter), then everyone else in the order they already had */
-    function _cuByPlan(list, idOf, ranks) {
-      return list.map((x, i) => ({ x, i, k: ranks[idOf(x)] || 0 })).sort((a, b) => (b.k - a.k) || (a.i - b.i)).map(o => o.x);
+    /* Ratings (rating_summary via STRating) for the people in a row: id (lowercase) -> { avg, count }. Best effort: no answer = nobody is rated. */
+    async function _cuRates(ids) {
+      try {
+        if (!window.STRating) return {};
+        const list = [...new Set((ids || []).map(x => String(x || '')).filter(Boolean))];
+        return list.length ? (await STRating.load(list, 'tasker')) || {} : {};
+      } catch (e) { return {}; }
+    }
+    /* Stable sort: 1) plan (Premium, Pro, Starter, then everyone else: Standard and Local Taskers are the SAME level),
+       2) inside a plan, higher rating first (more reviews break a tie; no rating comes last), 3) then the order they already had.
+       rates = null keeps the old plan-only order (used where nearest-first matters). */
+    function _cuByPlan(list, idOf, ranks, rates) {
+      const av = x => { const r = rates && rates[String(idOf(x)).toLowerCase()]; return r && r.avg > 0 ? r.avg : 0; };
+      const ct = x => { const r = rates && rates[String(idOf(x)).toLowerCase()]; return r && r.avg > 0 ? (r.count || 0) : 0; };
+      return list.map((x, i) => ({ x, i, k: ranks[idOf(x)] || 0, a: av(x), c: ct(x) }))
+        .sort((a, b) => (b.k - a.k) || (b.a - a.a) || (b.c - a.c) || (a.i - b.i)).map(o => o.x);
     }
     /* Does this tasker work in the chosen category? A row's own category first, else the categories of their live services. */
     function _cuTaskerInCat(r, cat, catsByUser) {
@@ -1113,8 +1126,9 @@
           all.push(Object.assign({}, r, { tasker_user_id: id, name: r.provider_name, photo_url: r.photo, tier: null }));
         });
       const ranks = await _cuRankMap(all.map(idOf));
+      const rates = await _cuRates(all.map(idOf));
       if (!_cuLive(host, tok)) return;
-      const ordered = _cuByPlan(all, idOf, ranks).slice(0, 30);
+      const ordered = _cuByPlan(all, idOf, ranks, rates).slice(0, 30);
       const sig = _cuSig(featured, idOf) + '#' + _cuSig(ordered, idOf);
       if (silent && host._sig === sig) return;   /* same people, same order: leave the screen alone */
       host._sig = sig;
@@ -1185,13 +1199,17 @@
         if (!_cuLive(host, tok)) return;
         const placed = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
           .sort((a, b) => (b.score - a.score) || (a.i - b.i)).map(x => x.p);
-        /* Front of the row: ONE main listing for each upgraded tasker (their first listing here), in plan order Premium, Pro, Starter.
-           Behind them: every other listing (other taskers, and the upgraded taskers' further listings) in the order they already had. */
+        /* Front of the row: ONE main listing for each upgraded tasker (their first listing here), Premium, then Pro, then Starter,
+           the better rated first inside each plan. Behind them: every other listing (other taskers, and the upgraded taskers' further listings),
+           the better rated tasker first; Standard and Local Taskers are the same level. */
+        const rates = await _cuRates(placed.map(p => p.uid));
+        if (!_cuLive(host, tok)) return;
         const mainOf = new Map();
         placed.forEach(p => { if (ranks[p.uid] && !mainOf.has(p.uid)) mainOf.set(p.uid, p); });
-        const front = _cuByPlan([...mainOf.values()], p => p.uid, ranks);
+        const front = _cuByPlan([...mainOf.values()], p => p.uid, ranks, rates);
         const frontSet = new Set(front);
-        const list = front.concat(placed.filter(p => !frontSet.has(p))).slice(0, CU.limit);
+        const rest = _cuByPlan(placed.filter(p => !frontSet.has(p)), p => p.uid, {}, rates);
+        const list = front.concat(rest).slice(0, CU.limit);
         const ok = await _cuVerifiedSet(list.map(p => p.uid));   /* the tick after the tasker's name */
         if (!_cuLive(host, tok)) return;
         if (silent) {
