@@ -103,3 +103,12 @@
 - task-details.html / .js / .css: "About this work" panel, "Category · Type of work" badge.
 - sql/categories/c3-task-details.sql (+ c3-rollback.sql); sql/categories/s1-sales-products.sql now fails with a clear message when `service_products` is missing.
 - tests/task-schemas.test.js (new).
+
+
+## Categories Stage 6d (2026-11-12): Find Tasks filters and answer chips, Poster questions batch A
+- find-tasks.html: "Type of work" chips and the poster's answers as checkbox filters (only while exactly one category chip is on; only types and answers that live tasks have, with counts); up to 3 answer chips on each task card; a Filter button + bottom sheet on phones (Find Tasks had no way to open its filters on a phone before); loads category-forms.js and task-schemas.js.
+- js/ui.js: `stTaskCard` shows `t.facts` (optional list) as chips. Home-feed task cards unchanged.
+- css/tasks.css (v=23): facet spacing, phone sheet rules.
+- js/task-schemas.js: Poster questions for Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring (same keys as the Tasker side).
+- tests/task-schemas.test.js: batch A block (199 tests pass in all).
+- No SQL.

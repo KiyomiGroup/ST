@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 6c)
+# Categories project: handoff for the next AI (after Stage 6d)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -20,7 +20,9 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 6a | Pricing methods on Post a Service (11 ways to charge) | Done (this stage), see "Stage 6a notes" |
 | 6b | Sales upgrade (condition, brand, quantity, stock status, delivery / pickup) | Done (this stage), see "Stage 6b notes" |
 | 6c | Post a Task: type of work + Poster-worded questions (pilot: Cleaning, Repairs, Moving & Delivery) | Done (this stage), see "Stage 6c notes" |
-| 6d | Poster questions for the other categories; Find Tasks filters + card chips; match tasks to services | Next |
+| 6d | Find Tasks filters + card chips; Poster questions batch A (5 categories) | Done (this stage), see "Stage 6d notes" |
+| 6e | Poster questions batches B, C, D (the other 18 categories); Edit task / My Tasks show answers | Next |
+| 6f | Match a task's answers to a tasker's service answers (needs owner decision) | Not started |
 
 ## How the pieces fit
 - `#svcCategory` (hidden select) and `#svcSubcategory` (hidden input) hold the answers from the picker. The picker fires a normal `change` event on the select.
@@ -147,5 +149,15 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - **s1 SQL note:** `s1-sales-products.sql` now stops with a clear message if `service_products` does not exist (owner hit `42P01`): run `sql/pricing/p1-price-range.sql` then `sql/pricing/p2-sales-products.sql` first.
 - **Tests:** `node --test tests/*.js tests/*.mjs` = 194 pass (`tests/task-schemas.test.js` new). Browser (Playwright, 1280px and 390px, fake Supabase): Post a Task 21 checks (type of work list, Poster wording, blocking on missing answers or type, saved payload, c3 SQL missing, draft restore) and Task details 8 checks; the Stage 5, 6a and 6b browser runs still pass. NOT tested against the real Supabase, and the real location / verification / urgent-payment steps were skipped in the harness (remote task, fake verify). Design check: no new warnings (only the two old post-service ones).
 
-## NEXT: Stage 6d (more Poster questions, Find Tasks)
-1. Poster schemas for the remaining categories (do them in batches like Stage 4). 2. Find Tasks (`find-tasks.html`, `js/tasks-search*.js` if present): `useAudience('poster')`, the category -> type of work chips and `STCatForms.facets()` filters like Stage 5's Find Services, and answer chips on task cards. 3. Edit task / My Tasks showing the answers. 4. Decide with the owner how a task's answers should match a tasker's service answers (needs an option mapping table per shared key).
+## Stage 6d notes (Find Tasks, Poster batch A)
+- **Find Tasks (`find-tasks.html`):** the page calls `STCatForms.useAudience('poster')`. With exactly ONE category chip on it shows "Type of work" chips (single choice, only types that live tasks have, with counts) and one checkbox list per question from `STCatForms.facets()` (max 6, short fixed lists, Yes/No; OR inside a question, AND between; a task that never answered a question does not match it; options nobody chose are hidden). Two or more categories, or none: neither group shows. Filtering is in the browser (the page loads up to 100 tasks). Same design as Find Services (Stage 5). Old tasks (`details = {}`) show no chips and match no answer filter.
+- **Card chips:** up to 3 from `STCatForms.badges()`, passed to `stTaskCard` as `t.facts`. Only Find Tasks passes it; home-feed cards unchanged.
+- **Phone fix (not asked, found while testing):** Find Tasks had NO way to open its filters on a phone (the sidebar is `display: none` under 768px and the page had no Filter button). It now has the same "Filter" button, bottom sheet and "Apply Filters" as Find Services. This also makes the older filters (type, budget, urgency, category) reachable on phones.
+- **Poster batch A:** `home_furniture`, `landscaping`, `automotive`, `grooming`, `fashion` in `js/task-schemas.js`. Same keys and groups as the Tasker side (tested: every Tasker key has a Poster twin and the reverse). Tasker promises (sterilise tools, guarantee length, turnaround, scanner, report, fittings, site visit, rush) are OPTIONAL wishes on the Poster side; what defines the job (type of vehicle, wall, fabric, garments...) stays required. Some questions that were several-answer on the Tasker side are one-answer here (`property_types`, `vehicle_types`, `makes`), because a task has one place or one vehicle. That is intended; matching (6f) must map one-of to any-of.
+- **Tests:** `node --test tests/*.js tests/*.mjs` = 199 pass. Browser (Playwright, 1280px and 390px, fake Supabase, 6 sample tasks): 45 checks passed (chips, counts, supplies filter, type chip on / off, two categories hide the filters, Clear all, `?category=` link, batch A category shows filters, phone Filter button / sheet / Apply, no sideways scroll, no page errors). The harness is not in the zip. NOT tested against the real Supabase. Design check: nothing new from these files (same two old post-service warnings plus the old legal / shell ones).
+- **Not done:** Poster questions for the other 18 categories (they have no questions on Post a Task, so no filters on Find Tasks either); Edit task / My Tasks still do not show or edit the answers; tasker-side matching.
+
+## NEXT: Stage 6e (rest of the Poster questions)
+1. Poster schemas in batches like Stage 4: B (`creative`, `it_tech`, `business`, `education`, `pet`), C (`events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`), D (`professional`, `security`, `health`, `legal`, `financial`). Copy the Tasker schema, reword for the Poster (see batch A in `js/task-schemas.js`, plus the `BATCH_A` block in `tests/task-schemas.test.js` as the model). For D (regulated): a Poster does not hold a licence, so ask what kind of professional they want and optionally "must be registered / certified" (yes/no) rather than copying `licence_body` / `licence_number`.
+2. Edit task / My Tasks: show and edit the answers (`useAudience('poster')`, `STCatForms.setValues`).
+3. 6f needs an owner decision on how task answers match service answers.

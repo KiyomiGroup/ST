@@ -447,6 +447,7 @@ function stTaskCard(t) {
       ${media}
       <h3 class="st-card-title">${e(t.title || 'Untitled Task')}</h3>
       ${desc ? `<p class="st-card-desc">${e(desc)}</p>` : ''}
+      ${Array.isArray(t.facts) && t.facts.length ? `<ul class="st-card-facts" aria-label="About this work">${t.facts.slice(0, 3).map(f => `<li>${e(f)}</li>`).join('')}</ul>` : ''}
       <ul class="st-card-meta">
         <li>${ST_ICON.pin}<strong>${e(t.location || 'Location TBD')}</strong></li>${dist}
         <li><span class="st-chip st-chip--mode">${remote ? ST_ICON.globe + 'Remote' : (t.category && window.STCat ? window.STCat.iconHtml(t.category) : '') + 'In-Person'}</span></li>

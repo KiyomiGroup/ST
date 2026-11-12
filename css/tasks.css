@@ -627,3 +627,11 @@
   .category-quick-grid { grid-template-columns: repeat(3, 1fr); }
   .task-submit-section { flex-direction: column; align-items: stretch; }
 }
+
+/* ── Find Tasks: type of work + the poster's answers (Categories Stage 6d) ── */
+#taskSubGroup[hidden] { display: none; }
+.task-facet .filter-opt { align-items: flex-start; }
+.task-facet .filter-opt input { margin-top: var(--space-1); flex-shrink: 0; }
+.task-filter-actions { display: none; padding: var(--space-4) 0 0; }
+.filter-sidebar.mobile-open .filter-panel { width: 100%; max-height: 80vh; overflow-y: auto; border-radius: var(--radius-card) var(--radius-card) 0 0; background: var(--white); padding: var(--space-4); }
+.filter-sidebar.mobile-open .task-filter-actions { display: block; }
