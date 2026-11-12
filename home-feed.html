@@ -881,7 +881,75 @@
        Order: Featured Taskers (rows Premium, Pro, Starter, Standard) -> Taskers Near You (the place the customer CHOSE in the hero picker)
        -> Explore Services (categories of real listings) -> My Active Tasks (Part A: yours, Part B: other customers', view only) -> Referral CTA (hidden until M15).
        Every list comes from a database function (m13a-core.sql, m13a2-core.sql, m13b-core.sql). Nothing is invented; an empty row is not drawn. */
-    const CU = { limit: 12, pointP: null };
+    const CU = { limit: 12, pointP: null, cat: '', featP: null, svcP: null };
+    const CU_RANK = { premium: 3, pro: 2, starter: 1 };   /* paid plans only: Standard and Local Taskers rank with everyone else */
+
+    /* Featured feed, asked ONCE and shared by the Featured row, the Taskers row and the Services row (plan order + category lookup). */
+    function _cuFeaturedRows() {
+      if (!CU.featP) {
+        CU.featP = _tkRpc('homepage_featured_taskers', {}).then(async rows => {
+          if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);   /* Local Taskers show their cover photo */
+          return rows;
+        });
+        CU.featP.catch(() => { CU.featP = null; });   /* a failed answer is asked again next time */
+      }
+      return CU.featP;
+    }
+    /* Live service listings, asked ONCE. Used for the Services row and to know which categories each tasker works in. */
+    function _cuServiceRows() {
+      if (!CU.svcP) {
+        CU.svcP = window.ST.db.fetchServices({ limit: 100 }).then(async raw => {
+          if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });
+          return raw;
+        });
+        CU.svcP.catch(() => { CU.svcP = null; });
+      }
+      return CU.svcP;
+    }
+    /* user id -> plan rank (3 Premium, 2 Pro, 1 Starter). Best effort: no answer = nobody is ranked, order stays as it was. */
+    async function _cuRankMap() {
+      const map = {};
+      try {
+        (await _cuFeaturedRows()).forEach(r => {
+          const id = String(r.user_id || r.tasker_user_id || '');
+          const k = CU_RANK[String(r.tier || '').toLowerCase()];
+          if (id && k && !(map[id] >= k)) map[id] = k;
+        });
+      } catch (e) { /* leave empty */ }
+      return map;
+    }
+    /* Stable sort: upgraded first (Premium, Pro, Starter), then everyone else in the order they already had */
+    function _cuByPlan(list, idOf, ranks) {
+      return list.map((x, i) => ({ x, i, k: ranks[idOf(x)] || 0 })).sort((a, b) => (b.k - a.k) || (a.i - b.i)).map(o => o.x);
+    }
+    /* Does this tasker work in the chosen category? A row's own category first, else the categories of their live services. */
+    function _cuTaskerInCat(r, cat, catsByUser) {
+      if (!cat) return true;
+      if (r.category && window.STCat) return STCat.matches(r.category, cat);
+      const mine = catsByUser[String(r.user_id || r.tasker_user_id || '')] || [];
+      return mine.some(c => window.STCat ? STCat.matches(c, cat) : c === cat);
+    }
+    function _cuCatsByUser(raw) {
+      const m = {};
+      raw.forEach(r => { const id = String(r.user_id || ''); if (id && r.category) (m[id] = m[id] || []).push(r.category); });
+      return m;
+    }
+    /* user ids that are verified (taskers.is_verified or users.is_verified). Best effort: a blocked read = no ticks. */
+    async function _cuVerifiedSet(uids) {
+      const ok = {};
+      uids = [...new Set(uids.filter(Boolean))];
+      if (!uids.length) return ok;
+      try {
+        const [t, u] = await Promise.all([
+          window.supabase.from('taskers').select('user_id, is_verified').in('user_id', uids),
+          window.supabase.from('users').select('id, is_verified').in('id', uids)
+        ]);
+        (t.data || []).forEach(r => { if (r.is_verified) ok[String(r.user_id)] = true; });
+        (u.data || []).forEach(r => { if (r.is_verified) ok[String(r.id)] = true; });
+      } catch (e) { /* no ticks is the safe result */ }
+      return ok;
+    }
+    function _cuCatLabel() { return CU.cat && window.STCat ? STCat.label(CU.cat) : ''; }
     const CU_TIERS = [['premium', 'Premium'], ['pro', 'Pro'], ['starter', 'Starter'], ['standard', 'Standard'], ['local', 'Local']];
     const CU_EMOJI = [['electric', '\u26A1'], ['plumb', '\uD83D\uDD27'], ['clean', '\uD83E\uDDF9'], ['barber', '\u2702\uFE0F'], ['beauty', '\uD83D\uDC84'],
                       ['mechanic', '\uD83D\uDD29'], ['photo', '\uD83D\uDCF7'], ['tutor', '\uD83D\uDCDA'], ['paint', '\uD83C\uDFA8'], ['moving', '\uD83D\uDE9A'],
@@ -943,7 +1011,7 @@
       const loading = STCompact.row({ title: 'Featured Taskers', skeleton: 'tasker', errorText: 'We could not load featured taskers. Please try again.' });
       host.appendChild(loading);
       let rows;
-      try { rows = await _tkRpc('homepage_featured_taskers', {}); }
+      try { rows = await _cuFeaturedRows(); }
       catch (e) {
         if (!_cuLive(host, tok)) return;
         loading.stOnRetry(() => _cuFeatured(host));
@@ -951,44 +1019,49 @@
         return;
       }
       if (!_cuLive(host, tok)) return;
-      if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);   /* Local Taskers show their cover photo */
+      const cat = CU.cat;
+      /* the services list tells us which categories each tasker works in (needed for the filter, and for the Taskers row below) */
+      let raw = [];
+      try { raw = await _cuServiceRows(); } catch (e) { /* the featured taskers are still shown */ }
       if (!_cuLive(host, tok)) return;
+      const catsByUser = _cuCatsByUser(raw);
       host.textContent = '';
       /* ONE "Featured Taskers" row for every paid plan, in plan order: Premium first, then Pro, then Starter.
          Standard (no paid plan) and Local Taskers are not featured; they appear in the Taskers row below with everyone else. */
-      const featured = ['premium', 'pro', 'starter'].reduce((acc, key) => acc.concat(rows.filter(r => r.tier === key)), []);
-      if (featured.length) {            /* nobody on a paid plan: no row */
+      const featured = ['premium', 'pro', 'starter'].reduce((acc, key) => acc.concat(rows.filter(r => r.tier === key)), [])
+        .filter(r => _cuTaskerInCat(r, cat, catsByUser));
+      if (featured.length) {            /* nobody on a paid plan (or none in this category): no row */
         const row = STCompact.row({ title: 'Featured Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
         row.stSetItems(featured.map(r => _cuTaskerCard(r, false)));
         host.appendChild(row);
       }
-      /* Taskers: ALL taskers. The featured feed only returns taskers with a tier or a Local Tasker listing, so every other tasker
-         with a live listing is added from the services list (the same source as Find Taskers). Featured ones come first, then
-         taskers in the customer's area, each person once. */
+      /* Taskers: ALL taskers, upgraded ones first (Premium, Pro, Starter), then everyone else, each person once.
+         The featured feed only returns taskers with a tier or a Local Tasker listing, so every other tasker
+         with a live listing is added from the services list (the same source as Find Taskers). Within the same plan,
+         taskers in the customer's area come first. */
       const seen = new Set();
       const idOf = r => String(r.user_id || r.tasker_user_id || r.tasker_id || r.id || '');
       const all = rows.filter(r => {
         const id = idOf(r);
         if (id && seen.has(id)) return false;
         if (id) seen.add(id);
-        return true;
+        return _cuTaskerInCat(r, cat, catsByUser);
       });
-      try {
-        const raw = await window.ST.db.fetchServices({ limit: 100 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });
-        if (!_cuLive(host, tok)) return;
-        raw.map((r, i) => ({ r, i, score: _locScoreText(r.location) }))
-          .sort((a, b) => (b.score - a.score) || (a.i - b.i))
-          .forEach(({ r }) => {
-            const id = String(r.user_id || '');
-            if (!id || seen.has(id)) return;
-            seen.add(id);
-            all.push(Object.assign({}, r, { tasker_user_id: id, name: r.provider_name, photo_url: r.photo, tier: null }));
-          });
-      } catch (e) { /* the featured taskers are still shown */ }
-      if (all.length) {
+      raw.map((r, i) => ({ r, i, score: _locScoreText(r.location) }))
+        .sort((a, b) => (b.score - a.score) || (a.i - b.i))
+        .forEach(({ r }) => {
+          const id = String(r.user_id || '');
+          if (!id || seen.has(id)) return;
+          seen.add(id);
+          if (!_cuTaskerInCat(r, cat, catsByUser)) return;
+          all.push(Object.assign({}, r, { tasker_user_id: id, name: r.provider_name, photo_url: r.photo, tier: null }));
+        });
+      const ranks = await _cuRankMap();
+      if (!_cuLive(host, tok)) return;
+      const ordered = _cuByPlan(all, idOf, ranks);
+      if (ordered.length) {
         const row = STCompact.row({ title: 'Taskers', skeleton: 'tasker', viewAllHref: 'find-taskers.html', viewAllLabel: 'View all' });
-        row.stSetItems(all.slice(0, 30).map(r => _cuTaskerCard(r, r.isLocal === true || r.tier === 'local')));
+        row.stSetItems(ordered.slice(0, 30).map(r => _cuTaskerCard(r, r.isLocal === true || r.tier === 'local')));
         host.appendChild(row);
       }
     }
@@ -1004,10 +1077,20 @@
         const pt = await CU.pointP;
         if (!_cuLive(host, tok)) return;
         if (!pt) { row.stShowMessage('We could not find that place on our map yet. Try a nearby area.', 'Choose another location', '#'); _cuWirePicker(row); return; }
-        const rows = await _tkRpc('homepage_nearby_taskers', { p_lat: pt.lat, p_lon: pt.lon, p_exclude: [], p_limit: CU.limit });
+        const cat = CU.cat;
+        let rows = await _tkRpc('homepage_nearby_taskers', { p_lat: pt.lat, p_lon: pt.lon, p_exclude: [], p_limit: cat ? 60 : CU.limit });
         if (!_cuLive(host, tok)) return;
         if (window.STLocal) await STLocal.decorate(rows, ['user_id', 'tasker_user_id'], ['photo_url', 'photo']);
         if (!_cuLive(host, tok)) return;
+        if (cat) {   /* category filter: keep only taskers who work in it */
+          let raw = []; try { raw = await _cuServiceRows(); } catch (e) { /* no category info: nothing matches */ }
+          if (!_cuLive(host, tok)) return;
+          const by = _cuCatsByUser(raw);
+          rows = rows.filter(r => _cuTaskerInCat(r, cat, by));
+        }
+        const ranks = await _cuRankMap();
+        if (!_cuLive(host, tok)) return;
+        rows = _cuByPlan(rows, r => String(r.user_id || r.tasker_user_id || ''), ranks).slice(0, CU.limit);   /* upgraded first, then nearest */
         row.stSetItems(rows.map(r => _cuTaskerCard(r, r.isLocal === true)));   /* none found: the row hides itself */
       } catch (e) {
         if (!_cuLive(host, tok)) return;
@@ -1016,22 +1099,30 @@
       }
     }
 
-    /* Services row: same look and scroller as the task rows. Listings in the customer's chosen area come first. */
+    /* Services row: same look and scroller as the task rows. Services from upgraded taskers come first (Premium, Pro, Starter),
+       then the rest; inside the same plan, listings in the customer's chosen area come first. A chosen category shows only that category. */
     async function _cuServices(host) {
       const tok = _cuStamp(host);
       host.textContent = '';
-      const row = STCompact.row({ title: 'Services', skeleton: 'task', viewAllHref: 'find-services.html', viewAllLabel: 'View all', errorText: 'We could not load services. Please try again.' });
+      const label = _cuCatLabel();
+      const row = STCompact.row({ title: label ? label + ' Services' : 'Services', skeleton: 'task', viewAllHref: 'find-services.html' + (CU.cat ? '?category=' + encodeURIComponent(CU.cat) : ''), viewAllLabel: 'View all', errorText: 'We could not load services. Please try again.' });
       host.appendChild(row);
       try {
-        const raw = await window.ST.db.fetchServices({ limit: 48 });
-        if (window.STLocal) await STLocal.decorate(raw, ['user_id'], ['photo'], { service: true });   /* Local Taskers show their cover photo */
+        let raw = await _cuServiceRows();
         if (!_cuLive(host, tok)) return;
-        const list = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
-          .sort((a, b) => (b.score - a.score) || (a.i - b.i)).slice(0, CU.limit).map(x => x.p);
+        if (CU.cat) raw = raw.filter(r => window.STCat ? STCat.matches(r.category, CU.cat) : r.category === CU.cat);
+        const ranks = await _cuRankMap();
+        if (!_cuLive(host, tok)) return;
+        const placed = raw.map(_normProvider).map((p, i) => ({ p, i, score: _locScoreText(p.location) }))
+          .sort((a, b) => (b.score - a.score) || (a.i - b.i)).map(x => x.p);
+        const list = _cuByPlan(placed, p => p.uid, ranks).slice(0, CU.limit);
+        const ok = await _cuVerifiedSet(list.map(p => p.uid));   /* the tick after the tasker's name */
+        if (!_cuLive(host, tok)) return;
         row.stSetItems(list.map(p => STCompact.serviceCard({
           service_name: p.service || p.name, category: p.category, categoryLabel: window.STCat ? STCat.label(p.category) : p.category,
           description: String(p.desc || '').slice(0, 90), photo: p.photo, provider: p.name, location: p.location,
-          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _serviceUrl(p), user_id: p.uid
+          price: p.price, unit: String(p.unit || '').replace('/', ''), href: _serviceUrl(p), user_id: p.uid,
+          verified: ok[p.uid] === true
         })));   /* none found: the row hides itself */
       } catch (e) {
         if (!_cuLive(host, tok)) return;
@@ -1135,26 +1226,57 @@
       root.textContent = '';
       CU.pointP = _cuResolvePoint();
       const hosts = {};
-      /* Owner order (2026-11-11): Services, Featured Taskers, Win Free Giftcards strip, Other Tasks, Taskers near you, Service Categories, Gift strip, My Tasks */
+      /* Owner order (2026-11-12): Service Categories (right under the filters), Services, Featured Taskers, Win Free Giftcards strip, Other Tasks, Taskers near you, Gift strip, My Tasks */
+      hosts.explore = _cuHost(root, 'hfCuExplore');
+      hosts.note = _cuHost(root, 'hfCuFilterNote');
       hosts.services = _cuHost(root, 'hfCuServices');
       hosts.feat = _cuHost(root, 'hfCuFeatured');
       root.appendChild(_tkStrip('Win Free Giftcards!', 'Invite friends', 'referrals.html'));
       hosts.others = _cuHost(root, 'hfCuOthers');
       hosts.near = _cuHost(root, 'hfCuNear');
-      hosts.explore = _cuHost(root, 'hfCuExplore');
       root.appendChild(_tkStrip('Gift Loved Ones', 'Buy Giftcard', 'gift-cards.html'));
       hosts.mine = _cuHost(root, 'hfCuMine');
-      _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuExplore(hosts.explore); _cuServices(hosts.services); _cuMine(hosts.mine); _cuOthers(hosts.others);
+      _cuExplore(hosts.explore); _cuServices(hosts.services); _cuFeatured(hosts.feat); _cuNear(hosts.near); _cuMine(hosts.mine); _cuOthers(hosts.others);
       const ref = document.getElementById('hfCuReferral');
       _wireReferral(ref, 'customer', 'Invite Friends. Earn Rewards.');
     }
 
+    /* Re-draw the four category-aware rows, then say so plainly when the chosen category has no services and no taskers */
+    async function _cuApplyFilter() {
+      const g = id => document.getElementById(id);
+      const note = g('hfCuFilterNote'), svcs = g('hfCuServices'), feat = g('hfCuFeatured'), near = g('hfCuNear');
+      if (note) note.textContent = '';
+      const jobs = [];
+      if (svcs) jobs.push(_cuServices(svcs));
+      if (feat) jobs.push(_cuFeatured(feat));
+      if (near) jobs.push(_cuNear(near));
+      await Promise.all(jobs);
+      if (!note || !CU.cat) return;
+      const shown = [svcs, feat, near].some(h => h && Array.from(h.querySelectorAll('.cc-row')).some(r => !r.hidden && r.getAttribute('data-state') === 'ready'));
+      const stillLoading = [svcs, feat, near].some(h => h && h.querySelector('.cc-row[data-state="loading"]'));
+      if (shown || stillLoading) return;
+      const d = document.createElement('div');
+      d.className = 'hf-empty';
+      d.textContent = 'No ' + (_cuCatLabel() || 'matching') + ' services or taskers yet.';
+      const a = document.createElement('a');
+      a.className = 'hf-empty-cta'; a.href = '#'; a.textContent = 'Show everything';
+      a.addEventListener('click', ev => {
+        ev.preventDefault();
+        const all = document.querySelector('#catScrollInner .hf-chip[data-cat=""]');
+        if (all) all.click();
+      });
+      d.appendChild(document.createElement('br')); d.appendChild(a);
+      note.appendChild(d);
+    }
+
     function initCustomerFeed() {
-      /* the hero category chips take the customer to the existing browse page for that category */
+      /* the category chips filter this page in place: Services, Featured Taskers, Taskers and Taskers near you show only that category */
       window.addEventListener('st:category-change', e => {
         if (_userRole === 'tasker') return;
         const cat = (e.detail && e.detail.category) || '';
-        if (cat) window.location.href = 'find-taskers.html?category=' + encodeURIComponent(cat);
+        if (cat === CU.cat) return;
+        CU.cat = cat;
+        _cuApplyFilter();
       });
       /* a new chosen place changes only the two place-based rows */
       window.addEventListener('st:location-change', () => {

@@ -647,7 +647,7 @@ function stServiceCardHome(s) {
       <div class="st-home-bottom">
         <div class="st-home-row">
           <div class="st-home-info">
-            ${name ? `<span class="st-home-provider">${avatar}<span class="st-home-provider-name">${e(name)}</span>${memb}</span>` : ''}
+            ${name ? `<span class="st-home-provider">${avatar}<span class="st-home-provider-name">${e(name)}</span>${s.verified === true ? `<span class="st-home-tick" title="Verified" aria-label="Verified">${ST_ICON.verified}</span>` : ''}${memb}</span>` : ''}
             <span class="st-home-price">${priceHtml}</span>
           </div>
           <a class="st-home-plus" href="${e(s.href)}" aria-label="Book ${e(s.service_name)}">${ST_ICON.plus}</a>
@@ -677,7 +677,7 @@ function stTaskerCardHome(s) {
       </div>
       <div class="st-home-head">
         <div class="st-home-id">
-          <h3 class="st-home-name"${s.verified !== true && !s.isLocal && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s.user_id || '')) ? ` data-verify-user="${e(s.user_id)}"` : ''}>${s.verified === true ? `<span class="st-home-tick" title="Verified" aria-label="Verified">${ST_ICON.verified}</span>` : ''}<span class="st-home-name-text">${e(name)}</span></h3>
+          <h3 class="st-home-name"${s.verified !== true && !s.isLocal && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s.user_id || '')) ? ` data-verify-user="${e(s.user_id)}"` : ''}><span class="st-home-name-text">${e(name)}</span>${s.verified === true ? `<span class="st-home-tick" title="Verified" aria-label="Verified">${ST_ICON.verified}</span>` : ''}</h3>
           ${s.service_name ? `<p class="st-home-role">${e(s.service_name)}</p>` : ''}
           <p class="st-home-where">${ST_ICON.pin}<span>${e(s.location || 'Lagos')}</span></p>
         </div>

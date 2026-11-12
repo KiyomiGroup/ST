@@ -117,3 +117,4 @@
 
 /* ── Service category tile: the tile itself now lives in css/categories.css (same tile on every page). Only the row spacing is set here. ── */
 .cc-row--cats .cc-track { gap: var(--home-cat-gap); padding-inline: var(--home-cat-inset); }
+.st-home-provider .st-home-tick svg { width: var(--text-sm); height: var(--text-sm); }   /* tick after the tasker name on service cards */

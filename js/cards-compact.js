@@ -154,7 +154,7 @@
     } catch (e) { /* label is optional */ }
   }
 
-  /* Verified tick in front of the name. Cards whose row did not say "verified" carry data-verify-user; one batched read of
+  /* Verified tick right after the name. Cards whose row did not say "verified" carry data-verify-user; one batched read of
      taskers.is_verified / users.is_verified decides. A blocked or failed read leaves the card without a tick (nothing invented). */
   function decorateVerified(scope) {
     try {
@@ -179,7 +179,7 @@
           tick.title = 'Verified';
           tick.setAttribute('aria-label', 'Verified');
           tick.innerHTML = ST_ICON.verified;   /* static markup from js/ui.js, no user text */
-          h.insertBefore(tick, h.firstChild);
+          h.appendChild(tick);   /* after the name, like other sites */
         });
       }).catch(function () { /* no tick is the safe result */ });
     } catch (e) { /* tick is optional */ }
