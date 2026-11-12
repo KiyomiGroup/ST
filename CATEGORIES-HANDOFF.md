@@ -1,4 +1,4 @@
-# Categories project: handoff for the next AI (after Stage 6d)
+# Categories project: handoff for the next AI (after Stage 6e)
 
 Read `CLAUDE.md`, `DESIGN-SYSTEM.md` and `CHANGES-categories-services.md` first. Rules that matter here: tokens only, no inline `style=""`, no `!important`, run `node tools/check-design-system.js` (it already reports 2 old warnings on `post-service.html`: hex 2 -> 3 and inline 5 -> 6; they are the same on the untouched original, do not "fix" them by editing the baseline).
 
@@ -21,7 +21,7 @@ Taskers post a service by choosing one of 26 categories and a subcategory, then 
 | 6b | Sales upgrade (condition, brand, quantity, stock status, delivery / pickup) | Done (this stage), see "Stage 6b notes" |
 | 6c | Post a Task: type of work + Poster-worded questions (pilot: Cleaning, Repairs, Moving & Delivery) | Done (this stage), see "Stage 6c notes" |
 | 6d | Find Tasks filters + card chips; Poster questions batch A (5 categories) | Done (this stage), see "Stage 6d notes" |
-| 6e | Poster questions batches B, C, D (the other 18 categories); Edit task / My Tasks show answers | Next |
+| 6e | Poster questions for the other 16 categories (batches B, C, D); answers on My Tasks; phone layout fix for the question cards | Done (this stage), see "Stage 6e notes" |
 | 6f | Match a task's answers to a tasker's service answers (needs owner decision) | Not started |
 
 ## How the pieces fit
@@ -157,7 +157,22 @@ Health & Wellness / Legal / Financial are kept as their own categories (decided)
 - **Tests:** `node --test tests/*.js tests/*.mjs` = 199 pass. Browser (Playwright, 1280px and 390px, fake Supabase, 6 sample tasks): 45 checks passed (chips, counts, supplies filter, type chip on / off, two categories hide the filters, Clear all, `?category=` link, batch A category shows filters, phone Filter button / sheet / Apply, no sideways scroll, no page errors). The harness is not in the zip. NOT tested against the real Supabase. Design check: nothing new from these files (same two old post-service warnings plus the old legal / shell ones).
 - **Not done:** Poster questions for the other 18 categories (they have no questions on Post a Task, so no filters on Find Tasks either); Edit task / My Tasks still do not show or edit the answers; tasker-side matching.
 
-## NEXT: Stage 6e (rest of the Poster questions)
-1. Poster schemas in batches like Stage 4: B (`creative`, `it_tech`, `business`, `education`, `pet`), C (`events`, `hospitality`, `assistance`, `construction`, `marketing`, `laundry`), D (`professional`, `security`, `health`, `legal`, `financial`). Copy the Tasker schema, reword for the Poster (see batch A in `js/task-schemas.js`, plus the `BATCH_A` block in `tests/task-schemas.test.js` as the model). For D (regulated): a Poster does not hold a licence, so ask what kind of professional they want and optionally "must be registered / certified" (yes/no) rather than copying `licence_body` / `licence_number`.
-2. Edit task / My Tasks: show and edit the answers (`useAudience('poster')`, `STCatForms.setValues`).
-3. 6f needs an owner decision on how task answers match service answers.
+## Stage 6e notes (rest of the Poster questions, My Tasks, phone fix)
+- **Phone layout bug (owner report: "the form, like cleaning, where they ask for details overlaps another section on mobile"):** cause found. The Stage 4a note says `css/category-forms.css` got a phone fix, but that file was never in the 4a zip, so the project never had it. Fixed now in `css/category-forms.css` (+ `css/post-task.css`):
+  - Post a Service: `#catFields` is `display: contents` under 768px so each question card is a child of the form and gets the form gap (before, the cards touched each other with no gap). Answer chips (`.pt-chips.cf-chips`) wrap instead of scrolling sideways off the card.
+  - Post a Task (worse): "What kind of work is it?" and "A few quick answers" had no `order`, so on phones they jumped ABOVE Quick categories, Title and Category, and the answers sat in a card inside a card. They now follow the category (`.pt-group-sub` order 4, `.pt-group-catfields` order 5; every later order moved up by 2), the answers block is a plain heading + separate cards (`#taskCatFields` is `display: contents`; `.pt-group-catfields[hidden]` still hides). Desktop unchanged.
+  - Checked in a real browser at 390px and 1280px (Playwright, fake Supabase): gaps between cards, order, no sideways scroll, for pet, events, health, business.
+- **Poster questions, all remaining categories** (`js/task-schemas.js`): batch B `creative, it_tech, business, education, pet`; batch C `events, hospitality, assistance, construction, marketing, laundry`; batch D `professional, security, health, legal, financial`. 24 of 26 categories now have Poster questions; only Sales and Other have none (same as the Tasker side).
+  - They are built with `derive(category, table)` from the Tasker schema, so keys, groups, `subs` / `notSubs`, min / max and units cannot drift. The table gives each question's Poster label (`l`), options (`o`), type (`t`), required (`r`, default as Tasker), unit, `when`. To change wording, edit the table; to add a Tasker question, add a table row (a test fails if a Tasker key has no Poster twin or still has the Tasker label).
+  - Rules used (same as batch A): what defines the job is required; Tasker promises (software, guarantee, turnaround, receipts, equipment brought, safety kit, "how do you hire") are optional wishes; one place / one person / one pet is a one-answer question (`levels`, `ages`, `transmission`, `pet_types`, `event_types`, `queue_places`, `industries`, `client_types`, `client_groups`, `practice_areas`, `mediation_types`, `business_customers`, `tank_waters`) even where the Tasker side takes several. Matching (6f) must map one-of to any-of.
+  - `dog_sizes` only shows when `pet_types` is Dog (a `when` follow-up).
+  - **Regulated categories (D):** a Poster holds no licence, so `licence_body`, `licence_number`, `has_certification`, `certification_details`, `vet_registration` (and the optional `licence_number` on Driving Lessons / Electrical / Plumbing) have NO Poster twin. Instead: `must_be_registered` (yes/no, optional; work that normally needs a licence, all of Legal, vets) and `must_be_certified` (yes/no, optional; the rest). Nothing is checked against any register (same owner decision as 4d). 6f can compare these with the Tasker's licence answers if the owner wants.
+  - Also fixed two thin spots in the 6c/6d Poster schemas: Pet "Other" had one question; Moving & Delivery > Warehousing had one (added `storage_features`).
+- **My Tasks** (`my-tasks.html`, `js/my-tasks.js`, `css/my-tasks.css`): each task card shows the type of work and up to 3 of the poster's answers (`STCatForms.badges` with `useAudience('poster')`). Old tasks and categories without questions show nothing. The page now loads `categories.js`, `category-forms.js`, `task-schemas.js`.
+- **NOT done: Edit task.** There is no edit-task flow in the project at all (Post a Task has no edit mode, nothing updates a task row), so there was nothing to extend. Adding one is a feature of its own (load a task into the form, `update` instead of `insert`, what may change after offers exist). Ask the owner before building it.
+- **Tests:** `node --test tests/*.js tests/*.mjs` = 209 pass (10 new in `tests/task-schemas.test.js`: all 24 categories covered, at least two questions per type of work and Other, same keys as the Tasker side, every label reworded, no licence asks, required vs optional, one-answer types, the dog-size follow-up). Browser: 29 checks (Post a Task phone for 4 new categories, Post a Service phone, desktop Post a Task, My Tasks chips). NOT tested against the real Supabase. Design check: output identical to the untouched project.
+
+## NEXT: Stage 6f / 6g
+1. 6f: match a task's answers to a tasker's service answers (needs an owner decision: which keys count, one-of vs any-of, licence / certified wishes vs the Tasker's licence answers, what the tasker sees on an offer).
+2. Find Tasks now shows filters and chips for 24 categories automatically (no code change; worth a visual check with 26 chips and the new questions).
+3. Edit task (see above), and Poster budget method (Stage 6c note) are still open.

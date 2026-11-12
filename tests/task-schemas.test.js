@@ -21,9 +21,10 @@ test('the Poster audience is registered, and switching back restores the Tasker 
   assert.strictEqual(F.useAudience('nonsense'), 'tasker');
 });
 
-test('a category with no Poster schema has no questions yet, and Post a Service is unaffected', () => {
+test('a category with no Poster schema has no questions (only Sales and Other), and Post a Service is unaffected', () => {
   F.useAudience('poster');
-  assert.ok(!F.has('pet')); assert.deepStrictEqual(plain(F.fieldsFor('pet', 'Dog Walking', {})), []);
+  ['sales', 'other'].forEach(cat => { assert.ok(!F.has(cat), cat + ' has no Poster questions'); assert.deepStrictEqual(plain(F.fieldsFor(cat, 'Anything', {})), []); });
+  assert.ok(F.has('pet'));
   F.useAudience('tasker');
   assert.ok(F.has('pet'));
 });
@@ -130,4 +131,119 @@ test('batch A: filters offer short fixed lists for tasks', () => {
   assert.ok(keys('grooming', '').includes('service_location'), 'category-level filter');
   assert.ok(F.facets('grooming', 'Barbing').some(f => f.key === 'barber_services'));
   assert.ok(F.facets('fashion', 'Embroidery').length >= 1);
+});
+
+/* ── Stage 6e, batches B, C and D ──────────────────────────────────────────────────────────── */
+const BATCH_B = ['creative', 'it_tech', 'business', 'education', 'pet'];
+const BATCH_C = ['events', 'hospitality', 'assistance', 'construction', 'marketing', 'laundry'];
+const BATCH_D = ['professional', 'security', 'health', 'legal', 'financial'];
+const NEW_6E = BATCH_B.concat(BATCH_C, BATCH_D);
+/* Tasker questions that have no Poster twin on purpose: a Poster holds no licence, certificate, vet number, or driving-school number */
+const NO_TWIN = ['licence_body', 'licence_number', 'has_certification', 'certification_details', 'vet_registration'];
+/* Poster-only questions: "I want someone registered / certified" */
+const POSTER_ONLY = ['must_be_registered', 'must_be_certified'];
+
+test('6e: all 24 categories that have Tasker questions now have Poster questions; only Sales and Other do not', () => {
+  const sc = Object.keys(F.SCHEMAS).sort();
+  assert.deepStrictEqual(Object.keys(P).sort(), sc);
+  assert.strictEqual(sc.length, 24);
+  NEW_6E.forEach(c => assert.ok(P[c], c));
+});
+
+test('6e: every type of work (and Other) has at least two Poster questions', () => {
+  F.useAudience('poster');
+  Object.keys(P).forEach(cat => {
+    C.subsOf(cat).concat([F.OTHER_SUB]).forEach(sub => {
+      assert.ok(F.fieldsFor(cat, sub, {}).length >= 2, cat + ' / ' + sub + ' has ' + F.fieldsFor(cat, sub, {}).length);
+    });
+  });
+});
+
+test('6e: Poster and Tasker ask the same keys (so a task can be matched to a service later)', () => {
+  NEW_6E.forEach(cat => {
+    const tasker = F.SCHEMAS[cat].fields.map(f => f.key).filter(k => !NO_TWIN.includes(k) && !(k === 'licence_number'));
+    const poster = P[cat].fields.map(f => f.key);
+    new Set(tasker).forEach(k => assert.ok(poster.includes(k), cat + '.' + k + ' is missing on the Poster side'));
+    poster.filter(k => !POSTER_ONLY.includes(k)).forEach(k => assert.ok(F.SCHEMAS[cat].fields.some(f => f.key === k), cat + '.' + k + ' has no Tasker twin'));
+  });
+});
+
+test('6e: every Poster question is reworded (none still carries the Tasker label) and no option sounds like a Tasker', () => {
+  NEW_6E.forEach(cat => {
+    P[cat].fields.forEach(f => {
+      const w = F.SCHEMAS[cat].fields.find(x => x.key === f.key);
+      if (!w) return;
+      assert.notStrictEqual(f.label, w.label, cat + '.' + f.key + ' still has the Tasker label: ' + f.label);
+      assert.ok(!/\byou (offer|do|give|use|work|take|teach|cook|bake|install|supply|can|hold|run|write|handle|cover|treat|translate|record|perform|play|sell|stock|repair)\b/i.test(f.label), cat + '.' + f.key + ' sounds like a Tasker: ' + f.label);
+      (f.options || []).forEach(o => assert.ok(!/^(client|customer) (supplies|provides|pays)|^I (supply|bring|cook|come|pick|visit|handle)\b/i.test(o), cat + '.' + f.key + ' option sounds like a Tasker: ' + o));
+    });
+  });
+});
+
+test('6e: Poster-only registration questions replace the Tasker licence fields, and nothing asks a Poster for a licence number', () => {
+  BATCH_D.forEach(cat => {
+    const keys = P[cat].fields.map(f => f.key);
+    NO_TWIN.forEach(k => assert.ok(!keys.includes(k), cat + ' must not ask the Poster for ' + k));
+    assert.ok(keys.includes('must_be_registered'), cat);
+  });
+  F.useAudience('poster');
+  const reg = (cat, sub) => F.fieldsFor(cat, sub, {}).map(f => f.key);
+  assert.ok(reg('health', 'Physiotherapy').includes('must_be_registered') && !reg('health', 'Physiotherapy').includes('must_be_certified'));
+  assert.ok(reg('health', 'Yoga Instruction').includes('must_be_certified') && !reg('health', 'Yoga Instruction').includes('must_be_registered'));
+  assert.ok(reg('legal', F.OTHER_SUB).includes('must_be_registered'), 'legal asks it for every type of work');
+  assert.ok(reg('pet', 'Veterinary Care').includes('must_be_registered') && !reg('pet', 'Dog Walking').includes('must_be_registered'));
+  assert.ok(!reg('education', 'Driving Lessons').includes('licence_number') && !reg('construction', 'Roofing').includes('licence_number'));
+});
+
+test('6e: what defines the job is required, Tasker promises are optional wishes', () => {
+  F.useAudience('poster');
+  const req = (cat, sub) => plain(F.fieldsFor(cat, sub, {}).filter(f => f.required).map(f => f.key));
+  assert.deepStrictEqual(req('creative', 'Logo Design'), [], 'software, rounds, turnaround and files are wishes');
+  assert.deepStrictEqual(req('creative', 'Video Editing'), ['video_types']);
+  assert.deepStrictEqual(req('it_tech', 'Laptop Repair'), ['service_mode', 'laptop_repairs', 'brands', 'parts']);
+  assert.deepStrictEqual(req('business', 'Data Entry'), ['work_mode', 'data_entry_types']);
+  assert.deepStrictEqual(req('education', 'Driving Lessons'), ['lesson_modes', 'class_size', 'transmission', 'provides_car']);
+  assert.deepStrictEqual(req('pet', 'Dog Walking'), ['pet_types', 'max_pets', 'walk_length']);
+  assert.deepStrictEqual(req('events', 'Photography'), ['event_types', 'coverage', 'shoot_types']);
+  assert.deepStrictEqual(req('construction', 'Roofing'), ['tools', 'materials', 'job_size', 'roof_types']);
+  assert.deepStrictEqual(req('laundry', 'Dry Cleaning'), ['pickup', 'turnaround', 'dry_clean_items']);
+  assert.deepStrictEqual(req('financial', 'Tax Preparation'), ['work_mode', 'client_types', 'tax_types']);
+});
+
+test('6e: one-answer questions on the Poster side (one place, one person, one pet)', () => {
+  const type = (cat, key) => P[cat].fields.find(f => f.key === key).type;
+  assert.strictEqual(type('education', 'levels'), 'select');
+  assert.strictEqual(type('pet', 'pet_types'), 'select');
+  assert.strictEqual(type('events', 'event_types'), 'select');
+  assert.strictEqual(type('health', 'client_groups'), 'select');
+  assert.strictEqual(type('financial', 'client_types'), 'select');
+  assert.strictEqual(F.SCHEMAS.pet.fields.find(f => f.key === 'pet_types').type, 'multi', 'the Tasker side is unchanged');
+});
+
+test('6e: the dog-size question only shows for a dog, and answers validate', () => {
+  F.useAudience('poster');
+  const keys = v => F.fieldsFor('pet', 'Dog Walking', v).map(f => f.key);
+  assert.ok(!keys({ pet_types: 'Cat' }).includes('dog_sizes'));
+  assert.ok(keys({ pet_types: 'Dog' }).includes('dog_sizes'));
+  const ok = F.validate('pet', 'Dog Walking', { pet_types: 'Dog', dog_sizes: 'Large', max_pets: 2, walk_length: '30 to 60 minutes' });
+  assert.ok(ok.ok, JSON.stringify(ok.errors));
+  assert.ok(!F.validate('pet', 'Dog Walking', { pet_types: 'Dog', max_pets: 2, walk_length: '30 to 60 minutes' }).ok, 'size is needed for a dog');
+  const cat = F.validate('pet', 'Dog Walking', { pet_types: 'Cat', dog_sizes: 'Large', max_pets: 1, walk_length: 'Up to 30 minutes' });
+  assert.ok(cat.ok && !('dog_sizes' in cat.clean), 'a hidden answer is dropped');
+});
+
+test('6e: a Tasker option is refused on the Poster side, a Poster option accepted', () => {
+  F.useAudience('poster');
+  const good = { event_types: 'Weddings', coverage: 'In my own city', max_guests: 150, shoot_types: ['Weddings'] };
+  assert.ok(F.validate('events', 'Photography', good).ok);
+  assert.ok(!F.validate('events', 'Photography', Object.assign({}, good, { coverage: 'Within my city' })).ok);
+  assert.ok(!F.validate('events', 'Photography', Object.assign({}, good, { event_types: ['Weddings'] })).ok, 'one-answer question');
+});
+
+test('6e: describe() and facets() work for the new Poster categories', () => {
+  F.useAudience('poster');
+  const lines = plain(F.describe('laundry', 'Dry Cleaning', { pickup: 'Either', turnaround: 'Next day', dry_clean_items: ['Suits & jackets'] }));
+  assert.deepStrictEqual(lines.map(l => l.label), ['How will the laundry get there and back', 'How soon do you need it back', 'What needs dry cleaning']);
+  assert.ok(F.facets('pet', 'Dog Walking').some(f => f.key === 'pet_types'));
+  assert.ok(F.facets('events', 'Photography').some(f => f.key === 'event_types'));
 });

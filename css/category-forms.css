@@ -1,5 +1,5 @@
 /* ============================================================
-   STREETTASKER — category-forms.css   (Categories Stage 3)
+   STREETTASKER — category-forms.css   (Categories Stage 3, phone layout fix Stage 6e)
    Extra bits for the category questions on Post a Service (js/category-forms.js).
    Everything else uses the shared .pt-* form classes. Tokens only.
    ============================================================ */
@@ -10,3 +10,19 @@
 .cf-chips.has-error { padding: var(--space-2); }
 .cf-unit { flex: none; margin-left: var(--space-3); font-size: var(--text-sm); color: var(--pt-ink-muted); }
 .cf-note { margin: 0 0 var(--space-5); font-size: var(--text-xs); line-height: 1.5; color: var(--pt-ink-muted); }
+
+/* Phones (max-width 768px): post-task.css turns every .pt-group into its own white card and lets .pt-form space them.
+   The question cards live one level deeper (inside the box), so without this they touched each other, the answer chips
+   scrolled sideways off the card, and on Post a Task the whole block jumped above the form. */
+@media (max-width: 768px) {
+  #catFields { display: contents; }                       /* cards become children of the form, so the form gap applies */
+  .pt-group.pt-group-catfields {                          /* Post a Task: a heading + cards, not a card inside a card */
+    display: flex; flex-direction: column; gap: var(--space-4);
+    padding: 0; background: none; box-shadow: none;
+  }
+  .pt-group.pt-group-catfields[hidden] { display: none; }
+  #taskCatFields { display: contents; }
+  .pt-group-catfields > .pt-label { margin: 0; }
+  .pt-chips.cf-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
+  .pt-chips.cf-chips.has-error { padding: var(--space-2); }
+}

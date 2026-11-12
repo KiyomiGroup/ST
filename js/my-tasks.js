@@ -267,6 +267,18 @@
     return a ? '<div class="ap-actions">' + a + '</div>' : '';
   }
 
+  /* The type of work and up to 3 of the poster's own answers (Categories Stage 6e). Nothing for old tasks or categories without questions. */
+  function answerChips(t) {
+    var F = window.STCatForms, C = window.STCat, raw = t.raw || {};
+    if (!F || !C || !t.category) return '';
+    if (F.useAudience) F.useAudience('poster');
+    var list = [];
+    if (raw.subcategory && raw.subcategory !== (F.OTHER_SUB || '')) list.push(raw.subcategory);
+    list = list.concat(F.badges(C.resolve(t.category).value, raw.subcategory, raw.details, 3));
+    if (!list.length) return '';
+    return '<ul class="mt-facts" aria-label="About this work">' + list.slice(0, 4).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+  }
+
   function card(t) {
     var sub = [];
     sub.push('<span>' + esc(shortId(t)) + '</span>');
@@ -277,6 +289,7 @@
       (t.created ? '<span class="ap-meta">' + icon('clock') + 'Posted ' + esc(ago(t.created)) + '</span>' : '') + '</div>' +
       '<div><h2 class="ap-card-title">' + esc(t.title) + '</h2><div class="ap-card-sub">' + sub.join('') + '</div></div>' +
       (t.description ? '<p class="mt-desc">' + esc(t.description) + '</p>' : '') +
+      answerChips(t) +
       figures(t) + peopleRow(t) + actions(t) + '</article>';
   }
 

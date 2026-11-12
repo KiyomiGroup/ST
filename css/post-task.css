@@ -529,14 +529,16 @@
   .pt-group-chips { order: 1; padding: 0; background: none; box-shadow: none; }
   .pt-group-title { order: 2; }
   .pt-group-category { order: 3; }
-  .pt-group-desc { order: 4; }
-  .pt-group-mode { order: 5; }
-  .pt-group-location { order: 6; }
-  .pt-group-when { order: 7; }
-  .pt-group-urgent { order: 8; }
-  .pt-group-budget { order: 9; }
-  .pt-group-photos { order: 10; }
-  .pt-submit { order: 11; }
+  .pt-group-sub { order: 4; }          /* type of work + its questions sit right under the category (Stage 6c) */
+  .pt-group-catfields { order: 5; }
+  .pt-group-desc { order: 6; }
+  .pt-group-mode { order: 7; }
+  .pt-group-location { order: 8; }
+  .pt-group-when { order: 9; }
+  .pt-group-urgent { order: 10; }
+  .pt-group-budget { order: 11; }
+  .pt-group-photos { order: 12; }
+  .pt-submit { order: 13; }
   .pt-group-frequency { display: none; }
   .pt-group.is-hidden { display: none; }
 

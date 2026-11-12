@@ -112,3 +112,11 @@
 - js/task-schemas.js: Poster questions for Home & Furniture, Gardening & Outdoor, Automotive, Beauty & Personal Care, Fashion & Tailoring (same keys as the Tasker side).
 - tests/task-schemas.test.js: batch A block (199 tests pass in all).
 - No SQL.
+
+
+## Categories Stage 6e (2026-11-12): Poster questions for the other 16 categories, My Tasks answers, phone layout fix
+- css/category-forms.css + css/post-task.css: PHONE FIX for the "Service Details" / "A few quick answers" questions. Post a Service: question cards had no gap and chips ran off the card. Post a Task: the type-of-work and answers blocks jumped above the whole form (no `order`) and were a card inside a card. Fixed (phones only, 768px and under); the 4a notes described this CSS but it was never in the project.
+- js/task-schemas.js: Poster questions for creative, it_tech, business, education, pet, events, hospitality, assistance, construction, marketing, laundry, professional, security, health, legal, financial (built with `derive()` from the Tasker schemas). Regulated categories ask `must_be_registered` / `must_be_certified` instead of licence numbers. Added `storage_features` (Warehousing).
+- js/my-tasks.js, my-tasks.html, css/my-tasks.css: type of work + up to 3 answers on each task card.
+- tests/task-schemas.test.js: 10 new tests (209 pass in all).
+- No SQL.
