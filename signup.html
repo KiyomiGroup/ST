@@ -37,14 +37,31 @@
         <h1>What do you want to do?</h1>
       </div>
 
+      <!-- Phones: a short "tap one" prompt, then two tall cards (picture, plain words, Get started chip) with "or" between.
+           Desktop: the prompt, pictures, hints and "or" are hidden and the two cards are plain square buttons. -->
+      <p class="av2-pick-prompt">Tap the one that describes you <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></p>
+
       <div class="av2-pick-grid">
         <button type="button" class="av2-pick" onclick="showStep('tasker')">
-          <span class="av2-pick-small">I&rsquo;m a</span>
-          <span class="av2-pick-big">Service provider</span>
+          <img class="av2-pick-img" src="images/role-provider.jpg" alt="" width="480" height="353" loading="eager" />
+          <span class="av2-pick-text">
+            <span class="av2-pick-small">I&rsquo;m a</span>
+            <span class="av2-pick-big">Service provider</span>
+            <span class="av2-pick-hint">Get jobs and get paid</span>
+            <span class="av2-pick-go">Get started <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+          </span>
         </button>
-        <button type="button" class="av2-pick" onclick="showStep('customer')">
-          <span class="av2-pick-small">I&rsquo;m here to</span>
-          <span class="av2-pick-big">Book a service</span>
+
+        <p class="av2-pick-or" aria-hidden="true">or</p>
+
+        <button type="button" class="av2-pick av2-pick--flip" onclick="showStep('customer')">
+          <img class="av2-pick-img" src="images/role-customer.jpg" alt="" width="480" height="480" loading="eager" />
+          <span class="av2-pick-text">
+            <span class="av2-pick-small">I&rsquo;m here to</span>
+            <span class="av2-pick-big">Book a service</span>
+            <span class="av2-pick-hint">Find someone you can trust</span>
+            <span class="av2-pick-go">Get started <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+          </span>
         </button>
       </div>
 

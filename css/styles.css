@@ -2197,8 +2197,11 @@ img { max-width: 100%; height: auto; }
 .av2-pick:hover, .av2-pick:focus-visible { border-color: var(--auth-green-mid); background: var(--auth-mint-hover-bg); }
 .av2-pick:focus-visible { outline: 3px solid var(--auth-green-mid); outline-offset: 2px; }
 .av2-pick:active { transform: scale(0.98); }
+.av2-pick-text { display: flex; flex-direction: column; align-items: inherit; gap: inherit; }
 .av2-pick-small { font-size: var(--text-sm); font-weight: 600; color: var(--auth-body); }
 .av2-pick-big { font-size: var(--text-xl); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+/* phone-only parts, hidden by default (shown in the phone block below) */
+.av2-pick-img, .av2-pick-hint, .av2-pick-go, .av2-pick-or, .av2-pick-prompt { display: none; }
 
 .av2-coord-link { text-align: center; max-width: 560px; margin: var(--space-5) auto 0; font-size: var(--text-sm); color: var(--auth-body); }
 .av2-coord-link a { color: var(--auth-green); font-weight: 700; text-decoration: underline; }
@@ -2217,7 +2220,7 @@ img { max-width: 100%; height: auto; }
   .av2-join-line { font-size: var(--text-xl); }
   .av2-join-line img { height: var(--space-6); }
   .av2-chooser-heading h1 { font-size: var(--text-2xl); }
-  .av2-pick-grid { gap: var(--space-5); max-width: 640px; }
+  .av2-pick-grid { gap: var(--space-5); max-width: 720px; }
   .av2-pick { padding: var(--space-5); gap: var(--space-3); }
   .av2-pick-small { font-size: var(--text-base); }
   .av2-pick-big { font-size: var(--text-2xl); }
@@ -5660,8 +5663,34 @@ body.st-shell { background: var(--pt-page); min-height: 100vh; }
 }
 
 @media (max-width: 768px) {
-  /* Role chooser: fits one screen on a phone */
+  /* Role chooser on phones: a "tap one" prompt, then two tall cards with a picture, plain words and a Get started chip.
+     Big text for the role, small text for the helper lines, one bright chip so it is obvious the card is a button. */
   #stepChoose.av2-page { min-height: 100svh; align-items: center; }
   #stepChoose .av2-shell { padding: var(--space-4); }
   #stepChoose .av2-login-pill { margin-top: var(--space-4); padding: var(--space-3) var(--space-4); }
+
+  #stepChoose .av2-pick-prompt {
+    display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+    margin: 0 auto var(--space-3); font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 700; color: var(--auth-green);
+  }
+  #stepChoose .av2-pick-grid { grid-template-columns: 1fr; gap: var(--space-2); max-width: 460px; }
+  #stepChoose .av2-pick {
+    aspect-ratio: auto; flex-direction: row; justify-content: flex-start; align-items: center; gap: var(--space-3);
+    padding: var(--space-3) var(--space-4); text-align: left;
+    background: var(--color-primary-soft); border-color: var(--color-mint-border);
+  }
+  #stepChoose .av2-pick:hover, #stepChoose .av2-pick:focus-visible { background: var(--color-primary-soft-hover); }
+  #stepChoose .av2-pick--flip { flex-direction: row-reverse; }
+  #stepChoose .av2-pick-img { display: block; flex: 0 0 40%; width: 40%; max-width: 40%; height: auto; mix-blend-mode: multiply; }   /* multiply: the picture's white background takes the card colour */
+  #stepChoose .av2-pick-text { flex: 1 1 0; min-width: 0; align-items: flex-start; gap: var(--space-1); }
+  #stepChoose .av2-pick-big { font-size: var(--text-xl); }
+  #stepChoose .av2-pick-hint { display: block; font-size: var(--text-sm); line-height: 1.3; color: var(--auth-body); font-family: var(--font-body); }
+  #stepChoose .av2-pick-go {
+    display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-full);
+    background: var(--color-primary); color: var(--color-text-on-primary); font-size: var(--text-sm); font-weight: 700;
+  }
+  #stepChoose .av2-pick:hover .av2-pick-go { background: var(--color-primary-hover); }
+  #stepChoose .av2-pick-or { display: block; margin: 0; text-align: center; font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700; color: var(--auth-body); }
+}
 }
