@@ -27,51 +27,27 @@
     </div>
   </div>
 
-  <!-- STEP 1 — role chooser (Figma: "Mobile/Desktop Sign up Option") -->
+  <!-- STEP 1: role chooser. Two big buttons; each one opens the sign-up form for that role.
+       Service provider = tasker account, Book a service = customer account.
+       Coordinators are not created here: new people send a request on coordinator-apply.html first. -->
   <section class="av2-page" id="stepChoose">
     <div class="av2-shell">
-      <div class="av2-chooser-badge">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12l2.5 2.5L16 9"/><path d="M4 8.5C4 6 6 4 8.5 4c1.3 0 2.5.6 3.5 1.6C13 4.6 14.2 4 15.5 4 18 4 20 6 20 8.5c0 3.5-4 6-8 9-4-3-8-5.5-8-9z"/></svg>
-      </div>
       <div class="av2-chooser-heading">
-        <h1>Join StreetTasker</h1>
-        <p>What do you need today?</p>
+        <p class="av2-join-line">Join <img src="images/logo-nav.svg" alt="StreetTasker" /></p>
+        <h1>What do you want to do?</h1>
       </div>
 
-      <div class="av2-role-grid">
-        <div class="av2-role-card-wrap av2-role-card-wrap--hire">
-        <div class="av2-role-card av2-role-card--hire">
-          <div class="av2-role-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3"/><path d="M4 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="14.5" r="3.5"/><line x1="20" y1="17" x2="22" y2="19"/></svg>
-          </div>
-          <h3>I need something done</h3>
-          <p>Find a plumber, cleaner, driver, tailor or helper near you. Post a job or book someone directly.</p>
-          <button type="button" class="btn btn-primary btn-lg" onclick="showStep('customer')">
-            Find help
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-        </div>
-        </div>
-
-        <div class="av2-role-card-wrap av2-role-card-wrap--work">
-        <div class="av2-role-card av2-role-card--work">
-          <div class="av2-role-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          </div>
-          <h3>I want to earn money</h3>
-          <p>Do the work you are good at and get paid. You set your price and choose your jobs.</p>
-          <a href="onboarding-tasker.html" class="btn btn-outline btn-lg" onclick="event.preventDefault(); showStep('tasker');">
-            Start earning
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
-        </div>
-        </div>
+      <div class="av2-pick-grid">
+        <button type="button" class="av2-pick" onclick="showStep('tasker')">
+          <span class="av2-pick-small">I&rsquo;m a</span>
+          <span class="av2-pick-big">Service provider</span>
+        </button>
+        <button type="button" class="av2-pick" onclick="showStep('customer')">
+          <span class="av2-pick-small">I&rsquo;m here to</span>
+          <span class="av2-pick-big">Book a service</span>
+        </button>
       </div>
 
-      <p class="av2-chooser-note">On StreetTasker, people who do the jobs are called Taskers.<span class="av2-note-extra"> Not sure which to pick? You can add the other later with the same email.</span></p>
-
-      <!-- Coordinators: a small link, not a card. A coordinator account is separate from customer and tasker accounts and is
-           not created here: new people send a request, pass the test, then create the coordinator account on coordinator-signup.html. -->
       <p class="av2-coord-link">Want to help local artisans get online? <a href="coordinator-apply.html">Become a coordinator</a></p>
 
       <div class="av2-login-pill">Already have an account? <a href="login.html">Log in</a></div>
