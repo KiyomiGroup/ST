@@ -89,6 +89,7 @@
 /* step 2 and 3 of 4 */
 .ps-progress-fill--2 { width: 50%; }
 .ps-progress-fill--3 { width: 75%; }
+.ps-progress-fill--4 { width: 100%; }
 
 /* ── Password step (provider-password.html) ── */
 .ps-email { color: var(--pt-ink); font-weight: 700; word-break: break-all; }
@@ -128,6 +129,25 @@
 
 .ps-login { margin: 0; text-align: center; font-family: var(--font-body); font-size: var(--text-sm); color: var(--auth-body); }
 .ps-login a { color: var(--auth-green); font-weight: 700; }
+
+/* ── Check your email (check-email.html) ── */
+.ps-mail {
+  width: 80px; height: 80px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pt-mint-soft); color: var(--pt-green);
+}
+.ps-cta {
+  min-height: 56px; padding: 0 var(--space-5); gap: var(--space-2); border: 0; border-radius: var(--radius-full); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+  font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700;
+  background: var(--color-forest-800); color: var(--color-text-on-primary); box-shadow: var(--shadow-md);
+  transition: background var(--t) var(--ease);
+}
+.ps-cta:hover { background: var(--color-forest-700); }
+.ps-cta:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ps-cta--ghost { background: var(--pt-field-strong); color: var(--pt-ink); box-shadow: none; }
+.ps-cta--ghost:hover { background: var(--pt-toggle-off); }
+.ps-cta[disabled] { cursor: default; opacity: 0.6; }
 
 @media (min-width: 769px) {
   .ps-main.st-page { padding-top: var(--space-8); align-content: center; }

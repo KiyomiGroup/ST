@@ -2172,12 +2172,6 @@ img { max-width: 100%; height: auto; }
    Two big square buttons side by side on every screen size. Small
    "I'm a" line on top, large role name under it. */
 .av2-chooser-heading { text-align: center; margin-bottom: var(--space-5); }
-.av2-join-line {
-  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
-  font-family: var(--font-heading); font-weight: 700; font-size: var(--text-lg);
-  color: var(--auth-body); margin-bottom: var(--space-2);
-}
-.av2-join-line img { height: var(--space-5); width: auto; display: block; }
 .av2-chooser-heading h1 {
   font-family: var(--font-heading); font-weight: 800;
   font-size: var(--text-h1-sm); color: var(--auth-ink); letter-spacing: -0.02em; line-height: 1.15;
@@ -2217,8 +2211,6 @@ img { max-width: 100%; height: auto; }
 
 @media (min-width: 769px) {
   .av2-chooser-heading { margin-bottom: var(--space-6); }
-  .av2-join-line { font-size: var(--text-xl); }
-  .av2-join-line img { height: var(--space-6); }
   .av2-chooser-heading h1 { font-size: var(--text-2xl); }
   .av2-pick-grid { gap: var(--space-5); max-width: 720px; }
   .av2-pick { padding: var(--space-5); gap: var(--space-3); }

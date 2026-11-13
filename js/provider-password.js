@@ -8,8 +8,8 @@
      the old sign-up form and reset-password never disagree.
    - Continue creates the account (ST.auth.signUpUser, role tasker) from
      what earlier steps saved in sessionStorage key st_provider_start
-     { name, businessName, email }, then sends the person to Log In with
-     the same "check your email" notice as the old form.
+     { name, businessName, email }, then sends the person to
+     check-email.html (verification notice + Log in button).
    ============================================================ */
 (function () {
   'use strict';
@@ -141,7 +141,9 @@
         return;
       }
       window.ST.auth.rememberSignupTarget(email);
-      window.location.href = 'login.html?' + (out.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
+      /* Email confirmation on: the next page tells them to check their email (it has the Log in button).
+         Confirmation off: nothing to check, straight to Log in. */
+      window.location.href = (out.needsVerification ? 'check-email.html?email=' : 'login.html?created=1&email=') + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
     } catch (err) {
       showError((err && err.message) || 'Something went wrong. Please try again.');
       nextBtn.disabled = false;

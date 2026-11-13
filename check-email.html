@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Check your email — StreetTasker</title>
+  <meta name="description" content="We sent you a verification link. Open it, then log in to StreetTasker." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/provider-start.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <!-- Onboarding step 4 of 4 for "Service provider": the account is created, now the person checks their email.
+       Reached from provider-password.html as check-email.html?email=... (and ?redirect=... when there is one).
+       Its Log in button goes to login.html. No site nav and no loading screen, same as the steps before it. -->
+  <main class="st-page st-page--narrow ps-main">
+
+    <div class="ps-top">
+      <div class="ps-progress" role="progressbar" aria-label="Sign-up progress" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-valuetext="Step 4 of 4">
+        <span class="ps-progress-fill ps-progress-fill--4"></span>
+      </div>
+    </div>
+
+    <div class="ps-mail" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+    </div>
+
+    <div class="ps-head">
+      <h1 class="ps-title">Check your email</h1>
+      <p class="ps-lead">We sent a verification link to <strong id="ceEmail" class="ps-email"></strong>. Open it to confirm your account, then log in.</p>
+      <p class="ps-lead">It can take a few minutes. Check your spam folder too.</p>
+    </div>
+
+    <div class="ps-form">
+      <a class="ps-cta" id="ceLogin" href="login.html">
+        <span>Go to log in</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <button type="button" class="ps-cta ps-cta--ghost" id="ceResend">Resend email</button>
+      <p class="ps-hint" id="ceMsg" role="status" aria-live="polite" hidden></p>
+    </div>
+
+    <p class="ps-login">Wrong email? <a href="provider-start.html">Start again</a></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/sanitize.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/check-email.js"></script>
+</body>
+</html>
