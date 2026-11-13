@@ -31,7 +31,7 @@
 .st-mascot-pic { flex: none; pointer-events: auto; line-height: 0; }
 .st-mascot-img { display: block; width: var(--mascot-size); height: auto; }
 
-/* Phones: face only, above the floating tab bar */
+/* Phones: same full-body art, a little smaller, above the floating tab bar */
 @media (max-width: 768px) {
   .st-mascot { bottom: var(--mascot-bottom-phone); }
   .st-mascot-bubble { margin-bottom: var(--space-2); }

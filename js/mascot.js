@@ -14,12 +14,11 @@
    character and drop or reuse the bubble. Position, size and layer are tokens (--mascot-* and --z-mascot in
    css/tokens.css), so moving it is one place. Today the whole thing leaves after the answer.
 
-   Art: images/mascot/bisi-avatar.png (phones) and bisi-bucket.png (wider screens). Styles: css/mascot.css.
+   Art: images/mascot/bisi-bucket.png (full body, every screen size). Styles: css/mascot.css.
    ============================================================ */
 (function (root) {
   'use strict';
-  var AVATAR = 'images/mascot/bisi-avatar.png';
-  var FULL = 'images/mascot/bisi-bucket.png';
+    var FULL = 'images/mascot/bisi-bucket.png';
   var ALT = 'Bisi, the StreetTasker guide';
   var showing = false;
 
@@ -58,13 +57,10 @@
         actions.append(accept, decline);
         bubble.append(text, actions);
 
-        var pic = el(doc, 'picture', 'st-mascot-pic');
-        var small = doc.createElement('source');
-        small.media = '(max-width: 768px)';
-        small.srcset = AVATAR;
+        var pic = el(doc, 'div', 'st-mascot-pic');
         var img = el(doc, 'img', 'st-mascot-img');
-        img.src = FULL; img.alt = ALT;
-        pic.append(small, img);
+        img.src = FULL; img.alt = ALT;   /* full-body art on every screen; only the size changes on phones */
+        pic.appendChild(img);
 
         box.append(bubble, pic);
         doc.body.appendChild(box);
