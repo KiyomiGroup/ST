@@ -175,7 +175,7 @@
         const res = await window.ST.auth.signUpUser({ name, email, password, role: 'tasker' });
         /* Send them to Log In with a "check your email" notice */
         window.ST.auth.rememberSignupTarget(email);
-        window.location.href = 'login.html?' + (res.needsVerification ? 'verify=1' : 'created=1') + '&email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
+        window.location.href = (res.needsVerification ? 'verify-email.html?' : 'login.html?created=1&') + 'email=' + encodeURIComponent(email) + window.ST.auth.redirectQuery('&');
       } catch (err) {
         errorEl.textContent = err?.message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';

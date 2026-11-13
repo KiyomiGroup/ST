@@ -1,0 +1,6 @@
+/* Email code page (.ve-*). Layout only, tokens only. */
+.ve-form { display: grid; gap: var(--space-5); }
+.ve-code { text-align: center; letter-spacing: 0.3em; font-weight: 600; font-size: var(--text-xl); }
+.ve-page .st-notice { margin-bottom: var(--space-5); }
+.ve-actions { display: grid; justify-items: center; gap: var(--space-3); margin-top: var(--space-5); }
+.ve-help { margin: 0; text-align: center; font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-secondary); }

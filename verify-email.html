@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Enter the code we emailed you to verify your StreetTasker account." />
+  <title>Enter your code — StreetTasker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/verify-email.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+  <link rel="icon" type="image/png" sizes="64x64" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+</head>
+<body class="st-shell">
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="st-page st-page--narrow ve-page">
+
+    <section class="st-hero">
+      <span class="st-hero-chip"><span class="st-hero-dot"></span>Verify your email</span>
+      <h1 class="st-hero-title">Enter your code</h1>
+      <p class="st-hero-lead" id="veLead">We emailed you a code. Type it below to finish creating your account.</p>
+    </section>
+
+    <section class="st-panel">
+      <div class="st-notice" id="veNotice" hidden></div>
+
+      <form class="ve-form" id="veForm" novalidate>
+        <div class="form-group" id="veEmailGroup" hidden>
+          <label class="form-label" for="veEmail">Email address</label>
+          <input class="form-input" id="veEmail" type="email" autocomplete="email" maxlength="160" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="veCode">Verification code</label>
+          <input class="form-input ve-code" id="veCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="10" placeholder="Enter code" required />
+          <p class="form-helper">Open the email we sent and type the code from it. It can take a few minutes, so check your spam folder too.</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-full" id="veBtn">Verify and continue</button>
+      </form>
+
+      <div class="ve-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="veResend">Send a new code</button>
+        <p class="ve-help">Wrong email? <a href="signup.html">Sign up again</a>. Already verified? <a href="login.html">Log in</a>.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Supabase CDN — must load before supabaseClient.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/referral-capture.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/saved.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/verify-email.js"></script>
+</body>
+</html>

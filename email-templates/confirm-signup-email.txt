@@ -1,0 +1,15 @@
+<!-- Supabase Dashboard > Authentication > Email Templates > "Confirm signup".
+     Subject:  Your StreetTasker verification code
+     Paste everything below the line into the Message body box.
+     {{ .Token }} is the code the person types on verify-email.html.
+     The link takes them back to that page with their email filled in, on whatever phone or browser opens it.
+     Needs Authentication > URL Configuration > Site URL to be https://streettasker.com -->
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a1c1b;max-width:520px">
+  <p>Hi,</p>
+  <p>Welcome to StreetTasker. Use this code to verify your email ({{ .Email }}):</p>
+  <p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:16px 0">{{ .Token }}</p>
+  <p>Type it on the verification page, or open this link to go back to it:</p>
+  <p><a href="{{ .SiteURL }}/verify-email.html?email={{ .Email }}">Enter my code</a></p>
+  <p>The code works once and expires soon. If you did not create a StreetTasker account, ignore this email.</p>
+  <p>StreetTasker<br>streettasker.com</p>
+</div>
