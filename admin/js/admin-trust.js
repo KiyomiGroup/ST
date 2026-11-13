@@ -1,6 +1,9 @@
-/* StreetTasker Admin: Services (services.html) and Reviews and community (reviews.html), stage A14a. READ ONLY.
-   Calls admin_service_list, admin_review_list, admin_flagged_user_list, admin_community_list; each checks its own permission again.
-   No button hides, deletes, clears or changes anything. All text via textContent. */
+/* StreetTasker Admin: Services (services.html) and Reviews and community (reviews.html). A14a read, A14b hide and restore.
+   Reads: admin_service_list, admin_review_list, admin_flagged_user_list, admin_community_list.
+   Writes (A14b, only services and reviews): admin_service_hide / _restore (listings.moderate), admin_review_hide / _restore (reviews.moderate),
+   history from admin_hide_history. Each function checks its own permission again on the server. A hide needs a reason from a fixed list and a
+   note; there is no "negative review" reason. Nothing is ever deleted. Flagged users and community posts are still read only.
+   All text via textContent. */
 'use strict';
 (function () {
   var PAGE = document.body.getAttribute('data-page');
@@ -61,6 +64,65 @@
     });
     act.appendChild(b); tr.appendChild(act); t.body.appendChild(tr); t.body.appendChild(drow);
   }
+  var uidn = 0; function nextId(p) { uidn += 1; return p + uidn; }
+  var SERVICE_REASONS = [['prohibited', 'Not an allowed kind of service'], ['misleading', 'Misleading or false'], ['contact_details', 'Shares contact details'], ['inappropriate', 'Inappropriate content'], ['other', 'Other (explain in the note)']];
+  var REVIEW_REASONS = [['abuse', 'Abusive or threatening'], ['fake', 'Fake, or not about a real job'], ['personal_data', 'Shows personal data'], ['off_topic', 'Off topic']];
+  function reasonLabel(list, code) { for (var i = 0; i < list.length; i++) if (list[i][0] === code) return list[i][1]; return words(code); }
+  function field(label, input) { var w = el('div', 'ad-field'), l = el('label', null, label); l.setAttribute('for', input.id); w.appendChild(l); w.appendChild(input); return w; }
+  /* One form for hide (reason list + note, two presses) and restore (note only). opt: label, reasons, confirm, run(code, note), done(res) */
+  function actionForm(opt) {
+    var f = el('form', 'ad-form'); f.noValidate = true;
+    var sel = null;
+    if (opt.reasons) {
+      sel = el('select', 'form-input'); sel.id = nextId('trReason');
+      var o0 = el('option', null, 'Choose a reason'); o0.value = ''; sel.appendChild(o0);
+      opt.reasons.forEach(function (r) { var o = el('option', null, r[1]); o.value = r[0]; sel.appendChild(o); });
+      f.appendChild(field('Reason', sel));
+    }
+    var note = el('textarea', 'form-input'); note.id = nextId('trNote'); note.rows = 3; note.maxLength = 300;
+    var err = el('p', 'ad-error'); err.hidden = true; err.setAttribute('role', 'alert');
+    var go = el('button', 'btn ' + (opt.confirm ? 'btn-outline' : 'btn-primary'), opt.label); go.type = 'submit';
+    var armed = false;
+    f.appendChild(field(opt.noteLabel || 'Note (at least 10 characters; it goes in the activity log)', note));
+    f.appendChild(err); var ac = el('div', 'ad-actions ad-actions--tight'); ac.appendChild(go); f.appendChild(ac);
+    function disarm() { armed = false; go.textContent = opt.label; }
+    note.addEventListener('input', disarm); if (sel) sel.addEventListener('change', disarm);
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault(); err.hidden = true;
+      if (sel && !sel.value) { err.textContent = 'Choose a reason from the list.'; err.hidden = false; return; }
+      if (note.value.trim().length < 10) { err.textContent = 'Write a note of at least 10 characters.'; err.hidden = false; return; }
+      if (opt.confirm && !armed) { armed = true; go.textContent = 'Press again to confirm'; return; }
+      go.disabled = true;
+      var res = await opt.run(sel ? sel.value : null, note.value.trim());
+      go.disabled = false; disarm();
+      var m = fail(res);
+      if (m || !res.data) { err.textContent = m || 'It could not be done. Nothing was changed.'; err.hidden = false; return; }
+      opt.done(res.data);
+    });
+    return f;
+  }
+  /* Decision history of one item, read when the details are opened. */
+  function historyBox(kind, id, reasons) {
+    var box = el('div', 'ad-card'); box.appendChild(el('h3', 'ad-card-title', 'Hide and restore history'));
+    var body = el('div'); body.appendChild(el('p', 'ad-hint', 'Loading...')); box.appendChild(body);
+    call('admin_hide_history', { p_kind: kind, p_id: String(id) }).then(function (res) {
+      clear(body);
+      var m = fail(res);
+      if (m || !res.data) { body.appendChild(el('p', 'ad-hint', 'The history could not be read.')); return; }
+      var items = res.data.items || [];
+      if (!items.length) { body.appendChild(el('p', 'ad-hint', 'Never hidden.')); return; }
+      var ul = el('ul', 'ad-list');
+      items.forEach(function (x) {
+        var li = el('li');
+        li.appendChild(el('span', null, 'Hidden ' + when(x.hidden_at) + (x.hidden_by_name ? ' by ' + x.hidden_by_name : '') + '. Reason: ' + reasonLabel(reasons, x.reason_code) + '. ' + (x.note || '')));
+        if (x.restored_at) { li.appendChild(document.createElement('br')); li.appendChild(el('span', null, 'Restored ' + when(x.restored_at) + (x.restored_by_name ? ' by ' + x.restored_by_name : '') + '. ' + (x.restore_note || ''))); }
+        else { li.appendChild(document.createTextNode(' ')); li.appendChild(badge('Hidden now')); }
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
+    });
+    return box;
+  }
   function pager(prefix, off, n, size, onMove) {
     $(prefix + 'Newer').disabled = off === 0; $(prefix + 'Older').disabled = n < size;
     $(prefix + 'Pager').hidden = off === 0 && n < size;
@@ -69,7 +131,7 @@
   /* ---------------- Services ---------------- */
   function startServices(ctx) {
     $('svRoot').hidden = false;
-    var SF = [['all', 'All'], ['active', 'Active'], ['paused', 'Paused (subscription)'], ['unavailable', 'Not available']];
+    var SF = [['all', 'All'], ['active', 'Active'], ['paused', 'Paused (subscription)'], ['unavailable', 'Not available'], ['hidden', 'Hidden by admin']];
     var f = 'all', q = '', off = 0, req = 0, SIZE = 25;
     function range(x) { var a = money(x.price), b = money(x.price_max); return a ? (b && b !== a ? a + ' to ' + b : a) + (x.rate_unit ? ' ' + x.rate_unit : '') : ''; }
     async function load() {
@@ -87,6 +149,7 @@
       g.appendChild(stat('Active', String(c.active || 0), 'Shown to customers by the site.'));
       g.appendChild(stat('Paused', String(c.paused || 0), 'Paused by the subscription rules, not by an admin.'));
       g.appendChild(stat('Not available', String(c.unavailable || 0), 'The Tasker marked it unavailable.'));
+      g.appendChild(stat('Hidden by admin', String(c.hidden || 0), 'Not shown to customers. The Tasker can still see it.', c.hidden > 0 ? 'warn' : null));
       sm.appendChild(g);
       var cb = $('svCats'); clear(cb);
       (d.categories || []).forEach(function (x) { cb.appendChild(badge(x.category + ': ' + x.n)); cb.appendChild(document.createTextNode(' ')); });
@@ -104,11 +167,25 @@
           var st = el('span'); st.appendChild(badge(words(x.listing_status)));
           if (x.available === false) st.appendChild(badge('Not available'));
           if (x.is_main) st.appendChild(badge('Main'));
+          if (x.admin_hidden) st.appendChild(badge('Hidden by admin'));
           cell(tr, 'Status', st);
           toggleRow(t, tr, 6, function () {
-            return facts([['Place', x.location], ['Description', x.description], ['Availability', words(x.availability_status)], ['Verified', x.verified ? 'Yes' : 'No'],
+            var wrap = el('div');
+            wrap.appendChild(facts([['Place', x.location], ['Description', x.description], ['Availability', words(x.availability_status)], ['Verified', x.verified ? 'Yes' : 'No'],
               ['Rating', x.rating != null ? x.rating + ' (' + (x.reviews_count || 0) + ' review(s))' : ''], ['Listed', when(x.created_at)], ['Last changed', when(x.updated_at)],
-              ['Listing id', x.id], ['Tasker id', x.tasker_id]]);
+              ['Listing id', x.id], ['Tasker id', x.tasker_id],
+              ['Hidden by admin', x.admin_hidden ? reasonLabel(SERVICE_REASONS, x.hide_reason) + ' (' + when(x.hidden_at) + '). ' + (x.hide_note || '') : '']]));
+            if (ctx.has('listings.moderate')) {
+              var card = el('div', 'ad-card');
+              card.appendChild(el('h3', 'ad-card-title', x.admin_hidden ? 'Show this listing to customers again' : 'Hide this listing from customers'));
+              card.appendChild(el('p', 'ad-note', x.admin_hidden ? 'The Tasker\'s subscription pause is not changed. Restoring only removes the admin hide.' : 'The listing disappears for customers and visitors. The Tasker still sees it in their own dashboard, nothing is deleted, and the subscription pause is not changed. You can restore it at any time.'));
+              card.appendChild(actionForm(x.admin_hidden
+                ? { label: 'Restore listing', noteLabel: 'Why is it being restored? (at least 10 characters)', run: function (c, n) { return call('admin_service_restore', { p_service: String(x.id), p_note: n }); }, done: function () { ctx.toast('Listing restored.'); load(); } }
+                : { label: 'Hide listing', confirm: true, reasons: SERVICE_REASONS, run: function (c, n) { return call('admin_service_hide', { p_service: String(x.id), p_reason: c, p_note: n }); }, done: function () { ctx.toast('Listing hidden.'); load(); } }));
+              wrap.appendChild(card);
+            }
+            wrap.appendChild(historyBox('service', x.id, SERVICE_REASONS));
+            return wrap;
           });
         });
         box.appendChild(t.wrap);
@@ -131,7 +208,7 @@
     if (ctx.has('trust.flags.view')) SECTIONS.push(['flags', 'Flagged users']);
     if (ctx.has('community.moderate')) { SECTIONS.push(['posts', 'Community posts']); SECTIONS.push(['comments', 'Comments']); }
     var SUBS = {
-      reviews: [['all', 'All'], ['low', 'Low (1 to 2 stars)'], ['comment', 'With a comment']],
+      reviews: [['all', 'All'], ['low', 'Low (1 to 2 stars)'], ['comment', 'With a comment'], ['hidden', 'Hidden']],
       flags: [['all', 'All'], ['flagged', 'Flagged'], ['warned', 'Warned only']],
       posts: [], comments: []
     };
@@ -154,9 +231,10 @@
       var g = el('div', 'ad-grid');
       if (sec === 'reviews') {
         g.appendChild(stat('Reviews', String(c.total || 0), 'All reviews on the site.'));
-        g.appendChild(stat('Average', c.average != null ? String(c.average) : 'None', 'Out of 5.'));
+        g.appendChild(stat('Average', c.average != null ? String(c.average) : 'None', 'Out of 5. Hidden reviews are left out.'));
         g.appendChild(stat('Low', String(c.low || 0), '1 or 2 stars.'));
         g.appendChild(stat('With a comment', String(c.with_comment || 0), 'Has written text.'));
+        g.appendChild(stat('Hidden', String(c.hidden || 0), 'Not shown to the public and not counted in ratings.', c.hidden > 0 ? 'warn' : null));
       } else if (sec === 'flags') {
         g.appendChild(stat('Flagged', String(c.flagged || 0), 'Marked as flagged on the account.', c.flagged > 0 ? 'warn' : null));
         g.appendChild(stat('Warned only', String(c.warned || 0), 'Shared contact details but not flagged.'));
@@ -174,8 +252,24 @@
           var tr = el('tr');
           cell(tr, 'Date', when(x.created_at)); cell(tr, 'From', (x.reviewer_name || '') + (x.reviewer_role ? ' (' + x.reviewer_role + ')' : ''));
           cell(tr, 'About', (x.reviewee_name || '') + (x.reviewee_role ? ' (' + x.reviewee_role + ')' : ''));
-          cell(tr, 'Rating', stars(x.rating)); cell(tr, 'Comment', x.comment || '');
-          toggleRow(t, tr, 6, function () { return facts([['Booking', x.booking_ref], ['Review id', x.id], ['Reviewer id', x.reviewer_id], ['About id', x.reviewee_id]]); });
+          var rt = el('span', null, stars(x.rating)); if (x.admin_hidden) { rt.appendChild(document.createTextNode(' ')); rt.appendChild(badge('Hidden')); }
+          cell(tr, 'Rating', rt); cell(tr, 'Comment', x.comment || '');
+          toggleRow(t, tr, 6, function () {
+            var wrap = el('div');
+            wrap.appendChild(facts([['Booking', x.booking_ref], ['Review id', x.id], ['Reviewer id', x.reviewer_id], ['About id', x.reviewee_id],
+              ['Hidden', x.admin_hidden ? reasonLabel(REVIEW_REASONS, x.hide_reason) + ' (' + when(x.hidden_at) + '). ' + (x.hide_note || '') : '']]));
+            if (ctx.has('reviews.moderate')) {
+              var card = el('div', 'ad-card');
+              card.appendChild(el('h3', 'ad-card-title', x.admin_hidden ? 'Show this review again' : 'Hide this review'));
+              card.appendChild(el('p', 'ad-note', x.admin_hidden ? 'The review counts in the rating again.' : 'A review can be hidden only for the reasons in the list. A low rating is not a reason. A hidden review is not shown and does not count in the average. Nothing is deleted and you can restore it.'));
+              card.appendChild(actionForm(x.admin_hidden
+                ? { label: 'Restore review', noteLabel: 'Why is it being restored? (at least 10 characters)', run: function (c, n) { return call('admin_review_restore', { p_review: x.id, p_note: n }); }, done: function () { ctx.toast('Review restored.'); load(); } }
+                : { label: 'Hide review', confirm: true, reasons: REVIEW_REASONS, run: function (c, n) { return call('admin_review_hide', { p_review: x.id, p_reason: c, p_note: n }); }, done: function () { ctx.toast('Review hidden.'); load(); } }));
+              wrap.appendChild(card);
+            }
+            wrap.appendChild(historyBox('review', x.id, REVIEW_REASONS));
+            return wrap;
+          });
         });
         box.appendChild(t.wrap);
       } else if (sec === 'flags') {
