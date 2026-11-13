@@ -1,0 +1,94 @@
+/* ================================================================
+   PROVIDER START — first onboarding step for "Service provider"
+   (provider-start.html). Name + business name, phone first.
+   Tokens only (DESIGN-SYSTEM.md). Layout follows the post-a-task
+   step card: round back button, thin progress bar, big left-aligned
+   heading, mint-tinted field while typing, small round arrow that
+   pops in once both fields are filled.
+   Breakpoints: 480 / 768 / 1044 (this page only needs 769+).
+   ================================================================ */
+
+/* st-page supplies the width and the 24px gap between blocks. There is no site nav on this
+   step, so the top padding is small and the page fills the screen height. */
+.ps-main.st-page {
+  min-height: 100vh;
+  align-content: start;
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+  padding-bottom: var(--corner-clear);
+  gap: var(--space-6);
+}
+
+/* ── Top row: back button + progress ── */
+.ps-top { display: flex; align-items: center; gap: var(--space-3); }
+.ps-back {
+  flex-shrink: 0; width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 0; text-decoration: none;
+  background: var(--pt-field-strong); color: var(--pt-ink-muted);
+  transition: background var(--t) var(--ease);
+}
+.ps-back:hover { background: var(--pt-toggle-off); }
+.ps-back:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ps-progress { flex: 1; height: var(--space-2); border-radius: var(--radius-full); background: var(--pt-field-strong); overflow: hidden; }
+.ps-progress-fill { display: block; width: 25%; height: 100%; border-radius: var(--radius-full); background: var(--pt-green); }
+
+/* ── Heading ── */
+.ps-head { display: grid; gap: var(--space-2); }
+.ps-title {
+  margin: 0; font-family: var(--font-heading); font-weight: 800;
+  font-size: var(--text-h1-sm); line-height: 1.15; letter-spacing: -0.02em; color: var(--pt-ink);
+}
+.ps-lead { margin: 0; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.5; color: var(--auth-muted); }
+
+/* ── Fields ── */
+.ps-form { display: grid; gap: var(--space-3); }
+.ps-field {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-height: 60px; padding: 0 var(--space-4);
+  border: 2px solid var(--color-border); border-radius: var(--radius-2xl);
+  background: var(--pt-field);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.ps-field:hover { border-color: var(--color-border-strong); }
+/* the field being typed in turns mint, as in the reference */
+.ps-field:focus-within { background: var(--pt-mint-soft); border-color: var(--pt-mint); }
+.ps-field-icon { flex-shrink: 0; color: var(--auth-muted); transition: color var(--t) var(--ease); }
+.ps-field:focus-within .ps-field-icon { color: var(--pt-green); }
+.ps-input {
+  flex: 1; min-width: 0; width: 100%; padding: var(--space-4) 0;
+  border: 0; outline: none; background: transparent;
+  font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 600; color: var(--pt-ink);
+  caret-color: var(--color-forest-800);
+}
+.ps-input::placeholder { color: var(--auth-muted); font-weight: 500; }
+
+/* ── Round arrow: hidden until both fields have text, then pops in ── */
+.ps-next-row { display: flex; justify-content: flex-end; min-height: 56px; } /* reserved, so the page never jumps */
+.ps-next {
+  width: 56px; height: 56px; border: 0; border-radius: 50%; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-forest-800); color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-md);
+  opacity: 0; visibility: hidden; transform: scale(0.6);
+  transition: opacity var(--t) var(--ease), transform 0.28s var(--ease), visibility 0s linear 0.28s, background var(--t) var(--ease);
+}
+.ps-next.is-ready { opacity: 1; visibility: visible; transform: scale(1); transition-delay: 0s; }
+.ps-next:hover { background: var(--color-forest-700); }
+.ps-next:active { transform: scale(0.94); }
+.ps-next:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ps-next[disabled] { cursor: default; }
+
+.ps-error { margin: 0; }
+.ps-error[hidden] { display: none; }
+
+.ps-login { margin: 0; text-align: center; font-family: var(--font-body); font-size: var(--text-sm); color: var(--auth-body); }
+.ps-login a { color: var(--auth-green); font-weight: 700; }
+
+@media (min-width: 769px) {
+  .ps-main.st-page { padding-top: var(--space-8); align-content: center; }
+  .ps-title { font-size: var(--text-2xl); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-next, .ps-next.is-ready { transition: opacity var(--t) var(--ease), visibility 0s; transform: none; }
+}

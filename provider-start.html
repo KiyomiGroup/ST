@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Tell us about you — StreetTasker</title>
+  <meta name="description" content="Start earning on StreetTasker. Tell us your name and your business name." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/provider-start.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StreetTasker" />
+</head>
+<body class="st-shell">
+  <!-- Onboarding step 1 of 4 for "Service provider" (tasker account).
+       Comes from the role chooser in signup.html, goes on to the account form (signup.html?step=tasker).
+       No site nav here: the person is inside a guided flow, so the page has its own back button and progress bar. -->
+  <main class="st-page st-page--narrow ps-main">
+
+    <div class="ps-top">
+      <a href="signup.html" class="ps-back" aria-label="Back to choose how you will use StreetTasker">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </a>
+      <div class="ps-progress" role="progressbar" aria-label="Sign-up progress" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-valuetext="Step 1 of 4">
+        <span class="ps-progress-fill"></span>
+      </div>
+    </div>
+
+    <div class="ps-head">
+      <h1 class="ps-title">Let&rsquo;s get you set up</h1>
+      <p class="ps-lead">Tell us your name and what your business is called.</p>
+    </div>
+
+    <form class="ps-form" id="providerStartForm" novalidate>
+      <label class="ps-field" for="psName">
+        <span class="sr-only">Your full name</span>
+        <svg class="ps-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input class="ps-input" type="text" id="psName" name="name" placeholder="Your full name" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="80" required />
+      </label>
+
+      <label class="ps-field" for="psBusiness">
+        <span class="sr-only">Your business name</span>
+        <svg class="ps-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <input class="ps-input" type="text" id="psBusiness" name="organization" placeholder="Your business name" autocomplete="organization" autocapitalize="words" enterkeyhint="go" maxlength="80" required />
+      </label>
+
+      <p class="form-error ps-error" id="psError" role="alert" hidden></p>
+
+      <div class="ps-next-row">
+        <button type="submit" class="ps-next" id="psNext" aria-label="Continue" disabled>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </form>
+
+    <p class="ps-login">Already have an account? <a href="login.html">Log in</a></p>
+  </main>
+
+  <script src="js/provider-start.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>

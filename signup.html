@@ -42,7 +42,7 @@
       <p class="av2-pick-prompt">Tap the one that describes you <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></p>
 
       <div class="av2-pick-grid">
-        <button type="button" class="av2-pick" onclick="showStep('tasker')">
+        <button type="button" class="av2-pick" onclick="window.location.href='provider-start.html'">
           <img class="av2-pick-img" src="images/role-provider.jpg" alt="" width="480" height="353" loading="eager" />
           <span class="av2-pick-text">
             <span class="av2-pick-small">I&rsquo;m a</span>
@@ -340,6 +340,14 @@
       const params = new URLSearchParams(window.location.search);
       const role = params.get('step') || params.get('role');
       if (role === 'customer' || role === 'tasker') showStep(role);
+    })();
+
+    /* Coming from provider-start.html (name + business name): fill the Full Name field with what was typed there */
+    (function () {
+      let saved = {};
+      try { saved = JSON.parse(sessionStorage.getItem('st_provider_start')) || {}; } catch (e) {}
+      const nameInput = document.getElementById('tFullName');
+      if (saved.name && nameInput && !nameInput.value) nameInput.value = saved.name;
     })();
 
     /* Live password checklist under each password field (rules live in js/auth.js) */
