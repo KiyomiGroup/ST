@@ -1,0 +1,38 @@
+/* StreetTasker: "Post a service" invitation pop-up (js/post-service-invite.js). Tokens only.
+   Phones: a card sitting at the bottom of the screen. From 640px: a centred dialog.
+   Layer: --z-picker (above the nav drawer, below the guided tour and toasts). */
+
+html.psi-lock, html.psi-lock body { overflow: hidden; }
+
+.psi-overlay {
+  position: fixed; inset: 0; z-index: var(--z-picker);
+  display: flex; align-items: flex-end; justify-content: center;
+  background: var(--drawer-overlay);
+}
+
+.psi-box {
+  box-sizing: border-box; width: 100%; max-width: 420px;
+  padding: var(--space-5) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--color-bg); color: var(--color-text-secondary);
+  box-shadow: var(--shadow-xl); text-align: center; outline: 0;
+}
+
+.psi-title { margin: 0 0 var(--space-2); font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; color: var(--color-text); }
+.psi-text { margin: 0 0 var(--space-5); font-size: var(--text-base); line-height: 1.5; }
+
+.psi-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+.psi-link { display: flex; margin: var(--space-3) auto 0; text-decoration: underline; text-underline-offset: 3px; }
+.psi-box .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+@media (min-width: 640px) {
+  .psi-overlay { align-items: center; padding: var(--space-4); }
+  .psi-box { border-radius: var(--radius-2xl); padding-bottom: var(--space-5); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .psi-overlay { animation: psi-fade var(--t) var(--ease); }
+  .psi-box { animation: psi-rise var(--t) var(--ease); }
+  @keyframes psi-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes psi-rise { from { transform: translateY(var(--space-4)); } to { transform: none; } }
+}

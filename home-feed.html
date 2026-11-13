@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/cards-v2.css?v=2" />
   <link rel="stylesheet" href="css/home-cards.css?v=2" />
   <link rel="stylesheet" href="css/onboarding.css" />
+  <link rel="stylesheet" href="css/post-service-invite.css" />
   <link rel="stylesheet" href="css/rating-badge.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
@@ -565,6 +566,7 @@
   <script src="js/location.js"></script>
   <script src="js/onboarding.js"></script>
   <script src="js/onboarding-tours-home.js"></script>
+  <script src="js/post-service-invite.js"></script>
 
   <script>
     /* ═══════════════════════════════════════════════════════════
@@ -600,8 +602,13 @@
 
       loadLiveCount();
 
+      /* Providers: the "Post a service" invitation comes first (js/post-service-invite.js); the first-login tour waits for
+         the answer. If they take the guide or go to the form, the tour does not start. Customers go straight to the tour. */
+      let invite = 'none';
+      if (_userRole === 'tasker' && window.ST && window.ST.postServiceInvite) invite = await window.ST.postServiceInvite.start();
+
       /* First-login tour (customer or tasker). Starts only on a first visit; see js/onboarding-tours-home.js */
-      if (window.ST && window.ST.homeTours) window.ST.homeTours.start();
+      if (invite !== 'accepted' && invite !== 'manual' && window.ST && window.ST.homeTours) window.ST.homeTours.start();
     }
 
     /* Real count of open tasks. If it can't be read, hide the chip rather than guess. */
