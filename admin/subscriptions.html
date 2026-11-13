@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="st-loader-off">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800&amp;display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+  <title>Subscriptions · StreetTasker Admin</title>
+</head>
+<body class="ad-body">
+  <a class="ad-skip" href="#adMain">Skip to content</a>
+
+  <!-- Shown first: checking access, then No access / error. Filled by admin/js/admin-shell.js. -->
+  <div class="ad-gate" id="adGate"></div>
+
+  <div class="ad-app" id="adApp" hidden>
+    <aside class="ad-sidebar" id="adSidebar" aria-label="Admin menu">
+      <div class="ad-brand">
+        <img src="/images/logo-nav.svg" alt="StreetTasker" width="133" height="22" />
+        <span class="ad-chip">Admin</span>
+      </div>
+      <nav class="ad-nav" id="adNav" aria-label="Admin"></nav>
+    </aside>
+    <div class="ad-scrim" id="adScrim" hidden></div>
+
+    <div class="ad-frame">
+      <header class="ad-topbar">
+        <button type="button" class="ad-btn-quiet ad-menu-btn" id="adMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="adSidebar">
+          <svg class="ad-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="ad-topbar-title" id="adTitle">Subscriptions</div>
+        <div class="ad-user">
+          <div>
+            <div class="ad-user-name" id="adUserName"></div>
+            <div class="ad-user-roles" id="adUserRoles"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-main" id="adMain" role="main" tabindex="-1">
+        <div id="sbRoot" hidden>
+          <div class="ad-pagehead">
+            <h1>Subscriptions</h1>
+            <p>Who is on which plan, what was paid, and which payments need a person to look. Read only: nothing here changes a plan, refunds, credits or cancels, and the page never calls Paystack. A plan does not renew by itself; a person continues it by paying again, so an expired plan is called ended. Coordinator plans and Local Taskers are not subscriptions and are not here. Amounts are in naira.</p>
+          </div>
+          <div id="sbAlerts" aria-live="polite"></div>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="sbOvTitle">
+            <h2 class="ad-card-title" id="sbOvTitle">Overview</h2>
+            <div id="sbOverview"></div>
+            <div id="sbByPlan"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="sbPlTitle">
+            <h2 class="ad-card-title" id="sbPlTitle">Plans</h2>
+            <p class="ad-hint">The plans exactly as stored. Prices are not editable here.</p>
+            <div id="sbPlans"></div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="sbSubTitle">
+            <h2 class="ad-card-title" id="sbSubTitle">Subscribers</h2>
+            <form class="ad-filters" id="sbFilters" novalidate>
+              <label class="ad-filter"><span class="ad-filter-label">Search by name or person id</span>
+                <input class="form-input" id="sbSearch" type="search" maxlength="80" autocomplete="off" /></label>
+              <div class="ad-actions"><button type="submit" class="btn btn-primary">Search</button><button type="button" class="btn" id="sbReset">Clear</button></div>
+            </form>
+            <div class="ad-tabs" role="group" aria-label="Show subscribers" id="sbSubTabs"></div>
+            <p class="ad-hint" id="sbSubCount" aria-live="polite"></p>
+            <div id="sbSubList"></div>
+            <div class="ad-actions ad-pager" id="sbSubPager" hidden>
+              <button type="button" class="btn" id="sbSubNewer">Newer</button>
+              <button type="button" class="btn" id="sbSubOlder">Older</button>
+            </div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="sbPayTitle" id="sbPaySection" hidden>
+            <h2 class="ad-card-title" id="sbPayTitle">Payments</h2>
+            <p class="ad-hint">Subscription payments only. Job money and coordinator plans are on the Transactions page.</p>
+            <div class="ad-tabs" role="group" aria-label="Show payments" id="sbPayTabs"></div>
+            <p class="ad-hint" id="sbPayCount" aria-live="polite"></p>
+            <div id="sbPayList"></div>
+            <div class="ad-actions ad-pager" id="sbPayPager" hidden>
+              <button type="button" class="btn" id="sbPayNewer">Newer</button>
+              <button type="button" class="btn" id="sbPayOlder">Older</button>
+            </div>
+          </section>
+
+          <section class="ad-card ad-dash-section" aria-labelledby="sbAudTitle">
+            <h2 class="ad-card-title" id="sbAudTitle">Audit</h2>
+            <p class="ad-hint">Subscription events and admin actions together, newest first. Existing logs are shown as they are; nothing is added or changed.</p>
+            <div class="ad-tabs" role="group" aria-label="Show audit entries" id="sbAudTabs"></div>
+            <p class="ad-hint" id="sbAudCount" aria-live="polite"></p>
+            <div id="sbAudList"></div>
+            <div class="ad-actions ad-pager" id="sbAudPager" hidden>
+              <button type="button" class="btn" id="sbAudNewer">Newer</button>
+              <button type="button" class="btn" id="sbAudOlder">Older</button>
+            </div>
+          </section>
+          <p class="ad-note" id="sbStamp"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-toasts" id="adToasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabaseClient.js"></script>
+  <script src="/admin/js/admin-shell.js"></script>
+  <script src="/admin/js/admin-subscriptions.js"></script>
+</body>
+</html>
