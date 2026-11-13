@@ -654,6 +654,24 @@
           run(tour, d.step, role); return true;
         });
       },
+      /* Would this tour start by itself right now? Resolves { start, resume, ... } without starting anything, so a page can
+         ask the person first (the mascot prompt). resume: true means they are part-way through, so no need to ask again. */
+      autoStartDecision: function (id) {
+        return ready().then(function (w) {
+          var tour = registry[id];
+          if (!w || !store || !tour || active) return { start: false, reason: 'unavailable' };
+          return decideAutoStart(store.get(tour.role === 'any' ? 'any' : tour.role, id), tour, { role: w.role, page: pageName() });
+        });
+      },
+      /* The person said no to a tour: record it as skipped so it never starts by itself again (Help / Learn can still replay it). */
+      markSkipped: function (id) {
+        return ready().then(function (w) {
+          var tour = registry[id];
+          if (!w || !store || !tour) return false;
+          var role = tour.role === 'any' ? 'any' : tour.role;
+          return store.save(role, id, { status: 'skipped', step: 0, version: tour.version }).then(function () { emit({ type: 'skipped', tourId: id, role: role }); return true; });
+        });
+      },
       /* Tries tours in order; at most one starts. Use this on pages that hold more than one automatic tour. */
       autoStartFirst: function (ids) {
         return (ids || []).reduce(function (p, id) { return p.then(function (started) { return started || api.autoStart(id); }); }, Promise.resolve(false));

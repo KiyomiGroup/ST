@@ -1,0 +1,40 @@
+/* StreetTasker mascot prompt (js/mascot.js). Tokens only: position, size and layer are --mascot-* / --z-mascot in css/tokens.css.
+   Not a modal: no dim layer, the page stays usable. Sits low on the right edge, clear of the phone tab bar. */
+
+.st-mascot {
+  position: fixed; z-index: var(--z-mascot);
+  right: var(--mascot-edge); bottom: var(--mascot-bottom);
+  display: flex; align-items: flex-end; gap: var(--space-2);
+  max-width: calc(100vw - 2 * var(--mascot-edge));
+  pointer-events: none;   /* only the bubble and the character catch taps, so the corner never blocks the page around them */
+}
+
+.st-mascot-bubble {
+  position: relative; pointer-events: auto; box-sizing: border-box;
+  width: var(--mascot-bubble-width); max-width: 100%;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-form);
+  background: var(--color-bg); border: 1px solid var(--color-border); box-shadow: var(--shadow-xl);
+  color: var(--color-text);
+}
+/* Pointer toward the character */
+.st-mascot-bubble::after {
+  content: ""; position: absolute; right: calc(var(--space-2) * -1 - 1px); bottom: var(--space-4);
+  width: var(--space-3); height: var(--space-3); background: var(--color-bg);
+  border-top: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
+  transform: rotate(45deg);
+}
+.st-mascot-text { margin: 0 0 var(--space-3); font-size: var(--text-sm); line-height: 1.45; font-weight: 600; }
+.st-mascot-actions { display: flex; gap: var(--space-2); }
+.st-mascot-actions .btn { flex: 1 1 0; }
+
+.st-mascot-pic { flex: none; pointer-events: auto; line-height: 0; }
+.st-mascot-img { display: block; width: var(--mascot-size); height: auto; }
+
+/* Phones: face only, above the floating tab bar */
+@media (max-width: 768px) {
+  .st-mascot { bottom: var(--mascot-bottom-phone); }
+  .st-mascot-bubble { margin-bottom: var(--space-2); }
+  .st-mascot-bubble::after { bottom: var(--space-3); }
+  .st-mascot-img { width: var(--mascot-size-phone); }
+}

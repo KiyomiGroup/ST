@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/category-forms.css" />
   <link rel="stylesheet" href="css/post-task.css" />
   <link rel="stylesheet" href="css/post-service.css" />
+  <link rel="stylesheet" href="css/post-service-guide.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -18,6 +19,7 @@
   <meta name="apple-mobile-web-app-title" content="StreetTasker" />
 </head>
 <body class="ps-body st-no-bottom-nav">
+  <script>if (/[?&]guide=1(&|$)/.test(location.search)) document.body.classList.add('psg-on');</script>   <!-- guided mode (js/post-service-guide.js): set before first paint so the full form never flashes -->
   <div id="navbar-placeholder"></div>
 
   <!-- Icon sprite: icons used by the page header -->
@@ -425,7 +427,6 @@
   <script src="js/location.js"></script>
   <script src="js/verify.js"></script>
   <script src="js/post-service-ui.js"></script>
-  <script src="js/profile-prompt.js"></script>
   <script>
     'use strict';
     var uploadedPhotoUrl = null;
@@ -1022,7 +1023,7 @@
         if (isVerified) {
           /* Live immediately */
           showToast('Service posted and live! Redirecting...');
-          setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);   /* back to My Services, not the overview */
+          setTimeout(function() { window.location.href = (window.psgAfterPost ? window.psgAfterPost() : 'my-services.html'); }, 1600);   /* back to My Services, not the overview */
         } else {
           /* V6e: register the saved service and the public listing with the server, so both go live by
              themselves once the person is verified. A failure here never blocks the page. If the server
@@ -1037,13 +1038,13 @@
           } catch(holdErr) { console.warn('[post-service] could not register for auto-publish', holdErr && holdErr.message); }
           if (servedLive) {
             showToast('Service posted and live! Redirecting...');
-            setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);   /* back to My Services, not the overview */
+            setTimeout(function() { window.location.href = (window.psgAfterPost ? window.psgAfterPost() : 'my-services.html'); }, 1600);   /* back to My Services, not the overview */
             return;
           }
 
           /* VR5: no verify step. The server could not publish just now (for example the check failed), so the listing stays a saved draft. */
           showToast('Saved as a draft. You can publish it from My Services.');
-          setTimeout(function() { window.location.href = 'my-services.html'; }, 1600);
+          setTimeout(function() { window.location.href = (window.psgAfterPost ? window.psgAfterPost() : 'my-services.html'); }, 1600);
           return;
         }
 
@@ -1062,6 +1063,11 @@
     }
 
   </script>
+  <script>
+    /* Guided mode needs to know when the page has loaded the saved draft: remember the promise initPage returns */
+    (function () { var orig = window.initPage; if (typeof orig !== 'function') return; window.initPage = function () { var p = orig.apply(this, arguments); window.psgReady = Promise.resolve(p); return p; }; })();
+  </script>
+  <script src="js/post-service-guide.js"></script>
   <script>
     /* ── Role guard: only taskers can post services ── */
     (async function() {

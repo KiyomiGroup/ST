@@ -1,0 +1,49 @@
+/* StreetTasker: guided Post a Service (js/post-service-guide.js). Active only with body.psg-on (post-service.html?guide=1).
+   Shows one part of the real form at a time. Tokens only. */
+
+/* Everything that belongs to the full form page and not to one question */
+body.psg-on .pt-topbar,
+body.psg-on .pt-progress-m,
+body.psg-on .ps-header,
+body.psg-on .pt-aside { display: none; }
+body.psg-on .pt-layout { display: block; max-width: 640px; margin-inline: auto; }
+
+/* The form parts the guide hides (siblings of the part being shown) */
+body.psg-on #serviceForm .psg-hide { display: none; }
+body.psg-on #serviceForm .pt-section.psg-path { padding: 0; background: none; box-shadow: none; }
+body.psg-on #serviceForm .psg-path > .pt-section-head { display: none; }
+body.psg-on #serviceForm .pt-group.psg-path { margin: 0; }
+
+/* The question is the page title, so the field's own label is not repeated */
+body.psg-on .psg-nolabel > .pt-label-row > .pt-label,
+body.psg-on .psg-nolabel > .pt-label,
+body.psg-on .psg-nolabel > .pt-label-row.pt-mob { display: none; }
+body.psg-on .psg-nolabel > .pt-label-row > .pt-hint { display: none; }
+body.psg-on .psg-nolabel > .pt-label-row { justify-content: flex-end; }
+
+/* Header: back, counter, fill-myself link, then the progress line */
+.psg-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.psg-back { padding-left: 0; }
+.psg-back[hidden] { display: none; }
+.psg-count { flex: 1 1 auto; text-align: center; font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted); }
+.psg-full { padding-right: 0; font-size: var(--text-sm); }
+.psg-track { height: 6px; margin-bottom: var(--space-6); border-radius: var(--radius-full); background: var(--pt-field-strong); overflow: hidden; }
+.psg-fill { height: 100%; width: 0; border-radius: var(--radius-full); background: var(--pt-green); transition: width var(--t) var(--ease); }
+
+/* The question */
+.psg-q { margin-bottom: var(--space-5); }
+.psg-title { margin: 0 0 var(--space-2); font-family: var(--font-heading); font-size: var(--text-h2-sm); font-weight: 700; line-height: 1.2; color: var(--pt-ink); outline: 0; }
+.psg-sub { margin: 0; font-size: var(--text-base); line-height: 1.5; color: var(--pt-ink-muted); }
+.psg-opt { display: inline-block; margin-bottom: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--pt-field-strong); font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 600; color: var(--pt-ink-muted); }
+
+/* Continue, Skip, Save to draft */
+.psg-bar { position: sticky; bottom: 0; z-index: 1; margin-top: var(--space-5); padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); background: var(--pt-page); }
+.psg-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+.psg-draft { display: flex; margin: var(--space-3) auto 0; text-decoration: underline; text-underline-offset: 3px; }
+.psg-err { margin: 0 0 var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-form); background: var(--pt-field); color: var(--pt-danger); font-size: var(--text-sm); font-weight: 600; }
+.psg-err[hidden] { display: none; }
+
+@media (min-width: 640px) {
+  .psg-actions { flex-direction: row-reverse; }
+  .psg-actions .btn { flex: 1 1 0; }
+}

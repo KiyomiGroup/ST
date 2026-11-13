@@ -86,9 +86,12 @@
   /* Wait out a guided tour (up to ~15 s) instead of landing on top of it. */
   function showWhenFree(msg, tries) {
     /* also wait for the "try your ID check again" pop-up (js/verify-retry-nudge.js) so the two never stack */
-    var busy = '.st-tour, .st-vnudge';
-    if (document.querySelector(busy) && tries > 0) return window.setTimeout(function () { showWhenFree(msg, tries - 1); }, 5000);
-    if (document.querySelector(busy)) return;
+    /* and the first-visit prompts on the homepage (Post a service invitation, Bisi's tour question): while one is on screen or
+       waiting its turn (ST.promptsPending, kept by js/post-service-invite.js and js/mascot.js), this pop-up waits too */
+    var busy = '.st-tour, .st-vnudge, .psi-overlay, .st-mascot';
+    function isBusy() { return !!document.querySelector(busy) || !!(window.ST && window.ST.promptsPending > 0); }
+    if (isBusy() && tries > 0) return window.setTimeout(function () { showWhenFree(msg, tries - 1); }, 5000);
+    if (isBusy()) return;
     store(false, SEEN_KEY, '1');
     show(msg);
   }

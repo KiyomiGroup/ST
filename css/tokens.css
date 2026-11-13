@@ -587,6 +587,18 @@
   --z-picker:         2100;                     /* category picker sheet (js/category-picker.js): above the nav drawer (2000), below the tour (9000) and toasts (9999) */
 }
 
+/* ── Mascot (js/mascot.js, css/mascot.css; docs/mascot/STREETTASKER-MASCOTS.md) ──
+   One place to move or resize the mascot, since it later becomes the site-wide assistant button in this same corner. */
+:root {
+  --mascot-edge:          var(--space-3);                                             /* gap to the right edge of the screen */
+  --mascot-bottom:        var(--space-5);                                             /* gap to the bottom on wider screens */
+  --mascot-bottom-phone:  calc(var(--space-9) + var(--space-3) + var(--corner-clear));   /* clears the floating tab bar (77px bar + 8px gap) */
+  --mascot-size:          112px;                                                      /* full-body art on wider screens (guide: spot image 96 to 160px) */
+  --mascot-size-phone:    56px;                                                       /* face only on phones (guide: avatar 32 to 56px) */
+  --mascot-bubble-width:  240px;
+  --z-mascot:             940;                                                        /* above page content, below the phone tab bar (950), the install banner (960) and the nav drawer (2000) */
+}
+
 /* ── Home cards (homepage design, DESIGN-SYSTEM.md 4.15, css/home-cards.css) ──
    Sizes are taken from the Figma homepage reference (about 225px wide on a phone) and mapped to the type scale (nothing under 12px). */
 :root {

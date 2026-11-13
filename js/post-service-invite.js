@@ -12,8 +12,7 @@
    It never shows on a tour replay (?tour=<id>), and never when anything cannot be read (no guessing).
 
    Buttons:
-   - Accept guide     closes the pop-up and fires `st:post-service-guide` on document. The guided pages come next
-                      (not built yet), so nothing else happens for now.
+   - Accept guide     opens the guided one-question-per-page flow: post-service.html?guide=1 (js/post-service-guide.js).
    - Decline          closes it; the reminder rules above apply.
    - Fill form myself link to post-service.html (counts as a decline).
 
@@ -30,6 +29,7 @@
 
   var DELAY_MS = 10000;
   var MANUAL_URL = 'post-service.html';
+  var GUIDE_URL = 'post-service.html?guide=1';
   var TOUR_ID = 'tasker-home';
 
   /* ════════════════ pure core ════════════════ */
@@ -62,7 +62,7 @@
     return { status: 'declined', signIn: signIn || null, declines: ((rec && rec.declines) || 0) + 1 };
   }
 
-  var pure = { decide: decide, remember: remember, DELAY_MS: DELAY_MS, MANUAL_URL: MANUAL_URL };
+  var pure = { decide: decide, remember: remember, DELAY_MS: DELAY_MS, MANUAL_URL: MANUAL_URL, GUIDE_URL: GUIDE_URL };
 
   /* ════════════════ browser runtime ════════════════ */
 
@@ -159,6 +159,9 @@
          'manual'    they are going to the form themselves: the tour should not start */
     async function start(opts) {
       opts = opts || {};
+      /* ST.promptsPending: other pop-ups (js/tasker-live-nudge.js) wait while this one is deciding, waiting or on screen */
+      win.ST = win.ST || {};
+      win.ST.promptsPending = (win.ST.promptsPending || 0) + 1;
       try {
         if (open) return 'none';
         var replay = /[?&]tour=/.test(win.location.search || '');
@@ -183,12 +186,13 @@
         if (win.ST && win.ST.onboarding && win.ST.onboarding.isActive && win.ST.onboarding.isActive()) return 'none';
 
         var answer = await showDialog();
+        /* They have just been asked about posting a service: the "Customers can't see you yet" pop-up would repeat it */
+        try { win.sessionStorage.setItem('st_live_nudge_seen', '1'); } catch (e) {}
         write(user.id, remember(rec, answer === 'accepted' ? 'accepted' : 'declined', signIn));
-        if (answer === 'accepted') {
-          try { doc.dispatchEvent(new win.CustomEvent('st:post-service-guide', { detail: { userId: user.id } })); } catch (e) {}
-        }
+        if (answer === 'accepted') win.location.assign(GUIDE_URL);
         return answer;
       } catch (e) { return 'none'; }
+      finally { win.ST.promptsPending--; }
     }
 
     return { start: start, _show: showDialog };
