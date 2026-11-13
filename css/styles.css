@@ -2219,6 +2219,50 @@ img { max-width: 100%; height: auto; }
   .av2-login-pill { max-width: none; width: max-content; display: flex; gap: 6px; margin: 22px auto 0; padding: 14px 28px; font-size: var(--text-base); box-shadow: var(--auth-shadow-role); }
 }
 
+/* ── Role chooser, desktop (>=769px): three staggered cards (Hire, Work, Coordinator). Phones are untouched. ── */
+.av2-dcards { display: none; }
+@media (min-width: 769px) {
+  #stepChoose .av2-pick-prompt, #stepChoose .av2-pick-grid, #stepChoose .av2-coord-link { display: none; }
+  #stepChoose .av2-chooser-heading h1 { font-size: clamp(2.25rem, 3.6vw, 3rem); }
+  .av2-dcards {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; align-items: start;
+    max-width: 1080px; margin: 0 auto;
+  }
+  .av2-dcard {
+    position: relative; overflow: hidden; box-sizing: border-box; isolation: isolate;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+    padding: 36px 32px 32px; background: var(--auth-glass-70);
+    border: 1px solid var(--auth-glass-30); border-radius: 28px;
+    box-shadow: var(--auth-shadow-role);
+  }
+  .av2-dcard--a { margin-top: 48px; }
+  .av2-dcard::before {
+    content: ''; position: absolute; z-index: -1; width: 190px; height: 190px; border-radius: 50%;
+    background: var(--auth-green-mid-a10);
+  }
+  .av2-dcard--a::before { top: -70px; right: -70px; }
+  .av2-dcard--b::before { bottom: -80px; left: -70px; }
+  .av2-dcard-icon {
+    display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px;
+    border-radius: 18px; background: var(--color-primary-soft); color: var(--auth-green);
+    border: 1px solid var(--color-mint-border); margin-bottom: 14px;
+  }
+  .av2-dcard h2 { font-family: var(--font-heading); font-weight: 700; font-size: var(--text-xl); color: var(--auth-ink); letter-spacing: -0.01em; margin: 0; }
+  .av2-dcard p { font-size: var(--text-base); line-height: 1.6; color: var(--auth-body); margin: 0 0 14px; flex: 1 1 auto; }
+  .av2-dcta {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-sizing: border-box;
+    padding: 16px 20px; border-radius: var(--radius-full); cursor: pointer; text-decoration: none;
+    font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700;
+    transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .av2-dcta:active { transform: scale(0.98); }
+  .av2-dcta:focus-visible { outline: 3px solid var(--auth-green-mid); outline-offset: 2px; }
+  .av2-dcta--solid { background: var(--auth-green); color: #fff; border: 2px solid var(--auth-green); box-shadow: 0 8px 18px rgba(15, 107, 70, 0.25); }
+  .av2-dcta--solid:hover { background: var(--auth-green-deep); border-color: var(--auth-green-deep); }
+  .av2-dcta--outline { background: transparent; color: var(--auth-green); border: 2px solid var(--auth-green); }
+  .av2-dcta--outline:hover { background: var(--color-primary-soft); }
+}
+
 /* ── Step 2: signup / tasker forms ──────────────────────────── */
 .av2-split {
   display: grid; grid-template-columns: 0.78fr 1fr; gap: 40px;

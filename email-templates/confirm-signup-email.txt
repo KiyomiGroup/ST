@@ -1,15 +1,129 @@
 <!-- Supabase Dashboard > Authentication > Email Templates > "Confirm signup".
      Subject:  Your StreetTasker verification code
-     Paste everything below the line into the Message body box.
-     {{ .Token }} is the code the person types on verify-email.html.
-     The link takes them back to that page with their email filled in, on whatever phone or browser opens it.
-     Needs Authentication > URL Configuration > Site URL to be https://streettasker.com -->
-<div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a1c1b;max-width:520px">
-  <p>Hi,</p>
-  <p>Welcome to StreetTasker. Use this code to verify your email ({{ .Email }}):</p>
-  <p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:16px 0">{{ .Token }}</p>
-  <p>Type it on the verification page, or open this link to go back to it:</p>
-  <p><a href="{{ .SiteURL }}/verify-email.html?email={{ .Email }}">Enter my code</a></p>
-  <p>The code works once and expires soon. If you did not create a StreetTasker account, ignore this email.</p>
-  <p>StreetTasker<br>streettasker.com</p>
-</div>
+     Paste everything below this comment into the Message body box.
+     {{ .Token }} is the code the person types on verify-email.html (that page asks the phone to suggest it above the keyboard).
+     The button and link take them back to that page with their email already filled in, on whatever phone or browser opens it.
+     {{ .Data.name }} is the name given at sign-up. Needs Authentication > URL Configuration > Site URL to be https://streettasker.com -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Your StreetTasker verification code</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F7F7F7;">
+<!-- Inbox preview text -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#F7F7F7;font-size:1px;line-height:1px;">Your StreetTasker verification code is {{ .Token }}. Enter it to start posting tasks, hiring trusted local help and earning with your skills.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F7F7;">
+<tr><td align="center" style="padding:32px 16px;">
+
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#FFFFFF;border:1px solid #E5E5E5;border-radius:20px;overflow:hidden;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+
+    <!-- Logo -->
+    <tr><td align="center" style="padding:32px 32px 8px 32px;">
+      <a href="https://streettasker.com" style="text-decoration:none;">
+        <img src="https://streettasker.com/images/email-logo.png" width="133" height="22" alt="StreetTasker" style="display:block;border:0;outline:none;font-size:20px;font-weight:800;color:#168A45;">
+      </a>
+    </td></tr>
+
+    <!-- Main message + code + button -->
+    <tr><td align="center" style="padding:24px 40px 8px 40px;">
+      <h1 style="margin:0 0 12px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:28px;line-height:1.25;font-weight:800;color:#121212;">Confirm your account</h1>
+      <p style="margin:0;font-size:16px;line-height:1.6;color:#4A4A4A;">Hi {{ .Data.name }}, welcome to StreetTasker! Use the verification code below to confirm your email address and finish setting up your account.</p>
+    </td></tr>
+
+    <!-- Verification code (plain text on purpose, so phones can offer it above the keyboard) -->
+    <tr><td align="center" style="padding:24px 40px 0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#E8F5EC;border:1px solid #BFE3CB;border-radius:14px;">
+        <tr><td align="center" style="padding:22px 16px 20px 16px;">
+          <p style="margin:0 0 8px 0;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#168A45;">Your verification code</p>
+          <p style="margin:0;font-family:'SFMono-Regular',Menlo,Consolas,'Courier New',monospace;font-size:36px;line-height:1.2;font-weight:800;letter-spacing:8px;color:#0F3D26;">{{ .Token }}</p>
+        </td></tr>
+      </table>
+      <p style="margin:12px 0 0 0;font-size:13px;line-height:1.6;color:#7A7A7A;">This code works once and expires soon. Never share it with anyone.</p>
+    </td></tr>
+
+    <tr><td align="center" style="padding:24px 40px 12px 40px;">
+      <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#4A4A4A;">Back on StreetTasker, your keyboard should suggest the code. Tap it, or type it in. Or use the button to go straight to the verification page.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr><td align="center" bgcolor="#0F6B46" style="border-radius:9999px;">
+          <a href="{{ .SiteURL }}/verify-email.html?email={{ .Email }}" style="display:inline-block;padding:16px 40px;font-family:Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:9999px;">Enter my code</a>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <tr><td align="center" style="padding:8px 40px 32px 40px;">
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#7A7A7A;">Button not working? Copy and paste this link into your browser:<br>
+      <a href="{{ .SiteURL }}/verify-email.html?email={{ .Email }}" style="color:#0F6B46;word-break:break-all;">{{ .SiteURL }}/verify-email.html?email={{ .Email }}</a></p>
+    </td></tr>
+
+    <!-- Divider -->
+    <tr><td style="padding:0 40px;"><div style="height:1px;line-height:1px;background-color:#E5E5E5;">&nbsp;</div></td></tr>
+
+    <!-- About StreetTasker -->
+    <tr><td style="padding:32px 40px 8px 40px;">
+      <p style="margin:0 0 6px 0;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#168A45;">Welcome to the community</p>
+      <h2 style="margin:0 0 10px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;line-height:1.3;font-weight:800;color:#121212;">Get any task done, with people you can trust</h2>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;">StreetTasker connects people who need things done with skilled, local Taskers across Nigeria. Here is what you can do once you're in:</p>
+    </td></tr>
+
+    <!-- Feature cards -->
+    <tr><td style="padding:16px 40px 0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#E8F5EC;border:1px solid #BFE3CB;border-radius:14px;">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 4px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;font-weight:800;color:#0F3D26;">For customers</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4A4A4A;">Post a task for cleaning, moving, repairs, delivery, gardening, furniture assembly, tutoring or photography. Compare Taskers, check verified profiles, ratings and reviews, and pay securely.</p>
+          <a href="https://streettasker.com/post-task.html" style="font-size:14px;font-weight:700;color:#0F6B46;text-decoration:none;">Post a task &rarr;</a>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <tr><td style="padding:12px 40px 0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#E8F5EC;border:1px solid #BFE3CB;border-radius:14px;">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 4px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;font-weight:800;color:#0F3D26;">For Taskers</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4A4A4A;">Turn your skills into income. Browse tasks near you, apply to the ones that suit you, build your reputation with reviews and get paid for the work you do.</p>
+          <a href="https://streettasker.com/find-tasks.html" style="font-size:14px;font-weight:700;color:#0F6B46;text-decoration:none;">Find tasks &rarr;</a>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <tr><td style="padding:12px 40px 0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#E8F5EC;border:1px solid #BFE3CB;border-radius:14px;">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 4px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;font-weight:800;color:#0F3D26;">Gift cards</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4A4A4A;">Give the gift of free time. Send a StreetTasker gift card to family, friends, clients or colleagues to pay for trusted local help like cleaning, repairs and moves.</p>
+          <a href="https://streettasker.com/gift-cards.html" style="font-size:14px;font-weight:700;color:#0F6B46;text-decoration:none;">Explore gift cards &rarr;</a>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <tr><td style="padding:12px 40px 0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#E8F5EC;border:1px solid #BFE3CB;border-radius:14px;">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 4px 0;font-family:Manrope,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;font-weight:800;color:#0F3D26;">Local Taskers</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4A4A4A;">Skilled tailors, mechanics, hairdressers, caterers and handymen who may not have easy access to smartphones or the internet. Our local coordinator network connects them with customers like you.</p>
+          <a href="https://streettasker.com/local-taskers.html" style="font-size:14px;font-weight:700;color:#0F6B46;text-decoration:none;">Meet Local Taskers &rarr;</a>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- Trust strip -->
+    <tr><td style="padding:24px 40px 0 40px;">
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#4A4A4A;text-align:center;"><strong style="color:#0F3D26;">Verified Taskers</strong> &nbsp;&bull;&nbsp; <strong style="color:#0F3D26;">Reviews &amp; ratings</strong> &nbsp;&bull;&nbsp; <strong style="color:#0F3D26;">Secure payments</strong></p>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="padding:32px 40px 0 40px;"><div style="height:1px;line-height:1px;background-color:#E5E5E5;">&nbsp;</div></td></tr>
+    <tr><td align="center" style="padding:20px 40px 32px 40px;">
+      <p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#7A7A7A;">You received this email because {{ .Email }} was used to create a StreetTasker account. If that wasn't you, you can safely ignore this message and no account will be activated.</p>
+      <p style="margin:0;font-size:12px;line-height:1.6;color:#7A7A7A;"><a href="https://streettasker.com" style="color:#0F6B46;text-decoration:none;">streettasker.com</a> &nbsp;&bull;&nbsp; <a href="https://streettasker.com/terms.html" style="color:#7A7A7A;">Terms</a> &nbsp;&bull;&nbsp; <a href="https://streettasker.com/privacy.html" style="color:#7A7A7A;">Privacy</a></p>
+    </td></tr>
+
+  </table>
+</td></tr>
+</table>
+</body>
+</html>
