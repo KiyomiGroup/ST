@@ -39,6 +39,10 @@
   var ROLES = ['customer', 'tasker', 'any'];
   var PLACEMENTS = ['auto', 'top', 'bottom', 'left', 'right'];
   var STATUSES = ['in_progress', 'completed', 'skipped'];
+  /* How long a step waits for its target when the step sets no timeout. Menus and nav items are in the page already or never
+     will be, so a missing one is skipped quickly; steps that wait for data set their own timeout. */
+  var DEFAULT_WAIT_MS = 700;
+  var HIDDEN_WAIT_MS = 200;   /* the element exists but is not visible: hidden for this screen size, so do not wait long */
 
   /* ════════════════ pure core ════════════════ */
 
@@ -290,6 +294,13 @@
       }
       return null;
     }
+    /* Is any element for this step in the page at all (even if hidden)? A nav item that exists but is not showing is hidden by the
+       screen size (phones), not still loading, so its step is skipped almost at once. */
+    function inPage(step) {
+      var list = step.target == null ? [] : (Array.isArray(step.target) ? step.target : [step.target]);
+      for (var i = 0; i < list.length; i++) { try { if (doc.querySelector(list[i])) return true; } catch (e) {} }
+      return false;
+    }
     /* Resolves with the element as soon as it is visible, or null after the timeout. Handles menus and cards that load late. */
     function waitForTarget(step, isCurrent) {
       return new Promise(function (resolve) {
@@ -299,7 +310,7 @@
         check(); if (done) return;
         try { mo = new win.MutationObserver(check); mo.observe(doc.body, { childList: true, subtree: true, attributes: true }); } catch (e) {}
         poll = win.setInterval(check, 150);
-        timer = win.setTimeout(function () { finish(null); }, step.timeout || 2500);
+        timer = win.setTimeout(function () { finish(null); }, step.timeout || (inPage(step) ? HIDDEN_WAIT_MS : DEFAULT_WAIT_MS));
       });
     }
 
@@ -414,6 +425,7 @@
       };
       active = r;
       doc.body.appendChild(ui.root);
+      doc.documentElement.classList.add('st-tour-lock');   /* the page does not scroll under the dim wash; the tour scrolls to each step itself */
 
       function onKey(e) {
         if (r.closed) return;
@@ -464,7 +476,7 @@
         showStep(i);
       }
       function goNext() {
-        if (r.closed || r.gated || r.busy) return;
+        if (r.closed || r.gated || r.busy || r.loading) return;
         var step = r.step; r.busy = true;
         Promise.resolve().then(function () { return step && step.onNext ? step.onNext(ctxOf()) : undefined; }).then(function (res) {
           r.busy = false;
@@ -478,18 +490,19 @@
           goTo(r.index + 1, 1);
         }, function () { r.busy = false; goTo(r.index + 1, 1); });
       }
-      function goBack() { if (r.closed || r.busy) return; goTo(r.index - 1, -1); }
+      function goBack() { if (r.closed || r.busy || r.loading) return; goTo(r.index - 1, -1); }
       function ctxOf() { return { tour: tour, step: r.step, index: r.index, role: role, el: r.el, engine: api }; }
 
       function showStep(i) {
         var token = ++r.seq, step = tour.steps[i];
         r.index = i; r.step = step; r.interactive = false;
-        r.ui.tip.classList.remove('is-shown');
+        r.loading = true;   /* the old card stays on screen (no blank flash) but Next / Back wait until this step is ready */
         Promise.resolve().then(function () { return step.beforeShow ? step.beforeShow({ tour: tour, step: step, index: i, role: role, engine: api }) : undefined; })
           .catch(function (e) { log('beforeShow failed in', step.id, e); })
           .then(function () { return step.target ? waitForTarget(step, function () { return token === r.seq && !r.closed; }) : null; })
           .then(function (found) {
             if (token !== r.seq || r.closed) return;
+            r.loading = false;
             if (step.target && !found && step.fallback !== 'center') {
               log('target not found, skipping step', tour.id + '/' + step.id);
               if (r.dir < 0 && i === 0) { goTo(1, 1); return; }
@@ -541,7 +554,7 @@
         if (r.closed) return; r.closed = true; r.seq++;
         r.gateOff && r.gateOff();
         r.unbind.forEach(function (fn) { fn(); });
-        clearInert(); if (ui.root.parentNode) ui.root.parentNode.removeChild(ui.root);
+        clearInert(); doc.documentElement.classList.remove('st-tour-lock'); if (ui.root.parentNode) ui.root.parentNode.removeChild(ui.root);
         if (active === r) active = null;
         var pf = r.previousFocus; if (pf && pf.isConnected && pf.focus) { try { pf.focus({ preventScroll: true }); } catch (e) {} }
       }

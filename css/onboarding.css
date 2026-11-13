@@ -3,6 +3,9 @@
    Engine: js/onboarding.js. Tokens: css/tokens.css "Guided tours".
    ============================================================ */
 
+/* While a tour runs the page behind it does not scroll (a scrolled-away highlight looked broken). scrollIntoView still works. */
+html.st-tour-lock { overflow: hidden; scrollbar-gutter: stable; }
+
 .st-tour { position: fixed; inset: 0; z-index: var(--z-tour); pointer-events: none; }
 
 /* Four panels around the highlighted element make the dim wash, so the element itself stays sharp and clickable
