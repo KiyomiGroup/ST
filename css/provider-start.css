@@ -1,6 +1,7 @@
 /* ================================================================
    PROVIDER START — first onboarding step for "Service provider"
-   (provider-start.html). Name + business name, phone first.
+   (provider-start.html). Name + business name (optional), phone first.
+   provider-email.html (step 2) reuses these classes.
    Tokens only (DESIGN-SYSTEM.md). Layout follows the post-a-task
    step card: round back button, thin progress bar, big left-aligned
    heading, mint-tinted field while typing, small round arrow that
@@ -62,11 +63,12 @@
 }
 .ps-input::placeholder { color: var(--auth-muted); font-weight: 500; }
 
-/* ── Round arrow: hidden until both fields have text, then pops in ── */
+/* ── Continue button: hidden until a field is tapped, then pops in ── */
 .ps-next-row { display: flex; justify-content: flex-end; min-height: 56px; } /* reserved, so the page never jumps */
 .ps-next {
-  width: 56px; height: 56px; border: 0; border-radius: 50%; cursor: pointer;
+  height: 56px; padding: 0 var(--space-5); gap: var(--space-2); border: 0; border-radius: var(--radius-full); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: var(--text-base); font-weight: 700;
   background: var(--color-forest-800); color: var(--color-text-on-primary);
   box-shadow: var(--shadow-md);
   opacity: 0; visibility: hidden; transform: scale(0.6);
@@ -77,6 +79,15 @@
 .ps-next:active { transform: scale(0.94); }
 .ps-next:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .ps-next[disabled] { cursor: default; }
+
+/* ── Google option under Continue ── */
+.ps-oauth { display: grid; gap: 0; }
+.ps-divider { margin: 0 0 var(--space-4); }
+.ps-oauth .av2-oauth-btn { min-height: 52px; width: 100%; }
+.ps-oauth .av2-oauth-btn[disabled] { opacity: 0.6; cursor: default; }
+
+/* step 2 of 4 */
+.ps-progress-fill--2 { width: 50%; }
 
 .ps-error { margin: 0; }
 .ps-error[hidden] { display: none; }

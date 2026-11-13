@@ -17,7 +17,7 @@
 </head>
 <body class="st-shell">
   <!-- Onboarding step 1 of 4 for "Service provider" (tasker account).
-       Comes from the role chooser in signup.html, goes on to the account form (signup.html?step=tasker).
+       Comes from the role chooser in signup.html, goes on to the email page (provider-email.html).
        No site nav here: the person is inside a guided flow, so the page has its own back button and progress bar. -->
   <main class="st-page st-page--narrow ps-main">
 
@@ -39,27 +39,42 @@
       <label class="ps-field" for="psName">
         <span class="sr-only">Your full name</span>
         <svg class="ps-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <input class="ps-input" type="text" id="psName" name="name" placeholder="Your full name" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="80" required />
+        <input class="ps-input" type="text" id="psName" name="name" placeholder="Your full name" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="80" />
       </label>
 
       <label class="ps-field" for="psBusiness">
         <span class="sr-only">Your business name</span>
         <svg class="ps-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        <input class="ps-input" type="text" id="psBusiness" name="organization" placeholder="Your business name" autocomplete="organization" autocapitalize="words" enterkeyhint="go" maxlength="80" required />
+        <input class="ps-input" type="text" id="psBusiness" name="organization" placeholder="Your business name" autocomplete="organization" autocapitalize="words" enterkeyhint="go" maxlength="80" />
       </label>
 
       <p class="form-error ps-error" id="psError" role="alert" hidden></p>
 
+      <!-- Appears as soon as a field is tapped (not after it is filled). Name and business name are optional here:
+           the person is asked for them again inside the site. -->
       <div class="ps-next-row">
-        <button type="submit" class="ps-next" id="psNext" aria-label="Continue" disabled>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <button type="submit" class="ps-next" id="psNext" aria-label="Continue" tabindex="-1">
+          <span>Continue</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
     </form>
 
+    <!-- Google skips the rest of these steps and uses the normal Google sign-up -->
+    <div class="ps-oauth">
+      <div class="av2-divider ps-divider">or</div>
+      <button type="button" class="av2-oauth-btn" id="psGoogle">
+        <img src="images/google-g.svg" width="18" height="18" alt="" aria-hidden="true">
+        <span>Sign up with Google</span>
+      </button>
+    </div>
+
     <p class="ps-login">Already have an account? <a href="login.html">Log in</a></p>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/referral-capture.js"></script>
   <script src="js/provider-start.js"></script>
   <script src="js/page-loader.js"></script>
 </body>

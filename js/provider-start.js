@@ -2,24 +2,28 @@
    STREET TASKER — provider-start.js
    First onboarding step for "Service provider": name + business name.
 
-   - The round arrow pops in once both fields have text.
+   - Both fields are optional here. Whatever the person leaves empty is
+     asked for again once they are inside the site.
+   - The Continue button pops in as soon as a field is tapped, not once
+     it is filled in.
    - What is typed is kept in sessionStorage (key st_provider_start) so Back
-     and refresh do not lose it, and so the next step can read it:
-       { name: "...", businessName: "..." }
-   - Continue goes to the account form: signup.html?step=tasker
-     (signup.html fills the Full Name field from the saved name).
+     and refresh do not lose it, and so the next steps can read it:
+       { name: "...", businessName: "...", email: "..." }
+   - Continue goes to the email page: provider-email.html (email is compulsory there).
+   - "Sign up with Google" drops these steps and starts the normal Google
+     sign-up (same hand-off as signup.html: login.html?oauth=1&role=tasker).
    ============================================================ */
 (function () {
   'use strict';
 
   var KEY = 'st_provider_start';
-  var NEXT_URL = 'signup.html?step=tasker';
-  var MIN = 2;   /* shortest name we accept, in characters */
+  var NEXT_URL = 'provider-email.html';
 
   var form = document.getElementById('providerStartForm');
   var nameEl = document.getElementById('psName');
   var bizEl = document.getElementById('psBusiness');
   var nextBtn = document.getElementById('psNext');
+  var googleBtn = document.getElementById('psGoogle');
   var errEl = document.getElementById('psError');
   if (!form || !nameEl || !bizEl || !nextBtn) return;
 
@@ -28,11 +32,13 @@
   }
   function save() {
     try {
-      sessionStorage.setItem(KEY, JSON.stringify({ name: nameEl.value.trim(), businessName: bizEl.value.trim() }));
+      var data = read();   /* keep anything a later step stored (email) */
+      data.name = nameEl.value.trim();
+      data.businessName = bizEl.value.trim();
+      sessionStorage.setItem(KEY, JSON.stringify(data));
     } catch (e) { /* private mode: the flow still works, it just cannot remember */ }
   }
   function clean(v) { return String(v || '').replace(/\s+/g, ' ').trim(); }
-  function valid() { return clean(nameEl.value).length >= MIN && clean(bizEl.value).length >= MIN; }
 
   function showError(msg) {
     errEl.textContent = msg;
@@ -44,19 +50,13 @@
     errEl.style.display = '';
   }
 
-  function refresh() {
-    var ready = valid();
-    nextBtn.classList.toggle('is-ready', ready);
-    nextBtn.disabled = !ready;
-    if (ready) clearError();
+  /* Continue appears the moment a field is tapped, and stays */
+  function reveal() {
+    nextBtn.classList.add('is-ready');
+    nextBtn.removeAttribute('tabindex');
   }
 
   function go() {
-    if (!valid()) {
-      if (clean(nameEl.value).length < MIN) { showError('Enter your full name to continue.'); nameEl.focus(); }
-      else { showError('Enter your business name to continue.'); bizEl.focus(); }
-      return;
-    }
     nameEl.value = clean(nameEl.value);
     bizEl.value = clean(bizEl.value);
     save();
@@ -67,10 +67,11 @@
   var saved = read();
   if (saved.name) nameEl.value = saved.name;
   if (saved.businessName) bizEl.value = saved.businessName;
-  refresh();
+  if (saved.name || saved.businessName) reveal();
 
   [nameEl, bizEl].forEach(function (el) {
-    el.addEventListener('input', function () { save(); refresh(); });
+    el.addEventListener('focus', reveal);
+    el.addEventListener('input', function () { reveal(); save(); });
   });
 
   /* Enter: name -> business name, business name -> continue */
@@ -83,6 +84,26 @@
 
   form.addEventListener('submit', function (e) { e.preventDefault(); go(); });
 
-  /* phones: first field is ready to type in straight away */
-  if (!saved.name) nameEl.focus();
+  /* Google: cancel these steps and use the normal Google sign-up as a service provider */
+  if (googleBtn) {
+    googleBtn.addEventListener('click', function () {
+      clearError();
+      if (!window.supabase || !window.supabase.auth) {
+        showError('Sign-up is unavailable right now. Please refresh and try again.');
+        return;
+      }
+      try { sessionStorage.removeItem(KEY); } catch (e) {}
+      try { localStorage.setItem('st_pending_role', 'tasker'); } catch (e) {}
+      googleBtn.disabled = true;
+      window.supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/login.html?oauth=1&role=tasker' }
+      }).then(function (res) {
+        if (res && res.error) {
+          googleBtn.disabled = false;
+          showError('Google sign-up failed: ' + res.error.message);
+        }
+      });
+    });
+  }
 })();

@@ -342,12 +342,15 @@
       if (role === 'customer' || role === 'tasker') showStep(role);
     })();
 
-    /* Coming from provider-start.html (name + business name): fill the Full Name field with what was typed there */
+    /* Coming from provider-start.html / provider-email.html (name, business name, email): fill the fields with what was typed there */
     (function () {
       let saved = {};
       try { saved = JSON.parse(sessionStorage.getItem('st_provider_start')) || {}; } catch (e) {}
       const nameInput = document.getElementById('tFullName');
       if (saved.name && nameInput && !nameInput.value) nameInput.value = saved.name;
+      /* the email typed on provider-email.html */
+      const emailInput = document.getElementById('tEmail');
+      if (saved.email && emailInput && !emailInput.value) emailInput.value = saved.email;
     })();
 
     /* Live password checklist under each password field (rules live in js/auth.js) */
@@ -445,8 +448,9 @@
       const btn = document.getElementById('taskerSignupBtn');
       errorEl.style.display = 'none';
 
-      const name = document.getElementById('tFullName').value.trim();
       const email = document.getElementById('tEmail').value.trim();
+      /* The name can be skipped on provider-start.html (it is asked for again inside the site), so fall back to the start of the email */
+      const name = document.getElementById('tFullName').value.trim() || email.split('@')[0];
       const password = document.getElementById('tPassword').value;
       const termsEl = document.getElementById('tTerms');
       // Desktop frame has no visible terms checkbox — only enforce it where it's actually shown (mobile).
