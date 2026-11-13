@@ -86,8 +86,42 @@
 .ps-oauth .av2-oauth-btn { min-height: 52px; width: 100%; }
 .ps-oauth .av2-oauth-btn[disabled] { opacity: 0.6; cursor: default; }
 
-/* step 2 of 4 */
+/* step 2 and 3 of 4 */
 .ps-progress-fill--2 { width: 50%; }
+.ps-progress-fill--3 { width: 75%; }
+
+/* ── Password step (provider-password.html) ── */
+.ps-email { color: var(--pt-ink); font-weight: 700; word-break: break-all; }
+.ps-field.is-error { border-color: var(--color-danger); background: var(--color-danger-soft); }
+.ps-field.is-error .ps-field-icon { color: var(--color-danger); }
+.ps-eye {
+  flex-shrink: 0; width: 44px; height: 44px; margin-right: calc(var(--space-2) * -1);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: transparent; cursor: pointer; color: var(--auth-muted);
+  transition: color var(--t) var(--ease), background var(--t) var(--ease);
+}
+.ps-eye:hover { color: var(--pt-ink); background: var(--pt-field-strong); }
+.ps-eye:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ps-eye[aria-pressed="true"] { color: var(--pt-green); }
+
+/* five small bars: one fills for each rule the password meets */
+.ps-meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-1); margin-top: calc(var(--space-1) * -1); }
+.ps-meter span { height: var(--space-1); border-radius: var(--radius-full); background: var(--pt-field-strong); transition: background var(--t) var(--ease); }
+.ps-meter span.is-on { background: var(--pt-green); }
+.ps-meter.is-bad span.is-on { background: var(--color-danger); }
+
+/* the single line of help: neutral to start, red for the one thing missing, green when done */
+.ps-hint {
+  margin: 0; display: flex; align-items: flex-start; gap: var(--space-2);
+  font-family: var(--font-body); font-size: var(--text-sm); line-height: 1.4; color: var(--auth-muted);
+}
+.ps-hint[hidden] { display: none; }
+.ps-hint svg { flex-shrink: 0; margin-top: 1px; }
+.ps-hint--error { color: var(--tone-danger-ink); font-weight: 600; }
+.ps-hint--ok { color: var(--pt-green); font-weight: 600; }
+
+.ps-terms { margin: var(--space-2) 0 0; }
+.ps-terms.is-error input { outline: 2px solid var(--color-danger); outline-offset: 2px; }
 
 .ps-error { margin: 0; }
 .ps-error[hidden] { display: none; }

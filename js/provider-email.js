@@ -4,14 +4,13 @@
 
    - Reads/writes the same sessionStorage object as provider-start.js
      (key st_provider_start), adding { email }.
-   - Continue goes to the account form: signup.html?step=tasker
-     (signup.html fills Full Name and Email from the saved values).
+   - Continue goes to the password page: provider-password.html
    ============================================================ */
 (function () {
   'use strict';
 
   var KEY = 'st_provider_start';
-  var NEXT_URL = 'signup.html?step=tasker';
+  var NEXT_URL = 'provider-password.html';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   var form = document.getElementById('providerEmailForm');
